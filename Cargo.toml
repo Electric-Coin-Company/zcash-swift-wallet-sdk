@@ -1,0 +1,10 @@
+[package]
+name = "libzcashlc"
+version = "0.0.1"
+authors = ["Jack Grigg <jack@z.cash>"]
+edition = "2018"
+
+[lib]
+name = "zcashlc"
+path = "rust/src/lib.rs"
+crate-type = ["staticlib"]
