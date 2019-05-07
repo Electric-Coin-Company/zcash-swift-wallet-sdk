@@ -3,8 +3,31 @@ name = "libzcashlc"
 version = "0.0.1"
 authors = ["Jack Grigg <jack@z.cash>"]
 edition = "2018"
+build = "rust/build.rs"
+
+[dependencies]
+failure = "0.1"
+ffi_helpers = "0.1"
+
+[dependencies.zcash_client_backend]
+git = "https://github.com/str4d/librustzcash.git"
+branch = "note-spending-v5"
+
+[dependencies.zcash_client_sqlite]
+git = "https://github.com/str4d/librustzcash.git"
+branch = "note-spending-v5"
+
+[dependencies.zcash_primitives]
+git = "https://github.com/str4d/librustzcash.git"
+branch = "note-spending-v5"
+
+[build-dependencies]
+cbindgen = "0.8"
 
 [lib]
 name = "zcashlc"
 path = "rust/src/lib.rs"
 crate-type = ["staticlib"]
+
+[profile.release]
+lto = true
