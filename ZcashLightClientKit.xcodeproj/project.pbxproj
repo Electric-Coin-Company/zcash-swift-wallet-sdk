@@ -10,6 +10,7 @@
 		103AFE8F228312A30074BC98 /* ZcashLightClientKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 103AFE85228312A30074BC98 /* ZcashLightClientKit.framework */; };
 		103AFE94228312A30074BC98 /* ZcashLightClientKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */; };
 		103AFE96228312A30074BC98 /* ZcashLightClientKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 103AFE88228312A30074BC98 /* ZcashLightClientKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		103AFEA22283166B0074BC98 /* libzcashlc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 103AFEA12283166B0074BC98 /* libzcashlc.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -29,6 +30,7 @@
 		103AFE8E228312A30074BC98 /* ZcashLightClientKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientKitTests.swift; sourceTree = "<group>"; };
 		103AFE95228312A30074BC98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		103AFEA12283166B0074BC98 /* libzcashlc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libzcashlc.a; path = target/universal/debug/libzcashlc.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -36,6 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				103AFEA22283166B0074BC98 /* libzcashlc.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -56,6 +59,7 @@
 				103AFE87228312A30074BC98 /* ZcashLightClientKit */,
 				103AFE92228312A30074BC98 /* ZcashLightClientKitTests */,
 				103AFE86228312A30074BC98 /* Products */,
+				103AFEA02283166B0074BC98 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -86,6 +90,14 @@
 			path = ZcashLightClientKitTests;
 			sourceTree = "<group>";
 		};
+		103AFEA02283166B0074BC98 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				103AFEA12283166B0074BC98 /* libzcashlc.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -105,6 +117,7 @@
 			buildConfigurationList = 103AFE99228312A30074BC98 /* Build configuration list for PBXNativeTarget "ZcashLightClientKit" */;
 			buildPhases = (
 				103AFE80228312A30074BC98 /* Headers */,
+				103AFE9F2283152F0074BC98 /* ShellScript */,
 				103AFE81228312A30074BC98 /* Sources */,
 				103AFE82228312A30074BC98 /* Frameworks */,
 				103AFE83228312A30074BC98 /* Resources */,
@@ -189,6 +202,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		103AFE9F2283152F0074BC98 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/Cargo.toml",
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PATH=\"$HOME/.cargo/bin:$PATH\"\nif [ \"$ACTION\" = \"clean\" ]; then\n    cargo clean\nelse\n    cargo lipo --xcode-integ --manifest-path ./Cargo.toml\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		103AFE81228312A30074BC98 /* Sources */ = {
@@ -348,12 +382,17 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ZcashLightClientKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/target/universal/debug",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -372,12 +411,17 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ZcashLightClientKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/target/universal/release",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
