@@ -11,6 +11,8 @@
 		103AFE94228312A30074BC98 /* ZcashLightClientKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */; };
 		103AFE96228312A30074BC98 /* ZcashLightClientKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 103AFE88228312A30074BC98 /* ZcashLightClientKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		103AFEA22283166B0074BC98 /* libzcashlc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 103AFEA12283166B0074BC98 /* libzcashlc.a */; };
+		103AFEA422831BB00074BC98 /* ZcashRustBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103AFEA322831BB00074BC98 /* ZcashRustBackend.swift */; };
+		103AFEAA228320F00074BC98 /* zcashlc.h in Headers */ = {isa = PBXBuildFile; fileRef = 103AFEA9228320F00074BC98 /* zcashlc.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +33,9 @@
 		103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientKitTests.swift; sourceTree = "<group>"; };
 		103AFE95228312A30074BC98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		103AFEA12283166B0074BC98 /* libzcashlc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libzcashlc.a; path = target/universal/debug/libzcashlc.a; sourceTree = "<group>"; };
+		103AFEA322831BB00074BC98 /* ZcashRustBackend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackend.swift; sourceTree = "<group>"; };
+		103AFEA8228320F00074BC98 /* module.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
+		103AFEA9228320F00074BC98 /* zcashlc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zcashlc.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,7 +80,9 @@
 		103AFE87228312A30074BC98 /* ZcashLightClientKit */ = {
 			isa = PBXGroup;
 			children = (
+				103AFEA7228320F00074BC98 /* zcashlc */,
 				103AFE88228312A30074BC98 /* ZcashLightClientKit.h */,
+				103AFEA322831BB00074BC98 /* ZcashRustBackend.swift */,
 				103AFE89228312A30074BC98 /* Info.plist */,
 			);
 			path = ZcashLightClientKit;
@@ -98,6 +105,15 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		103AFEA7228320F00074BC98 /* zcashlc */ = {
+			isa = PBXGroup;
+			children = (
+				103AFEA8228320F00074BC98 /* module.modulemap */,
+				103AFEA9228320F00074BC98 /* zcashlc.h */,
+			);
+			path = zcashlc;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -106,6 +122,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				103AFE96228312A30074BC98 /* ZcashLightClientKit.h in Headers */,
+				103AFEAA228320F00074BC98 /* zcashlc.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -229,6 +246,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				103AFEA422831BB00074BC98 /* ZcashRustBackend.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,6 +394,7 @@
 		103AFE9A228312A30074BC98 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
@@ -397,6 +416,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "${SRCROOT}/ZcashLightClientKit/zcashlc";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -405,6 +426,7 @@
 		103AFE9B228312A30074BC98 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
 				DEFINES_MODULE = YES;
@@ -426,6 +448,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientKit;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "${SRCROOT}/ZcashLightClientKit/zcashlc";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -434,6 +457,7 @@
 		103AFE9D228312A30074BC98 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = ZcashLightClientKitTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -451,6 +475,7 @@
 		103AFE9E228312A30074BC98 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = ZcashLightClientKitTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
