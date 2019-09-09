@@ -9,24 +9,18 @@ Pod::Spec.new do |s|
   
     s.homepage         = 'https://github.com/zcash/ZcashLightClientKit'
     s.license          = { :type => 'Apache 2.0', :file => 'LICENSE' }
-    s.author           = { 'Francisco Gindre' => 'francisco.gindre@gmail.com' }
+    s.author           = { 
+        'Francisco Gindre' => 'francisco.gindre@gmail.com',
+        'Jack Grigg' => 'str4d@electriccoin.co'
+     }
     s.source           = { :git => 'https://github.com/zcash/ZcashLightClientKit.git', :tag => s.version.to_s }
 
     s.public_header_files = 'ZcashLightClientKit/**/*.h'
     s.source_files = 'ZcashLightClientKit/**/*.{swift,h,a}'
     s.module_map = 'ZcashLightClientKit.modulemap'
-    
-    # s.script_phases = [
-    #     {
-    #         :name => "build librustzcash",
-    #         :script => '${PODS_TARGET_SRCROOT}/build_librustzcash.sh',
-    #         :execution_position => :before_compile
-    #     }
-    # ]
     s.swift_version = '5.0'
     s.ios.deployment_target = '11.0'
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
-    #s.prepare_command = 'sh prepare.sh'
     s.prepare_command = <<-CMD
         BASEPATH="${PWD}"
         echo "Building librustzcash library..."
