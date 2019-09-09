@@ -1,0 +1,728 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
+		0D907F182322CC5900D641FE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F172322CC5900D641FE /* ViewController.swift */; };
+		0D907F1B2322CC5900D641FE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F192322CC5900D641FE /* Main.storyboard */; };
+		0D907F1D2322CC5B00D641FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1C2322CC5B00D641FE /* Assets.xcassets */; };
+		0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
+		0D907F2B2322CC5B00D641FE /* ZcashLightClientSampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */; };
+		0D907F362322CC5B00D641FE /* ZcashLightClientSampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */; };
+		30AB89006A2D6891F32BFBF0 /* Pods_ZcashLightClientSample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */; };
+		868A42CEE1EBA7F9B0E48927 /* Pods_ZcashLightClientSampleUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E9E0B112B9AFA48C27C4BC7 /* Pods_ZcashLightClientSampleUITests.framework */; };
+		F54D714D7D2CBD7882AB31D4 /* Pods_ZcashLightClientSampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC7ACB694E10039AC19A90BE /* Pods_ZcashLightClientSampleTests.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0D907F272322CC5B00D641FE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0D907F0A2322CC5900D641FE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0D907F112322CC5900D641FE;
+			remoteInfo = ZcashLightClientSample;
+		};
+		0D907F322322CC5B00D641FE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0D907F0A2322CC5900D641FE /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0D907F112322CC5900D641FE;
+			remoteInfo = ZcashLightClientSample;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		0D907F122322CC5900D641FE /* ZcashLightClientSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZcashLightClientSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D907F152322CC5900D641FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		0D907F172322CC5900D641FE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		0D907F1A2322CC5900D641FE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		0D907F1C2322CC5B00D641FE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0D907F1F2322CC5B00D641FE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		0D907F212322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0D907F262322CC5B00D641FE /* ZcashLightClientSampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleTests.swift; sourceTree = "<group>"; };
+		0D907F2C2322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleUITests.swift; sourceTree = "<group>"; };
+		0D907F372322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		1BEB1273671D6E7883C81472 /* Pods-ZcashLightClientSample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSample.release.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample.release.xcconfig"; sourceTree = "<group>"; };
+		3E9E0B112B9AFA48C27C4BC7 /* Pods_ZcashLightClientSampleUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSampleUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		59BA5F37462FF34F64350712 /* Pods-ZcashLightClientSampleUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSampleUITests.debug.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSampleUITests/Pods-ZcashLightClientSampleUITests.debug.xcconfig"; sourceTree = "<group>"; };
+		7725E5618226722E4FF54D35 /* Pods-ZcashLightClientSampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSampleTests.debug.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests.debug.xcconfig"; sourceTree = "<group>"; };
+		89F6F4B8F441C9EC43B7412A /* Pods-ZcashLightClientSampleUITests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSampleUITests.release.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSampleUITests/Pods-ZcashLightClientSampleUITests.release.xcconfig"; sourceTree = "<group>"; };
+		93F435FD5C95BEE3BC7BBC28 /* Pods-ZcashLightClientSample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSample.debug.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample.debug.xcconfig"; sourceTree = "<group>"; };
+		AB3C9B79B6C5CC564852A806 /* Pods-ZcashLightClientSampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSampleTests.release.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests.release.xcconfig"; sourceTree = "<group>"; };
+		EC7ACB694E10039AC19A90BE /* Pods_ZcashLightClientSampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0D907F0F2322CC5900D641FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30AB89006A2D6891F32BFBF0 /* Pods_ZcashLightClientSample.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D907F232322CC5B00D641FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F54D714D7D2CBD7882AB31D4 /* Pods_ZcashLightClientSampleTests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D907F2E2322CC5B00D641FE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				868A42CEE1EBA7F9B0E48927 /* Pods_ZcashLightClientSampleUITests.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0D907F092322CC5900D641FE = {
+			isa = PBXGroup;
+			children = (
+				0D907F142322CC5900D641FE /* ZcashLightClientSample */,
+				0D907F292322CC5B00D641FE /* ZcashLightClientSampleTests */,
+				0D907F342322CC5B00D641FE /* ZcashLightClientSampleUITests */,
+				0D907F132322CC5900D641FE /* Products */,
+				66EF5A44FD6A5AC92244F054 /* Pods */,
+				A4E309895AA511479901D67E /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		0D907F132322CC5900D641FE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0D907F122322CC5900D641FE /* ZcashLightClientSample.app */,
+				0D907F262322CC5B00D641FE /* ZcashLightClientSampleTests.xctest */,
+				0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
+			isa = PBXGroup;
+			children = (
+				0D907F152322CC5900D641FE /* AppDelegate.swift */,
+				0D907F172322CC5900D641FE /* ViewController.swift */,
+				0D907F192322CC5900D641FE /* Main.storyboard */,
+				0D907F1C2322CC5B00D641FE /* Assets.xcassets */,
+				0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */,
+				0D907F212322CC5B00D641FE /* Info.plist */,
+			);
+			path = ZcashLightClientSample;
+			sourceTree = "<group>";
+		};
+		0D907F292322CC5B00D641FE /* ZcashLightClientSampleTests */ = {
+			isa = PBXGroup;
+			children = (
+				0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */,
+				0D907F2C2322CC5B00D641FE /* Info.plist */,
+			);
+			path = ZcashLightClientSampleTests;
+			sourceTree = "<group>";
+		};
+		0D907F342322CC5B00D641FE /* ZcashLightClientSampleUITests */ = {
+			isa = PBXGroup;
+			children = (
+				0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */,
+				0D907F372322CC5B00D641FE /* Info.plist */,
+			);
+			path = ZcashLightClientSampleUITests;
+			sourceTree = "<group>";
+		};
+		66EF5A44FD6A5AC92244F054 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				93F435FD5C95BEE3BC7BBC28 /* Pods-ZcashLightClientSample.debug.xcconfig */,
+				1BEB1273671D6E7883C81472 /* Pods-ZcashLightClientSample.release.xcconfig */,
+				7725E5618226722E4FF54D35 /* Pods-ZcashLightClientSampleTests.debug.xcconfig */,
+				AB3C9B79B6C5CC564852A806 /* Pods-ZcashLightClientSampleTests.release.xcconfig */,
+				59BA5F37462FF34F64350712 /* Pods-ZcashLightClientSampleUITests.debug.xcconfig */,
+				89F6F4B8F441C9EC43B7412A /* Pods-ZcashLightClientSampleUITests.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
+		A4E309895AA511479901D67E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */,
+				EC7ACB694E10039AC19A90BE /* Pods_ZcashLightClientSampleTests.framework */,
+				3E9E0B112B9AFA48C27C4BC7 /* Pods_ZcashLightClientSampleUITests.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0D907F112322CC5900D641FE /* ZcashLightClientSample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0D907F3A2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSample" */;
+			buildPhases = (
+				33EFC5F94E60AC06AD108A01 /* [CP] Check Pods Manifest.lock */,
+				0D907F0E2322CC5900D641FE /* Sources */,
+				0D907F0F2322CC5900D641FE /* Frameworks */,
+				0D907F102322CC5900D641FE /* Resources */,
+				6F790CD178809E37D3EE225C /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ZcashLightClientSample;
+			productName = ZcashLightClientSample;
+			productReference = 0D907F122322CC5900D641FE /* ZcashLightClientSample.app */;
+			productType = "com.apple.product-type.application";
+		};
+		0D907F252322CC5B00D641FE /* ZcashLightClientSampleTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0D907F3D2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleTests" */;
+			buildPhases = (
+				F0CBB1827AD1030E7E0B4C2A /* [CP] Check Pods Manifest.lock */,
+				0D907F222322CC5B00D641FE /* Sources */,
+				0D907F232322CC5B00D641FE /* Frameworks */,
+				0D907F242322CC5B00D641FE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0D907F282322CC5B00D641FE /* PBXTargetDependency */,
+			);
+			name = ZcashLightClientSampleTests;
+			productName = ZcashLightClientSampleTests;
+			productReference = 0D907F262322CC5B00D641FE /* ZcashLightClientSampleTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		0D907F302322CC5B00D641FE /* ZcashLightClientSampleUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0D907F402322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleUITests" */;
+			buildPhases = (
+				DF7247036A849FB9CB2C5856 /* [CP] Check Pods Manifest.lock */,
+				0D907F2D2322CC5B00D641FE /* Sources */,
+				0D907F2E2322CC5B00D641FE /* Frameworks */,
+				0D907F2F2322CC5B00D641FE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0D907F332322CC5B00D641FE /* PBXTargetDependency */,
+			);
+			name = ZcashLightClientSampleUITests;
+			productName = ZcashLightClientSampleUITests;
+			productReference = 0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0D907F0A2322CC5900D641FE /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1020;
+				LastUpgradeCheck = 1020;
+				ORGANIZATIONNAME = "Electric Coin Company";
+				TargetAttributes = {
+					0D907F112322CC5900D641FE = {
+						CreatedOnToolsVersion = 10.2.1;
+					};
+					0D907F252322CC5B00D641FE = {
+						CreatedOnToolsVersion = 10.2.1;
+						TestTargetID = 0D907F112322CC5900D641FE;
+					};
+					0D907F302322CC5B00D641FE = {
+						CreatedOnToolsVersion = 10.2.1;
+						TestTargetID = 0D907F112322CC5900D641FE;
+					};
+				};
+			};
+			buildConfigurationList = 0D907F0D2322CC5900D641FE /* Build configuration list for PBXProject "ZcashLightClientSample" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 0D907F092322CC5900D641FE;
+			productRefGroup = 0D907F132322CC5900D641FE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0D907F112322CC5900D641FE /* ZcashLightClientSample */,
+				0D907F252322CC5B00D641FE /* ZcashLightClientSampleTests */,
+				0D907F302322CC5B00D641FE /* ZcashLightClientSampleUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0D907F102322CC5900D641FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */,
+				0D907F1D2322CC5B00D641FE /* Assets.xcassets in Resources */,
+				0D907F1B2322CC5900D641FE /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D907F242322CC5B00D641FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D907F2F2322CC5B00D641FE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		33EFC5F94E60AC06AD108A01 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ZcashLightClientSample-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		6F790CD178809E37D3EE225C /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DF7247036A849FB9CB2C5856 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ZcashLightClientSampleUITests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F0CBB1827AD1030E7E0B4C2A /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-ZcashLightClientSampleTests-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0D907F0E2322CC5900D641FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D907F182322CC5900D641FE /* ViewController.swift in Sources */,
+				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D907F222322CC5B00D641FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D907F2B2322CC5B00D641FE /* ZcashLightClientSampleTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0D907F2D2322CC5B00D641FE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0D907F362322CC5B00D641FE /* ZcashLightClientSampleUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0D907F282322CC5B00D641FE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0D907F112322CC5900D641FE /* ZcashLightClientSample */;
+			targetProxy = 0D907F272322CC5B00D641FE /* PBXContainerItemProxy */;
+		};
+		0D907F332322CC5B00D641FE /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0D907F112322CC5900D641FE /* ZcashLightClientSample */;
+			targetProxy = 0D907F322322CC5B00D641FE /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		0D907F192322CC5900D641FE /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0D907F1A2322CC5900D641FE /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0D907F1F2322CC5B00D641FE /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0D907F382322CC5B00D641FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		0D907F392322CC5B00D641FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		0D907F3B2322CC5B00D641FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 93F435FD5C95BEE3BC7BBC28 /* Pods-ZcashLightClientSample.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6J82A38BF9;
+				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0D907F3C2322CC5B00D641FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 1BEB1273671D6E7883C81472 /* Pods-ZcashLightClientSample.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6J82A38BF9;
+				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		0D907F3E2322CC5B00D641FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 7725E5618226722E4FF54D35 /* Pods-ZcashLightClientSampleTests.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6J82A38BF9;
+				INFOPLIST_FILE = ZcashLightClientSampleTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ZcashLightClientSample.app/ZcashLightClientSample";
+			};
+			name = Debug;
+		};
+		0D907F3F2322CC5B00D641FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AB3C9B79B6C5CC564852A806 /* Pods-ZcashLightClientSampleTests.release.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6J82A38BF9;
+				INFOPLIST_FILE = ZcashLightClientSampleTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ZcashLightClientSample.app/ZcashLightClientSample";
+			};
+			name = Release;
+		};
+		0D907F412322CC5B00D641FE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 59BA5F37462FF34F64350712 /* Pods-ZcashLightClientSampleUITests.debug.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6J82A38BF9;
+				INFOPLIST_FILE = ZcashLightClientSampleUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ZcashLightClientSample;
+			};
+			name = Debug;
+		};
+		0D907F422322CC5B00D641FE /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 89F6F4B8F441C9EC43B7412A /* Pods-ZcashLightClientSampleUITests.release.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6J82A38BF9;
+				INFOPLIST_FILE = ZcashLightClientSampleUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = ZcashLightClientSample;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0D907F0D2322CC5900D641FE /* Build configuration list for PBXProject "ZcashLightClientSample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0D907F382322CC5B00D641FE /* Debug */,
+				0D907F392322CC5B00D641FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0D907F3A2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0D907F3B2322CC5B00D641FE /* Debug */,
+				0D907F3C2322CC5B00D641FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0D907F3D2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0D907F3E2322CC5B00D641FE /* Debug */,
+				0D907F3F2322CC5B00D641FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0D907F402322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0D907F412322CC5B00D641FE /* Debug */,
+				0D907F422322CC5B00D641FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0D907F0A2322CC5900D641FE /* Project object */;
+}

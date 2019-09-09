@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import Zcashlc
+
 
 public class ZcashRustBackend {
     static func osStrFromURL(_ url: URL) -> (String, UInt) {

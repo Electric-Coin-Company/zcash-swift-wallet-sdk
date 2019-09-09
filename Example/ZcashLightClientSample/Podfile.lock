@@ -1,0 +1,16 @@
+PODS:
+  - ZcashLightClientKit (0.0.1)
+
+DEPENDENCIES:
+  - ZcashLightClientKit (from `../../`)
+
+EXTERNAL SOURCES:
+  ZcashLightClientKit:
+    :path: "../../"
+
+SPEC CHECKSUMS:
+  ZcashLightClientKit: eacf5e530a210e9eef6e9608696a5d70893cb997
+
+PODFILE CHECKSUM: 7c9d39272319433442b14024a916deb276e81da4
+
+COCOAPODS: 1.7.5
