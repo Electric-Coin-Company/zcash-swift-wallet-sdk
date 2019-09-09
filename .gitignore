@@ -68,3 +68,10 @@ iOSInjectionProject/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+#ignore Pods directory for example project 
+Pods
+
+# do not commit generated libraries to this repo
+lib
+*.a
