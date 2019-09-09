@@ -20,6 +20,10 @@ Pod::Spec.new do |s|
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.0'
     s.ios.deployment_target = '11.0'
+
+    s.dependency 'SwiftGRPC'
+    
+    
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
     s.prepare_command = <<-CMD
         BASEPATH="${PWD}"
