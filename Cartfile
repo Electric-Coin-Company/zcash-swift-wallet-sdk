@@ -1,1 +1,2 @@
 github "grpc/grpc-swift"
+github "stephencelis/SQLite.swift"

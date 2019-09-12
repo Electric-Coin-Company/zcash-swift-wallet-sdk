@@ -43,5 +43,9 @@ class ZcashRustBackendTests: XCTestCase {
         XCTAssert(ZcashRustBackend.getLastError() != nil)
         XCTAssertEqual(addr2, nil)
     }
+    
+    func testInitCacheDb() {
+        XCTFail("Not Implemented")
+    }
 
 }

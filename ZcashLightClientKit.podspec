@@ -22,6 +22,8 @@ Pod::Spec.new do |s|
     s.ios.deployment_target = '11.0'
 
     s.dependency 'SwiftGRPC'
+    s.dependency 'SQLite.swift'
+    
     
     
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
