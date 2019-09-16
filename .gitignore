@@ -75,3 +75,5 @@ Pods
 # do not commit generated libraries to this repo
 lib
 *.a
+*.generated.swift
+
