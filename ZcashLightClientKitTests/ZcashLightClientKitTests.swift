@@ -7,62 +7,92 @@
 //
 
 import XCTest
+import SwiftGRPC
+
 @testable import ZcashLightClientKit
 
 class ZcashLightClientKitTests: XCTestCase {
-
-    static var latestBlock: BlockID = try! LightWalletGRPCService.shared.latestBlock()
-
-     func testEnvironmentLaunch() {
-         
-         let address = Environment.address
-         
-         XCTAssertFalse(address.isEmpty, "Your \'\(Environment.lightwalletdKey)\' key is missing from your launch environment variables")
-     }
-     
-     func testService() {
     
-         // and that it has a non-zero size
-         XCTAssert(Self.latestBlock.height > 0)
-         
-     }
-     
-     func testBlockRangeService() {
+    var latestBlock: BlockID!
+    
+    var service: LightWalletGRPCService!
+    override func setUp() {
+        super.setUp()
+        service = LightWalletGRPCService(channel: ChannelProvider().channel())
+        do {
+            latestBlock = try service.latestBlock()
+        } catch {
+            XCTFail("service creation failed")
+        }
+    }
+    
+    override func tearDown() {
+        super.tearDown()
+        service.channel.shutdown()
+        service = nil
+        latestBlock = nil
+    }
+    
+    func testEnvironmentLaunch() {
+        
+        let address = Constants.address
+        
+        XCTAssertFalse(address.isEmpty, "Your \'\(Environment.lightwalletdKey)\' key is missing from your launch environment variables")
+    }
+    
+    func testService() {
+        
+        // and that it has a non-zero size
+        XCTAssert(self.latestBlock.height > 0)
+        
+    }
+    
+    func testBlockRangeService() {
+        
+        let expect = XCTestExpectation(description: self.debugDescription)
+        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
+            print(result)
+            expect.fulfill()
+            XCTAssert(result.success)
+            XCTAssertNotNil(result.resultData)
+        }
+        wait(for: [expect], timeout: 10)
+    }
+    
+    func testBlockRangeServiceTilLastest() {
+        let expectedCount: UInt64 = 99
+        var count: UInt64 = 0
+        let expect = XCTestExpectation(description: self.debugDescription)
+        
+        let startHeight = self.latestBlock.height - expectedCount
+        let endHeight = self.latestBlock.height
+        guard let call = try? service.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
+            result in
+            XCTAssert(result.success)
+            
+        }) else {
+            XCTFail("failed to create getBlockRange( \(startHeight) ..<= \(endHeight)")
+            return
+        }
+        wait(for: [expect], timeout: 20)
+        
+        while let _ = try? call.receive() {
+            expect.fulfill()
+            count += 1
+        }
+        
+        XCTAssertEqual(expectedCount + 1, count)
+        
+    }
+    
+}
 
-         let expect = XCTestExpectation(description: self.debugDescription)
-         let _ = try? LightWalletGRPCService.shared.getAllBlocksSinceSaplingLaunch(){ result in
-             print(result)
-             expect.fulfill()
-             XCTAssert(result.success)
-             XCTAssertNotNil(result.resultData)
-         }
-         wait(for: [expect], timeout: 10)
-     }
-     
-     func testBlockRangeServiceTilLastest() {
-         let expectedCount: UInt64 = 99
-         var count: UInt64 = 0
-         let expect = XCTestExpectation(description: self.debugDescription)
-         
-         let startHeight = Self.latestBlock.height - expectedCount
-         let endHeight = Self.latestBlock.height
-         guard let call = try? LightWalletGRPCService.shared.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
-             result in
-                        XCTAssert(result.success)
-                    
-         }) else {
-             XCTFail("failed to create getBlockRange( \(startHeight) ..<= \(endHeight)")
-             return
-         }
-         wait(for: [expect], timeout: 20)
-         
-         while let _ = try? call.receive() {
-             expect.fulfill()
-             count += 1
-         }
-         
-         XCTAssertEqual(expectedCount + 1, count)
-         
-     }
+class Environment {
+    static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
+}
 
+class ChannelProvider {
+    func channel() -> SwiftGRPC.Channel {
+        Channel(address: Constants.address, secure: false)
+    }
 }

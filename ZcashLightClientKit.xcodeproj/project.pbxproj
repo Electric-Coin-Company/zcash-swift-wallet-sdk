@@ -30,6 +30,7 @@
 		0DC64E6B23284A2C0053EFAC /* SwiftGRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */; };
 		0DC64E6C23284A2C0053EFAC /* BoringSSL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6823284A2C0053EFAC /* BoringSSL.framework */; };
 		0DC64E6D23284A2C0053EFAC /* SwiftProtobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */; };
+		0DDF6378232FD02F000F9F01 /* Constants.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDF6377232FD02F000F9F01 /* Constants.generated.swift */; };
 		103AFE8F228312A30074BC98 /* ZcashLightClientKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 103AFE85228312A30074BC98 /* ZcashLightClientKit.framework */; };
 		103AFE94228312A30074BC98 /* ZcashLightClientKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */; };
 		103AFE96228312A30074BC98 /* ZcashLightClientKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 103AFE88228312A30074BC98 /* ZcashLightClientKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -71,6 +72,7 @@
 		0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftGRPC.framework; path = Carthage/Build/iOS/SwiftGRPC.framework; sourceTree = "<group>"; };
 		0DC64E6823284A2C0053EFAC /* BoringSSL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BoringSSL.framework; path = Carthage/Build/iOS/BoringSSL.framework; sourceTree = "<group>"; };
 		0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftProtobuf.framework; path = Carthage/Build/iOS/SwiftProtobuf.framework; sourceTree = "<group>"; };
+		0DDF6377232FD02F000F9F01 /* Constants.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.generated.swift; sourceTree = "<group>"; };
 		103AFE85228312A30074BC98 /* ZcashLightClientKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ZcashLightClientKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		103AFE88228312A30074BC98 /* ZcashLightClientKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZcashLightClientKit.h; sourceTree = "<group>"; };
 		103AFE89228312A30074BC98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -223,6 +225,7 @@
 		103AFE92228312A30074BC98 /* ZcashLightClientKitTests */ = {
 			isa = PBXGroup;
 			children = (
+				0DDF6377232FD02F000F9F01 /* Constants.generated.swift */,
 				103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */,
 				0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */,
 				0DA33499232C1B6F00CAC082 /* WalletTests.swift */,
@@ -290,9 +293,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 103AFE9C228312A30074BC98 /* Build configuration list for PBXNativeTarget "ZcashLightClientKitTests" */;
 			buildPhases = (
+				0DDF6379232FD0B4000F9F01 /* ShellScript */,
 				103AFE8A228312A30074BC98 /* Sources */,
 				103AFE8B228312A30074BC98 /* Frameworks */,
 				103AFE8C228312A30074BC98 /* Resources */,
+				0D35E05E2330007B00D5901F /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -359,6 +364,25 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		0D35E05E2330007B00D5901F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"$(SRCROOT)/filelists/input.xcfilelist",
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+				"$(SRCROOT)/filelists/output.xcfilelist",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
+		};
 		0DC64E65232848F10053EFAC /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -377,6 +401,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
+		};
+		0DDF6379232FD0B4000F9F01 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Constants.generated.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#check if env-vars.sh exists\nif [ -f ${SRCROOT}/env-vars.sh ];then\nsource ${SRCROOT}/env-vars.sh\nfi\n\nexport ZCASH_TEST_SRC_PATH=\"${SRCROOT}/ZcashLightClientKitTests\"\nif ![ ${LIGHTWALLETD_ADDRESS} ]; then\n echo \"LIGHTWALLETD_ADDRESS VARIABLE NOT DEFINED\"\n exit 1\nfi\necho \"export ZCASH_TEST_SRC_PATH=$ZCASH_TEST_SRC_PATH\"\n#no `else` case needed if the CI works as expecteds\nsourcery --templates ${ZCASH_TEST_SRC_PATH}  --sources ${ZCASH_TEST_SRC_PATH} --output ${ZCASH_TEST_SRC_PATH} --args addr=$LIGHTWALLETD_ADDRESS\n";
 		};
 		103AFE9F2283152F0074BC98 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -426,6 +468,7 @@
 			files = (
 				0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */,
 				0DA3349A232C1B6F00CAC082 /* WalletTests.swift in Sources */,
+				0DDF6378232FD02F000F9F01 /* Constants.generated.swift in Sources */,
 				103AFE94228312A30074BC98 /* ZcashLightClientKitTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

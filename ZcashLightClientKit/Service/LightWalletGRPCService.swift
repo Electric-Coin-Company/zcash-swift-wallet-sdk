@@ -9,24 +9,15 @@
 import Foundation
 import SwiftGRPC
 
-class Environment {
-    
-    static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
-    
-    static var address: String {
-        return ""
-    }
-    
-}
-
 class LightWalletGRPCService {
     
-    static let shared = LightWalletGRPCService()
+    let channel: Channel
     
     let compactTxStreamer: CompactTxStreamerServiceClient
     
-    private init() {
-       compactTxStreamer = CompactTxStreamerServiceClient(address: Environment.address, secure: false, arguments:[])
+    init(channel: Channel) {
+        self.channel = channel
+        compactTxStreamer = CompactTxStreamerServiceClient(channel: self.channel)
     }
     
     func blockRange(startHeight: UInt64, endHeight: UInt64? = nil,  result: @escaping (CallResult)->()) throws -> CompactTxStreamerGetBlockRangeCall {
