@@ -8,11 +8,17 @@
 
 import Foundation
 
+public typealias BlockHeight = UInt64
+public typealias CompactBlockRange = Range<BlockHeight>
+
 public struct ZcashCompactBlock {
-    var height: UInt64
+    var height: BlockHeight
     var data: Data
 }
 
+enum ZcashCompactBlockError: Error {
+    case unreadableBlock(compactBlock: CompactBlock)
+}
 
 extension ZcashCompactBlock {
     init?(compactBlock: CompactBlock) {

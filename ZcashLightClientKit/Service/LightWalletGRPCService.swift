@@ -11,6 +11,7 @@ import SwiftGRPC
 
 class LightWalletGRPCService {
     
+    var queue = DispatchQueue.init(label: "LightWalletGRPCService")
     let channel: Channel
     
     let compactTxStreamer: CompactTxStreamerServiceClient
@@ -20,8 +21,8 @@ class LightWalletGRPCService {
         compactTxStreamer = CompactTxStreamerServiceClient(channel: self.channel)
     }
     
-    func blockRange(startHeight: UInt64, endHeight: UInt64? = nil,  result: @escaping (CallResult)->()) throws -> CompactTxStreamerGetBlockRangeCall {
-           try compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight)) { result($0) }
+    func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil,  result: @escaping (CallResult)->()) throws -> CompactTxStreamerGetBlockRangeCall {
+        try compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight)) { result($0) }
     }
     
     func latestBlock() throws -> BlockID {
@@ -42,7 +43,7 @@ class LightWalletGRPCService {
 }
 
 extension LightWalletGRPCService: LightWalletService {
-    func latestBlockHeight(result: @escaping (Result<UInt64, LightWalletServiceError>) -> ()) {
+    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> ()) {
         do {
             try compactTxStreamer.getLatestBlock(ChainSpec()) { (blockID, callResult) in
                 guard let blockHeight = blockID?.height else {
@@ -58,15 +59,48 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    func blockRange(_ range: Range<UInt64>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
-        result(.failure(LightWalletServiceError.generalError))
+    // TODO: Make cancellable
+    func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
+        
+        
+        queue.async {
+            
+            var isSyncing = true
+            guard let response = try? self.compactTxStreamer.getBlockRange(range.blockRange(),completion: { (callResult) in
+                isSyncing = false
+                if !callResult.success {
+                    result(.failure(LightWalletServiceError.generalError))
+                    return
+                }
+            }) else {
+                result(.failure(LightWalletServiceError.generalError))
+                return
+            }
+            do {
+                var blocks = [CompactBlock]()
+                var element: CompactBlock?
+                repeat {
+                    element = try response.receive()
+                    if let e = element {
+                        blocks.append(e)
+                    }
+                } while isSyncing && element != nil
+                
+                result(.success(try blocks.asZcashCompactBlocks()))
+                
+            } catch {
+                result(.failure(LightWalletServiceError.generalError))
+            }
+        }
+        
     }
-    
     
 }
 
+
+
 extension LightWalletGRPCService: LightWalletSyncService {
-    func latestBlockHeight() throws -> UInt64 {
+    func latestBlockHeight() throws -> BlockHeight {
         do {
             return try latestBlock().height
         } catch {

@@ -8,7 +8,7 @@
 
 import Foundation
 
-extension Range where Element == UInt64 {
+extension CompactBlockRange {
     func blockRange() -> BlockRange {
         BlockRange(startHeight: lowerBound, endHeight: upperBound)
     }
@@ -48,6 +48,22 @@ extension BlockRange {
             blockRange.end = BlockID.init(height: height)
         }
         return blockRange
+    }
+    
+}
+
+
+extension Array where Element == CompactBlock {
+    func asZcashCompactBlocks() throws -> [ZcashCompactBlock] {
+        var result = [ZcashCompactBlock]()
+        
+        for i in 0 ..< self.count {
+            guard let zBlock = ZcashCompactBlock(compactBlock: self[i]) else {
+                throw ZcashCompactBlockError.unreadableBlock(compactBlock: self[i])
+            }
+            result.append(zBlock)
+        }
+        return result
     }
     
 }

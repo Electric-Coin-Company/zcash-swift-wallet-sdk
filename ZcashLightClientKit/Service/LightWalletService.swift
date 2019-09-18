@@ -27,7 +27,7 @@ public protocol LightWalletService {
      
         - Parameter result: a result containing the height or an Error
      */
-    func latestBlockHeight(result: @escaping (Result<UInt64,LightWalletServiceError>) -> ())
+    func latestBlockHeight(result: @escaping (Result<BlockHeight,LightWalletServiceError>) -> ())
     
     /**
           Return the given range of blocks.
@@ -35,6 +35,6 @@ public protocol LightWalletService {
           - Parameter range: the inclusive range to fetch.
           For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
     */
-    func blockRange(_ range: Range<UInt64>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void )
+    func blockRange(_ range: Range<BlockHeight>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void )
     
 }

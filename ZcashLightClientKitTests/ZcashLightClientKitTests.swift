@@ -22,8 +22,10 @@ class ZcashLightClientKitTests: XCTestCase {
         do {
             latestBlock = try service.latestBlock()
         } catch {
-            XCTFail("service creation failed")
+            XCTFail("service creation failed: \(error)")
+            return
         }
+        XCTAssertNotNil(latestBlock)
     }
     
     override func tearDown() {
@@ -47,17 +49,20 @@ class ZcashLightClientKitTests: XCTestCase {
         
     }
     
-    func testBlockRangeService() {
-        
-        let expect = XCTestExpectation(description: self.debugDescription)
-        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
-            print(result)
-            expect.fulfill()
-            XCTAssert(result.success)
-            XCTAssertNotNil(result.resultData)
-        }
-        wait(for: [expect], timeout: 10)
-    }
+    /**
+     LIGHTWALLETD KILLER TEST - DO NOT USE
+     */
+//    func testBlockRangeService() {
+//
+//        let expect = XCTestExpectation(description: self.debugDescription)
+//        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
+//            print(result)
+//            expect.fulfill()
+//            XCTAssert(result.success)
+//            XCTAssertNotNil(result.resultData)
+//        }
+//        wait(for: [expect], timeout: 10)
+//    }
     
     func testBlockRangeServiceTilLastest() {
         let expectedCount: UInt64 = 99
@@ -89,10 +94,4 @@ class ZcashLightClientKitTests: XCTestCase {
 
 class Environment {
     static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
-}
-
-class ChannelProvider {
-    func channel() -> SwiftGRPC.Channel {
-        Channel(address: Constants.address, secure: false)
-    }
 }

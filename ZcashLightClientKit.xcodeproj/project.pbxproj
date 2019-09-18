@@ -26,11 +26,17 @@
 		0DB45715232B0AA800057720 /* CgRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6623284A2C0053EFAC /* CgRPC.framework */; };
 		0DB45716232B0AA800057720 /* SwiftGRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */; };
 		0DB45717232B0AA800057720 /* SwiftProtobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */; };
+		0DBF2CE7233291530074C1BE /* LightWalletServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CE6233291530074C1BE /* LightWalletServiceTests.swift */; };
+		0DBF2CEA233291D10074C1BE /* Tests+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CE9233291D10074C1BE /* Tests+Utils.swift */; };
+		0DBF2CEC2332ACBD0074C1BE /* BlockDownloaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CEB2332ACBD0074C1BE /* BlockDownloaderTests.swift */; };
+		0DBF2CEE2332B3090074C1BE /* CompactBlockProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */; };
+		0DBF2CF02332B8B70074C1BE /* Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CEF2332B8B70074C1BE /* Stubs.swift */; };
 		0DC64E6A23284A2C0053EFAC /* CgRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6623284A2C0053EFAC /* CgRPC.framework */; };
 		0DC64E6B23284A2C0053EFAC /* SwiftGRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */; };
 		0DC64E6C23284A2C0053EFAC /* BoringSSL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6823284A2C0053EFAC /* BoringSSL.framework */; };
 		0DC64E6D23284A2C0053EFAC /* SwiftProtobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */; };
 		0DDF6378232FD02F000F9F01 /* Constants.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDF6377232FD02F000F9F01 /* Constants.generated.swift */; };
+		0DE3CD4523317A6F00FD1EFA /* BlockDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE3CD4423317A6F00FD1EFA /* BlockDownloader.swift */; };
 		103AFE8F228312A30074BC98 /* ZcashLightClientKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 103AFE85228312A30074BC98 /* ZcashLightClientKit.framework */; };
 		103AFE94228312A30074BC98 /* ZcashLightClientKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */; };
 		103AFE96228312A30074BC98 /* ZcashLightClientKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 103AFE88228312A30074BC98 /* ZcashLightClientKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -68,11 +74,17 @@
 		0DB4570C232ACD3100057720 /* ZcashRustBackendWelding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackendWelding.swift; sourceTree = "<group>"; };
 		0DB45710232ADD4B00057720 /* CompactBlockStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockStoring.swift; sourceTree = "<group>"; };
 		0DB45712232AEAF200057720 /* LightWalletService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightWalletService.swift; sourceTree = "<group>"; };
+		0DBF2CE6233291530074C1BE /* LightWalletServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightWalletServiceTests.swift; sourceTree = "<group>"; };
+		0DBF2CE9233291D10074C1BE /* Tests+Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Tests+Utils.swift"; sourceTree = "<group>"; };
+		0DBF2CEB2332ACBD0074C1BE /* BlockDownloaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockDownloaderTests.swift; sourceTree = "<group>"; };
+		0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockProcessor.swift; sourceTree = "<group>"; };
+		0DBF2CEF2332B8B70074C1BE /* Stubs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Stubs.swift; sourceTree = "<group>"; };
 		0DC64E6623284A2C0053EFAC /* CgRPC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CgRPC.framework; path = Carthage/Build/iOS/CgRPC.framework; sourceTree = "<group>"; };
 		0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftGRPC.framework; path = Carthage/Build/iOS/SwiftGRPC.framework; sourceTree = "<group>"; };
 		0DC64E6823284A2C0053EFAC /* BoringSSL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BoringSSL.framework; path = Carthage/Build/iOS/BoringSSL.framework; sourceTree = "<group>"; };
 		0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftProtobuf.framework; path = Carthage/Build/iOS/SwiftProtobuf.framework; sourceTree = "<group>"; };
 		0DDF6377232FD02F000F9F01 /* Constants.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.generated.swift; sourceTree = "<group>"; };
+		0DE3CD4423317A6F00FD1EFA /* BlockDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockDownloader.swift; sourceTree = "<group>"; };
 		103AFE85228312A30074BC98 /* ZcashLightClientKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ZcashLightClientKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		103AFE88228312A30074BC98 /* ZcashLightClientKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZcashLightClientKit.h; sourceTree = "<group>"; };
 		103AFE89228312A30074BC98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -186,6 +198,32 @@
 			path = Rust;
 			sourceTree = "<group>";
 		};
+		0DBF2CE8233291C10074C1BE /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				0DBF2CE9233291D10074C1BE /* Tests+Utils.swift */,
+			);
+			path = utils;
+			sourceTree = "<group>";
+		};
+		0DE3CD4223317A1200FD1EFA /* Block */ = {
+			isa = PBXGroup;
+			children = (
+				0DE3CD4323317A3500FD1EFA /* Downloader */,
+				0DB45703232AA03C00057720 /* Storage */,
+				0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */,
+			);
+			path = Block;
+			sourceTree = "<group>";
+		};
+		0DE3CD4323317A3500FD1EFA /* Downloader */ = {
+			isa = PBXGroup;
+			children = (
+				0DE3CD4423317A6F00FD1EFA /* BlockDownloader.swift */,
+			);
+			path = Downloader;
+			sourceTree = "<group>";
+		};
 		103AFE7B228312A30074BC98 = {
 			isa = PBXGroup;
 			children = (
@@ -209,8 +247,8 @@
 		103AFE87228312A30074BC98 /* ZcashLightClientKit */ = {
 			isa = PBXGroup;
 			children = (
+				0DE3CD4223317A1200FD1EFA /* Block */,
 				0DA33494232C11C600CAC082 /* Providers */,
-				0DB45703232AA03C00057720 /* Storage */,
 				0DB456F5232A863700057720 /* Service */,
 				103AFEA7228320F00074BC98 /* zcashlc */,
 				103AFE88228312A30074BC98 /* ZcashLightClientKit.h */,
@@ -225,11 +263,15 @@
 		103AFE92228312A30074BC98 /* ZcashLightClientKitTests */ = {
 			isa = PBXGroup;
 			children = (
+				0DBF2CE8233291C10074C1BE /* utils */,
 				0DDF6377232FD02F000F9F01 /* Constants.generated.swift */,
 				103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */,
 				0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */,
 				0DA33499232C1B6F00CAC082 /* WalletTests.swift */,
 				103AFE95228312A30074BC98 /* Info.plist */,
+				0DBF2CE6233291530074C1BE /* LightWalletServiceTests.swift */,
+				0DBF2CEB2332ACBD0074C1BE /* BlockDownloaderTests.swift */,
+				0DBF2CEF2332B8B70074C1BE /* Stubs.swift */,
 			);
 			path = ZcashLightClientKitTests;
 			sourceTree = "<group>";
@@ -449,9 +491,11 @@
 				0DB45713232AEAF200057720 /* LightWalletService.swift in Sources */,
 				0DB456FD232A867800057720 /* service.pb.swift in Sources */,
 				0DB45702232A86EF00057720 /* LightWalletGRPCService.swift in Sources */,
+				0DE3CD4523317A6F00FD1EFA /* BlockDownloader.swift in Sources */,
 				0DA33496232C11DF00CAC082 /* SeedProvider.swift in Sources */,
 				0DB456FE232A867800057720 /* service.grpc.swift in Sources */,
 				103AFEA422831BB00074BC98 /* ZcashRustBackend.swift in Sources */,
+				0DBF2CEE2332B3090074C1BE /* CompactBlockProcessor.swift in Sources */,
 				0DB45709232AA81200057720 /* Protocolbuffer+Extensions.swift in Sources */,
 				0DB4570D232ACD3100057720 /* ZcashRustBackendWelding.swift in Sources */,
 				0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */,
@@ -467,9 +511,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */,
+				0DBF2CEA233291D10074C1BE /* Tests+Utils.swift in Sources */,
+				0DBF2CEC2332ACBD0074C1BE /* BlockDownloaderTests.swift in Sources */,
+				0DBF2CE7233291530074C1BE /* LightWalletServiceTests.swift in Sources */,
 				0DA3349A232C1B6F00CAC082 /* WalletTests.swift in Sources */,
 				0DDF6378232FD02F000F9F01 /* Constants.generated.swift in Sources */,
 				103AFE94228312A30074BC98 /* ZcashLightClientKitTests.swift in Sources */,
+				0DBF2CF02332B8B70074C1BE /* Stubs.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -618,6 +666,10 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Carthage/Build/iOS";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = ZcashLightClientKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -654,6 +706,7 @@
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = "$(PROJECT_DIR)/Carthage/Build/iOS";
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = ZcashLightClientKit/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
