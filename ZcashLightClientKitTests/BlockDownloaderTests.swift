@@ -30,7 +30,7 @@ class BlockDownloaderTests: XCTestCase {
     func testSmallDownload() {
         
         let expect = XCTestExpectation(description: self.description)
-        expect.expectedFulfillmentCount = 2
+        expect.expectedFulfillmentCount = 3
         let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
         let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
         
@@ -42,23 +42,19 @@ class BlockDownloaderTests: XCTestCase {
             // check what was 'stored'
             self.storage.latestHeight { (result) in
                 expect.fulfill()
-                switch result {
-                case .success(let height):
-                    XCTAssertEqual(height, upperRange)
-                    do {
-                        let height = try self.downloader.latestBlockHeight()
-                        XCTAssertEqual(height, upperRange)
-                    } catch {
-                        XCTFail("latest height failed")
-                    }
-                case .failure(let error):
-                    XCTFail("Test Failed: \(error)")
+                
+                XCTAssertTrue(self.validate(result: result, against: upperRange))
+                
+                self.downloader.latestBlockHeight { (resultHeight) in
+                    expect.fulfill()
+                    XCTAssertTrue(self.validate(result: resultHeight, against: upperRange))
                 }
             }
         }
         
         wait(for: [expect], timeout: 2)
     }
+    
     
     func testFailure() {
         let awfulDownloader = CompactBlockDownloader(service: AwfulLightWalletService(), storage: ZcashConsoleFakeStorage())
@@ -75,5 +71,21 @@ class BlockDownloaderTests: XCTestCase {
             XCTAssertNotNil(error)
         }
         wait(for: [expect], timeout: 2)
+    }
+}
+
+
+/// Helper functions
+
+extension BlockDownloaderTests {
+    func validate(result: Result<BlockHeight,Error> ,against height: BlockHeight) -> Bool  {
+        
+        switch result {
+        case .success(let resultHeight):
+            return resultHeight == height
+        default:
+            return false
+        }
+        
     }
 }

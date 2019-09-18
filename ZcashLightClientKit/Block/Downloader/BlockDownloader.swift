@@ -18,9 +18,9 @@ protocol CompactBlockDownloading {
     func downloadBlockRange(_ heightRange: CompactBlockRange,
                             completion: @escaping (Error?) -> Void)
     
-    func rewind(to height: BlockHeight) throws
+    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void)
     
-    func latestBlockHeight() throws -> BlockHeight
+    func latestBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void)
     
 }
 
@@ -64,55 +64,29 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     }
     
     
-    func rewind(to height: BlockHeight) throws {
-        // remove this horrible function
-        var waiting = true
-        var error: Error? = nil
+     func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void){
+        
         storage.rewind(to: height) { (e) in
-            waiting = false
-            if let err = e {
-                error = CompactBlockDownloadError.generalError(error: err)
-                return
-            }
+            
+            completion(e)
             
         }
-        
-        while waiting {
-            sleep(1)
-        }
-        
-        if let error  = error {
-            throw error
-        }
-        return
     }
     
-    func latestBlockHeight() throws -> BlockHeight {
-        // remove this horrible function
-        var waiting = true
-        var error: Error? = nil
-        var blockHeight: BlockHeight = 0
-        storage.latestHeight { (result) in
-            
-            waiting = false
-            switch result {
+    func latestBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void) {
+        
+        storage.latestHeight { (r) in
+          
+            switch r {
             case .failure(let e):
-                error = CompactBlockDownloadError.generalError(error: e)
+                result(.failure(CompactBlockDownloadError.generalError(error: e)))
                 return
             case .success(let height):
-                blockHeight = height
+                result(.success(height))
             }
             
         }
         
-        while waiting {
-            sleep(1)
-        }
-        
-        if let error = error {
-            throw error
-        }
-        return blockHeight
     }
     
 }
