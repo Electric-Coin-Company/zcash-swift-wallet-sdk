@@ -16,4 +16,6 @@ class CompactBlockProcessor {
     }
        
     private(set) var state: State = .stopped
+    
+    
 }

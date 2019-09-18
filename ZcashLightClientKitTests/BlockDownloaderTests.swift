@@ -45,6 +45,12 @@ class BlockDownloaderTests: XCTestCase {
                 switch result {
                 case .success(let height):
                     XCTAssertEqual(height, upperRange)
+                    do {
+                        let height = try self.downloader.latestBlockHeight()
+                        XCTAssertEqual(height, upperRange)
+                    } catch {
+                        XCTFail("latest height failed")
+                    }
                 case .failure(let error):
                     XCTFail("Test Failed: \(error)")
                 }
