@@ -52,17 +52,17 @@ class ZcashLightClientKitTests: XCTestCase {
     /**
      LIGHTWALLETD KILLER TEST - DO NOT USE
      */
-//    func testBlockRangeService() {
-//
-//        let expect = XCTestExpectation(description: self.debugDescription)
-//        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
-//            print(result)
-//            expect.fulfill()
-//            XCTAssert(result.success)
-//            XCTAssertNotNil(result.resultData)
-//        }
-//        wait(for: [expect], timeout: 10)
-//    }
+    func testBlockRangeService() {
+
+        let expect = XCTestExpectation(description: self.debugDescription)
+        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
+            print(result)
+            expect.fulfill()
+            XCTAssert(result.success)
+            XCTAssertNotNil(result.resultData)
+        }
+        wait(for: [expect], timeout: 10)
+    }
     
     func testBlockRangeServiceTilLastest() {
         let expectedCount: UInt64 = 99

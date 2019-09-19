@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */; };
+		0D866A522334208100960888 /* ResourceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D866A512334208000960888 /* ResourceProvider.swift */; };
 		0DA33493232C0BC200CAC082 /* Wallet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33492232C0BC200CAC082 /* Wallet.swift */; };
 		0DA33496232C11DF00CAC082 /* SeedProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33495232C11DF00CAC082 /* SeedProvider.swift */; };
 		0DA33498232C1A8200CAC082 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33497232C1A8200CAC082 /* Constants.swift */; };
@@ -57,6 +58,7 @@
 
 /* Begin PBXFileReference section */
 		0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackendTests.swift; sourceTree = "<group>"; };
+		0D866A512334208000960888 /* ResourceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceProvider.swift; sourceTree = "<group>"; };
 		0DA33492232C0BC200CAC082 /* Wallet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallet.swift; sourceTree = "<group>"; };
 		0DA33495232C11DF00CAC082 /* SeedProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedProvider.swift; sourceTree = "<group>"; };
 		0DA33497232C1A8200CAC082 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -124,10 +126,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0D866A532334233500960888 /* Processor */ = {
+			isa = PBXGroup;
+			children = (
+				0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */,
+			);
+			path = Processor;
+			sourceTree = "<group>";
+		};
 		0DA33494232C11C600CAC082 /* Providers */ = {
 			isa = PBXGroup;
 			children = (
 				0DA33495232C11DF00CAC082 /* SeedProvider.swift */,
+				0D866A512334208000960888 /* ResourceProvider.swift */,
 			);
 			path = Providers;
 			sourceTree = "<group>";
@@ -211,7 +222,7 @@
 			children = (
 				0DE3CD4323317A3500FD1EFA /* Downloader */,
 				0DB45703232AA03C00057720 /* Storage */,
-				0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */,
+				0D866A532334233500960888 /* Processor */,
 			);
 			path = Block;
 			sourceTree = "<group>";
@@ -499,6 +510,7 @@
 				0DB45709232AA81200057720 /* Protocolbuffer+Extensions.swift in Sources */,
 				0DB4570D232ACD3100057720 /* ZcashRustBackendWelding.swift in Sources */,
 				0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */,
+				0D866A522334208100960888 /* ResourceProvider.swift in Sources */,
 				0DB45705232AA06200057720 /* Storage.swift in Sources */,
 				0DA33498232C1A8200CAC082 /* Constants.swift in Sources */,
 				0DB456FF232A867800057720 /* compact_formats.pb.swift in Sources */,

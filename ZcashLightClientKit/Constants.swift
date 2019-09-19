@@ -72,3 +72,13 @@ let DEFAULT_REWIND_DISTANCE = 10
  * returning from the background and is exposed via the Synchronizer's isStale function.
  */
 let DEFAULT_STALE_TOLERANCE = 10
+
+/**
+ Default Name for LibRustZcash data.db
+ */
+let DEFAULT_DATA_DB_NAME = "data.db"
+
+/**
+Default Name for Compact Block caches db
+*/
+let DEFAULT_CACHES_DB_NAME = "caches.db"
