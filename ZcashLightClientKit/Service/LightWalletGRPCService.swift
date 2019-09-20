@@ -64,11 +64,25 @@ extension LightWalletGRPCService: LightWalletService {
         
         
         queue.async {
-            
+            var blocks = [CompactBlock]()
             var isSyncing = true
             guard let response = try? self.compactTxStreamer.getBlockRange(range.blockRange(),completion: { (callResult) in
                 isSyncing = false
-                if !callResult.success {
+                if callResult.success {
+                    let code = callResult.statusCode
+                    switch code{
+                    case .ok:
+                        do {
+                            result(.success(try blocks.asZcashCompactBlocks()))
+                        } catch {
+                            result(.failure(LightWalletServiceError.generalError))
+                        }
+                    default:
+                        result(.failure(LightWalletServiceError.failed(statusCode: code)))
+                    }
+                    
+                    
+                } else {
                     result(.failure(LightWalletServiceError.generalError))
                     return
                 }
@@ -77,7 +91,7 @@ extension LightWalletGRPCService: LightWalletService {
                 return
             }
             do {
-                var blocks = [CompactBlock]()
+                
                 var element: CompactBlock?
                 repeat {
                     element = try response.receive()
@@ -85,8 +99,6 @@ extension LightWalletGRPCService: LightWalletService {
                         blocks.append(e)
                     }
                 } while isSyncing && element != nil
-                
-                result(.success(try blocks.asZcashCompactBlocks()))
                 
             } catch {
                 result(.failure(LightWalletServiceError.generalError))

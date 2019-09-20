@@ -59,7 +59,7 @@ let DEFAULT_RETRIES = 5
  * The default maximum amount of time to wait during retry backoff intervals. Failed loops will never wait longer than
  * this before retyring.
  */
-let DEFAULT_MAX_BACKOFF_INTERVAL: UInt64 = 600_000
+let DEFAULT_MAX_BACKOFF_INTERVAL: TimeInterval = 600
 
 /**
  * Default number of blocks to rewind when a chain reorg is detected. This should be large enough to recover from the

@@ -38,6 +38,7 @@
 		0DC64E6D23284A2C0053EFAC /* SwiftProtobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */; };
 		0DDF6378232FD02F000F9F01 /* Constants.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDF6377232FD02F000F9F01 /* Constants.generated.swift */; };
 		0DE3CD4523317A6F00FD1EFA /* BlockDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE3CD4423317A6F00FD1EFA /* BlockDownloader.swift */; };
+		0DF490DE23357A95005A4929 /* CompactBlockProcessorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF490DD23357A95005A4929 /* CompactBlockProcessorTests.swift */; };
 		103AFE8F228312A30074BC98 /* ZcashLightClientKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 103AFE85228312A30074BC98 /* ZcashLightClientKit.framework */; };
 		103AFE94228312A30074BC98 /* ZcashLightClientKitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */; };
 		103AFE96228312A30074BC98 /* ZcashLightClientKit.h in Headers */ = {isa = PBXBuildFile; fileRef = 103AFE88228312A30074BC98 /* ZcashLightClientKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -87,6 +88,7 @@
 		0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftProtobuf.framework; path = Carthage/Build/iOS/SwiftProtobuf.framework; sourceTree = "<group>"; };
 		0DDF6377232FD02F000F9F01 /* Constants.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.generated.swift; sourceTree = "<group>"; };
 		0DE3CD4423317A6F00FD1EFA /* BlockDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockDownloader.swift; sourceTree = "<group>"; };
+		0DF490DD23357A95005A4929 /* CompactBlockProcessorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockProcessorTests.swift; sourceTree = "<group>"; };
 		103AFE85228312A30074BC98 /* ZcashLightClientKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ZcashLightClientKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		103AFE88228312A30074BC98 /* ZcashLightClientKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ZcashLightClientKit.h; sourceTree = "<group>"; };
 		103AFE89228312A30074BC98 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -283,6 +285,7 @@
 				0DBF2CE6233291530074C1BE /* LightWalletServiceTests.swift */,
 				0DBF2CEB2332ACBD0074C1BE /* BlockDownloaderTests.swift */,
 				0DBF2CEF2332B8B70074C1BE /* Stubs.swift */,
+				0DF490DD23357A95005A4929 /* CompactBlockProcessorTests.swift */,
 			);
 			path = ZcashLightClientKitTests;
 			sourceTree = "<group>";
@@ -523,6 +526,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */,
+				0DF490DE23357A95005A4929 /* CompactBlockProcessorTests.swift in Sources */,
 				0DBF2CEA233291D10074C1BE /* Tests+Utils.swift in Sources */,
 				0DBF2CEC2332ACBD0074C1BE /* BlockDownloaderTests.swift in Sources */,
 				0DBF2CE7233291530074C1BE /* LightWalletServiceTests.swift in Sources */,

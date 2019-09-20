@@ -19,13 +19,8 @@ class ZcashLightClientKitTests: XCTestCase {
     override func setUp() {
         super.setUp()
         service = LightWalletGRPCService(channel: ChannelProvider().channel())
-        do {
-            latestBlock = try service.latestBlock()
-        } catch {
-            XCTFail("service creation failed: \(error)")
-            return
-        }
-        XCTAssertNotNil(latestBlock)
+        
+        latestBlock = try! service.latestBlock()
     }
     
     override func tearDown() {
@@ -49,20 +44,20 @@ class ZcashLightClientKitTests: XCTestCase {
         
     }
     
-    /**
-     LIGHTWALLETD KILLER TEST - DO NOT USE
-     */
-    func testBlockRangeService() {
-
-        let expect = XCTestExpectation(description: self.debugDescription)
-        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
-            print(result)
-            expect.fulfill()
-            XCTAssert(result.success)
-            XCTAssertNotNil(result.resultData)
-        }
-        wait(for: [expect], timeout: 10)
-    }
+//    /**
+//     LIGHTWALLETD KILLER TEST - DO NOT USE
+//     */
+//    func testBlockRangeService() {
+//
+//        let expect = XCTestExpectation(description: self.debugDescription)
+//        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
+//            print(result)
+//            expect.fulfill()
+//            XCTAssert(result.success)
+//            XCTAssertNotNil(result.resultData)
+//        }
+//        wait(for: [expect], timeout: 10)
+//    }
     
     func testBlockRangeServiceTilLastest() {
         let expectedCount: UInt64 = 99
@@ -74,9 +69,10 @@ class ZcashLightClientKitTests: XCTestCase {
         guard let call = try? service.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
             result in
             XCTAssert(result.success)
-            
+            expect.fulfill()
         }) else {
             XCTFail("failed to create getBlockRange( \(startHeight) ..<= \(endHeight)")
+            expect.fulfill()
             return
         }
         wait(for: [expect], timeout: 20)

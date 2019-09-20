@@ -30,8 +30,8 @@ class LightWalletServiceTests: XCTestCase {
         let expect = XCTestExpectation(description: self.description)
         let excessivelyHugeRange = Range<BlockHeight>(uncheckedBounds: (lower: 280_000, upper: 600_000))
         service.blockRange(excessivelyHugeRange) { (result) in
+            XCTAssertEqual(result, .failure(LightWalletServiceError.failed(statusCode: SwiftGRPC.StatusCode.unknown)))
             expect.fulfill()
-            XCTAssertEqual(result, .failure(LightWalletServiceError.generalError))
             
         }
         wait(for: [expect], timeout: 5)
@@ -39,6 +39,7 @@ class LightWalletServiceTests: XCTestCase {
     
     func testHundredBlocks() {
         let expect = XCTestExpectation(description: self.description)
+        
         let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
         let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
         let blockRange = Range<BlockHeight>(uncheckedBounds: (lower: lowerRange, upper: upperRange))

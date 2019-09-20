@@ -14,6 +14,9 @@ class ZcashConsoleFakeStorage: CompactBlockAsyncStoring {
     var latestBlockHeight: BlockHeight = 0
     var delay = DispatchTimeInterval.milliseconds(300)
     
+    init(latestBlockHeight: BlockHeight = 0) {
+        self.latestBlockHeight = latestBlockHeight
+    }
     
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {

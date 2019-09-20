@@ -24,7 +24,7 @@ public struct DefaultResourceProvider: ResourceProvider {
      public var dataDbPath: String {
         do {
             let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return url.appendingPathComponent(DEFAULT_DATA_DB_NAME).absoluteString
+            return url.appendingPathComponent(DEFAULT_DATA_DB_NAME).path
         } catch {
             return "file://\(DEFAULT_DATA_DB_NAME)"
         }
@@ -34,7 +34,7 @@ public struct DefaultResourceProvider: ResourceProvider {
     public var cacheDbPath: String {
         do {
             let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return path.appendingPathComponent(DEFAULT_CACHES_DB_NAME).absoluteString
+            return path.appendingPathComponent(DEFAULT_CACHES_DB_NAME).path
         } catch {
             return "file://\(DEFAULT_CACHES_DB_NAME)"
         }

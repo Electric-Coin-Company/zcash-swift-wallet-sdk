@@ -7,16 +7,40 @@
 //
 
 import Foundation
-
+import SwiftGRPC
 
 public enum LightWalletServiceError: Error {
     case generalError
+    case failed(statusCode: StatusCode)
+}
+
+extension LightWalletServiceError: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        switch lhs {
+        case .generalError:
+            switch rhs {
+            case .generalError:
+                return true
+            default:
+                return false
+            }
+        case .failed(let statusCode):
+            switch rhs {
+            case .failed(let anotherStatus):
+                return statusCode == anotherStatus
+            default:
+                return false
+            }
+            
+        }
+    }
+    
 }
 
 public protocol LightWalletSyncService {
     
     /// Return the latest block height known to the service.
-    func latestBlockHeight() throws -> UInt64
+    func latestBlockHeight() throws -> BlockHeight
     
 }
 
