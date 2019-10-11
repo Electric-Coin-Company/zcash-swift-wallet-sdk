@@ -9,7 +9,19 @@
 import Foundation
 
 
-class ZcashConsoleFakeStorage: CompactBlockAsyncStoring {
+class ZcashConsoleFakeStorage: CompactBlockStoring {
+    func getLatestHeight() throws -> UInt64 {
+        return self.latestBlockHeight
+    }
+    
+    func write(blocks: [ZcashCompactBlock]) throws {
+        fakeSave(blocks: blocks)
+    }
+    
+    func rewind(to height: BlockHeight) throws {
+        fakeRewind(to: height)
+    }
+    
     
     var latestBlockHeight: BlockHeight = 0
     var delay = DispatchTimeInterval.milliseconds(300)
@@ -24,22 +36,30 @@ class ZcashConsoleFakeStorage: CompactBlockAsyncStoring {
         }
     }
     
+    fileprivate func fakeSave(blocks: [ZcashCompactBlock]) {
+        blocks.forEach {
+            print("saving block \($0)")
+            self.latestBlockHeight = $0.height
+        }
+    }
+    
     func write(blocks: [ZcashCompactBlock], completion: ((Error?) -> Void)?) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            blocks.forEach {
-                print("saving block \($0)")
-                self.latestBlockHeight = $0.height
-            }
+            self.fakeSave(blocks: blocks)
             completion?(nil)
         }
     }
     
     func rewind(to height: BlockHeight, completion: ((Error?) -> Void)?) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            print("rewind to \(height)")
-            self.latestBlockHeight = min(self.latestBlockHeight, height)
+            self.fakeRewind(to: height)
             completion?(nil)
         }
+    }
+    
+    private func fakeRewind(to height: BlockHeight) {
+        print("rewind to \(height)")
+        self.latestBlockHeight = min(self.latestBlockHeight, height)
     }
     
     

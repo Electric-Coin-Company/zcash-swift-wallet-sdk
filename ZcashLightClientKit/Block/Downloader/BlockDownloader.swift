@@ -24,13 +24,20 @@ protocol CompactBlockDownloading {
     
 }
 
-
+/**
+ Serves as a source of compact blocks received from the light wallet server. Once started, it will use the given
+ lightwallet service to request all the appropriate blocks and compact block store to persist them. By delegating to
+ these dependencies, the downloader remains agnostic to the particular implementation of how to retrieve and store
+ data; although, by default the SDK uses gRPC and SQL.
+ - Property lightwalletService: the service used for requesting compact blocks
+ - Property storage: responsible for persisting the compact blocks that are received
+*/
 class CompactBlockDownloader {
     
     fileprivate var lightwalletService: LightWalletService
-    fileprivate var storage: CompactBlockAsyncStoring
+    fileprivate var storage: CompactBlockStoring
     
-    init(service: LightWalletService, storage: CompactBlockAsyncStoring) {
+    init(service: LightWalletService, storage: CompactBlockStoring) {
         self.lightwalletService = service
         self.storage = storage
     }
@@ -40,6 +47,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     
     /**
      Downloads and stores the given block range.
+     Non-Blocking
      */
     func downloadBlockRange(_ heightRange: CompactBlockRange,
                             completion: @escaping (Error?) -> Void) {
@@ -63,20 +71,23 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         
     }
     
+    func downloadBlockRange(_ range: CompactBlockRange) throws  {
+        let blocks = try lightwalletService.blockRange(range)
+        try storage.write(blocks: blocks)
+    }
     
-     func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void){
+    
+    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void){
         
         storage.rewind(to: height) { (e) in
-            
             completion(e)
-            
         }
     }
     
     func latestBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void) {
         
         storage.latestHeight { (r) in
-          
+            
             switch r {
             case .failure(let e):
                 result(.failure(CompactBlockDownloadError.generalError(error: e)))
@@ -88,6 +99,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         }
         
     }
+    
     
 }
 
