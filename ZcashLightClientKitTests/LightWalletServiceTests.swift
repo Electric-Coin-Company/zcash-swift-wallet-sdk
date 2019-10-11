@@ -60,6 +60,19 @@ class LightWalletServiceTests: XCTestCase {
     }
     
     
+    func testSyncBlockRange() {
+        let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
+        let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
+        let blockRange = CompactBlockRange(uncheckedBounds: (lower: lowerRange, upper: upperRange))
+        
+        do {
+            let blocks = try service.blockRange(blockRange)
+            XCTAssertEqual(blocks.count, blockRange.count + 1)
+        } catch {
+            XCTFail("\(error)")
+        }
+        
+    }
     func testLatestBlock(){
         let expect = XCTestExpectation(description: self.description)
         service.latestBlockHeight { (result) in

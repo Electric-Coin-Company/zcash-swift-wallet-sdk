@@ -43,6 +43,25 @@ class LightWalletGRPCService {
 }
 
 extension LightWalletGRPCService: LightWalletService {
+    func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
+        var blocks = [ZcashCompactBlock]()
+        
+        let call = try compactTxStreamer.getBlockRange(range.blockRange(), completion: { statusCode in
+            print("finished with statusCode: \(statusCode)")
+        })
+        
+        while let block = try call.receive() {
+            
+            if let compactBlock = ZcashCompactBlock(compactBlock: block) {
+                blocks.append(compactBlock)
+            } else {
+                throw LightWalletServiceError.invalidBlock
+            }
+        }
+        
+        return blocks
+    }
+    
     func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> ()) {
         do {
             try compactTxStreamer.getLatestBlock(ChainSpec()) { (blockID, callResult) in

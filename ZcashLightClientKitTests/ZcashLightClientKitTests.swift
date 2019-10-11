@@ -62,26 +62,32 @@ class ZcashLightClientKitTests: XCTestCase {
     func testBlockRangeServiceTilLastest() {
         let expectedCount: UInt64 = 99
         var count: UInt64 = 0
-        let expect = XCTestExpectation(description: self.debugDescription)
+       
         
         let startHeight = self.latestBlock.height - expectedCount
         let endHeight = self.latestBlock.height
+        
         guard let call = try? service.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
             result in
             XCTAssert(result.success)
-            expect.fulfill()
+          
         }) else {
             XCTFail("failed to create getBlockRange( \(startHeight) ..<= \(endHeight)")
-            expect.fulfill()
             return
         }
-        wait(for: [expect], timeout: 20)
+      
         
-        while let _ = try? call.receive() {
-            expect.fulfill()
+        var blocks = [CompactBlock]()
+        while true {
+            guard let block = try? call.receive() else {
+               
+                break
+                
+            }
+            blocks.append(block)
             count += 1
         }
-        
+     
         XCTAssertEqual(expectedCount + 1, count)
         
     }
