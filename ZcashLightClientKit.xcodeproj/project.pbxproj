@@ -18,7 +18,7 @@
 		0DB456FE232A867800057720 /* service.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F9232A867800057720 /* service.grpc.swift */; };
 		0DB456FF232A867800057720 /* compact_formats.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456FA232A867800057720 /* compact_formats.pb.swift */; };
 		0DB45702232A86EF00057720 /* LightWalletGRPCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45701232A86EF00057720 /* LightWalletGRPCService.swift */; };
-		0DB45705232AA06200057720 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45704232AA06200057720 /* Storage.swift */; };
+		0DB45705232AA06200057720 /* FakeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45704232AA06200057720 /* FakeStorage.swift */; };
 		0DB45709232AA81200057720 /* Protocolbuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45708232AA81200057720 /* Protocolbuffer+Extensions.swift */; };
 		0DB4570D232ACD3100057720 /* ZcashRustBackendWelding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB4570C232ACD3100057720 /* ZcashRustBackendWelding.swift */; };
 		0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45710232ADD4B00057720 /* CompactBlockStoring.swift */; };
@@ -71,7 +71,7 @@
 		0DB456FA232A867800057720 /* compact_formats.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = compact_formats.pb.swift; sourceTree = "<group>"; };
 		0DB456FB232A867800057720 /* compact_formats.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = compact_formats.proto; sourceTree = "<group>"; };
 		0DB45701232A86EF00057720 /* LightWalletGRPCService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LightWalletGRPCService.swift; sourceTree = "<group>"; };
-		0DB45704232AA06200057720 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		0DB45704232AA06200057720 /* FakeStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeStorage.swift; sourceTree = "<group>"; };
 		0DB45706232AA6AF00057720 /* ZcashLightClientKit.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = ZcashLightClientKit.modulemap; sourceTree = "<group>"; };
 		0DB45708232AA81200057720 /* Protocolbuffer+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Protocolbuffer+Extensions.swift"; sourceTree = "<group>"; };
 		0DB4570C232ACD3100057720 /* ZcashRustBackendWelding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackendWelding.swift; sourceTree = "<group>"; };
@@ -179,7 +179,7 @@
 		0DB45703232AA03C00057720 /* Storage */ = {
 			isa = PBXGroup;
 			children = (
-				0DB45704232AA06200057720 /* Storage.swift */,
+				0DB45704232AA06200057720 /* FakeStorage.swift */,
 				0DB45710232ADD4B00057720 /* CompactBlockStoring.swift */,
 			);
 			path = Storage;
@@ -514,7 +514,7 @@
 				0DB4570D232ACD3100057720 /* ZcashRustBackendWelding.swift in Sources */,
 				0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */,
 				0D866A522334208100960888 /* ResourceProvider.swift in Sources */,
-				0DB45705232AA06200057720 /* Storage.swift in Sources */,
+				0DB45705232AA06200057720 /* FakeStorage.swift in Sources */,
 				0DA33498232C1A8200CAC082 /* Constants.swift in Sources */,
 				0DB456FF232A867800057720 /* compact_formats.pb.swift in Sources */,
 				0DB456F4232A860200057720 /* ZcashCompactBlock.swift in Sources */,
