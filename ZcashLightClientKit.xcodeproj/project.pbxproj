@@ -9,6 +9,12 @@
 /* Begin PBXBuildFile section */
 		0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */; };
 		0D866A522334208100960888 /* ResourceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D866A512334208000960888 /* ResourceProvider.swift */; };
+		0D9F5F1623537AD000D263C6 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F1523537AD000D263C6 /* Storage.swift */; };
+		0D9F5F192353821400D263C6 /* SQLDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F182353821400D263C6 /* SQLDatabase.swift */; };
+		0D9F5F1B235388CA00D263C6 /* CompactBlockStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F1A235388CA00D263C6 /* CompactBlockStorage.swift */; };
+		0D9F5F1D2353922500D263C6 /* CompactBlockStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F1C2353922500D263C6 /* CompactBlockStorageTests.swift */; };
+		0D9F5F1F2353C27100D263C6 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D9F5F1E2353C27000D263C6 /* SQLite.framework */; };
+		0D9F5F202353C27F00D263C6 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D9F5F1E2353C27000D263C6 /* SQLite.framework */; };
 		0DA33493232C0BC200CAC082 /* Wallet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33492232C0BC200CAC082 /* Wallet.swift */; };
 		0DA33496232C11DF00CAC082 /* SeedProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33495232C11DF00CAC082 /* SeedProvider.swift */; };
 		0DA33498232C1A8200CAC082 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33497232C1A8200CAC082 /* Constants.swift */; };
@@ -60,6 +66,11 @@
 /* Begin PBXFileReference section */
 		0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackendTests.swift; sourceTree = "<group>"; };
 		0D866A512334208000960888 /* ResourceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceProvider.swift; sourceTree = "<group>"; };
+		0D9F5F1523537AD000D263C6 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
+		0D9F5F182353821400D263C6 /* SQLDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SQLDatabase.swift; sourceTree = "<group>"; };
+		0D9F5F1A235388CA00D263C6 /* CompactBlockStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockStorage.swift; sourceTree = "<group>"; };
+		0D9F5F1C2353922500D263C6 /* CompactBlockStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockStorageTests.swift; sourceTree = "<group>"; };
+		0D9F5F1E2353C27000D263C6 /* SQLite.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SQLite.framework; path = Carthage/Build/iOS/SQLite.framework; sourceTree = "<group>"; };
 		0DA33492232C0BC200CAC082 /* Wallet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wallet.swift; sourceTree = "<group>"; };
 		0DA33495232C11DF00CAC082 /* SeedProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedProvider.swift; sourceTree = "<group>"; };
 		0DA33497232C1A8200CAC082 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -108,6 +119,7 @@
 				0DC64E6A23284A2C0053EFAC /* CgRPC.framework in Frameworks */,
 				0DC64E6B23284A2C0053EFAC /* SwiftGRPC.framework in Frameworks */,
 				0DC64E6C23284A2C0053EFAC /* BoringSSL.framework in Frameworks */,
+				0D9F5F1F2353C27100D263C6 /* SQLite.framework in Frameworks */,
 				0DC64E6D23284A2C0053EFAC /* SwiftProtobuf.framework in Frameworks */,
 				103AFEA22283166B0074BC98 /* libzcashlc.a in Frameworks */,
 			);
@@ -120,6 +132,7 @@
 				103AFE8F228312A30074BC98 /* ZcashLightClientKit.framework in Frameworks */,
 				0DB45714232B0AA800057720 /* BoringSSL.framework in Frameworks */,
 				0DB45715232B0AA800057720 /* CgRPC.framework in Frameworks */,
+				0D9F5F202353C27F00D263C6 /* SQLite.framework in Frameworks */,
 				0DB45716232B0AA800057720 /* SwiftGRPC.framework in Frameworks */,
 				0DB45717232B0AA800057720 /* SwiftProtobuf.framework in Frameworks */,
 			);
@@ -134,6 +147,15 @@
 				0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */,
 			);
 			path = Processor;
+			sourceTree = "<group>";
+		};
+		0D9F5F17235381D100D263C6 /* DatabaseStorage */ = {
+			isa = PBXGroup;
+			children = (
+				0D9F5F182353821400D263C6 /* SQLDatabase.swift */,
+				0D9F5F1A235388CA00D263C6 /* CompactBlockStorage.swift */,
+			);
+			path = DatabaseStorage;
 			sourceTree = "<group>";
 		};
 		0DA33494232C11C600CAC082 /* Providers */ = {
@@ -181,6 +203,7 @@
 			children = (
 				0DB45704232AA06200057720 /* FakeStorage.swift */,
 				0DB45710232ADD4B00057720 /* CompactBlockStoring.swift */,
+				0D9F5F1523537AD000D263C6 /* Storage.swift */,
 			);
 			path = Storage;
 			sourceTree = "<group>";
@@ -222,6 +245,7 @@
 		0DE3CD4223317A1200FD1EFA /* Block */ = {
 			isa = PBXGroup;
 			children = (
+				0D9F5F17235381D100D263C6 /* DatabaseStorage */,
 				0DE3CD4323317A3500FD1EFA /* Downloader */,
 				0DB45703232AA03C00057720 /* Storage */,
 				0D866A532334233500960888 /* Processor */,
@@ -286,6 +310,7 @@
 				0DBF2CEB2332ACBD0074C1BE /* BlockDownloaderTests.swift */,
 				0DBF2CEF2332B8B70074C1BE /* Stubs.swift */,
 				0DF490DD23357A95005A4929 /* CompactBlockProcessorTests.swift */,
+				0D9F5F1C2353922500D263C6 /* CompactBlockStorageTests.swift */,
 			);
 			path = ZcashLightClientKitTests;
 			sourceTree = "<group>";
@@ -293,6 +318,7 @@
 		103AFEA02283166B0074BC98 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0D9F5F1E2353C27000D263C6 /* SQLite.framework */,
 				0DC64E6823284A2C0053EFAC /* BoringSSL.framework */,
 				0DC64E6623284A2C0053EFAC /* CgRPC.framework */,
 				0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */,
@@ -506,14 +532,17 @@
 				0DB456FD232A867800057720 /* service.pb.swift in Sources */,
 				0DB45702232A86EF00057720 /* LightWalletGRPCService.swift in Sources */,
 				0DE3CD4523317A6F00FD1EFA /* BlockDownloader.swift in Sources */,
+				0D9F5F1623537AD000D263C6 /* Storage.swift in Sources */,
 				0DA33496232C11DF00CAC082 /* SeedProvider.swift in Sources */,
 				0DB456FE232A867800057720 /* service.grpc.swift in Sources */,
 				103AFEA422831BB00074BC98 /* ZcashRustBackend.swift in Sources */,
 				0DBF2CEE2332B3090074C1BE /* CompactBlockProcessor.swift in Sources */,
 				0DB45709232AA81200057720 /* Protocolbuffer+Extensions.swift in Sources */,
+				0D9F5F192353821400D263C6 /* SQLDatabase.swift in Sources */,
 				0DB4570D232ACD3100057720 /* ZcashRustBackendWelding.swift in Sources */,
 				0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */,
 				0D866A522334208100960888 /* ResourceProvider.swift in Sources */,
+				0D9F5F1B235388CA00D263C6 /* CompactBlockStorage.swift in Sources */,
 				0DB45705232AA06200057720 /* FakeStorage.swift in Sources */,
 				0DA33498232C1A8200CAC082 /* Constants.swift in Sources */,
 				0DB456FF232A867800057720 /* compact_formats.pb.swift in Sources */,
@@ -526,6 +555,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */,
+				0D9F5F1D2353922500D263C6 /* CompactBlockStorageTests.swift in Sources */,
 				0DF490DE23357A95005A4929 /* CompactBlockProcessorTests.swift in Sources */,
 				0DBF2CEA233291D10074C1BE /* Tests+Utils.swift in Sources */,
 				0DBF2CEC2332ACBD0074C1BE /* BlockDownloaderTests.swift in Sources */,
