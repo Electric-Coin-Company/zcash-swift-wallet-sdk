@@ -13,21 +13,21 @@ import SwiftGRPC
 
 class ZcashLightClientKitTests: XCTestCase {
     
-    var latestBlock: BlockID!
+    var latestBlockHeight: BlockHeight!
     
     var service: LightWalletGRPCService!
     override func setUp() {
         super.setUp()
         service = LightWalletGRPCService(channel: ChannelProvider().channel())
         
-        latestBlock = try! service.latestBlock()
+        latestBlockHeight = try! service.latestBlock().compactBlockHeight()!
     }
     
     override func tearDown() {
         super.tearDown()
         service.channel.shutdown()
         service = nil
-        latestBlock = nil
+        latestBlockHeight = nil
     }
     
     func testEnvironmentLaunch() {
@@ -40,7 +40,7 @@ class ZcashLightClientKitTests: XCTestCase {
     func testService() {
         
         // and that it has a non-zero size
-        XCTAssert(self.latestBlock.height > 0)
+        XCTAssert(latestBlockHeight > 0)
         
     }
     
@@ -60,14 +60,14 @@ class ZcashLightClientKitTests: XCTestCase {
 //    }
     
     func testBlockRangeServiceTilLastest() {
-        let expectedCount: UInt64 = 99
-        var count: UInt64 = 0
+        let expectedCount: BlockHeight = 99
+        var count: BlockHeight = 0
        
         
-        let startHeight = self.latestBlock.height - expectedCount
-        let endHeight = self.latestBlock.height
+        let startHeight = latestBlockHeight - expectedCount
+        let endHeight = latestBlockHeight!
         
-        guard let call = try? service.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
+        guard let call = try? service!.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
             result in
             XCTAssert(result.success)
           

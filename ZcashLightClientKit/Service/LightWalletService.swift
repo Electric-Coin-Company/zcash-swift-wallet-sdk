@@ -45,14 +45,6 @@ extension LightWalletServiceError: Equatable {
     
 }
 
-public protocol LightWalletSyncService {
-    
-    /// Return the latest block height known to the service.
-    func latestBlockHeight() throws -> BlockHeight
-    
-}
-
-
 public protocol LightWalletService {
     /**
         Return the latest block height known to the service.

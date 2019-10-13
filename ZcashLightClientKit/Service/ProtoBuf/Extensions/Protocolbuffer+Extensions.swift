@@ -28,15 +28,22 @@ extension BlockID {
         BlockID(height: saplingActivationHeight)
     }
     
+    init(height: BlockHeight) {
+        self.init(height: UInt64(height))
+    }
+    
+    func compactBlockHeight() -> BlockHeight? {
+        BlockHeight(exactly: self.height)
+    }
 }
 
 extension BlockRange {
     
-    init(startHeight: UInt64, endHeight: UInt64? = nil) {
+    init(startHeight: Int, endHeight: Int? = nil) {
         self = BlockRange()
-        self.start =  BlockID(height: startHeight)
+        self.start =  BlockID(height: UInt64(startHeight))
         if let endHeight = endHeight {
-            self.end = BlockID(height: endHeight)
+            self.end = BlockID(height: UInt64(endHeight))
         }
     }
     

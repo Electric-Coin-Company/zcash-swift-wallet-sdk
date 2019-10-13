@@ -10,7 +10,7 @@ import Foundation
 
 
 class ZcashConsoleFakeStorage: CompactBlockStoring {
-    func getLatestHeight() throws -> UInt64 {
+    func getLatestHeight() throws -> Int {
         return self.latestBlockHeight
     }
     

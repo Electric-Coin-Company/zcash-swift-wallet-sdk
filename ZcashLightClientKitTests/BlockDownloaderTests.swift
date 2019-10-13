@@ -18,16 +18,16 @@ class BlockDownloaderTests: XCTestCase {
         storage =  ZcashConsoleFakeStorage()
         downloader = CompactBlockDownloader(service: service, storage: storage)
     }
-
+    
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         service = nil
         storage = nil
         downloader = nil
     }
-
     
-    func testSmallDownload() {
+    
+    func testSmallDownloadAsync() {
         
         let expect = XCTestExpectation(description: self.description)
         expect.expectedFulfillmentCount = 3
@@ -55,6 +55,36 @@ class BlockDownloaderTests: XCTestCase {
         wait(for: [expect], timeout: 2)
     }
     
+    
+    func testSmallDownload() {
+        
+
+        let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
+        let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
+        
+        let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
+        var latest: BlockHeight = 0
+        
+        
+        do {
+          latest = try downloader.latestBlockHeight()
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+        
+            
+        XCTAssertNoThrow(try downloader.downloadBlockRange(range))
+        let expectedLatest = latest + 100
+        
+        var currentLatest: BlockHeight = 0
+        do {
+            currentLatest = try downloader.latestBlockHeight()
+        } catch {
+            let expectedLatest = latest + 100
+        }
+        XCTAssertEqual(currentLatest, expectedLatest)
+        
+    }
     
     func testFailure() {
         let awfulDownloader = CompactBlockDownloader(service: AwfulLightWalletService(), storage: ZcashConsoleFakeStorage())

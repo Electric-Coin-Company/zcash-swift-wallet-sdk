@@ -8,7 +8,7 @@
 
 import Foundation
 
-public typealias BlockHeight = UInt64
+public typealias BlockHeight = Int
 public typealias CompactBlockRange = Range<BlockHeight>
 
 public struct ZcashCompactBlock {
@@ -23,7 +23,9 @@ enum ZcashCompactBlockError: Error {
 extension ZcashCompactBlock {
     init?(compactBlock: CompactBlock) {
         do {
-            self.height = compactBlock.height
+            // Safe to try: 32-bit systems will nil 
+            guard let h = Int(exactly: compactBlock.height) else { return nil }
+            self.height = h
             self.data = try compactBlock.serializedData()
         } catch {
             return nil

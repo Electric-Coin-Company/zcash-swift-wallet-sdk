@@ -14,7 +14,10 @@ enum CompactBlockDownloadError: Error {
 }
 
 protocol CompactBlockDownloading {
-    
+    /**
+    Downloads and stores the given block range.
+    Non-Blocking
+    */
     func downloadBlockRange(_ heightRange: CompactBlockRange,
                             completion: @escaping (Error?) -> Void)
     
@@ -22,6 +25,15 @@ protocol CompactBlockDownloading {
     
     func latestBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void)
     
+    /**
+    Downloads and stores the given block range.
+    Blocking
+    */
+    func downloadBlockRange(_ range: CompactBlockRange) throws
+    
+    func rewind(to height: BlockHeight) throws
+    
+    func latestBlockHeight() throws -> BlockHeight
 }
 
 /**
@@ -44,6 +56,7 @@ class CompactBlockDownloader {
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
+    
     
     /**
      Downloads and stores the given block range.
@@ -98,6 +111,14 @@ extension CompactBlockDownloader: CompactBlockDownloading {
             
         }
         
+    }
+    
+    func rewind(to height: BlockHeight) throws {
+       try self.storage.rewind(to: height)
+    }
+    
+    func latestBlockHeight() throws -> BlockHeight {
+        try self.storage.getLatestHeight()
     }
     
     

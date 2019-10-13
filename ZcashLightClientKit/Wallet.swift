@@ -28,7 +28,7 @@ public class Wallet {
     }
     
     
-    func initalize(firstRunStartHeight: UInt64 = SAPLING_ACTIVATION_HEIGHT) {
+    func initalize(firstRunStartHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT) {
         
     }
 }
@@ -55,7 +55,7 @@ public class Wallet {
     advance it can save the user a lot of time.
     */
 public struct WalletBirthday {
-    var height: Int64 = -1
+    var height: BlockHeight = -1
     var hash: String = ""
     var time: TimeInterval = -1
     var tree: String = ""

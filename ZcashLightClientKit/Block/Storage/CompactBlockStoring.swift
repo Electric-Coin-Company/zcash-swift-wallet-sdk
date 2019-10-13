@@ -15,7 +15,7 @@ protocol CompactBlockStoring {
      Gets the highest block that is currently stored.
      */
     
-    func getLatestHeight() throws -> UInt64
+    func getLatestHeight() throws -> BlockHeight
     
     /**
      Gets the highest block that is currently stored.

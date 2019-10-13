@@ -11,18 +11,18 @@ import Foundation
 /**
  * Miner's fee in zatoshi.
  */
-let MINERS_FEE_ZATOSHI: UInt64 = 10_000
+let MINERS_FEE_ZATOSHI: BlockHeight = 10_000
 
 /**
  * The number of zatoshi that equal 1 ZEC.
  */
-let ZATOSHI_PER_ZEC: UInt64 = 100_000_000
+let ZATOSHI_PER_ZEC: BlockHeight = 100_000_000
 
 /**
  * The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
  * prior to this height, at all.
  */
-let SAPLING_ACTIVATION_HEIGHT: UInt64 = 280_000
+let SAPLING_ACTIVATION_HEIGHT: BlockHeight = 280_000
 
 /**
  * The theoretical maximum number of blocks in a reorg, due to other bottlenecks in the protocol design.
