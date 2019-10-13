@@ -11,13 +11,16 @@ import Foundation
 public typealias BlockHeight = Int
 public typealias CompactBlockRange = Range<BlockHeight>
 
-public struct ZcashCompactBlock {
-    var height: BlockHeight
-    var data: Data
-}
+
 
 enum ZcashCompactBlockError: Error {
     case unreadableBlock(compactBlock: CompactBlock)
+}
+
+extension BlockHeight {
+    static func empty() -> BlockHeight {
+        BlockHeight(-1)
+    }
 }
 
 extension ZcashCompactBlock {

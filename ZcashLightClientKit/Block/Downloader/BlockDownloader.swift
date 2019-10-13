@@ -118,7 +118,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     }
     
     func latestBlockHeight() throws -> BlockHeight {
-        try self.storage.getLatestHeight()
+        try self.storage.latestHeight()
     }
     
     

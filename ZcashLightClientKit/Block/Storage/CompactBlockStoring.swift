@@ -8,6 +8,10 @@
 
 import Foundation
 
+public struct ZcashCompactBlock {
+    var height: BlockHeight
+    var data: Data
+}
 
 protocol CompactBlockStoring {
     
@@ -15,7 +19,7 @@ protocol CompactBlockStoring {
      Gets the highest block that is currently stored.
      */
     
-    func getLatestHeight() throws -> BlockHeight
+    func latestHeight() throws -> BlockHeight
     
     /**
      Gets the highest block that is currently stored.
