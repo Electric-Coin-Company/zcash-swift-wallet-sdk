@@ -13,6 +13,8 @@ public struct ZcashCompactBlock {
     var data: Data
 }
 
+extension ZcashCompactBlock: Encodable { }
+
 protocol CompactBlockStoring {
     
     /**

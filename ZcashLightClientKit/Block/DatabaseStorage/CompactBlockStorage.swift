@@ -8,6 +8,9 @@
 
 import Foundation
 import SQLite
+
+
+
 struct CompactBlockStorage: CompactBlockDAO {
     var db: Connection
     
@@ -15,37 +18,62 @@ struct CompactBlockStorage: CompactBlockDAO {
         self.db = connection
     }
     
+    private func compactBlocksTable() -> Table {
+        Table("compactblocks")
+    }
+    private func heightColumn() -> Expression<Int64> {
+        Expression<Int64>("height")
+    }
+    private func dataColumn() -> Expression<Blob> {
+        Expression<Blob>("data")
+    }
     func createTable() throws {
         do {
-            let compactBlocks = Table("compactblocks")
-            let height = Expression<Int64>("height")
-            let data = Expression<Blob>("data")
+            let compactBlocks = compactBlocksTable()
+            let height = heightColumn()
+            let data = dataColumn()
             
             try db.run(compactBlocks.create(ifNotExists: true) { t in
                 t.column(height, primaryKey: true)
                 t.column(data)
             } )
+            
+            try db.run(compactBlocks.createIndex(height))
+            
         } catch {
             throw StorageError.couldNotCreate
         }
     }
     
     func insert(_ block: ZcashCompactBlock) throws {
-        // todo: insert block
+        
+        try db.run(compactBlocksTable().insert(block))
     }
     
     func insert(_ blocks: [ZcashCompactBlock]) throws {
-        // todo: insert blocks
+        let compactBlocks = compactBlocksTable()
+        try db.transaction {
+            for block in blocks {
+                try db.run(compactBlocks.insert(block))
+            }
+        }
     }
     
     func latestBlockHeight() throws -> BlockHeight {
-        // todo : get block height
-        return -1
+        
+        guard let maxHeight = try db.scalar(compactBlocksTable().select(heightColumn().max)) else {
+            return BlockHeight.empty()
+        }
+        
+        guard let blockHeight = BlockHeight(exactly: maxHeight) else {
+            throw StorageError.operationFailed
+        }
+            
+        return blockHeight
     }
     
     func rewind(to height: BlockHeight) throws {
-        // todo: rewind to height
+        try db.run(compactBlocksTable().filter(heightColumn() >= Int64(height)).delete())
     }
-    
     
 }

@@ -58,7 +58,7 @@ class BlockDownloaderTests: XCTestCase {
     
     func testSmallDownload() {
         
-
+        
         let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
         let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
         
@@ -67,22 +67,23 @@ class BlockDownloaderTests: XCTestCase {
         
         
         do {
-          latest = try downloader.latestBlockHeight()
+            latest = try downloader.latestBlockHeight()
         } catch {
             XCTFail(error.localizedDescription)
         }
         
-            
+        
         XCTAssertNoThrow(try downloader.downloadBlockRange(range))
-        let expectedLatest = latest + 100
         
         var currentLatest: BlockHeight = 0
         do {
             currentLatest = try downloader.latestBlockHeight()
+            
         } catch {
-            let expectedLatest = latest + 100
+            XCTFail("latest block failed")
+            return
         }
-        XCTAssertEqual(currentLatest, expectedLatest)
+        XCTAssertEqual(currentLatest,upperRange )
         
     }
     
