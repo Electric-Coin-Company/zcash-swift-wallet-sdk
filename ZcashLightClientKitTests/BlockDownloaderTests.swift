@@ -15,7 +15,7 @@ class BlockDownloaderTests: XCTestCase {
     var storage: CompactBlockStoring!
     override func setUp() {
         service = LightWalletGRPCService(channel: ChannelProvider().channel())
-        storage =  ZcashConsoleFakeStorage()
+        storage =  try! TestDbBuilder.inMemoryCompactBlockStorage()
         downloader = CompactBlockDownloader(service: service, storage: storage)
     }
     

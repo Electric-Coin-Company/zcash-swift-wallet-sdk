@@ -10,7 +10,6 @@ import Foundation
 import SQLite
 
 
-
 struct CompactBlockStorage: CompactBlockDAO {
     var db: Connection
     
@@ -75,5 +74,51 @@ struct CompactBlockStorage: CompactBlockDAO {
     func rewind(to height: BlockHeight) throws {
         try db.run(compactBlocksTable().filter(heightColumn() >= Int64(height)).delete())
     }
+    
+}
+
+extension CompactBlockStorage: CompactBlockStoring {
+    
+    func latestHeight() throws -> BlockHeight {
+        try latestBlockHeight()
+    }
+    
+    func latestHeight(result: @escaping (Swift.Result<BlockHeight, Error>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                result(.success(try self.latestBlockHeight()))
+            } catch {
+                result(.failure(error))
+            }
+        }
+    }
+    
+    func write(blocks: [ZcashCompactBlock]) throws {
+        try insert(blocks)
+    }
+    
+    func write(blocks: [ZcashCompactBlock], completion: ((Error?) -> Void)?) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                try self.insert(blocks)
+                completion?(nil)
+            } catch {
+                completion?(error)
+            }
+        }
+    }
+    
+    func rewind(to height: BlockHeight, completion: ((Error?) -> Void)?) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            do {
+                try self.rewind(to: height)
+                completion?(nil)
+                
+            } catch {
+                completion?(error)
+            }
+        }
+    }
+    
     
 }

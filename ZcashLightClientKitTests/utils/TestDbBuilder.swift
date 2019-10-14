@@ -8,7 +8,7 @@
 
 import Foundation
 import SQLite
-import ZcashLightClientKit
+@testable import ZcashLightClientKit
 
 struct TestDbBuilder {
     
@@ -25,6 +25,15 @@ struct TestDbBuilder {
         return SQLiteStorage(connection: connection, compactBlockDAO: compactBlockDao)
         
     }
+    
+    static func inMemoryCompactBlockStorage() throws -> CompactBlockStorage {
+        let connection = try Connection(.inMemory, readonly: false)
+        let compactBlockDao = CompactBlockStorage(connection: connection)
+        try compactBlockDao.createTable()
+        return compactBlockDao
+    }
+    
+    
     
     static func seed(db: Storage, with blockRange: CompactBlockRange) throws {
         
