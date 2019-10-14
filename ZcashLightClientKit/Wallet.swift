@@ -11,25 +11,49 @@ import Foundation
  Wrapper for the Rust backend. This class basically represents all the Rust-wallet
  capabilities and the supporting data required to exercise those abilities.
  */
+
+
+public enum WalletError: Error {
+    case cacheDbInitFailed
+}
+
 public class Wallet {
     
     private var rustBackend: ZcashRustBackendWelding.Type
     private var dataDbURL: URL
+    private var cacheDbURL: URL
     private var paramDestination: URL
     private var accountIDs: [Int]
     private var seedProvider: SeedProvider
+    private var walletBirthday: WalletBirthday
+    private var storage: Storage?
     
-    init(rustWelding: ZcashRustBackendWelding.Type, dataDbURL: URL, paramDestination: URL, seedProvider: SeedProvider, accountIDs: [Int] = [0]) {
+    init(rustWelding: ZcashRustBackendWelding.Type, cacheDbURL:URL, dataDbURL: URL, paramDestination: URL, seedProvider: SeedProvider, walletBirthday: WalletBirthday, accountIDs: [Int] = [0]) {
+        
         self.rustBackend = rustWelding.self
         self.dataDbURL = dataDbURL
         self.paramDestination = paramDestination
         self.accountIDs = accountIDs
         self.seedProvider = seedProvider
+        self.cacheDbURL = cacheDbURL
+        self.walletBirthday = walletBirthday
+        
     }
     
     
-    func initalize(firstRunStartHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT) {
+     public func initalize(firstRunStartHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT) throws {
         
+        guard let storage = StorageBuilder.cacheDb(at: cacheDbURL) else {
+            throw WalletError.cacheDbInitFailed
+        }
+        
+        self.storage = storage
+        
+        
+    }
+    
+    public func latestBlockHeight() -> Int? {
+        try? self.storage?.compactBlockDao.latestBlockHeight()
     }
 }
 

@@ -20,6 +20,7 @@
 		0DA33498232C1A8200CAC082 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33497232C1A8200CAC082 /* Constants.swift */; };
 		0DA3349A232C1B6F00CAC082 /* WalletTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33499232C1B6F00CAC082 /* WalletTests.swift */; };
 		0DA3DFAD2354BFC3008F8ECC /* TestDbBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */; };
+		0DA3DFAF23551A4C008F8ECC /* StorageBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA3DFAE23551A4C008F8ECC /* StorageBuilder.swift */; };
 		0DB456F4232A860200057720 /* ZcashCompactBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F3232A860200057720 /* ZcashCompactBlock.swift */; };
 		0DB456FD232A867800057720 /* service.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F8232A867800057720 /* service.pb.swift */; };
 		0DB456FE232A867800057720 /* service.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F9232A867800057720 /* service.grpc.swift */; };
@@ -77,6 +78,7 @@
 		0DA33497232C1A8200CAC082 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		0DA33499232C1B6F00CAC082 /* WalletTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletTests.swift; sourceTree = "<group>"; };
 		0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDbBuilder.swift; sourceTree = "<group>"; };
+		0DA3DFAE23551A4C008F8ECC /* StorageBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StorageBuilder.swift; sourceTree = "<group>"; };
 		0DB456F3232A860200057720 /* ZcashCompactBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashCompactBlock.swift; sourceTree = "<group>"; };
 		0DB456F7232A867800057720 /* service.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = service.proto; sourceTree = "<group>"; };
 		0DB456F8232A867800057720 /* service.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = service.pb.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 			children = (
 				0D9F5F182353821400D263C6 /* SQLDatabase.swift */,
 				0D9F5F1A235388CA00D263C6 /* CompactBlockStorage.swift */,
+				0DA3DFAE23551A4C008F8ECC /* StorageBuilder.swift */,
 			);
 			path = DatabaseStorage;
 			sourceTree = "<group>";
@@ -531,6 +534,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0DA33493232C0BC200CAC082 /* Wallet.swift in Sources */,
+				0DA3DFAF23551A4C008F8ECC /* StorageBuilder.swift in Sources */,
 				0DB45713232AEAF200057720 /* LightWalletService.swift in Sources */,
 				0DB456FD232A867800057720 /* service.pb.swift in Sources */,
 				0DB45702232A86EF00057720 /* LightWalletGRPCService.swift in Sources */,

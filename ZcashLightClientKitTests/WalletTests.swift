@@ -31,18 +31,31 @@ class WalletTests: XCTestCase {
     
     func testWalletInitialization() {
         
-        let wallet = Wallet(rustWelding: ZcashRustBackend.self, dataDbURL: dbData, paramDestination: paramDestination, seedProvider: SampleSeedProvider())
+        let wallet = Wallet(rustWelding: ZcashRustBackend.self, cacheDbURL: cacheData, dataDbURL: dbData, paramDestination: paramDestination, seedProvider: SampleSeedProvider(), walletBirthday: WalletBirthdayProvider.testBirthday)
         
-        wallet.initalize()
+        XCTAssertNoThrow(try wallet.initalize())
         
-        XCTAssertTrue(FileManager.default.fileExists(atPath: dbData.absoluteString))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: paramDestination.absoluteString))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: cacheData.absoluteString))
+//        XCTAssertTrue(FileManager.default.fileExists(atPath: dbData.absoluteString))
+//        XCTAssertTrue(FileManager.default.fileExists(atPath: paramDestination.absoluteString))
+        guard let latestBlockHeight = wallet.latestBlockHeight() else {
+            XCTFail("should get BlockHeight.empty() from freshly initialized wallet")
+            return
+        }
+        
+        XCTAssertEqual(latestBlockHeight, BlockHeight.empty())
+        // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
+        XCTAssertNoThrow( try FileManager.default.removeItem(at: cacheData!) )
     }
 }
 
 struct SampleSeedProvider: SeedProvider {
     func seed() -> [UInt8] {
         Array("seed".utf8)
+    }
+}
+
+struct WalletBirthdayProvider {
+    static var testBirthday: WalletBirthday {
+        WalletBirthday()
     }
 }

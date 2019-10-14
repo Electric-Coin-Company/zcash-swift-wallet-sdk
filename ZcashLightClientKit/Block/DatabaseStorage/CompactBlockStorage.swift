@@ -37,7 +37,7 @@ struct CompactBlockStorage: CompactBlockDAO {
                 t.column(data)
             } )
             
-            try db.run(compactBlocks.createIndex(height))
+            try db.run(compactBlocks.createIndex(height, ifNotExists: true))
             
         } catch {
             throw StorageError.couldNotCreate
