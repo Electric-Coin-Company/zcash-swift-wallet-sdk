@@ -19,6 +19,7 @@
 		0DA33496232C11DF00CAC082 /* SeedProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33495232C11DF00CAC082 /* SeedProvider.swift */; };
 		0DA33498232C1A8200CAC082 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33497232C1A8200CAC082 /* Constants.swift */; };
 		0DA3349A232C1B6F00CAC082 /* WalletTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33499232C1B6F00CAC082 /* WalletTests.swift */; };
+		0DA3DFAD2354BFC3008F8ECC /* TestDbBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */; };
 		0DB456F4232A860200057720 /* ZcashCompactBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F3232A860200057720 /* ZcashCompactBlock.swift */; };
 		0DB456FD232A867800057720 /* service.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F8232A867800057720 /* service.pb.swift */; };
 		0DB456FE232A867800057720 /* service.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F9232A867800057720 /* service.grpc.swift */; };
@@ -75,6 +76,7 @@
 		0DA33495232C11DF00CAC082 /* SeedProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeedProvider.swift; sourceTree = "<group>"; };
 		0DA33497232C1A8200CAC082 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		0DA33499232C1B6F00CAC082 /* WalletTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletTests.swift; sourceTree = "<group>"; };
+		0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestDbBuilder.swift; sourceTree = "<group>"; };
 		0DB456F3232A860200057720 /* ZcashCompactBlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashCompactBlock.swift; sourceTree = "<group>"; };
 		0DB456F7232A867800057720 /* service.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.protobuf; path = service.proto; sourceTree = "<group>"; };
 		0DB456F8232A867800057720 /* service.pb.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = service.pb.swift; sourceTree = "<group>"; };
@@ -237,7 +239,9 @@
 		0DBF2CE8233291C10074C1BE /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				0DBF2CEF2332B8B70074C1BE /* Stubs.swift */,
 				0DBF2CE9233291D10074C1BE /* Tests+Utils.swift */,
+				0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -308,7 +312,6 @@
 				103AFE95228312A30074BC98 /* Info.plist */,
 				0DBF2CE6233291530074C1BE /* LightWalletServiceTests.swift */,
 				0DBF2CEB2332ACBD0074C1BE /* BlockDownloaderTests.swift */,
-				0DBF2CEF2332B8B70074C1BE /* Stubs.swift */,
 				0DF490DD23357A95005A4929 /* CompactBlockProcessorTests.swift */,
 				0D9F5F1C2353922500D263C6 /* CompactBlockStorageTests.swift */,
 			);
@@ -554,6 +557,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DA3DFAD2354BFC3008F8ECC /* TestDbBuilder.swift in Sources */,
 				0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */,
 				0D9F5F1D2353922500D263C6 /* CompactBlockStorageTests.swift in Sources */,
 				0DF490DE23357A95005A4929 /* CompactBlockProcessorTests.swift in Sources */,

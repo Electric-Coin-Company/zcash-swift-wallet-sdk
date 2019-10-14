@@ -72,7 +72,7 @@ class BlockDownloaderTests: XCTestCase {
             XCTFail(error.localizedDescription)
         }
         
-        
+        XCTAssertEqual(latest, BlockHeight.empty())
         XCTAssertNoThrow(try downloader.downloadBlockRange(range))
         
         var currentLatest: BlockHeight = 0
