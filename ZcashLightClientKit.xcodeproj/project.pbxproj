@@ -21,12 +21,12 @@
 		0DA3349A232C1B6F00CAC082 /* WalletTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33499232C1B6F00CAC082 /* WalletTests.swift */; };
 		0DA3DFAD2354BFC3008F8ECC /* TestDbBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */; };
 		0DA3DFAF23551A4C008F8ECC /* StorageBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA3DFAE23551A4C008F8ECC /* StorageBuilder.swift */; };
+		0DA47A1623561FD700249DAF /* FakeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45704232AA06200057720 /* FakeStorage.swift */; };
 		0DB456F4232A860200057720 /* ZcashCompactBlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F3232A860200057720 /* ZcashCompactBlock.swift */; };
 		0DB456FD232A867800057720 /* service.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F8232A867800057720 /* service.pb.swift */; };
 		0DB456FE232A867800057720 /* service.grpc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456F9232A867800057720 /* service.grpc.swift */; };
 		0DB456FF232A867800057720 /* compact_formats.pb.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB456FA232A867800057720 /* compact_formats.pb.swift */; };
 		0DB45702232A86EF00057720 /* LightWalletGRPCService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45701232A86EF00057720 /* LightWalletGRPCService.swift */; };
-		0DB45705232AA06200057720 /* FakeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45704232AA06200057720 /* FakeStorage.swift */; };
 		0DB45709232AA81200057720 /* Protocolbuffer+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45708232AA81200057720 /* Protocolbuffer+Extensions.swift */; };
 		0DB4570D232ACD3100057720 /* ZcashRustBackendWelding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB4570C232ACD3100057720 /* ZcashRustBackendWelding.swift */; };
 		0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB45710232ADD4B00057720 /* CompactBlockStoring.swift */; };
@@ -206,7 +206,6 @@
 		0DB45703232AA03C00057720 /* Storage */ = {
 			isa = PBXGroup;
 			children = (
-				0DB45704232AA06200057720 /* FakeStorage.swift */,
 				0DB45710232ADD4B00057720 /* CompactBlockStoring.swift */,
 				0D9F5F1523537AD000D263C6 /* Storage.swift */,
 			);
@@ -242,6 +241,7 @@
 		0DBF2CE8233291C10074C1BE /* utils */ = {
 			isa = PBXGroup;
 			children = (
+				0DB45704232AA06200057720 /* FakeStorage.swift */,
 				0DBF2CEF2332B8B70074C1BE /* Stubs.swift */,
 				0DBF2CE9233291D10074C1BE /* Tests+Utils.swift */,
 				0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */,
@@ -550,7 +550,6 @@
 				0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */,
 				0D866A522334208100960888 /* ResourceProvider.swift in Sources */,
 				0D9F5F1B235388CA00D263C6 /* CompactBlockStorage.swift in Sources */,
-				0DB45705232AA06200057720 /* FakeStorage.swift in Sources */,
 				0DA33498232C1A8200CAC082 /* Constants.swift in Sources */,
 				0DB456FF232A867800057720 /* compact_formats.pb.swift in Sources */,
 				0DB456F4232A860200057720 /* ZcashCompactBlock.swift in Sources */,
@@ -565,6 +564,7 @@
 				0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */,
 				0D9F5F1D2353922500D263C6 /* CompactBlockStorageTests.swift in Sources */,
 				0DF490DE23357A95005A4929 /* CompactBlockProcessorTests.swift in Sources */,
+				0DA47A1623561FD700249DAF /* FakeStorage.swift in Sources */,
 				0DBF2CEA233291D10074C1BE /* Tests+Utils.swift in Sources */,
 				0DBF2CEC2332ACBD0074C1BE /* BlockDownloaderTests.swift in Sources */,
 				0DBF2CE7233291530074C1BE /* LightWalletServiceTests.swift in Sources */,
