@@ -15,6 +15,7 @@ import Foundation
 
 public enum WalletError: Error {
     case cacheDbInitFailed
+    case dataDbInitFailed
 }
 
 public class Wallet {
@@ -45,6 +46,10 @@ public class Wallet {
         
         guard let storage = StorageBuilder.cacheDb(at: cacheDbURL) else {
             throw WalletError.cacheDbInitFailed
+        }
+        
+        guard rustBackend.initDataDb(dbData: dataDbURL) else {
+            throw WalletError.dataDbInitFailed
         }
         
         self.storage = storage

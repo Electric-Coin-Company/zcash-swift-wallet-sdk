@@ -35,15 +35,16 @@ class WalletTests: XCTestCase {
         
         XCTAssertNoThrow(try wallet.initalize())
         
-//        XCTAssertTrue(FileManager.default.fileExists(atPath: dbData.absoluteString))
-//        XCTAssertTrue(FileManager.default.fileExists(atPath: paramDestination.absoluteString))
+        // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
+        XCTAssertNoThrow( try FileManager.default.removeItem(at: dbData!) )
+
         guard let latestBlockHeight = wallet.latestBlockHeight() else {
             XCTFail("should get BlockHeight.empty() from freshly initialized wallet")
             return
         }
         
         XCTAssertEqual(latestBlockHeight, BlockHeight.empty())
-        // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
+        
         XCTAssertNoThrow( try FileManager.default.removeItem(at: cacheData!) )
     }
 }
