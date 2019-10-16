@@ -25,18 +25,4 @@ enum StorageError: Error {
     case operationFailed
 }
 
-protocol CompactBlockDAO {
-    
-    func createTable() throws
-    
-    func insert(_ block: ZcashCompactBlock) throws
-    
-    func insert(_ blocks: [ZcashCompactBlock]) throws
-    
-    /**
-     Query the latest block height, returns -1 if no block is stored
-     */
-    func latestBlockHeight() throws -> BlockHeight
-    
-    func rewind(to height: BlockHeight) throws
-}
+
