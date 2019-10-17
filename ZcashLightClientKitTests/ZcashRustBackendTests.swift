@@ -19,7 +19,7 @@ class ZcashRustBackendTests: XCTestCase {
     
     override func tearDown() {
         
-//        try? FileManager.default.removeItem(at: dbData!)
+        try? FileManager.default.removeItem(at: dbData!)
         
     }
     
