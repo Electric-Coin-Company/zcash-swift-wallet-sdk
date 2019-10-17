@@ -45,3 +45,27 @@ extension XCTestExpectation {
         NotificationCenter.default.removeObserver(self)
     }
 }
+
+
+func __documentsDirectory() throws -> URL {
+    try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+}
+
+func __cacheDbURL() throws -> URL {
+    try __documentsDirectory().appendingPathComponent("cache.db", isDirectory: false)
+}
+
+func __dataDbURL() throws -> URL {
+    try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
+}
+
+func parametersReady() -> Bool {
+    
+    guard let output = try? __documentsDirectory().appendingPathComponent("sapling-output.params", isDirectory: false),
+          let spend = try? __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false),
+          FileManager.default.isReadableFile(atPath: output.absoluteString),
+          FileManager.default.isReadableFile(atPath: spend.absoluteString) else {
+            return false
+    }
+    return true
+}

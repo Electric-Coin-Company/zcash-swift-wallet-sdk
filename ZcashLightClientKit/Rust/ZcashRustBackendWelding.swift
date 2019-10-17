@@ -9,7 +9,8 @@
 import Foundation
 
 protocol ZcashRustBackendWelding {
-
+    static func lastError() -> Error?
+    
     static func getLastError() -> String?
 
     static func initDataDb(dbData: URL) -> Bool

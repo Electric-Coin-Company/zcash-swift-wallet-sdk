@@ -45,6 +45,10 @@
 		0DC64E6B23284A2C0053EFAC /* SwiftGRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */; };
 		0DC64E6C23284A2C0053EFAC /* BoringSSL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6823284A2C0053EFAC /* BoringSSL.framework */; };
 		0DC64E6D23284A2C0053EFAC /* SwiftProtobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */; };
+		0DDC86232358C39000C50148 /* BlockScanOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDC86222358C39000C50148 /* BlockScanOperationTests.swift */; };
+		0DDC862A2358E50000C50148 /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DDC86282358E4FE00C50148 /* sapling-output.params */; };
+		0DDC862B2358E50000C50148 /* sapling-spend.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DDC86292358E4FF00C50148 /* sapling-spend.params */; };
+		0DDC862D235905F600C50148 /* cache.db in Resources */ = {isa = PBXBuildFile; fileRef = 0DDC862C235905F600C50148 /* cache.db */; };
 		0DDF6378232FD02F000F9F01 /* Constants.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDF6377232FD02F000F9F01 /* Constants.generated.swift */; };
 		0DE3CD4523317A6F00FD1EFA /* BlockDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DE3CD4423317A6F00FD1EFA /* BlockDownloader.swift */; };
 		0DF3154A2357A1CC0052E778 /* BlockRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF315492357A1CC0052E778 /* BlockRepository.swift */; };
@@ -108,6 +112,10 @@
 		0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftGRPC.framework; path = Carthage/Build/iOS/SwiftGRPC.framework; sourceTree = "<group>"; };
 		0DC64E6823284A2C0053EFAC /* BoringSSL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BoringSSL.framework; path = Carthage/Build/iOS/BoringSSL.framework; sourceTree = "<group>"; };
 		0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftProtobuf.framework; path = Carthage/Build/iOS/SwiftProtobuf.framework; sourceTree = "<group>"; };
+		0DDC86222358C39000C50148 /* BlockScanOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockScanOperationTests.swift; sourceTree = "<group>"; };
+		0DDC86282358E4FE00C50148 /* sapling-output.params */ = {isa = PBXFileReference; lastKnownFileType = file; path = "sapling-output.params"; sourceTree = "<group>"; };
+		0DDC86292358E4FF00C50148 /* sapling-spend.params */ = {isa = PBXFileReference; lastKnownFileType = file; path = "sapling-spend.params"; sourceTree = "<group>"; };
+		0DDC862C235905F600C50148 /* cache.db */ = {isa = PBXFileReference; lastKnownFileType = file; path = cache.db; sourceTree = "<group>"; };
 		0DDF6377232FD02F000F9F01 /* Constants.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.generated.swift; sourceTree = "<group>"; };
 		0DE3CD4423317A6F00FD1EFA /* BlockDownloader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockDownloader.swift; sourceTree = "<group>"; };
 		0DF315492357A1CC0052E778 /* BlockRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockRepository.swift; sourceTree = "<group>"; };
@@ -332,6 +340,9 @@
 		103AFE92228312A30074BC98 /* ZcashLightClientKitTests */ = {
 			isa = PBXGroup;
 			children = (
+				0DDC862C235905F600C50148 /* cache.db */,
+				0DDC86282358E4FE00C50148 /* sapling-output.params */,
+				0DDC86292358E4FF00C50148 /* sapling-spend.params */,
 				0DBF2CE8233291C10074C1BE /* utils */,
 				0DDF6377232FD02F000F9F01 /* Constants.generated.swift */,
 				103AFE93228312A30074BC98 /* ZcashLightClientKitTests.swift */,
@@ -343,6 +354,7 @@
 				0DF490DD23357A95005A4929 /* CompactBlockProcessorTests.swift */,
 				0D9F5F1C2353922500D263C6 /* CompactBlockStorageTests.swift */,
 				0DF315522357BF060052E778 /* DownloadOperationTests.swift */,
+				0DDC86222358C39000C50148 /* BlockScanOperationTests.swift */,
 			);
 			path = ZcashLightClientKitTests;
 			sourceTree = "<group>";
@@ -472,6 +484,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DDC862A2358E50000C50148 /* sapling-output.params in Resources */,
+				0DDC862D235905F600C50148 /* cache.db in Resources */,
+				0DDC862B2358E50000C50148 /* sapling-spend.params in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -597,6 +612,7 @@
 				0DF490DE23357A95005A4929 /* CompactBlockProcessorTests.swift in Sources */,
 				0DA47A1623561FD700249DAF /* FakeStorage.swift in Sources */,
 				0DBF2CEA233291D10074C1BE /* Tests+Utils.swift in Sources */,
+				0DDC86232358C39000C50148 /* BlockScanOperationTests.swift in Sources */,
 				0DBF2CEC2332ACBD0074C1BE /* BlockDownloaderTests.swift in Sources */,
 				0DBF2CE7233291530074C1BE /* LightWalletServiceTests.swift in Sources */,
 				0DA3349A232C1B6F00CAC082 /* WalletTests.swift in Sources */,

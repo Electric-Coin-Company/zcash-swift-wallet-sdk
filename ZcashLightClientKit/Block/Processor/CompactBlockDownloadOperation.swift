@@ -10,6 +10,10 @@ import Foundation
 
 typealias ZcashOperationCompletionBlock = (_ finished: Bool, _ cancelled: Bool, _ error: Error?) -> Void
 
+enum ZcashOperationError: Error {
+    case unknown
+}
+
 class ZcashOperation: Operation {
     var error: Error?
     var completionHandler: ZcashOperationCompletionBlock?
@@ -37,22 +41,18 @@ class CompactBlockDownloadOperation: ZcashOperation {
        
     override var isAsynchronous: Bool { false }
     
-    private var downloader: CompactBlockDownloading?
+    private var downloader: CompactBlockDownloading
     
-    private var range: CompactBlockRange?
+    private var range: CompactBlockRange
     
     required init(downloader: CompactBlockDownloading, range: CompactBlockRange) {
-        super.init()
-        self.name = "Download Operation: \(range)"
         self.range = range
         self.downloader = downloader
-
+        super.init()
+        self.name = "Download Operation: \(range)"
     }
     
     override func main() {
-        
-        guard let range = range, let downloader = downloader else { return }
-        
         do {
             try downloader.downloadBlockRange(range)
         } catch {

@@ -7,10 +7,17 @@
 //
 
 import Foundation
-
+enum RustWeldingError: Error {
+    case genericError(message: String)
+}
 
 class ZcashRustBackend: ZcashRustBackendWelding {
-
+    
+    static func lastError() -> Error? {
+        guard let message = getLastError() else { return nil }
+        return RustWeldingError.genericError(message: message)
+    }
+    
     static func getLastError() -> String? {
         let errorLen = zcashlc_last_error_length()
         if errorLen > 0 {
@@ -22,7 +29,10 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
     }
-
+    
+    /**
+    * Sets up the internal structure of the data database.
+    */
     static func initDataDb(dbData: URL) -> Bool {
         let dbData = dbData.osStr()
         return zcashlc_init_data_database(dbData.0, dbData.1) != 0

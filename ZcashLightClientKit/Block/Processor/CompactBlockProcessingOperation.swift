@@ -8,7 +8,7 @@
 
 import Foundation
 
-class CompactBlockScanningOperation: Operation {
+class CompactBlockScanningOperation: ZcashOperation {
     
     override var isConcurrent: Bool { false }
     
@@ -19,14 +19,17 @@ class CompactBlockScanningOperation: Operation {
     private var cacheDb: URL
     private var dataDb: URL
     init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb:URL) {
-        self.rustBackend = rustWelding
+        rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
+        super.init()
     }
     
     override func main() {
         guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb) else {
-            print("block scanning failed")
+            self.error = self.rustBackend.lastError() ?? ZcashOperationError.unknown
+            print("block scanning failed with error: \(String(describing: self.error))")
+            self.cancel()
             return
         }
     }
