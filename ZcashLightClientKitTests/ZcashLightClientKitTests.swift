@@ -7,29 +7,93 @@
 //
 
 import XCTest
+import SwiftGRPC
+
 @testable import ZcashLightClientKit
 
 class ZcashLightClientKitTests: XCTestCase {
-
+    
+    var latestBlockHeight: BlockHeight!
+    
+    var service: LightWalletGRPCService!
     override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        super.setUp()
+        service = LightWalletGRPCService(channel: ChannelProvider().channel())
+        
+        latestBlockHeight = try! service.latestBlock().compactBlockHeight()!
     }
-
+    
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        super.tearDown()
+        service.channel.shutdown()
+        service = nil
+        latestBlockHeight = nil
     }
-
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        XCTAssert(ZcashRustBackend.getLastError() == nil)
+    
+    func testEnvironmentLaunch() {
+        
+        let address = Constants.address
+        
+        XCTAssertFalse(address.isEmpty, "Your \'\(Environment.lightwalletdKey)\' key is missing from your launch environment variables")
     }
-
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
+    
+    func testService() {
+        
+        // and that it has a non-zero size
+        XCTAssert(latestBlockHeight > 0)
+        
+    }
+    
+//    /**
+//     LIGHTWALLETD KILLER TEST - DO NOT USE
+//     */
+//    func testBlockRangeService() {
+//
+//        let expect = XCTestExpectation(description: self.debugDescription)
+//        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
+//            print(result)
+//            expect.fulfill()
+//            XCTAssert(result.success)
+//            XCTAssertNotNil(result.resultData)
+//        }
+//        wait(for: [expect], timeout: 10)
+//    }
+    
+    func testBlockRangeServiceTilLastest() {
+        let expectedCount: BlockHeight = 99
+        var count: BlockHeight = 0
+       
+        
+        let startHeight = latestBlockHeight - expectedCount
+        let endHeight = latestBlockHeight!
+        
+        guard let call = try? service!.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
+            result in
+            XCTAssert(result.success)
+          
+        }) else {
+            XCTFail("failed to create getBlockRange( \(startHeight) ..<= \(endHeight)")
+            return
         }
+      
+        
+        var blocks = [CompactBlock]()
+        while true {
+            guard let block = try? call.receive() else {
+               
+                break
+                
+            }
+            blocks.append(block)
+            count += 1
+        }
+     
+        XCTAssertEqual(expectedCount + 1, count)
+        
     }
+    
+}
 
+class Environment {
+    static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
 }

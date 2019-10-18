@@ -1,0 +1,46 @@
+//
+//  DownloadOperationTests.swift
+//  ZcashLightClientKitTests
+//
+//  Created by Francisco Gindre on 10/16/19.
+//  Copyright © 2019 Electric Coin Company. All rights reserved.
+//
+
+import XCTest
+import SQLite
+@testable import ZcashLightClientKit
+class DownloadOperationTests: XCTestCase {
+    
+    var operationQueue = OperationQueue()
+    
+
+    override func tearDown() {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        operationQueue.cancelAllOperations()
+    }
+
+    func testSingleOperation() {
+        let expect = XCTestExpectation(description: self.description)
+        
+        let service = LightWalletGRPCService(channel: ChannelProvider().channel())
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+        let downloader = CompactBlockDownloader(service: service, storage: storage)
+        let blockCount = 100
+        let range = SAPLING_ACTIVATION_HEIGHT ..< SAPLING_ACTIVATION_HEIGHT + blockCount
+        let downloadOperation = CompactBlockDownloadOperation(downloader: downloader, range: range)
+        
+        downloadOperation.completionHandler = { (finished, cancelled, error) in
+            expect.fulfill()
+            XCTAssertNil(error)
+            XCTAssertTrue(finished)
+            XCTAssertFalse(cancelled)
+        }
+        
+        operationQueue.addOperation(downloadOperation)
+        
+        wait(for: [expect], timeout: 5)
+        
+        XCTAssertEqual(try! storage.latestHeight(),range.endIndex)
+    }
+
+}
