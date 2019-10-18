@@ -60,6 +60,5 @@ class ZcashRustBackendTests: XCTestCase {
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData))
         
-        
     }
 }

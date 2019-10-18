@@ -22,7 +22,6 @@ class ZcashConsoleFakeStorage: CompactBlockStoring {
         fakeRewind(to: height)
     }
     
-    
     var latestBlockHeight: BlockHeight = 0
     var delay = DispatchTimeInterval.milliseconds(300)
     
@@ -61,7 +60,5 @@ class ZcashConsoleFakeStorage: CompactBlockStoring {
         print("rewind to \(height)")
         self.latestBlockHeight = min(self.latestBlockHeight, height)
     }
-    
-    
     
 }

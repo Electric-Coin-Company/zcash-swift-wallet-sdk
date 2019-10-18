@@ -18,7 +18,7 @@ class AwfulLightWalletService: LightWalletService {
         throw LightWalletServiceError.invalidBlock
     }
     
-    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> ()) {
+    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             result(.failure(LightWalletServiceError.generalError))
         }
@@ -30,6 +30,5 @@ class AwfulLightWalletService: LightWalletService {
             result(.failure(LightWalletServiceError.generalError))
         }
     }
-    
     
 }

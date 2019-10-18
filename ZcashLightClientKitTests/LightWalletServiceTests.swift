@@ -59,7 +59,6 @@ class LightWalletServiceTests: XCTestCase {
         wait(for: [expect], timeout: 5)
     }
     
-    
     func testSyncBlockRange() {
         let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
         let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99

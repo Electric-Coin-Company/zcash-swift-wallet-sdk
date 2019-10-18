@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 protocol BlockRepository {
     func lastScannedBlockHeight() -> BlockHeight
 }

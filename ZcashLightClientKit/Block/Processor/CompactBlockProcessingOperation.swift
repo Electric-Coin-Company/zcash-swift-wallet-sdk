@@ -18,7 +18,7 @@ class CompactBlockScanningOperation: ZcashOperation {
     
     private var cacheDb: URL
     private var dataDb: URL
-    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb:URL) {
+    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb

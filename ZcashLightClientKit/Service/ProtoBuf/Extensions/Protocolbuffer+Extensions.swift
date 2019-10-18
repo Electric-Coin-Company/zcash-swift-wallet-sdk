@@ -14,7 +14,6 @@ extension CompactBlockRange {
     }
 }
 
-
 extension BlockID {
     
     static let saplingActivationHeight: UInt64 = 280_000
@@ -41,7 +40,7 @@ extension BlockRange {
     
     init(startHeight: Int, endHeight: Int? = nil) {
         self = BlockRange()
-        self.start =  BlockID(height: UInt64(startHeight))
+        self.start = BlockID(height: UInt64(startHeight))
         if let endHeight = endHeight {
             self.end = BlockID(height: UInt64(endHeight))
         }
@@ -58,7 +57,6 @@ extension BlockRange {
     }
     
 }
-
 
 extension Array where Element == CompactBlock {
     func asZcashCompactBlocks() throws -> [ZcashCompactBlock] {

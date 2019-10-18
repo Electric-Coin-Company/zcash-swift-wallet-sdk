@@ -33,14 +33,13 @@ struct TestDbBuilder {
         return compactBlockDao
     }
     
-    static func diskCompactBlockStorage(at url:URL) throws -> CompactBlockStorage {
+    static func diskCompactBlockStorage(at url: URL) throws -> CompactBlockStorage {
         let connection = try Connection(url.absoluteString)
         let compactBlockDao = CompactBlockStorage(connection: connection)
         try compactBlockDao.createTable()
         return compactBlockDao
     }
-    
-    
+        
     static func seed(db: Storage, with blockRange: CompactBlockRange) throws {
         
         guard let blocks = StubBlockCreator.createBlockRange(blockRange) else {

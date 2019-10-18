@@ -18,7 +18,6 @@ public protocol ResourceProvider {
     
 }
 
-
 public struct DefaultResourceProvider: ResourceProvider {
      
      public var dataDbPath: String {

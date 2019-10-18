@@ -51,8 +51,7 @@ public protocol LightWalletService {
      
         - Parameter result: a result containing the height or an Error
      */
-    func latestBlockHeight(result: @escaping (Result<BlockHeight,LightWalletServiceError>) -> ())
-    
+    func latestBlockHeight(result: @escaping (Result<BlockHeight,LightWalletServiceError>) -> Void)
     
     /**
        Return the latest block height known to the service.
@@ -81,5 +80,3 @@ public protocol LightWalletService {
     func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock]
     
 }
-
-

@@ -28,7 +28,7 @@ class BlockScanOperationTests: XCTestCase {
         operationQueue.cancelAllOperations()
         
 //        try! FileManager.default.removeItem(at: cacheDbURL)
-        try! FileManager.default.removeItem(at: dataDbURL)
+        try? FileManager.default.removeItem(at: dataDbURL)
     }
 
     func testSingleDownloadAndScanOperation() {

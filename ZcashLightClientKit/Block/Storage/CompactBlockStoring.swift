@@ -33,7 +33,7 @@ protocol CompactBlockStoring {
     /**
      Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
      */
-    func write(blocks: [ZcashCompactBlock]) throws -> Void
+    func write(blocks: [ZcashCompactBlock]) throws
     
     /**
      Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
@@ -49,7 +49,7 @@ protocol CompactBlockStoring {
      Meaning, if max height is 100 block and  rewindTo(50) is called, then the highest block remaining will be 49.
      */
     
-    func rewind(to height: BlockHeight) throws -> Void
+    func rewind(to height: BlockHeight) throws
     
     /**
      Remove every block above and including the given height.
@@ -60,4 +60,3 @@ protocol CompactBlockStoring {
      */
     func rewind(to height: BlockHeight, completion: ((Error?) -> Void)?)
 }
-

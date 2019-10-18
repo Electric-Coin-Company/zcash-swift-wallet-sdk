@@ -20,8 +20,6 @@ class CompactBlockProcessorTests: XCTestCase {
         XCTAssertTrue(MockDbInit.emptyFile(at: processorConfig.cacheDbPath))
         XCTAssertTrue(MockDbInit.emptyFile(at: processorConfig.dataDbPath))
         
-        
-        
         let service = LightWalletGRPCService(channel: ChannelProvider().channel())
         let storage = ZcashConsoleFakeStorage()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
@@ -43,12 +41,9 @@ class CompactBlockProcessorTests: XCTestCase {
         
         expect.unsuscribeFromNotifications()
         
-        
     }
     
-    
     func testStartNotifiesSuscriptors() {
-        
         
         XCTAssertNotNil(processor)
         expect.suscribe(to: Notification.Name.blockProcessorStarted, object: processor)
