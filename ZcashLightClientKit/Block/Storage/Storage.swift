@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 protocol Storage {
     
     func createDatabase(at path: String) throws
@@ -24,5 +23,3 @@ enum StorageError: Error {
     case closeFailed
     case operationFailed
 }
-
-

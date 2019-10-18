@@ -62,7 +62,6 @@ class ZcashLightClientKitTests: XCTestCase {
     func testBlockRangeServiceTilLastest() {
         let expectedCount: BlockHeight = 99
         var count: BlockHeight = 0
-       
         
         let startHeight = latestBlockHeight - expectedCount
         let endHeight = latestBlockHeight!
@@ -75,7 +74,6 @@ class ZcashLightClientKitTests: XCTestCase {
             XCTFail("failed to create getBlockRange( \(startHeight) ..<= \(endHeight)")
             return
         }
-      
         
         var blocks = [CompactBlock]()
         while true {

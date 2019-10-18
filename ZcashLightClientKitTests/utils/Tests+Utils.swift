@@ -16,13 +16,10 @@ class ChannelProvider {
     }
 }
 
-
 struct MockDbInit {
     @discardableResult static func emptyFile(at path: String) -> Bool {
         
-        
         FileManager.default.createFile(atPath: path, contents: Data("".utf8), attributes: nil)
-        
         
     }
     
@@ -45,7 +42,6 @@ extension XCTestExpectation {
         NotificationCenter.default.removeObserver(self)
     }
 }
-
 
 func __documentsDirectory() throws -> URL {
     try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)

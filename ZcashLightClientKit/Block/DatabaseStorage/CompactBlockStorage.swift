@@ -9,7 +9,6 @@
 import Foundation
 import SQLite
 
-
 struct CompactBlockStorage: CompactBlockDAO {
     var db: Connection
     
@@ -119,6 +118,5 @@ extension CompactBlockStorage: CompactBlockStoring {
             }
         }
     }
-    
     
 }

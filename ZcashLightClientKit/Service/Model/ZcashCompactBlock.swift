@@ -11,8 +11,6 @@ import Foundation
 public typealias BlockHeight = Int
 public typealias CompactBlockRange = Range<BlockHeight>
 
-
-
 enum ZcashCompactBlockError: Error {
     case unreadableBlock(compactBlock: CompactBlock)
 }
@@ -52,5 +50,3 @@ extension ZcashCompactBlock: Hashable {
         hasher.combine(data)
     }
 }
-
-

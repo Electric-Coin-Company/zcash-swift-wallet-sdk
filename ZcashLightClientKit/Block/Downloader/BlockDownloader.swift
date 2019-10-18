@@ -57,7 +57,6 @@ class CompactBlockDownloader {
 
 extension CompactBlockDownloader: CompactBlockDownloading {
     
-    
     /**
      Downloads and stores the given block range.
      Non-Blocking
@@ -88,7 +87,6 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         let blocks = try lightwalletService.blockRange(range)
         try storage.write(blocks: blocks)
     }
-    
     
     func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void){
         
@@ -121,6 +119,4 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try self.storage.latestHeight()
     }
     
-    
 }
-

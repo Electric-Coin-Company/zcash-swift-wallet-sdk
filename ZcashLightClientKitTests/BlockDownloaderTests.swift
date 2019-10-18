@@ -15,7 +15,7 @@ class BlockDownloaderTests: XCTestCase {
     var storage: CompactBlockStoring!
     override func setUp() {
         service = LightWalletGRPCService(channel: ChannelProvider().channel())
-        storage =  try! TestDbBuilder.inMemoryCompactBlockStorage()
+        storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         downloader = CompactBlockDownloader(service: service, storage: storage)
     }
     
@@ -25,7 +25,6 @@ class BlockDownloaderTests: XCTestCase {
         storage = nil
         downloader = nil
     }
-    
     
     func testSmallDownloadAsync() {
         
@@ -55,16 +54,13 @@ class BlockDownloaderTests: XCTestCase {
         wait(for: [expect], timeout: 2)
     }
     
-    
     func testSmallDownload() {
-        
         
         let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
         let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
         var latest: BlockHeight = 0
-        
         
         do {
             latest = try downloader.latestBlockHeight()
@@ -104,7 +100,6 @@ class BlockDownloaderTests: XCTestCase {
         wait(for: [expect], timeout: 2)
     }
 }
-
 
 /// Helper functions
 

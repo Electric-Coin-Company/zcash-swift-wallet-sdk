@@ -11,7 +11,6 @@ import XCTest
 @testable import ZcashLightClientKit
 class CompactBlockStorageTests: XCTestCase {
     
-    
     var storage: Storage = try! TestDbBuilder.inMemory()
     
     func testEmptyStorage() {
@@ -60,7 +59,6 @@ class CompactBlockStorageTests: XCTestCase {
             return
         }
     }
-    
     
     func testRewindTo() {
         

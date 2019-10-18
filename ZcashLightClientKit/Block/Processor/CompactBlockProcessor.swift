@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 enum  CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
@@ -16,15 +15,13 @@ enum  CompactBlockProcessorError: Error {
 
 extension Notification.Name {
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
-    static let blockProcessorStarted = Notification.Name(rawValue:"CompactBlockProcessorStarted")
-    static let blockProcessorStopped = Notification.Name(rawValue:"CompactBlockProcessorStopped")
-    static let blockProcessorFinished = Notification.Name(rawValue:"CompactBlockProcessorFinished")
-    static let blockProcessorFailed = Notification.Name(rawValue:"CompactBlockProcessorFinished")
+    static let blockProcessorStarted = Notification.Name(rawValue: "CompactBlockProcessorStarted")
+    static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
+    static let blockProcessorFinished = Notification.Name(rawValue: "CompactBlockProcessorFinished")
+    static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFinished")
 }
 
-
 class CompactBlockProcessor {
-    
     
     enum State {
         
@@ -66,11 +63,9 @@ class CompactBlockProcessor {
         config.retries
     }
     
-    
     private var batchSize: BlockHeight {
            BlockHeight(self.config.downloadBatchSize)
     }
-    
     
     private var processingError: Error?
     
@@ -90,7 +85,6 @@ class CompactBlockProcessor {
     private func unsuscribeToSystemNotifications() {
         
     }
-    
     
     deinit {
         self.queue.suspend()
@@ -180,13 +174,11 @@ class CompactBlockProcessor {
             self.processNewBlocks(latestHeight: latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight)
         }
         
-        
     }
     
     func processNewBlocks(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
         
         let dispatchGroup = DispatchGroup()
-        
         
         let validateBlocksTask = DispatchWorkItem {
             dispatchGroup.enter()
@@ -252,7 +244,6 @@ class CompactBlockProcessor {
         self.state = .stopped
     }
     
-    
     func fail(_ error: Error) {
         // todo specify: failure
         print(error.localizedDescription)
@@ -263,7 +254,6 @@ class CompactBlockProcessor {
     }
     
 }
-
 
 extension CompactBlockProcessor.Configuration {
     static var standard: CompactBlockProcessor.Configuration {

@@ -24,7 +24,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
             zcashlc_error_message_utf8(error, errorLen)
             zcashlc_clear_last_error()
-            return String(validatingUTF8: error)!
+            return String(validatingUTF8: error)
         } else {
             return nil
         }
@@ -45,9 +45,10 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
 
-        let extsks = UnsafeBufferPointer(start: extsksCStr, count: Int(accounts)).map {
-            String(cString: $0!)
-        }
+        let extsks = UnsafeBufferPointer(start: extsksCStr, count: Int(accounts)).compactMap({ (cStr) -> String? in
+            guard let str = cStr else { return nil }
+            return String(cString: str)
+        })
         zcashlc_vec_string_free(extsksCStr, UInt(accounts))
         return extsks
     }
@@ -60,12 +61,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func getAddress(dbData: URL, account: Int32) -> String? {
         let dbData = dbData.osStr()
 
-        let addressCStr = zcashlc_get_address(dbData.0, dbData.1, account)
-        if addressCStr == nil {
-            return nil
-        }
+        guard let addressCStr = zcashlc_get_address(dbData.0, dbData.1, account) else { return nil }
 
-        let address = String(validatingUTF8: addressCStr!)
+        let address = String(validatingUTF8: addressCStr)
         zcashlc_string_free(addressCStr)
         return address
     }
@@ -83,12 +81,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {
         let dbData = dbData.osStr()
 
-        let memoCStr = zcashlc_get_received_memo_as_utf8(dbData.0, dbData.1, idNote)
-        if memoCStr == nil {
-            return nil
-        }
-
-        let memo = String(validatingUTF8: memoCStr!)
+        guard let memoCStr = zcashlc_get_received_memo_as_utf8(dbData.0, dbData.1, idNote) else { return  nil }
+        
+        let memo = String(validatingUTF8: memoCStr)
         zcashlc_string_free(memoCStr)
         return memo
     }
@@ -96,12 +91,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func getSentMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {
         let dbData = dbData.osStr()
 
-        let memoCStr = zcashlc_get_sent_memo_as_utf8(dbData.0, dbData.1, idNote)
-        if memoCStr == nil {
-            return nil
-        }
+        guard let memoCStr = zcashlc_get_sent_memo_as_utf8(dbData.0, dbData.1, idNote) else { return nil }
 
-        let memo = String(validatingUTF8: memoCStr!)
+        let memo = String(validatingUTF8: memoCStr)
         zcashlc_string_free(memoCStr)
         return memo
     }
