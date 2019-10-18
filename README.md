@@ -43,6 +43,8 @@ The ```LIGHTWALLETD_ADDRESS``` environment variable can also be added to your sh
 
 We advice setting this value as a secret variable on your CD/CI environment when possible
 
+# Swiftlint 
+We don't like reinveing the wheel, so be gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.
 
 ## Troubleshooting
 
