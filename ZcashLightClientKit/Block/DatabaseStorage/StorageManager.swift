@@ -27,7 +27,7 @@ class StorageManager {
             return rw
         }
         
-        let rw = try Connection(url.absoluteString)
+        let rw = try Connection.customConection(at: url)
         readOnly[url] = rw
         return rw
         
@@ -38,10 +38,36 @@ class StorageManager {
             return rw
         }
         
-        let rw = try Connection(url.absoluteString)
+        let rw = try Connection.customConection(at: url)
         readWrite[url] = rw
         return rw
     }
+}
+
+private extension Connection {
+    static func customConection(at url: URL, readonly: Bool = false) throws -> Connection {
+        
+        let conn = try Connection(url.absoluteString, readonly: readonly)
+        try conn.run("PRAGMA journal_mode = TRUNCATE;")
+        return conn
+        
+    }
+}
+
+struct SimpleConnectionProvider: ConnectionProvider {
+    
+    var path: String
+    var readonly: Bool
+    
+    init(path: String, readonly: Bool = false) {
+        self.path = path
+        self.readonly = readonly
+    }
+    
+    func connection() throws -> Connection {
+        try Connection(path, readonly: readonly)
+    }
+    
 }
 
 /**

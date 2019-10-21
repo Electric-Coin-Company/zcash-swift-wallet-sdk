@@ -46,6 +46,7 @@ class BlockScanOperationTests: XCTestCase {
         
         let downloadExpect = XCTestExpectation(description: self.description + "download")
         let scanExpect = XCTestExpectation(description: self.description + "scan")
+        let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
         let service = LightWalletGRPCService(channel: ChannelProvider().channel())
         let blockCount = 100
         let range = SAPLING_ACTIVATION_HEIGHT ..< SAPLING_ACTIVATION_HEIGHT + blockCount
@@ -82,6 +83,7 @@ class BlockScanOperationTests: XCTestCase {
         }
         
         latestScannedBlockOperation.completionBlock = {
+            latestScannedBlockExpect.fulfill()
             XCTAssertEqual(latestScannedheight, range.endIndex)
         }
         latestScannedBlockOperation.addDependency(scanOperation)
@@ -89,7 +91,7 @@ class BlockScanOperationTests: XCTestCase {
         operationQueue.addOperations([downloadOperation,scanOperation,latestScannedBlockOperation], waitUntilFinished: false)
         
         
-        wait(for: [downloadExpect, scanExpect], timeout: 10, enforceOrder: true)
+        wait(for: [downloadExpect, scanExpect,latestScannedBlockExpect], timeout: 10, enforceOrder: true)
     }
     
     func testPerformanceExample() {

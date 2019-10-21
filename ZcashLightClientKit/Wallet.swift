@@ -46,13 +46,8 @@ public class Wallet {
             throw WalletError.dataDbInitFailed
         }
         
-        do {
-            let connection = try StorageManager.shared.connection(at: cacheDbURL)
-            self.compactBlockStorage = CompactBlockStorage(connection: connection)
-        } catch {
-            throw WalletError.cacheDbInitFailed
-        }
-        
+        self.compactBlockStorage = CompactBlockStorage(connectionProvider: SimpleConnectionProvider(path: cacheDbURL.absoluteString))
+
     }
     
     public func latestBlockHeight() -> BlockHeight {
