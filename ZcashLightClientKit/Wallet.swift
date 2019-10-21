@@ -26,7 +26,7 @@ public class Wallet {
     private var accountIDs: [Int]
     private var seedProvider: SeedProvider
     private var walletBirthday: WalletBirthday
-    private var storage: Storage?
+    private var compactBlockStorage: CompactBlockStoring?
     
     init(rustWelding: ZcashRustBackendWelding.Type, cacheDbURL: URL, dataDbURL: URL, paramDestination: URL, seedProvider: SeedProvider, walletBirthday: WalletBirthday, accountIDs: [Int] = [0]) {
         
@@ -42,20 +42,21 @@ public class Wallet {
     
     public func initalize(firstRunStartHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT) throws {
         
-        guard let storage = StorageBuilder.cacheDb(at: cacheDbURL) else {
-            throw WalletError.cacheDbInitFailed
-        }
-        
         guard rustBackend.initDataDb(dbData: dataDbURL) else {
             throw WalletError.dataDbInitFailed
         }
         
-        self.storage = storage
+        do {
+            let connection = try StorageManager.shared.connection(at: cacheDbURL)
+            self.compactBlockStorage = CompactBlockStorage(connection: connection)
+        } catch {
+            throw WalletError.cacheDbInitFailed
+        }
         
     }
     
-    public func latestBlockHeight() -> Int? {
-        try? self.storage?.compactBlockDao.latestBlockHeight()
+    public func latestBlockHeight() -> BlockHeight {
+        (try? self.compactBlockStorage?.latestHeight()) ?? BlockHeight.empty()
     }
 }
 

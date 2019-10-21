@@ -11,26 +11,26 @@ import XCTest
 @testable import ZcashLightClientKit
 class CompactBlockStorageTests: XCTestCase {
     
-    var storage: Storage = try! TestDbBuilder.inMemory()
+    var compactBlockDao: CompactBlockStoring = try! TestDbBuilder.inMemoryCompactBlockStorage()
     
     func testEmptyStorage() {
-        XCTAssertEqual(try! storage.compactBlockDao.latestBlockHeight(), BlockHeight.empty())
+        XCTAssertEqual(try! compactBlockDao.latestHeight(), BlockHeight.empty())
     }
     
     func testStoreThousandBlocks() {
-        let initialHeight = try! storage.compactBlockDao.latestBlockHeight()
+        let initialHeight = try! compactBlockDao.latestHeight()
         let startHeight = SAPLING_ACTIVATION_HEIGHT
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         
         do {
-            try TestDbBuilder.seed(db: storage, with: CompactBlockRange(startHeight...finalHeight))
+            try TestDbBuilder.seed(db: compactBlockDao, with: CompactBlockRange(startHeight...finalHeight))
         } catch {
             XCTFail("seed faild with error: \(error)")
             return
         }
         
-        let latestHeight = try! storage.compactBlockDao.latestBlockHeight()
+        let latestHeight = try! compactBlockDao.latestHeight()
         XCTAssertNotEqual(initialHeight, latestHeight)
         XCTAssertEqual(latestHeight, finalHeight)
         
@@ -38,7 +38,7 @@ class CompactBlockStorageTests: XCTestCase {
     
     func testStoreOneBlockFromEmpty() {
         
-        let initialHeight = try! storage.compactBlockDao.latestBlockHeight()
+        let initialHeight = try! compactBlockDao.latestHeight()
         guard initialHeight == BlockHeight.empty() else {
             XCTFail("database not empty, latest height: \(initialHeight)")
             return
@@ -49,10 +49,10 @@ class CompactBlockStorageTests: XCTestCase {
             XCTFail("could not create randem block with height: \(expectedHeight)")
             return
         }
-        XCTAssertNoThrow(try storage.compactBlockDao.insert(block))
+        XCTAssertNoThrow(try compactBlockDao.write(blocks: [block]))
         
         do {
-            let result = try storage.compactBlockDao.latestBlockHeight()
+            let result = try compactBlockDao.latestHeight()
             XCTAssertEqual(result, expectedHeight)
         } catch {
             XCTFail("latestBlockHeight failed")
@@ -67,16 +67,16 @@ class CompactBlockStorageTests: XCTestCase {
         let finalHeight = startHeight + blockCount
         
         do {
-            try TestDbBuilder.seed(db: storage, with: CompactBlockRange(startHeight...finalHeight))
+            try TestDbBuilder.seed(db: compactBlockDao, with: CompactBlockRange(startHeight...finalHeight))
         } catch {
             XCTFail("seed faild with error: \(error)")
             return
         }
         let rewindHeight = BlockHeight(finalHeight - 233)
         
-        XCTAssertNoThrow(try storage.compactBlockDao.rewind(to: rewindHeight))
+        XCTAssertNoThrow(try compactBlockDao.rewind(to: rewindHeight))
         do {
-            let latestHeight = try storage.compactBlockDao.latestBlockHeight()
+            let latestHeight = try compactBlockDao.latestHeight()
             XCTAssertEqual(latestHeight, rewindHeight - 1)
             
         } catch {

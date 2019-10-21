@@ -53,6 +53,7 @@ class CompactBlockDownloader {
         self.lightwalletService = service
         self.storage = storage
     }
+    
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
