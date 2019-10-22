@@ -55,7 +55,11 @@ class CompactBlockProcessor {
     private var rustBackend: ZcashRustBackendWelding.Type
     private var config: Configuration = Configuration.standard
     private var service: LightWalletService
-    private var queue = DispatchQueue(label: "CompactBlockProcessor-Queue")
+    private var queue: OperationQueue = {
+        let q = OperationQueue()
+        q.maxConcurrentOperationCount = 1
+        return q
+    } ()
     private var retryAttempts = 0
     private var backoffTimer: Timer?
     // convenience vars
@@ -64,7 +68,7 @@ class CompactBlockProcessor {
     }
     
     private var batchSize: BlockHeight {
-           BlockHeight(self.config.downloadBatchSize)
+        BlockHeight(self.config.downloadBatchSize)
     }
     
     private var processingError: Error?
@@ -87,7 +91,7 @@ class CompactBlockProcessor {
     }
     
     deinit {
-        self.queue.suspend()
+        self.queue.cancelAllOperations()
         self.unsuscribeToSystemNotifications()
         
     }
@@ -110,11 +114,11 @@ class CompactBlockProcessor {
     }
     
     private func validateConfiguration() throws {
-        guard FileManager.default.fileExists(atPath: config.cacheDbPath) else {
+        guard FileManager.default.isReadableFile(atPath: config.cacheDbPath) else {
             throw CompactBlockProcessorError.missingDbPath(path: config.cacheDbPath)
         }
         
-        guard FileManager.default.fileExists(atPath: config.dataDbPath) else {
+        guard FileManager.default.isReadableFile(atPath: config.dataDbPath) else {
             throw CompactBlockProcessorError.missingDbPath(path: config.dataDbPath)
         }
         
