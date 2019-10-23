@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum  CompactBlockProcessorError: Error {
+enum CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
     case dataDbInitFailed(path: String)
@@ -16,10 +16,13 @@ enum  CompactBlockProcessorError: Error {
 
 extension Notification.Name {
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
-    static let blockProcessorStarted = Notification.Name(rawValue: "CompactBlockProcessorStarted")
+    static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
+    static let blockProcessorFinishedDownloading = Notification.Name(rawValue: "CompactBlockProcessorFinishedDownloading")
+    static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
+    static let blockProcessorFinishedScanning = Notification.Name(rawValue: "CompactBlockProcessorFinishedScanning")
     static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
-    static let blockProcessorFinished = Notification.Name(rawValue: "CompactBlockProcessorFinished")
     static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFinished")
+    static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
 }
 
 class CompactBlockProcessor {
@@ -46,7 +49,7 @@ class CompactBlockProcessor {
         /**
          connected and downloading blocks
          */
-        case connected
+        case downloading
         
         /**
          was doing something but was paused
@@ -59,15 +62,20 @@ class CompactBlockProcessor {
         /**
          was processing but erred
          */
-        case error
+        case error(_ e: Error)
         
         /**
          Just chillin'
          */
         case idle
+        
     }
     
-    private(set) var state: State = .idle
+    private(set) var state: State = .idle {
+        didSet {
+            transitionState(from: oldValue, to: self.state)
+        }
+    }
     
     private var downloader: CompactBlockDownloading
     private var rustBackend: ZcashRustBackendWelding.Type
@@ -126,7 +134,8 @@ class CompactBlockProcessor {
     func start() throws {
         // TODO: Handle Background task
         
-        try validateConfiguration()
+        // TODO: check if this validation makes sense at all
+        //        try validateConfiguration()
         
         guard rustBackend.initDataDb(dbData: config.dataDb) else {
             throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
@@ -156,10 +165,9 @@ class CompactBlockProcessor {
     
     func processNewBlocks(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
         
-        NotificationCenter.default.post(name: Notification.Name.blockProcessorStarted, object: self)
         var err: Error?
         let blockOperation = BlockOperation {
-            self.state = .connected
+            self.state = .downloading
             var currentHeight = latestDownloadedHeight
             let cfg = self.config
             while err != nil || latestDownloadedHeight > latestDownloadedHeight {
@@ -225,18 +233,73 @@ class CompactBlockProcessor {
         print(error.localizedDescription)
         queue.cancelAllOperations()
         self.processingError = error
-        self.state = .error
-        
-        NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: ["error": error ])
+        self.state = .error(error)
+    }
+    
+    private func transitionState(from oldValue: State, to newValue: State) {
+        guard oldValue != newValue else {
+            return
+        }
+        switch newValue {
+        case .downloading:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
+        case .idle:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorIdle, object: self)
+        case .error(let err):
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: ["error": err])
+        case .scanning:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
+        case .stopped:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStopped, object: self)
+        }
     }
 }
 
 extension CompactBlockProcessor.Configuration {
     static var standard: CompactBlockProcessor.Configuration {
-        
         let pathProvider = DefaultResourceProvider()
-        
         return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL, dataDb: pathProvider.dataDbURL)
-        
+    }
+}
+
+extension CompactBlockProcessor.State: Equatable {
+    static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
+        switch  lhs {
+        case .downloading:
+            switch  rhs {
+            case .downloading:
+                return true
+            default:
+                return false
+            }
+        case .idle:
+            switch rhs {
+            case .idle:
+                return true
+            default:
+                return false
+            }
+        case .scanning:
+            switch rhs {
+            case .scanning:
+                return true
+            default:
+                return false
+            }
+        case .stopped:
+            switch rhs {
+            case .stopped:
+                return true
+            default:
+                return false
+            }
+        case .error(_):
+            switch rhs {
+            case .error(_):
+                return true
+            default:
+                return false
+            }
+        }
     }
 }

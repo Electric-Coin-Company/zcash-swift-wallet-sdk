@@ -12,40 +12,58 @@ class CompactBlockProcessorTests: XCTestCase {
     
     let processorConfig = CompactBlockProcessor.Configuration.standard
     var processor: CompactBlockProcessor!
-    var startExpect: XCTestExpectation!
-    var stopExpect: XCTestExpectation!
+    var downloadStartedExpect: XCTestExpectation!
+    var finishedDownloadingNotificationExpectation: XCTestExpectation!
+    var updatedNotificationExpectation: XCTestExpectation!
+    var stopNotificationExpectation: XCTestExpectation!
+    var startedScanningNotificationExpectation: XCTestExpectation!
+    var finishedScanningNotificationExpectation: XCTestExpectation!
+    var idleNotificationExpectation: XCTestExpectation!
+    
     
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
-        let service = LightWalletGRPCService(channel: ChannelProvider().channel())
+        let service = MockLightWalletService(latestBlockHeight: 281_000)
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
-        startExpect = XCTestExpectation(description: self.description + " start")
-        stopExpect = XCTestExpectation(description: self.description + " stop")
+        
         processor = CompactBlockProcessor(downloader: downloader,
                                             backend: ZcashRustBackend.self,
                                             config: processorConfig,
                                             service: service)
+        
+        downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
+        stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
+        finishedDownloadingNotificationExpectation = XCTestExpectation(description: self.description + " finishedDownloadingNotificationExpectation")
+        updatedNotificationExpectation = XCTestExpectation(description: self.description + " updatedNotificationExpectation")
+        stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
+        startedScanningNotificationExpectation = XCTestExpectation(description: self.description + " startedScanningNotificationExpectation")
+        finishedScanningNotificationExpectation = XCTestExpectation(description: self.description + " finishedScanningNotificationExpectation")
+        idleNotificationExpectation = XCTestExpectation(description: self.description + " idleNotificationExpectation")
+        
     }
     
     override func tearDown() {
         
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        startExpect.unsuscribeFromNotifications()
-        
+        downloadStartedExpect.unsuscribeFromNotifications()
+        stopNotificationExpectation.unsuscribeFromNotifications()
     }
     
     func testStartNotifiesSuscriptors() {
         
         XCTAssertNotNil(processor)
-        startExpect.suscribe(to: Notification.Name.blockProcessorStarted, object: processor)
-        startExpect.suscribe(to: Notification.Name.blockProcessorStopped, object: processor)
+        
+        
+        
+        downloadStartedExpect.suscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
+        stopNotificationExpectation.suscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         XCTAssertNoThrow(try processor.start())
         processor.stop()
-        wait(for: [startExpect,stopExpect], timeout: 5,enforceOrder: true)
+        wait(for: [downloadStartedExpect,stopNotificationExpectation], timeout: 5,enforceOrder: true)
         
         
     }

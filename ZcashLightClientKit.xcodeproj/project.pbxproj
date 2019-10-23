@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */; };
+		0D75A5CF2360C5F5009B2406 /* FakeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D75A5CE2360C5F5009B2406 /* FakeService.swift */; };
 		0D866A522334208100960888 /* ResourceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D866A512334208000960888 /* ResourceProvider.swift */; };
 		0D8AF10F235A733D0034D14A /* CompactBlockDownloaderBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8AF10E235A733D0034D14A /* CompactBlockDownloaderBuilder.swift */; };
 		0D9F5F1623537AD000D263C6 /* Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F1523537AD000D263C6 /* Storage.swift */; };
@@ -77,6 +78,7 @@
 
 /* Begin PBXFileReference section */
 		0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackendTests.swift; sourceTree = "<group>"; };
+		0D75A5CE2360C5F5009B2406 /* FakeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeService.swift; sourceTree = "<group>"; };
 		0D866A512334208000960888 /* ResourceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceProvider.swift; sourceTree = "<group>"; };
 		0D8AF10E235A733D0034D14A /* CompactBlockDownloaderBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockDownloaderBuilder.swift; sourceTree = "<group>"; };
 		0D9F5F1523537AD000D263C6 /* Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Storage.swift; sourceTree = "<group>"; };
@@ -268,6 +270,7 @@
 				0DBF2CEF2332B8B70074C1BE /* Stubs.swift */,
 				0DBF2CE9233291D10074C1BE /* Tests+Utils.swift */,
 				0DA3DFAC2354BFC3008F8ECC /* TestDbBuilder.swift */,
+				0D75A5CE2360C5F5009B2406 /* FakeService.swift */,
 			);
 			path = utils;
 			sourceTree = "<group>";
@@ -624,6 +627,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D75A5CF2360C5F5009B2406 /* FakeService.swift in Sources */,
 				0DA3DFAD2354BFC3008F8ECC /* TestDbBuilder.swift in Sources */,
 				0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */,
 				0D9F5F1D2353922500D263C6 /* CompactBlockStorageTests.swift in Sources */,
