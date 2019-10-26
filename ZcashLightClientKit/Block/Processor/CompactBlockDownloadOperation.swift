@@ -9,13 +9,14 @@
 import Foundation
 
 typealias ZcashOperationCompletionBlock = (_ finished: Bool, _ cancelled: Bool, _ error: Error?) -> Void
-
+typealias ZcashOperationStartedBlock = () -> Void
 enum ZcashOperationError: Error {
     case unknown
 }
 
 class ZcashOperation: Operation {
     var error: Error?
+    var startedHandler: ZcashOperationStartedBlock?
     var completionHandler: ZcashOperationCompletionBlock?
     var completionDispatchQueue: DispatchQueue = DispatchQueue.main
     
@@ -23,15 +24,22 @@ class ZcashOperation: Operation {
         super.init()
         
         completionBlock = { [weak self] in
-            guard let self = self else { return }
-            self.completionHandler?(self.isFinished, self.isCancelled, self.error)
+            guard let self = self, let handler = self.completionHandler else { return }
             
+            self.completionDispatchQueue.async {
+                handler(self.isFinished, self.isCancelled, self.error)
+            }
         }
     }
     
     convenience init(completionDispatchQueue: DispatchQueue = DispatchQueue.main) {
         self.init()
         self.completionDispatchQueue = completionDispatchQueue
+    }
+    
+    override func start() {
+        startedHandler?()
+        super.start()
     }
 }
 

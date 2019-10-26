@@ -43,8 +43,9 @@ class BlockScanOperationTests: XCTestCase {
             return
         }
         
-        
+        let downloadStartedExpect = XCTestExpectation(description: self.description + "download started")
         let downloadExpect = XCTestExpectation(description: self.description + "download")
+        let scanStartedExpect = XCTestExpectation(description: self.description + "scan started")
         let scanExpect = XCTestExpectation(description: self.description + "scan")
         let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
         let service = LightWalletGRPCService(channel: ChannelProvider().channel())
@@ -53,11 +54,19 @@ class BlockScanOperationTests: XCTestCase {
         let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)
         let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL)
         
+        downloadOperation.startedHandler = {
+            downloadStartedExpect.fulfill()
+        }
+        
         downloadOperation.completionHandler = { (finished, cancelled, error) in
             downloadExpect.fulfill()
             XCTAssertNil(error)
             XCTAssertTrue(finished)
             XCTAssertFalse(cancelled)
+        }
+        
+        scanOperation.startedHandler = {
+            scanStartedExpect.fulfill()
         }
         
         scanOperation.completionHandler = { (finished, cancelled, error) in
@@ -86,12 +95,13 @@ class BlockScanOperationTests: XCTestCase {
             latestScannedBlockExpect.fulfill()
             XCTAssertEqual(latestScannedheight, range.endIndex)
         }
+        
         latestScannedBlockOperation.addDependency(scanOperation)
         
         operationQueue.addOperations([downloadOperation,scanOperation,latestScannedBlockOperation], waitUntilFinished: false)
         
         
-        wait(for: [downloadExpect, scanExpect,latestScannedBlockExpect], timeout: 10, enforceOrder: true)
+        wait(for: [downloadStartedExpect, downloadExpect, scanStartedExpect, scanExpect,latestScannedBlockExpect], timeout: 10, enforceOrder: true)
     }
     
     func testPerformanceExample() {

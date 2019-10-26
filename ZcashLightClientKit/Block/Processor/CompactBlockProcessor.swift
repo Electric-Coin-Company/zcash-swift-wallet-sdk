@@ -17,12 +17,11 @@ enum CompactBlockProcessorError: Error {
 extension Notification.Name {
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
     static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
-    static let blockProcessorFinishedDownloading = Notification.Name(rawValue: "CompactBlockProcessorFinishedDownloading")
     static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
-    static let blockProcessorFinishedScanning = Notification.Name(rawValue: "CompactBlockProcessorFinishedScanning")
     static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
-    static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFinished")
+    static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
     static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
+    static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
 }
 
 class CompactBlockProcessor {
@@ -41,7 +40,7 @@ class CompactBlockProcessor {
         var retries = DEFAULT_RETRIES
         var maxBackoffInterval = DEFAULT_MAX_BACKOFF_INTERVAL
         var rewindDistance = DEFAULT_REWIND_DISTANCE
-        
+        var walletBirthday = SAPLING_ACTIVATION_HEIGHT
     }
     
     enum State {
@@ -93,6 +92,7 @@ class CompactBlockProcessor {
         config.retries
     }
     
+    private var latestBlockHeight: BlockHeight
     private var batchSize: BlockHeight {
         BlockHeight(self.config.downloadBatchSize)
     }
@@ -104,6 +104,7 @@ class CompactBlockProcessor {
         self.rustBackend = backend
         self.config = config
         self.service = service
+        self.latestBlockHeight = config.walletBirthday
         suscribeToSystemNotifications()
         
     }
@@ -141,65 +142,98 @@ class CompactBlockProcessor {
             throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
         }
         
-        var latestBlockHeight: BlockHeight = 0
-        
+        try nextBatch()
+    }
+    
+    private func nextBatch() throws {
         // get latest block height
         
-        let latestDownloadedBlockHeight: BlockHeight = try downloader.latestBlockHeight()
+        let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.latestBlockHeight())
         
         // get latest block height from ligthwalletd
         
-        self.service.latestBlockHeight { (result) in
-            switch result {
-            case .success(let blockHeight):
-                latestBlockHeight = blockHeight
-                
-                self.processNewBlocks(latestHeight: latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight)
-            case .failure(let e):
-                DispatchQueue.main.async {
-                    self.fail(e)
+        if self.latestBlockHeight > latestDownloadedBlockHeight {
+            self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+        } else {
+            self.service.latestBlockHeight { (result) in
+                switch result {
+                case .success(let blockHeight):
+                    self.latestBlockHeight = blockHeight
+                    
+                    self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                case .failure(let e):
+                    DispatchQueue.main.async {
+                        self.fail(e)
+                    }
                 }
             }
         }
     }
     
-    func processNewBlocks(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
-        
-        var err: Error?
-        let blockOperation = BlockOperation {
-            self.state = .downloading
-            var currentHeight = latestDownloadedHeight
-            let cfg = self.config
-            while err != nil || latestDownloadedHeight > latestDownloadedHeight {
-                do {
-                    try self.downloader.downloadBlockRange(CompactBlockRange(uncheckedBounds: (lower: currentHeight, upper: min(latestDownloadedHeight + cfg.downloadBatchSize,latestHeight))))
-                    currentHeight = try self.downloader.latestBlockHeight()
-                    print("progress: \(currentHeight / latestHeight)")
-                } catch {
-                    err = error
-                }
-            }
+    func processNewBlocks(range: CompactBlockRange) {
+        guard !range.isEmpty else {
+            processingFinished()
+            return
         }
         
-        blockOperation.completionBlock =  {
-            if let error = err {
+        let cfg = self.config
+        
+        let downloadBlockOperation = CompactBlockDownloadOperation(downloader: self.downloader, range: range)
+        
+        downloadBlockOperation.startedHandler = {
+            self.state = .downloading
+        }
+        downloadBlockOperation.completionHandler = { (finished, cancelled, error) in
+            if let error = error {
+                self.processingError = error
                 self.fail(error)
             }
         }
-        queue.addOperation(blockOperation)
+        
+        let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        
+        scanBlocksOperation.startedHandler = {
+            self.state = .scanning
+        }
+        
+        scanBlocksOperation.completionHandler = { (finished, cancelled, error) in
+            
+            guard !cancelled, error == nil else {
+                if let error = error {
+                    self.processingError = error
+                    self.fail(error)
+                } else {
+                    print("Warning: operation cancelled")
+                }
+                return
+            }
+             
+            self.processBatchFinished(range: range)
+            
+        }
+        
+        scanBlocksOperation.addDependency(downloadBlockOperation)
+        
+        queue.addOperations([downloadBlockOperation,scanBlocksOperation], waitUntilFinished: false)
         
     }
     
-    private func processBatchFinished(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
+    private func processBatchFinished(range: CompactBlockRange) {
         
         guard processingError == nil else {
-            retryProcessing(latestHeight: latestHeight, latestDownloadedHeight: latestDownloadedHeight)
+            retryProcessing(range: range)
             return
         }
         retryAttempts = 0
-        guard latestDownloadedHeight < latestHeight else {
+        guard !range.isEmpty else {
             processingFinished()
             return
+        }
+        
+        do {
+            try nextBatch()
+        } catch {
+            fail(error)
         }
     }
     
@@ -210,17 +244,17 @@ class CompactBlockProcessor {
                 try self.start()
             } catch {
                 self.fail(error)
-                
             }
         })
     }
-    private func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
-        return CompactBlockRange(uncheckedBounds: (latestDownloadedHeight + 1, min(latestDownloadedHeight + BlockHeight(DEFAULT_BATCH_SIZE), latestDownloadedHeight)))
+    
+    func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
+        return CompactBlockRange(uncheckedBounds: (latestDownloadedHeight, min(latestDownloadedHeight + BlockHeight(DEFAULT_BATCH_SIZE), latestHeight)))
     }
     
-    func retryProcessing(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
-        
-        processNewBlocks(latestHeight: latestHeight, latestDownloadedHeight: latestDownloadedHeight)
+    func retryProcessing(range: CompactBlockRange) {
+        queue.cancelAllOperations()
+        processNewBlocks(range: range)
     }
     
     func stop() {
@@ -240,6 +274,7 @@ class CompactBlockProcessor {
         guard oldValue != newValue else {
             return
         }
+        
         switch newValue {
         case .downloading:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
@@ -293,9 +328,9 @@ extension CompactBlockProcessor.State: Equatable {
             default:
                 return false
             }
-        case .error(_):
+        case .error:
             switch rhs {
-            case .error(_):
+            case .error:
                 return true
             default:
                 return false

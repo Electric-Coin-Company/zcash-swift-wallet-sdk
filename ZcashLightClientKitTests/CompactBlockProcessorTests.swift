@@ -13,11 +13,9 @@ class CompactBlockProcessorTests: XCTestCase {
     let processorConfig = CompactBlockProcessor.Configuration.standard
     var processor: CompactBlockProcessor!
     var downloadStartedExpect: XCTestExpectation!
-    var finishedDownloadingNotificationExpectation: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
     var startedScanningNotificationExpectation: XCTestExpectation!
-    var finishedScanningNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     
     
@@ -36,36 +34,43 @@ class CompactBlockProcessorTests: XCTestCase {
         
         downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
-        finishedDownloadingNotificationExpectation = XCTestExpectation(description: self.description + " finishedDownloadingNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: self.description + " updatedNotificationExpectation")
-        stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
+        
         startedScanningNotificationExpectation = XCTestExpectation(description: self.description + " startedScanningNotificationExpectation")
-        finishedScanningNotificationExpectation = XCTestExpectation(description: self.description + " finishedScanningNotificationExpectation")
         idleNotificationExpectation = XCTestExpectation(description: self.description + " idleNotificationExpectation")
         
     }
     
     override func tearDown() {
         
-        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try! FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        downloadStartedExpect.unsuscribeFromNotifications()
-        stopNotificationExpectation.unsuscribeFromNotifications()
+        downloadStartedExpect.unsubscribeFromNotifications()
+        stopNotificationExpectation.unsubscribeFromNotifications()
+        updatedNotificationExpectation.unsubscribeFromNotifications()
+        startedScanningNotificationExpectation.unsubscribeFromNotifications()
+        idleNotificationExpectation.unsubscribeFromNotifications()
     }
     
     func testStartNotifiesSuscriptors() {
         
         XCTAssertNotNil(processor)
         
+        // Subscribe to notifications
+        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
+        stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
+        updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
+        startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
+        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
         
         
-        downloadStartedExpect.suscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
-        stopNotificationExpectation.suscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         XCTAssertNoThrow(try processor.start())
-        processor.stop()
-        wait(for: [downloadStartedExpect,stopNotificationExpectation], timeout: 5,enforceOrder: true)
-        
-        
+   
+        wait(for: [downloadStartedExpect,
+//                   updatedNotificationExpectation,
+                   startedScanningNotificationExpectation,
+                   idleNotificationExpectation,
+                   stopNotificationExpectation,
+                   ], timeout: 10,enforceOrder: true)
     }
-    
 }
