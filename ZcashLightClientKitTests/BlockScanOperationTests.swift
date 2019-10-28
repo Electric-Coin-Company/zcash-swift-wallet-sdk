@@ -58,37 +58,39 @@ class BlockScanOperationTests: XCTestCase {
             downloadStartedExpect.fulfill()
         }
         
-        downloadOperation.completionHandler = { (finished, cancelled, error) in
+        downloadOperation.completionHandler = { (finished, cancelled) in
             downloadExpect.fulfill()
-            XCTAssertNil(error)
             XCTAssertTrue(finished)
             XCTAssertFalse(cancelled)
+        }
+        
+        downloadOperation.errorHandler = { (error) in
+            XCTFail("Download Operation failed with Error: \(error)")
         }
         
         scanOperation.startedHandler = {
             scanStartedExpect.fulfill()
         }
         
-        scanOperation.completionHandler = { (finished, cancelled, error) in
+        scanOperation.completionHandler = { (finished, cancelled) in
             scanExpect.fulfill()
-            XCTAssertNil(error)
             XCTAssertFalse(cancelled)
             XCTAssertTrue(finished)
+        }
+        
+        scanOperation.errorHandler = { (error) in
+            XCTFail("Scan Operation failed with Error: \(error)")
         }
         
         scanOperation.addDependency(downloadOperation)
         var latestScannedheight = BlockHeight.empty()
         let latestScannedBlockOperation = BlockOperation {
-            
             do {
-                
                 let repository = try BlockSQLDAO(dataDb: self.dataDbURL)
-                
                 latestScannedheight = repository.lastScannedBlockHeight()
             } catch {
                 XCTFail("scan failed")
             }
-            
         }
         
         latestScannedBlockOperation.completionBlock = {

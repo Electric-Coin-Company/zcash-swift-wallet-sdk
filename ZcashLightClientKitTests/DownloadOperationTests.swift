@@ -28,11 +28,14 @@ class DownloadOperationTests: XCTestCase {
         let range = SAPLING_ACTIVATION_HEIGHT ..< SAPLING_ACTIVATION_HEIGHT + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: downloader, range: range)
         
-        downloadOperation.completionHandler = { (finished, cancelled, error) in
+        downloadOperation.completionHandler = { (finished, cancelled) in
             expect.fulfill()
-            XCTAssertNil(error)
             XCTAssertTrue(finished)
             XCTAssertFalse(cancelled)
+        }
+        
+        downloadOperation.errorHandler = { (error) in
+            XCTFail("Donwload Operation failed with error: \(error)")
         }
         
         operationQueue.addOperation(downloadOperation)

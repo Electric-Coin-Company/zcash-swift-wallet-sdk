@@ -183,11 +183,10 @@ class CompactBlockProcessor {
         downloadBlockOperation.startedHandler = {
             self.state = .downloading
         }
-        downloadBlockOperation.completionHandler = { (finished, cancelled, error) in
-            if let error = error {
-                self.processingError = error
-                self.fail(error)
-            }
+        
+        downloadBlockOperation.errorHandler = { (error) in
+            self.processingError = error
+            self.fail(error)
         }
         
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
@@ -196,20 +195,17 @@ class CompactBlockProcessor {
             self.state = .scanning
         }
         
-        scanBlocksOperation.completionHandler = { (finished, cancelled, error) in
-            
-            guard !cancelled, error == nil else {
-                if let error = error {
-                    self.processingError = error
-                    self.fail(error)
-                } else {
+        scanBlocksOperation.completionHandler = { (finished, cancelled) in
+            guard !cancelled else {
                     print("Warning: operation cancelled")
-                }
                 return
             }
-             
             self.processBatchFinished(range: range)
-            
+        }
+        
+        scanBlocksOperation.errorHandler = { (error) in
+            self.processingError = error
+            self.fail(error)
         }
         
         scanBlocksOperation.addDependency(downloadBlockOperation)
@@ -249,7 +245,9 @@ class CompactBlockProcessor {
     }
     
     func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
-        return CompactBlockRange(uncheckedBounds: (latestDownloadedHeight, min(latestDownloadedHeight + BlockHeight(DEFAULT_BATCH_SIZE), latestHeight)))
+        
+        let lowerBound = max(latestDownloadedHeight + 1, config.walletBirthday)
+        return CompactBlockRange(uncheckedBounds: (lowerBound, min(lowerBound + BlockHeight( config.downloadBatchSize - 1), latestHeight)))
     }
     
     func retryProcessing(range: CompactBlockRange) {

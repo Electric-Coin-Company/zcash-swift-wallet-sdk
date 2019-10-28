@@ -17,12 +17,11 @@ class CompactBlockProcessorTests: XCTestCase {
     var stopNotificationExpectation: XCTestExpectation!
     var startedScanningNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
-    
-    
+    let mockLatestHeight = 281_000
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
-        let service = MockLightWalletService(latestBlockHeight: 281_000)
+        let service = MockLightWalletService(latestBlockHeight: mockLatestHeight)
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
@@ -38,7 +37,7 @@ class CompactBlockProcessorTests: XCTestCase {
         
         startedScanningNotificationExpectation = XCTestExpectation(description: self.description + " startedScanningNotificationExpectation")
         idleNotificationExpectation = XCTestExpectation(description: self.description + " idleNotificationExpectation")
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(processorFailed(_:)), name: Notification.Name.blockProcessorFailed, object: processor)
     }
     
     override func tearDown() {
@@ -50,6 +49,16 @@ class CompactBlockProcessorTests: XCTestCase {
         updatedNotificationExpectation.unsubscribeFromNotifications()
         startedScanningNotificationExpectation.unsubscribeFromNotifications()
         idleNotificationExpectation.unsubscribeFromNotifications()
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func processorFailed(_ notification: Notification) {
+        XCTAssertNotNil(notification.userInfo)
+        if let error = notification.userInfo?["error"] {
+            XCTFail("CompactBlockProcessor failed with Error: \(error)")
+        } else {
+            XCTFail("CompactBlockProcessor failed")
+        }
     }
     
     func testStartNotifiesSuscriptors() {
@@ -71,6 +80,37 @@ class CompactBlockProcessorTests: XCTestCase {
                    startedScanningNotificationExpectation,
                    idleNotificationExpectation,
                    stopNotificationExpectation,
-                   ], timeout: 10,enforceOrder: true)
+                   ], timeout: 20,enforceOrder: true)
+    }
+    
+    func testNextBatchBlockRange() {
+        
+        // test first range
+        var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
+        var latestBlockchainHeight = BlockHeight(281_000)
+        
+        var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestDownloadedHeight + processorConfig.downloadBatchSize))
+        
+        
+        // Test mid-range
+        latestDownloadedHeight = BlockHeight(280_100)
+        latestBlockchainHeight = BlockHeight(281_000)
+        
+        expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper:latestDownloadedHeight + processorConfig.downloadBatchSize))
+        
+        XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
+        
+        
+        latestDownloadedHeight = BlockHeight(280_950)
+        latestBlockchainHeight = BlockHeight(281_000)
+        
+        // Test last batch range
+        
+        latestDownloadedHeight = BlockHeight(280_950)
+        latestBlockchainHeight = BlockHeight(281_000)
+        
+        expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
+        
+        XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
     }
 }

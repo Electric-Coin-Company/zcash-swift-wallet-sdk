@@ -23,6 +23,11 @@ protocol CompactBlockDownloading {
     
     func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void)
     
+    /**
+         returns the height of the latest compact block stored locally
+         BlockHeight.empty() if no blocks are stored yet
+         non-blocking
+     */
     func latestBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void)
     
     /**
@@ -32,7 +37,11 @@ protocol CompactBlockDownloading {
     func downloadBlockRange(_ range: CompactBlockRange) throws
     
     func rewind(to height: BlockHeight) throws
-    
+    /**
+        returns the height of the latest compact block stored locally.
+        BlockHeight.empty() if no blocks are stored yet
+         Blocking
+    */
     func latestBlockHeight() throws -> BlockHeight
 }
 

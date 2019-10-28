@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */; };
+		0D6487912365E1FE00129E57 /* ZcashOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6487902365E1FE00129E57 /* ZcashOperation.swift */; };
 		0D75A5CF2360C5F5009B2406 /* FakeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D75A5CE2360C5F5009B2406 /* FakeService.swift */; };
 		0D866A522334208100960888 /* ResourceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D866A512334208000960888 /* ResourceProvider.swift */; };
 		0D8AF10F235A733D0034D14A /* CompactBlockDownloaderBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8AF10E235A733D0034D14A /* CompactBlockDownloaderBuilder.swift */; };
@@ -78,6 +79,7 @@
 
 /* Begin PBXFileReference section */
 		0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackendTests.swift; sourceTree = "<group>"; };
+		0D6487902365E1FE00129E57 /* ZcashOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashOperation.swift; sourceTree = "<group>"; };
 		0D75A5CE2360C5F5009B2406 /* FakeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeService.swift; sourceTree = "<group>"; };
 		0D866A512334208000960888 /* ResourceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceProvider.swift; sourceTree = "<group>"; };
 		0D8AF10E235A733D0034D14A /* CompactBlockDownloaderBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockDownloaderBuilder.swift; sourceTree = "<group>"; };
@@ -173,6 +175,7 @@
 				0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */,
 				0DA47A172356439400249DAF /* CompactBlockProcessingOperation.swift */,
 				0DF315502357B2750052E778 /* CompactBlockDownloadOperation.swift */,
+				0D6487902365E1FE00129E57 /* ZcashOperation.swift */,
 			);
 			path = Processor;
 			sourceTree = "<group>";
@@ -610,6 +613,7 @@
 				0DB45709232AA81200057720 /* Protocolbuffer+Extensions.swift in Sources */,
 				0D9F5F192353821400D263C6 /* StorageManager.swift in Sources */,
 				0DB4570D232ACD3100057720 /* ZcashRustBackendWelding.swift in Sources */,
+				0D6487912365E1FE00129E57 /* ZcashOperation.swift in Sources */,
 				0DF3154F2357A81B0052E778 /*  CompactBlockDAO.swift in Sources */,
 				0DB45711232ADD4B00057720 /* CompactBlockStoring.swift in Sources */,
 				0D866A522334208100960888 /* ResourceProvider.swift in Sources */,
