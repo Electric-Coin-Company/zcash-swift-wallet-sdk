@@ -246,8 +246,8 @@ class CompactBlockProcessor {
     
     func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
         
-        let lowerBound = max(latestDownloadedHeight + 1, config.walletBirthday)
-        return CompactBlockRange(uncheckedBounds: (lowerBound, min(lowerBound + BlockHeight( config.downloadBatchSize - 1), latestHeight)))
+        let lowerBound = latestDownloadedHeight <= config.walletBirthday ? config.walletBirthday : latestDownloadedHeight + 1
+        return CompactBlockRange(uncheckedBounds: (lowerBound, min(lowerBound + BlockHeight(config.downloadBatchSize - 1), latestHeight)))
     }
     
     func retryProcessing(range: CompactBlockRange) {

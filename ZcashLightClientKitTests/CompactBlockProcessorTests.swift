@@ -79,8 +79,8 @@ class CompactBlockProcessorTests: XCTestCase {
 //                   updatedNotificationExpectation,
                    startedScanningNotificationExpectation,
                    idleNotificationExpectation,
-                   stopNotificationExpectation,
-                   ], timeout: 20,enforceOrder: true)
+                   
+                   ], timeout: 90,enforceOrder: true)
     }
     
     func testNextBatchBlockRange() {
@@ -89,8 +89,9 @@ class CompactBlockProcessorTests: XCTestCase {
         var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
         var latestBlockchainHeight = BlockHeight(281_000)
         
-        var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestDownloadedHeight + processorConfig.downloadBatchSize))
+        var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestDownloadedHeight + processorConfig.downloadBatchSize - 1))
         
+        XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
         
         // Test mid-range
         latestDownloadedHeight = BlockHeight(280_100)
