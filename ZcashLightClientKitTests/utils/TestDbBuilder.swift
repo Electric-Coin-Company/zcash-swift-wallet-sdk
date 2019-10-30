@@ -16,38 +16,39 @@ struct TestDbBuilder {
         case generalError
     }
     
-    static func inMemory() throws -> Storage {
-        
-        let connection = try Connection(.inMemory, readonly: false)
-        let compactBlockDao = CompactBlockStorage(connection: connection)
-        try compactBlockDao.createTable()
-        
-        return SQLiteStorage(connection: connection, compactBlockDAO: compactBlockDao)
-        
-    }
-    
     static func inMemoryCompactBlockStorage() throws -> CompactBlockStorage {
-        let connection = try Connection(.inMemory, readonly: false)
-        let compactBlockDao = CompactBlockStorage(connection: connection)
+        let compactBlockDao = CompactBlockStorage(connectionProvider: InMemoryDbProvider())
         try compactBlockDao.createTable()
         return compactBlockDao
     }
     
     static func diskCompactBlockStorage(at url: URL) throws -> CompactBlockStorage {
-        let connection = try Connection(url.absoluteString)
-        let compactBlockDao = CompactBlockStorage(connection: connection)
+        let compactBlockDao = CompactBlockStorage(connectionProvider: SimpleConnectionProvider(path: url.absoluteString))
         try compactBlockDao.createTable()
         return compactBlockDao
     }
         
-    static func seed(db: Storage, with blockRange: CompactBlockRange) throws {
+    static func seed(db: CompactBlockStoring, with blockRange: CompactBlockRange) throws {
         
         guard let blocks = StubBlockCreator.createBlockRange(blockRange) else {
             throw TestBuilderError.generalError
         }
         
-        try db.compactBlockDao.insert(blocks)
+        try db.write(blocks: blocks)
     }
+}
+
+struct InMemoryDbProvider: ConnectionProvider {
+    var readonly: Bool
+    
+    init(readonly: Bool = false) {
+        self.readonly = readonly
+    }
+    
+    func connection() throws -> Connection {
+       try Connection(.inMemory, readonly: readonly)
+    }
+    
 }
 
 struct StubBlockCreator {

@@ -21,61 +21,96 @@ class BlockScanOperationTests: XCTestCase {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         self.cacheDbURL = try! __cacheDbURL()
         self.dataDbURL = try! __dataDbURL()
+        deleteDBs()
+        operationQueue.maxConcurrentOperationCount = 1
     }
-
+    
+    private func deleteDBs() {
+        try? FileManager.default.removeItem(at: cacheDbURL)
+        try? FileManager.default.removeItem(at: dataDbURL)
+    }
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         operationQueue.cancelAllOperations()
         
-//        try! FileManager.default.removeItem(at: cacheDbURL)
+        try? FileManager.default.removeItem(at: cacheDbURL)
         try? FileManager.default.removeItem(at: dataDbURL)
     }
-
+    
     func testSingleDownloadAndScanOperation() {
         guard rustWelding.initDataDb(dbData: dataDbURL) else {
             XCTFail("could not initialize data DB")
             return
         }
-        blockRepository = try! BlockSQLDAO(dataDb: dataDbURL)
         
+        let downloadStartedExpect = XCTestExpectation(description: self.description + "download started")
         let downloadExpect = XCTestExpectation(description: self.description + "download")
+        let scanStartedExpect = XCTestExpectation(description: self.description + "scan started")
         let scanExpect = XCTestExpectation(description: self.description + "scan")
+        let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
         let service = LightWalletGRPCService(channel: ChannelProvider().channel())
-        let storage = try! TestDbBuilder.diskCompactBlockStorage(at: cacheDbURL)
-        let downloader = CompactBlockDownloader(service: service, storage: storage)
         let blockCount = 100
         let range = SAPLING_ACTIVATION_HEIGHT ..< SAPLING_ACTIVATION_HEIGHT + blockCount
-        let downloadOperation = CompactBlockDownloadOperation(downloader: downloader, range: range)
+        let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)
         let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL)
         
-        downloadOperation.completionHandler = { (finished, cancelled, error) in
+        downloadOperation.startedHandler = {
+            downloadStartedExpect.fulfill()
+        }
+        
+        downloadOperation.completionHandler = { (finished, cancelled) in
             downloadExpect.fulfill()
-            XCTAssertNil(error)
             XCTAssertTrue(finished)
             XCTAssertFalse(cancelled)
         }
         
-        scanOperation.completionHandler = { (finished, cancelled, error) in
+        downloadOperation.errorHandler = { (error) in
+            XCTFail("Download Operation failed with Error: \(error)")
+        }
+        
+        scanOperation.startedHandler = {
+            scanStartedExpect.fulfill()
+        }
+        
+        scanOperation.completionHandler = { (finished, cancelled) in
             scanExpect.fulfill()
-            XCTAssertNil(error)
             XCTAssertFalse(cancelled)
             XCTAssertTrue(finished)
         }
+        
+        scanOperation.errorHandler = { (error) in
+            XCTFail("Scan Operation failed with Error: \(error)")
+        }
+        
         scanOperation.addDependency(downloadOperation)
-        operationQueue.addOperation(downloadOperation)
-        operationQueue.addOperation(scanOperation)
+        var latestScannedheight = BlockHeight.empty()
+        let latestScannedBlockOperation = BlockOperation {
+            do {
+                let repository = try BlockSQLDAO(dataDb: self.dataDbURL)
+                latestScannedheight = repository.lastScannedBlockHeight()
+            } catch {
+                XCTFail("scan failed")
+            }
+        }
         
-        wait(for: [downloadExpect, scanExpect], timeout: 5, enforceOrder: true)
+        latestScannedBlockOperation.completionBlock = {
+            latestScannedBlockExpect.fulfill()
+            XCTAssertEqual(latestScannedheight, range.endIndex)
+        }
         
-        XCTAssertEqual(try! storage.latestHeight(),range.endIndex)
-        XCTAssertEqual(blockRepository.lastScannedBlockHeight(), range.endIndex)
+        latestScannedBlockOperation.addDependency(scanOperation)
+        
+        operationQueue.addOperations([downloadOperation,scanOperation,latestScannedBlockOperation], waitUntilFinished: false)
+        
+        
+        wait(for: [downloadStartedExpect, downloadExpect, scanStartedExpect, scanExpect,latestScannedBlockExpect], timeout: 10, enforceOrder: true)
     }
-
+    
     func testPerformanceExample() {
         // This is an example of a performance test case.
         self.measure {
             // Put the code you want to measure the time of here.
         }
     }
-
+    
 }

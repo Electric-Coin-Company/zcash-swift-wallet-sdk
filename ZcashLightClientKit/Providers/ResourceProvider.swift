@@ -13,29 +13,29 @@ public enum ResourceProviderError: Error {
 }
 public protocol ResourceProvider {
     
-    var dataDbPath: String { get }
-    var cacheDbPath: String { get }
+    var dataDbURL: URL { get }
+    var cacheDbURL: URL { get }
     
 }
 
 public struct DefaultResourceProvider: ResourceProvider {
      
-     public var dataDbPath: String {
+     public var dataDbURL: URL {
         do {
             let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return url.appendingPathComponent(DEFAULT_DATA_DB_NAME).path
+            return url.appendingPathComponent(DEFAULT_DATA_DB_NAME)
         } catch {
-            return "file://\(DEFAULT_DATA_DB_NAME)"
+            return URL(fileURLWithPath: "file://\(DEFAULT_DATA_DB_NAME)")
         }
         
     }
     
-    public var cacheDbPath: String {
+    public var cacheDbURL: URL {
         do {
             let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return path.appendingPathComponent(DEFAULT_CACHES_DB_NAME).path
+            return path.appendingPathComponent(DEFAULT_CACHES_DB_NAME)
         } catch {
-            return "file://\(DEFAULT_CACHES_DB_NAME)"
+            return URL(fileURLWithPath: "file://\(DEFAULT_CACHES_DB_NAME)")
         }
     }
     

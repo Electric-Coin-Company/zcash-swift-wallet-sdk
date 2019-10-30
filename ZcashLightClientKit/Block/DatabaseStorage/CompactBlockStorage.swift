@@ -9,11 +9,15 @@
 import Foundation
 import SQLite
 
+protocol ConnectionProvider {
+    func connection() throws -> Connection
+}
+
 struct CompactBlockStorage: CompactBlockDAO {
-    var db: Connection
+    var dbProvider: ConnectionProvider
     
-    init(connection: Connection) {
-        self.db = connection
+    init(connectionProvider: ConnectionProvider) {
+        dbProvider = connectionProvider
     }
     
     private func compactBlocksTable() -> Table {
@@ -31,6 +35,7 @@ struct CompactBlockStorage: CompactBlockDAO {
             let height = heightColumn()
             let data = dataColumn()
             
+            let db = try dbProvider.connection()
             try db.run(compactBlocks.create(ifNotExists: true) { t in
                 t.column(height, primaryKey: true)
                 t.column(data)
@@ -45,12 +50,13 @@ struct CompactBlockStorage: CompactBlockDAO {
     
     func insert(_ block: ZcashCompactBlock) throws {
         
-        try db.run(compactBlocksTable().insert(block))
+        try dbProvider.connection().run(compactBlocksTable().insert(block))
     }
     
     func insert(_ blocks: [ZcashCompactBlock]) throws {
         let compactBlocks = compactBlocksTable()
-        try db.transaction {
+        let db = try dbProvider.connection()
+            try db.transaction(.immediate) {
             for block in blocks {
                 try db.run(compactBlocks.insert(block))
             }
@@ -59,19 +65,19 @@ struct CompactBlockStorage: CompactBlockDAO {
     
     func latestBlockHeight() throws -> BlockHeight {
         
-        guard let maxHeight = try db.scalar(compactBlocksTable().select(heightColumn().max)) else {
+        guard let maxHeight = try dbProvider.connection().scalar(compactBlocksTable().select(heightColumn().max)) else {
             return BlockHeight.empty()
         }
         
         guard let blockHeight = BlockHeight(exactly: maxHeight) else {
             throw StorageError.operationFailed
         }
-            
+        
         return blockHeight
     }
     
     func rewind(to height: BlockHeight) throws {
-        try db.run(compactBlocksTable().filter(heightColumn() >= Int64(height)).delete())
+        try dbProvider.connection().run(compactBlocksTable().filter(heightColumn() >= Int64(height)).delete())
     }
     
 }

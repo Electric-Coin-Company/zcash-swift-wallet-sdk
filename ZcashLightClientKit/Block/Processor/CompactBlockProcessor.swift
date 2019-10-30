@@ -8,54 +8,88 @@
 
 import Foundation
 
-enum  CompactBlockProcessorError: Error {
+enum CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
+    case dataDbInitFailed(path: String)
 }
 
 extension Notification.Name {
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
-    static let blockProcessorStarted = Notification.Name(rawValue: "CompactBlockProcessorStarted")
+    static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
+    static let blockProcessorStartedValidating = Notification.Name(rawValue: "CompactBlockProcessorStartedValidating")
+    static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
     static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
-    static let blockProcessorFinished = Notification.Name(rawValue: "CompactBlockProcessorFinished")
-    static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFinished")
+    static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
+    static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
+    static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
 }
 
 class CompactBlockProcessor {
+    /**
+     Compact Block Processor configuration
+     
+     Property: cacheDbPath absolute file path of the DB where raw, unprocessed compact blocks are stored.
+     Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
+     */
+    
+    struct Configuration {
+        var cacheDb: URL
+        var dataDb: URL
+        var downloadBatchSize = DEFAULT_BATCH_SIZE
+        var blockPollInterval = DEFAULT_POLL_INTERVAL
+        var retries = DEFAULT_RETRIES
+        var maxBackoffInterval = DEFAULT_MAX_BACKOFF_INTERVAL
+        var rewindDistance = DEFAULT_REWIND_DISTANCE
+        var walletBirthday = SAPLING_ACTIVATION_HEIGHT
+    }
     
     enum State {
         
         /**
          connected and downloading blocks
          */
-        case connected
+        case downloading
         
         /**
          was doing something but was paused
          */
         case stopped
         /**
-         processor is scanning
+        processor is validating
+         */
+        case validating
+        /**
+        processor is scanning
          */
         case scanning
         /**
          was processing but erred
          */
-        case error
+        case error(_ e: Error)
         
         /**
-         Just chillin'
+         Processor is up to date with the blockchain and  you can now make trasnsactions.
          */
-        case idle
+        case synced
+        
     }
     
-    private(set) var state: State = .idle
+    private(set) var state: State = .synced {
+        didSet {
+            transitionState(from: oldValue, to: self.state)
+        }
+    }
     
     private var downloader: CompactBlockDownloading
     private var rustBackend: ZcashRustBackendWelding.Type
     private var config: Configuration = Configuration.standard
     private var service: LightWalletService
-    private var queue = DispatchQueue(label: "CompactBlockProcessor-Queue")
+    private var queue: OperationQueue = {
+        let q = OperationQueue()
+        q.maxConcurrentOperationCount = 1
+        return q
+    } ()
     private var retryAttempts = 0
     private var backoffTimer: Timer?
     // convenience vars
@@ -63,8 +97,9 @@ class CompactBlockProcessor {
         config.retries
     }
     
+    private var latestBlockHeight: BlockHeight
     private var batchSize: BlockHeight {
-           BlockHeight(self.config.downloadBatchSize)
+        BlockHeight(self.config.downloadBatchSize)
     }
     
     private var processingError: Error?
@@ -74,6 +109,7 @@ class CompactBlockProcessor {
         self.rustBackend = backend
         self.config = config
         self.service = service
+        self.latestBlockHeight = config.walletBirthday
         suscribeToSystemNotifications()
         
     }
@@ -87,181 +123,259 @@ class CompactBlockProcessor {
     }
     
     deinit {
-        self.queue.suspend()
+        self.queue.cancelAllOperations()
         self.unsuscribeToSystemNotifications()
-        
-    }
-    /**
-     Compact Block Processor configuration
-     
-     Property: cacheDbPath absolute file path of the DB where raw, unprocessed compact blocks are stored.
-     Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
-     */
-    
-    struct Configuration {
-        var cacheDbPath: String
-        var dataDbPath: String
-        var downloadBatchSize = DEFAULT_BATCH_SIZE
-        var blockPollInterval = DEFAULT_POLL_INTERVAL
-        var retries = DEFAULT_RETRIES
-        var maxBackoffInterval = DEFAULT_MAX_BACKOFF_INTERVAL
-        var rewindDistance = DEFAULT_REWIND_DISTANCE
-        
     }
     
     private func validateConfiguration() throws {
-        guard FileManager.default.fileExists(atPath: config.cacheDbPath) else {
-            throw CompactBlockProcessorError.missingDbPath(path: config.cacheDbPath)
+        guard FileManager.default.isReadableFile(atPath: config.cacheDb.absoluteString) else {
+            throw CompactBlockProcessorError.missingDbPath(path: config.cacheDb.absoluteString)
         }
         
-        guard FileManager.default.fileExists(atPath: config.dataDbPath) else {
-            throw CompactBlockProcessorError.missingDbPath(path: config.dataDbPath)
+        guard FileManager.default.isReadableFile(atPath: config.dataDb.absoluteString) else {
+            throw CompactBlockProcessorError.missingDbPath(path: config.dataDb.absoluteString)
         }
-        
     }
     
     func start() throws {
+        // TODO: Handle Background task
         
-        try validateConfiguration()
-        var latestDownloadedBlockHeight: BlockHeight = 0
-        var latestBlockHeight: BlockHeight = 0
-        let dispatchGroup = DispatchGroup()
+        // TODO: check if this validation makes sense at all
+        //        try validateConfiguration()
         
-        let downloadedHeightItem = DispatchWorkItem {
-            dispatchGroup.enter()
-            self.downloader.latestBlockHeight { (heightResult) in
-                switch heightResult {
-                case .success(let downloadedHeight):
-                    latestDownloadedBlockHeight = downloadedHeight
-                    
-                case .failure(let e):
-                    DispatchQueue.main.async {
-                        self.fail(e)
-                    }
-                }
-                dispatchGroup.leave()
-            }
+        guard rustBackend.initDataDb(dbData: config.dataDb) else {
+            throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
         }
         
-        let latestBlockHeightItem = DispatchWorkItem {
-            dispatchGroup.enter()
+        try nextBatch()
+    }
+    
+    private func nextBatch() throws {
+        // get latest block height
+        
+        let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.latestBlockHeight())
+        
+        // get latest block height from ligthwalletd
+        
+        if self.latestBlockHeight > latestDownloadedBlockHeight {
+            self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+        } else {
             self.service.latestBlockHeight { (result) in
                 switch result {
                 case .success(let blockHeight):
-                    latestBlockHeight = blockHeight
+                    self.latestBlockHeight = blockHeight
+                    
+                    self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
                 case .failure(let e):
                     DispatchQueue.main.async {
                         self.fail(e)
                     }
                 }
-                dispatchGroup.leave()
             }
         }
-        
-        queue.async(execute: downloadedHeightItem)
-        queue.async(execute: latestBlockHeightItem)
-        
-        dispatchGroup.notify(queue: DispatchQueue.main) {
-            print("downloaded BlockHeight Value: \(latestDownloadedBlockHeight)")
-            print("latest BlockHeight Value:\(latestBlockHeight)")
-            
-            guard self.state != .error else {
-                return
-            }
-            
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStarted, object: self)
-            
-            self.processNewBlocks(latestHeight: latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight)
-        }
-        
     }
     
-    func processNewBlocks(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
-        
-        let dispatchGroup = DispatchGroup()
-        
-        let validateBlocksTask = DispatchWorkItem {
-            dispatchGroup.enter()
-            self.state = .scanning
-            
-        }
-        
-        let downloadTask = DispatchWorkItem {
-            dispatchGroup.enter()
-            self.state = .connected
-            self.downloader.downloadBlockRange(self.nextBatchBlockRange(latestHeight: latestHeight, latestDownloadedHeight: latestDownloadedHeight)) { (error) in
-                
-                if let error = error {
-                    validateBlocksTask.cancel()
-                    self.fail(error)
-                }
-                dispatchGroup.leave()
-            }
-        }
-        queue.async(execute: downloadTask)
-        queue.async(execute: validateBlocksTask)
-        dispatchGroup.notify(queue: DispatchQueue.main) {
-            self.processBatchFinished(latestHeight: latestHeight, latestDownloadedHeight: latestDownloadedHeight)
-        }
-        
-    }
-    
-    private func processBatchFinished(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
-        
-        guard processingError == nil else {
-            retryProcessing(latestHeight: latestHeight, latestDownloadedHeight: latestDownloadedHeight)
-            return
-        }
-        retryAttempts = 0
-        guard latestDownloadedHeight < latestHeight else {
+    func processNewBlocks(range: CompactBlockRange) {
+        guard !range.isEmpty else {
             processingFinished()
             return
         }
-    }
         
+        let cfg = self.config
+        
+        let downloadBlockOperation = CompactBlockDownloadOperation(downloader: self.downloader, range: range)
+        
+        downloadBlockOperation.startedHandler = {
+            self.state = .downloading
+        }
+        
+        downloadBlockOperation.errorHandler = { (error) in
+            self.processingError = error
+            self.fail(error)
+        }
+        
+        let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        
+        validateChainOperation.completionHandler = { (finished, cancelled) in
+            guard !cancelled else {
+                               print("Warning: operation cancelled")
+                           return
+                       }
+            
+            print("validateChainFinished")
+        }
+        
+        validateChainOperation.errorHandler = { (error) in
+            guard let validationError = error as? CompactBlockValidationError else {
+                print("Warning: validateChain operation returning generic error: \(error)")
+                return
+            }
+            
+            switch validationError {
+            case .validationFailed(let height):
+                print("chain validation at height: \(height)")
+            }
+        }
+        
+        validateChainOperation.startedHandler = {
+            self.state = .validating
+        }
+        
+        validateChainOperation.addDependency(downloadBlockOperation)
+        
+        let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        
+        scanBlocksOperation.startedHandler = {
+            self.state = .scanning
+        }
+        
+        scanBlocksOperation.completionHandler = { (finished, cancelled) in
+            guard !cancelled else {
+                    print("Warning: operation cancelled")
+                return
+            }
+            self.processBatchFinished(range: range)
+        }
+        
+        scanBlocksOperation.errorHandler = { (error) in
+            self.processingError = error
+            self.fail(error)
+        }
+        
+        scanBlocksOperation.addDependency(downloadBlockOperation)
+        scanBlocksOperation.addDependency(validateChainOperation)
+        queue.addOperations([downloadBlockOperation, validateChainOperation, scanBlocksOperation], waitUntilFinished: false)
+        
+    }
+    
+    private func processBatchFinished(range: CompactBlockRange) {
+        
+        guard processingError == nil else {
+            retryProcessing(range: range)
+            return
+        }
+        retryAttempts = 0
+        guard !range.isEmpty else {
+            processingFinished()
+            return
+        }
+        
+        do {
+            try nextBatch()
+        } catch {
+            fail(error)
+        }
+    }
+    
     private func processingFinished() {
-        self.state = .idle
+        self.state = .synced
         self.backoffTimer = Timer(timeInterval: TimeInterval(self.config.blockPollInterval), repeats: true, block: { _ in
             do {
                 try self.start()
             } catch {
                 self.fail(error)
-                
             }
         })
     }
-    private func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
-        return CompactBlockRange(uncheckedBounds: (latestDownloadedHeight + 1, min(latestDownloadedHeight + BlockHeight(DEFAULT_BATCH_SIZE), latestDownloadedHeight)))
+    
+    func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
+        
+        let lowerBound = latestDownloadedHeight <= config.walletBirthday ? config.walletBirthday : latestDownloadedHeight + 1
+        return CompactBlockRange(uncheckedBounds: (lowerBound, min(lowerBound + BlockHeight(config.downloadBatchSize - 1), latestHeight)))
     }
     
-    func retryProcessing(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) {
-        
-        processNewBlocks(latestHeight: latestHeight, latestDownloadedHeight: latestDownloadedHeight)
+    func retryProcessing(range: CompactBlockRange) {
+        queue.cancelAllOperations()
+        processNewBlocks(range: range)
     }
     
     func stop() {
-        queue.suspend()
+        queue.cancelAllOperations()
         self.state = .stopped
     }
     
     func fail(_ error: Error) {
         // todo specify: failure
         print(error.localizedDescription)
+        queue.cancelAllOperations()
         self.processingError = error
-        self.state = .error
-        
-        NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: ["error": error ])
+        self.state = .error(error)
     }
     
+    private func transitionState(from oldValue: State, to newValue: State) {
+        guard oldValue != newValue else {
+            return
+        }
+        
+        switch newValue {
+        case .downloading:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
+        case .synced:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorIdle, object: self)
+        case .error(let err):
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: ["error": err])
+        case .scanning:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
+        case .stopped:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStopped, object: self)
+        case .validating:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedValidating, object: self)
+        }
+    }
 }
 
 extension CompactBlockProcessor.Configuration {
     static var standard: CompactBlockProcessor.Configuration {
-        
         let pathProvider = DefaultResourceProvider()
-        
-        return CompactBlockProcessor.Configuration(cacheDbPath: pathProvider.cacheDbPath, dataDbPath: pathProvider.dataDbPath)
-        
+        return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL, dataDb: pathProvider.dataDbURL)
     }
-    
+}
+
+extension CompactBlockProcessor.State: Equatable {
+    static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
+        switch  lhs {
+        case .downloading:
+            switch  rhs {
+            case .downloading:
+                return true
+            default:
+                return false
+            }
+        case .synced:
+            switch rhs {
+            case .synced:
+                return true
+            default:
+                return false
+            }
+        case .scanning:
+            switch rhs {
+            case .scanning:
+                return true
+            default:
+                return false
+            }
+        case .stopped:
+            switch rhs {
+            case .stopped:
+                return true
+            default:
+                return false
+            }
+        case .error:
+            switch rhs {
+            case .error:
+                return true
+            default:
+                return false
+            }
+        case .validating:
+            switch rhs {
+            case .validating:
+                return true
+            default:
+                return false
+            }
+        }
+    }
 }

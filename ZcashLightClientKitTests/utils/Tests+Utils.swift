@@ -30,15 +30,15 @@ struct MockDbInit {
 }
 
 extension XCTestExpectation {
-    func suscribe(to notification: Notification.Name, object: Any?) {
+    func subscribe(to notification: Notification.Name, object: Any?) {
         NotificationCenter.default.addObserver(self, selector: #selector(fulfill), name: notification, object: object)
     }
     
-    func unsuscribe(from notification: Notification.Name) {
+    func unsubscribe(from notification: Notification.Name) {
         NotificationCenter.default.removeObserver(self, name: notification, object: nil)
     }
     
-    func unsuscribeFromNotifications() {
+    func unsubscribeFromNotifications() {
         NotificationCenter.default.removeObserver(self)
     }
 }
