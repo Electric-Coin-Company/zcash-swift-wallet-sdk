@@ -16,8 +16,9 @@ class CompactBlockProcessorTests: XCTestCase {
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
     var startedScanningNotificationExpectation: XCTestExpectation!
+    var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
-    let mockLatestHeight = 281_000
+    let mockLatestHeight = 282_000
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
@@ -34,7 +35,7 @@ class CompactBlockProcessorTests: XCTestCase {
         downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: self.description + " updatedNotificationExpectation")
-        
+        startedValidatingNotificationExpectation = XCTestExpectation(description: self.description + " startedValidatingNotificationExpectation")
         startedScanningNotificationExpectation = XCTestExpectation(description: self.description + " startedScanningNotificationExpectation")
         idleNotificationExpectation = XCTestExpectation(description: self.description + " idleNotificationExpectation")
         NotificationCenter.default.addObserver(self, selector: #selector(processorFailed(_:)), name: Notification.Name.blockProcessorFailed, object: processor)
@@ -43,11 +44,12 @@ class CompactBlockProcessorTests: XCTestCase {
     override func tearDown() {
         
         try! FileManager.default.removeItem(at: processorConfig.cacheDb)
-        try? FileManager.default.removeItem(at: processorConfig.dataDb)
+        try! FileManager.default.removeItem(at: processorConfig.dataDb)
         downloadStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()
         updatedNotificationExpectation.unsubscribeFromNotifications()
         startedScanningNotificationExpectation.unsubscribeFromNotifications()
+        startedValidatingNotificationExpectation.unsubscribeFromNotifications()
         idleNotificationExpectation.unsubscribeFromNotifications()
         NotificationCenter.default.removeObserver(self)
     }
@@ -69,6 +71,7 @@ class CompactBlockProcessorTests: XCTestCase {
         downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
         stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
+        startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
         
@@ -77,10 +80,11 @@ class CompactBlockProcessorTests: XCTestCase {
    
         wait(for: [downloadStartedExpect,
 //                   updatedNotificationExpectation,
+                   startedValidatingNotificationExpectation,
                    startedScanningNotificationExpectation,
                    idleNotificationExpectation,
                    
-                   ], timeout: 90,enforceOrder: true)
+                   ], timeout: 130,enforceOrder: true)
     }
     
     func testNextBatchBlockRange() {

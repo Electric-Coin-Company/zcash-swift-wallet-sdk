@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0B45933D22C612CB002A66BA /* ZcashRustBackendTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */; };
+		0D4A552B2369FD1C00B26C23 /* CompactBlockValidationInformation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4A552A2369FD1C00B26C23 /* CompactBlockValidationInformation.swift */; };
 		0D6487912365E1FE00129E57 /* ZcashOperation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6487902365E1FE00129E57 /* ZcashOperation.swift */; };
 		0D75A5CF2360C5F5009B2406 /* FakeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D75A5CE2360C5F5009B2406 /* FakeService.swift */; };
 		0D866A522334208100960888 /* ResourceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D866A512334208000960888 /* ResourceProvider.swift */; };
@@ -79,6 +80,7 @@
 
 /* Begin PBXFileReference section */
 		0B45933C22C612CB002A66BA /* ZcashRustBackendTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashRustBackendTests.swift; sourceTree = "<group>"; };
+		0D4A552A2369FD1C00B26C23 /* CompactBlockValidationInformation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompactBlockValidationInformation.swift; sourceTree = "<group>"; };
 		0D6487902365E1FE00129E57 /* ZcashOperation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashOperation.swift; sourceTree = "<group>"; };
 		0D75A5CE2360C5F5009B2406 /* FakeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FakeService.swift; sourceTree = "<group>"; };
 		0D866A512334208000960888 /* ResourceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceProvider.swift; sourceTree = "<group>"; };
@@ -176,6 +178,7 @@
 				0DA47A172356439400249DAF /* CompactBlockProcessingOperation.swift */,
 				0DF315502357B2750052E778 /* CompactBlockDownloadOperation.swift */,
 				0D6487902365E1FE00129E57 /* ZcashOperation.swift */,
+				0D4A552A2369FD1C00B26C23 /* CompactBlockValidationInformation.swift */,
 			);
 			path = Processor;
 			sourceTree = "<group>";
@@ -602,6 +605,7 @@
 				0DB45713232AEAF200057720 /* LightWalletService.swift in Sources */,
 				0DB456FD232A867800057720 /* service.pb.swift in Sources */,
 				0DB45702232A86EF00057720 /* LightWalletGRPCService.swift in Sources */,
+				0D4A552B2369FD1C00B26C23 /* CompactBlockValidationInformation.swift in Sources */,
 				0DE3CD4523317A6F00FD1EFA /* BlockDownloader.swift in Sources */,
 				0D9F5F1623537AD000D263C6 /* Storage.swift in Sources */,
 				0DA33496232C11DF00CAC082 /* SeedProvider.swift in Sources */,

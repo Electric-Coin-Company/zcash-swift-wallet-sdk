@@ -17,6 +17,7 @@ enum CompactBlockProcessorError: Error {
 extension Notification.Name {
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
     static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
+    static let blockProcessorStartedValidating = Notification.Name(rawValue: "CompactBlockProcessorStartedValidating")
     static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
     static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
     static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
@@ -55,7 +56,11 @@ class CompactBlockProcessor {
          */
         case stopped
         /**
-         processor is scanning
+        processor is validating
+         */
+        case validating
+        /**
+        processor is scanning
          */
         case scanning
         /**
@@ -64,13 +69,13 @@ class CompactBlockProcessor {
         case error(_ e: Error)
         
         /**
-         Just chillin'
+         Processor is up to date with the blockchain and  you can now make trasnsactions.
          */
-        case idle
+        case synced
         
     }
     
-    private(set) var state: State = .idle {
+    private(set) var state: State = .synced {
         didSet {
             transitionState(from: oldValue, to: self.state)
         }
@@ -189,6 +194,35 @@ class CompactBlockProcessor {
             self.fail(error)
         }
         
+        let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        
+        validateChainOperation.completionHandler = { (finished, cancelled) in
+            guard !cancelled else {
+                               print("Warning: operation cancelled")
+                           return
+                       }
+            
+            print("validateChainFinished")
+        }
+        
+        validateChainOperation.errorHandler = { (error) in
+            guard let validationError = error as? CompactBlockValidationError else {
+                print("Warning: validateChain operation returning generic error: \(error)")
+                return
+            }
+            
+            switch validationError {
+            case .validationFailed(let height):
+                print("chain validation at height: \(height)")
+            }
+        }
+        
+        validateChainOperation.startedHandler = {
+            self.state = .validating
+        }
+        
+        validateChainOperation.addDependency(downloadBlockOperation)
+        
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
         scanBlocksOperation.startedHandler = {
@@ -209,8 +243,8 @@ class CompactBlockProcessor {
         }
         
         scanBlocksOperation.addDependency(downloadBlockOperation)
-        
-        queue.addOperations([downloadBlockOperation,scanBlocksOperation], waitUntilFinished: false)
+        scanBlocksOperation.addDependency(validateChainOperation)
+        queue.addOperations([downloadBlockOperation, validateChainOperation, scanBlocksOperation], waitUntilFinished: false)
         
     }
     
@@ -234,7 +268,7 @@ class CompactBlockProcessor {
     }
     
     private func processingFinished() {
-        self.state = .idle
+        self.state = .synced
         self.backoffTimer = Timer(timeInterval: TimeInterval(self.config.blockPollInterval), repeats: true, block: { _ in
             do {
                 try self.start()
@@ -276,7 +310,7 @@ class CompactBlockProcessor {
         switch newValue {
         case .downloading:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
-        case .idle:
+        case .synced:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorIdle, object: self)
         case .error(let err):
             NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: ["error": err])
@@ -284,6 +318,8 @@ class CompactBlockProcessor {
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
         case .stopped:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStopped, object: self)
+        case .validating:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedValidating, object: self)
         }
     }
 }
@@ -305,9 +341,9 @@ extension CompactBlockProcessor.State: Equatable {
             default:
                 return false
             }
-        case .idle:
+        case .synced:
             switch rhs {
-            case .idle:
+            case .synced:
                 return true
             default:
                 return false
@@ -329,6 +365,13 @@ extension CompactBlockProcessor.State: Equatable {
         case .error:
             switch rhs {
             case .error:
+                return true
+            default:
+                return false
+            }
+        case .validating:
+            switch rhs {
+            case .validating:
                 return true
             default:
                 return false
