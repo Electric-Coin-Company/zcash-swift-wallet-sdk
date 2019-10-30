@@ -14,7 +14,14 @@ enum CompactBlockProcessorError: Error {
     case dataDbInitFailed(path: String)
 }
 
+struct CompactBlockProcessorNotificationKey {
+    static let progress = "CompactBlockProcessorNotificationKey.progress"
+}
+
 extension Notification.Name {
+    /**
+     Processing progress update. usertInfo["progress"]
+     */
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
     static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
     static let blockProcessorStartedValidating = Notification.Name(rawValue: "CompactBlockProcessorStartedValidating")
@@ -56,11 +63,11 @@ class CompactBlockProcessor {
          */
         case stopped
         /**
-        processor is validating
+         processor is validating
          */
         case validating
         /**
-        processor is scanning
+         processor is scanning
          */
         case scanning
         /**
@@ -97,6 +104,7 @@ class CompactBlockProcessor {
         config.retries
     }
     
+    private var startBlockHeight: BlockHeight?
     private var latestBlockHeight: BlockHeight
     private var batchSize: BlockHeight {
         BlockHeight(self.config.downloadBatchSize)
@@ -155,6 +163,9 @@ class CompactBlockProcessor {
         
         let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.latestBlockHeight())
         
+        if self.startBlockHeight == nil {
+            self.startBlockHeight = latestDownloadedBlockHeight
+        }
         // get latest block height from ligthwalletd
         
         if self.latestBlockHeight > latestDownloadedBlockHeight {
@@ -198,9 +209,9 @@ class CompactBlockProcessor {
         
         validateChainOperation.completionHandler = { (finished, cancelled) in
             guard !cancelled else {
-                               print("Warning: operation cancelled")
-                           return
-                       }
+                print("Warning: operation cancelled")
+                return
+            }
             
             print("validateChainFinished")
         }
@@ -231,9 +242,10 @@ class CompactBlockProcessor {
         
         scanBlocksOperation.completionHandler = { (finished, cancelled) in
             guard !cancelled else {
-                    print("Warning: operation cancelled")
+                print("Warning: operation cancelled")
                 return
             }
+            print("scan operation completed: \(scanBlocksOperation)")
             self.processBatchFinished(range: range)
         }
         
@@ -248,6 +260,22 @@ class CompactBlockProcessor {
         
     }
     
+    func calculateProgress(start: BlockHeight, current: BlockHeight, latest: BlockHeight) -> Double {
+        let totalBlocks = Double(abs(latest - start))
+        let completed = Double(abs(current - start))
+        let progress = completed / totalBlocks
+        return progress
+    }
+    
+    func notifyProgress(completedRange: CompactBlockRange) {
+        let progress = calculateProgress(start: self.startBlockHeight ?? config.walletBirthday, current: completedRange.upperBound, latest: self.latestBlockHeight)
+        
+        print("\(self) progress: \(progress)")
+        NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
+                                        object: self,
+                                        userInfo: [ CompactBlockProcessorNotificationKey.progress : progress ])
+    }
+    
     private func processBatchFinished(range: CompactBlockRange) {
         
         guard processingError == nil else {
@@ -255,6 +283,9 @@ class CompactBlockProcessor {
             return
         }
         retryAttempts = 0
+        
+        notifyProgress(completedRange: range)
+        
         guard !range.isEmpty else {
             processingFinished()
             return

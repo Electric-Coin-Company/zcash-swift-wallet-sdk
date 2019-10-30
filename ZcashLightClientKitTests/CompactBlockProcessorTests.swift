@@ -19,6 +19,7 @@ class CompactBlockProcessorTests: XCTestCase {
     var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     let mockLatestHeight = 282_000
+    
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
@@ -63,8 +64,7 @@ class CompactBlockProcessorTests: XCTestCase {
         }
     }
     
-    func testStartNotifiesSuscriptors() {
-        
+    fileprivate func startProcessing() {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
@@ -75,16 +75,34 @@ class CompactBlockProcessorTests: XCTestCase {
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
         
-        
         XCTAssertNoThrow(try processor.start())
+    }
+    
+    func testStartNotifiesSuscriptors() {
+        
+        startProcessing()
    
-        wait(for: [downloadStartedExpect,
-//                   updatedNotificationExpectation,
+        wait(for: [
+                   downloadStartedExpect,
                    startedValidatingNotificationExpectation,
                    startedScanningNotificationExpectation,
                    idleNotificationExpectation,
-                   
                    ], timeout: 130,enforceOrder: true)
+    }
+    
+    func testProgressNotifications() {
+        
+        let expectedUpdates = expectedBatches(currentHeight: processorConfig.walletBirthday, targetHeight: mockLatestHeight, batchSize: processorConfig.downloadBatchSize)
+        updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
+        
+        startProcessing()
+        wait(for: [updatedNotificationExpectation], timeout: 130)
+        
+        
+    }
+    
+    private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {
+        (abs(currentHeight-targetHeight)/batchSize)
     }
     
     func testNextBatchBlockRange() {
@@ -104,7 +122,6 @@ class CompactBlockProcessorTests: XCTestCase {
         expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper:latestDownloadedHeight + processorConfig.downloadBatchSize))
         
         XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
-        
         
         latestDownloadedHeight = BlockHeight(280_950)
         latestBlockchainHeight = BlockHeight(281_000)
