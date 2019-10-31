@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 51;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -14,6 +14,8 @@
 		0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
 		0D907F2B2322CC5B00D641FE /* ZcashLightClientSampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */; };
 		0D907F362322CC5B00D641FE /* ZcashLightClientSampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */; };
+		0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
+		0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
 		30AB89006A2D6891F32BFBF0 /* Pods_ZcashLightClientSample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */; };
 		868A42CEE1EBA7F9B0E48927 /* Pods_ZcashLightClientSampleUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E9E0B112B9AFA48C27C4BC7 /* Pods_ZcashLightClientSampleUITests.framework */; };
 		F54D714D7D2CBD7882AB31D4 /* Pods_ZcashLightClientSampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC7ACB694E10039AC19A90BE /* Pods_ZcashLightClientSampleTests.framework */; };
@@ -50,6 +52,8 @@
 		0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleUITests.swift; sourceTree = "<group>"; };
 		0D907F372322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestHeightViewController.swift; sourceTree = "<group>"; };
+		0DDFB33D236B844900AED892 /* DemoAppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoAppConfig.swift; sourceTree = "<group>"; };
 		17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1BEB1273671D6E7883C81472 /* Pods-ZcashLightClientSample.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSample.release.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample.release.xcconfig"; sourceTree = "<group>"; };
 		3E9E0B112B9AFA48C27C4BC7 /* Pods_ZcashLightClientSampleUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSampleUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -114,12 +118,14 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				0DDFB33A236B733700AED892 /* Latest Block Height */,
 				0D907F152322CC5900D641FE /* AppDelegate.swift */,
 				0D907F172322CC5900D641FE /* ViewController.swift */,
 				0D907F192322CC5900D641FE /* Main.storyboard */,
 				0D907F1C2322CC5B00D641FE /* Assets.xcassets */,
 				0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */,
 				0D907F212322CC5B00D641FE /* Info.plist */,
+				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
 			);
 			path = ZcashLightClientSample;
 			sourceTree = "<group>";
@@ -142,6 +148,14 @@
 			path = ZcashLightClientSampleUITests;
 			sourceTree = "<group>";
 		};
+		0DDFB33A236B733700AED892 /* Latest Block Height */ = {
+			isa = PBXGroup;
+			children = (
+				0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */,
+			);
+			path = "Latest Block Height";
+			sourceTree = "<group>";
+		};
 		66EF5A44FD6A5AC92244F054 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -152,7 +166,6 @@
 				59BA5F37462FF34F64350712 /* Pods-ZcashLightClientSampleUITests.debug.xcconfig */,
 				89F6F4B8F441C9EC43B7412A /* Pods-ZcashLightClientSampleUITests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -388,6 +401,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				0D907F182322CC5900D641FE /* ViewController.swift in Sources */,
+				0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */,
+				0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */,
 				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -19,7 +19,7 @@ public enum WalletError: Error {
 
 public class Wallet {
     
-    private var rustBackend: ZcashRustBackendWelding.Type
+    private var rustBackend: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     private var dataDbURL: URL
     private var cacheDbURL: URL
     private var paramDestination: URL
@@ -28,9 +28,8 @@ public class Wallet {
     private var walletBirthday: WalletBirthday
     private var compactBlockStorage: CompactBlockStoring?
     
-    init(rustWelding: ZcashRustBackendWelding.Type, cacheDbURL: URL, dataDbURL: URL, paramDestination: URL, seedProvider: SeedProvider, walletBirthday: WalletBirthday, accountIDs: [Int] = [0]) {
+    init(cacheDbURL: URL, dataDbURL: URL, paramDestination: URL, seedProvider: SeedProvider, walletBirthday: WalletBirthday, accountIDs: [Int] = [0]) {
         
-        self.rustBackend = rustWelding.self
         self.dataDbURL = dataDbURL
         self.paramDestination = paramDestination
         self.accountIDs = accountIDs
