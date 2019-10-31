@@ -1,0 +1,59 @@
+PODS:
+  - BoringSSL-GRPC (0.0.3):
+    - BoringSSL-GRPC/Implementation (= 0.0.3)
+    - BoringSSL-GRPC/Interface (= 0.0.3)
+  - BoringSSL-GRPC/Implementation (0.0.3):
+    - BoringSSL-GRPC/Interface (= 0.0.3)
+  - BoringSSL-GRPC/Interface (0.0.3)
+  - gRPC-Core (1.23.1):
+    - gRPC-Core/Implementation (= 1.23.1)
+    - gRPC-Core/Interface (= 1.23.1)
+  - gRPC-Core/Implementation (1.23.1):
+    - BoringSSL-GRPC (= 0.0.3)
+    - gRPC-Core/Interface (= 1.23.1)
+    - nanopb (~> 0.3)
+  - gRPC-Core/Interface (1.23.1)
+  - nanopb (0.3.9011):
+    - nanopb/decode (= 0.3.9011)
+    - nanopb/encode (= 0.3.9011)
+  - nanopb/decode (0.3.9011)
+  - nanopb/encode (0.3.9011)
+  - SQLite.swift (0.12.2):
+    - SQLite.swift/standard (= 0.12.2)
+  - SQLite.swift/standard (0.12.2)
+  - SwiftGRPC (0.10.0):
+    - gRPC-Core (~> 1.23.0)
+    - SwiftProtobuf (~> 1.7.0)
+  - SwiftProtobuf (1.7.0)
+  - ZcashLightClientKit (0.0.1):
+    - SQLite.swift
+    - SwiftGRPC
+
+DEPENDENCIES:
+  - ZcashLightClientKit (from `../../`)
+
+SPEC REPOS:
+  trunk:
+    - BoringSSL-GRPC
+    - gRPC-Core
+    - nanopb
+    - SQLite.swift
+    - SwiftGRPC
+    - SwiftProtobuf
+
+EXTERNAL SOURCES:
+  ZcashLightClientKit:
+    :path: "../../"
+
+SPEC CHECKSUMS:
+  BoringSSL-GRPC: db8764df3204ccea016e1c8dd15d9a9ad63ff318
+  gRPC-Core: 4b1148eb8596225178e5a154e40e35141a3cdf0f
+  nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
+  SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
+  SwiftGRPC: f8fcfecb547c96cc6913de619f95fa3cd09838ee
+  SwiftProtobuf: 4fd9645e69b72cbae6ec8da5be0cdd20ca6565dd
+  ZcashLightClientKit: 2adc70f65050b7940b527ce507f903c5ab7f1194
+
+PODFILE CHECKSUM: 7c9d39272319433442b14024a916deb276e81da4
+
+COCOAPODS: 1.8.4

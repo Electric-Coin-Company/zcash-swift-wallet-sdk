@@ -9,16 +9,21 @@
 import Foundation
 import SwiftGRPC
 
-class LightWalletGRPCService {
+public class LightWalletGRPCService {
     
     var queue = DispatchQueue.init(label: "LightWalletGRPCService")
     let channel: Channel
     
     let compactTxStreamer: CompactTxStreamerServiceClient
     
-    init(channel: Channel) {
+    public init(channel: Channel) {
         self.channel = channel
         compactTxStreamer = CompactTxStreamerServiceClient(channel: self.channel)
+    }
+    
+    public convenience init(host: String, secure: Bool = true) {
+        let channel = Channel(address: host, secure: secure, arguments: [])
+        self.init(channel: channel)
     }
     
     func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil, result: @escaping (CallResult) -> Void) throws -> CompactTxStreamerGetBlockRangeCall {
@@ -43,7 +48,7 @@ class LightWalletGRPCService {
 
 extension LightWalletGRPCService: LightWalletService {
     
-    func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
+    public func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
         var blocks = [ZcashCompactBlock]()
         
         let call = try compactTxStreamer.getBlockRange(range.blockRange(), completion: { statusCode in
@@ -62,7 +67,7 @@ extension LightWalletGRPCService: LightWalletService {
         return blocks
     }
     
-    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
+    public func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         do {
             try compactTxStreamer.getLatestBlock(ChainSpec()) { (blockID, _) in
                 guard let rawHeight = blockID?.height, let blockHeight = Int(exactly: rawHeight) else {
@@ -79,7 +84,7 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
     // TODO: Make cancellable
-    func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
+    public func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         
         queue.async {
             var blocks = [CompactBlock]()
@@ -124,7 +129,7 @@ extension LightWalletGRPCService: LightWalletService {
         
     }
     
-    func latestBlockHeight() throws -> BlockHeight {
+    public func latestBlockHeight() throws -> BlockHeight {
         
         guard let height = try? latestBlock().compactBlockHeight() else {
             throw LightWalletServiceError.invalidBlock
