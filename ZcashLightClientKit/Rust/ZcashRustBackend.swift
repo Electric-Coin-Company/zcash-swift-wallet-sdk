@@ -7,13 +7,10 @@
 //
 
 import Foundation
-enum RustWeldingError: Error {
-    case genericError(message: String)
-}
 
 class ZcashRustBackend: ZcashRustBackendWelding {
     
-    static func lastError() -> Error? {
+    static func lastError() -> RustWeldingError? {
         guard let message = getLastError() else { return nil }
         return RustWeldingError.genericError(message: message)
     }
@@ -33,9 +30,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     /**
     * Sets up the internal structure of the data database.
     */
-    static func initDataDb(dbData: URL) -> Bool {
+    static func initDataDb(dbData: URL) throws {
         let dbData = dbData.osStr()
-        return zcashlc_init_data_database(dbData.0, dbData.1) != 0
+        guard zcashlc_init_data_database(dbData.0, dbData.1) != 0 else {
+            if let error = lastError() {
+                throw throwDataDbError(error)
+            }
+            throw RustWeldingError.dataDbInitFailed(message: "unknown error")
+        }
     }
 
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]? {
@@ -53,9 +55,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
 
-    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) -> Bool {
+    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
         let dbData = dbData.osStr()
-        return zcashlc_init_blocks_table(dbData.0, dbData.1, height, [CChar](hash.utf8CString), time, [CChar](saplingTree.utf8CString)) != 0
+        guard zcashlc_init_blocks_table(dbData.0, dbData.1, height, [CChar](hash.utf8CString), time, [CChar](saplingTree.utf8CString)) != 0 else {
+            if let error = lastError() {
+                throw throwDataDbError(error)
+            }
+            throw RustWeldingError.dataDbInitFailed(message: "Unknown Error")
+        }
     }
 
     static func getAddress(dbData: URL, account: Int32) -> String? {
@@ -120,6 +127,17 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         let spendParams = spendParams.osStr()
         let outputParams = outputParams.osStr()
         return zcashlc_send_to_address(dbData.0, dbData.1, account, extsk, to, value, memo, spendParams.0, spendParams.1, outputParams.0, outputParams.1)
+    }
+    
+}
+
+private extension ZcashRustBackend {
+    static func throwDataDbError(_ error: RustWeldingError) -> Error {
+        
+        if case RustWeldingError.genericError(let message) = error, message.contains("is not empty") {
+            return RustWeldingError.dataDbNotEmpty
+        }
+        return RustWeldingError.dataDbInitFailed(message: error.localizedDescription)
     }
 }
 

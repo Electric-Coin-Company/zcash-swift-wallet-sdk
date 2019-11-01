@@ -151,7 +151,9 @@ class CompactBlockProcessor {
         // TODO: check if this validation makes sense at all
         //        try validateConfiguration()
         
-        guard rustBackend.initDataDb(dbData: config.dataDb) else {
+        do {
+            try rustBackend.initDataDb(dbData: config.dataDb)
+        } catch {
             throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
         }
         

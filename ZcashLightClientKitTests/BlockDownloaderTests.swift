@@ -13,9 +13,10 @@ class BlockDownloaderTests: XCTestCase {
     var downloader: CompactBlockDownloading!
     var service: LightWalletService!
     var storage: CompactBlockStoring!
+    var cacheDB = try! __cacheDbURL()
     override func setUp() {
         service = LightWalletGRPCService(channel: ChannelProvider().channel())
-        storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+        storage = try! TestDbBuilder.diskCompactBlockStorage(at: cacheDB)
         downloader = CompactBlockDownloader(service: service, storage: storage)
     }
     
@@ -24,6 +25,7 @@ class BlockDownloaderTests: XCTestCase {
         service = nil
         storage = nil
         downloader = nil
+        try? FileManager.default.removeItem(at: cacheDB)
     }
     
     func testSmallDownloadAsync() {

@@ -45,7 +45,7 @@ class CompactBlockProcessorTests: XCTestCase {
     override func tearDown() {
         
         try! FileManager.default.removeItem(at: processorConfig.cacheDb)
-        try! FileManager.default.removeItem(at: processorConfig.dataDb)
+        try? FileManager.default.removeItem(at: processorConfig.dataDb)
         downloadStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()
         updatedNotificationExpectation.unsubscribeFromNotifications()

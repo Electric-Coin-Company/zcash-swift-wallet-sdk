@@ -7,15 +7,28 @@
 //
 
 import UIKit
-
+import ZcashLightClientKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
-
+    private var wallet: Wallet?
+    
+    var addresses: [String]?
+    var sharedWallet: Wallet {
+        if let wallet = wallet {
+            return wallet
+        } else {
+            let wallet = Wallet(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL())
+            self.addresses = try! wallet.initialize(seedProvider: DemoAppConfig(), walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
+            self.wallet = wallet
+            return wallet
+        }
+    }
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        _ = self.sharedWallet
         return true
     }
 
@@ -43,4 +56,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 }
+/**
+ The functions below are convenience functions for THIS SAMPLE APP.
+ */
 
+
+extension DemoAppConfig: SeedProvider {}
+
+extension Wallet {
+    static var shared: Wallet {
+        (UIApplication.shared.delegate as! AppDelegate).sharedWallet // AppDelegate or DIE.
+    }
+}
+
+func __documentsDirectory() throws -> URL {
+    try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+}
+
+func __cacheDbURL() throws -> URL {
+    try __documentsDirectory().appendingPathComponent("cache.db", isDirectory: false)
+}
+
+func __dataDbURL() throws -> URL {
+    try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
+}

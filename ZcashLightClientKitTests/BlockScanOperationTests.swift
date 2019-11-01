@@ -38,10 +38,7 @@ class BlockScanOperationTests: XCTestCase {
     }
     
     func testSingleDownloadAndScanOperation() {
-        guard rustWelding.initDataDb(dbData: dataDbURL) else {
-            XCTFail("could not initialize data DB")
-            return
-        }
+        XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL))
         
         let downloadStartedExpect = XCTestExpectation(description: self.description + "download started")
         let downloadExpect = XCTestExpectation(description: self.description + "download")
