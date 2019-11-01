@@ -8,20 +8,26 @@
 
 import Foundation
 
+enum RustWeldingError: Error {
+    case genericError(message: String)
+    case dataDbInitFailed(message: String)
+    case dataDbNotEmpty
+}
+
 struct ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }
 
 protocol ZcashRustBackendWelding {
-    static func lastError() -> Error?
+    static func lastError() -> RustWeldingError?
     
     static func getLastError() -> String?
 
-    static func initDataDb(dbData: URL) -> Bool
+    static func initDataDb(dbData: URL) throws
 
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]?
     
-    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) -> Bool
+    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws
 
     static func getAddress(dbData: URL, account: Int32) -> String?
 

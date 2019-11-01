@@ -31,14 +31,12 @@ class WalletTests: XCTestCase {
     
     func testWalletInitialization() {
         
-        let wallet = Wallet(rustWelding: ZcashRustBackend.self, cacheDbURL: cacheData, dataDbURL: dbData, paramDestination: paramDestination, seedProvider: SampleSeedProvider(), walletBirthday: WalletBirthdayProvider.testBirthday)
+        let wallet = Wallet(cacheDbURL: cacheData, dataDbURL: dbData)
         
-        XCTAssertNoThrow(try wallet.initalize())
+        XCTAssertNoThrow(try wallet.initialize(seedProvider: SampleSeedProvider(), walletBirthdayHeight: SAPLING_ACTIVATION_HEIGHT))
         
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
         XCTAssertNoThrow( try FileManager.default.removeItem(at: dbData!) )
-
-        XCTAssertEqual(wallet.latestBlockHeight(), BlockHeight.empty())
         
         XCTAssertNoThrow( try FileManager.default.removeItem(at: cacheData!) )
     }

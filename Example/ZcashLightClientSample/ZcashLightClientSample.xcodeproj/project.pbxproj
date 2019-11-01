@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
 		0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
 		0D907F182322CC5900D641FE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F172322CC5900D641FE /* ViewController.swift */; };
 		0D907F1B2322CC5900D641FE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F192322CC5900D641FE /* Main.storyboard */; };
@@ -39,6 +40,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0D756A93236C761E009B041B /* GetAddressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetAddressViewController.swift; sourceTree = "<group>"; };
 		0D907F122322CC5900D641FE /* ZcashLightClientSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZcashLightClientSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F152322CC5900D641FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0D907F172322CC5900D641FE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -93,6 +95,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0D756A92236C75FE009B041B /* Get Address */ = {
+			isa = PBXGroup;
+			children = (
+				0D756A93236C761E009B041B /* GetAddressViewController.swift */,
+			);
+			path = "Get Address";
+			sourceTree = "<group>";
+		};
 		0D907F092322CC5900D641FE = {
 			isa = PBXGroup;
 			children = (
@@ -118,6 +128,7 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				0D756A92236C75FE009B041B /* Get Address */,
 				0DDFB33A236B733700AED892 /* Latest Block Height */,
 				0D907F152322CC5900D641FE /* AppDelegate.swift */,
 				0D907F172322CC5900D641FE /* ViewController.swift */,
@@ -246,7 +257,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1020;
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1110;
 				ORGANIZATIONNAME = "Electric Coin Company";
 				TargetAttributes = {
 					0D907F112322CC5900D641FE = {
@@ -400,6 +411,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */,
 				0D907F182322CC5900D641FE /* ViewController.swift in Sources */,
 				0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */,
 				0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */,

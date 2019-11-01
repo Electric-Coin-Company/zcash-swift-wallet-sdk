@@ -19,8 +19,28 @@
                         <sections>
                             <tableViewSection id="HAA-1f-le3">
                                 <cells>
-                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" textLabel="AMo-WC-MIN" style="IBUITableViewCellStyleDefault" id="rCB-Ax-4Nk">
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" textLabel="Dic-ex-pwz" style="IBUITableViewCellStyleDefault" id="thm-RZ-Mhh">
                                         <rect key="frame" x="0.0" y="28" width="414" height="43.5"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="thm-RZ-Mhh" id="zOR-bL-Uwc">
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Get Address" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Dic-ex-pwz">
+                                                    <rect key="frame" x="20" y="0.0" width="374" height="43.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <segue destination="Rx9-1X-8Gi" kind="show" id="YDj-7N-giN"/>
+                                        </connections>
+                                    </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" textLabel="AMo-WC-MIN" style="IBUITableViewCellStyleDefault" id="rCB-Ax-4Nk">
+                                        <rect key="frame" x="0.0" y="71.5" width="414" height="43.5"/>
                                         <autoresizingMask key="autoresizingMask"/>
                                         <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="rCB-Ax-4Nk" id="ac2-bZ-mAy">
                                             <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
@@ -52,6 +72,39 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="u9B-ne-NE7" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="828" y="40"/>
+        </scene>
+        <!--Get Addreses-->
+        <scene sceneID="zFi-Pu-g6Q">
+            <objects>
+                <viewController title="Get Addreses" id="Rx9-1X-8Gi" customClass="GetAddressViewController" customModule="ZcashLightClientSample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5WU-Pu-1e9">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="characterWrap" numberOfLines="0" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="X0E-Ba-xxX">
+                                <rect key="frame" x="16" y="50" width="382" height="796"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="jVy-LO-XKe" firstAttribute="trailing" secondItem="X0E-Ba-xxX" secondAttribute="trailing" constant="16" id="FqK-H1-XgY"/>
+                            <constraint firstItem="X0E-Ba-xxX" firstAttribute="centerX" secondItem="5WU-Pu-1e9" secondAttribute="centerX" id="UK8-Jg-oK4"/>
+                            <constraint firstItem="X0E-Ba-xxX" firstAttribute="centerY" secondItem="5WU-Pu-1e9" secondAttribute="centerY" id="VGo-Dc-2EC"/>
+                            <constraint firstItem="jVy-LO-XKe" firstAttribute="bottom" secondItem="X0E-Ba-xxX" secondAttribute="bottom" constant="16" id="Wth-O9-0B1"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="jVy-LO-XKe"/>
+                    </view>
+                    <navigationItem key="navigationItem" title="Get Address" largeTitleDisplayMode="always" id="Uvy-EM-bSo"/>
+                    <connections>
+                        <outlet property="addressLabel" destination="X0E-Ba-xxX" id="9es-sw-gO5"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="kr1-B6-akA" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1800" y="-445"/>
         </scene>
         <!--Latest Height View Controller-->
         <scene sceneID="4pw-mR-qER">
@@ -94,7 +147,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="mVQ-br-4uP" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1528.985507246377" y="3.3482142857142856"/>
+            <point key="canvasLocation" x="1745" y="261"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="0ru-sC-FRK">

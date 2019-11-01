@@ -26,8 +26,7 @@ class ZcashRustBackendTests: XCTestCase {
     func testInitAndGetAddress() {
         let seed = "seed"
         
-        XCTAssert(ZcashRustBackend.initDataDb(dbData: dbData!))
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
+        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         
         let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
@@ -48,10 +47,10 @@ class ZcashRustBackendTests: XCTestCase {
             return
         }
         let seed = "seed"
-        XCTAssertTrue(ZcashRustBackend.initDataDb(dbData: dbData!))
+        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
-        let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)
+        XCTAssertNotNil(ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
         let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0)
