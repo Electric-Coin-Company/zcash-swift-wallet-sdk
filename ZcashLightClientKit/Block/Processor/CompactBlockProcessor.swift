@@ -40,8 +40,6 @@ public class CompactBlockProcessor {
      Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
      */
     
-    
-    
     // TODO: make internal again
     public struct Configuration {
         public var cacheDb: URL
