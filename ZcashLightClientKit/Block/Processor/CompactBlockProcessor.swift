@@ -169,7 +169,7 @@ public class CompactBlockProcessor {
             try rustBackend.initDataDb(dbData: config.dataDb)
             try rustBackend.initBlocksTable(dbData: config.dataDb, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
         } catch RustWeldingError.dataDbNotEmpty {
-            // i'm ok 
+            // i'm ok
         } catch {
             throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
         }
@@ -201,7 +201,7 @@ public class CompactBlockProcessor {
         
         if self.latestBlockHeight > latestDownloadedBlockHeight {
             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
-        } else {
+        } else if self.latestBlockHeight < latestDownloadedBlockHeight {
             self.downloader.latestBlockHeight { (result) in
                 switch result {
                 case .success(let blockHeight):
@@ -214,6 +214,8 @@ public class CompactBlockProcessor {
                     }
                 }
             }
+        } else {
+            self.processingFinished()
         }
     }
     
