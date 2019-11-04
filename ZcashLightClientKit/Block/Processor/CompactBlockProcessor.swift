@@ -201,21 +201,23 @@ public class CompactBlockProcessor {
         
         if self.latestBlockHeight > latestDownloadedBlockHeight {
             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
-        } else if self.latestBlockHeight < latestDownloadedBlockHeight {
+        } else {
             self.downloader.latestBlockHeight { (result) in
                 switch result {
                 case .success(let blockHeight):
                     self.latestBlockHeight = blockHeight
                     
-                    self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                    if self.latestBlockHeight == latestDownloadedBlockHeight  {
+                        self.processingFinished()
+                    } else {
+                        self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                    }
                 case .failure(let e):
                     DispatchQueue.main.async {
                         self.fail(e)
                     }
                 }
             }
-        } else {
-            self.processingFinished()
         }
     }
     
