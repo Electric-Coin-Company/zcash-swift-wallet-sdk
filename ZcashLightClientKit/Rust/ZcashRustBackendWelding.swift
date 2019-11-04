@@ -8,17 +8,17 @@
 
 import Foundation
 
-enum RustWeldingError: Error {
+public enum RustWeldingError: Error {
     case genericError(message: String)
     case dataDbInitFailed(message: String)
     case dataDbNotEmpty
 }
 
-struct ZcashRustBackendWeldingConstants {
+public struct ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }
 
-protocol ZcashRustBackendWelding {
+public protocol ZcashRustBackendWelding {
     static func lastError() -> RustWeldingError?
     
     static func getLastError() -> String?

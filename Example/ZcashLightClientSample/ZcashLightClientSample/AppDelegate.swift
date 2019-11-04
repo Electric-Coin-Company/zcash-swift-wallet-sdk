@@ -53,13 +53,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
-
-
+    
 }
 /**
  The functions below are convenience functions for THIS SAMPLE APP.
  */
 
+
+extension AppDelegate {
+    func clearDatabases() {
+        do {
+            try FileManager.default.removeItem(at: try __cacheDbURL())
+        } catch {
+            print("error clearing cache DB: \(error)")
+        }
+        
+        do {
+            try FileManager.default.removeItem(at: try __dataDbURL())
+        } catch {
+            print("error clearing data db: \(error)")
+        }
+    }
+}
 
 extension DemoAppConfig: SeedProvider {}
 

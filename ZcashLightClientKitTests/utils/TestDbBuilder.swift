@@ -17,7 +17,7 @@ struct TestDbBuilder {
     }
     
     static func inMemoryCompactBlockStorage() throws -> CompactBlockStorage {
-        let compactBlockDao = CompactBlockStorage(connectionProvider: InMemoryDbProvider())
+        let compactBlockDao = CompactBlockStorage(connectionProvider: try InMemoryDbProvider())
         try compactBlockDao.createTable()
         return compactBlockDao
     }
@@ -41,14 +41,15 @@ struct TestDbBuilder {
 struct InMemoryDbProvider: ConnectionProvider {
     var readonly: Bool
     
-    init(readonly: Bool = false) {
+    var conn: Connection
+    init(readonly: Bool = false) throws {
         self.readonly = readonly
+        self.conn = try Connection(.inMemory, readonly: readonly)
     }
     
     func connection() throws -> Connection {
-       try Connection(.inMemory, readonly: readonly)
+        self.conn
     }
-    
 }
 
 struct StubBlockCreator {

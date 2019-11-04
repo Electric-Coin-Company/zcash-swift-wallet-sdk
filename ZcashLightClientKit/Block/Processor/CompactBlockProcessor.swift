@@ -8,17 +8,17 @@
 
 import Foundation
 
-enum CompactBlockProcessorError: Error {
+public enum CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
     case dataDbInitFailed(path: String)
 }
 
-struct CompactBlockProcessorNotificationKey {
-    static let progress = "CompactBlockProcessorNotificationKey.progress"
+public struct CompactBlockProcessorNotificationKey {
+    public static let progress = "CompactBlockProcessorNotificationKey.progress"
 }
 
-extension Notification.Name {
+public extension Notification.Name {
     /**
      Processing progress update. usertInfo["progress"]
      */
@@ -32,7 +32,7 @@ extension Notification.Name {
     static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
 }
 
-class CompactBlockProcessor {
+public class CompactBlockProcessor {
     /**
      Compact Block Processor configuration
      
@@ -40,18 +40,24 @@ class CompactBlockProcessor {
      Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
      */
     
-    struct Configuration {
-        var cacheDb: URL
-        var dataDb: URL
-        var downloadBatchSize = DEFAULT_BATCH_SIZE
-        var blockPollInterval = DEFAULT_POLL_INTERVAL
-        var retries = DEFAULT_RETRIES
-        var maxBackoffInterval = DEFAULT_MAX_BACKOFF_INTERVAL
-        var rewindDistance = DEFAULT_REWIND_DISTANCE
-        var walletBirthday = SAPLING_ACTIVATION_HEIGHT
+    // TODO: make internal again
+    public struct Configuration {
+        public var cacheDb: URL
+        public var dataDb: URL
+        public var downloadBatchSize = DEFAULT_BATCH_SIZE
+        public var blockPollInterval = DEFAULT_POLL_INTERVAL
+        public var retries = DEFAULT_RETRIES
+        public var maxBackoffInterval = DEFAULT_MAX_BACKOFF_INTERVAL
+        public var rewindDistance = DEFAULT_REWIND_DISTANCE
+        public var walletBirthday = SAPLING_ACTIVATION_HEIGHT
+        
+        public init(cacheDb: URL, dataDb: URL){
+            self.cacheDb = cacheDb
+            self.dataDb = dataDb
+        }
     }
     
-    enum State {
+    public enum State {
         
         /**
          connected and downloading blocks
@@ -82,7 +88,7 @@ class CompactBlockProcessor {
         
     }
     
-    private(set) var state: State = .synced {
+    public private(set) var state: State = .stopped {
         didSet {
             transitionState(from: oldValue, to: self.state)
         }
@@ -91,7 +97,6 @@ class CompactBlockProcessor {
     private var downloader: CompactBlockDownloading
     private var rustBackend: ZcashRustBackendWelding.Type
     private var config: Configuration = Configuration.standard
-    private var service: LightWalletService
     private var queue: OperationQueue = {
         let q = OperationQueue()
         q.maxConcurrentOperationCount = 1
@@ -112,13 +117,12 @@ class CompactBlockProcessor {
     
     private var processingError: Error?
     
-    init(downloader: CompactBlockDownloading, backend: ZcashRustBackendWelding.Type, config: Configuration, service: LightWalletService) {
+    public init(downloader: CompactBlockDownloading, backend: ZcashRustBackendWelding.Type, config: Configuration) {
         self.downloader = downloader
         self.rustBackend = backend
         self.config = config
-        self.service = service
         self.latestBlockHeight = config.walletBirthday
-        suscribeToSystemNotifications()
+        self.suscribeToSystemNotifications()
         
     }
     
@@ -145,25 +149,48 @@ class CompactBlockProcessor {
         }
     }
     
-    func start() throws {
+    public func start() throws {
         // TODO: Handle Background task
         
         // TODO: check if this validation makes sense at all
         //        try validateConfiguration()
         
+        guard !queue.isSuspended else {
+            queue.isSuspended = false
+            return
+        }
+        guard let birthday = WalletBirthday.birthday(with: config.walletBirthday) else {
+            throw CompactBlockProcessorError.invalidConfiguration
+        }
+        
         do {
             try rustBackend.initDataDb(dbData: config.dataDb)
+            try rustBackend.initBlocksTable(dbData: config.dataDb, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
+        } catch RustWeldingError.dataDbNotEmpty {
+            // i'm ok
         } catch {
             throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
         }
         
         try nextBatch()
+        
+    }
+    
+    public func stop(cancelTasks: Bool = true) {
+           self.backoffTimer?.invalidate()
+           self.backoffTimer = nil
+           if cancelTasks {
+               queue.cancelAllOperations()
+           } else {
+               self.queue.isSuspended = true
+           }
+           self.state = .stopped
     }
     
     private func nextBatch() throws {
         // get latest block height
         
-        let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.latestBlockHeight())
+        let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.lastDownloadedBlockHeight())
         
         if self.startBlockHeight == nil {
             self.startBlockHeight = latestDownloadedBlockHeight
@@ -173,12 +200,16 @@ class CompactBlockProcessor {
         if self.latestBlockHeight > latestDownloadedBlockHeight {
             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
         } else {
-            self.service.latestBlockHeight { (result) in
+            self.downloader.latestBlockHeight { (result) in
                 switch result {
                 case .success(let blockHeight):
                     self.latestBlockHeight = blockHeight
                     
-                    self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                    if self.latestBlockHeight == latestDownloadedBlockHeight  {
+                        self.processingFinished()
+                    } else {
+                        self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                    }
                 case .failure(let e):
                     DispatchQueue.main.async {
                         self.fail(e)
@@ -262,9 +293,9 @@ class CompactBlockProcessor {
         
     }
     
-    func calculateProgress(start: BlockHeight, current: BlockHeight, latest: BlockHeight) -> Double {
-        let totalBlocks = Double(abs(latest - start))
-        let completed = Double(abs(current - start))
+    func calculateProgress(start: BlockHeight, current: BlockHeight, latest: BlockHeight) -> Float {
+        let totalBlocks = Float(abs(latest - start))
+        let completed = Float(abs(current - start))
         let progress = completed / totalBlocks
         return progress
     }
@@ -322,11 +353,6 @@ class CompactBlockProcessor {
         processNewBlocks(range: range)
     }
     
-    func stop() {
-        queue.cancelAllOperations()
-        self.state = .stopped
-    }
-    
     func fail(_ error: Error) {
         // todo specify: failure
         print(error.localizedDescription)
@@ -357,7 +383,7 @@ class CompactBlockProcessor {
     }
 }
 
-extension CompactBlockProcessor.Configuration {
+public extension CompactBlockProcessor.Configuration {
     static var standard: CompactBlockProcessor.Configuration {
         let pathProvider = DefaultResourceProvider()
         return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL, dataDb: pathProvider.dataDbURL)
@@ -365,7 +391,7 @@ extension CompactBlockProcessor.Configuration {
 }
 
 extension CompactBlockProcessor.State: Equatable {
-    static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
+    public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
         switch  lhs {
         case .downloading:
             switch  rhs {
