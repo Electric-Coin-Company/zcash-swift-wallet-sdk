@@ -46,7 +46,7 @@ class BlockDownloaderTests: XCTestCase {
                 
                 XCTAssertTrue(self.validate(result: result, against: upperRange))
                 
-                self.downloader.latestBlockHeight { (resultHeight) in
+                self.downloader.lastDownloadedBlockHeight { (resultHeight) in
                     expect.fulfill()
                     XCTAssertTrue(self.validate(result: resultHeight, against: upperRange))
                 }
@@ -65,7 +65,7 @@ class BlockDownloaderTests: XCTestCase {
         var latest: BlockHeight = 0
         
         do {
-            latest = try downloader.latestBlockHeight()
+            latest = try downloader.lastDownloadedBlockHeight()
         } catch {
             XCTFail(error.localizedDescription)
         }
@@ -75,7 +75,7 @@ class BlockDownloaderTests: XCTestCase {
         
         var currentLatest: BlockHeight = 0
         do {
-            currentLatest = try downloader.latestBlockHeight()
+            currentLatest = try downloader.lastDownloadedBlockHeight()
             
         } catch {
             XCTFail("latest block failed")

@@ -18,9 +18,17 @@ struct DemoAppConfig {
     static var address: String {
         "\(host):\(port)"
     }
+    
+    static var processorConfig: CompactBlockProcessor.Configuration {
+        var config = CompactBlockProcessor.Configuration(cacheDb: try! __cacheDbURL(), dataDb: try! __dataDbURL())
+        config.walletBirthday = self.birthdayHeight
+        return config
+    }
 }
+
 
 enum ZcashNetwork {
     case mainNet
     case testNet
 }
+

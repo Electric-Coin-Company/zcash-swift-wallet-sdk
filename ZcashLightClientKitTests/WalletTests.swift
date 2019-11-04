@@ -17,10 +17,10 @@ class WalletTests: XCTestCase {
     var cacheData: URL! = nil
     
     override func setUp() {
-        let dataDir = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-        dbData = dataDir.appendingPathComponent("data.db")
-        cacheData = dataDir.appendingPathComponent("cache.db")
-        paramDestination = dataDir.appendingPathComponent("parameters")
+        
+        dbData = try! __dataDbURL()
+        cacheData = try! __cacheDbURL()
+        paramDestination = try! __documentsDirectory().appendingPathComponent("parameters")
     }
     
     override func tearDown() {
@@ -37,8 +37,8 @@ class WalletTests: XCTestCase {
         
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
         XCTAssertNoThrow( try FileManager.default.removeItem(at: dbData!) )
-        
-        XCTAssertNoThrow( try FileManager.default.removeItem(at: cacheData!) )
+        // TODO: Initialize cacheDB on start, will be done when Synchronizer is ready and integrated 
+//        XCTAssertNoThrow( try FileManager.default.removeItem(at: cacheData!) )
     }
 }
 

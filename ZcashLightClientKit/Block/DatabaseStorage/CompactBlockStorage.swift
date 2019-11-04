@@ -49,7 +49,6 @@ struct CompactBlockStorage: CompactBlockDAO {
     }
     
     func insert(_ block: ZcashCompactBlock) throws {
-        
         try dbProvider.connection().run(compactBlocksTable().insert(block))
     }
     
@@ -79,7 +78,6 @@ struct CompactBlockStorage: CompactBlockDAO {
     func rewind(to height: BlockHeight) throws {
         try dbProvider.connection().run(compactBlocksTable().filter(heightColumn() >= Int64(height)).delete())
     }
-    
 }
 
 extension CompactBlockStorage: CompactBlockStoring {

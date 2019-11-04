@@ -13,7 +13,7 @@ enum CompactBlockDownloadError: Error {
     case generalError(error: Error)
 }
 
-protocol CompactBlockDownloading {
+public protocol CompactBlockDownloading {
     /**
     Downloads and stores the given block range.
     Non-Blocking
@@ -27,6 +27,12 @@ protocol CompactBlockDownloading {
          returns the height of the latest compact block stored locally
          BlockHeight.empty() if no blocks are stored yet
          non-blocking
+     */
+    func lastDownloadedBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void)
+    
+    /**
+        Returns the last height on the blockchain
+        Non-blocking
      */
     func latestBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void)
     
@@ -42,6 +48,12 @@ protocol CompactBlockDownloading {
         BlockHeight.empty() if no blocks are stored yet
          Blocking
     */
+    func lastDownloadedBlockHeight() throws -> BlockHeight
+    
+    /**
+     Returns the latest block height
+     Blocking
+     */
     func latestBlockHeight() throws -> BlockHeight
 }
 
@@ -66,6 +78,21 @@ class CompactBlockDownloader {
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
+    func latestBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
+        lightwalletService.latestBlockHeight { (r) in
+            
+            switch r {
+            case .failure(let error):
+                result(.failure(error))
+            case .success(let height):
+                result(.success(height))
+            }
+        }
+    }
+    
+    func latestBlockHeight() throws -> BlockHeight {
+        try lightwalletService.latestBlockHeight()
+    }
     
     /**
      Downloads and stores the given block range.
@@ -83,14 +110,12 @@ extension CompactBlockDownloader: CompactBlockDownloading {
             switch result{
             case .failure(let error):
                 completion(error)
-                return
             case .success(let compactBlocks):
                 self.storage.write(blocks: compactBlocks) { (storeError) in
                     completion(storeError)
                 }
             }
         }
-        
     }
     
     func downloadBlockRange(_ range: CompactBlockRange) throws  {
@@ -105,7 +130,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         }
     }
     
-    func latestBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void) {
+    func lastDownloadedBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void) {
         
         storage.latestHeight { (r) in
             
@@ -125,7 +150,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
        try self.storage.rewind(to: height)
     }
     
-    func latestBlockHeight() throws -> BlockHeight {
+    func lastDownloadedBlockHeight() throws -> BlockHeight {
         try self.storage.latestHeight()
     }
     

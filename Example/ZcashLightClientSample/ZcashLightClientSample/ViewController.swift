@@ -9,12 +9,29 @@
 import UIKit
 
 class MainTableViewController: UITableViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        
+        self.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .trash, target: self, action: #selector(clearDatabases(_:)))
     }
 
-
+    @objc func clearDatabases(_ sender: Any?) {
+        let alert = UIAlertController(title: "Clear Databases?", message: "You are about to clear existing databases. You will lose all synced blocks, stored TXs, etc", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Drop it like it's FIAT", style: UIAlertAction.Style.destructive) { _ in 
+            guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
+                return
+            }
+            
+            appDelegate.clearDatabases()
+            
+        })
+        
+        alert.addAction(UIAlertAction(title: "No please! Have mercy!", style: UIAlertAction.Style.cancel, handler: nil))
+        
+        self.present(alert, animated: true, completion: nil)
+            
+    }
 }
 

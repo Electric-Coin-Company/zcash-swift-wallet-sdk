@@ -30,8 +30,7 @@ class CompactBlockProcessorTests: XCTestCase {
         
         processor = CompactBlockProcessor(downloader: downloader,
                                             backend: ZcashRustBackend.self,
-                                            config: processorConfig,
-                                            service: service)
+                                            config: processorConfig)
         
         downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
