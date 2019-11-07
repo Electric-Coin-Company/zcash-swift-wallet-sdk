@@ -46,7 +46,7 @@ class ZcashRustBackendTests: XCTestCase {
             XCTFail("pre populated Db not present")
             return
         }
-        let seed = "seed"
+        let seed = "testreferencealice"
         XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
@@ -55,7 +55,7 @@ class ZcashRustBackendTests: XCTestCase {
         
         let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0)
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        XCTAssertEqual(addr, Optional("ztestsapling1meqz0cd598fw0jlq2htkuarg8gqv36fam83yxmu5mu3wgkx4khlttqhqaxvwf57urm3rqsq9t07"))
+        XCTAssertEqual(addr, Optional("ztestsapling12pxv67r0kdw58q8tcn8kxhfy9n4vgaa7q8vp0dg24aueuz2mpgv2x7mw95yetcc37efc6q3hewn"))
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData))
         

@@ -12,10 +12,17 @@ import SQLite
 extension CompactBlockDownloader {
     static func sqlDownloader(service: LightWalletService, at url: URL) -> CompactBlockDownloader? {
         
-        let storage = CompactBlockStorage(connectionProvider: SimpleConnectionProvider(path: url.absoluteString, readonly: false))
+        let storage = CompactBlockStorage(url: url, readonly: false)
         
         guard (try? storage.createTable()) != nil else { return nil }
         
         return CompactBlockDownloader(service: service, storage: storage)
+    }
+}
+
+extension CompactBlockStorage {
+    
+    init(url: URL, readonly: Bool) {
+        self.init(connectionProvider: SimpleConnectionProvider(path: url.absoluteString, readonly: readonly))
     }
 }
