@@ -133,7 +133,6 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     func lastDownloadedBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void) {
         
         storage.latestHeight { (r) in
-            
             switch r {
             case .failure(let e):
                 result(.failure(CompactBlockDownloadError.generalError(error: e)))
@@ -141,9 +140,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
             case .success(let height):
                 result(.success(height))
             }
-            
         }
-        
     }
     
     func rewind(to height: BlockHeight) throws {

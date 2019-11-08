@@ -70,8 +70,8 @@ class LightWalletServiceTests: XCTestCase {
         } catch {
             XCTFail("\(error)")
         }
-        
     }
+    
     func testLatestBlock(){
         let expect = XCTestExpectation(description: self.description)
         service.latestBlockHeight { (result) in
@@ -85,7 +85,6 @@ class LightWalletServiceTests: XCTestCase {
         }
         
         wait(for: [expect], timeout: 5)
-        
     }
    
 }

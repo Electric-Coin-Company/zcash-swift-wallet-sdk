@@ -78,16 +78,31 @@ class SDKSynchronizer: Synchronizer {
         
         let center = NotificationCenter.default
         
-        center.addObserver(self, selector: #selector(applicationDidBecomeActive(_:)), name: UIApplication.didBecomeActiveNotification, object: nil)
-        center.addObserver(self, selector: #selector(applicationWillTerminate(_:)), name: UIApplication.willTerminateNotification, object: nil)
-        center.addObserver(self, selector: #selector(applicationWillResignActive(_:)), name: UIApplication.willResignActiveNotification, object: nil)
-        center.addObserver(self, selector: #selector(applicationDidEnterBackground(_:)), name: UIApplication.didEnterBackgroundNotification, object: nil)
-        center.addObserver(self, selector: #selector(applicationWillEnterForeground(_:)), name: UIApplication.willEnterForegroundNotification, object: nil)
+        center.addObserver(self,
+                           selector: #selector(applicationDidBecomeActive(_:)),
+                           name: UIApplication.didBecomeActiveNotification, object: nil)
+        
+        center.addObserver(self, selector: #selector(applicationWillTerminate(_:)), name: UIApplication.willTerminateNotification,
+                           object: nil)
+        
+        center.addObserver(self,
+                           selector: #selector(applicationWillResignActive(_:)),
+                           name: UIApplication.willResignActiveNotification,
+                           object: nil)
+        
+        center.addObserver(self,
+                           selector: #selector(applicationDidEnterBackground(_:)),
+                           name: UIApplication.didEnterBackgroundNotification,
+                           object: nil)
+        
+        center.addObserver(self,
+                           selector: #selector(applicationWillEnterForeground(_:)),
+                           name: UIApplication.willEnterForegroundNotification,
+                           object: nil)
         
     }
     
     private func registerBackgroundActivity() {
-        
         if self.taskIdentifier == .invalid {
             self.taskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: {
                 self.blockProcessor?.stop(cancelTasks: true)
@@ -100,14 +115,44 @@ class SDKSynchronizer: Synchronizer {
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
         let center = NotificationCenter.default
         
-        center.addObserver(self, selector: #selector(processorUpdated(_:)), name: Notification.Name.blockProcessorUpdated, object: processor)
-        center.addObserver(self, selector: #selector(processorStartedDownloading(_:)), name: Notification.Name.blockProcessorStartedDownloading, object: processor)
-        center.addObserver(self, selector: #selector(processorStartedValidating(_:)), name: Notification.Name.blockProcessorStartedValidating, object: processor)
-        center.addObserver(self, selector: #selector(processorStartedScanning(_:)), name: Notification.Name.blockProcessorStartedScanning, object: processor)
-        center.addObserver(self, selector: #selector(processorStopped(_:)), name: Notification.Name.blockProcessorStopped, object: processor)
-        center.addObserver(self, selector: #selector(processorFailed(_:)), name: Notification.Name.blockProcessorFailed, object: processor)
-        center.addObserver(self, selector: #selector(processorIdle(_:)), name: Notification.Name.blockProcessorIdle, object: processor)
-        center.addObserver(self, selector: #selector(processorTransitionUnknown(_:)), name: Notification.Name.blockProcessorUnknownTransition, object: processor)
+        center.addObserver(self,
+                           selector: #selector(processorUpdated(_:)),
+                           name: Notification.Name.blockProcessorUpdated,
+                           object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(processorStartedDownloading(_:)),
+                           name: Notification.Name.blockProcessorStartedDownloading,
+                           object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(processorStartedValidating(_:)),
+                           name: Notification.Name.blockProcessorStartedValidating,
+                           object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(processorStartedScanning(_:)),
+                           name: Notification.Name.blockProcessorStartedScanning,
+                           object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(processorStopped(_:)),
+                           name: Notification.Name.blockProcessorStopped,
+                           object: processor)
+        
+        center.addObserver(self, selector: #selector(processorFailed(_:)),
+                           name: Notification.Name.blockProcessorFailed,
+                           object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(processorIdle(_:)),
+                           name: Notification.Name.blockProcessorIdle,
+                           object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(processorTransitionUnknown(_:)),
+                           name: Notification.Name.blockProcessorUnknownTransition,
+                           object: processor)
     }
     
     @objc func processorUpdated(_ notification: Notification) {

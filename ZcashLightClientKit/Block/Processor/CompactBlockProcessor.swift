@@ -122,21 +122,10 @@ public class CompactBlockProcessor {
         self.rustBackend = backend
         self.config = config
         self.latestBlockHeight = config.walletBirthday
-        self.suscribeToSystemNotifications()
-        
-    }
-    
-    private func suscribeToSystemNotifications() {
-        // TODO: check system notifications for connections and application context changes
-    }
-    
-    private func unsuscribeToSystemNotifications() {
-        
     }
     
     deinit {
         self.queue.cancelAllOperations()
-        self.unsuscribeToSystemNotifications()
     }
     
     private func validateConfiguration() throws {
@@ -150,7 +139,6 @@ public class CompactBlockProcessor {
     }
     
     public func start() throws {
-        // TODO: Handle Background task
         
         // TODO: check if this validation makes sense at all
         //        try validateConfiguration()
@@ -159,6 +147,7 @@ public class CompactBlockProcessor {
             queue.isSuspended = false
             return
         }
+        
         guard let birthday = WalletBirthday.birthday(with: config.walletBirthday) else {
             throw CompactBlockProcessorError.invalidConfiguration
         }
