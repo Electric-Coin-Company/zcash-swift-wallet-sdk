@@ -18,7 +18,6 @@
 		0D9F5F192353821400D263C6 /* StorageManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F182353821400D263C6 /* StorageManager.swift */; };
 		0D9F5F1B235388CA00D263C6 /* CompactBlockStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F1A235388CA00D263C6 /* CompactBlockStorage.swift */; };
 		0D9F5F1D2353922500D263C6 /* CompactBlockStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F5F1C2353922500D263C6 /* CompactBlockStorageTests.swift */; };
-		0D9F5F1F2353C27100D263C6 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D9F5F1E2353C27000D263C6 /* SQLite.framework */; };
 		0D9F5F202353C27F00D263C6 /* SQLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0D9F5F1E2353C27000D263C6 /* SQLite.framework */; };
 		0D9F8FCB23733947002202A2 /* SDKSynchronizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9F8FCA23733947002202A2 /* SDKSynchronizer.swift */; };
 		0DA33493232C0BC200CAC082 /* Initializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA33492232C0BC200CAC082 /* Initializer.swift */; };
@@ -46,10 +45,6 @@
 		0DBF2CEC2332ACBD0074C1BE /* BlockDownloaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CEB2332ACBD0074C1BE /* BlockDownloaderTests.swift */; };
 		0DBF2CEE2332B3090074C1BE /* CompactBlockProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CED2332B3090074C1BE /* CompactBlockProcessor.swift */; };
 		0DBF2CF02332B8B70074C1BE /* Stubs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF2CEF2332B8B70074C1BE /* Stubs.swift */; };
-		0DC64E6A23284A2C0053EFAC /* CgRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6623284A2C0053EFAC /* CgRPC.framework */; };
-		0DC64E6B23284A2C0053EFAC /* SwiftGRPC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6723284A2C0053EFAC /* SwiftGRPC.framework */; };
-		0DC64E6C23284A2C0053EFAC /* BoringSSL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6823284A2C0053EFAC /* BoringSSL.framework */; };
-		0DC64E6D23284A2C0053EFAC /* SwiftProtobuf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0DC64E6923284A2C0053EFAC /* SwiftProtobuf.framework */; };
 		0DDC86232358C39000C50148 /* BlockScanOperationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDC86222358C39000C50148 /* BlockScanOperationTests.swift */; };
 		0DDC862A2358E50000C50148 /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DDC86282358E4FE00C50148 /* sapling-output.params */; };
 		0DDC862B2358E50000C50148 /* sapling-spend.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DDC86292358E4FF00C50148 /* sapling-spend.params */; };
@@ -150,11 +145,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0DC64E6A23284A2C0053EFAC /* CgRPC.framework in Frameworks */,
-				0DC64E6B23284A2C0053EFAC /* SwiftGRPC.framework in Frameworks */,
-				0DC64E6C23284A2C0053EFAC /* BoringSSL.framework in Frameworks */,
-				0D9F5F1F2353C27100D263C6 /* SQLite.framework in Frameworks */,
-				0DC64E6D23284A2C0053EFAC /* SwiftProtobuf.framework in Frameworks */,
 				103AFEA22283166B0074BC98 /* libzcashlc.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -428,7 +418,6 @@
 				103AFE81228312A30074BC98 /* Sources */,
 				103AFE82228312A30074BC98 /* Frameworks */,
 				103AFE83228312A30074BC98 /* Resources */,
-				0DC64E65232848F10053EFAC /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -552,25 +541,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if which swiftlint >/dev/null; then\n  swiftlint lint --config .swiftlint.yml\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
-		};
-		0DC64E65232848F10053EFAC /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"$(SRCROOT)/filelists/input.xcfilelist",
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-				"$(SRCROOT)/filelists/output.xcfilelist",
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "/usr/local/bin/carthage copy-frameworks\n";
 		};
 		0DDF6379232FD0B4000F9F01 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
