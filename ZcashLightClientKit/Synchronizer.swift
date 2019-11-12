@@ -51,7 +51,6 @@ public protocol Synchronizer {
 
 }
 
-
 public enum Status {
     
     /**

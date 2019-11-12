@@ -102,20 +102,22 @@ public class CompactBlockProcessor {
         q.maxConcurrentOperationCount = 1
         return q
     } ()
-    private var retryAttempts = 0
+    
+    private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
-    // convenience vars
+    private var lowerBoundHeight: BlockHeight?
+    private var latestBlockHeight: BlockHeight
+    private var lastChainValidationFailure: BlockHeight?
+    private var consecutiveChainValidationErrors: Int = 0
+    private var processingError: Error?
+    
     private var maxAttempts: Int {
         config.retries
     }
     
-    private var startBlockHeight: BlockHeight?
-    private var latestBlockHeight: BlockHeight
     private var batchSize: BlockHeight {
         BlockHeight(self.config.downloadBatchSize)
     }
-    
-    private var processingError: Error?
     
     public init(downloader: CompactBlockDownloading, backend: ZcashRustBackendWelding.Type, config: Configuration) {
         self.downloader = downloader
@@ -181,8 +183,8 @@ public class CompactBlockProcessor {
         
         let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.lastDownloadedBlockHeight())
         
-        if self.startBlockHeight == nil {
-            self.startBlockHeight = latestDownloadedBlockHeight
+        if self.lowerBoundHeight == nil {
+            self.lowerBoundHeight = latestDownloadedBlockHeight
         }
         // get latest block height from ligthwalletd
         
@@ -290,12 +292,39 @@ public class CompactBlockProcessor {
     }
     
     func notifyProgress(completedRange: CompactBlockRange) {
-        let progress = calculateProgress(start: self.startBlockHeight ?? config.walletBirthday, current: completedRange.upperBound, latest: self.latestBlockHeight)
+        let progress = calculateProgress(start: self.lowerBoundHeight ?? config.walletBirthday, current: completedRange.upperBound, latest: self.latestBlockHeight)
         
         print("\(self) progress: \(progress)")
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
                                         object: self,
                                         userInfo: [ CompactBlockProcessorNotificationKey.progress : progress ])
+    }
+    
+    private func validationFailed(at height: BlockHeight) throws {
+        
+        // cancel all Tasks
+        queue.cancelAllOperations()
+        
+        // register latest failure
+        self.lastChainValidationFailure = height
+        self.consecutiveChainValidationErrors = self.consecutiveChainValidationErrors + 1
+        
+        // rewind
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(height)) else {
+            fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
+            return
+        }
+        
+        try downloader.rewind(to: determineLowerBound(errorHeight: height))
+        
+        // process next batch
+        processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
+    }
+    
+    func determineLowerBound(errorHeight: Int) -> BlockHeight {
+        
+        let offset = min(MAX_REORG_SIZE, DEFAULT_REWIND_DISTANCE * (consecutiveChainValidationErrors + 1))
+        return max(errorHeight - offset, lowerBoundHeight ?? SAPLING_ACTIVATION_HEIGHT)
     }
     
     private func processBatchFinished(range: CompactBlockRange) {
@@ -304,7 +333,9 @@ public class CompactBlockProcessor {
             retryProcessing(range: range)
             return
         }
+        
         retryAttempts = 0
+        consecutiveChainValidationErrors = 0
         
         notifyProgress(completedRange: range)
         

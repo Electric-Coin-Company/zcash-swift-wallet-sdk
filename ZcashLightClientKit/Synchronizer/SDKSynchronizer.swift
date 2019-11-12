@@ -12,15 +12,15 @@ import UIKit
 /**
  Synchronizer implementation  for UIKit  and iOS 12+
  */
-class SDKSynchronizer: Synchronizer {
+public class SDKSynchronizer: Synchronizer {
     
-    var status: Status
+    public private(set) var status: Status
     
-    var progress: Float = 0.0
+    public private(set) var progress: Float = 0.0
     
-    var blockProcessor: CompactBlockProcessor?
+    public private(set) var blockProcessor: CompactBlockProcessor?
     
-    var initializer: Initializer
+    public private(set) var initializer: Initializer
     
     var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
@@ -33,7 +33,7 @@ class SDKSynchronizer: Synchronizer {
         }
     }
     
-    init(initializer: Initializer) {
+    public init(initializer: Initializer) {
         self.status = .disconnected
         self.initializer = initializer
     }
@@ -45,7 +45,7 @@ class SDKSynchronizer: Synchronizer {
         self.taskIdentifier = .invalid
     }
     
-    func start() throws {
+   public func start() throws {
         
         guard let processor = initializer.blockProcessor() else {
             throw SynchronizerError.initFailed
@@ -64,7 +64,7 @@ class SDKSynchronizer: Synchronizer {
         self.blockProcessor = processor
     }
     
-    func stop() throws {
+    public func stop() throws {
         
         guard status != .stopped, status != .disconnected else { return }
         
@@ -192,7 +192,6 @@ class SDKSynchronizer: Synchronizer {
     @objc func processorTransitionUnknown(_ notification: Notification) {
         self.status = .disconnected
     }
-    
     
     // MARK: application notifications
     @objc func applicationDidBecomeActive(_ notification: Notification) {

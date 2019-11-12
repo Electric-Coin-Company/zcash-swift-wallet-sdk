@@ -5,9 +5,9 @@
 //  Created by Francisco Gindre on 06/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
-
+    
 import XCTest
-import ZcashLightClientKit
+@testable import ZcashLightClientKit
 @testable import ZcashLightClientSample
 
 class ZcashLightClientSampleTests: XCTestCase {
@@ -30,7 +30,7 @@ class ZcashLightClientSampleTests: XCTestCase {
     func testInitAndGetAddress() {
         let seed = "seed"
         
-        XCTAssert(ZcashRustBackend.initDataDb(dbData: dbData!))
+        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
         let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)

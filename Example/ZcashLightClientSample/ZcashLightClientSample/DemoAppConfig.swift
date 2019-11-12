@@ -24,6 +24,10 @@ struct DemoAppConfig {
         config.walletBirthday = self.birthdayHeight
         return config
     }
+    
+    static var endpoint: LightWalletEndpoint {
+        return LightWalletEndpoint(address: self.host, port: self.port, secure: false)
+    }
 }
 
 

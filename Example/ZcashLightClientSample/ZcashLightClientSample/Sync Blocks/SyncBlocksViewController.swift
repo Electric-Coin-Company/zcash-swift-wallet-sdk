@@ -22,9 +22,9 @@ class SyncBlocksViewController: UIViewController {
         
         // Do any additional setup after loading the view.
         
-        let wallet = Wallet.shared
+        let wallet = Initializer.shared
         
-        processor = wallet.blockProcessor(address: DemoAppConfig.address, secure: false, configuration: DemoAppConfig.processorConfig)
+        processor = wallet.blockProcessor()
         
         statusLabel.text = textFor(state: processor?.state ?? .stopped)
         progressBar.progress = 0
@@ -35,7 +35,10 @@ class SyncBlocksViewController: UIViewController {
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+         
         NotificationCenter.default.removeObserver(self)
+        guard let processor = self.processor else { return }
+        processor.stop()
     }
     
     @objc func processorNotification(_ notification: Notification) {

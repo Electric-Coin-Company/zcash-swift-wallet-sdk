@@ -1,5 +1,5 @@
 //
-//  Wallet.swift
+//  Initializer.swift
 //  ZcashLightClientKit
 //
 //  Created by Francisco Gindre on 13/09/2019.
@@ -26,6 +26,12 @@ public struct LightWalletEndpoint {
     
     public var host: String {
         "\(address):\(port)"
+    }
+    
+    public init(address: String, port: String, secure: Bool = true) {
+        self.address = address
+        self.port = port
+        self.secure = secure
     }
 }
 
@@ -95,8 +101,9 @@ public class Initializer {
         
         let downloader = CompactBlockStorage(url: cacheDbURL, readonly: true)
         
+        let lastDownloaded = (try? downloader.latestHeight()) ?? SAPLING_ACTIVATION_HEIGHT
         // resume from last downloaded block
-        lowerBoundHeight = max(birthday.height, (try? downloader.latestHeight()) ?? SAPLING_ACTIVATION_HEIGHT)
+        lowerBoundHeight = max(birthday.height, lastDownloaded)
         
         guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
@@ -109,7 +116,8 @@ public class Initializer {
         return rustBackend.getAddress(dbData: dataDbURL, account: Int32(account))
     }
     
-    func blockProcessor() -> CompactBlockProcessor? {
+    // TODO: make internal
+    public func blockProcessor() -> CompactBlockProcessor? {
         var configuration = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL)
         
         configuration.walletBirthday = walletBirthday?.height ?? self.lowerBoundHeight // check if this make sense
