@@ -16,6 +16,7 @@ public enum CompactBlockProcessorError: Error {
 
 public struct CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
+    public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
 }
 
 public extension Notification.Name {
@@ -30,6 +31,7 @@ public extension Notification.Name {
     static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
     static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
     static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
+    static let blockProcessorHandledReOrg = Notification.Name(rawValue: "CompactBlockProcessorHandledReOrg")
 }
 
 public class CompactBlockProcessor {
@@ -175,6 +177,7 @@ public class CompactBlockProcessor {
            } else {
                self.queue.isSuspended = true
            }
+        self.retryAttempts = 0
            self.state = .stopped
     }
     
@@ -186,7 +189,7 @@ public class CompactBlockProcessor {
         if self.lowerBoundHeight == nil {
             self.lowerBoundHeight = latestDownloadedBlockHeight
         }
-        // get latest block height from ligthwalletd
+        // get latest block height from lightwalletd
         
         if self.latestBlockHeight > latestDownloadedBlockHeight {
             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
@@ -249,6 +252,7 @@ public class CompactBlockProcessor {
             switch validationError {
             case .validationFailed(let height):
                 print("chain validation at height: \(height)")
+                self.validationFailed(at: height)
             }
         }
         
@@ -300,10 +304,13 @@ public class CompactBlockProcessor {
                                         userInfo: [ CompactBlockProcessorNotificationKey.progress : progress ])
     }
     
-    private func validationFailed(at height: BlockHeight) throws {
+    private func validationFailed(at height: BlockHeight) {
         
         // cancel all Tasks
         queue.cancelAllOperations()
+        
+        // notify reorg
+        NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height])
         
         // register latest failure
         self.lastChainValidationFailure = height
@@ -315,14 +322,16 @@ public class CompactBlockProcessor {
             return
         }
         
-        try downloader.rewind(to: determineLowerBound(errorHeight: height))
-        
-        // process next batch
-        processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
+        do {
+            try downloader.rewind(to: determineLowerBound(errorHeight: height))
+            // process next batch
+            processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
+        } catch {
+            self.fail(error)
+        }
     }
     
     func determineLowerBound(errorHeight: Int) -> BlockHeight {
-        
         let offset = min(MAX_REORG_SIZE, DEFAULT_REWIND_DISTANCE * (consecutiveChainValidationErrors + 1))
         return max(errorHeight - offset, lowerBoundHeight ?? SAPLING_ACTIVATION_HEIGHT)
     }
@@ -369,7 +378,15 @@ public class CompactBlockProcessor {
     }
     
     func retryProcessing(range: CompactBlockRange) {
+        
         queue.cancelAllOperations()
+        // update retries
+        self.retryAttempts = self.retryAttempts + 1
+        guard self.retryAttempts < config.retries else {
+            self.stop()
+            return
+        }
+        
         processNewBlocks(range: range)
     }
     
@@ -379,6 +396,7 @@ public class CompactBlockProcessor {
         queue.cancelAllOperations()
         self.processingError = error
         self.state = .error(error)
+        
     }
     
     private func transitionState(from oldValue: State, to newValue: State) {

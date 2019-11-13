@@ -34,8 +34,8 @@ class AwfulLightWalletService: LightWalletService {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
-    static var mockDataDb = true
-    static var mockAcounts = true
+    static var mockDataDb = false
+    static var mockAcounts = false
     static var mockError: RustWeldingError?
     static var mockLastError: String?
     static var mockAccounts: [String]?
@@ -45,9 +45,13 @@ class MockRustBackend: ZcashRustBackendWelding {
     static var mockMemo: String?
     static var mockSentMemo: String?
     static var mockValidateCombinedChainSuccessRate: Float?
+    static var mockValidateCombinedChainFailAfterAttempts: Int?
+    static var mockValidateCombinedChainKeepFailing = false
+    static var mockValidateCombinedChainFailureHeight: BlockHeight = 0
     static var mockScanblocksSuccessRate: Float?
     static var mockSendToAddress: Int64?
     static var rustBackend = ZcashRustBackend.self
+    
     
     static func lastError() -> RustWeldingError? {
         mockError ?? rustBackend.lastError()
@@ -101,11 +105,13 @@ class MockRustBackend: ZcashRustBackendWelding {
                        }
                        return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
             } else {
-                return 0
+                return  Int32(mockValidateCombinedChainFailureHeight)
             }
-        } else {
-            return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
+        } else if let attempts = self.mockValidateCombinedChainFailAfterAttempts {
+            self.mockValidateCombinedChainFailAfterAttempts = attempts - 1
+            return  attempts > 0 ? rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData) : 0
         }
+        return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
     }
     
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool {
