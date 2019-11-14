@@ -33,6 +33,8 @@ class CompactBlockReorgTests: XCTestCase {
         let mockBackend = MockRustBackend.self
         mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
         mockBackend.mockValidateCombinedChainKeepFailing = false
+        mockBackend.mockValidateCombinedChainFailureHeight = 280_320
+        
         processor = CompactBlockProcessor(downloader: downloader,
                                             backend: mockBackend,
                                             config: processorConfig)
@@ -96,6 +98,7 @@ class CompactBlockReorgTests: XCTestCase {
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
+        reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
         
         XCTAssertNoThrow(try processor.start())
     }

@@ -317,13 +317,15 @@ public class CompactBlockProcessor {
         self.consecutiveChainValidationErrors = self.consecutiveChainValidationErrors + 1
         
         // rewind
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(height)) else {
+        
+        let rewindHeight = determineLowerBound(errorHeight: height)
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight)) else {
             fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }
         
         do {
-            try downloader.rewind(to: determineLowerBound(errorHeight: height))
+            try downloader.rewind(to: rewindHeight)
             // process next batch
             processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
         } catch {

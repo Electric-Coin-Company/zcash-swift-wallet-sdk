@@ -100,18 +100,34 @@ class MockRustBackend: ZcashRustBackendWelding {
     static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32 {
         if let rate = self.mockValidateCombinedChainSuccessRate {
             if shouldSucceed(successRate: rate) {
-                       if mockDataDb {
-                           return -1
-                       }
-                       return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
+                return validationResult(dbCache: dbCache, dbData: dbData)
             } else {
-                return  Int32(mockValidateCombinedChainFailureHeight)
+                return Int32(mockValidateCombinedChainFailureHeight)
             }
         } else if let attempts = self.mockValidateCombinedChainFailAfterAttempts {
             self.mockValidateCombinedChainFailAfterAttempts = attempts - 1
-            return  attempts > 0 ? rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData) : 0
+            if attempts > 0 {
+                return validationResult(dbCache: dbCache, dbData: dbData)
+            } else {
+                
+                if attempts == 0 {
+                    return Int32(mockValidateCombinedChainFailureHeight)
+                } else if attempts < 0 && mockValidateCombinedChainKeepFailing {
+                    return Int32(mockValidateCombinedChainFailureHeight)
+                } else {
+                    return validationResult(dbCache: dbCache, dbData: dbData)
+                }
+            }
         }
         return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
+    }
+    
+    private static func validationResult(dbCache: URL, dbData: URL) -> Int32{
+        if mockDataDb {
+            return -1
+        } else {
+            return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
+        }
     }
     
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool {
