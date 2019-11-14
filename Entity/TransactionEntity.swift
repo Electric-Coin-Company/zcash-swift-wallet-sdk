@@ -72,7 +72,7 @@ public protocol PendingTransaction: SignedTransaction, Transaction, RawIdentifia
     var createTime: TimeInterval { get set }
     
     func isSameTransactionId<T: RawIdentifiable> (other: T) -> Bool
-    func isPending(currentHeight: Int  = -1) -> Bool
+    func isPending(currentHeight: Int) -> Bool
     
     var isCreating: Bool { get }
     var isFailedEncoding: Bool { get }
@@ -124,7 +124,7 @@ public extension PendingTransaction {
     }
         
     var isSubmitSuccess: Bool {
-        submitAttempts > 0 && (errorCode != nil && (errorCode ?? -1) >= 0) && errorMesssage == nil 
+        submitAttempts > 0 && (errorCode != nil && (errorCode ?? -1) >= 0) && errorMesssage == nil
     }
 }
 
