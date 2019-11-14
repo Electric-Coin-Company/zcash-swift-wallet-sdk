@@ -21,6 +21,10 @@ public class LightWalletGRPCService {
         compactTxStreamer = CompactTxStreamerServiceClient(channel: self.channel)
     }
     
+    public convenience init(endpoint: LightWalletEndpoint) {
+        self.init(host: endpoint.host, secure: endpoint.secure)
+    }
+    
     public convenience init(host: String, secure: Bool = true) {
         let channel = Channel(address: host, secure: secure, arguments: [])
         self.init(channel: channel)

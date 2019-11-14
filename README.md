@@ -19,9 +19,6 @@ use_frameworks!
 pod 'ZcashLightClientKit' 
 ````
 
-# Carthage support
-Add ```ZcashLightClientKit``` to your Cartfile
-
 # Testing
 Currently tests depend on a ```lightwalletd``` server instance runnning locally or remotely to pass.
 To know more about running ```lightwalletd```, refer to its repo https://github.com/zcash-hackworks/lightwalletd

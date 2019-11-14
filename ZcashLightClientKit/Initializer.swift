@@ -1,5 +1,5 @@
 //
-//  Wallet.swift
+//  Initializer.swift
 //  ZcashLightClientKit
 //
 //  Created by Francisco Gindre on 13/09/2019.
@@ -12,28 +12,50 @@ import Foundation
  capabilities and the supporting data required to exercise those abilities.
  */
 
-public enum WalletError: Error {
+public enum InitializerError: Error {
     case cacheDbInitFailed
     case dataDbInitFailed
     case accountInitFailed
     case falseStart
 }
+
+public struct LightWalletEndpoint {
+    public var address: String
+    public var port: String
+    public var secure: Bool
+    
+    public var host: String {
+        "\(address):\(port)"
+    }
+    
+    public init(address: String, port: String, secure: Bool = true) {
+        self.address = address
+        self.port = port
+        self.secure = secure
+    }
+}
+
 /**
  Wrapper for all the Rust backend functionality that does not involve processing blocks. This
  class initializes the Rust backend and the supporting data required to exercise those abilities.
  The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
  functionality, related to processing blocks.
-*/
-public class Wallet {
+ */
+public class Initializer {
     
     private var rustBackend: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     private var lowerBoundHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT
     private var cacheDbURL: URL
     private var dataDbURL: URL
     
-    public init (cacheDbURL: URL, dataDbURL: URL) {
+    private var walletBirthday: WalletBirthday?
+    
+    public private(set) var  endpoint: LightWalletEndpoint
+    
+    public init (cacheDbURL: URL, dataDbURL: URL, endpoint: LightWalletEndpoint) {
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
+        self.endpoint = endpoint
     }
     
     /**
@@ -43,7 +65,7 @@ public class Wallet {
      private keys from its own secure storage. In other words, the private keys are only given out
      once for each set of database files. Subsequent calls to [initialize] will only load the Rust
      library and return null.
-    
+     
      'compactBlockCache.db' and 'transactionData.db' files are created by this function (if they
      do not already exist). These files can be given a prefix for scenarios where multiple wallets
      operate in one app--for instance, when sweeping funds from another wallet seed.
@@ -51,7 +73,7 @@ public class Wallet {
      - Parameter walletBirthdayHeight the height corresponding to when the wallet seed was created. If null,
      this signals that the wallet is being born.
      - Parameter numberOfAccounts the number of accounts to create from this seed.
-    */
+     */
     
     public func initialize(seedProvider: SeedProvider, walletBirthdayHeight: BlockHeight, numberOfAccounts: Int = 1) throws -> [String]? {
         
@@ -60,25 +82,31 @@ public class Wallet {
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
-            throw WalletError.dataDbInitFailed
-        }
-
-        guard let birthday = WalletBirthday.birthday(with: walletBirthdayHeight) else {
-            throw WalletError.falseStart
+            throw InitializerError.dataDbInitFailed
         }
         
-        lowerBoundHeight = birthday.height
+        guard let birthday = WalletBirthday.birthday(with: walletBirthdayHeight) else {
+            throw InitializerError.falseStart
+        }
+        
+        self.walletBirthday = birthday
         
         do {
             try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
-            throw WalletError.dataDbInitFailed
+            throw InitializerError.dataDbInitFailed
         }
         
+        let downloader = CompactBlockStorage(url: cacheDbURL, readonly: true)
+        
+        let lastDownloaded = (try? downloader.latestHeight()) ?? SAPLING_ACTIVATION_HEIGHT
+        // resume from last downloaded block
+        lowerBoundHeight = max(birthday.height, lastDownloaded)
+        
         guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
-            throw rustBackend.lastError() ?? WalletError.accountInitFailed
+            throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
         
         return accounts
@@ -88,6 +116,17 @@ public class Wallet {
         return rustBackend.getAddress(dbData: dataDbURL, account: Int32(account))
     }
     
+    // TODO: make internal
+    public func blockProcessor() -> CompactBlockProcessor? {
+        var configuration = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL)
+        
+        configuration.walletBirthday = walletBirthday?.height ?? self.lowerBoundHeight // check if this make sense
+           guard let downloader = CompactBlockDownloader.sqlDownloader(service: LightWalletGRPCService(endpoint: endpoint), at: self.cacheDbURL) else {
+               return nil
+           }
+           
+           return CompactBlockProcessor(downloader: downloader, backend: self.rustBackend, config: configuration)
+       }
 }
 
 /**
@@ -135,18 +174,5 @@ public extension WalletBirthday {
         default:
             return nil
         }
-    }
-}
-
-import SwiftGRPC
-// TODO: abstract this to avoid this import
-public extension Wallet {
-    func blockProcessor(address: String, secure: Bool = true, configuration: CompactBlockProcessor.Configuration = CompactBlockProcessor.Configuration.standard) -> CompactBlockProcessor? {
-        
-        guard let downloader = CompactBlockDownloader.sqlDownloader(service: LightWalletGRPCService(channel: Channel(address: address, secure: secure, arguments: [])), at: self.cacheDbURL) else {
-            return nil
-        }
-        
-        return CompactBlockProcessor(downloader: downloader, backend: self.rustBackend, config: configuration)
     }
 }

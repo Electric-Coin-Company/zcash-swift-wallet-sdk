@@ -31,7 +31,7 @@ class GetAddressViewController: UIViewController {
     */
     
     func legibleAddresses() -> String? {
-        Wallet.shared.getAddress()
+        Initializer.shared.getAddress()
     }
 }
 

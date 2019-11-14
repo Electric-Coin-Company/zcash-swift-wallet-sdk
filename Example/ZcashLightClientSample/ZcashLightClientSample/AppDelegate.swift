@@ -12,14 +12,14 @@ import ZcashLightClientKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    private var wallet: Wallet?
+    private var wallet: Initializer?
     
     var addresses: [String]?
-    var sharedWallet: Wallet {
+    var sharedWallet: Initializer {
         if let wallet = wallet {
             return wallet
         } else {
-            let wallet = Wallet(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL())
+            let wallet = Initializer(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL(), endpoint: DemoAppConfig.endpoint)
             self.addresses = try! wallet.initialize(seedProvider: DemoAppConfig(), walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             self.wallet = wallet
             return wallet
@@ -78,8 +78,8 @@ extension AppDelegate {
 
 extension DemoAppConfig: SeedProvider {}
 
-extension Wallet {
-    static var shared: Wallet {
+extension Initializer {
+    static var shared: Initializer {
         (UIApplication.shared.delegate as! AppDelegate).sharedWallet // AppDelegate or DIE.
     }
 }

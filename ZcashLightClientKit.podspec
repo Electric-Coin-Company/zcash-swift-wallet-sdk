@@ -20,12 +20,8 @@ Pod::Spec.new do |s|
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.0'
     s.ios.deployment_target = '11.0'
-
     s.dependency 'SwiftGRPC'
-    s.dependency 'SQLite.swift'
-    
-    
-    
+    s.dependency 'SQLite.swift'    
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
     s.prepare_command = <<-CMD
         BASEPATH="${PWD}"
@@ -35,6 +31,12 @@ Pod::Spec.new do |s|
         mkdir -p lib
         cp target/universal/debug/* lib/
         cp -rf target/universal/debug/*  ZcashLightClientKit/zcashlc
-            CMD
+    CMD
+    
+    s.test_spec 'Tests' do | test_spec |
+        test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift,db}'
+        test_spec.dependency 'SwiftGRPC'
+        test_spec.dependency 'SQLite.swift'
+    end
   end
   

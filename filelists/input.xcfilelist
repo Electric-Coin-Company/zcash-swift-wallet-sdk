@@ -1,5 +1,0 @@
-$(SRCROOT)/Carthage/Build/iOS/BoringSSL.framework
-$(SRCROOT)/Carthage/Build/iOS/CgRPC.framework
-$(SRCROOT)/Carthage/Build/iOS/SwiftGRPC.framework
-$(SRCROOT)/Carthage/Build/iOS/SwiftProtobuf.framework
-$(SRCROOT)/Carthage/Build/iOS/SQLite.framework
