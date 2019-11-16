@@ -11,7 +11,7 @@ import XCTest
 @testable import ZcashLightClientKit
 class CompactBlockStorageTests: XCTestCase {
     
-    var compactBlockDao: CompactBlockStoring = try! TestDbBuilder.inMemoryCompactBlockStorage()
+    var compactBlockDao: CompactBlockRepository = try! TestDbBuilder.inMemoryCompactBlockStorage()
     
     func testEmptyStorage() {
         XCTAssertEqual(try! compactBlockDao.latestHeight(), BlockHeight.empty())

@@ -10,7 +10,7 @@ import Foundation
 import SQLite
 @testable import ZcashLightClientKit
 
-struct TestDbBuilder {
+class TestDbBuilder {
     
     enum TestBuilderError: Error {
         case generalError
@@ -27,8 +27,21 @@ struct TestDbBuilder {
         try compactBlockDao.createTable()
         return compactBlockDao
     }
+    
+    static func prepopulatedDataDbProvider() -> ConnectionProvider? {
+        let bundle = Bundle(for: TestDbBuilder.self)
+        guard let url = bundle.url(forResource: "ZcashSdk_Data", withExtension: "db") else { return nil }
+        let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
+        return provider
+    }
+    
+    static func transactionRepository() -> TransactionRepository? {
+        guard let provider = prepopulatedDataDbProvider() else { return nil }
         
-    static func seed(db: CompactBlockStoring, with blockRange: CompactBlockRange) throws {
+        return TransactionSQLDAO(dbProvider: provider)
+    }
+        
+    static func seed(db: CompactBlockRepository, with blockRange: CompactBlockRange) throws {
         
         guard let blocks = StubBlockCreator.createBlockRange(blockRange) else {
             throw TestBuilderError.generalError

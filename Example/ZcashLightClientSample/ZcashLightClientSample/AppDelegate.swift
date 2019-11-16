@@ -13,8 +13,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     private var wallet: Initializer?
-    
-    var addresses: [String]?
+    @UserDefaults var addresses: [String]?
     var sharedWallet: Initializer {
         if let wallet = wallet {
             return wallet
