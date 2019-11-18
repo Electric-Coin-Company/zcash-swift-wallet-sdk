@@ -83,7 +83,7 @@ class TransactionRepositoryTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(txs.count, 0)
+        XCTAssertEqual(txs.count, 27)
     }
     
     func testFindAllTransactions() {
@@ -97,10 +97,16 @@ class TransactionRepositoryTests: XCTestCase {
         XCTAssertEqual(txs.count, 27)
     }
     
-    func testPerformanceExample() {
+    func testFindAllPerformance() {
         // This is an example of a performance test case.
         self.measure {
             // Put the code you want to measure the time of here.
+            
+            do {
+                _ = try self.transactionRepository.findAll(limit: Int.max)
+            } catch {
+                XCTFail("find all failed")
+            }
         }
     }
     
