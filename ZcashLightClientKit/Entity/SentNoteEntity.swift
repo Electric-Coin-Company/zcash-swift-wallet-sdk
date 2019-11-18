@@ -7,7 +7,8 @@
 
 import Foundation
 
-protocol SentNoteEntity: Identifiable, Hashable {
+protocol SentNoteEntity: Hashable {
+    var id: Int { get set }
     var transactionId: Int { get set }
     var outputIndex: Int { get set }
     var account: Int { get set }

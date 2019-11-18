@@ -40,6 +40,16 @@ class TestDbBuilder {
         
         return TransactionSQLDAO(dbProvider: provider)
     }
+    
+    static func sentNotesRepository() -> SentNotesRepository? {
+        guard let provider = prepopulatedDataDbProvider() else { return nil }
+        return SentNotesSQLDAO(dbProvider: provider)
+    }
+    
+    static func receivedNotesRepository() -> ReceivedNoteRepository? {
+        guard let provider = prepopulatedDataDbProvider() else { return nil }
+        return ReceivedNotesSQLDAO(dbProvider: provider)
+    }
         
     static func seed(db: CompactBlockRepository, with blockRange: CompactBlockRange) throws {
         
