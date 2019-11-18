@@ -1,0 +1,204 @@
+//
+//  TransactionDao.swift
+//  ZcashLightClientKit
+//
+//  Created by Francisco Gindre on 11/15/19.
+//
+
+import Foundation
+import SQLite
+
+struct Transaction: TransactionEntity, Decodable {
+    enum CodingKeys: String, CodingKey {
+        case id = "id_tx"
+        case transactionId = "txid"
+        case created
+        case transactionIndex = "tx_index"
+        case expiryHeight = "expiry_height"
+        case minedHeight = "block"
+        case raw
+    }
+    
+    var id: Int
+    var transactionId: Data
+    var created: String?
+    var transactionIndex: Int?
+    var expiryHeight: BlockHeight?
+    var minedHeight: BlockHeight?
+    var raw: Data?
+}
+
+struct ConfirmedTransaction: ConfirmedTransactionEntity {
+    var toAddress: String?
+    var expiryHeight: BlockHeight?
+    var minedHeight: Int
+    var noteId: Int
+    var blockTimeInSeconds: TimeInterval
+    var transactionIndex: Int
+    var raw: Data?
+    var id: UInt
+    var value: Int
+    var memo: Data?
+    var rawTransactionId: Data?
+}
+
+
+
+class TransactionSQLDAO: TransactionRepository {
+    
+    struct TableStructure {
+        static var id = Expression<Int64>(Transaction.CodingKeys.id.rawValue)
+        static var transactionId = Expression<Blob>(Transaction.CodingKeys.transactionId.rawValue)
+        static var created = Expression<String?>(Transaction.CodingKeys.created.rawValue)
+        static var txIndex = Expression<String?>(Transaction.CodingKeys.transactionIndex.rawValue)
+        static var expiryHeight = Expression<Int64?>(Transaction.CodingKeys.expiryHeight.rawValue)
+        static var minedHeight = Expression<Int64?>(Transaction.CodingKeys.minedHeight.rawValue)
+        static var raw = Expression<Blob?>(Transaction.CodingKeys.raw.rawValue)
+    }
+    
+    var dbProvider: ConnectionProvider
+    
+    var transactions = Table("transactions")
+    
+    init(dbProvider: ConnectionProvider) {
+        self.dbProvider = dbProvider
+    }
+    
+    func countAll() throws -> Int {
+        try dbProvider.connection().scalar(transactions.count)
+    }
+    
+    func countUnmined() throws -> Int {
+        try dbProvider.connection().scalar(transactions.filter(TableStructure.minedHeight == nil).count)
+    }
+    
+    func findBy(id: Int) throws -> TransactionEntity? {
+        let query = transactions.filter(TableStructure.id == Int64(id)).limit(1)
+        let entity: Transaction? = try dbProvider.connection().prepare(query).map({ try $0.decode() }).first
+        return entity
+    }
+    
+    func findBy(rawId: Data) throws -> TransactionEntity? {
+        let query = transactions.filter(TableStructure.transactionId == Blob(bytes: rawId.bytes)).limit(1)
+        let entity: Transaction? = try dbProvider.connection().prepare(query).map({ try $0.decode() }).first
+        return entity
+    }
+    
+    func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        try dbProvider.connection().run("""
+            SELECT transactions.id_tx         AS id,
+                   transactions.block         AS minedHeight,
+                   transactions.tx_index      AS transactionIndex,
+                   transactions.txid          AS rawTransactionId,
+                   transactions.expiry_height AS expiryHeight,
+                   transactions.raw           AS raw,
+                   sent_notes.address         AS toAddress,
+                   sent_notes.value           AS value,
+                   sent_notes.memo            AS memo,
+                   sent_notes.id_note         AS noteId,
+                   blocks.time                AS blockTimeInSeconds
+            FROM   transactions
+                   LEFT JOIN sent_notes
+                          ON transactions.id_tx = sent_notes.tx
+                   LEFT JOIN blocks
+                          ON transactions.block = blocks.height
+            WHERE  transactions.raw IS NOT NULL
+                   AND minedheight > 0
+            ORDER  BY block IS NOT NULL, height DESC, time DESC, txid DESC
+            LIMIT  \(limit)
+        """).map({ (bindings) -> ConfirmedTransactionEntity in
+            guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
+                throw TransactionRepositoryError.malformedTransaction
+            }
+            return tx
+        })
+    }
+    
+    func findAllReceivedTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        try dbProvider.connection().run("""
+            SELECT transactions.id_tx     AS id,
+                   transactions.block     AS minedHeight,
+                   transactions.tx_index  AS transactionIndex,
+                   transactions.txid      AS rawTransactionId,
+                   received_notes.value   AS value,
+                   received_notes.memo    AS memo,
+                   received_notes.id_note AS noteId,
+                   blocks.time            AS blockTimeInSeconds
+            FROM   transactions
+                   LEFT JOIN received_notes
+                          ON transactions.id_tx = received_notes.tx
+                   LEFT JOIN blocks
+                          ON transactions.block = blocks.height
+            WHERE  received_notes.is_change != 1
+            ORDER  BY minedheight DESC, blocktimeinseconds DESC, id DESC
+            LIMIT  \(limit)
+            """).map({ (bindings) -> ConfirmedTransactionEntity in
+                guard let tx = TransactionBuilder.createReceivedTransaction(from: bindings) else {
+                    throw TransactionRepositoryError.malformedTransaction
+                }
+                return tx
+            })
+    }
+    
+    func findAll(limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
+        try dbProvider.connection().run("""
+             SELECT transactions.id_tx          AS id,
+                   transactions.block           AS minedHeight,
+                   transactions.tx_index        AS transactionIndex,
+                   transactions.txid            AS rawTransactionId,
+                   transactions.expiry_height   AS expiryHeight,
+                   transactions.raw             AS raw,
+                   sent_notes.address           AS toAddress,
+                   CASE
+                     WHEN transactions.raw IS NOT NULL THEN sent_notes.value
+                     ELSE received_notes.value
+                   end                          AS value,
+                   CASE
+                     WHEN transactions.raw IS NOT NULL THEN sent_notes.memo
+                     ELSE received_notes.memo
+                   end                          AS memo,
+                   CASE
+                     WHEN transactions.raw IS NOT NULL THEN sent_notes.id_note
+                     ELSE received_notes.id_note
+                   end                          AS noteId,
+                   blocks.time                  AS blockTimeInSeconds
+             FROM   transactions
+                   LEFT JOIN received_notes
+                          ON transactions.id_tx = received_notes.tx
+                   LEFT JOIN sent_notes
+                          ON transactions.id_tx = sent_notes.tx
+                   LEFT JOIN blocks
+                          ON transactions.block = blocks.height
+             WHERE  ( transactions.raw IS NULL
+                     AND received_notes.is_change != 1 )
+                    OR ( transactions.raw IS NOT NULL )
+             ORDER  BY ( minedheight IS NOT NULL ),
+                      minedheight DESC,
+                      blocktimeinseconds DESC,
+                      id DESC
+             LIMIT  \(limit)
+            """).map({ (bindings) -> ConfirmedTransactionEntity in
+                guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
+                    throw TransactionRepositoryError.malformedTransaction
+                }
+                return tx
+            })
+    }
+}
+
+extension Data {
+    init(blob: SQLite.Blob) {
+        let bytes = blob.bytes
+        self = Data(bytes: bytes, count: bytes.count)
+    }
+    
+    var bytes: [UInt8] {
+        return [UInt8](self)
+    }
+}
+
+extension Array where Element == UInt8 {
+    var data : Data{
+        return Data(self)
+    }
+}

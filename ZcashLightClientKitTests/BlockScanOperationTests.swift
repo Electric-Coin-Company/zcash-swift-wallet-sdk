@@ -83,7 +83,7 @@ class BlockScanOperationTests: XCTestCase {
         var latestScannedheight = BlockHeight.empty()
         let latestScannedBlockOperation = BlockOperation {
             do {
-                let repository = try BlockSQLDAO(dataDb: self.dataDbURL)
+                let repository = try BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
                 latestScannedheight = repository.lastScannedBlockHeight()
             } catch {
                 XCTFail("scan failed")

@@ -12,7 +12,7 @@ class BlockDownloaderTests: XCTestCase {
     
     var downloader: CompactBlockDownloading!
     var service: LightWalletService!
-    var storage: CompactBlockStoring!
+    var storage: CompactBlockRepository!
     var cacheDB = try! __cacheDbURL()
     override func setUp() {
         service = LightWalletGRPCService(channel: ChannelProvider().channel())

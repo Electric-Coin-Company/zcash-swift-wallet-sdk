@@ -80,7 +80,7 @@ struct CompactBlockStorage: CompactBlockDAO {
     }
 }
 
-extension CompactBlockStorage: CompactBlockStoring {
+extension CompactBlockStorage: CompactBlockRepository {
     
     func latestHeight() throws -> BlockHeight {
         try latestBlockHeight()

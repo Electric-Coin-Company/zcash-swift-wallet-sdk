@@ -9,7 +9,7 @@
 import Foundation
 @testable import ZcashLightClientKit
 
-class ZcashConsoleFakeStorage: CompactBlockStoring {
+class ZcashConsoleFakeStorage: CompactBlockRepository {
     func latestHeight() throws -> Int {
         return self.latestBlockHeight
     }
