@@ -7,12 +7,16 @@
 
 import Foundation
 
+enum TransactionRepositoryError: Error {
+    case malformedTransaction
+}
+
 protocol TransactionRepository {
     func countAll() throws  -> Int
     func countUnmined() throws -> Int
     func findBy(id: Int) throws -> TransactionEntity?
     func findBy(rawId: Data) throws -> TransactionEntity?
-    func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransaction]?
-    func findAllReceivedTransactions(limit: Int) throws ->  [ConfirmedTransaction]?
-    func findAll(limit: Int) throws -> [ConfirmedTransaction]?
+    func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]?
+    func findAllReceivedTransactions(limit: Int) throws ->  [ConfirmedTransactionEntity]?
+    func findAll(limit: Int) throws -> [ConfirmedTransactionEntity]?
 }

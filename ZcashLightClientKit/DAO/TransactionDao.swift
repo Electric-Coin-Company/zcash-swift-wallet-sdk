@@ -8,8 +8,6 @@
 import Foundation
 import SQLite
 
-
-
 struct Transaction: TransactionEntity, Decodable {
     enum CodingKeys: String, CodingKey {
         case id = "id_tx"
@@ -29,6 +27,22 @@ struct Transaction: TransactionEntity, Decodable {
     var minedHeight: BlockHeight?
     var raw: Data?
 }
+
+struct ConfirmedTransaction: ConfirmedTransactionEntity {
+    var toAddress: String?
+    var expiryHeight: BlockHeight?
+    var minedHeight: Int
+    var noteId: Int
+    var blockTimeInSeconds: TimeInterval
+    var transactionIndex: Int
+    var raw: Data?
+    var id: UInt
+    var value: Int
+    var memo: Data?
+    var rawTransactionId: Data?
+}
+
+
 
 class TransactionSQLDAO: TransactionRepository {
     
@@ -70,16 +84,105 @@ class TransactionSQLDAO: TransactionRepository {
         return entity
     }
     
-    func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransaction]? {
-        nil
+    func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        try dbProvider.connection().run("""
+            SELECT transactions.id_tx         AS id,
+                   transactions.block         AS minedHeight,
+                   transactions.tx_index      AS transactionIndex,
+                   transactions.txid          AS rawTransactionId,
+                   transactions.expiry_height AS expiryHeight,
+                   transactions.raw           AS raw,
+                   sent_notes.address         AS toAddress,
+                   sent_notes.value           AS value,
+                   sent_notes.memo            AS memo,
+                   sent_notes.id_note         AS noteId,
+                   blocks.time                AS blockTimeInSeconds
+            FROM   transactions
+                   LEFT JOIN sent_notes
+                          ON transactions.id_tx = sent_notes.tx
+                   LEFT JOIN blocks
+                          ON transactions.block = blocks.height
+            WHERE  transactions.raw IS NOT NULL
+                   AND minedheight > 0
+            ORDER  BY block IS NOT NULL, height DESC, time DESC, txid DESC
+            LIMIT  \(limit)
+        """).map({ (bindings) -> ConfirmedTransactionEntity in
+            guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
+                throw TransactionRepositoryError.malformedTransaction
+            }
+            return tx
+        })
     }
     
-    func findAllReceivedTransactions(limit: Int) throws -> [ConfirmedTransaction]? {
-        nil
+    func findAllReceivedTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        try dbProvider.connection().run("""
+            SELECT transactions.id_tx     AS id,
+                   transactions.block     AS minedHeight,
+                   transactions.tx_index  AS transactionIndex,
+                   transactions.txid      AS rawTransactionId,
+                   received_notes.value   AS value,
+                   received_notes.memo    AS memo,
+                   received_notes.id_note AS noteId,
+                   blocks.time            AS blockTimeInSeconds
+            FROM   transactions
+                   LEFT JOIN received_notes
+                          ON transactions.id_tx = received_notes.tx
+                   LEFT JOIN blocks
+                          ON transactions.block = blocks.height
+            WHERE  received_notes.is_change != 1
+            ORDER  BY minedheight DESC, blocktimeinseconds DESC, id DESC
+            LIMIT  \(limit)
+            """).map({ (bindings) -> ConfirmedTransactionEntity in
+                guard let tx = TransactionBuilder.createReceivedTransaction(from: bindings) else {
+                    throw TransactionRepositoryError.malformedTransaction
+                }
+                return tx
+            })
     }
     
-    func findAll(limit: Int) throws -> [ConfirmedTransaction]? {
-        nil
+    func findAll(limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
+        try dbProvider.connection().run("""
+             SELECT transactions.id_tx          AS id,
+                   transactions.block           AS minedHeight,
+                   transactions.tx_index        AS transactionIndex,
+                   transactions.txid            AS rawTransactionId,
+                   transactions.expiry_height   AS expiryHeight,
+                   transactions.raw             AS raw,
+                   sent_notes.address           AS toAddress,
+                   CASE
+                     WHEN transactions.raw IS NOT NULL THEN sent_notes.value
+                     ELSE received_notes.value
+                   end                          AS value,
+                   CASE
+                     WHEN transactions.raw IS NOT NULL THEN sent_notes.memo
+                     ELSE received_notes.memo
+                   end                          AS memo,
+                   CASE
+                     WHEN transactions.raw IS NOT NULL THEN sent_notes.id_note
+                     ELSE received_notes.id_note
+                   end                          AS noteId,
+                   blocks.time                  AS blockTimeInSeconds
+             FROM   transactions
+                   LEFT JOIN received_notes
+                          ON transactions.id_tx = received_notes.tx
+                   LEFT JOIN sent_notes
+                          ON transactions.id_tx = sent_notes.tx
+                   LEFT JOIN blocks
+                          ON transactions.block = blocks.height
+             WHERE  ( transactions.raw IS NULL
+                     AND received_notes.is_change != 1 )
+                    OR ( transactions.raw IS NOT NULL )
+             ORDER  BY ( minedheight IS NOT NULL ),
+                      minedheight DESC,
+                      blocktimeinseconds DESC,
+                      id DESC
+             LIMIT  \(limit)
+            """).map({ (bindings) -> ConfirmedTransactionEntity in
+                guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
+                    throw TransactionRepositoryError.malformedTransaction
+                }
+                return tx
+            })
     }
 }
 

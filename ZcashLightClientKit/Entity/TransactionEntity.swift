@@ -48,26 +48,26 @@ public protocol AbstractTransaction {
     var memo: Data? { get set }
 }
 
-public protocol SignedTransaction {
+public protocol SignedTransactionEntity {
     var raw: Data? { get set }
 }
 
 public protocol RawIdentifiable {
     var rawTransactionId: Data? { get set }
 }
-public protocol MinedTransaction: AbstractTransaction, RawIdentifiable {
+public protocol MinedTransactionEntity: AbstractTransaction, RawIdentifiable {
     var minedHeight: Int { get set }
     var noteId: Int { get set }
     var blockTimeInSeconds: TimeInterval { get set }
     var transactionIndex: Int { get set }
 }
 
-public protocol ConfirmedTransaction: MinedTransaction, SignedTransaction {
+public protocol ConfirmedTransactionEntity: MinedTransactionEntity, SignedTransactionEntity {
     var toAddress: String? { get set }
     var expiryHeight: BlockHeight? { get set }
 }
 
-public protocol PendingTransaction: SignedTransaction, AbstractTransaction, RawIdentifiable {
+public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTransaction, RawIdentifiable {
     var toAddress: String { get set }
     var accountIndex: Int { get set }
     var minedHeight: BlockHeight { get set }
@@ -92,7 +92,7 @@ public protocol PendingTransaction: SignedTransaction, AbstractTransaction, RawI
     var isSubmitSuccess: Bool { get }
 }
 
-public extension PendingTransaction {
+public extension PendingTransactionEntity {
     func isSameTransaction<T: RawIdentifiable>(other: T) -> Bool {
         guard let selfId  = self.rawTransactionId, let otherId = other.rawTransactionId else { return false }
         return selfId == otherId
