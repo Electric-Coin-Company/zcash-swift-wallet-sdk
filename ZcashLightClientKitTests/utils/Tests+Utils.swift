@@ -8,8 +8,15 @@
 
 import Foundation
 import SwiftGRPC
-
+import ZcashLightClientKit
 import XCTest
+
+class LightWalletEndpointBuilder {
+    static var `default`: LightWalletEndpoint {
+        LightWalletEndpoint(address: "localhost", port: "9067", secure: false)
+    }
+}
+
 class ChannelProvider {
     func channel() -> SwiftGRPC.Channel {
         Channel(address: Constants.address, secure: false)
