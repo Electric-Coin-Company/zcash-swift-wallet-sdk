@@ -45,17 +45,20 @@ public class Initializer {
     
     private var rustBackend: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     private var lowerBoundHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT
-    private var cacheDbURL: URL
-    private var dataDbURL: URL
-    
+    private(set) var cacheDbURL: URL
+    private(set) var dataDbURL: URL
+    private(set) var spendParamsURL: URL
+    private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
     
     public private(set) var  endpoint: LightWalletEndpoint
     
-    public init (cacheDbURL: URL, dataDbURL: URL, endpoint: LightWalletEndpoint) {
+    public init (cacheDbURL: URL, dataDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL) {
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
         self.endpoint = endpoint
+        self.spendParamsURL = spendParamsURL
+        self.outputParamsURL = outputParamsURL
     }
     
     /**
@@ -113,7 +116,11 @@ public class Initializer {
     }
     
     public func getAddress(index account: Int = 0) -> String? {
-        return rustBackend.getAddress(dbData: dataDbURL, account: Int32(account))
+        rustBackend.getAddress(dbData: dataDbURL, account: Int32(account))
+    }
+    
+    public func getBalance(account index: Int = 0) -> Int64 {
+        rustBackend.getBalance(dbData: dataDbURL, account: Int32(index))
     }
     
     // TODO: make internal

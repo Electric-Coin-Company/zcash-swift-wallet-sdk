@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 class PendingTransactionSQLDAO: PendingTransactionRepository {
     
     var dbProvider: ConnectionProvider
@@ -39,6 +38,5 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     func getAll() throws -> [PendingTransactionEntity] {
         []
     }
-    
     
 }

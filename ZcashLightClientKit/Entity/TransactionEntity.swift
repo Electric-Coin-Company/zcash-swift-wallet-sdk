@@ -66,5 +66,3 @@ public protocol ConfirmedTransactionEntity: MinedTransactionEntity, SignedTransa
     var toAddress: String? { get set }
     var expiryHeight: BlockHeight? { get set }
 }
-
-

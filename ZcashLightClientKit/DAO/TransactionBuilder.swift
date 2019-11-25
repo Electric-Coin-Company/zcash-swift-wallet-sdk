@@ -45,7 +45,7 @@ struct TransactionBuilder {
         // Optional values
         
         var toAddress: String?
-        if let to =  bindings[ConfirmedColumns.toAddress.rawValue] as? String {
+        if let to = bindings[ConfirmedColumns.toAddress.rawValue] as? String {
             toAddress = to
         }
         
@@ -60,7 +60,7 @@ struct TransactionBuilder {
         }
         
         var memo: Data?
-        if let memoBlob =  bindings[ConfirmedColumns.memo.rawValue] as? Blob {
+        if let memoBlob = bindings[ConfirmedColumns.memo.rawValue] as? Blob {
             memo = Data(blob: memoBlob)
         }
         
@@ -94,7 +94,7 @@ struct TransactionBuilder {
         // Optional values
         
         var memo: Data?
-        if let memoBlob =  bindings[ReceivedColumns.memo.rawValue] as? Blob {
+        if let memoBlob = bindings[ReceivedColumns.memo.rawValue] as? Blob {
             memo = Data(blob: memoBlob)
         }
         

@@ -18,7 +18,7 @@ Pod::Spec.new do |s|
     s.public_header_files = 'ZcashLightClientKit/**/*.h'
     s.source_files = 'ZcashLightClientKit/**/*.{swift,h,a}'
     s.module_map = 'ZcashLightClientKit.modulemap'
-    s.swift_version = '5.0'
+    s.swift_version = '5.1'
     s.ios.deployment_target = '11.0'
     s.dependency 'SwiftGRPC'
     s.dependency 'SQLite.swift'    
@@ -35,7 +35,7 @@ Pod::Spec.new do |s|
     
     s.test_spec 'Tests' do | test_spec |
         test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift,db}'
-        test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db}'
+        test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
         test_spec.dependency 'SwiftGRPC'
         test_spec.dependency 'SQLite.swift'
     end

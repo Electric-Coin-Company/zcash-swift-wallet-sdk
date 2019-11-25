@@ -15,15 +15,17 @@ class WalletTransactionEncoderTests: XCTestCase {
     var dataDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedDataDbURL()!)
     var cacheDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedCacheDbURL()!)
     var initializer: Initializer!
-    let spendingKey = "zxviewtestsapling1qwxyzvdmqqqqpqy3knx32fpja779wzg76kmglgguvr74g773f3aw3gy37rar6y9d37knvskz6thnea55s05cz3a7q38835hq4w58yevn763cn2wf7k2mpj247ynxpt9qm0nn39slkz5dk572hxr43pxqtg5kz3pqcj8z8uhz0l2vx8gxe90uf4pgw7ks23f0hz2hm47k9ym42cmns3tenhxzlyur2nvx68h4fmk9nrs44ymcqz434zsuxpvhklrjzn00gc43fdghn5szc5x2w"
+    let spendingKey = "zxviewtestsapling1qvpevftsqqqqpqy52ut2vv24a2qh7nsukew7qg9pq6djfwyc3xt5vaxuenshp2hhszsdmllvgjs754hua7yy7k2fpgx6rntp4td5axj5ej82rgt3hcn90lq59l8nh0uzjuazfradarnr6nmn3mw63jq00ggw69wg0z3tvm9q5a0qjssrwpdh7u6tq89hl3wchuq8ljq8r8rwd6xdwh3nry9at80z7amnj3s6ah4jevnvfr08gxpws523z95g6dmn4wm6l3658kd4xcqs0rwac"
     let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
+    
+    let zpend: Int64 = 500_000
     
     override func setUp() {
         try! dataDbHandle.setUp()
         try! cacheDbHandle.setUp()
-        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, endpoint: LightWalletEndpointBuilder.default)
+        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
         repository = TransactionSQLDAO(dbProvider: dataDbHandle.connectionProvider(readwrite: false))
-        transactionEncoder = WalletTransactionEncoder(rust: rustBackend.self, repository: repository)
+        transactionEncoder = WalletTransactionEncoder(rust: rustBackend.self, repository: repository, initializer:  initializer)
     }
 
     override func tearDown() {
@@ -34,7 +36,7 @@ class WalletTransactionEncoderTests: XCTestCase {
 
     func testCreateTransaction() {
         var transaction: EncodedTransaction?
-        XCTAssertNoThrow(try { transaction = try transactionEncoder.createTransaction(spendingKey: spendingKey, zatoshi: 500_000, to: recipientAddress, memo: nil, from: 0)}())
+        XCTAssertNoThrow(try { transaction = try transactionEncoder.createTransaction(spendingKey: spendingKey, zatoshi: zpend, to: recipientAddress, memo: nil, from: 0)}())
         guard let tx = transaction else {
             XCTFail("transaction is nil")
             return
@@ -47,8 +49,12 @@ class WalletTransactionEncoderTests: XCTestCase {
     }
     
     func testCreateSpend() {
+        
+        XCTAssert(initializer.getBalance() >= zpend)
+    
         var spendId: Int64?
-        spendId = transactionEncoder.createSpend(spendingKey: spendingKey, zatoshi: 500_000, to: recipientAddress, memo: nil , from: 0)
+        
+        XCTAssertNoThrow(try { spendId = try transactionEncoder.createSpend(spendingKey: self.spendingKey, zatoshi: self.zpend, to: self.recipientAddress, memo: nil,  from: 0) }())
         
         guard let id = spendId else {
             XCTFail("failed to create spend")
@@ -56,14 +62,9 @@ class WalletTransactionEncoderTests: XCTestCase {
         }
         
         var tx: TransactionEntity?
-        XCTAssertNoThrow(try { tx = try repository.findBy(id: Int(id))}())
-        
+        XCTAssertNoThrow(try { tx = try repository.findBy(id: id)}())
         XCTAssertNotNil(tx)
         
-    }
-    
-    func testEnsureParams() {
-        XCTFail()
     }
     
     

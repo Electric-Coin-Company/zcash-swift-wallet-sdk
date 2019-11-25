@@ -126,7 +126,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         let dbData = dbData.osStr()
         let spendParams = spendParams.osStr()
         let outputParams = outputParams.osStr()
-        return zcashlc_send_to_address(dbData.0, dbData.1, account, extsk, to, value, memo, spendParams.0, spendParams.1, outputParams.0, outputParams.1)
+        let memoBytes = memo ?? ""
+        
+        return zcashlc_send_to_address(dbData.0, dbData.1, account, extsk, to, value, memoBytes, spendParams.0, spendParams.1, outputParams.0, outputParams.1)
     }
     
 }

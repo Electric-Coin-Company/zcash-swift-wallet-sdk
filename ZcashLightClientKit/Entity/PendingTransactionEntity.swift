@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTransaction, RawIdentifiable {
     var toAddress: String { get set }
     var accountIndex: Int { get set }
@@ -35,7 +34,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
 
 public extension PendingTransactionEntity {
     func isSameTransaction<T: RawIdentifiable>(other: T) -> Bool {
-        guard let selfId  = self.rawTransactionId, let otherId = other.rawTransactionId else { return false }
+        guard let selfId = self.rawTransactionId, let otherId = other.rawTransactionId else { return false }
         return selfId == otherId
     }
     
@@ -76,4 +75,3 @@ public extension PendingTransactionEntity {
         submitAttempts > 0 && (errorCode != nil && (errorCode ?? -1) >= 0) && errorMesssage == nil
     }
 }
-

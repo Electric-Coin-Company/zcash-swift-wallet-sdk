@@ -62,13 +62,28 @@ func __dataDbURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
 }
 
+func __spendParamsURL() throws -> URL {
+    Bundle.testBundle.url(forResource: "sapling-spend.params", withExtension: nil)!
+}
+
+func __outputParamsURL() throws -> URL {
+    Bundle.testBundle.url(forResource: "sapling-output.params", withExtension: nil)!
+}
+
 func parametersReady() -> Bool {
     
-    guard let output = try? __documentsDirectory().appendingPathComponent("sapling-output.params", isDirectory: false),
-          let spend = try? __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false),
+    guard let output = try? __outputParamsURL(),
+          let spend = try? __spendParamsURL(),
           FileManager.default.isReadableFile(atPath: output.absoluteString),
           FileManager.default.isReadableFile(atPath: spend.absoluteString) else {
             return false
     }
     return true
+}
+
+class StubTest: XCTestCase {}
+extension Bundle {
+    static var testBundle: Bundle {
+        Bundle(for: StubTest.self)
+    }
 }

@@ -42,8 +42,6 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
     var rawTransactionId: Data?
 }
 
-
-
 class TransactionSQLDAO: TransactionRepository {
     
     struct TableStructure {
@@ -72,7 +70,7 @@ class TransactionSQLDAO: TransactionRepository {
         try dbProvider.connection().scalar(transactions.filter(TableStructure.minedHeight == nil).count)
     }
     
-    func findBy(id: Int) throws -> TransactionEntity? {
+    func findBy(id: Int64) throws -> TransactionEntity? {
         let query = transactions.filter(TableStructure.id == Int64(id)).limit(1)
         let entity: Transaction? = try dbProvider.connection().prepare(query).map({ try $0.decode() }).first
         return entity
@@ -198,7 +196,7 @@ extension Data {
 }
 
 extension Array where Element == UInt8 {
-    var data : Data{
+    var data: Data {
         return Data(self)
     }
 }

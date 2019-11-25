@@ -55,7 +55,7 @@ class TestDbBuilder {
     }
     
     static func prePopulatedDataDbURL() -> URL? {
-        Bundle(for: TestDbBuilder.self).url(forResource: "ZcashSdk_Data", withExtension: "db")
+        Bundle(for: TestDbBuilder.self).url(forResource: "test_data", withExtension: "db")
     }
     
     static func prepopulatedDataDbProvider() -> ConnectionProvider? {

@@ -56,7 +56,7 @@ SPEC CHECKSUMS:
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
   SwiftGRPC: f8fcfecb547c96cc6913de619f95fa3cd09838ee
   SwiftProtobuf: 4fd9645e69b72cbae6ec8da5be0cdd20ca6565dd
-  ZcashLightClientKit: 5c5b46a9c1f5b293d493241d542215155e9bbfd8
+  ZcashLightClientKit: 96dac747851af3dcb8ece75718c53f9e57d1608b
 
 PODFILE CHECKSUM: bc6f10f9eb1279ca097cfa020229bb9cfb768223
 
