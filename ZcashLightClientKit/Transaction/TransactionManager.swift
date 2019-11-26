@@ -1,0 +1,34 @@
+//
+//  TransactionManager.swift
+//  ZcashLightClientKit
+//
+//  Created by Francisco Gindre on 11/26/19.
+//
+
+import Foundation
+
+
+/**
+ Manage outbound transactions with the main purpose of reporting which ones are still pending,
+ particularly after failed attempts or dropped connectivity. The intent is to help see outbound
+ transactions through to completion.
+*/
+
+protocol OutboundTransactionManager {
+    func initSpend(zatoshi: Int64, toAddress: String, memo: String, from accountIndex: Int, result: @escaping (Result<PendingTransactionEntity,Error>) -> Void)
+    
+    func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
+    
+    func submit(pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
+    
+    func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) -> PendingTransactionEntity
+    
+    func monitorChanges(byId: Int64, observer: Any) // check this out. code smell
+    
+    /**
+    Attempts to Cancel a transaction. Returns true if successful
+     */
+    func cancel(pendingTransaction: PendingTransactionEntity) -> Bool
+    
+    func allPendingTransactions() -> [PendingTransactionEntity]?
+}
