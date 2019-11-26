@@ -34,7 +34,7 @@ Pod::Spec.new do |s|
     CMD
     
     s.test_spec 'Tests' do | test_spec |
-        test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift,db}'
+        test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift}'
         test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
         test_spec.dependency 'SwiftGRPC'
         test_spec.dependency 'SQLite.swift'

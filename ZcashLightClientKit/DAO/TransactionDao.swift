@@ -72,7 +72,8 @@ class TransactionSQLDAO: TransactionRepository {
     
     func findBy(id: Int64) throws -> TransactionEntity? {
         let query = transactions.filter(TableStructure.id == Int64(id)).limit(1)
-        let entity: Transaction? = try dbProvider.connection().prepare(query).map({ try $0.decode() }).first
+        let sequence = try dbProvider.connection().prepare(query)
+        let entity: Transaction? = try sequence.map({ try $0.decode() }).first
         return entity
     }
     

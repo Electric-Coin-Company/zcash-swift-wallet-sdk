@@ -28,7 +28,7 @@ struct TestDbHandle {
     }
     
     func connectionProvider(readwrite: Bool = true) -> ConnectionProvider {
-        SimpleConnectionProvider(path: readwrite ? self.readWriteDb.absoluteString : self.originalDb.absoluteString, readonly: readwrite)
+        SimpleConnectionProvider(path: self.readWriteDb.absoluteString, readonly: !readwrite)
     }
 }
 

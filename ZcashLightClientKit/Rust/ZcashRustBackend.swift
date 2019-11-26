@@ -12,6 +12,10 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func lastError() -> RustWeldingError? {
         guard let message = getLastError() else { return nil }
+        
+        if message.contains("couldn't load Sapling spend parameters") {
+            return RustWeldingError.saplingSpendParametersNotFound
+        }
         return RustWeldingError.genericError(message: message)
     }
     

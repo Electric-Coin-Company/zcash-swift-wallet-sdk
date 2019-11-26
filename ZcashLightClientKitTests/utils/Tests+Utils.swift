@@ -63,11 +63,30 @@ func __dataDbURL() throws -> URL {
 }
 
 func __spendParamsURL() throws -> URL {
-    Bundle.testBundle.url(forResource: "sapling-spend.params", withExtension: nil)!
+    Bundle.testBundle.url(forResource: "sapling-spend", withExtension: "params")!
 }
 
 func __outputParamsURL() throws -> URL {
-    Bundle.testBundle.url(forResource: "sapling-output.params", withExtension: nil)!
+    Bundle.testBundle.url(forResource: "sapling-output", withExtension: "params")!
+}
+
+func copyParametersToDocuments() throws -> (spend: URL, output: URL) {
+    
+    let spendURL = try __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false)
+    let outputURL = try __documentsDirectory().appendingPathComponent("sapling-output.params", isDirectory: false)
+    try FileManager.default.copyItem(at: try __spendParamsURL(), to: spendURL)
+    try FileManager.default.copyItem(at: try __outputParamsURL(), to: outputURL)
+    
+    return (spendURL, outputURL)
+}
+
+func deleteParametersFromDocuments() throws {
+    let documents = try __documentsDirectory()
+    deleteParamsFrom(spend: documents.appendingPathComponent("sapling-spend.params"), output: documents.appendingPathComponent("sapling-output.params"))
+}
+func deleteParamsFrom(spend: URL, output: URL)  {
+    try? FileManager.default.removeItem(at: spend)
+    try? FileManager.default.removeItem(at: output)
 }
 
 func parametersReady() -> Bool {

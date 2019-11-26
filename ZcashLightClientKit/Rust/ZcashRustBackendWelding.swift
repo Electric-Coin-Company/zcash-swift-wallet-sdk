@@ -12,6 +12,7 @@ public enum RustWeldingError: Error {
     case genericError(message: String)
     case dataDbInitFailed(message: String)
     case dataDbNotEmpty
+    case saplingSpendParametersNotFound
 }
 
 public struct ZcashRustBackendWeldingConstants {

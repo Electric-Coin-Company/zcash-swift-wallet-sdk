@@ -48,19 +48,26 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
     
     func createSpend(spendingKey: String, zatoshi: Int64, to address: String, memo: String?, from accountIndex: Int) throws -> Int64 {
-        guard ensureParams(spend: initializer.spendParamsURL, output: initializer.spendParamsURL) else {
+        guard ensureParams(spend: initializer.spendParamsURL, output: initializer.spendParamsURL),
+            let spend = URL(string: initializer.spendParamsURL.path), let output = URL(string: initializer.outputParamsURL.path) else {
             throw TransactionEncoderError.missingParams
         }
         
-        let txId = rustBackend.sendToAddress(dbData: initializer.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParams: initializer.spendParamsURL, outputParams: initializer.outputParamsURL)
+        
+        let txId = rustBackend.sendToAddress(dbData: initializer.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParams: spend, outputParams: output)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
         }
+        
         return txId
     }
     
     func ensureParams(spend: URL, output: URL) -> Bool {
-        return true // Todo: change this to something that makes sense
+        
+        let readableSpend = FileManager.default.isReadableFile(atPath: spend.path)
+        let readableOutput = FileManager.default.isReadableFile(atPath: output.path)
+        
+        return readableSpend && readableOutput // Todo: change this to something that makes sense
     }
 }
