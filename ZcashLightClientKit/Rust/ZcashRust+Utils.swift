@@ -7,3 +7,15 @@
 //
 
 import Foundation
+
+extension Data {
+    func asZcashTransactionMemo() -> String? {
+        return nil
+    }
+}
+
+extension String {
+    func encodeAsZcashTransactionMemo() -> Data? {
+        return nil
+    }
+}

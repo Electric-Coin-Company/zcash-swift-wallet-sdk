@@ -31,7 +31,7 @@ class WalletTests: XCTestCase {
     
     func testWalletInitialization() {
         
-        let wallet = Initializer(cacheDbURL: cacheData, dataDbURL: dbData, endpoint: LightWalletEndpoint(address: "localhost", port: "9067", secure: false))
+        let wallet = Initializer(cacheDbURL: cacheData, dataDbURL: dbData, endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
         
         XCTAssertNoThrow(try wallet.initialize(seedProvider: SampleSeedProvider(), walletBirthdayHeight: SAPLING_ACTIVATION_HEIGHT))
         

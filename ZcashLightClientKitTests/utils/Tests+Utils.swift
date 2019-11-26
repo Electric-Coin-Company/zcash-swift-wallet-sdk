@@ -8,8 +8,15 @@
 
 import Foundation
 import SwiftGRPC
-
+import ZcashLightClientKit
 import XCTest
+
+class LightWalletEndpointBuilder {
+    static var `default`: LightWalletEndpoint {
+        LightWalletEndpoint(address: "localhost", port: "9067", secure: false)
+    }
+}
+
 class ChannelProvider {
     func channel() -> SwiftGRPC.Channel {
         Channel(address: Constants.address, secure: false)
@@ -55,13 +62,47 @@ func __dataDbURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
 }
 
+func __spendParamsURL() throws -> URL {
+    Bundle.testBundle.url(forResource: "sapling-spend", withExtension: "params")!
+}
+
+func __outputParamsURL() throws -> URL {
+    Bundle.testBundle.url(forResource: "sapling-output", withExtension: "params")!
+}
+
+func copyParametersToDocuments() throws -> (spend: URL, output: URL) {
+    
+    let spendURL = try __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false)
+    let outputURL = try __documentsDirectory().appendingPathComponent("sapling-output.params", isDirectory: false)
+    try FileManager.default.copyItem(at: try __spendParamsURL(), to: spendURL)
+    try FileManager.default.copyItem(at: try __outputParamsURL(), to: outputURL)
+    
+    return (spendURL, outputURL)
+}
+
+func deleteParametersFromDocuments() throws {
+    let documents = try __documentsDirectory()
+    deleteParamsFrom(spend: documents.appendingPathComponent("sapling-spend.params"), output: documents.appendingPathComponent("sapling-output.params"))
+}
+func deleteParamsFrom(spend: URL, output: URL)  {
+    try? FileManager.default.removeItem(at: spend)
+    try? FileManager.default.removeItem(at: output)
+}
+
 func parametersReady() -> Bool {
     
-    guard let output = try? __documentsDirectory().appendingPathComponent("sapling-output.params", isDirectory: false),
-          let spend = try? __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false),
+    guard let output = try? __outputParamsURL(),
+          let spend = try? __spendParamsURL(),
           FileManager.default.isReadableFile(atPath: output.absoluteString),
           FileManager.default.isReadableFile(atPath: spend.absoluteString) else {
             return false
     }
     return true
+}
+
+class StubTest: XCTestCase {}
+extension Bundle {
+    static var testBundle: Bundle {
+        Bundle(for: StubTest.self)
+    }
 }

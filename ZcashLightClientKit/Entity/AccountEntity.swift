@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol AccountEntity: Hashable {
-    var account:Int { get set }
+    var account: Int { get set }
     var extfvk: String { get set }
     var address: String { get set }
 }
@@ -28,5 +28,3 @@ public extension AccountEntity {
         return true
     }
 }
-
-

@@ -10,6 +10,28 @@ import Foundation
 import SQLite
 @testable import ZcashLightClientKit
 
+struct TestDbHandle {
+    var originalDb: URL
+    var readWriteDb: URL
+    
+    init(originalDb: URL) {
+        self.originalDb = originalDb
+        self.readWriteDb = FileManager.default.temporaryDirectory.appendingPathComponent(self.originalDb.lastPathComponent.appending("_\(Date().timeIntervalSince1970)")) // avoid files clashing because crashing tests failed to remove previous ones by incrementally changing the filename
+    }
+    
+    func setUp() throws {
+        try FileManager.default.copyItem(at: originalDb, to: readWriteDb)
+    }
+    
+    func dispose() {
+        try? FileManager.default.removeItem(at: readWriteDb)
+    }
+    
+    func connectionProvider(readwrite: Bool = true) -> ConnectionProvider {
+        SimpleConnectionProvider(path: self.readWriteDb.absoluteString, readonly: !readwrite)
+    }
+}
+
 class TestDbBuilder {
     
     enum TestBuilderError: Error {
@@ -26,6 +48,14 @@ class TestDbBuilder {
         let compactBlockDao = CompactBlockStorage(connectionProvider: SimpleConnectionProvider(path: url.absoluteString))
         try compactBlockDao.createTable()
         return compactBlockDao
+    }
+    
+    static func prePopulatedCacheDbURL() -> URL? {
+        Bundle(for: TestDbBuilder.self).url(forResource: "cache", withExtension: "db")
+    }
+    
+    static func prePopulatedDataDbURL() -> URL? {
+        Bundle(for: TestDbBuilder.self).url(forResource: "test_data", withExtension: "db")
     }
     
     static func prepopulatedDataDbProvider() -> ConnectionProvider? {
