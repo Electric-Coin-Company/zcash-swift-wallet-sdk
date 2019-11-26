@@ -36,8 +36,8 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
     var blockTimeInSeconds: TimeInterval
     var transactionIndex: Int
     var raw: Data?
-    var id: UInt
-    var value: Int
+    var id: Int64
+    var value: Int64
     var memo: Data?
     var rawTransactionId: Data?
 }
