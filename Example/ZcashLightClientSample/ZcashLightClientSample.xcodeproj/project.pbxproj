@@ -18,6 +18,7 @@
 		0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
 		0D907F2B2322CC5B00D641FE /* ZcashLightClientSampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */; };
 		0D907F362322CC5B00D641FE /* ZcashLightClientSampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */; };
+		0DCD3DC7238D88B100DD3EC4 /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
 		0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
 		0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
 		30AB89006A2D6891F32BFBF0 /* Pods_ZcashLightClientSample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */; };
@@ -60,6 +61,7 @@
 		0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleUITests.swift; sourceTree = "<group>"; };
 		0D907F372322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GetBalanceViewController.swift; path = "Get Balance/GetBalanceViewController.swift"; sourceTree = "<group>"; };
 		0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestHeightViewController.swift; sourceTree = "<group>"; };
 		0DDFB33D236B844900AED892 /* DemoAppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoAppConfig.swift; sourceTree = "<group>"; };
 		17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -142,6 +144,8 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				0DCD3DC5238D888B00DD3EC4 /* Get Balance */,
+				0DCD3DC4238D886400DD3EC4 /* Send Funds */,
 				0D2343EC238C91B900606F71 /* sapling-output.params */,
 				0D2343ED238C91B900606F71 /* sapling-spend.params */,
 				0D7A4A81236CCCDB001F4DD8 /* Sync Blocks */,
@@ -154,6 +158,7 @@
 				0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */,
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
+				0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */,
 			);
 			path = ZcashLightClientSample;
 			sourceTree = "<group>";
@@ -174,6 +179,20 @@
 				0D907F372322CC5B00D641FE /* Info.plist */,
 			);
 			path = ZcashLightClientSampleUITests;
+			sourceTree = "<group>";
+		};
+		0DCD3DC4238D886400DD3EC4 /* Send Funds */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Send Funds";
+			sourceTree = "<group>";
+		};
+		0DCD3DC5238D888B00DD3EC4 /* Get Balance */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Get Balance";
 			sourceTree = "<group>";
 		};
 		0DDFB33A236B733700AED892 /* Latest Block Height */ = {
@@ -448,6 +467,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DCD3DC7238D88B100DD3EC4 /* GetBalanceViewController.swift in Sources */,
 				0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */,
 				0D907F182322CC5900D641FE /* ViewController.swift in Sources */,
 				0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */,
