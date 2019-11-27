@@ -50,6 +50,9 @@ class TestDbBuilder {
         return compactBlockDao
     }
     
+    static func pendingTransactionsDbURL() throws -> URL {
+        try __documentsDirectory().appendingPathComponent("pending.db")
+    }
     static func prePopulatedCacheDbURL() -> URL? {
         Bundle(for: TestDbBuilder.self).url(forResource: "cache", withExtension: "db")
     }
