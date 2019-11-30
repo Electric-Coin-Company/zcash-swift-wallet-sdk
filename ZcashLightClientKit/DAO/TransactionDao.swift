@@ -36,8 +36,8 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
     var blockTimeInSeconds: TimeInterval
     var transactionIndex: Int
     var raw: Data?
-    var id: Int64
-    var value: Int64
+    var id: Int?
+    var value: Int
     var memo: Data?
     var rawTransactionId: Data?
 }
@@ -45,12 +45,12 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
 class TransactionSQLDAO: TransactionRepository {
     
     struct TableStructure {
-        static var id = Expression<Int64>(Transaction.CodingKeys.id.rawValue)
+        static var id = Expression<Int>(Transaction.CodingKeys.id.rawValue)
         static var transactionId = Expression<Blob>(Transaction.CodingKeys.transactionId.rawValue)
         static var created = Expression<String?>(Transaction.CodingKeys.created.rawValue)
         static var txIndex = Expression<String?>(Transaction.CodingKeys.transactionIndex.rawValue)
-        static var expiryHeight = Expression<Int64?>(Transaction.CodingKeys.expiryHeight.rawValue)
-        static var minedHeight = Expression<Int64?>(Transaction.CodingKeys.minedHeight.rawValue)
+        static var expiryHeight = Expression<Int?>(Transaction.CodingKeys.expiryHeight.rawValue)
+        static var minedHeight = Expression<Int?>(Transaction.CodingKeys.minedHeight.rawValue)
         static var raw = Expression<Blob?>(Transaction.CodingKeys.raw.rawValue)
     }
     
@@ -70,8 +70,8 @@ class TransactionSQLDAO: TransactionRepository {
         try dbProvider.connection().scalar(transactions.filter(TableStructure.minedHeight == nil).count)
     }
     
-    func findBy(id: Int64) throws -> TransactionEntity? {
-        let query = transactions.filter(TableStructure.id == Int64(id)).limit(1)
+    func findBy(id: Int) throws -> TransactionEntity? {
+        let query = transactions.filter(TableStructure.id == id).limit(1)
         let sequence = try dbProvider.connection().prepare(query)
         let entity: Transaction? = try sequence.map({ try $0.decode() }).first
         return entity

@@ -10,16 +10,16 @@ import SQLite
 struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     
     enum CodingKeys: String, CodingKey {
-        case toAddress
-        case accountIndex
-        case minedHeight
-        case expiryHeight
+        case toAddress = "to_address"
+        case accountIndex = "account_index"
+        case minedHeight = "mined_height"
+        case expiryHeight = "expiry_height"
         case cancelled
-        case encodeAttempts
-        case submitAttempts
-        case errorMessage
-        case errorCode
-        case createTime
+        case encodeAttempts = "encode_attempts"
+        case submitAttempts = "submit_attempts"
+        case errorMessage = "error_message"
+        case errorCode = "error_code"
+        case createTime = "create_time"
         case raw
         case id
         case value
@@ -38,8 +38,8 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     var errorCode: Int?
     var createTime: TimeInterval
     var raw: Data?
-    var id: Int64
-    var value: Int64
+    var id: Int?
+    var value: Int
     var memo: Data?
     var rawTransactionId: Data?
     
@@ -66,25 +66,33 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     }
 }
 
+extension PendingTransaction {
+    
+    // TODO: Handle Memo
+    init(value: Int, toAddress: String, memo: String?, account index: Int) {
+        self = PendingTransaction(toAddress: toAddress, accountIndex: index, minedHeight: -1, expiryHeight: -1, cancelled: 0, encodeAttempts: 0, submitAttempts: 0, errorMessage: nil, errorCode: nil, createTime: Date().timeIntervalSince1970, raw: nil, id: nil, value: Int(value), memo: nil, rawTransactionId: nil)
+    }
+}
+
 
 class PendingTransactionSQLDAO: PendingTransactionRepository {
-    
+
     let table = Table("pending_transactions")
     
     struct TableColumns {
         static var toAddress = Expression<String>("to_address")
-        static var accountIndex = Expression<Int64>("account_index")
-        static var minedHeight = Expression<Int64?>("mined_height")
-        static var expiryHeight = Expression<Int64?>("expiry_height")
-        static var cancelled = Expression<Int64?>("cancelled")
-        static var encodeAttempts = Expression<Int64?>("encode_attempts")
+        static var accountIndex = Expression<Int>("account_index")
+        static var minedHeight = Expression<Int?>("mined_height")
+        static var expiryHeight = Expression<Int?>("expiry_height")
+        static var cancelled = Expression<Int?>("cancelled")
+        static var encodeAttempts = Expression<Int?>("encode_attempts")
         static var errorMessage = Expression<String?>("error_message")
-        static var submitAttempts = Expression<Int64?>("submit_attempts")
-        static var errorCode = Expression<Int64?>("error_code")
+        static var submitAttempts = Expression<Int?>("submit_attempts")
+        static var errorCode = Expression<Int?>("error_code")
         static var createTime = Expression<TimeInterval?>("create_time")
         static var raw = Expression<Blob?>("raw")
-        static var id = Expression<Int64>("id")
-        static var value = Expression<Int64>("value")
+        static var id = Expression<Int>("id")
+        static var value = Expression<Int>("value")
         static var memo = Expression<Blob?>("memo")
         static var rawTransactionId = Expression<Blob?>("txid")
     }
@@ -92,7 +100,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     var dbProvider: ConnectionProvider
    
     init(dbProvider: ConnectionProvider) {
-        self.dbProvider = dbProvider        
+        self.dbProvider = dbProvider
     }
     
     func createrTableIfNeeded() throws {
@@ -109,6 +117,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
             t.column(TableColumns.submitAttempts, defaultValue: 0)
             t.column(TableColumns.createTime)
             t.column(TableColumns.rawTransactionId)
+            t.column(TableColumns.value)
             t.column(TableColumns.raw)
             t.column(TableColumns.memo)
         }
@@ -116,35 +125,48 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         try dbProvider.connection().run(statement)
     }
     
-    func create(_ transaction: PendingTransactionEntity) throws -> Int64 {
+    func create(_ transaction: PendingTransactionEntity) throws -> Int {
         
         let tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
         
-        return try dbProvider.connection().run(table.insert(tx))
+        return try Int(dbProvider.connection().run(table.insert(tx)))
     }
     
     func update(_ transaction: PendingTransactionEntity) throws {
         let tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
-        try dbProvider.connection().run(table.filter(TableColumns.id == tx.id).update(tx))
+        guard let id = tx.id else {
+            throw StorageError.malformedEntity(fields: ["id"])
+        }
+        try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
     }
     
     func delete(_ transaction: PendingTransactionEntity) throws {
-        try dbProvider.connection().run(table.filter(TableColumns.id == transaction.id).delete())
+        guard let id = transaction.id else {
+                  throw StorageError.malformedEntity(fields: ["id"])
+              }
+        try dbProvider.connection().run(table.filter(TableColumns.id == id).delete())
     }
     
     func cancel(_ transaction: PendingTransactionEntity) throws {
+        
         var tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
         tx.cancelled = 1
-        try dbProvider.connection().run(table.filter(TableColumns.id == tx.id).update(tx))
+        guard let id = tx.id else {
+            throw StorageError.malformedEntity(fields: ["id"])
+        }
+        try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
     }
     
-    func find(by id: Int64) throws -> PendingTransactionEntity? {
-       guard let row = try dbProvider.connection().pluck(table.filter(TableColumns.id == 1).limit(1)),
-        let tx: PendingTransaction = try row.decode() else {
+    func find(by id: Int) throws -> PendingTransactionEntity? {
+        guard let row = try dbProvider.connection().pluck(table.filter(TableColumns.id == id).limit(1)) else {
             return nil
         }
-        
-        return tx
+        do {
+            let tx: PendingTransaction = try row.decode()
+            return tx
+        } catch {
+            throw StorageError.operationFailed
+        }
     }
     
     func getAll() throws -> [PendingTransactionEntity] {

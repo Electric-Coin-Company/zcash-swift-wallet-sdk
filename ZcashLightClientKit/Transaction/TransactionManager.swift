@@ -15,7 +15,7 @@ import Foundation
 */
 
 protocol OutboundTransactionManager {
-    func initSpend(zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity
+    func initSpend(zatoshi: Int, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity
     
     func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
     
@@ -23,7 +23,7 @@ protocol OutboundTransactionManager {
     
     func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) -> PendingTransactionEntity
     
-    func monitorChanges(byId: Int64, observer: Any) // check this out. code smell
+    func monitorChanges(byId: Int, observer: Any) // check this out. code smell
     
     /**
     Attempts to Cancel a transaction. Returns true if successful

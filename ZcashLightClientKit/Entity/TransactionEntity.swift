@@ -43,8 +43,8 @@ public extension TransactionEntity {
 }
 
 public protocol AbstractTransaction {
-    var id: Int64 { get set }
-    var value: Int64 { get set }
+    var id: Int? { get set }
+    var value: Int { get set }
     var memo: Data? { get set }
 }
 
