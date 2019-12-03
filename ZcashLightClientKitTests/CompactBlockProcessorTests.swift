@@ -86,7 +86,7 @@ class CompactBlockProcessorTests: XCTestCase {
                    startedValidatingNotificationExpectation,
                    startedScanningNotificationExpectation,
                    idleNotificationExpectation,
-                   ], timeout: 130,enforceOrder: true)
+                   ], timeout: 260,enforceOrder: true)
     }
     
     func testProgressNotifications() {
@@ -95,7 +95,7 @@ class CompactBlockProcessorTests: XCTestCase {
         updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
         
         startProcessing()
-        wait(for: [updatedNotificationExpectation], timeout: 130)
+        wait(for: [updatedNotificationExpectation], timeout: 300)
         
         
     }
