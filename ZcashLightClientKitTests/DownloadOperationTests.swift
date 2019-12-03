@@ -40,7 +40,7 @@ class DownloadOperationTests: XCTestCase {
         
         operationQueue.addOperation(downloadOperation)
         
-        wait(for: [expect], timeout: 5)
+        wait(for: [expect], timeout: 10)
         
         XCTAssertEqual(try! storage.latestHeight(),range.endIndex)
     }

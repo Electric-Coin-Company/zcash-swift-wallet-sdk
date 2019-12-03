@@ -34,14 +34,14 @@ class LightWalletServiceTests: XCTestCase {
             expect.fulfill()
             
         }
-        wait(for: [expect], timeout: 5)
+        wait(for: [expect], timeout: 20)
     }
     
     func testHundredBlocks() {
         let expect = XCTestExpectation(description: self.description)
-        
+        let count = 100
         let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
+        let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + count
         let blockRange = Range<BlockHeight>(uncheckedBounds: (lower: lowerRange, upper: upperRange))
         
         service.blockRange(blockRange) { (result) in
@@ -51,12 +51,12 @@ class LightWalletServiceTests: XCTestCase {
                 XCTFail("failed with error \(error)")
                 
             case .success(let blocks):
-                XCTAssertEqual(blocks.count, 100)
+                XCTAssertEqual(blocks.count, count)
                 XCTAssertEqual(blocks[0].height, lowerRange)
             }
         }
         
-        wait(for: [expect], timeout: 5)
+        wait(for: [expect], timeout: 10)
     }
     
     func testSyncBlockRange() {
@@ -84,7 +84,7 @@ class LightWalletServiceTests: XCTestCase {
             }
         }
         
-        wait(for: [expect], timeout: 5)
+        wait(for: [expect], timeout: 10)
     }
    
 }

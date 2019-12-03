@@ -57,7 +57,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
         
         
-        let txId = rustBackend.sendToAddress(dbData: initializer.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParams: spend, outputParams: output)
+        let txId = rustBackend.createToAddress(dbData: initializer.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParams: spend, outputParams: output)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")

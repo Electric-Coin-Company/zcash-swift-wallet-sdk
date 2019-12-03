@@ -67,7 +67,7 @@ class ZcashRustBackendTests: XCTestCase {
     
     func testSendToAddress() {
         
-        let tx = try! ZcashRustBackend.sendToAddress(dbData: dataDbHandle.readWriteDb, account: 0, extsk: spendingKey, to: recipientAddress, value: Int64(zpend), memo: nil, spendParams: URL(string: __spendParamsURL().path)!, outputParams: URL(string: __outputParamsURL().path)!)
+        let tx = try! ZcashRustBackend.createToAddress(dbData: dataDbHandle.readWriteDb, account: 0, extsk: spendingKey, to: recipientAddress, value: Int64(zpend), memo: nil, spendParams: URL(string: __spendParamsURL().path)!, outputParams: URL(string: __outputParamsURL().path)!)
         XCTAssert(tx > 0)
         XCTAssertNil(ZcashRustBackend.lastError())
     }

@@ -126,13 +126,13 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1) != 0
     }
 
-    static func sendToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64 {
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64 {
         let dbData = dbData.osStr()
         let spendParams = spendParams.osStr()
         let outputParams = outputParams.osStr()
         let memoBytes = memo ?? ""
         
-        return zcashlc_send_to_address(dbData.0, dbData.1, account, extsk, to, value, memoBytes, spendParams.0, spendParams.1, outputParams.0, outputParams.1)
+        return zcashlc_create_to_address(dbData.0, dbData.1, account, extsk, to, value, memoBytes, spendParams.0, spendParams.1, outputParams.0, outputParams.1)
     }
     
 }
