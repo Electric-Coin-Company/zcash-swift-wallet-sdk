@@ -10,8 +10,8 @@ import Foundation
 typealias TransactionEncoderResultBlock = (_ result: Result<EncodedTransaction,Error>) -> Void
 
 public enum TransactionEncoderError: Error {
-    case notFound(transactionId: Int64)
-    case NotEncoded(transactionId: Int64)
+    case notFound(transactionId: Int)
+    case NotEncoded(transactionId: Int)
     case missingParams
     case spendingKeyWrongNetwork
 }
@@ -24,7 +24,7 @@ protocol TransactionEncoder {
     double-bangs for things).
      Blocking
     */
-    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction
+    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction
     
     /**
     Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
@@ -32,6 +32,6 @@ protocol TransactionEncoder {
     double-bangs for things).
      Non-blocking
     */
-    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
+    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
     
 }

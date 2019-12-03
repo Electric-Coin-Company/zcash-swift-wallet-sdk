@@ -11,16 +11,20 @@ import XCTest
 
 class ZcashRustBackendTests: XCTestCase {
     var dbData: URL!
-    
+    var dataDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedDataDbURL()!)
+    var cacheDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedCacheDbURL()!)
+    let spendingKey = "secret-extended-key-test1qvpevftsqqqqpqy52ut2vv24a2qh7nsukew7qg9pq6djfwyc3xt5vaxuenshp2hhspp9qmqvdh0gs2ljpwxders5jkwgyhgln0drjqaguaenfhehz4esdl4kwlm5t9q0l6wmzcrvcf5ed6dqzvct3e2ge7f6qdvzhp02m7sp5a0qjssrwpdh7u6tq89hl3wchuq8ljq8r8rwd6xdwh3nry9at80z7amnj3s6ah4jevnvfr08gxpws523z95g6dmn4wm6l3658kd4xcq9rc0qn"
+    let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
+    let zpend: Int = 500_000
     override func setUp() {
         dbData = try! __dataDbURL()
-        
+        try? dataDbHandle.setUp()
     }
     
     override func tearDown() {
         
         try? FileManager.default.removeItem(at: dbData!)
-        
+        dataDbHandle.dispose()
     }
     
     func testInitAndGetAddress() {
@@ -59,5 +63,12 @@ class ZcashRustBackendTests: XCTestCase {
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData))
         
+    }
+    
+    func testSendToAddress() {
+        
+        let tx = try! ZcashRustBackend.sendToAddress(dbData: dataDbHandle.readWriteDb, account: 0, extsk: spendingKey, to: recipientAddress, value: Int64(zpend), memo: nil, spendParams: URL(string: __spendParamsURL().path)!, outputParams: URL(string: __outputParamsURL().path)!)
+        XCTAssert(tx > 0)
+        XCTAssertNil(ZcashRustBackend.lastError())
     }
 }

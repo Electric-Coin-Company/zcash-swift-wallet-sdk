@@ -76,7 +76,7 @@ struct TransactionBuilder {
              blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
              transactionIndex: Int(transactionIndex),
              raw: raw,
-             id: UInt(id),
+             id: Int(id),
              value: Int(value),
              memo: memo,
              rawTransactionId: transactionId)
@@ -110,7 +110,7 @@ struct TransactionBuilder {
              blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
              transactionIndex: Int(transactionIndex),
              raw: nil,
-             id: UInt(id),
+             id: Int(id),
              value: Int(value),
              memo: memo,
              rawTransactionId: transactionId)

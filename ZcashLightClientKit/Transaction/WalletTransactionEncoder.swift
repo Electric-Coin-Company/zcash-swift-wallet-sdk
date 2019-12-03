@@ -8,16 +8,19 @@
 import Foundation
 
 class WalletTransactionEncoder: TransactionEncoder {
+    
     var rustBackend: ZcashRustBackend.Type
     var repository: TransactionRepository
     var initializer: Initializer
+    var queue: DispatchQueue
     init(rust: ZcashRustBackend.Type, repository: TransactionRepository, initializer: Initializer) {
         self.rustBackend = rust
         self.repository = repository
         self.initializer = initializer
+        self.queue = DispatchQueue(label: "wallet.transaction.encoder.serial.queue")
     }
     
-    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction {
+    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction {
         
         let txId = try createSpend(spendingKey: spendingKey, zatoshi: zatoshi, to: to, memo: memo, from: accountIndex)
         
@@ -35,9 +38,9 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
     }
     
-    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock) {
+    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock) {
         
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        queue.async { [weak self] in
             guard let self = self else { return }
             do {
                 result(.success(try self.createTransaction(spendingKey: spendingKey, zatoshi: zatoshi, to: to, memo: memo, from: accountIndex)))
@@ -47,7 +50,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         } 
     }
     
-    func createSpend(spendingKey: String, zatoshi: Int64, to address: String, memo: String?, from accountIndex: Int) throws -> Int64 {
+    func createSpend(spendingKey: String, zatoshi: Int, to address: String, memo: String?, from accountIndex: Int) throws -> Int {
         guard ensureParams(spend: initializer.spendParamsURL, output: initializer.spendParamsURL),
             let spend = URL(string: initializer.spendParamsURL.path), let output = URL(string: initializer.outputParamsURL.path) else {
             throw TransactionEncoderError.missingParams
@@ -60,7 +63,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
         }
         
-        return txId
+        return Int(txId)
     }
     
     func ensureParams(spend: URL, output: URL) -> Bool {

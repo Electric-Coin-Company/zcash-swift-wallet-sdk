@@ -51,6 +51,24 @@ public class LightWalletGRPCService {
 }
 
 extension LightWalletGRPCService: LightWalletService {
+    public func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            
+            guard let self = self else { return }
+            
+            do {
+                let response = try self.compactTxStreamer.sendTransaction(RawTransaction(serializedData: spendTransaction))
+                result(.success(response))
+            } catch {
+                result(.failure(LightWalletServiceError.genericError(error: error)))
+            }
+        }
+    }
+    
+    public func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
+        try compactTxStreamer.sendTransaction(RawTransaction(serializedData: spendTransaction))
+    }
+    
     
     public func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
         var blocks = [ZcashCompactBlock]()
@@ -142,3 +160,4 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
 }
+
