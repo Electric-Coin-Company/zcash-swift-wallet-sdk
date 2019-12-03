@@ -55,8 +55,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             let spend = URL(string: initializer.spendParamsURL.path), let output = URL(string: initializer.outputParamsURL.path) else {
             throw TransactionEncoderError.missingParams
         }
-        
-        
+                
         let txId = rustBackend.createToAddress(dbData: initializer.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParams: spend, outputParams: output)
         
         guard txId > 0 else {

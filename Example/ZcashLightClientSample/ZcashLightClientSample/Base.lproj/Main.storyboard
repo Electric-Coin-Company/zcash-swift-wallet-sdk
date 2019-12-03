@@ -99,6 +99,26 @@
                                             <segue destination="r9r-pi-Z4o" kind="show" id="dvg-Kp-7LV"/>
                                         </connections>
                                     </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" textLabel="CS3-Hm-JPK" style="IBUITableViewCellStyleDefault" id="lX6-BP-STv">
+                                        <rect key="frame" x="0.0" y="202" width="414" height="43.5"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="lX6-BP-STv" id="uYl-mR-smC">
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Send Funds" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="CS3-Hm-JPK">
+                                                    <rect key="frame" x="20" y="0.0" width="374" height="43.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <segue destination="6mH-Rv-HBn" kind="show" trigger="accessoryAction" id="LdF-Tu-4os"/>
+                                        </connections>
+                                    </tableViewCell>
                                 </cells>
                             </tableViewSection>
                         </sections>
@@ -111,8 +131,131 @@
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="u9B-ne-NE7" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" id="vYi-by-eJM">
+                    <rect key="frame" x="0.0" y="0.0" width="46" height="30"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <state key="normal" title="Button"/>
+                </button>
             </objects>
             <point key="canvasLocation" x="828" y="40"/>
+        </scene>
+        <!--Send Funds-->
+        <scene sceneID="Sb5-CT-ezM">
+            <objects>
+                <viewController title="Send Funds" id="6mH-Rv-HBn" customClass="SendViewController" customModule="ZcashLightClientSample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="mzn-Gc-de9">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Balance:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="AFU-aL-aZ0">
+                                <rect key="frame" x="20" y="143" width="97" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="32" id="ARm-9g-ScV"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="26"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Amount:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0JH-Y9-k10">
+                                <rect key="frame" x="20" y="194" width="96" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="96" id="3ea-kz-IHC"/>
+                                    <constraint firstAttribute="height" constant="32" id="WtS-hu-rud"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="26"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="0.0" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="QPl-ho-Vb5">
+                                <rect key="frame" x="135" y="194" width="259" height="34"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardType="decimalPad" returnKeyType="next" enablesReturnKeyAutomatically="YES" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
+                                <connections>
+                                    <outlet property="delegate" destination="6mH-Rv-HBn" id="LSD-br-RRX"/>
+                                </connections>
+                            </textField>
+                            <textField opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="zAddress" textAlignment="natural" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="pMR-dt-N4H">
+                                <rect key="frame" x="69" y="294" width="325" height="34"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" keyboardType="alphabet" returnKeyType="done" enablesReturnKeyAutomatically="YES" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
+                                <connections>
+                                    <outlet property="delegate" destination="6mH-Rv-HBn" id="MKz-dP-jPU"/>
+                                </connections>
+                            </textField>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="to:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="uPw-SX-zmP">
+                                <rect key="frame" x="20" y="295" width="29" height="32"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="26"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="xns-dw-RD9">
+                                <rect key="frame" x="347" y="248" width="51" height="31"/>
+                                <connections>
+                                    <action selector="maxFundsValueChanged:" destination="6mH-Rv-HBn" eventType="valueChanged" id="Fbp-vd-U5h"/>
+                                </connections>
+                            </switch>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Max funds" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qUm-uc-jqe">
+                                <rect key="frame" x="251" y="253" width="80" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Zec 0.0" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8RU-tm-VOE">
+                                <rect key="frame" x="152" y="143" width="242" height="32"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="26"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Kti-hs-oWv">
+                                <rect key="frame" x="172" y="424" width="70" height="49"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="31"/>
+                                <state key="normal" title="Send"/>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <constraints>
+                            <constraint firstItem="xns-dw-RD9" firstAttribute="leading" secondItem="qUm-uc-jqe" secondAttribute="trailing" constant="16" id="0E6-oG-dJL"/>
+                            <constraint firstItem="0JH-Y9-k10" firstAttribute="top" secondItem="QPl-ho-Vb5" secondAttribute="top" id="5Gt-7B-dSb"/>
+                            <constraint firstItem="AFU-aL-aZ0" firstAttribute="leading" secondItem="0JH-Y9-k10" secondAttribute="leading" id="A5D-Ya-Idg"/>
+                            <constraint firstItem="Kti-hs-oWv" firstAttribute="centerY" secondItem="mzn-Gc-de9" secondAttribute="centerY" id="F0r-ot-xuI"/>
+                            <constraint firstItem="0JH-Y9-k10" firstAttribute="top" secondItem="AFU-aL-aZ0" secondAttribute="bottom" constant="19" id="GK7-fs-1av"/>
+                            <constraint firstItem="pMR-dt-N4H" firstAttribute="leading" secondItem="uPw-SX-zmP" secondAttribute="trailing" constant="20" id="I0Z-xk-u69"/>
+                            <constraint firstItem="uPw-SX-zmP" firstAttribute="centerY" secondItem="pMR-dt-N4H" secondAttribute="centerY" id="Iqn-PL-8pq"/>
+                            <constraint firstItem="AFU-aL-aZ0" firstAttribute="leading" secondItem="mzn-Gc-de9" secondAttribute="leadingMargin" id="L5K-Fn-ihc"/>
+                            <constraint firstItem="8RU-tm-VOE" firstAttribute="trailing" secondItem="mzn-Gc-de9" secondAttribute="trailingMargin" id="OPN-RS-PU8"/>
+                            <constraint firstItem="uPw-SX-zmP" firstAttribute="top" secondItem="0JH-Y9-k10" secondAttribute="bottom" constant="69" id="QIJ-dN-pDa"/>
+                            <constraint firstItem="AFU-aL-aZ0" firstAttribute="top" secondItem="jlC-eJ-vHy" secondAttribute="top" constant="55" id="QIy-oY-DdN"/>
+                            <constraint firstItem="jlC-eJ-vHy" firstAttribute="bottom" secondItem="Kti-hs-oWv" secondAttribute="bottom" constant="389" id="QUA-g4-o5F"/>
+                            <constraint firstItem="Kti-hs-oWv" firstAttribute="top" secondItem="pMR-dt-N4H" secondAttribute="bottom" constant="96" id="Shi-6F-XSI"/>
+                            <constraint firstItem="AFU-aL-aZ0" firstAttribute="baseline" secondItem="8RU-tm-VOE" secondAttribute="baseline" id="THD-Cd-14H"/>
+                            <constraint firstItem="0JH-Y9-k10" firstAttribute="leading" secondItem="uPw-SX-zmP" secondAttribute="leading" id="UEy-ps-DRR"/>
+                            <constraint firstItem="8RU-tm-VOE" firstAttribute="trailing" secondItem="QPl-ho-Vb5" secondAttribute="trailing" id="ZZB-XQ-K7l"/>
+                            <constraint firstItem="xns-dw-RD9" firstAttribute="top" secondItem="QPl-ho-Vb5" secondAttribute="bottom" constant="20" id="Znx-4w-nuD"/>
+                            <constraint firstItem="AFU-aL-aZ0" firstAttribute="centerX" secondItem="0JH-Y9-k10" secondAttribute="centerX" id="ar1-AH-KBN"/>
+                            <constraint firstItem="qUm-uc-jqe" firstAttribute="leading" secondItem="jlC-eJ-vHy" secondAttribute="leading" constant="251" id="dQ3-Xp-zlq"/>
+                            <constraint firstItem="QPl-ho-Vb5" firstAttribute="leading" secondItem="0JH-Y9-k10" secondAttribute="trailing" constant="19" id="jQ0-Il-6i3"/>
+                            <constraint firstItem="pMR-dt-N4H" firstAttribute="top" secondItem="xns-dw-RD9" secondAttribute="bottom" constant="15" id="p19-th-e8f"/>
+                            <constraint firstItem="Kti-hs-oWv" firstAttribute="centerX" secondItem="mzn-Gc-de9" secondAttribute="centerX" id="tLx-AD-tVB"/>
+                            <constraint firstItem="QPl-ho-Vb5" firstAttribute="trailing" secondItem="pMR-dt-N4H" secondAttribute="trailing" id="wSz-7h-E8o"/>
+                            <constraint firstItem="qUm-uc-jqe" firstAttribute="centerY" secondItem="xns-dw-RD9" secondAttribute="centerY" id="x01-Ee-l9q"/>
+                            <constraint firstItem="8RU-tm-VOE" firstAttribute="leading" secondItem="AFU-aL-aZ0" secondAttribute="trailing" constant="35" id="zxm-R2-lRp"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="jlC-eJ-vHy"/>
+                    </view>
+                    <navigationItem key="navigationItem" title="Send Funds" id="BMZ-tq-ThY"/>
+                    <connections>
+                        <outlet property="addressLabel" destination="uPw-SX-zmP" id="CUb-rw-wiw"/>
+                        <outlet property="addressTextField" destination="pMR-dt-N4H" id="Z7Q-8T-aSM"/>
+                        <outlet property="amountLabel" destination="0JH-Y9-k10" id="rfo-pH-FZW"/>
+                        <outlet property="amountTextField" destination="QPl-ho-Vb5" id="bNc-pf-MU4"/>
+                        <outlet property="balanceLabel" destination="8RU-tm-VOE" id="9Tq-e3-ZUz"/>
+                        <outlet property="maxFunds" destination="xns-dw-RD9" id="cur-gN-J08"/>
+                        <outlet property="sendButton" destination="Kti-hs-oWv" id="6Jq-Up-neP"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="MLi-t7-xoi" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1792.753623188406" y="-1148.4375"/>
         </scene>
         <!--Get Addreses-->
         <scene sceneID="zFi-Pu-g6Q">

@@ -1,20 +1,18 @@
 //
-//  GetBalanceViewController.swift
+//  SendViewController.swift
 //  ZcashLightClientSample
 //
-//  Created by Francisco Gindre on 11/26/19.
+//  Created by Francisco Gindre on 12/3/19.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
 import UIKit
-import ZcashLightClientKit
-class GetBalanceViewController: UIViewController {
-    
-    @IBOutlet weak var balance: UILabel!
+
+class SendViewController: UIViewController {
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Account 0 Balance"
-        self.balance.text = "\(Initializer.shared.getBalance().asHumanReadableZecBalance()) ZEC"
+
         // Do any additional setup after loading the view.
     }
     
@@ -29,16 +27,4 @@ class GetBalanceViewController: UIViewController {
     }
     */
 
-}
-
-extension Int64 {
-    func asHumanReadableZecBalance() -> Double {
-        Double(self) / Double(ZATOSHI_PER_ZEC)
-    }
-}
-
-extension Double {
-    func toZatoshi() -> Int64 {
-        Int64(self) * ZATOSHI_PER_ZEC
-    }
 }

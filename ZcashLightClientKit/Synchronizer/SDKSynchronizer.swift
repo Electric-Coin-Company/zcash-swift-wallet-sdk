@@ -15,12 +15,11 @@ import UIKit
 public class SDKSynchronizer: Synchronizer {
     
     public private(set) var status: Status
-    
     public private(set) var progress: Float = 0.0
-    
     public private(set) var blockProcessor: CompactBlockProcessor?
-    
     public private(set) var initializer: Initializer
+    
+    private var transactionManager: OutboundTransactionManager
     
     var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
@@ -36,6 +35,7 @@ public class SDKSynchronizer: Synchronizer {
     public init(initializer: Initializer) {
         self.status = .disconnected
         self.initializer = initializer
+        self.transactionManager = OutboundTransactionManagerBuilder.build(initializer: initializer)
     }
     
     deinit {
@@ -45,7 +45,7 @@ public class SDKSynchronizer: Synchronizer {
         self.taskIdentifier = .invalid
     }
     
-   public func start() throws {
+    public func start() throws {
         
         guard let processor = initializer.blockProcessor() else {
             throw SynchronizerError.initFailed
@@ -238,4 +238,35 @@ public class SDKSynchronizer: Synchronizer {
             try stop()
         } catch {}
     }
+    
+    // MARK: Synchronizer methods
+    
+    public func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
+        
+        do {
+            let spend = try transactionManager.initSpend(zatoshi: Int(zatoshi), toAddress: toAddress, memo: memo, from: accountIndex)
+            
+            transactionManager.encode(spendingKey: spendingKey, pendingTransaction: spend) { (result) in
+                switch result {
+                    
+                case .success(let tx):
+                    resultBlock(.success(tx))
+                case .failure(let error):
+                    resultBlock(.failure(error))
+                }
+            }
+        } catch {
+            resultBlock(.failure(error))
+        }
+    }
+    
+    public func getAddress(accountIndex: Int) -> String {
+        initializer.getAddress(index: accountIndex) ?? ""
+    }
+    
+    
+    public func cancelSpend(transaction: PendingTransactionEntity) -> Bool {
+        transactionManager.cancel(pendingTransaction: transactionManager)
+    }
+    
 }

@@ -147,7 +147,6 @@ class PersistentTransactionManager: OutboundTransactionManager {
         try repository.getAll()
     }
     
-    
     // MARK: other functions
     private func updateOnFailure(tx: PendingTransactionEntity, error: Error) throws {
         var pending = tx
@@ -166,3 +165,29 @@ class PersistentTransactionManager: OutboundTransactionManager {
         return tx
     }
 }
+
+class OutboundTransactionManagerBuilder {
+    
+    static func build(initializer: Initializer) -> OutboundTransactionManager {
+        PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: LightWalletGRPCService(endpoint: initializer.endpoint), repository: PendingTransactionRepositoryBuilder.build(initializer: initializer))
+    }
+}
+
+class PendingTransactionRepositoryBuilder {
+    static func build(initializer: Initializer) -> PendingTransactionRepository {
+        PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
+    }
+}
+
+class TransactionRepositoryBuilder {
+    static func build(initializer: Initializer) -> TransactionRepository {
+        TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path, readonly: true))
+    }
+}
+
+class TransactionEncoderbuilder {
+    static func build(initializer: Initializer) -> TransactionEncoder {
+        WalletTransactionEncoder(rust: initializer.rustBackend as! ZcashRustBackend.Type, repository:  TransactionRepositoryBuilder.build(initializer: initializer), initializer: initializer)
+    }
+}
+
