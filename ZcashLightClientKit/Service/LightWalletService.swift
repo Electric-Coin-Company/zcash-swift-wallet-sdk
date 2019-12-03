@@ -8,11 +8,13 @@
 
 import Foundation
 import SwiftGRPC
-
+import SwiftProtobuf
 public enum LightWalletServiceError: Error {
     case generalError
     case failed(statusCode: StatusCode)
     case invalidBlock
+    case sentFailed(sendResponse: LightWalletServiceResponse)
+    case genericError(error: Error)
 }
 
 extension LightWalletServiceError: Equatable {
@@ -40,10 +42,27 @@ extension LightWalletServiceError: Equatable {
             default:
                 return false
             }
+        case .sentFailed(let sendResponse):
+            switch rhs {
+            case .sentFailed(let response):
+                return response.errorCode == sendResponse.errorCode
+            default:
+                return false
+            }
+        case .genericError(_):
+            return false
         }
     }
     
 }
+
+public protocol LightWalletServiceResponse {
+    var errorCode: Int32 { get }
+    var errorMessage: String { get }
+    var unknownFields: SwiftProtobuf.UnknownStorage { get }
+}
+
+extension SendResponse: LightWalletServiceResponse {}
 
 public protocol LightWalletService {
     /**
@@ -78,5 +97,17 @@ public protocol LightWalletService {
      
        */
     func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock]
+    
+    
+    /**
+     Submits a raw transaction over lightwalletd. Non-Blocking
+     */
+    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void)
+    
+    /**
+    Submits a raw transaction over lightwalletd. Blocking
+    */
+    
+    func submit(spendTransaction: Data) throws -> LightWalletServiceResponse
     
 }

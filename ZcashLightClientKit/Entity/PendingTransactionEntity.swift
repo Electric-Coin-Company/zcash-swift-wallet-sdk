@@ -15,7 +15,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
     var cancelled: Int { get set }
     var encodeAttempts: Int { get set }
     var submitAttempts: Int { get set }
-    var errorMesssage: String? { get set }
+    var errorMessage: String? { get set }
     var errorCode: Int? { get set }
     var createTime: TimeInterval { get set }
     
@@ -47,7 +47,7 @@ public extension PendingTransactionEntity {
     }
     
     var isFailedSubmit: Bool {
-        errorMesssage != nil || (errorCode != nil && (errorCode ?? 0) < 0)
+        errorMessage != nil || (errorCode != nil && (errorCode ?? 0) < 0)
     }
     
     var isFailure: Bool {
@@ -72,6 +72,6 @@ public extension PendingTransactionEntity {
     }
         
     var isSubmitSuccess: Bool {
-        submitAttempts > 0 && (errorCode != nil && (errorCode ?? -1) >= 0) && errorMesssage == nil
+        submitAttempts > 0 && (errorCode != nil && (errorCode ?? -1) >= 0) && errorMessage == nil
     }
 }

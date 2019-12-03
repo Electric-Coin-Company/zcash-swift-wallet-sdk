@@ -31,6 +31,19 @@ class AwfulLightWalletService: LightWalletService {
         }
     }
     
+    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void) {
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                  result(.failure(LightWalletServiceError.generalError))
+              }
+    }
+       
+       /**
+       Submits a raw transaction over lightwalletd. Blocking
+       */
+       
+    func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
+        throw LightWalletServiceError.generalError
+    }
 }
 
 class MockRustBackend: ZcashRustBackendWelding {

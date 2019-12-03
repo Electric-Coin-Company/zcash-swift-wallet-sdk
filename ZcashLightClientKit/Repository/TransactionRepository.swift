@@ -14,7 +14,7 @@ enum TransactionRepositoryError: Error {
 protocol TransactionRepository {
     func countAll() throws -> Int
     func countUnmined() throws -> Int
-    func findBy(id: Int64) throws -> TransactionEntity?
+    func findBy(id: Int) throws -> TransactionEntity?
     func findBy(rawId: Data) throws -> TransactionEntity?
     func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]?
     func findAllReceivedTransactions(limit: Int) throws ->  [ConfirmedTransactionEntity]?

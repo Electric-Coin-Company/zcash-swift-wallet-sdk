@@ -7,7 +7,15 @@
 //
 
 import Foundation
+import SwiftProtobuf
 @testable import ZcashLightClientKit
+
+struct LightWalletServiceMockResponse: LightWalletServiceResponse {
+    var errorCode: Int32
+    var errorMessage: String
+    var unknownFields: UnknownStorage
+}
+
 class MockLightWalletService: LightWalletService {
     
     private var service = LightWalletGRPCService(channel: ChannelProvider().channel())
@@ -34,5 +42,13 @@ class MockLightWalletService: LightWalletService {
         try self.service.blockRange(range)
     }
     
+    func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) {
+            result(.success(LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())))
+        }
+    }
     
+    func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
+        return LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
+    }
 }

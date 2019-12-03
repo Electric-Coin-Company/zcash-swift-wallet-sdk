@@ -22,4 +22,6 @@ enum StorageError: Error {
     case openFailed
     case closeFailed
     case operationFailed
+    case updateFailed
+    case malformedEntity(fields: [String]?)
 }
