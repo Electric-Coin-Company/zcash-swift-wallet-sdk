@@ -25,6 +25,8 @@ branch = "note-spending-v6"
 [dependencies.zcash_proofs]
 git = "https://github.com/str4d/librustzcash.git"
 branch = "note-spending-v6"
+default-features = false
+features = ["local-prover"]
 
 [build-dependencies]
 cbindgen = "0.8"
