@@ -21,7 +21,7 @@ protocol OutboundTransactionManager {
     
     func submit(pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
     
-    func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) -> PendingTransactionEntity
+    func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) throws -> PendingTransactionEntity
     
     func monitorChanges(byId: Int, observer: Any) // check this out. code smell
     

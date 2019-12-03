@@ -144,7 +144,12 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         guard let id = transaction.id else {
                   throw StorageError.malformedEntity(fields: ["id"])
               }
-        try dbProvider.connection().run(table.filter(TableColumns.id == id).delete())
+        do {
+            try dbProvider.connection().run(table.filter(TableColumns.id == id).delete())
+        } catch {
+            throw StorageError.updateFailed
+        }
+            
     }
     
     func cancel(_ transaction: PendingTransactionEntity) throws {

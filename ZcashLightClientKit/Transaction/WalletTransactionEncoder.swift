@@ -12,10 +12,12 @@ class WalletTransactionEncoder: TransactionEncoder {
     var rustBackend: ZcashRustBackend.Type
     var repository: TransactionRepository
     var initializer: Initializer
+    var queue: DispatchQueue
     init(rust: ZcashRustBackend.Type, repository: TransactionRepository, initializer: Initializer) {
         self.rustBackend = rust
         self.repository = repository
         self.initializer = initializer
+        self.queue = DispatchQueue(label: "wallet.transaction.encoder.serial.queue")
     }
     
     func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction {
@@ -38,7 +40,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock) {
         
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        queue.async { [weak self] in
             guard let self = self else { return }
             do {
                 result(.success(try self.createTransaction(spendingKey: spendingKey, zatoshi: zatoshi, to: to, memo: memo, from: accountIndex)))

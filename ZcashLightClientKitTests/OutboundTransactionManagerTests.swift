@@ -10,11 +10,12 @@ import XCTest
 class OutboundTransactionManagerTests: XCTestCase {
     
     var transactionManager: OutboundTransactionManager!
-    
-    var transactionRepository: PendingTransactionRepository!
-    
+    var encoder: TransactionEncoder!
+    var pendingRespository: PendingTransactionSQLDAO!
     var dataDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedDataDbURL()!)
     var cacheDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedCacheDbURL()!)
+    var pendingDbhandle = TestDbHandle(originalDb: try! TestDbBuilder.pendingTransactionsDbURL())
+    var service: LightWalletService!
     var initializer: Initializer!
     let spendingKey = "secret-extended-key-test1qvpevftsqqqqpqy52ut2vv24a2qh7nsukew7qg9pq6djfwyc3xt5vaxuenshp2hhspp9qmqvdh0gs2ljpwxders5jkwgyhgln0drjqaguaenfhehz4esdl4kwlm5t9q0l6wmzcrvcf5ed6dqzvct3e2ge7f6qdvzhp02m7sp5a0qjssrwpdh7u6tq89hl3wchuq8ljq8r8rwd6xdwh3nry9at80z7amnj3s6ah4jevnvfr08gxpws523z95g6dmn4wm6l3658kd4xcq9rc0qn"
     let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
@@ -25,13 +26,27 @@ class OutboundTransactionManagerTests: XCTestCase {
         
         try! dataDbHandle.setUp()
         try! cacheDbHandle.setUp()
+        pendingRespository = PendingTransactionSQLDAO(dbProvider: pendingDbhandle.connectionProvider(readwrite: true))
+        
+        try! pendingRespository.createrTableIfNeeded()
+        
+        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
+        
+        encoder = WalletTransactionEncoder(rust: ZcashRustBackend.self, repository: TestDbBuilder.transactionRepository()!, initializer: initializer)
+        transactionManager = PersistentTransactionManager(encoder: encoder, service: MockLightWalletService(latestBlockHeight: 620999), repository: pendingRespository)
+        
         
     }
     
     override func tearDown() {
         transactionManager = nil
+        encoder = nil
+        service = nil
+        initializer = nil
+        pendingRespository = nil 
         dataDbHandle.dispose()
         cacheDbHandle.dispose()
+        pendingDbhandle.dispose()
     }
     
     func testInitSpend() {
@@ -75,6 +90,7 @@ class OutboundTransactionManagerTests: XCTestCase {
                 XCTAssertEqual(tx.id, pendingTx.id)
             }
         }
+        wait(for: [expect], timeout: 120)
         
     }
     
@@ -105,7 +121,7 @@ class OutboundTransactionManagerTests: XCTestCase {
                 encodedTx = tx
             }
         }
-        wait(for: [encodeExpect], timeout: 60)
+        wait(for: [encodeExpect], timeout: 500)
         
         guard let submittableTx = encodedTx else {
             XCTFail("failed to encode tx")
@@ -138,10 +154,16 @@ class OutboundTransactionManagerTests: XCTestCase {
             return
         }
         
-        let minedTransaction = transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
+        var minedTransaction: PendingTransactionEntity?
+            
+        XCTAssertNoThrow(try { minedTransaction = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)}())
         
-        XCTAssertTrue(minedTransaction.isMined)
-        XCTAssertEqual(minedTransaction.minedHeight, minedHeight)
+        guard let minedTx = minedTransaction else {
+            XCTFail("failed to apply mined height")
+            return
+        }
+        XCTAssertTrue(minedTx.isMined)
+        XCTAssertEqual(minedTx.minedHeight, minedHeight)
         
     }
     
@@ -162,7 +184,7 @@ class OutboundTransactionManagerTests: XCTestCase {
                   XCTFail("transaction with no id")
                   return
               }
-        guard let retrievedTransaction = try! transactionRepository.find(by: id) else {
+        guard let retrievedTransaction = try! pendingRespository.find(by: id) else {
             XCTFail("failed to retrieve previously created transation")
             return
         }
@@ -194,12 +216,4 @@ class OutboundTransactionManagerTests: XCTestCase {
         XCTAssertEqual(allPending.count, txCount)
         
     }
-    
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
-    
 }
