@@ -74,6 +74,6 @@ public protocol ZcashRustBackendWelding {
     */
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
 
-    static func sendToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64
 
 }

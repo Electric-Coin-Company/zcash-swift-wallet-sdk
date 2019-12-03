@@ -416,7 +416,7 @@ pub extern "C" fn zcashlc_scan_blocks(
 /// Do not call this multiple times in parallel, or you will generate transactions that
 /// double-spend the same notes.
 #[no_mangle]
-pub extern "C" fn zcashlc_send_to_address(
+pub extern "C" fn zcashlc_create_to_address(
     db_data: *const u8,
     db_data_len: usize,
     account: i32,

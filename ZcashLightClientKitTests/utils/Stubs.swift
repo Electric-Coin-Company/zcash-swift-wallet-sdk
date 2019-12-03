@@ -49,7 +49,7 @@ class MockRustBackend: ZcashRustBackendWelding {
     static var mockValidateCombinedChainKeepFailing = false
     static var mockValidateCombinedChainFailureHeight: BlockHeight = 0
     static var mockScanblocksSuccessRate: Float?
-    static var mockSendToAddress: Int64?
+    static var mockCreateToAddress: Int64?
     static var rustBackend = ZcashRustBackend.self
     
     
@@ -146,8 +146,8 @@ class MockRustBackend: ZcashRustBackendWelding {
         return rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData)
     }
     
-    static func sendToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64 {
-        mockSendToAddress ?? rustBackend.sendToAddress(dbData: dbData, account: account, extsk: extsk, to: to, value: value, memo: memo, spendParams: spendParams, outputParams: outputParams)
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64 {
+        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, to: to, value: value, memo: memo, spendParams: spendParams, outputParams: outputParams)
     }
     
     static func shouldSucceed(successRate: Float) -> Bool {
