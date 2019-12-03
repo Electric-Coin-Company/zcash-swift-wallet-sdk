@@ -12,19 +12,19 @@ hex = "0.3"
 
 [dependencies.zcash_client_backend]
 git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v5"
+branch = "note-spending-v6"
 
 [dependencies.zcash_client_sqlite]
 git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v5"
+branch = "note-spending-v6"
 
 [dependencies.zcash_primitives]
 git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v5"
+branch = "note-spending-v6"
 
 [dependencies.zcash_proofs]
 git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v5"
+branch = "note-spending-v6"
 
 [build-dependencies]
 cbindgen = "0.8"

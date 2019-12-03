@@ -13,9 +13,14 @@ use zcash_client_backend::{
 use zcash_client_sqlite::{
     address::RecipientAddress,
     chain::{rewind_to_height, validate_combined_chain},
-    get_address, get_balance, get_received_memo_as_utf8, get_sent_memo_as_utf8,
-    get_verified_balance, init_accounts_table, init_blocks_table, init_data_database,
-    scan_cached_blocks, send_to_address, ErrorKind,
+    error::ErrorKind,
+    init::{init_accounts_table, init_blocks_table, init_data_database},
+    query::{
+        get_address, get_balance, get_received_memo_as_utf8, get_sent_memo_as_utf8,
+        get_verified_balance,
+    },
+    scan::scan_cached_blocks,
+    transact::create_to_address,
 };
 use zcash_primitives::{
     block::BlockHash, note_encryption::Memo, transaction::components::Amount,
@@ -207,7 +212,7 @@ pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, ac
         };
 
         match get_balance(&db_data, account) {
-            Ok(balance) => Ok(balance.0),
+            Ok(balance) => Ok(balance.into()),
             Err(e) => Err(format_err!("Error while fetching balance: {}", e)),
         }
     });
@@ -233,7 +238,7 @@ pub extern "C" fn zcashlc_get_verified_balance(
         };
 
         match get_verified_balance(&db_data, account) {
-            Ok(balance) => Ok(balance.0),
+            Ok(balance) => Ok(balance.into()),
             Err(e) => Err(format_err!("Error while fetching verified balance: {}", e)),
         }
     });
@@ -435,7 +440,11 @@ pub extern "C" fn zcashlc_send_to_address(
         };
         let extsk = unsafe { CStr::from_ptr(extsk) }.to_str()?;
         let to = unsafe { CStr::from_ptr(to) }.to_str()?;
-        let value = Amount(value);
+        let value =
+            Amount::from_i64(value).map_err(|()| format_err!("Invalid amount, out of range"))?;
+        if value.is_negative() {
+            return Err(format_err!("Amount is negative"));
+        }
         let memo = unsafe { CStr::from_ptr(memo) }.to_str()?;
         let spend_params = Path::new(OsStr::from_bytes(unsafe {
             slice::from_raw_parts(spend_params, spend_params_len)
@@ -455,12 +464,9 @@ pub extern "C" fn zcashlc_send_to_address(
         };
 
         let to = match RecipientAddress::from_str(&to) {
-            Ok(Some(to)) => to,
-            Ok(None) => {
+            Some(to) => to,
+            None => {
                 return Err(format_err!("PaymentAddress is for the wrong network"));
-            }
-            Err(e) => {
-                return Err(format_err!("Invalid address: {}", e));
             }
         };
 
@@ -468,7 +474,7 @@ pub extern "C" fn zcashlc_send_to_address(
 
         let prover = LocalTxProver::new(spend_params, output_params);
 
-        send_to_address(
+        create_to_address(
             &db_data,
             SAPLING_CONSENSUS_BRANCH_ID,
             prover,
