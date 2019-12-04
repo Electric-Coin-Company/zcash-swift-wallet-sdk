@@ -52,7 +52,7 @@ public class Initializer {
     private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
     
-    public private(set) var  endpoint: LightWalletEndpoint
+    public private(set) var endpoint: LightWalletEndpoint
     
     public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL) {
         self.cacheDbURL = cacheDbURL

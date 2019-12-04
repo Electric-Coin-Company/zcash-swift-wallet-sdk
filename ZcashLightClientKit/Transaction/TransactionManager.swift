@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 /**
  Manage outbound transactions with the main purpose of reporting which ones are still pending,
  particularly after failed attempts or dropped connectivity. The intent is to help see outbound

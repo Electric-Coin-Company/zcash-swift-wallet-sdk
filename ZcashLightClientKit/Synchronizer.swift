@@ -49,7 +49,6 @@ public protocol Synchronizer {
      */
     var progress: Float { get }
     
-    
     /**
     Gets the address for the given account.
     - Parameter accountIndex the optional accountId whose address is of interest. By default, the first account is used.
@@ -66,7 +65,6 @@ public protocol Synchronizer {
     */
     func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
     
-    
     /**
        Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
        an option if the transaction has not yet been submitted to the server.
@@ -76,9 +74,6 @@ public protocol Synchronizer {
        */
     
     func cancelSpend(transaction: PendingTransactionEntity) -> Bool
-    
-    
-
 }
 
 public enum Status {

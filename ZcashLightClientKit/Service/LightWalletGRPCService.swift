@@ -69,7 +69,6 @@ extension LightWalletGRPCService: LightWalletService {
         try compactTxStreamer.sendTransaction(RawTransaction(serializedData: spendTransaction))
     }
     
-    
     public func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
         var blocks = [ZcashCompactBlock]()
         
@@ -160,4 +159,3 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
 }
-

@@ -264,9 +264,8 @@ public class SDKSynchronizer: Synchronizer {
         initializer.getAddress(index: accountIndex) ?? ""
     }
     
-    
     public func cancelSpend(transaction: PendingTransactionEntity) -> Bool {
-        transactionManager.cancel(pendingTransaction: transactionManager)
+        transactionManager.cancel(pendingTransaction: transaction)
     }
     
 }

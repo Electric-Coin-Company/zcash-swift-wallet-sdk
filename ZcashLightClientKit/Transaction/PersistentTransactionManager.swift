@@ -187,7 +187,6 @@ class TransactionRepositoryBuilder {
 
 class TransactionEncoderbuilder {
     static func build(initializer: Initializer) -> TransactionEncoder {
-        WalletTransactionEncoder(rust: initializer.rustBackend as! ZcashRustBackend.Type, repository:  TransactionRepositoryBuilder.build(initializer: initializer), initializer: initializer)
+        WalletTransactionEncoder(rust: initializer.rustBackend, repository:  TransactionRepositoryBuilder.build(initializer: initializer), initializer: initializer)
     }
 }
-

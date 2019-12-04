@@ -9,11 +9,11 @@ import Foundation
 
 class WalletTransactionEncoder: TransactionEncoder {
     
-    var rustBackend: ZcashRustBackend.Type
+    var rustBackend: ZcashRustBackendWelding.Type
     var repository: TransactionRepository
     var initializer: Initializer
     var queue: DispatchQueue
-    init(rust: ZcashRustBackend.Type, repository: TransactionRepository, initializer: Initializer) {
+    init(rust: ZcashRustBackendWelding.Type, repository: TransactionRepository, initializer: Initializer) {
         self.rustBackend = rust
         self.repository = repository
         self.initializer = initializer
