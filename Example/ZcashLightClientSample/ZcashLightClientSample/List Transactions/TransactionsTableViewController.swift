@@ -9,10 +9,22 @@
 import UIKit
 
 class TransactionsTableViewController: UITableViewController {
-
+    
+    var datasource: TransactionsDataSource? {
+        didSet {
+            self.tableView.dataSource = datasource
+            datasource?.load()
+            if viewIfLoaded != nil {
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        self.tableView.dataSource = datasource
+        datasource?.load()
+        self.tableView.reloadData()
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 

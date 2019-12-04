@@ -19,6 +19,10 @@
 		0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
 		0D907F2B2322CC5B00D641FE /* ZcashLightClientSampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */; };
 		0D907F362322CC5B00D641FE /* ZcashLightClientSampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */; };
+		0DA58B942397DDD9004596EA /* TransactionsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */; };
+		0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
+		0DA58BD323982785004596EA /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DA58BD123982785004596EA /* sapling-output.params */; };
+		0DA58BD423982785004596EA /* sapling-spend.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DA58BD223982785004596EA /* sapling-spend.params */; };
 		0DCD3DC7238D88B100DD3EC4 /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
 		0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
 		0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
@@ -63,6 +67,10 @@
 		0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleUITests.swift; sourceTree = "<group>"; };
 		0D907F372322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsTableViewController.swift; sourceTree = "<group>"; };
+		0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsDataSource.swift; sourceTree = "<group>"; };
+		0DA58BD123982785004596EA /* sapling-output.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-output.params"; path = "../../../ZcashLightClientKitTests/sapling-output.params"; sourceTree = "<group>"; };
+		0DA58BD223982785004596EA /* sapling-spend.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-spend.params"; path = "../../../ZcashLightClientKitTests/sapling-spend.params"; sourceTree = "<group>"; };
 		0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetBalanceViewController.swift; sourceTree = "<group>"; };
 		0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestHeightViewController.swift; sourceTree = "<group>"; };
 		0DDFB33D236B844900AED892 /* DemoAppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoAppConfig.swift; sourceTree = "<group>"; };
@@ -154,9 +162,11 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				0DA58B922397DDBC004596EA /* List Transactions */,
 				0D4EBA2F2396CFBE0041B507 /* Send */,
 				0DCD3DC5238D888B00DD3EC4 /* Get Balance */,
 				0D2343EC238C91B900606F71 /* sapling-output.params */,
+				0DA58BD223982785004596EA /* sapling-spend.params */,
 				0D2343ED238C91B900606F71 /* sapling-spend.params */,
 				0D7A4A81236CCCDB001F4DD8 /* Sync Blocks */,
 				0D756A92236C75FE009B041B /* Get Address */,
@@ -168,6 +178,7 @@
 				0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */,
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
+				0DA58BD123982785004596EA /* sapling-output.params */,
 			);
 			path = ZcashLightClientSample;
 			sourceTree = "<group>";
@@ -188,6 +199,15 @@
 				0D907F372322CC5B00D641FE /* Info.plist */,
 			);
 			path = ZcashLightClientSampleUITests;
+			sourceTree = "<group>";
+		};
+		0DA58B922397DDBC004596EA /* List Transactions */ = {
+			isa = PBXGroup;
+			children = (
+				0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */,
+				0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */,
+			);
+			path = "List Transactions";
 			sourceTree = "<group>";
 		};
 		0DCD3DC5238D888B00DD3EC4 /* Get Balance */ = {
@@ -341,6 +361,8 @@
 				0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */,
 				0D907F1D2322CC5B00D641FE /* Assets.xcassets in Resources */,
 				0D907F1B2322CC5900D641FE /* Main.storyboard in Resources */,
+				0DA58BD423982785004596EA /* sapling-spend.params in Resources */,
+				0DA58BD323982785004596EA /* sapling-output.params in Resources */,
 				0D2343EE238C91B900606F71 /* sapling-output.params in Resources */,
 				0D2343EF238C91B900606F71 /* sapling-spend.params in Resources */,
 			);
@@ -474,10 +496,12 @@
 				0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */,
 				0D907F182322CC5900D641FE /* ViewController.swift in Sources */,
 				0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */,
+				0DA58B942397DDD9004596EA /* TransactionsTableViewController.swift in Sources */,
 				0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */,
 				0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */,
 				0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */,
 				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
+				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -33,5 +33,18 @@ class MainTableViewController: UITableViewController {
         self.present(alert, animated: true, completion: nil)
             
     }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        if let destination = segue.destination as? TransactionsTableViewController {
+            
+            if let id = segue.identifier, id == "Pending" {
+                destination.datasource = TransactionsDataSource(status: .pending, synchronizer: AppDelegate.shared.sharedSynchronizer)
+            } 
+        }
+        super.prepare(for: segue, sender: sender)
+        
+        
+    }
 }
 

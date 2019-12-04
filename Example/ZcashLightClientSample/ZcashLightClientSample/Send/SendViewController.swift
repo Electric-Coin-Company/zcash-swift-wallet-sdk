@@ -8,6 +8,7 @@
 
 import UIKit
 import ZcashLightClientKit
+import KRProgressHUD
 class SendViewController: UIViewController {
     
     @IBOutlet weak var addressLabel: UILabel!
@@ -23,7 +24,7 @@ class SendViewController: UIViewController {
     var synchronizer: Synchronizer!
     override func viewDidLoad() {
         super.viewDidLoad()
-        synchronizer = SDKSynchronizer(initializer: wallet)
+        synchronizer = AppDelegate.shared.sharedSynchronizer
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
@@ -120,13 +121,21 @@ class SendViewController: UIViewController {
             return
         }
         
+        KRProgressHUD.show()
+        
         synchronizer.sendToAddress(spendingKey: addresses[0], zatoshi: zec, toAddress: recipient, memo: nil, from: 0) {  [weak self] result in
+            
+            DispatchQueue.main.async {
+                KRProgressHUD.dismiss()
+            }
             switch result {
             case .success(let pendingTransaction):
                 print("transaction created: \(pendingTransaction)")
+                
             case .failure(let error):
                 DispatchQueue.main.async {
                     self?.fail(error)
+                    print("SEND FAILED: \(error)")
                 }
             }
         }

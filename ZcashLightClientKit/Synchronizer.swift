@@ -74,6 +74,23 @@ public protocol Synchronizer {
        */
     
     func cancelSpend(transaction: PendingTransactionEntity) -> Bool
+    
+    /**
+        all outbound pending transactions that have been sent but are awaiting confirmations
+     */
+    var pendingTransactions: [PendingTransactionEntity] { get }
+    /**
+     al the transactions that are on the blockchain
+     */
+    var clearedTransactions: [ConfirmedTransactionEntity] { get }
+    /**
+     All transactions that are related to sending funds
+     */
+    var sentTransactions: [ConfirmedTransactionEntity] { get }
+    /**
+     all transactions related to receiving funds
+     */
+    var receivedTransactions: [ConfirmedTransactionEntity] { get }
 }
 
 public enum Status {

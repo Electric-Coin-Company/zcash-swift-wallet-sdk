@@ -27,7 +27,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         self.repository = repository
         self.encoder = encoder
         self.service = service
-        self.queue = DispatchQueue.init(label: "PersistentTransactionManager.serial.queue")
+        self.queue = DispatchQueue.init(label: "PersistentTransactionManager.serial.queue", qos: .userInitiated)
     }
     
     func initSpend(zatoshi: Int, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity {
@@ -40,8 +40,8 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
-        // FIX: change to async when librustzcash is updated to v6
-        queue.sync { [weak self] in
+
+        queue.async { [weak self] in
             guard let self = self else { return }
             do {
                 let encodedTransaction = try self.encoder.createTransaction(spendingKey: spendingKey, zatoshi: pendingTransaction.value, to: pendingTransaction.toAddress, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: pendingTransaction.accountIndex)
@@ -50,16 +50,12 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 pending.raw = encodedTransaction.raw
                 pending.rawTransactionId = encodedTransaction.raw
                 try self.repository.update(pending)
-                
-                DispatchQueue.main.async {
-                    result(.success(pending))
-                }
+                result(.success(pending))
             } catch StorageError.updateFailed {
                 DispatchQueue.main.async {
                     result(.failure(TransactionManagerError.updateFailed(tx: pendingTransaction)))
                 }
             } catch {
-                
                 DispatchQueue.main.async {
                     result(.failure(error))
                 }
@@ -74,7 +70,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             return
         }
         // FIX: change to async when librustzcash is updated to v6
-        queue.sync { [weak self] in
+        queue.async { [weak self] in
             guard let self = self else { return }
             do {
                 guard let storedTx = try self.repository.find(by: txId) else {
@@ -168,14 +164,17 @@ class PersistentTransactionManager: OutboundTransactionManager {
 
 class OutboundTransactionManagerBuilder {
     
-    static func build(initializer: Initializer) -> OutboundTransactionManager {
-        PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: LightWalletGRPCService(endpoint: initializer.endpoint), repository: PendingTransactionRepositoryBuilder.build(initializer: initializer))
+    static func build(initializer: Initializer) throws -> OutboundTransactionManager {
+        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: LightWalletGRPCService(endpoint: initializer.endpoint), repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer))
+        
     }
 }
 
 class PendingTransactionRepositoryBuilder {
-    static func build(initializer: Initializer) -> PendingTransactionRepository {
-        PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
+    static func build(initializer: Initializer) throws -> PendingTransactionRepository {
+        let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
+        try dao.createrTableIfNeeded()
+        return dao
     }
 }
 

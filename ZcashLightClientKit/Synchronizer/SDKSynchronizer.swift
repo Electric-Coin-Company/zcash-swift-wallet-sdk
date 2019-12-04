@@ -20,6 +20,7 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var initializer: Initializer
     
     private var transactionManager: OutboundTransactionManager
+    private var transactionRepository: TransactionRepository
     
     var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
@@ -32,10 +33,11 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
-    public init(initializer: Initializer) {
+    public init(initializer: Initializer) throws {
         self.status = .disconnected
         self.initializer = initializer
-        self.transactionManager = OutboundTransactionManagerBuilder.build(initializer: initializer)
+        self.transactionManager = try OutboundTransactionManagerBuilder.build(initializer: initializer)
+        self.transactionRepository = TransactionRepositoryBuilder.build(initializer: initializer)
     }
     
     deinit {
@@ -246,11 +248,22 @@ public class SDKSynchronizer: Synchronizer {
         do {
             let spend = try transactionManager.initSpend(zatoshi: Int(zatoshi), toAddress: toAddress, memo: memo, from: accountIndex)
             
-            transactionManager.encode(spendingKey: spendingKey, pendingTransaction: spend) { (result) in
+            transactionManager.encode(spendingKey: spendingKey, pendingTransaction: spend) { [weak self] (result) in
+                guard let self = self else { return }
                 switch result {
                     
                 case .success(let tx):
-                    resultBlock(.success(tx))
+                    self.transactionManager.submit(pendingTransaction: tx) { (submitResult) in
+                        switch submitResult {
+                        case .success(let submittedTx):
+                            resultBlock(.success(submittedTx))
+                        case .failure(let submittionError):
+                            DispatchQueue.main.async {
+                                resultBlock(.failure(submittionError))
+                            }
+                        }
+                    }
+                    
                 case .failure(let error):
                     resultBlock(.failure(error))
                 }
@@ -268,4 +281,19 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.cancel(pendingTransaction: transaction)
     }
     
+    public var pendingTransactions: [PendingTransactionEntity] {
+        (try? transactionManager.allPendingTransactions()) ?? [PendingTransactionEntity]()
+    }
+    
+    public var clearedTransactions: [ConfirmedTransactionEntity] {
+        (try? transactionRepository.findAll(limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+    }
+    
+    public var sentTransactions: [ConfirmedTransactionEntity] {
+        (try? transactionRepository.findAllSentTransactions(limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+    }
+    
+    public var receivedTransactions: [ConfirmedTransactionEntity] {
+        (try? transactionRepository.findAllReceivedTransactions(limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+    }
 }
