@@ -24,10 +24,19 @@ class SendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = SDKSynchronizer(initializer: wallet)
-        
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
+        self.view.addGestureRecognizer(tapRecognizer)
         setUp()
     }
     
+    @objc func viewTapped(_ recognizer: UITapGestureRecognizer) {
+        let point = recognizer.location(in: self.view)
+        if addressTextField.isFirstResponder && !addressTextField.frame.contains(point) {
+            addressTextField.resignFirstResponder()
+        } else if amountTextField.isFirstResponder && !amountTextField.frame.contains(point)  {
+            amountTextField.resignFirstResponder()
+        }
+    }
     func setUp() {
         balanceLabel.text = format(balance: wallet.getBalance())
         toggleSendButton()
@@ -106,6 +115,28 @@ class SendViewController: UIViewController {
         }
         
         
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate, let addresses = appDelegate.addresses else {
+            print("NO ADDRESSES")
+            return
+        }
+        
+        synchronizer.sendToAddress(spendingKey: addresses[0], zatoshi: zec, toAddress: recipient, memo: nil, from: 0) {  [weak self] result in
+            switch result {
+            case .success(let pendingTransaction):
+                print("transaction created: \(pendingTransaction)")
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    self?.fail(error)
+                }
+            }
+        }
+    }
+    
+    func fail(_ error: Error) {
+        let alert = UIAlertController(title: "Send failed!", message: error.localizedDescription, preferredStyle: UIAlertController.Style.alert)
+        let action = UIAlertAction(title: "OK :(", style: UIAlertAction.Style.default, handler: nil)
+        alert.addAction(action)
+        self.present(alert, animated: true, completion: nil)
     }
     
     func cancel() {
@@ -118,7 +149,7 @@ extension SendViewController: UITextFieldDelegate {
     
     func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
         if textField == amountTextField {
-           return maxFunds.isOn
+           return !maxFunds.isOn
         }
         return true
     }
@@ -126,5 +157,14 @@ extension SendViewController: UITextFieldDelegate {
     func textFieldDidEndEditing(_ textField: UITextField) {
         textField.resignFirstResponder()
         toggleSendButton()
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField == amountTextField {
+            addressTextField.becomeFirstResponder()
+            return false
+        }
+        textField.resignFirstResponder()
+        return true
     }
 }

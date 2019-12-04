@@ -17,6 +17,8 @@ class GetAddressViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         addressLabel.text =  legibleAddresses() ?? "No Addresses found"
+        
+        print("Address: \(String(describing: Initializer.shared.getAddress()))")
     }
     
 

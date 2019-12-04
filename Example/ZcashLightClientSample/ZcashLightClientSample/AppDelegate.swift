@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let wallet = wallet {
             return wallet
         } else {
-            let wallet = Initializer(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL(), endpoint: DemoAppConfig.endpoint, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
+            let wallet = Initializer(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL(), pendingDbURL: try! __pendingDbURL(), endpoint: DemoAppConfig.endpoint, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
             self.addresses = try! wallet.initialize(seedProvider: DemoAppConfig(), walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             self.wallet = wallet
             return wallet
@@ -95,6 +95,9 @@ func __dataDbURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
 }
 
+func __pendingDbURL() throws -> URL {
+    try __documentsDirectory().appendingPathComponent("pending.db")
+}
 
 func __spendParamsURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false)
