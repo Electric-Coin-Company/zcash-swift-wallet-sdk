@@ -63,7 +63,7 @@
 		0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleUITests.swift; sourceTree = "<group>"; };
 		0D907F372322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = GetBalanceViewController.swift; path = "Get Balance/GetBalanceViewController.swift"; sourceTree = "<group>"; };
+		0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetBalanceViewController.swift; sourceTree = "<group>"; };
 		0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestHeightViewController.swift; sourceTree = "<group>"; };
 		0DDFB33D236B844900AED892 /* DemoAppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoAppConfig.swift; sourceTree = "<group>"; };
 		17A69D88CA6DB45FA9D21E75 /* Pods_ZcashLightClientSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -168,7 +168,6 @@
 				0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */,
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
-				0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */,
 			);
 			path = ZcashLightClientSample;
 			sourceTree = "<group>";
@@ -194,6 +193,7 @@
 		0DCD3DC5238D888B00DD3EC4 /* Get Balance */ = {
 			isa = PBXGroup;
 			children = (
+				0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */,
 			);
 			path = "Get Balance";
 			sourceTree = "<group>";
