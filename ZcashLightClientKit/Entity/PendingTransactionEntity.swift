@@ -78,7 +78,7 @@ public extension PendingTransactionEntity {
 
 public extension PendingTransactionEntity {
     var transactionEntity: TransactionEntity {
-        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.createTime).description, transactionIndex: nil, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
+        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.createTime).description, transactionIndex: -1, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
     }
 }
 

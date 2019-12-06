@@ -19,10 +19,10 @@ struct Transaction: TransactionEntity, Decodable {
         case raw
     }
     
-    var id: Int
+    var id: Int?
     var transactionId: Data
     var created: String?
-    var transactionIndex: Int?
+    var transactionIndex: Int
     var expiryHeight: BlockHeight?
     var minedHeight: BlockHeight?
     var raw: Data?
@@ -44,6 +44,22 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
 
 class TransactionSQLDAO: TransactionRepository {
     
+    private var blockDao: BlockSQLDAO
+    
+    func lastScannedHeight() throws -> BlockHeight {
+        try blockDao.latestBlockHeight()
+    }
+    
+    func isInitialized() throws -> Bool {
+        true
+    }
+    
+    func findEndodedTransactionBy(txId: Int) -> EncodedTransaction? {
+//        try dbProvider
+        return nil
+    }
+    
+    
     struct TableStructure {
         static var id = Expression<Int>(Transaction.CodingKeys.id.rawValue)
         static var transactionId = Expression<Blob>(Transaction.CodingKeys.transactionId.rawValue)
@@ -60,6 +76,7 @@ class TransactionSQLDAO: TransactionRepository {
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
+        self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
     }
     
     func countAll() throws -> Int {

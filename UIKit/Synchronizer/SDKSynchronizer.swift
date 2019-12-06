@@ -286,14 +286,14 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public var clearedTransactions: [ConfirmedTransactionEntity] {
-        (try? transactionRepository.findAll(limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+        (try? transactionRepository.findAll(offset: 0, limit: Int.max)) ?? [ConfirmedTransactionEntity]()
     }
     
     public var sentTransactions: [ConfirmedTransactionEntity] {
-        (try? transactionRepository.findAllSentTransactions(limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+        (try? transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max)) ?? [ConfirmedTransactionEntity]()
     }
     
     public var receivedTransactions: [ConfirmedTransactionEntity] {
-        (try? transactionRepository.findAllReceivedTransactions(limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+        (try? transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max)) ?? [ConfirmedTransactionEntity]()
     }
 }

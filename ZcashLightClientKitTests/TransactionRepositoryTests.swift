@@ -66,7 +66,7 @@ class TransactionRepositoryTests: XCTestCase {
     
     func testFindAllSentTransactions() {
         var transactions: [ConfirmedTransactionEntity]?
-        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findAllSentTransactions(limit: Int.max) }())
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) }())
         guard let txs = transactions else {
             XCTFail("find all sent transactions returned no transactions")
             return
@@ -77,7 +77,7 @@ class TransactionRepositoryTests: XCTestCase {
     
     func testFindAllReceivedTransactions() {
         var transactions: [ConfirmedTransactionEntity]?
-        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findAllReceivedTransactions(limit: Int.max) }())
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) }())
         guard let txs = transactions else {
             XCTFail("find all received transactions returned no transactions")
             return
@@ -88,7 +88,7 @@ class TransactionRepositoryTests: XCTestCase {
     
     func testFindAllTransactions() {
         var transactions: [ConfirmedTransactionEntity]?
-        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findAll(limit: Int.max) }())
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findAll(offset: 0, limit: Int.max) }())
         guard let txs = transactions else {
             XCTFail("find all transactions returned no transactions")
             return
@@ -103,7 +103,7 @@ class TransactionRepositoryTests: XCTestCase {
             // Put the code you want to measure the time of here.
             
             do {
-                _ = try self.transactionRepository.findAll(limit: Int.max)
+                _ = try self.transactionRepository.findAll(offset: 0, limit: Int.max)
             } catch {
                 XCTFail("find all failed")
             }

@@ -8,10 +8,10 @@
 import Foundation
 
 public protocol TransactionEntity {
-    var id: Int { get set }
+    var id: Int? { get set }
     var transactionId: Data { get set }
     var created: String? { get set }
-    var transactionIndex: Int? { get set }
+    var transactionIndex: Int { get set }
     var expiryHeight: BlockHeight? { get set }
     var minedHeight: BlockHeight? { get set }
     var raw: Data? { get set }

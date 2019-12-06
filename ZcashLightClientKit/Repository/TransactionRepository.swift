@@ -19,4 +19,7 @@ protocol TransactionRepository {
     func findAllSentTransactions(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
     func findAllReceivedTransactions(offset: Int, limit: Int) throws ->  [ConfirmedTransactionEntity]?
     func findAll(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
+    func lastScannedHeight() throws -> BlockHeight
+    func isInitialized() throws -> Bool
+    func findEndodedTransactionBy(txId: Int) -> EncodedTransaction? 
 }
