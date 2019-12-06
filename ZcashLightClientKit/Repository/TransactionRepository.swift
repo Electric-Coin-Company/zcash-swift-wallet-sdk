@@ -16,7 +16,7 @@ protocol TransactionRepository {
     func countUnmined() throws -> Int
     func findBy(id: Int) throws -> TransactionEntity?
     func findBy(rawId: Data) throws -> TransactionEntity?
-    func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]?
-    func findAllReceivedTransactions(limit: Int) throws ->  [ConfirmedTransactionEntity]?
-    func findAll(limit: Int) throws -> [ConfirmedTransactionEntity]?
+    func findAllSentTransactions(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
+    func findAllReceivedTransactions(offset: Int, limit: Int) throws ->  [ConfirmedTransactionEntity]?
+    func findAll(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
 }
