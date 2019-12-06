@@ -75,3 +75,15 @@ public extension PendingTransactionEntity {
         submitAttempts > 0 && (errorCode != nil && (errorCode ?? -1) >= 0) && errorMessage == nil
     }
 }
+
+public extension PendingTransactionEntity {
+    var transactionEntity: TransactionEntity {
+        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.createTime).description, transactionIndex: nil, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
+    }
+}
+
+public extension ConfirmedTransactionEntity {
+    var transactionEntity: TransactionEntity {
+        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.blockTimeInSeconds).description, transactionIndex: self.transactionIndex, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
+    }
+}

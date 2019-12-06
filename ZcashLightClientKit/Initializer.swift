@@ -43,20 +43,22 @@ public struct LightWalletEndpoint {
  */
 public class Initializer {
     
-    private var rustBackend: ZcashRustBackendWelding.Type = ZcashRustBackend.self
+    private(set) var rustBackend: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     private var lowerBoundHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT
     private(set) var cacheDbURL: URL
     private(set) var dataDbURL: URL
+    private(set) var pendingDbURL: URL
     private(set) var spendParamsURL: URL
     private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
     
-    public private(set) var  endpoint: LightWalletEndpoint
+    public private(set) var endpoint: LightWalletEndpoint
     
-    public init (cacheDbURL: URL, dataDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL) {
+    public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL) {
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
         self.endpoint = endpoint
+        self.pendingDbURL = pendingDbURL
         self.spendParamsURL = spendParamsURL
         self.outputParamsURL = outputParamsURL
     }

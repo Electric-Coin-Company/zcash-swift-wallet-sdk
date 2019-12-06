@@ -49,7 +49,7 @@ extension LightWalletServiceError: Equatable {
             default:
                 return false
             }
-        case .genericError(_):
+        case .genericError:
             return false
         }
     }
@@ -97,7 +97,6 @@ public protocol LightWalletService {
      
        */
     func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock]
-    
     
     /**
      Submits a raw transaction over lightwalletd. Non-Blocking

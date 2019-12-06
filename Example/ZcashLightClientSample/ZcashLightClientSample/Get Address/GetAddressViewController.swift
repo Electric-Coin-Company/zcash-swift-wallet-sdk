@@ -17,6 +17,10 @@ class GetAddressViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         addressLabel.text =  legibleAddresses() ?? "No Addresses found"
+        
+        addressLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(addressTapped(_:))))
+        addressLabel.isUserInteractionEnabled = true
+        print("Address: \(String(describing: Initializer.shared.getAddress()))")
     }
     
 
@@ -32,6 +36,14 @@ class GetAddressViewController: UIViewController {
     
     func legibleAddresses() -> String? {
         Initializer.shared.getAddress()
+    }
+    
+    @IBAction func addressTapped(_ gesture: UIGestureRecognizer) {
+        print("copied to clipboard")
+        UIPasteboard.general.string = legibleAddresses()
+        let alert = UIAlertController(title: "", message: "Address Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
     }
 }
 

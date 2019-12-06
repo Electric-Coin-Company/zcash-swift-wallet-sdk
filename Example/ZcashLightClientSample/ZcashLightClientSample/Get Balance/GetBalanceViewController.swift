@@ -36,3 +36,9 @@ extension Int64 {
         Double(self) / Double(ZATOSHI_PER_ZEC)
     }
 }
+
+extension Double {
+    func toZatoshi() -> Int64 {
+        Int64(self) * Int64(ZATOSHI_PER_ZEC)
+    }
+}

@@ -43,7 +43,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     var memo: Data?
     var rawTransactionId: Data?
     
-    func isSameTransactionId<T>(other: T) -> Bool where T : RawIdentifiable {
+    func isSameTransactionId<T>(other: T) -> Bool where T: RawIdentifiable {
         self.rawTransactionId == other.rawTransactionId
     }
     
@@ -73,7 +73,6 @@ extension PendingTransaction {
         self = PendingTransaction(toAddress: toAddress, accountIndex: index, minedHeight: -1, expiryHeight: -1, cancelled: 0, encodeAttempts: 0, submitAttempts: 0, errorMessage: nil, errorCode: nil, createTime: Date().timeIntervalSince1970, raw: nil, id: nil, value: Int(value), memo: nil, rawTransactionId: nil)
     }
 }
-
 
 class PendingTransactionSQLDAO: PendingTransactionRepository {
 

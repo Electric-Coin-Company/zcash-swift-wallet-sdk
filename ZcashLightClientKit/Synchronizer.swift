@@ -48,7 +48,49 @@ public protocol Synchronizer {
      a value of 1.0 signals that progress is complete and any progress indicators can be hidden. KVO Compliant
      */
     var progress: Float { get }
-
+    
+    /**
+    Gets the address for the given account.
+    - Parameter accountIndex the optional accountId whose address is of interest. By default, the first account is used.
+    */
+    func getAddress(accountIndex: Int) -> String
+    
+    /**
+    Sends zatoshi.
+    - Parameter spendingKey the key that allows spends to occur.
+    - Parameter zatoshi the amount of zatoshi to send.
+    - Parameter toAddress the recipient's address.
+    - Parameter memo the optional memo to include as part of the transaction.
+    - Parameter accountIndex  the optional account id to use. By default, the first account is used.
+    */
+    func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
+    
+    /**
+       Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
+       an option if the transaction has not yet been submitted to the server.
+    
+       - Parameter transaction the transaction to cancel.
+        - Returns true when the cancellation request was successful. False when it is too late.
+       */
+    
+    func cancelSpend(transaction: PendingTransactionEntity) -> Bool
+    
+    /**
+        all outbound pending transactions that have been sent but are awaiting confirmations
+     */
+    var pendingTransactions: [PendingTransactionEntity] { get }
+    /**
+     al the transactions that are on the blockchain
+     */
+    var clearedTransactions: [ConfirmedTransactionEntity] { get }
+    /**
+     All transactions that are related to sending funds
+     */
+    var sentTransactions: [ConfirmedTransactionEntity] { get }
+    /**
+     all transactions related to receiving funds
+     */
+    var receivedTransactions: [ConfirmedTransactionEntity] { get }
 }
 
 public enum Status {

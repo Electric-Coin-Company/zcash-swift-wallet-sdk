@@ -14,11 +14,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     private var wallet: Initializer?
     var addresses: [String]?
+    private var synchronizer: SDKSynchronizer?
+    
+    var sharedSynchronizer: SDKSynchronizer {
+        if let sync = synchronizer {
+            return sync
+        } else {
+            let sync = try! SDKSynchronizer(initializer: sharedWallet) // this must break if fails
+            self.synchronizer = sync
+            return sync
+        }
+    }
+    
     var sharedWallet: Initializer {
         if let wallet = wallet {
             return wallet
         } else {
-            let wallet = Initializer(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL(), endpoint: DemoAppConfig.endpoint, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
+            let wallet = Initializer(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL(), pendingDbURL: try! __pendingDbURL(), endpoint: DemoAppConfig.endpoint, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
             self.addresses = try! wallet.initialize(seedProvider: DemoAppConfig(), walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             self.wallet = wallet
             return wallet
@@ -60,6 +72,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
 extension AppDelegate {
+    
+    static var shared: AppDelegate {
+        UIApplication.shared.delegate as! AppDelegate
+    }
+    
     func clearDatabases() {
         do {
             try FileManager.default.removeItem(at: try __cacheDbURL())
@@ -79,7 +96,13 @@ extension DemoAppConfig: SeedProvider {}
 
 extension Initializer {
     static var shared: Initializer {
-        (UIApplication.shared.delegate as! AppDelegate).sharedWallet // AppDelegate or DIE.
+        AppDelegate.shared.sharedWallet // AppDelegate or DIE.
+    }
+}
+
+extension Synchronizer {
+    static var shared: Synchronizer {
+        AppDelegate.shared.sharedSynchronizer
     }
 }
 
@@ -95,12 +118,14 @@ func __dataDbURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
 }
 
+func __pendingDbURL() throws -> URL {
+    try __documentsDirectory().appendingPathComponent("pending.db")
+}
 
 func __spendParamsURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false)
-    
+    Bundle.main.url(forResource: "sapling-spend", withExtension: ".params")!
 }
 
 func __outputParamsURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("sapling-output.params", isDirectory: false)
+    Bundle.main.url(forResource: "sapling-output", withExtension: ".params")!
 }

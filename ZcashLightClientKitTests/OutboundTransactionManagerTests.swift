@@ -21,16 +21,15 @@ class OutboundTransactionManagerTests: XCTestCase {
     let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
     let zpend: Int = 500_000
     
-    
     override func setUp() {
-        
+       
         try! dataDbHandle.setUp()
         try! cacheDbHandle.setUp()
         pendingRespository = PendingTransactionSQLDAO(dbProvider: pendingDbhandle.connectionProvider(readwrite: true))
         
         try! pendingRespository.createrTableIfNeeded()
         
-        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
+        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(), endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
         
         encoder = WalletTransactionEncoder(rust: ZcashRustBackend.self, repository: TestDbBuilder.transactionRepository()!, initializer: initializer)
         transactionManager = PersistentTransactionManager(encoder: encoder, service: MockLightWalletService(latestBlockHeight: 620999), repository: pendingRespository)
@@ -90,7 +89,7 @@ class OutboundTransactionManagerTests: XCTestCase {
                 XCTAssertEqual(tx.id, pendingTx.id)
             }
         }
-        wait(for: [expect], timeout: 120)
+        wait(for: [expect], timeout: 240)
         
     }
     
