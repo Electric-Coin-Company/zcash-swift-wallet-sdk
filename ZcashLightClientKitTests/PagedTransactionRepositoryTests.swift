@@ -14,11 +14,7 @@ class PagedTransactionRepositoryTests: XCTestCase {
     
     override func setUp() {
         transactionRepository = MockTransactionRepository(unminedCount: 5, receivedCount: 150, sentCount: 100)
-        
-    }
-
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        pagedTransactionRepository = PagedTransactionDAO(repository: transactionRepository)
     }
 
     func testBrowsePages() {
@@ -36,13 +32,6 @@ class PagedTransactionRepositoryTests: XCTestCase {
                 // last page has to have the remainding items
                 XCTAssertEqual(page.count,  totalItems - (pageSize * pageCount))
             }
-        }
-    }
-
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
         }
     }
 
