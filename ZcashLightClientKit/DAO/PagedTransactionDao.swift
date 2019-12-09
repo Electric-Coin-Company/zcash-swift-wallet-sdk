@@ -10,6 +10,7 @@ import Foundation
 class PagedTransactionDAO: PagedTransactionRepository {
     var pageSize: Int
     var transactionRepository: TransactionRepository
+    var kind: TransactionKind
     
     var pageCount: Int {
         guard pageSize > 0 else {
@@ -25,15 +26,27 @@ class PagedTransactionDAO: PagedTransactionRepository {
         return count
     }
     
-    init(repository: TransactionRepository, pageSize: Int = 30) {
+    init(repository: TransactionRepository, pageSize: Int = 30, kind: TransactionKind = .all) {
         self.transactionRepository = repository
         self.pageSize = pageSize
+        self.kind = kind
+    }
+    
+    func getAll(offset: Int, limit: Int, kind: TransactionKind) throws -> [ConfirmedTransactionEntity]? {
+        switch kind {
+        case .all:
+            return try transactionRepository.findAll(offset: offset, limit: limit)
+        case .received:
+            return try transactionRepository.findAll(offset: offset, limit: limit)
+        case .sent:
+            return try transactionRepository.findAllSentTransactions(offset: offset, limit: limit)
+        }
     }
     
     func page(_ number: Int) throws -> [TransactionEntity]? {
         let offset = number * pageSize
         guard offset < itemCount else { return nil }
-        return try transactionRepository.findAll(offset: offset, limit: pageSize)?.map( {$0.transactionEntity })
+        return try getAll(offset: offset, limit: pageSize, kind: kind)?.map({ $0.transactionEntity })
     }
     
     func page(_ number: Int, result: @escaping (Result<[TransactionEntity]?, Error>) -> Void) {

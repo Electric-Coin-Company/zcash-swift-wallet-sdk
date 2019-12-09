@@ -178,12 +178,6 @@ class PendingTransactionRepositoryBuilder {
     }
 }
 
-class TransactionRepositoryBuilder {
-    static func build(initializer: Initializer) -> TransactionRepository {
-        TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path, readonly: true))
-    }
-}
-
 class TransactionEncoderbuilder {
     static func build(initializer: Initializer) -> TransactionEncoder {
         WalletTransactionEncoder(rust: initializer.rustBackend, repository:  TransactionRepositoryBuilder.build(initializer: initializer), initializer: initializer)

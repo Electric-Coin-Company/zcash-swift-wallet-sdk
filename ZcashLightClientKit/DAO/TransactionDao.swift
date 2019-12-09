@@ -59,7 +59,6 @@ class TransactionSQLDAO: TransactionRepository {
         return nil
     }
     
-    
     struct TableStructure {
         static var id = Expression<Int>(Transaction.CodingKeys.id.rawValue)
         static var transactionId = Expression<Blob>(Transaction.CodingKeys.transactionId.rawValue)
