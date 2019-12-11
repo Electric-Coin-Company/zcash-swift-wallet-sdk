@@ -12,11 +12,11 @@ if [ "$ACTION" = "clean" ]; then
     fi 
     
 else
-    cargo lipo --xcode-integ --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml
+    cargo lipo --xcode-integ --release --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml
 
     if [ ! -d "${RUST_LIB_PATH}" ]; then 
         mkdir -p "${RUST_LIB_PATH}"
     fi 
     
-    cp -f "${ZCASH_LIB_RUST_PATH}/universal/${CONFIGURATION}/${ZCASH_LIB_RUST_NAME}" ${ZCASH_LIB_RUST_PATH}
+    cp -f "${ZCASH_LIB_RUST_PATH}/universal/release/${ZCASH_LIB_RUST_NAME}" ${ZCASH_LIB_RUST_PATH}
 fi
