@@ -16,7 +16,9 @@ public enum CompactBlockProcessorError: Error {
 
 public struct CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
+    public static let progressHeight = "CompactBlockProcessorNotificationKey.progressHeight"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
+    public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
 }
 
 public extension Notification.Name {
@@ -29,6 +31,7 @@ public extension Notification.Name {
     static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
     static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
     static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
+    static let blockProcessorFinished = Notification.Name(rawValue: "CompactBlockProcessorFinished")
     static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
     static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
     static let blockProcessorHandledReOrg = Notification.Name(rawValue: "CompactBlockProcessorHandledReOrg")
@@ -51,11 +54,12 @@ public class CompactBlockProcessor {
         public var retries = DEFAULT_RETRIES
         public var maxBackoffInterval = DEFAULT_MAX_BACKOFF_INTERVAL
         public var rewindDistance = DEFAULT_REWIND_DISTANCE
-        public var walletBirthday = SAPLING_ACTIVATION_HEIGHT
+        public var walletBirthday: BlockHeight
         
-        public init(cacheDb: URL, dataDb: URL){
+        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = SAPLING_ACTIVATION_HEIGHT){
             self.cacheDb = cacheDb
             self.dataDb = dataDb
+            self.walletBirthday = walletBirthday
         }
     }
     
@@ -200,7 +204,7 @@ public class CompactBlockProcessor {
                     self.latestBlockHeight = blockHeight
                     
                     if self.latestBlockHeight == latestDownloadedBlockHeight  {
-                        self.processingFinished()
+                        self.processingFinished(height: blockHeight)
                     } else {
                         self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
                     }
@@ -214,10 +218,10 @@ public class CompactBlockProcessor {
     }
     
     func processNewBlocks(range: CompactBlockRange) {
-        guard !range.isEmpty else {
-            processingFinished()
-            return
-        }
+//        guard !range.isEmpty else {
+//            processingFinished(height: range.upperBound)
+//            return
+//        }
         
         let cfg = self.config
         
@@ -348,10 +352,11 @@ public class CompactBlockProcessor {
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
         
+        
         notifyProgress(completedRange: range)
         
         guard !range.isEmpty else {
-            processingFinished()
+            processingFinished(height: range.upperBound)
             return
         }
         
@@ -362,8 +367,9 @@ public class CompactBlockProcessor {
         }
     }
     
-    private func processingFinished() {
+    private func processingFinished(height: BlockHeight) {
         self.state = .synced
+        NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self, userInfo: [CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height])
         self.backoffTimer = Timer(timeInterval: TimeInterval(self.config.blockPollInterval), repeats: true, block: { _ in
             do {
                 try self.start()
@@ -394,7 +400,7 @@ public class CompactBlockProcessor {
     
     func fail(_ error: Error) {
         // todo specify: failure
-        print(error.localizedDescription)
+        print(error)
         queue.cancelAllOperations()
         self.processingError = error
         self.state = .error(error)

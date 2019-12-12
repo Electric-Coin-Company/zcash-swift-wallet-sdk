@@ -89,6 +89,12 @@ extension AppDelegate {
         } catch {
             print("error clearing data db: \(error)")
         }
+        
+        do {
+            try FileManager.default.removeItem(at: try __pendingDbURL())
+        } catch {
+            print("error clearing data db: \(error)")
+        }
     }
 }
 

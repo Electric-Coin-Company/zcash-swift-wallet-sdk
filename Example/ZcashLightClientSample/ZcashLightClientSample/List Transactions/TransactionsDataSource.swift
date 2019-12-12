@@ -24,7 +24,7 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
     var transactions = [TransactionEntity]()
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1
+        return transactions.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

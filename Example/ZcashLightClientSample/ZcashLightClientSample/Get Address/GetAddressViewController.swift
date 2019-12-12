@@ -10,6 +10,7 @@ import UIKit
 import ZcashLightClientKit
 class GetAddressViewController: UIViewController {
     @IBOutlet weak var addressLabel: UILabel!
+    @IBOutlet weak var spendingKeyLabel: UILabel! // THIS SHOULD BE SUPER SECRET!!!!!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -17,7 +18,7 @@ class GetAddressViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         addressLabel.text =  legibleAddresses() ?? "No Addresses found"
-        
+        spendingKeyLabel.text = AppDelegate.shared.addresses?[0] ?? "No Spending Key found"
         addressLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(addressTapped(_:))))
         addressLabel.isUserInteractionEnabled = true
         print("Address: \(String(describing: Initializer.shared.getAddress()))")

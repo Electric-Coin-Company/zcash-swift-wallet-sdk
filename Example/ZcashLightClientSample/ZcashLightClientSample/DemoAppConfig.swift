@@ -10,7 +10,7 @@ import Foundation
 import ZcashLightClientKit
 
 struct DemoAppConfig {
-    static var host = "34.68.177.238"
+    static var host = "127.0.0.1"//"34.68.177.238"
     static var port = "9067"
     static var birthdayHeight: BlockHeight = 620_000
     static var network = ZcashNetwork.testNet
