@@ -26,11 +26,11 @@ Pod::Spec.new do |s|
     s.prepare_command = <<-CMD
         BASEPATH="${PWD}"
         echo "Building librustzcash library..."
-        cargo build && cargo lipo
+        cargo build && cargo lipo --release
         
         mkdir -p lib
-        cp target/universal/debug/* lib/
-        cp -rf target/universal/debug/*  ZcashLightClientKit/zcashlc
+        cp target/universal/release/* lib/
+        cp -rf target/universal/release/*  ZcashLightClientKit/zcashlc
     CMD
     
     s.test_spec 'Tests' do | test_spec |
