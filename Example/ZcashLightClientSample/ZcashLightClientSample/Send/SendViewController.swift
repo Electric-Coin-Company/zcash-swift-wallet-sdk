@@ -18,6 +18,7 @@ class SendViewController: UIViewController {
     @IBOutlet weak var balanceLabel: UILabel!
     @IBOutlet weak var maxFunds: UISwitch!
     @IBOutlet weak var sendButton: UIButton!
+    @IBOutlet weak var sendMainThreadButton: UIButton!
     
     var wallet: Initializer = Initializer.shared
     
@@ -107,6 +108,49 @@ class SendViewController: UIViewController {
         alert.addAction(cancelAction)
         
         self.present(alert, animated: true, completion: nil)
+    }
+    
+    @IBAction func sendMainThread(_ sender: Any) {
+           guard isFormValid() else {
+               print("WARNING: Form is invalid")
+               return
+           }
+           
+           let alert = UIAlertController(title: "About To send funds On MAIN THREAD!", message: "This will lock your UI until end of time.", preferredStyle: UIAlertController.Style.alert)
+           
+           let sendAction = UIAlertAction(title: "Send!", style: UIAlertAction.Style.default) { (_) in
+               self.sendMainThead()
+           }
+           let cancelAction = UIAlertAction(title: "Go back! I'm not sure about this.", style: UIAlertAction.Style.destructive) { (_) in
+               self.cancel()
+           }
+           alert.addAction(sendAction)
+           alert.addAction(cancelAction)
+           
+           self.present(alert, animated: true, completion: nil)
+       }
+    
+    func sendMainThead() {
+        guard isFormValid(), let amount = amountTextField.text, let zec = Double(amount)?.toZatoshi(), let recipient = addressTextField.text else {
+                   print("WARNING: Form is invalid")
+                   return
+               }
+               
+               
+               guard let appDelegate = UIApplication.shared.delegate as? AppDelegate, let addresses = appDelegate.addresses else {
+                   print("NO ADDRESSES")
+                   return
+               }
+               
+               
+        do {
+               let txId = try (synchronizer as! SDKSynchronizer).sendToAddress(spendingKey: addresses[0], zatoshi: Int64(zec), toAddress: recipient, memo: nil, from: 0)
+                
+            KRProgressHUD.showMessage(txId > 0 ? "TX \(txId) Sent" : "Tx send failed")
+        } catch {
+            print(error)
+        }
+        
     }
     
     func send() {
