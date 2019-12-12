@@ -66,7 +66,11 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
     public func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
-        try compactTxStreamer.sendTransaction(RawTransaction(serializedData: spendTransaction))
+        
+        let rawTx = RawTransaction.with { (raw) in
+            raw.data = spendTransaction
+        }
+        return try compactTxStreamer.sendTransaction(rawTx)
     }
     
     public func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
