@@ -22,7 +22,7 @@ struct Transaction: TransactionEntity, Decodable {
     var id: Int?
     var transactionId: Data
     var created: String?
-    var transactionIndex: Int
+    var transactionIndex: Int?
     var expiryHeight: BlockHeight?
     var minedHeight: BlockHeight?
     var raw: Data?
@@ -63,7 +63,7 @@ class TransactionSQLDAO: TransactionRepository {
         static var id = Expression<Int>(Transaction.CodingKeys.id.rawValue)
         static var transactionId = Expression<Blob>(Transaction.CodingKeys.transactionId.rawValue)
         static var created = Expression<String?>(Transaction.CodingKeys.created.rawValue)
-        static var txIndex = Expression<String?>(Transaction.CodingKeys.transactionIndex.rawValue)
+        static var txIndex = Expression<Int?>(Transaction.CodingKeys.transactionIndex.rawValue)
         static var expiryHeight = Expression<Int?>(Transaction.CodingKeys.expiryHeight.rawValue)
         static var minedHeight = Expression<Int?>(Transaction.CodingKeys.minedHeight.rawValue)
         static var raw = Expression<Blob?>(Transaction.CodingKeys.raw.rawValue)
