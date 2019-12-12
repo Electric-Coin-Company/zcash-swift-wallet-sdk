@@ -273,6 +273,35 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
+    public func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int) throws -> Int64 {
+        
+//            let spend = try transactionManager.initSpend(zatoshi: Int(zatoshi), toAddress: toAddress, memo: memo, from: accountIndex)
+            let tx = initializer.rustBackend.createToAddress(dbData: initializer.dataDbURL, account: 0, extsk: spendingKey, to: toAddress, value: zatoshi, memo: memo, spendParams: URL(string: initializer.spendParamsURL.path)!, outputParams: URL(string: initializer.outputParamsURL.path)!)
+            
+        if (tx < 0) {
+            print("Error send to address: \(String(describing: initializer.rustBackend.getLastError()))")
+            return -1
+        } else {
+            print("TRANSACTION \(tx) CREATED")
+        }
+        
+        guard let transaction = try transactionRepository.findBy(id: Int(tx)), let raw = transaction.raw else {
+            print("transaction \(tx) NOT FOUND")
+            return -1
+        }
+        
+        let service = LightWalletGRPCService(endpoint: initializer.endpoint)
+        
+       let response = try service.submit(spendTransaction: raw)
+        
+        if response.errorCode != 0 {
+            print("error submitting: \(response.errorMessage)")
+            return -1
+        }
+        return tx
+        
+    }
+    
     public func getAddress(accountIndex: Int) -> String {
         initializer.getAddress(index: accountIndex) ?? ""
     }
