@@ -11,15 +11,16 @@ import UIKit
 import ZcashLightClientKit
 class TransactionsDataSource: NSObject, UITableViewDataSource {
     
-    enum Status {
+    enum TransactionType {
         case pending
         case sent
         case received
         case cleared
+        case all
     }
     static let cellIdentifier = "TransactionCell"
     
-    private var status: Status
+    private var status: TransactionType
     var synchronizer: Synchronizer!
     var transactions = [TransactionEntity]()
     
@@ -38,7 +39,7 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
     }
     
     
-    init(status: Status, synchronizer: Synchronizer) {
+    init(status: TransactionType, synchronizer: Synchronizer) {
         self.status = status
         self.synchronizer = synchronizer
     }
@@ -53,11 +54,16 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
             transactions = synchronizer.receivedTransactions.map { $0.transactionEntity }
         case .sent:
             transactions = synchronizer.sentTransactions.map { $0.transactionEntity }
+        case .all:
+            transactions = synchronizer.pendingTransactions.map { $0.transactionEntity } +
+                synchronizer.clearedTransactions.map { $0.transactionEntity } +
+                synchronizer.receivedTransactions.map { $0.transactionEntity } +
+                synchronizer.sentTransactions.map { $0.transactionEntity }
         }        
     }
     
     func transactionString(_ tx: TransactionEntity) -> String {
-        String(bytes: tx.transactionId, encoding: .utf8) ?? "No Transaction ID"
+        tx.transactionId.hexEncodedString()
     }
 }
 

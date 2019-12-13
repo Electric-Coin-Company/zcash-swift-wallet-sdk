@@ -352,7 +352,6 @@ public class CompactBlockProcessor {
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
         
-        
         notifyProgress(completedRange: range)
         
         guard !range.isEmpty else {
