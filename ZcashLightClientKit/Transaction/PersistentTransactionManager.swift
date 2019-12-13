@@ -40,15 +40,15 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
-
+        
         queue.async { [weak self] in
             guard let self = self else { return }
             do {
                 let encodedTransaction = try self.encoder.createTransaction(spendingKey: spendingKey, zatoshi: pendingTransaction.value, to: pendingTransaction.toAddress, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: pendingTransaction.accountIndex)
                 var pending = pendingTransaction
-                pending.encodeAttempts = 1
+                pending.encodeAttempts = pending.encodeAttempts + 1
                 pending.raw = encodedTransaction.raw
-                pending.rawTransactionId = encodedTransaction.raw
+                pending.rawTransactionId = encodedTransaction.transactionId
                 try self.repository.update(pending)
                 result(.success(pending))
             } catch StorageError.updateFailed {
@@ -72,6 +72,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         // FIX: change to async when librustzcash is updated to v6
         queue.async { [weak self] in
             guard let self = self else { return }
+            
             do {
                 guard let storedTx = try self.repository.find(by: txId) else {
                     result(.failure(TransactionManagerError.notPending(tx: pendingTransaction)))
@@ -99,7 +100,8 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 
                 result(.success(tx))
             } catch {
-                    result(.failure(error))
+                try? self.updateOnFailure(tx: pendingTransaction, error: error)
+                result(.failure(error))
             }
         }
     }
@@ -153,7 +155,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     
     private func update(transaction: PendingTransactionEntity, on sendResponse: LightWalletServiceResponse) throws -> PendingTransactionEntity {
         var tx = transaction
-        
+        tx.submitAttempts = tx.submitAttempts + 1
         let error = sendResponse.errorCode < 0
         tx.errorCode = Int(sendResponse.errorCode)
         tx.errorMessage = error ? sendResponse.errorMessage : nil

@@ -72,17 +72,16 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.initFailed
         }
         
+        subscribeToProcessorNotifications(processor)
+        registerBackgroundActivity()
+        self.blockProcessor = processor
         guard status == .stopped || status == .disconnected || status == .synced else {
             assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion some time in the near future
             return
         }
-        
-        subscribeToProcessorNotifications(processor)
-        
-        registerBackgroundActivity()
+  
         try processor.start()
-        
-        self.blockProcessor = processor
+       
     }
     
     public func stop() throws {
@@ -290,9 +289,9 @@ public class SDKSynchronizer: Synchronizer {
                         switch submitResult {
                         case .success(let submittedTx):
                             resultBlock(.success(submittedTx))
-                        case .failure(let submittionError):
+                        case .failure(let submissionError):
                             DispatchQueue.main.async {
-                                resultBlock(.failure(submittionError))
+                                resultBlock(.failure(submissionError))
                             }
                         }
                     }
