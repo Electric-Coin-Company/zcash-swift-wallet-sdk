@@ -329,6 +329,10 @@ public class SDKSynchronizer: Synchronizer {
         (try? transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max)) ?? [ConfirmedTransactionEntity]()
     }
     
+    public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
+        PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
+    }
+    
     // MARK: notify state
     private func notify(progress: Float, height: BlockHeight) {
         NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: [

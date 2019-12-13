@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol PagedTransactionRepository {
+public protocol PaginatedTransactionRepository {
     
     /**
      The page size of this repository

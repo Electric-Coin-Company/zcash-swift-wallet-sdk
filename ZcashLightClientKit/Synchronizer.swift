@@ -91,6 +91,12 @@ public protocol Synchronizer {
      all transactions related to receiving funds
      */
     var receivedTransactions: [ConfirmedTransactionEntity] { get }
+    
+    /**
+        a repository serving transactions in a paginated manner
+     */
+    func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
+    
 }
 
 public enum Status {
@@ -118,4 +124,10 @@ public enum Status {
     When set, a UI element may want to turn green.
     */
     case synced
+}
+
+public enum TransactionKind {
+    case sent
+    case received
+    case all
 }

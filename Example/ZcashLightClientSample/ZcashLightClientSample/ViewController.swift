@@ -54,6 +54,9 @@ class MainTableViewController: UITableViewController {
                 destination.datasource = TransactionsDataSource(status: .all, synchronizer: AppDelegate.shared.sharedSynchronizer)
                 destination.title = "All Transactions"
             }
+        } else if let destination =  segue.destination as? PaginatedTransactionsViewController {
+            let paginatedRepo = AppDelegate.shared.sharedSynchronizer.paginatedTransactions()
+            destination.paginatedRepository = paginatedRepo
         }
         super.prepare(for: segue, sender: sender)
         

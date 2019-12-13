@@ -7,7 +7,7 @@
 
 import Foundation
 
-class PagedTransactionDAO: PagedTransactionRepository {
+class PagedTransactionDAO: PaginatedTransactionRepository {
     var pageSize: Int
     var transactionRepository: TransactionRepository
     var kind: TransactionKind

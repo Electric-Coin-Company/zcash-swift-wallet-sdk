@@ -9,7 +9,7 @@ import XCTest
 @testable import ZcashLightClientKit
 class PagedTransactionRepositoryTests: XCTestCase {
     
-    var pagedTransactionRepository: PagedTransactionRepository!
+    var pagedTransactionRepository: PaginatedTransactionRepository!
     var transactionRepository: TransactionRepository!
     
     override func setUp() {
