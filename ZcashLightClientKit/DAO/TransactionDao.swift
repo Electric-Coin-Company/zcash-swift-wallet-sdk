@@ -54,7 +54,7 @@ class TransactionSQLDAO: TransactionRepository {
         true
     }
     
-    func findEndodedTransactionBy(txId: Int) -> EncodedTransaction? {
+    func findEncodedTransactionBy(txId: Int) -> EncodedTransaction? {
 //        try dbProvider
         return nil
     }

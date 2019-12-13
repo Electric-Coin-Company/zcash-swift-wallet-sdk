@@ -86,7 +86,7 @@ class MockTransactionRepository: TransactionRepository {
         true
     }
     
-    func findEndodedTransactionBy(txId: Int) -> EncodedTransaction? {
+    func findEncodedTransactionBy(txId: Int) -> EncodedTransaction? {
         nil
     }
     
