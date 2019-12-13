@@ -7,31 +7,33 @@
 //
 
 import Foundation
+import SwiftGRPC
+import SwiftProtobuf
 @testable import ZcashLightClientKit
 
-class AwfulLightWalletService: LightWalletService {
-    func latestBlockHeight() throws -> BlockHeight {
+class AwfulLightWalletService: MockLightWalletService {
+    override func latestBlockHeight() throws -> BlockHeight {
         throw LightWalletServiceError.generalError
     }
     
-    func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
+    override func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
         throw LightWalletServiceError.invalidBlock
     }
     
-    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
+    override func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             result(.failure(LightWalletServiceError.generalError))
         }
         
     }
     
-    func blockRange(_ range: Range<BlockHeight>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
+    override func blockRange(_ range: Range<BlockHeight>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             result(.failure(LightWalletServiceError.generalError))
         }
     }
     
-    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void) {
+    override func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void) {
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                   result(.failure(LightWalletServiceError.generalError))
               }
@@ -41,8 +43,36 @@ class AwfulLightWalletService: LightWalletService {
        Submits a raw transaction over lightwalletd. Blocking
        */
        
-    func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
+    override func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
         throw LightWalletServiceError.generalError
+    }
+}
+
+class SlightlyBadLightWalletService: MockLightWalletService {
+   
+    
+    override func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void) {
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            result(.success(LightWalletServiceMockResponse.error))
+              }
+    }
+       
+       /**
+       Submits a raw transaction over lightwalletd. Blocking
+       */
+       
+    override func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
+        LightWalletServiceMockResponse.error
+    }
+}
+
+
+extension LightWalletServiceMockResponse {
+    static var error: LightWalletServiceMockResponse {
+        LightWalletServiceMockResponse(errorCode: -100, errorMessage: "Ohhh this is bad dude, really bad, you lost all your internet money", unknownFields: UnknownStorage())
+    }
+    static var success: LightWalletServiceMockResponse {
+        LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
 }
 
