@@ -31,7 +31,7 @@ class OutboundTransactionManagerTests: XCTestCase {
         
         initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(), endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
         
-        encoder = WalletTransactionEncoder(rust: ZcashRustBackend.self, repository: TestDbBuilder.transactionRepository()!, initializer: initializer)
+        encoder = WalletTransactionEncoder(initializer: initializer)
         transactionManager = PersistentTransactionManager(encoder: encoder, service: MockLightWalletService(latestBlockHeight: 620999), repository: pendingRespository)
         
         
@@ -87,6 +87,8 @@ class OutboundTransactionManagerTests: XCTestCase {
                 XCTFail("failed with error: \(error)")
             case .success(let tx):
                 XCTAssertEqual(tx.id, pendingTx.id)
+                XCTAssertTrue(tx.encodeAttempts > 0)
+                XCTAssertFalse(tx.isFailedEncoding)
             }
         }
         wait(for: [expect], timeout: 240)
@@ -133,8 +135,12 @@ class OutboundTransactionManagerTests: XCTestCase {
             switch result {
             case .failure(let error):
                 XCTFail("submission failed with error: \(error)")
+                let failedTx = try? self.pendingRespository.find(by: submittableTx.id!)
+                XCTAssertTrue(failedTx?.isFailedSubmit ?? false)
             case .success(let successfulTx):
                 XCTAssertEqual(submittableTx.id, successfulTx.id)
+                XCTAssertTrue(successfulTx.isSubmitted)
+                XCTAssertTrue(successfulTx.isSubmitSuccess)
             }
             
         }

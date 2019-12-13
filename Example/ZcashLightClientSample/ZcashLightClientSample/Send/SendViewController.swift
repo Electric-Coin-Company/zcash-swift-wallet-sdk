@@ -159,7 +159,7 @@ class SendViewController: UIViewController {
             }
             switch result {
             case .success(let pendingTransaction):
-                print("transaction created: \(pendingTransaction)")
+                    print("transaction created: \(pendingTransaction)")
                 
             case .failure(let error):
                 DispatchQueue.main.async {

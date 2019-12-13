@@ -31,7 +31,7 @@ class WalletTransactionEncoderTests: XCTestCase {
         initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(), endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
         
         repository = TransactionSQLDAO(dbProvider: dataDbHandle.connectionProvider(readwrite: false))
-        transactionEncoder = WalletTransactionEncoder(rust: rustBackend.self, repository: repository, initializer:  initializer)
+        transactionEncoder = WalletTransactionEncoder(initializer:  initializer)
     }
     
     override func tearDown() {
