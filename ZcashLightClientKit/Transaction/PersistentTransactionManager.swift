@@ -18,6 +18,18 @@ enum TransactionManagerError: Error {
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
+    func handleReorg(at height: BlockHeight) throws {
+        guard let affectedTxs = try self.allPendingTransactions()?.filter({ $0.minedHeight >= height }) else {
+            return
+        }
+        
+        try affectedTxs.map { (tx) -> PendingTransactionEntity in
+            var updatedTx = tx
+            updatedTx.minedHeight = -1
+            return updatedTx
+        } .forEach({ try self.repository.update($0) })
+
+    }
     
     var repository: PendingTransactionRepository
     var encoder: TransactionEncoder

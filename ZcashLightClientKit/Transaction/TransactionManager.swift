@@ -30,4 +30,6 @@ protocol OutboundTransactionManager {
     func cancel(pendingTransaction: PendingTransactionEntity) -> Bool
     
     func allPendingTransactions() throws -> [PendingTransactionEntity]?
+    
+    func handleReorg(at: BlockHeight) throws 
 }
