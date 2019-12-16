@@ -19,7 +19,7 @@ struct Transaction: TransactionEntity, Decodable {
         case raw
     }
     
-    var id: Int
+    var id: Int?
     var transactionId: Data
     var created: String?
     var transactionIndex: Int?
@@ -44,11 +44,26 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
 
 class TransactionSQLDAO: TransactionRepository {
     
+    private var blockDao: BlockSQLDAO
+    
+    func lastScannedHeight() throws -> BlockHeight {
+        try blockDao.latestBlockHeight()
+    }
+    
+    func isInitialized() throws -> Bool {
+        true
+    }
+    
+    func findEncodedTransactionBy(txId: Int) -> EncodedTransaction? {
+//        try dbProvider
+        return nil
+    }
+    
     struct TableStructure {
         static var id = Expression<Int>(Transaction.CodingKeys.id.rawValue)
         static var transactionId = Expression<Blob>(Transaction.CodingKeys.transactionId.rawValue)
         static var created = Expression<String?>(Transaction.CodingKeys.created.rawValue)
-        static var txIndex = Expression<String?>(Transaction.CodingKeys.transactionIndex.rawValue)
+        static var txIndex = Expression<Int?>(Transaction.CodingKeys.transactionIndex.rawValue)
         static var expiryHeight = Expression<Int?>(Transaction.CodingKeys.expiryHeight.rawValue)
         static var minedHeight = Expression<Int?>(Transaction.CodingKeys.minedHeight.rawValue)
         static var raw = Expression<Blob?>(Transaction.CodingKeys.raw.rawValue)
@@ -60,6 +75,7 @@ class TransactionSQLDAO: TransactionRepository {
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
+        self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
     }
     
     func countAll() throws -> Int {
@@ -83,7 +99,7 @@ class TransactionSQLDAO: TransactionRepository {
         return entity
     }
     
-    func findAllSentTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]? {
+    func findAllSentTransactions(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
         try dbProvider.connection().run("""
             SELECT transactions.id_tx         AS id,
                    transactions.block         AS minedHeight,
@@ -104,7 +120,7 @@ class TransactionSQLDAO: TransactionRepository {
             WHERE  transactions.raw IS NOT NULL
                    AND minedheight > 0
             ORDER  BY block IS NOT NULL, height DESC, time DESC, txid DESC
-            LIMIT  \(limit)
+            LIMIT  \(limit) OFFSET \(offset)
         """).map({ (bindings) -> ConfirmedTransactionEntity in
             guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
                 throw TransactionRepositoryError.malformedTransaction
@@ -113,7 +129,7 @@ class TransactionSQLDAO: TransactionRepository {
         })
     }
     
-    func findAllReceivedTransactions(limit: Int) throws -> [ConfirmedTransactionEntity]? {
+    func findAllReceivedTransactions(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
         try dbProvider.connection().run("""
             SELECT transactions.id_tx     AS id,
                    transactions.block     AS minedHeight,
@@ -130,7 +146,7 @@ class TransactionSQLDAO: TransactionRepository {
                           ON transactions.block = blocks.height
             WHERE  received_notes.is_change != 1
             ORDER  BY minedheight DESC, blocktimeinseconds DESC, id DESC
-            LIMIT  \(limit)
+            LIMIT  \(limit) OFFSET \(offset)
             """).map({ (bindings) -> ConfirmedTransactionEntity in
                 guard let tx = TransactionBuilder.createReceivedTransaction(from: bindings) else {
                     throw TransactionRepositoryError.malformedTransaction
@@ -139,7 +155,7 @@ class TransactionSQLDAO: TransactionRepository {
             })
     }
     
-    func findAll(limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
+    func findAll(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
         try dbProvider.connection().run("""
              SELECT transactions.id_tx          AS id,
                    transactions.block           AS minedHeight,
@@ -175,7 +191,7 @@ class TransactionSQLDAO: TransactionRepository {
                       minedheight DESC,
                       blocktimeinseconds DESC,
                       id DESC
-             LIMIT  \(limit)
+             LIMIT  \(limit) OFFSET \(offset)
             """).map({ (bindings) -> ConfirmedTransactionEntity in
                 guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
                     throw TransactionRepositoryError.malformedTransaction

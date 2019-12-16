@@ -35,13 +35,13 @@ struct TransactionBuilder {
     
     static func createConfirmedTransaction(from bindings: [Binding?]) -> ConfirmedTransaction? {
         guard let id = bindings[ConfirmedColumns.id.rawValue] as? Int64,
-            let minedHeight = bindings[ConfirmedColumns.minedHeight.rawValue] as? Int64,
             let noteId = bindings[ConfirmedColumns.noteId.rawValue] as? Int64,
-            let blockTimeInSeconds = bindings[ConfirmedColumns.blockTimeInSeconds.rawValue] as? Int64,
             let transactionIndex = bindings[ConfirmedColumns.transactionIndex.rawValue] as? Int64,
             let value = bindings[ConfirmedColumns.value.rawValue] as? Int64
             else { return nil }
         
+        let minedHeight = bindings[ConfirmedColumns.minedHeight.rawValue] as? Int64 ?? -1
+        let blockTimeInSeconds = bindings[ConfirmedColumns.blockTimeInSeconds.rawValue] as? Int64 ?? 0
         // Optional values
         
         var toAddress: String?

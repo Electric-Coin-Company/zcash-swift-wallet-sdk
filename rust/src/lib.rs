@@ -6,7 +6,7 @@ use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::slice;
 use zcash_client_backend::{
-    constants::{testnet::HRP_SAPLING_EXTENDED_SPENDING_KEY, SAPLING_CONSENSUS_BRANCH_ID},
+    constants::{testnet::HRP_SAPLING_EXTENDED_SPENDING_KEY},
     encoding::{decode_extended_spending_key, encode_extended_spending_key},
     keys::spending_key,
 };
@@ -473,10 +473,10 @@ pub extern "C" fn zcashlc_create_to_address(
         let memo = Memo::from_str(&memo);
 
         let prover = LocalTxProver::new(spend_params, output_params);
-
+        
         create_to_address(
             &db_data,
-            SAPLING_CONSENSUS_BRANCH_ID,
+            0x2bb4_0e60, // BLOSSOM_CONSENSUS_BRANCH_ID
             prover,
             (account, &extsk),
             &to,

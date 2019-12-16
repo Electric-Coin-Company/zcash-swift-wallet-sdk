@@ -18,16 +18,27 @@ class SendViewController: UIViewController {
     @IBOutlet weak var balanceLabel: UILabel!
     @IBOutlet weak var maxFunds: UISwitch!
     @IBOutlet weak var sendButton: UIButton!
+    @IBOutlet weak var synchronizerStatusLabel: UILabel!
     
     var wallet: Initializer = Initializer.shared
     
     var synchronizer: Synchronizer!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        do {
+            try synchronizer.start()
+        } catch {
+            fail(error)
+        }
     }
     
     @objc func viewTapped(_ recognizer: UITapGestureRecognizer) {
@@ -38,10 +49,19 @@ class SendViewController: UIViewController {
             amountTextField.resignFirstResponder()
         }
     }
+    
     func setUp() {
         balanceLabel.text = format(balance: wallet.getBalance())
         toggleSendButton()
+        
+        let center = NotificationCenter.default
+        
+        center.addObserver(self, selector: #selector(synchronizerStarted(_:)), name: Notification.Name.synchronizerStarted, object: synchronizer)
+        center.addObserver(self, selector: #selector(synchronizerSynced(_:)), name: Notification.Name.synchronizerSynced, object: synchronizer)
+        center.addObserver(self, selector: #selector(synchronizerStopped(_:)), name: Notification.Name.synchronizerStopped, object: synchronizer)
+        center.addObserver(self, selector: #selector(synchronizerUpdated(_:)), name: Notification.Name.synchronizerProgressUpdated, object: synchronizer)
     }
+    
     
     func format(balance: Int64 = 0) -> String {
         "Zec \(balance.asHumanReadableZecBalance())"
@@ -61,7 +81,12 @@ class SendViewController: UIViewController {
     }
     
     func isFormValid() -> Bool {
-        isBalanceValid() && isAmountValid() && isRecipientValid()
+        switch synchronizer.status {
+        case .synced:
+            return isBalanceValid() && isAmountValid() && isRecipientValid()
+        default:
+            return false
+        } 
     }
     
     func isBalanceValid() -> Bool {
@@ -95,12 +120,15 @@ class SendViewController: UIViewController {
             return
         }
         
-        let alert = UIAlertController(title: "About To send funds!", message: "This is an ugly confirmation message. You should come up with something fancier that let's the user be sure about sending funds without disturbing the user experience with an annoying alert like this one", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(title: "About To send funds!",
+                                      message: "This is an ugly confirmation message. You should come up with something fancier that let's the user be sure about sending funds without disturbing the user experience with an annoying alert like this one",
+                                      preferredStyle: UIAlertController.Style.alert)
         
         let sendAction = UIAlertAction(title: "Send!", style: UIAlertAction.Style.default) { (_) in
             self.send()
         }
-        let cancelAction = UIAlertAction(title: "Go back! I'm not sure about this.", style: UIAlertAction.Style.destructive) { (_) in
+        let cancelAction = UIAlertAction(title: "Go back! I'm not sure about this.",
+                                         style: UIAlertAction.Style.destructive) { (_) in
             self.cancel()
         }
         alert.addAction(sendAction)
@@ -108,6 +136,7 @@ class SendViewController: UIViewController {
         
         self.present(alert, animated: true, completion: nil)
     }
+    
     
     func send() {
         guard isFormValid(), let amount = amountTextField.text, let zec = Double(amount)?.toZatoshi(), let recipient = addressTextField.text else {
@@ -130,7 +159,7 @@ class SendViewController: UIViewController {
             }
             switch result {
             case .success(let pendingTransaction):
-                print("transaction created: \(pendingTransaction)")
+                    print("transaction created: \(pendingTransaction)")
                 
             case .failure(let error):
                 DispatchQueue.main.async {
@@ -142,7 +171,7 @@ class SendViewController: UIViewController {
     }
     
     func fail(_ error: Error) {
-        let alert = UIAlertController(title: "Send failed!", message: error.localizedDescription, preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(title: "Send faile    d!", message: "\(error)", preferredStyle: UIAlertController.Style.alert)
         let action = UIAlertAction(title: "OK :(", style: UIAlertAction.Style.default, handler: nil)
         alert.addAction(action)
         self.present(alert, animated: true, completion: nil)
@@ -150,6 +179,23 @@ class SendViewController: UIViewController {
     
     func cancel() {
         
+    }
+    
+    // MARK: synchronizer notifications
+    @objc func synchronizerUpdated(_ notification: Notification) {
+        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+    }
+    
+    @objc func synchronizerStarted(_ notification: Notification) {
+        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+    }
+    
+    @objc func synchronizerStopped(_ notification: Notification) {
+        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+    }
+    
+    @objc func synchronizerSynced(_ notification: Notification) {
+        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
     }
 }
 
@@ -176,4 +222,19 @@ extension SendViewController: UITextFieldDelegate {
         textField.resignFirstResponder()
         return true
     }
+}
+
+extension SDKSynchronizer {
+      static func textFor(state: Status) -> String {
+          switch state {
+          case .disconnected:
+              return "disconnected 💔"
+          case .syncing:
+              return "Syncing Blocks 🤖"
+          case .stopped:
+              return "Stopped 🚫"
+          case .synced:
+              return "Synced 😎"
+          }
+      }
 }

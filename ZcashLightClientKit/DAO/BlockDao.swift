@@ -19,7 +19,7 @@ class BlockSQLDAO: BlockDao {
     var table: Table
     var height = Expression<Int>("height")
     
-    init(dbProvider: ConnectionProvider) throws {
+    init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
         self.table = Table("Blocks")
     }

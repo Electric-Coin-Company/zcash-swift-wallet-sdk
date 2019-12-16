@@ -22,7 +22,7 @@ class OutboundTransactionManagerTests: XCTestCase {
     let zpend: Int = 500_000
     
     override func setUp() {
-       
+        
         try! dataDbHandle.setUp()
         try! cacheDbHandle.setUp()
         pendingRespository = PendingTransactionSQLDAO(dbProvider: pendingDbhandle.connectionProvider(readwrite: true))
@@ -31,7 +31,7 @@ class OutboundTransactionManagerTests: XCTestCase {
         
         initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(), endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
         
-        encoder = WalletTransactionEncoder(rust: ZcashRustBackend.self, repository: TestDbBuilder.transactionRepository()!, initializer: initializer)
+        encoder = WalletTransactionEncoder(initializer: initializer)
         transactionManager = PersistentTransactionManager(encoder: encoder, service: MockLightWalletService(latestBlockHeight: 620999), repository: pendingRespository)
         
         
@@ -67,7 +67,7 @@ class OutboundTransactionManagerTests: XCTestCase {
         
     }
     
-    func testEncodeSpend() {
+    func testEncodeSpendSucess() {
         let expect = XCTestExpectation(description: self.description)
         
         var tx: PendingTransactionEntity?
@@ -87,25 +87,50 @@ class OutboundTransactionManagerTests: XCTestCase {
                 XCTFail("failed with error: \(error)")
             case .success(let tx):
                 XCTAssertEqual(tx.id, pendingTx.id)
+                XCTAssertTrue(tx.encodeAttempts > 0)
+                XCTAssertFalse(tx.isFailedEncoding)
             }
         }
-        wait(for: [expect], timeout: 240)
+        wait(for: [expect], timeout: 20)
         
     }
     
-    
-    func testSubmit() {
-        
-        let encodeExpect = XCTestExpectation(description: "encode")
+    func testSubmitFailed() {
+        transactionManager = PersistentTransactionManager(encoder: encoder, service: SlightlyBadLightWalletService(latestBlockHeight: 620999), repository: pendingRespository)
         
         let submitExpect = XCTestExpectation(description: "submit")
+        guard let tx = submittableTx() else {
+            XCTFail("failed to encode and all that")
+            return
+        }
+        
+        
+        transactionManager.submit(pendingTransaction: tx) { (result) in
+            submitExpect.fulfill()
+            switch result {
+            case .failure(_):
+                let failedTx = try? self.pendingRespository.find(by: tx.id!)
+                XCTAssertTrue(failedTx?.isFailedSubmit ?? false)
+            case .success(_):
+                XCTFail("test should have failed but succeeeded!")
+            }
+            
+        }
+        wait(for: [submitExpect], timeout: 5)
+        
+        
+    }
+    private func submittableTx() -> PendingTransactionEntity? {
+        let encodeExpect = XCTestExpectation(description: "encode")
+        
+        
         var tx: PendingTransactionEntity?
         
         XCTAssertNoThrow(try { tx = try transactionManager.initSpend(zatoshi: zpend, toAddress: recipientAddress, memo: nil, from: 0) }())
         
         guard let pendingTx = tx else {
             XCTFail("failed to create pending transaction")
-            return
+            return nil
         }
         
         var encodedTx: PendingTransactionEntity?
@@ -120,21 +145,35 @@ class OutboundTransactionManagerTests: XCTestCase {
                 encodedTx = tx
             }
         }
-        wait(for: [encodeExpect], timeout: 500)
+        wait(for: [encodeExpect], timeout: 20)
         
         guard let submittableTx = encodedTx else {
             XCTFail("failed to encode tx")
+            return nil
+        }
+        return submittableTx
+    }
+    
+    
+    func testSubmit() {
+        let submitExpect = XCTestExpectation(description: "submit")
+        guard let tx = submittableTx() else {
+            XCTFail("failed to encode and all that")
             return
         }
         
         
-        transactionManager.submit(pendingTransaction: submittableTx) { (result) in
+        transactionManager.submit(pendingTransaction: tx) { (result) in
             submitExpect.fulfill()
             switch result {
             case .failure(let error):
                 XCTFail("submission failed with error: \(error)")
+                let failedTx = try? self.pendingRespository.find(by: tx.id!)
+                XCTAssertTrue(failedTx?.isFailedSubmit ?? false)
             case .success(let successfulTx):
-                XCTAssertEqual(submittableTx.id, successfulTx.id)
+                XCTAssertEqual(tx.id, successfulTx.id)
+                XCTAssertTrue(successfulTx.isSubmitted)
+                XCTAssertTrue(successfulTx.isSubmitSuccess)
             }
             
         }
@@ -154,7 +193,7 @@ class OutboundTransactionManagerTests: XCTestCase {
         }
         
         var minedTransaction: PendingTransactionEntity?
-            
+        
         XCTAssertNoThrow(try { minedTransaction = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)}())
         
         guard let minedTx = minedTransaction else {
@@ -180,9 +219,9 @@ class OutboundTransactionManagerTests: XCTestCase {
         let cancellationResult = transactionManager.cancel(pendingTransaction: pendingTx)
         
         guard let id = pendingTx.id else {
-                  XCTFail("transaction with no id")
-                  return
-              }
+            XCTFail("transaction with no id")
+            return
+        }
         guard let retrievedTransaction = try! pendingRespository.find(by: id) else {
             XCTFail("failed to retrieve previously created transation")
             return
