@@ -22,6 +22,7 @@
 		0DA58B942397DDD9004596EA /* TransactionsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */; };
 		0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
 		0DA58BD323982785004596EA /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DA58BD123982785004596EA /* sapling-output.params */; };
+		0DBF8F9523A80F5A0010B85F /* TransactionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */; };
 		0DCD3DC7238D88B100DD3EC4 /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
 		0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
 		0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
@@ -70,6 +71,7 @@
 		0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsTableViewController.swift; sourceTree = "<group>"; };
 		0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsDataSource.swift; sourceTree = "<group>"; };
 		0DA58BD123982785004596EA /* sapling-output.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-output.params"; path = "../../../ZcashLightClientKitTests/sapling-output.params"; sourceTree = "<group>"; };
+		0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailViewController.swift; sourceTree = "<group>"; };
 		0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetBalanceViewController.swift; sourceTree = "<group>"; };
 		0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestHeightViewController.swift; sourceTree = "<group>"; };
 		0DDFB33D236B844900AED892 /* DemoAppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoAppConfig.swift; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				0DBF8F9323A80F0E0010B85F /* Transaction Detail */,
 				0DF53E6523A438BA00D7249C /* Paginated Transactions */,
 				0DA58B922397DDBC004596EA /* List Transactions */,
 				0D4EBA2F2396CFBE0041B507 /* Send */,
@@ -208,6 +211,14 @@
 				0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */,
 			);
 			path = "List Transactions";
+			sourceTree = "<group>";
+		};
+		0DBF8F9323A80F0E0010B85F /* Transaction Detail */ = {
+			isa = PBXGroup;
+			children = (
+				0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */,
+			);
+			path = "Transaction Detail";
 			sourceTree = "<group>";
 		};
 		0DCD3DC5238D888B00DD3EC4 /* Get Balance */ = {
@@ -503,6 +514,7 @@
 				0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */,
 				0D907F182322CC5900D641FE /* ViewController.swift in Sources */,
 				0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */,
+				0DBF8F9523A80F5A0010B85F /* TransactionDetailViewController.swift in Sources */,
 				0DA58B942397DDD9004596EA /* TransactionsTableViewController.swift in Sources */,
 				0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */,
 				0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */,
