@@ -15,8 +15,8 @@ class PaginatedTransactionsViewController: UIViewController {
     @IBOutlet weak var tableView: PaginatedTableView!
     
     var paginatedRepository: PaginatedTransactionRepository!
-    
     var transactions = [TransactionEntity]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Add paginated delegates only
@@ -27,19 +27,15 @@ class PaginatedTransactionsViewController: UIViewController {
         
         // More settings
         tableView.enablePullToRefresh = true
-        
         tableView.loadData(refresh: true)
-        
-        
     }
-    
     
     func loadMore(_ pageNumber: Int, _ pageSize: Int, onSuccess: ((Bool) -> Void)?, onError: ((Error) -> Void)?) {
         // Call your api here
         // Send true in onSuccess in case new data exists, sending false will disable pagination
         do {
             guard let txs = try paginatedRepository.page(pageNumber) else {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                DispatchQueue.main.async {
                     onSuccess?(false)
                 }
                 return
@@ -47,24 +43,22 @@ class PaginatedTransactionsViewController: UIViewController {
             if pageNumber == 0 { transactions.removeAll() }
             
             transactions.append(contentsOf: txs)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                onSuccess?(true)
+            DispatchQueue.main.async {
+                onSuccess?(pageNumber < self.paginatedRepository.pageCount)
             }
-            
         } catch {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            DispatchQueue.main.async {
                 onError?(error)
             }
-            
-            
         }
-        
     }
 }
+
 extension PaginatedTransactionsViewController: PaginatedTableViewDataSource {
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return paginatedRepository.itemCount
+        return transactions.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

@@ -18,6 +18,7 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
         case cleared
         case all
     }
+    
     static let cellIdentifier = "TransactionCell"
     
     private var status: TransactionType
@@ -66,4 +67,3 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
         tx.transactionId.hexEncodedString()
     }
 }
-
