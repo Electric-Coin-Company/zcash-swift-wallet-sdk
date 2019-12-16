@@ -52,6 +52,29 @@ class PaginatedTransactionsViewController: UIViewController {
             }
         }
     }
+    
+    var selectedRow: Int?
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        selectedRow = indexPath.row
+        
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        if shouldPerformSegue(withIdentifier: "TransactionDetail", sender: self) {
+            performSegue(withIdentifier: "TransactionDetail", sender: self)
+        }
+    }
+    
+    override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
+        identifier == "TransactionDetail" && selectedRow != nil
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if let destination = segue.destination as? TransactionDetailViewController, let row = selectedRow {
+            destination.model = transactions[row]
+            selectedRow = nil
+        }
+    }
 }
 
 extension PaginatedTransactionsViewController: PaginatedTableViewDataSource {
@@ -74,8 +97,6 @@ extension PaginatedTransactionsViewController: PaginatedTableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int {
         1
     }
-    
-    
 }
 
 extension PaginatedTransactionsViewController: PaginatedTableViewDelegate {
