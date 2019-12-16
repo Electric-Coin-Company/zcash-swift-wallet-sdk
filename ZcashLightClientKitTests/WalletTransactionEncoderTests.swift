@@ -96,17 +96,6 @@ class WalletTransactionEncoderTests: XCTestCase {
         XCTAssertTrue(operation.txId > 0)
     }
     
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            do {
-                _ = try transactionEncoder.createSpend(spendingKey: self.spendingKey, zatoshi: self.zpend, to: self.recipientAddress, memo: nil, from: 0)
-            } catch {
-                XCTFail("error: \(error)")
-            }
-        }
-    }
-    
     func testSpendThread() {
         let operation = CreateToAddressThread(rust: rustBackend, spendingKey: self.spendingKey, zatoshi: self.zpend, to: self.recipientAddress, memo: nil, from: 0, dataDbURL: dataDbHandle.readWriteDb, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
         
