@@ -17,6 +17,6 @@ class PagedTransactionRepositoryBuilder {
     
     static func build(initializer: Initializer, kind: TransactionKind = .all) -> PaginatedTransactionRepository {
         let txRepository = TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path, readonly: true))
-        return PagedTransactionDAO(repository: txRepository)
+        return PagedTransactionDAO(repository: txRepository, kind: kind)
     }
 }
