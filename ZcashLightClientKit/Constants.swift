@@ -45,10 +45,10 @@ public let EXPIRY_OFFSET = 20
 public let DEFAULT_BATCH_SIZE = 100
 
 /**
- * Default amount of time, in milliseconds, to poll for new blocks. Typically, this should be about half the average
+ * Default amount of time, in in seconds, to poll for new blocks. Typically, this should be about half the average
  * block time.
  */
-public let DEFAULT_POLL_INTERVAL: UInt64 = 75_000
+public let DEFAULT_POLL_INTERVAL: TimeInterval = 37.5
 
 /**
  * Default attempts at retrying.
