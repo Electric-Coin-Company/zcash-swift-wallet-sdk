@@ -175,6 +175,15 @@ class PersistentTransactionManager: OutboundTransactionManager {
         try repository.update(tx)
         return tx
     }
+    
+    func delete(pendingTransaction: PendingTransactionEntity) throws {
+        do {
+            try repository.delete(pendingTransaction)
+        } catch {
+            throw TransactionManagerError.notPending(tx: pendingTransaction)
+        }
+    }
+    
 }
 
 class OutboundTransactionManagerBuilder {
