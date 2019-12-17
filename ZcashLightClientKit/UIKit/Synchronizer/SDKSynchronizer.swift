@@ -18,6 +18,7 @@ public extension Notification.Name {
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
     static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
+    static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
 }
 
 /**
@@ -29,6 +30,7 @@ public class SDKSynchronizer: Synchronizer {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
         public static let minedTransaction = "SDKSynchronizer.minedTransaction"
+        public static let error = "SDKSynchronizer.error"
     }
     
     public private(set) var status: Status {
@@ -204,7 +206,8 @@ public class SDKSynchronizer: Synchronizer {
         do {
           try transactionManager.handleReorg(at: rewindHeight)
         } catch {
-            print("error handling reorg: \(error)") // TODO: handle and propagate Error
+            print("error handling reorg: \(error)")
+            notifyFailure(error)
         }
     }
     
@@ -220,7 +223,6 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorStartedDownloading(_ notification: Notification) {
-        
         DispatchQueue.main.async { self.status = .syncing }
     }
     
@@ -243,6 +245,7 @@ public class SDKSynchronizer: Synchronizer {
     @objc func processorIdle(_ notification: Notification) {
         DispatchQueue.main.async { self.status = .disconnected }
     }
+        
     @objc func processorFinished(_ notification: Notification) {
         DispatchQueue.global().async {
             self.refreshPendingTransactions()
@@ -417,6 +420,12 @@ public class SDKSynchronizer: Synchronizer {
     private func notifyMinedTransaction(_ tx: PendingTransactionEntity) {
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: Notification.Name.synchronizerMinedTransaction, object: self, userInfo: [NotificationKeys.minedTransaction : tx])
+        }
+    }
+    
+    private func notifyFailure(_ error: Error) {
+        DispatchQueue.main.async {
+             NotificationCenter.default.post(name: Notification.Name.synchronizerFailed, object: self, userInfo: [NotificationKeys.error : error])
         }
     }
 }
