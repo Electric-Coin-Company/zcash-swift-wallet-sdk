@@ -100,9 +100,12 @@ public class SDKSynchronizer: Synchronizer {
         
         center.addObserver(self,
                            selector: #selector(applicationDidBecomeActive(_:)),
-                           name: UIApplication.didBecomeActiveNotification, object: nil)
+                           name: UIApplication.didBecomeActiveNotification,
+                           object: nil)
         
-        center.addObserver(self, selector: #selector(applicationWillTerminate(_:)), name: UIApplication.willTerminateNotification,
+        center.addObserver(self,
+                           selector: #selector(applicationWillTerminate(_:)),
+                           name: UIApplication.willTerminateNotification,
                            object: nil)
         
         center.addObserver(self,
@@ -178,9 +181,31 @@ public class SDKSynchronizer: Synchronizer {
                            selector: #selector(processorTransitionUnknown(_:)),
                            name: Notification.Name.blockProcessorUnknownTransition,
                            object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(reorgDetected(_:)),
+                           name: Notification.Name.blockProcessorHandledReOrg,
+                           object: processor)
+        
+        
     }
     
     // MARK: Block Processor notifications
+    
+    @objc func reorgDetected(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+            let progress = userInfo[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
+            let rewindHeight = userInfo[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight else {
+                print("error processing reorg notification")
+                return }
+        
+        print("handling reorg at: \(progress) with rewind height: \(rewindHeight)")
+        do {
+          try transactionManager.handleReorg(at: rewindHeight)
+        } catch {
+            print("error handling reorg: \(error)") // TODO: handle and propagate Error
+        }
+    }
     
     @objc func processorUpdated(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
