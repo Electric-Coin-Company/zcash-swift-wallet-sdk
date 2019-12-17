@@ -31,5 +31,10 @@ protocol OutboundTransactionManager {
     
     func allPendingTransactions() throws -> [PendingTransactionEntity]?
     
-    func handleReorg(at: BlockHeight) throws 
+    func handleReorg(at: BlockHeight) throws
+    
+    /**
+        deletes a pending transaction from the database
+     */
+    func delete(pendingTransaction: PendingTransactionEntity) throws
 }

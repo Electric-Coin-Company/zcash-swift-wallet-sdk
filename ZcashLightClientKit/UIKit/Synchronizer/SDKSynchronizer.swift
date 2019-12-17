@@ -244,9 +244,12 @@ public class SDKSynchronizer: Synchronizer {
         DispatchQueue.main.async { self.status = .disconnected }
     }
     @objc func processorFinished(_ notification: Notification) {
-        refreshPendingTransactions()
-        DispatchQueue.main.async {
-            self.status = .synced }
+        DispatchQueue.global().async {
+            self.refreshPendingTransactions()
+            DispatchQueue.main.async {
+                self.status = .synced
+            }
+        }
     }
     
     @objc func processorTransitionUnknown(_ notification: Notification) {
@@ -382,20 +385,30 @@ public class SDKSynchronizer: Synchronizer {
     }
     // MARK: book keeping
     
+    private func updateMinedTransactions() throws {
+            try transactionManager.allPendingTransactions()?.filter( { $0.isSubmitSuccess && !$0.isMined } ).forEach( { pendingTx in
+            guard let rawId = pendingTx.rawTransactionId else { return }
+            let tx = try transactionRepository.findBy(rawId: rawId)
+            
+            guard let minedHeight = tx?.minedHeight else { return }
+            
+            let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
+            
+            notifyMinedTransaction(minedTx)
+            
+        })
+    }
+    
+    private func removeConfirmedTransactions() throws {
+        let latestHeight = try transactionRepository.lastScannedHeight()
+        
+        try transactionManager.allPendingTransactions()?.filter( { abs($0.minedHeight - latestHeight) >= DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
+    }
+    
     private func refreshPendingTransactions() {
         do {
-            try transactionManager.allPendingTransactions()?.filter({ $0.isSubmitSuccess && !$0.isMined }).forEach( { pendingTx in
-                guard let rawId = pendingTx.rawTransactionId else { return }
-                let tx = try transactionRepository.findBy(rawId: rawId)
-                
-                guard let minedHeight = tx?.minedHeight else { return }
-                
-                let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
-                
-                notifyMinedTransaction(minedTx)
-                
-            })
-            
+            try updateMinedTransactions()
+            try removeConfirmedTransactions()
         } catch {
             print("error refreshing pending transactions: \(error)")
         }
