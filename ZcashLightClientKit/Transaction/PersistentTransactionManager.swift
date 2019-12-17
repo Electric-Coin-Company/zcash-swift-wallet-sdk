@@ -19,7 +19,7 @@ enum TransactionManagerError: Error {
 
 class PersistentTransactionManager: OutboundTransactionManager {
     func handleReorg(at height: BlockHeight) throws {
-        guard let affectedTxs = try self.allPendingTransactions()?.filter({ $0.minedHeight >= height }) else {
+        guard let affectedTxs = try self.allPendingTransactions()?.filter({ $0.minedHeight >= (height - DEFAULT_REWIND_DISTANCE) }) else {
             return
         }
         
