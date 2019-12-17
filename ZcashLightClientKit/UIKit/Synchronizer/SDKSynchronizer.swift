@@ -26,9 +26,9 @@ public extension Notification.Name {
 public class SDKSynchronizer: Synchronizer {
     
     public struct NotificationKeys {
-        static let progress = "SDKSynchronizer.progress"
-        static let blockHeight = "SDKSynchronizer.blockHeight"
-        static let minedTransaction = "SDKSynchronizer.minedTransaction"
+        public static let progress = "SDKSynchronizer.progress"
+        public static let blockHeight = "SDKSynchronizer.blockHeight"
+        public static let minedTransaction = "SDKSynchronizer.minedTransaction"
     }
     
     public private(set) var status: Status {
@@ -188,7 +188,6 @@ public class SDKSynchronizer: Synchronizer {
                            selector: #selector(reorgDetected(_:)),
                            name: Notification.Name.blockProcessorHandledReOrg,
                            object: processor)
-        
         
     }
     

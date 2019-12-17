@@ -19,7 +19,6 @@ enum TransactionManagerError: Error {
 
 class PersistentTransactionManager: OutboundTransactionManager {
     
-    
     var repository: PendingTransactionRepository
     var encoder: TransactionEncoder
     var service: LightWalletService
