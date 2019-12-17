@@ -21,6 +21,7 @@ PODS:
     - nanopb/encode (= 0.3.9011)
   - nanopb/decode (0.3.9011)
   - nanopb/encode (0.3.9011)
+  - NotificationBubbles (0.1.1)
   - PaginatedTableView (0.1.0)
   - SQLite.swift (0.12.2):
     - SQLite.swift/standard (= 0.12.2)
@@ -38,6 +39,7 @@ PODS:
 
 DEPENDENCIES:
   - KRProgressHUD
+  - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
   - ZcashLightClientKit/Tests (from `../../`)
@@ -49,6 +51,7 @@ SPEC REPOS:
     - KRActivityIndicatorView
     - KRProgressHUD
     - nanopb
+    - NotificationBubbles
     - PaginatedTableView
     - SQLite.swift
     - SwiftGRPC
@@ -64,12 +67,13 @@ SPEC CHECKSUMS:
   KRActivityIndicatorView: 549db10b9578d58bac73db063d8b544e8970f7f2
   KRProgressHUD: c3b9a48a0ee4824ea13212ac3f1efa50dca021e3
   nanopb: 18003b5e52dab79db540fe93fe9579f399bd1ccd
+  NotificationBubbles: 91ee10deee54f35b5d49a161e1cb3d788ab5d011
   PaginatedTableView: 14025b52a9f88bb1e9a87f31765eae7986ffb192
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
   SwiftGRPC: f8fcfecb547c96cc6913de619f95fa3cd09838ee
   SwiftProtobuf: 4fd9645e69b72cbae6ec8da5be0cdd20ca6565dd
   ZcashLightClientKit: 7c5c65f59cf49f9db5341bacd0504e4264689965
 
-PODFILE CHECKSUM: 2e4c89ef66d003face250e6559f935e7afec3d7b
+PODFILE CHECKSUM: 78798ec859cb13d41ca5227082a269eef8f45a05
 
 COCOAPODS: 1.8.4

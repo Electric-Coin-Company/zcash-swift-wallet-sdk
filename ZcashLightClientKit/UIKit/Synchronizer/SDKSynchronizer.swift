@@ -17,6 +17,7 @@ public extension Notification.Name {
     static let synchronizerStopped = Notification.Name("SDKSyncronizerStopped")
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
+    static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
 }
 
 /**
@@ -25,8 +26,9 @@ public extension Notification.Name {
 public class SDKSynchronizer: Synchronizer {
     
     public struct NotificationKeys {
-        static let progress = "SDKSynchronizer.progress"
-        static let blockHeight = "SDKSynchronizer.progress"
+        public static let progress = "SDKSynchronizer.progress"
+        public static let blockHeight = "SDKSynchronizer.blockHeight"
+        public static let minedTransaction = "SDKSynchronizer.minedTransaction"
     }
     
     public private(set) var status: Status {
@@ -186,7 +188,6 @@ public class SDKSynchronizer: Synchronizer {
                            selector: #selector(reorgDetected(_:)),
                            name: Notification.Name.blockProcessorHandledReOrg,
                            object: processor)
-        
         
     }
     
@@ -389,11 +390,20 @@ public class SDKSynchronizer: Synchronizer {
                 
                 guard let minedHeight = tx?.minedHeight else { return }
                 
-                _ = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
+                let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
+                
+                notifyMinedTransaction(minedTx)
+                
             })
             
         } catch {
             print("error refreshing pending transactions: \(error)")
+        }
+    }
+    
+    private func notifyMinedTransaction(_ tx: PendingTransactionEntity) {
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: Notification.Name.synchronizerMinedTransaction, object: self, userInfo: [NotificationKeys.minedTransaction : tx])
         }
     }
 }
