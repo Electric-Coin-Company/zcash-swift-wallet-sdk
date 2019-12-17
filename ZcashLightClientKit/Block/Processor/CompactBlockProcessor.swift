@@ -19,6 +19,7 @@ public struct CompactBlockProcessorNotificationKey {
     public static let progressHeight = "CompactBlockProcessorNotificationKey.progressHeight"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
+    public static let rewindHeight = "CompactBlockProcessorNotificationKey.rewindHeight"
 }
 
 public extension Notification.Name {
@@ -313,9 +314,6 @@ public class CompactBlockProcessor {
         // cancel all Tasks
         queue.cancelAllOperations()
         
-        // notify reorg
-        NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height])
-        
         // register latest failure
         self.lastChainValidationFailure = height
         self.consecutiveChainValidationErrors = self.consecutiveChainValidationErrors + 1
@@ -327,6 +325,10 @@ public class CompactBlockProcessor {
             fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }
+        
+        // notify reorg
+        NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height,
+                                                                                                                     CompactBlockProcessorNotificationKey.rewindHeight : rewindHeight])
         
         do {
             try downloader.rewind(to: rewindHeight)

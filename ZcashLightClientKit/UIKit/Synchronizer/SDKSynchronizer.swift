@@ -194,9 +194,14 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func reorgDetected(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
-            let progress = userInfo[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight else { return }
+            let progress = userInfo[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
+            let rewindHeight = userInfo[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight else {
+                print("error processing reorg notification")
+                return }
+        
+        print("handling reorg at: \(progress) with rewind height: \(rewindHeight)")
         do {
-          try transactionManager.handleReorg(at: progress)
+          try transactionManager.handleReorg(at: rewindHeight)
         } catch {
             print("error handling reorg: \(error)") // TODO: handle and propagate Error
         }
