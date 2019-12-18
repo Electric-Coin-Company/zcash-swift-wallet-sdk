@@ -21,6 +21,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
     
     func isSameTransactionId<T: RawIdentifiable> (other: T) -> Bool
     func isPending(currentHeight: Int) -> Bool
+    func getAccount() -> Int32?
     
     var isCreating: Bool { get }
     var isFailedEncoding: Bool { get }

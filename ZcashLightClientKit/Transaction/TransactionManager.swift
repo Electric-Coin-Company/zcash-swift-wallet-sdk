@@ -14,7 +14,7 @@ import Foundation
 */
 
 protocol OutboundTransactionManager {
-    func initSpend(zatoshi: Int, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity
+    func initSpend(zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int32) throws -> PendingTransactionEntity
     
     func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
     

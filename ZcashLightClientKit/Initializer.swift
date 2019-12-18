@@ -117,12 +117,12 @@ public class Initializer {
         return accounts
     }
     
-    public func getAddress(index account: Int = 0) -> String? {
-        rustBackend.getAddress(dbData: dataDbURL, account: Int32(account))
+    public func getAddress(index account: Int32 = 0) -> String? {
+        rustBackend.getAddress(dbData: dataDbURL, account: account)
     }
     
-    public func getBalance(account index: Int = 0) -> Int64 {
-        rustBackend.getBalance(dbData: dataDbURL, account: Int32(index))
+    public func getBalance(account index: Int32 = 0) -> Int64 {
+        rustBackend.getBalance(dbData: dataDbURL, account: index)
     }
     
     // TODO: make internal

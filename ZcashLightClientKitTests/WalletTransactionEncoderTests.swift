@@ -18,7 +18,7 @@ class WalletTransactionEncoderTests: XCTestCase {
     var initializer: Initializer!
     let spendingKey = "secret-extended-key-test1qvpevftsqqqqpqy52ut2vv24a2qh7nsukew7qg9pq6djfwyc3xt5vaxuenshp2hhspp9qmqvdh0gs2ljpwxders5jkwgyhgln0drjqaguaenfhehz4esdl4kwlm5t9q0l6wmzcrvcf5ed6dqzvct3e2ge7f6qdvzhp02m7sp5a0qjssrwpdh7u6tq89hl3wchuq8ljq8r8rwd6xdwh3nry9at80z7amnj3s6ah4jevnvfr08gxpws523z95g6dmn4wm6l3658kd4xcq9rc0qn"
     let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
-    let zpend: Int = 1_000
+    let zpend: Int64 = 1_000
     let queue: OperationQueue = OperationQueue()
     
     override func setUp() {
@@ -139,16 +139,16 @@ class SpendOperation: Operation {
     
     private var rustBackend: ZcashRustBackendWelding.Type
     private var spendingKey: String
-    private var zatoshi: Int
+    private var zatoshi: Int64
     private var recipient: String
     private var memo: String?
-    private var fromAccount: Int
+    private var fromAccount: Int32
     private var spendURL: URL
     private var outputURL: URL
     private var dataDbURL: URL
     
     var txId: Int64 = -1
-    init(rust: ZcashRustBackendWelding.Type, spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, dataDbURL: URL, spendParamsURL: URL, outputParamsURL: URL) {
+    init(rust: ZcashRustBackendWelding.Type, spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int32, dataDbURL: URL, spendParamsURL: URL, outputParamsURL: URL) {
         self.rustBackend = rust
         self.spendingKey = spendingKey
         self.zatoshi = zatoshi
@@ -173,10 +173,10 @@ class CreateToAddressThread: Thread {
     
     private var rustBackend: ZcashRustBackendWelding.Type
     private var spendingKey: String
-    private var zatoshi: Int
+    private var zatoshi: Int64
     private var recipient: String
     private var memo: String?
-    private var fromAccount: Int
+    private var fromAccount: Int32
     private var spendURL: URL
     private var outputURL: URL
     private var dataDbURL: URL
@@ -186,7 +186,7 @@ class CreateToAddressThread: Thread {
     
     private var _working: Bool = true
     var txId: Int64 = -1
-    init(rust: ZcashRustBackendWelding.Type, spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, dataDbURL: URL, spendParamsURL: URL, outputParamsURL: URL) {
+    init(rust: ZcashRustBackendWelding.Type, spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int32, dataDbURL: URL, spendParamsURL: URL, outputParamsURL: URL) {
         self.rustBackend = rust
         self.spendingKey = spendingKey
         self.zatoshi = zatoshi

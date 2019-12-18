@@ -24,7 +24,7 @@ protocol TransactionEncoder {
     double-bangs for things).
      Blocking
     */
-    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction
+    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int32) throws -> EncodedTransaction
     
     /**
     Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
@@ -32,6 +32,6 @@ protocol TransactionEncoder {
     double-bangs for things).
      Non-blocking
     */
-    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
+    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int32, result: @escaping TransactionEncoderResultBlock)
     
 }

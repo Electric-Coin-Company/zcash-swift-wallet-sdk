@@ -49,7 +49,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     
     static func from(entity: PendingTransactionEntity) -> PendingTransaction {
         PendingTransaction(toAddress: entity.toAddress,
-                           accountIndex: entity.accountIndex,
+                           accountIndex: Int(entity.accountIndex),
                            minedHeight: entity.minedHeight,
                            expiryHeight: entity.expiryHeight,
                            cancelled: entity.cancelled,
@@ -60,9 +60,22 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
                            createTime: entity.createTime,
                            raw: entity.raw,
                            id: entity.id,
-                           value: entity.value,
+                           value: Int(entity.value),
                            memo: entity.memo,
                            rawTransactionId: entity.raw)
+    }
+    
+    // See: https://github.com/zcash/ZcashLightClientKit/issues/40
+    func getAccount() -> Int32? {
+        Int32(exactly: self.accountIndex)
+    }
+
+}
+
+extension Int32 {
+    init?(exactly: Int64) {
+        guard (Int64(Int32.min) ... Int64(Int32.max)).contains(exactly) else { return nil }
+        self = Int32(exactly)
     }
 }
 
@@ -75,7 +88,7 @@ extension PendingTransaction {
 }
 
 class PendingTransactionSQLDAO: PendingTransactionRepository {
-
+    
     let table = Table("pending_transactions")
     
     struct TableColumns {
@@ -97,7 +110,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     }
     
     var dbProvider: ConnectionProvider
-   
+    
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
@@ -120,7 +133,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
             t.column(TableColumns.raw)
             t.column(TableColumns.memo)
         }
-       
+        
         try dbProvider.connection().run(statement)
     }
     
@@ -141,14 +154,14 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     
     func delete(_ transaction: PendingTransactionEntity) throws {
         guard let id = transaction.id else {
-                  throw StorageError.malformedEntity(fields: ["id"])
-              }
+            throw StorageError.malformedEntity(fields: ["id"])
+        }
         do {
             try dbProvider.connection().run(table.filter(TableColumns.id == id).delete())
         } catch {
             throw StorageError.updateFailed
         }
-            
+        
     }
     
     func cancel(_ transaction: PendingTransactionEntity) throws {

@@ -8,13 +8,15 @@
 import Foundation
 
 enum TransactionManagerError: Error {
-    case couldNotCreateSpend(toAddress: String, account: Int, zatoshi: Int)
+    case couldNotCreateSpend(toAddress: String, account: Int32, zatoshi: Int64)
     case encodingFailed(tx: PendingTransactionEntity)
     case updateFailed(tx: PendingTransactionEntity)
     case notPending(tx: PendingTransactionEntity)
     case cancelled(tx: PendingTransactionEntity)
     case internalInconsistency(tx: PendingTransactionEntity)
     case submitFailed(tx: PendingTransactionEntity, errorCode: Int)
+    case invalidAccount(tx: PendingTransactionEntity)
+
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
@@ -30,9 +32,9 @@ class PersistentTransactionManager: OutboundTransactionManager {
         self.queue = DispatchQueue.init(label: "PersistentTransactionManager.serial.queue", qos: .userInitiated)
     }
     
-    func initSpend(zatoshi: Int, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity {
+    func initSpend(zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int32) throws -> PendingTransactionEntity {
         
-        guard let insertedTx = try repository.find(by: try repository.create(PendingTransaction(value: zatoshi, toAddress: toAddress, memo: memo, account: accountIndex))) else {
+        guard let insertedTx = try repository.find(by: try repository.create(PendingTransaction(value: Int(zatoshi), toAddress: toAddress, memo: memo, account: Int(accountIndex)))) else {
             throw TransactionManagerError.couldNotCreateSpend(toAddress: toAddress, account: accountIndex, zatoshi: zatoshi)
         }
         print("pending transaction \(String(describing: insertedTx.id)) created")
@@ -43,8 +45,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
         
         queue.async { [weak self] in
             guard let self = self else { return }
+            guard let accountIndex = pendingTransaction.getAccount() else {
+                result(.failure(TransactionManagerError.invalidAccount(tx: pendingTransaction)))
+                return
+            }
+
             do {
-                let encodedTransaction = try self.encoder.createTransaction(spendingKey: spendingKey, zatoshi: pendingTransaction.value, to: pendingTransaction.toAddress, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: pendingTransaction.accountIndex)
+                let encodedTransaction = try self.encoder.createTransaction(spendingKey: spendingKey, zatoshi: Int64(pendingTransaction.value), to: pendingTransaction.toAddress, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: accountIndex)
                 var pending = pendingTransaction
                 pending.encodeAttempts = pending.encodeAttempts + 1
                 pending.raw = encodedTransaction.raw

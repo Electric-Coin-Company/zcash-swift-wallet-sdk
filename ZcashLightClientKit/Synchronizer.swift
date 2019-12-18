@@ -53,7 +53,7 @@ public protocol Synchronizer {
     Gets the address for the given account.
     - Parameter accountIndex the optional accountId whose address is of interest. By default, the first account is used.
     */
-    func getAddress(accountIndex: Int) -> String
+    func getAddress(accountIndex: Int32) -> String
     
     /**
     Sends zatoshi.
@@ -63,7 +63,7 @@ public protocol Synchronizer {
     - Parameter memo the optional memo to include as part of the transaction.
     - Parameter accountIndex  the optional account id to use. By default, the first account is used.
     */
-    func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
+    func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int32, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
     
     /**
        Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only

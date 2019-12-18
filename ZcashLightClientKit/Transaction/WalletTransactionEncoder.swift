@@ -41,7 +41,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         
     }
     
-    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction {
+    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int32) throws -> EncodedTransaction {
         
         let txId = try createSpend(spendingKey: spendingKey, zatoshi: zatoshi, to: to, memo: memo, from: accountIndex)
         
@@ -59,7 +59,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
     }
     
-    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock) {
+    func createTransaction(spendingKey: String, zatoshi: Int64, to: String, memo: String?, from accountIndex: Int32, result: @escaping TransactionEncoderResultBlock) {
         
         queue.async { [weak self] in
             guard let self = self else { return }
@@ -71,13 +71,13 @@ class WalletTransactionEncoder: TransactionEncoder {
         } 
     }
     
-    func createSpend(spendingKey: String, zatoshi: Int, to address: String, memo: String?, from accountIndex: Int) throws -> Int {
+    func createSpend(spendingKey: String, zatoshi: Int64, to address: String, memo: String?, from accountIndex: Int32) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL),
             let spend = URL(string: self.spendParamsURL.path), let output = URL(string: self.outputParamsURL.path) else {
             throw TransactionEncoderError.missingParams
         }
                 
-        let txId = rustBackend.createToAddress(dbData: self.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParams: spend, outputParams: output)
+        let txId = rustBackend.createToAddress(dbData: self.dataDbURL, account: accountIndex, extsk: spendingKey, to: address, value: zatoshi, memo: memo, spendParams: spend, outputParams: output)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")

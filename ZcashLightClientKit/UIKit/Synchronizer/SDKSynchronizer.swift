@@ -304,10 +304,10 @@ public class SDKSynchronizer: Synchronizer {
     
     // MARK: Synchronizer methods
     
-    public func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
+    public func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int32, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         
         do {
-            let spend = try transactionManager.initSpend(zatoshi: Int(zatoshi), toAddress: toAddress, memo: memo, from: accountIndex)
+            let spend = try transactionManager.initSpend(zatoshi: zatoshi, toAddress: toAddress, memo: memo, from: accountIndex)
             
             transactionManager.encode(spendingKey: spendingKey, pendingTransaction: spend) { [weak self] (result) in
                 guard let self = self else { return }
@@ -334,7 +334,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
-    public func getAddress(accountIndex: Int) -> String {
+    public func getAddress(accountIndex: Int32) -> String {
         initializer.getAddress(index: accountIndex) ?? ""
     }
     
