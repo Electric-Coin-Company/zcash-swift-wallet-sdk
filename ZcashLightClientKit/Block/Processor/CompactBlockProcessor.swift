@@ -326,12 +326,12 @@ public class CompactBlockProcessor {
             return
         }
         
-        // notify reorg
-        NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height,
-                                                                                                                     CompactBlockProcessorNotificationKey.rewindHeight : rewindHeight])
-        
         do {
             try downloader.rewind(to: rewindHeight)
+            
+            // notify reorg
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height, CompactBlockProcessorNotificationKey.rewindHeight : rewindHeight])
+                    
             // process next batch
             processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
         } catch {
