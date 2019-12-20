@@ -14,7 +14,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     var window: UIWindow?
     private var wallet: Initializer?
-    var addresses: [String]?
     private var synchronizer: SDKSynchronizer?
     
     var sharedSynchronizer: SDKSynchronizer {
@@ -32,7 +31,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return wallet
         } else {
             let wallet = Initializer(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL(), pendingDbURL: try! __pendingDbURL(), endpoint: DemoAppConfig.endpoint, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
-            self.addresses = try! wallet.initialize(seedProvider: DemoAppConfig(), walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
+            let addresses = try! wallet.initialize(seedProvider: DemoAppConfig(), walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
+            
+            var storage = SampleStorage.shared
+            storage!.seed = Data(DemoAppConfig().seed())
+            storage!.privateKey = addresses?[0]
             self.wallet = wallet
             return wallet
         }
