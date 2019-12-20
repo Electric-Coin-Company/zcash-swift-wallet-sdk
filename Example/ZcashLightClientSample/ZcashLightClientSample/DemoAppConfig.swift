@@ -11,7 +11,7 @@ import ZcashLightClientKit
 
 struct DemoAppConfig {
     static var host = "127.0.0.1"//"34.68.177.238"
-    static var port = "9067"
+    static var port = "18232"
     static var birthdayHeight: BlockHeight = 620_000
     static var network = ZcashNetwork.testNet
     static var seed = Array("testreferencealice".utf8)    

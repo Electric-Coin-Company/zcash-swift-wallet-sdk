@@ -18,14 +18,14 @@ class GetAddressViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         addressLabel.text =  legibleAddresses() ?? "No Addresses found"
-        spendingKeyLabel.text = AppDelegate.shared.addresses?[0] ?? "No Spending Key found"
+        spendingKeyLabel.text = SampleStorage.shared.privateKey ?? "No Spending Key found"
         addressLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(addressTapped(_:))))
         addressLabel.isUserInteractionEnabled = true
         
         spendingKeyLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(spendingKeyTapped(_:))))
         spendingKeyLabel.isUserInteractionEnabled = true
         print("Address: \(String(describing: Initializer.shared.getAddress()))")
-        print("Spending Key: \(AppDelegate.shared.addresses?[0] ?? "No Spending Key found")")
+        print("Spending Key: \(SampleStorage.shared.privateKey ?? "No Spending Key found")")
     }
     
 
