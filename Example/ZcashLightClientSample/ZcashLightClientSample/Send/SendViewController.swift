@@ -145,14 +145,14 @@ class SendViewController: UIViewController {
         }
         
         
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate, let addresses = appDelegate.addresses else {
-            print("NO ADDRESSES")
+        guard let address = SampleStorage.shared.privateKey else {
+            print("NO ADDRESS")
             return
         }
         
         KRProgressHUD.show()
         
-        synchronizer.sendToAddress(spendingKey: addresses[0], zatoshi: zec, toAddress: recipient, memo: nil, from: 0) {  [weak self] result in
+        synchronizer.sendToAddress(spendingKey: address, zatoshi: zec, toAddress: recipient, memo: nil, from: 0) {  [weak self] result in
             
             DispatchQueue.main.async {
                 KRProgressHUD.dismiss()
