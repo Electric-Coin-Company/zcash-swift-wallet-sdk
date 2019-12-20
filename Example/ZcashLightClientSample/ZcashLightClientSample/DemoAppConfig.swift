@@ -10,7 +10,7 @@ import Foundation
 import ZcashLightClientKit
 
 struct DemoAppConfig {
-    static var host = "127.0.0.1"//"34.68.177.238"
+    static var host = "lightwalletd.testnet.z.cash"//"34.68.177.238"
     static var port = "9067"
     static var birthdayHeight: BlockHeight = 620_000
     static var network = ZcashNetwork.testNet
@@ -26,7 +26,7 @@ struct DemoAppConfig {
     }
     
     static var endpoint: LightWalletEndpoint {
-        return LightWalletEndpoint(address: self.host, port: self.port, secure: false)
+        return LightWalletEndpoint(address: self.host, port: self.port, secure: true)
     }
 }
 

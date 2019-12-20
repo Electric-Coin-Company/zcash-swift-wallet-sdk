@@ -8,15 +8,6 @@
 
 import Foundation
 
-protocol Storage {
-    
-    func createDatabase(at path: String) throws
-    
-    func closeDatabase()
-    
-    var compactBlockDao: CompactBlockDAO { get }
-}
-
 enum StorageError: Error {
     case couldNotCreate
     case openFailed

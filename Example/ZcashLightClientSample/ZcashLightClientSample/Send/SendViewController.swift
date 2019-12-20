@@ -171,7 +171,7 @@ class SendViewController: UIViewController {
     }
     
     func fail(_ error: Error) {
-        let alert = UIAlertController(title: "Send faile    d!", message: "\(error)", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(title: "Send failed!", message: "\(error)", preferredStyle: UIAlertController.Style.alert)
         let action = UIAlertAction(title: "OK :(", style: UIAlertAction.Style.default, handler: nil)
         alert.addAction(action)
         self.present(alert, animated: true, completion: nil)
