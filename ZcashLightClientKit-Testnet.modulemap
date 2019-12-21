@@ -1,0 +1,12 @@
+framework module ZcashLightClientKit {
+  umbrella header "ZcashLightClientKit.h"
+
+  export *
+  module * { export * }
+
+  module Zcashlc [system][extern_c] {
+    header "zcashlc.h"
+    export *
+  }
+
+}

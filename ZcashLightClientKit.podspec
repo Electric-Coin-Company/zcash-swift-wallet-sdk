@@ -15,29 +15,18 @@ Pod::Spec.new do |s|
      }
     s.source           = { :git => 'https://github.com/zcash/ZcashLightClientKit.git', :tag => s.version.to_s }
 
-    s.public_header_files = 'ZcashLightClientKit/**/*.h'
+    s.public_header_files = 'ZcashLightClientKit/ZcashLightClientKit.h'
+    s.private_header_files = 'ZcashLightClientKit/zcashlc/zcashlc.h'
     s.source_files = 'ZcashLightClientKit/**/*.{swift,h,a}'
+    s.exclude_files = 'ZcashLightClientKit/Testnet/**/*'
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.1'
-    s.ios.deployment_target = '11.0'
+    s.ios.deployment_target = '12.0'
     s.dependency 'SwiftGRPC'
     s.dependency 'SQLite.swift'    
-    s.ios.vendored_libraries = 'lib/libzcashlc.a'
+    s.ios.vendored_libraries = 'lib/mainnet/libzcashlc.a'
     s.prepare_command = <<-CMD
-        BASEPATH="${PWD}"
-        echo "Building librustzcash library..."
-        cargo build && cargo lipo --release
-        
-        mkdir -p lib
-        cp target/universal/release/* lib/
-        cp -rf target/universal/release/*  ZcashLightClientKit/zcashlc
+       sh build_librustzcash.sh --mainnet
     CMD
-    
-    s.test_spec 'Tests' do | test_spec |
-        test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift}'
-        test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
-        test_spec.dependency 'SwiftGRPC'
-        test_spec.dependency 'SQLite.swift'
-    end
   end
   

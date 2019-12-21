@@ -50,14 +50,14 @@ public class CompactBlockProcessor {
     public struct Configuration {
         public var cacheDb: URL
         public var dataDb: URL
-        public var downloadBatchSize = DEFAULT_BATCH_SIZE
-        public var blockPollInterval = DEFAULT_POLL_INTERVAL
-        public var retries = DEFAULT_RETRIES
-        public var maxBackoffInterval = DEFAULT_MAX_BACKOFF_INTERVAL
-        public var rewindDistance = DEFAULT_REWIND_DISTANCE
+        public var downloadBatchSize = ZcashSDK.DEFAULT_BATCH_SIZE
+        public var blockPollInterval = ZcashSDK.DEFAULT_POLL_INTERVAL
+        public var retries = ZcashSDK.DEFAULT_RETRIES
+        public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
+        public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
         public var walletBirthday: BlockHeight
         
-        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = SAPLING_ACTIVATION_HEIGHT){
+        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT){
             self.cacheDb = cacheDb
             self.dataDb = dataDb
             self.walletBirthday = walletBirthday
@@ -340,8 +340,8 @@ public class CompactBlockProcessor {
     }
     
     func determineLowerBound(errorHeight: Int) -> BlockHeight {
-        let offset = min(MAX_REORG_SIZE, DEFAULT_REWIND_DISTANCE * (consecutiveChainValidationErrors + 1))
-        return max(errorHeight - offset, lowerBoundHeight ?? SAPLING_ACTIVATION_HEIGHT)
+        let offset = min(ZcashSDK.MAX_REORG_SIZE, ZcashSDK.DEFAULT_REWIND_DISTANCE * (consecutiveChainValidationErrors + 1))
+        return max(errorHeight - offset, lowerBoundHeight ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
     }
     
     private func processBatchFinished(range: CompactBlockRange) {

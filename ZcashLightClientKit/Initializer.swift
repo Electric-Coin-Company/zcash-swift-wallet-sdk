@@ -44,7 +44,7 @@ public struct LightWalletEndpoint {
 public class Initializer {
     
     private(set) var rustBackend: ZcashRustBackendWelding.Type = ZcashRustBackend.self
-    private var lowerBoundHeight: BlockHeight = SAPLING_ACTIVATION_HEIGHT
+    private var lowerBoundHeight: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
     private(set) var cacheDbURL: URL
     private(set) var dataDbURL: URL
     private(set) var pendingDbURL: URL
@@ -106,7 +106,7 @@ public class Initializer {
         
         let downloader = CompactBlockStorage(url: cacheDbURL, readonly: true)
         
-        let lastDownloaded = (try? downloader.latestHeight()) ?? SAPLING_ACTIVATION_HEIGHT
+        let lastDownloaded = (try? downloader.latestHeight()) ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         // resume from last downloaded block
         lowerBoundHeight = max(birthday.height, lastDownloaded)
         

@@ -23,9 +23,9 @@ public struct DefaultResourceProvider: ResourceProvider {
      public var dataDbURL: URL {
         do {
             let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return url.appendingPathComponent(DEFAULT_DATA_DB_NAME)
+            return url.appendingPathComponent(ZcashSDK.DEFAULT_DATA_DB_NAME)
         } catch {
-            return URL(fileURLWithPath: "file://\(DEFAULT_DATA_DB_NAME)")
+            return URL(fileURLWithPath: "file://\(ZcashSDK.DEFAULT_DATA_DB_NAME)")
         }
         
     }
@@ -33,9 +33,9 @@ public struct DefaultResourceProvider: ResourceProvider {
     public var cacheDbURL: URL {
         do {
             let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return path.appendingPathComponent(DEFAULT_CACHES_DB_NAME)
+            return path.appendingPathComponent(ZcashSDK.DEFAULT_CACHES_DB_NAME)
         } catch {
-            return URL(fileURLWithPath: "file://\(DEFAULT_CACHES_DB_NAME)")
+            return URL(fileURLWithPath: "file://\(ZcashSDK.DEFAULT_CACHES_DB_NAME)")
         }
     }
     

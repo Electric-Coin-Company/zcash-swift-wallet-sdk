@@ -1,5 +1,5 @@
 Pod::Spec.new do |s|
-    s.name             = 'ZcashTestnetLightClientKit'
+    s.name             = 'ZcashLightClientKit-Testnet'
     s.version          = '0.0.1'
     s.summary          = 'Zcash Testnet Light Client wallet SDK for iOS'
   
@@ -15,16 +15,18 @@ Pod::Spec.new do |s|
      }
     s.source           = { :git => 'https://github.com/zcash/ZcashLightClientKit.git', :tag => s.version.to_s }
 
-    s.public_header_files = 'ZcashLightClientKit/**/*.h'
+    s.public_header_files = 'ZcashLightClientKit/ZcashLightClientKit.h'
+    s.private_header_files = 'ZcashLightClientKit/zcashlc/zcashlc.h'
     s.source_files = 'ZcashLightClientKit/**/*.{swift,h,a}'
-    s.module_map = 'ZcashLightClientKit.modulemap'
+    s.exclude_files = 'ZcashLightClientKit/Mainnet/**/*'
+    s.module_map = 'ZcashLightClientKit-Testnet.modulemap'
     s.swift_version = '5.1'
     s.ios.deployment_target = '12.0'
     s.dependency 'SwiftGRPC'
     s.dependency 'SQLite.swift'    
-    s.ios.vendored_libraries = 'lib/libzcashlc.a'
+    s.ios.vendored_libraries = 'lib/testnet/libzcashlc.a'
     s.prepare_command = <<-CMD
-       sh build_testnet.sh
+       sh build_librustzcash.sh --testnet
     CMD
     
     s.test_spec 'Tests' do | test_spec |
