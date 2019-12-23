@@ -26,8 +26,16 @@ Pod::Spec.new do |s|
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
     s.script_phase = {
       :name => 'Build librustzcash',
-      :script => 'sh Scripts/build_librustzcash_xcode.sh',
+      :script => 'sh Scripts/generate_zcashsdk_constants.sh && sh Scripts/build_librustzcash_xcode.sh',
       :execution_position => :before_compile
    }
+   s.test_spec 'Tests' do | test_spec |
+      test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift}'
+      test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
+      test_spec.script_phase = "sh Scripts/generate_test_constants.sh && Scripts/build_librustzcash_xcode.sh --testing"
+      test_spec.dependency 'SwiftGRPC'
+      test_spec.dependency 'SQLite.swift'
+  end
+
   end
   
