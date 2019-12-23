@@ -1,10 +1,3 @@
-//
-//  Constants.swift
-//  ZcashLightClientKit
-//
-//  Created by Francisco Gindre on 13/09/2019.
-//  Copyright © 2019 Electric Coin Company. All rights reserved.
-//
 
 import Foundation
 
@@ -16,7 +9,6 @@ import Foundation
  */
 
 public class ZcashSDK {
-    
     
     /**
      Miner's fee in zatoshi.
@@ -32,7 +24,7 @@ public class ZcashSDK {
      The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
      prior to this height, at all.
      */
-    public static let SAPLING_ACTIVATION_HEIGHT: BlockHeight = 419_200
+    public static let SAPLING_ACTIVATION_HEIGHT: BlockHeight = {{ argument.saplingActivationHeight }}
     
     /**
      The theoretical maximum number of blocks in a reorg, due to other bottlenecks in the protocol design.
@@ -98,7 +90,7 @@ public class ZcashSDK {
      */
     public static let DEFAULT_PENDING_DB_NAME = "pending.db"
     
-    public static let DEFAULT_DB_NAME_PREFIX = "ZcashSDK_mainnet_"
+    public static let DEFAULT_DB_NAME_PREFIX = "{{ argument.dbprefix }}"
     
     /**
      File name for the sappling spend params
@@ -116,5 +108,7 @@ public class ZcashSDK {
      this will do for now, since we're using a cloudfront URL that already redirects.
      */
     public static let CLOUD_PARAM_DIR_URL = "https://z.cash/downloads/"
+
+    public static let isMainnet = {{ argument.ismainnet }}
     
 }

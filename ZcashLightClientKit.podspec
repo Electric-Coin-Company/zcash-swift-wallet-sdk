@@ -18,15 +18,16 @@ Pod::Spec.new do |s|
     s.public_header_files = 'ZcashLightClientKit/ZcashLightClientKit.h'
     s.private_header_files = 'ZcashLightClientKit/zcashlc/zcashlc.h'
     s.source_files = 'ZcashLightClientKit/**/*.{swift,h,a}'
-    s.exclude_files = 'ZcashLightClientKit/Testnet/**/*'
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.1'
     s.ios.deployment_target = '12.0'
     s.dependency 'SwiftGRPC'
     s.dependency 'SQLite.swift'    
-    s.ios.vendored_libraries = 'lib/mainnet/libzcashlc.a'
-    s.prepare_command = <<-CMD
-       sh build_librustzcash.sh --mainnet
-    CMD
+    s.ios.vendored_libraries = 'lib/libzcashlc.a'
+    s.script_phase = {
+      :name => 'Build librustzcash',
+      :script => 'sh Scripts/build_librustzcash_xcode.sh',
+      :execution_position => :before_compile
+   }
   end
   

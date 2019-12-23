@@ -1,11 +1,11 @@
 platform :ios, '12.0'
 
-target 'ZcashLightClientSample-Testnet' do
+target 'ZcashLightClientSample' do
   # Comment the next line if you don't want to use dynamic frameworks
   use_frameworks!
   pod "KRProgressHUD"
   # Pods for ZcashLightClientSample
-  pod 'ZcashLightClientKit-Testnet', :path => '../../', :testspecs => ['Tests']
+  pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'
   target 'ZcashLightClientSampleTests' do
@@ -17,17 +17,6 @@ target 'ZcashLightClientSample-Testnet' do
     inherit! :search_paths
     # Pods for testing
   end
-
-end
-
-target 'ZcashLightClientSample-Mainnet' do
-  # Comment the next line if you don't want to use dynamic frameworks
-  use_frameworks!
-  pod "KRProgressHUD"
-  # Pods for ZcashLightClientSample
-  pod 'ZcashLightClientKit', :path => '../../'
-  pod 'PaginatedTableView'
-  pod 'NotificationBubbles'
 end
 
 post_install do |installer|
