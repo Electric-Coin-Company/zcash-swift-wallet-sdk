@@ -6,10 +6,10 @@ else
     exit 1
 fi
 
-if [ "$1" = "--testing" ]; then
-    export $ZCASH_NETWORK_ENVIRONMENT=$ZCASH_TESTNET
-    echo "Testing flag detected, forcing $ZCASH_TESTNET"
-fi
+# if [ "$1" = "--testing" ]; then
+#     export $ZCASH_NETWORK_ENVIRONMENT=$ZCASH_TESTNET
+#     echo "Testing flag detected, forcing $ZCASH_TESTNET"
+# fi
 
 check_environment
 
