@@ -1,12 +1,12 @@
-SCRIPT_COMMONS="${PODS_TARGET_SRCROOT}/Scripts/scripts_common.sh"
-if [ -f $SCRIPT_COMMONS ]
+SCRIPT_COMMONS="${PODS_TARGET_SRCROOT}/Scripts/script_commons.sh"
+if [ -f $SCRIPT_COMMONS ]; then
     source $SCRIPT_COMMONS
 else
-    echo "Failed to load script_common.sh"
+    echo "Failed to load $SCRIPT_COMMONS"
     exit 1
 fi
 
-if [ $1 = "--testing" ]; then
+if [ "$1" = "--testing" ]; then
     export $ZCASH_NETWORK_ENVIRONMENT=$ZCASH_TESTNET
     echo "Testing flag detected, forcing $ZCASH_TESTNET"
 fi
@@ -17,11 +17,24 @@ if [ "$ACTION" = "clean" ]; then
     clean
 else
 
-    if [ existing_build_mismatch ]; then 
-        clean
+    if [ existing_build_mismatch = true ]; then 
+        # clean
+        echo "build mismatch"
     fi
 
-    cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml
+    if is_mainnet; then
+        FEATURE_FLAGS="--features=mainnet"
+    else 
+         FEATURE_FLAGS=""
+    fi
+
+    echo "Building Rust backend"
+    echo ""
+    echo "cargo build --release $FEATURE_FLAGS && cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --release"
+
+    if ! [ -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ]; then
+        cargo build --release $FEATURE_FLAGS && cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --release
+    fi
     
     persist_environment
     
@@ -29,5 +42,10 @@ else
         mkdir -p "${RUST_LIB_PATH}"
     fi 
     
-    cp -f "${ZCASH_LIB_RUST_BUILD_PATH}/universal/${CONFIGURATION}/${ZCASH_LIB_RUST_NAME}" ${ZCASH_LIB_RUST_BUILD_PATH}
+    echo "copying artifacts: cp -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ${ZCASH_SDK_RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
+
+    # ALWAYS SHIP RELEASE NO MATTER WHAT YOUR BUILD IS (FOR NOW AT LEAST)
+    cp -f "${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME}" "${ZCASH_SDK_RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
+    echo "copying artifacts: cp -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
+    cp -f "${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME}" "${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
 fi

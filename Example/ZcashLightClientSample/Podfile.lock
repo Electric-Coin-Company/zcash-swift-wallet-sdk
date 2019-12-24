@@ -33,10 +33,7 @@ PODS:
   - ZcashLightClientKit (0.0.1):
     - SQLite.swift
     - SwiftGRPC
-  - ZcashLightClientKit-Testnet (0.0.1):
-    - SQLite.swift
-    - SwiftGRPC
-  - ZcashLightClientKit-Testnet/Tests (0.0.1):
+  - ZcashLightClientKit/Tests (0.0.1):
     - SQLite.swift
     - SwiftGRPC
 
@@ -45,8 +42,7 @@ DEPENDENCIES:
   - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
-  - ZcashLightClientKit-Testnet (from `../../`)
-  - ZcashLightClientKit-Testnet/Tests (from `../../`)
+  - ZcashLightClientKit/Tests (from `../../`)
 
 SPEC REPOS:
   trunk:
@@ -64,8 +60,6 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   ZcashLightClientKit:
     :path: "../../"
-  ZcashLightClientKit-Testnet:
-    :path: "../../"
 
 SPEC CHECKSUMS:
   BoringSSL-GRPC: db8764df3204ccea016e1c8dd15d9a9ad63ff318
@@ -78,9 +72,8 @@ SPEC CHECKSUMS:
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
   SwiftGRPC: f8fcfecb547c96cc6913de619f95fa3cd09838ee
   SwiftProtobuf: 4fd9645e69b72cbae6ec8da5be0cdd20ca6565dd
-  ZcashLightClientKit: aad5fd22ab6aeae41b808f409b48c51a2ada8478
-  ZcashLightClientKit-Testnet: a806d885e08490f1e9f8561fcc1200ed5bc6551f
+  ZcashLightClientKit: 52ce93d5d41e04acec9ce5d25e1f827a4d33f2da
 
-PODFILE CHECKSUM: 466192635c74e3994cf3961f95f54ab536285617
+PODFILE CHECKSUM: d9b3b2c92a7ca6ce56838c9cb0082c444a6fab33
 
 COCOAPODS: 1.8.4

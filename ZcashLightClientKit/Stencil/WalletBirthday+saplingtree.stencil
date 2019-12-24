@@ -1,4 +1,4 @@
-
+// swiftlint:disable all
 import Foundation
 
 {% if arguments.mainnet %}

@@ -1,31 +1,39 @@
 #!/bin/sh
 
-SCRIPT_COMMONS="${PODS_TARGET_SRCROOT}/Scripts/scripts_common.sh"
-if [ -f $SCRIPT_COMMONS ]
+SCRIPT_COMMONS="${PODS_TARGET_SRCROOT}/Scripts/script_commons.sh"
+if [ -f $SCRIPT_COMMONS ]; then
     source $SCRIPT_COMMONS
 else
-    echo "Failed to load script_common.sh"
+    echo "Failed to load $SCRIPT_COMMONS"
     exit 1
 fi
 
-if ![ sourcery --version ]; then
+if ! hash sourcery; then
     echo "Sourcery not found on your PATH"
     exit 1
 fi
+export ZCASH_SDK_TEMPLATE="${ZCASH_SRC_PATH}/Stencil"
 
-export ZCASH_SRC_PATH="$PODS_TARGET_SRCROOT"
-export ZCASH_SDK_TEMPLATE="$ZCASH_SRC_PATH/Stencil/ZcashSDK.stencil"
-
-echo "export ZCASH_SRC_PATH=$ZCASH_SRC_PATH"
+echo "export ZCASH_SRC_PATH=${ZCASH_SRC_PATH}"
 
 check_environment
 
-if [ is_mainnet ]; then
-    SOURCERY_ARGS="dbprefix=ZcashSdk_mainnet_ ismainnet=true saplingActivationHeight=419_200"
+if is_mainnet; then
+    SOURCERY_ARGS="--args dbprefix=ZcashSdk_mainnet_ --args ismainnet=true --args saplingActivationHeight=419_200"
 else 
-    SOURCERY_ARGS="dbprefix=ZcashSdk_testnet_ ismainnet=false saplingActivationHeight=280_000"
+    SOURCERY_ARGS="--args dbprefix=ZcashSdk_testnet_ --args ismainnet=false --args saplingActivationHeight=280_000"
 fi
 
-echo "sourcery --templates ${ZCASH_SDK_TEMPLATE}  --sources ${ZCASH_SRC_PATH} --output ${ZCASH_SRC_PATH} --args $SOURCERY_ARGS"
+if [ -d $ZCASH_SDK_GENERATED_SOURCES_FOLDER ]; then 
+    echo "clean up before generating new files: $ZCASH_SDK_GENERATED_SOURCES_FOLDER"
+    echo "rm -rf "${ZCASH_SDK_GENERATED_SOURCES_FOLDER}/*.generated*""
+    rm -rf "${ZCASH_SDK_GENERATED_SOURCES_FOLDER}/*.generated*"
+else 
+    echo "mkdir -p -v $ZCASH_SDK_GENERATED_SOURCES_FOLDER"
+    mkdir -p -v ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}
+fi
 
-sourcery --templates ${ZCASH_SDK_TEMPLATE}  --sources ${ZCASH_SRC_PATH} --output ${ZCASH_SRC_PATH} --args $SOURCERY_ARGS
+echo "sourcery --prune --verbose --templates ${ZCASH_SDK_TEMPLATE}  --sources ${ZCASH_SRC_PATH} --output ${ZCASH_SDK_GENERATED_SOURCES_FOLDER} $SOURCERY_ARGS "
+
+sourcery --prune --verbose --templates ${ZCASH_SDK_TEMPLATE} --sources ${ZCASH_SRC_PATH} --output ${ZCASH_SDK_GENERATED_SOURCES_FOLDER} $SOURCERY_ARGS
+

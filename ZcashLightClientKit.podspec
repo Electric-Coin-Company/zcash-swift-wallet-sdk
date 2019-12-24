@@ -24,18 +24,24 @@ Pod::Spec.new do |s|
     s.dependency 'SwiftGRPC'
     s.dependency 'SQLite.swift'    
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
+    s.prepare_command = <<-CMD
+      sh Scripts/prepare_zcash_sdk.sh
+    CMD
+
     s.script_phase = {
-      :name => 'Build librustzcash',
-      :script => 'sh Scripts/generate_zcashsdk_constants.sh && sh Scripts/build_librustzcash_xcode.sh',
+      :name => 'Build generate constants and build librustzcash',
+      :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_zcashsdk_constants.sh && sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
       :execution_position => :before_compile
    }
    s.test_spec 'Tests' do | test_spec |
       test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift}'
       test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
-      test_spec.script_phase = "sh Scripts/generate_test_constants.sh && Scripts/build_librustzcash_xcode.sh --testing"
+      test_spec.script_phase = {
+         :name => 'Build generate constants and build librustzcash',
+         :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh --testing}',
+         :execution_position => :before_compile
+      }
       test_spec.dependency 'SwiftGRPC'
       test_spec.dependency 'SQLite.swift'
   end
-
-  end
-  
+end
