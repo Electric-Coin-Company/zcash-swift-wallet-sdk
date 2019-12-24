@@ -12,9 +12,9 @@ import ZcashLightClientKit
 struct DemoAppConfig {
     static var host = "127.0.0.1"//"34.68.177.238"
     static var port = "18232"
-    static var birthdayHeight: BlockHeight = 620_000
-    static var network = ZcashNetwork.testNet
-    static var seed = Array("testreferencealice".utf8)    
+    static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 419_200 : 620_000
+    static var network = ZcashSDK.isMainnet ? ZcashNetwork.mainNet : ZcashNetwork.testNet
+    static var seed = ZcashSDK.isMainnet ? Array("testreferencealice".utf8) : Array("testreferencealice".utf8)
     static var address: String {
         "\(host):\(port)"
     }
