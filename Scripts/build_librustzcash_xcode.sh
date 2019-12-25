@@ -19,7 +19,8 @@ else
 
     if [ existing_build_mismatch = true ]; then 
         # clean
-        echo "build mismatch"
+        echo "build mismatch. You previously build a Different network environment. It appears that your build could be inconsistent if proceeding. Please clean your Pods/ folder and clean your build before running your next build."
+        exit 1
     fi
 
     if is_mainnet; then
