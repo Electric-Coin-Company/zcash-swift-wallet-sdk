@@ -31,6 +31,8 @@ function check_environment {
         echo "No 'ZCASH_SDK_GENERATED_SOURCES_FOLDER' variable present. delete Pods/ and run 'pod install --verbose'"
         exit 1
     fi
+
+    echo "**** Building for $ZCASH_NETWORK_ENVIRONMENT environment ****"
 }
 
 function is_mainnet {
