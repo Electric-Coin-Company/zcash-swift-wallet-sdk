@@ -113,10 +113,19 @@ extension AppDelegate {
         } catch {
             print("error clearing data db: \(error)")
         }
+        
+        var storage = SampleStorage.shared
+        storage!.seed = nil
+        storage!.privateKey = nil
+        
     }
 }
 
-extension DemoAppConfig: SeedProvider {}
+extension DemoAppConfig: SeedProvider {
+    func seed() -> [UInt8] {
+        DemoAppConfig.seed
+    }
+}
 
 extension Initializer {
     static var shared: Initializer {
