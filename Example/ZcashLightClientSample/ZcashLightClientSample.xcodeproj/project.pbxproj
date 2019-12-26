@@ -29,7 +29,6 @@
 		0D8BB46223B1DA0700D5E2A1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
 		0D8BB46323B1DA0700D5E2A1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1C2322CC5B00D641FE /* Assets.xcassets */; };
 		0D8BB46423B1DA0700D5E2A1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F192322CC5900D641FE /* Main.storyboard */; };
-		0D8BB46523B1DA0700D5E2A1 /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DA58BD123982785004596EA /* sapling-output.params */; };
 		0D8BB46623B1DA0700D5E2A1 /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0D2343EC238C91B900606F71 /* sapling-output.params */; };
 		0D8BB46723B1DA0700D5E2A1 /* sapling-spend.params in Resources */ = {isa = PBXBuildFile; fileRef = 0D2343ED238C91B900606F71 /* sapling-spend.params */; };
 		0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
@@ -41,7 +40,6 @@
 		0D907F362322CC5B00D641FE /* ZcashLightClientSampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F352322CC5B00D641FE /* ZcashLightClientSampleUITests.swift */; };
 		0DA58B942397DDD9004596EA /* TransactionsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */; };
 		0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
-		0DA58BD323982785004596EA /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0DA58BD123982785004596EA /* sapling-output.params */; };
 		0DBF8F9523A80F5A0010B85F /* TransactionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */; };
 		0DC30CFDB2CDAF56E3066E8F /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		0DCD3DC7238D88B100DD3EC4 /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
@@ -95,7 +93,6 @@
 		0D907F372322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsTableViewController.swift; sourceTree = "<group>"; };
 		0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsDataSource.swift; sourceTree = "<group>"; };
-		0DA58BD123982785004596EA /* sapling-output.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-output.params"; path = "../../../ZcashLightClientKitTests/sapling-output.params"; sourceTree = "<group>"; };
 		0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailViewController.swift; sourceTree = "<group>"; };
 		0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetBalanceViewController.swift; sourceTree = "<group>"; };
 		0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LatestHeightViewController.swift; sourceTree = "<group>"; };
@@ -220,7 +217,6 @@
 				0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */,
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
-				0DA58BD123982785004596EA /* sapling-output.params */,
 				0D7C85E423AD5A9B006878FC /* SampleStorage.swift */,
 			);
 			path = ZcashLightClientSample;
@@ -444,7 +440,6 @@
 				0D8BB46223B1DA0700D5E2A1 /* LaunchScreen.storyboard in Resources */,
 				0D8BB46323B1DA0700D5E2A1 /* Assets.xcassets in Resources */,
 				0D8BB46423B1DA0700D5E2A1 /* Main.storyboard in Resources */,
-				0D8BB46523B1DA0700D5E2A1 /* sapling-output.params in Resources */,
 				0D8BB46623B1DA0700D5E2A1 /* sapling-output.params in Resources */,
 				0D8BB46723B1DA0700D5E2A1 /* sapling-spend.params in Resources */,
 			);
@@ -457,7 +452,6 @@
 				0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */,
 				0D907F1D2322CC5B00D641FE /* Assets.xcassets in Resources */,
 				0D907F1B2322CC5900D641FE /* Main.storyboard in Resources */,
-				0DA58BD323982785004596EA /* sapling-output.params in Resources */,
 				0D2343EE238C91B900606F71 /* sapling-output.params in Resources */,
 				0D2343EF238C91B900606F71 /* sapling-spend.params in Resources */,
 			);
