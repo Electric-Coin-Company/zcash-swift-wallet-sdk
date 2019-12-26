@@ -59,9 +59,3 @@ class GetAddressViewController: UIViewController {
         self.present(alert, animated: true, completion: nil)
     }
 }
-
-extension SeedProvider {
-    func seed() -> [UInt8] {
-        Array(DemoAppConfig.address.utf8)
-    }
-}
