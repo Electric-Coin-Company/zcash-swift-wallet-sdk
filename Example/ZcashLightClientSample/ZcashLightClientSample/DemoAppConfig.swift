@@ -26,7 +26,7 @@ struct DemoAppConfig {
     }
     
     static var endpoint: LightWalletEndpoint {
-        return LightWalletEndpoint(address: self.host, port: self.port, secure: false)
+        return LightWalletEndpoint(address: self.host, port: self.port, secure: true)
     }
 }
 
