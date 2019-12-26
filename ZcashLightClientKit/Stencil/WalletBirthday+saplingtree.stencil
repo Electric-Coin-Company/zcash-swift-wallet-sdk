@@ -1,7 +1,7 @@
 //swiftlint:disable all
 import Foundation
 
-{% if argument.ismainnet == true %}
+{% if argument.ismainnet == "true" %}
 public extension WalletBirthday {
     static func birthday(with height: BlockHeight) -> WalletBirthday? {
         switch height {
