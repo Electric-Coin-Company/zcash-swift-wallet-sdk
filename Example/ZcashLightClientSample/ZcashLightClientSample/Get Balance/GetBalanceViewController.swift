@@ -11,10 +11,12 @@ import ZcashLightClientKit
 class GetBalanceViewController: UIViewController {
     
     @IBOutlet weak var balance: UILabel!
+    @IBOutlet weak var verified: UILabel!
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Account 0 Balance"
         self.balance.text = "\(Initializer.shared.getBalance().asHumanReadableZecBalance()) ZEC"
+        self.verified.text = "\(Initializer.shared.getVerifiedBalance().asHumanReadableZecBalance()) ZEC"
         // Do any additional setup after loading the view.
     }
     

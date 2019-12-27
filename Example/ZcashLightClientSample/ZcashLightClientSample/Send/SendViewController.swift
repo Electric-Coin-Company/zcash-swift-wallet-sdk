@@ -16,6 +16,7 @@ class SendViewController: UIViewController {
     @IBOutlet weak var addressTextField: UITextField!
     @IBOutlet weak var amountTextField: UITextField!
     @IBOutlet weak var balanceLabel: UILabel!
+    @IBOutlet weak var verifiedBalanceLabel: UILabel!
     @IBOutlet weak var maxFunds: UISwitch!
     @IBOutlet weak var sendButton: UIButton!
     @IBOutlet weak var synchronizerStatusLabel: UILabel!
@@ -36,7 +37,9 @@ class SendViewController: UIViewController {
         super.viewDidAppear(animated)
         do {
             try synchronizer.start()
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: .syncing)
         } catch {
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: .stopped)
             fail(error)
         }
     }
@@ -52,6 +55,7 @@ class SendViewController: UIViewController {
     
     func setUp() {
         balanceLabel.text = format(balance: wallet.getBalance())
+        verifiedBalanceLabel.text = format(balance: wallet.getVerifiedBalance())
         toggleSendButton()
         
         let center = NotificationCenter.default
@@ -72,7 +76,9 @@ class SendViewController: UIViewController {
     }
     
     func maxFundsOn() {
-        amountTextField.text = String(wallet.getBalance().asHumanReadableZecBalance())
+        let fee: Int64 = 10000
+        let max = wallet.getVerifiedBalance() - fee
+        amountTextField.text = String(max.asHumanReadableZecBalance())
         amountTextField.isEnabled = false
     }
     
@@ -90,13 +96,13 @@ class SendViewController: UIViewController {
     }
     
     func isBalanceValid() -> Bool {
-        wallet.getBalance() > 0
+        wallet.getVerifiedBalance() > 0
     }
     
     func isAmountValid() -> Bool {
         guard let value = amountTextField.text,
             let amount = Double(value),
-            amount.toZatoshi() <= wallet.getBalance() else {
+            amount.toZatoshi() <= wallet.getVerifiedBalance() else {
                 return false
         }
         return true

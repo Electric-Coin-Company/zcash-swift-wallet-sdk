@@ -125,6 +125,10 @@ public class Initializer {
         rustBackend.getBalance(dbData: dataDbURL, account: Int32(index))
     }
     
+    public func getVerifiedBalance(account index: Int = 0) -> Int64 {
+        rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index))
+    }
+    
     // TODO: make internal
     public func blockProcessor() -> CompactBlockProcessor? {
         var configuration = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL)
