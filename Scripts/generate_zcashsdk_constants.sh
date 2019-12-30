@@ -26,12 +26,15 @@ fi
 
 if [ -d $ZCASH_SDK_GENERATED_SOURCES_FOLDER ]; then 
     echo "clean up before generating new files: $ZCASH_SDK_GENERATED_SOURCES_FOLDER"
-    echo "rm -rf "${ZCASH_SDK_GENERATED_SOURCES_FOLDER}/*.generated*""
+    echo "rm -rf ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}/*.generated*"
     rm -rf "${ZCASH_SDK_GENERATED_SOURCES_FOLDER}/*.generated*"
 else 
     echo "mkdir -p -v $ZCASH_SDK_GENERATED_SOURCES_FOLDER"
     mkdir -p -v ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}
 fi
+
+echo "Set +w to ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}"
+chmod -R +w ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}
 
 echo "sourcery --prune --verbose --templates ${ZCASH_SDK_TEMPLATE}  --sources ${ZCASH_SRC_PATH} --output ${ZCASH_SDK_GENERATED_SOURCES_FOLDER} $SOURCERY_ARGS "
 
