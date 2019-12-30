@@ -24,7 +24,7 @@ Pod::Spec.new do |s|
     s.dependency 'SwiftGRPC'
     s.dependency 'SQLite.swift'    
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
-    s.preserve_paths = ['Scripts', 'rust','docs','Cargo.*']
+    s.preserve_paths = ['Scripts', 'rust','docs','Cargo.*','ZcashLightClientKit/Stencil']
     s.prepare_command = <<-CMD
       sh Scripts/prepare_zcash_sdk.sh
     CMD
