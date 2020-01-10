@@ -1,7 +1,9 @@
 #!/bin/sh
 #check if env-vars.sh exists
-if [ -f ${SRCROOT}/env-vars.sh ]; then
-    source ${SRCROOT}/env-vars.sh
+ENV_VARS_PATH=${PODS_TARGET_SRCROOT}/env-vars.sh
+if [ -f $ENV_VARS_PATH ]; then
+    source $ENV_VARS_PATH
+    echo "importing $ENV_VARS_PATH"
 fi
 
 export ZCASH_TEST_SRC_PATH="${PODS_TARGET_SRCROOT}/ZcashLightClientKitTests"
