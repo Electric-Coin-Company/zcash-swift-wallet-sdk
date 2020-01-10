@@ -5,7 +5,7 @@ if [ -f ${SRCROOT}/env-vars.sh ]; then
 fi
 
 export ZCASH_TEST_SRC_PATH="${PODS_TARGET_SRCROOT}/ZcashLightClientKitTests"
-if ![ ${LIGHTWALLETD_ADDRESS} ]; then
+if [ ! ${LIGHTWALLETD_ADDRESS} ]; then
     echo "LIGHTWALLETD_ADDRESS VARIABLE NOT DEFINED"
     exit 1
 fi

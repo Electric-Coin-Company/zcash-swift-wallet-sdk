@@ -1,3 +1,5 @@
+#!/bin/sh
+
 export PATH="$HOME/.cargo/bin:$PATH"
 export RUST_LIB_PATH="${PODS_TARGET_SRCROOT}/lib"
 export ZCASH_POD_SCRIPTS="${PODS_TARGET_SRCROOT}/Scripts"
