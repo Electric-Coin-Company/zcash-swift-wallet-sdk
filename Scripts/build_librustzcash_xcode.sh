@@ -28,7 +28,7 @@ fi
 if is_mainnet; then
     FEATURE_FLAGS="--features=mainnet"
 else 
-        FEATURE_FLAGS=""
+    FEATURE_FLAGS=""
 fi
 
 echo "Building Rust backend"
