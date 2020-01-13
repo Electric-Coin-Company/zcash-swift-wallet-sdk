@@ -48,20 +48,34 @@ function is_mainnet {
 function existing_build_mismatch {
     #if build exists check that corresponds to the current network environment
     if [ -d $ZCASH_LIB_RUST_BUILD_PATH ]; then
+
+        # there's a MAINNET Flag and MAINNET ENVIRONMENT
         if [ -f "$ZCASH_LIB_RUST_BUILD_PATH/$ZCASH_BUILD_TYPE_MAINNET_FLAG" ] && [[ "$ZCASH_NETWORK_ENVIRONMENT" = "$ZCASH_MAINNET" ]]
         then
-            false
+            return 1 # no build mismatch
+        
+        if [ -f "$ZCASH_LIB_RUST_BUILD_PATH/$ZCASH_BUILD_TYPE_MAINNET_FLAG" ] && [[ "$ZCASH_NETWORK_ENVIRONMENT" = "$ZCASH_TESTNET" ]]
+        then 
+            warn_mismatch $ZCASH_MAINNET $ZCASH_NETWORK_ENVIRONMENT
+            return 0 # build mismatch in place
+
+        # There's a TESTNET flag and we are on TESTNET ENVIRONMENT    
         elif [ -f "$ZCASH_LIB_RUST_BUILD_PATH/$ZCASH_BUILD_TYPE_TESTNET_FLAG" ] && [[ "$ZCASH_NETWORK_ENVIRONMENT" = "$ZCASH_TESTNET" ]]
         then
-            warn_mismatch $ZCASH_BUILD_TYPE_MAINNET_FLAG $ZCASH_NETWORK_ENVIRONMENT
-            false
+            
+            return 1 # no build mismatch 
+        # There's a TESTNET flag and we are on a MAINNET Environment 
+        elif [ -f "$ZCASH_LIB_RUST_BUILD_PATH/$ZCASH_BUILD_TYPE_TESTNET_FLAG" ] && [[ "$ZCASH_NETWORK_ENVIRONMENT" = "$ZCASH_MAINNET" ]]
+            warn_mismatch $ZCASH_TESTNET $ZCASH_NETWORK_ENVIRONMENT
+            return 0 #build mismatch in place 
         else
+
             echo "=== NO BUILD FLAG, CHECKING ENVIRONMENT ==="
             check_environment
-            false
+            return 1 #no build mismatch
         fi
     fi
-    false
+    return 1
 }
 
 function warn_mismatch {
