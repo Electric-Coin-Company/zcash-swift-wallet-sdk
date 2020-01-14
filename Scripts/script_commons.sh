@@ -44,7 +44,7 @@ function is_mainnet {
         false
     fi
 }
-
+# Return success (0) if there is a build mismatch, else failure (1) if no mismatch.
 function existing_build_mismatch {
     #if build exists check that corresponds to the current network environment
     if [! -d $ZCASH_LIB_RUST_BUILD_PATH ]; then
