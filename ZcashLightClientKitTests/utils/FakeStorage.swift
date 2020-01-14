@@ -1,5 +1,5 @@
 //
-//  Storage.swift
+//  FakeStorage.swift
 //  ZcashLightClientKit
 //
 //  Created by Francisco Gindre on 12/09/2019.

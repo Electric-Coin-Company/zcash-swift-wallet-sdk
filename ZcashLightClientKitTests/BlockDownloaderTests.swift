@@ -32,8 +32,8 @@ class BlockDownloaderTests: XCTestCase {
         
         let expect = XCTestExpectation(description: self.description)
         expect.expectedFulfillmentCount = 3
-        let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let upperRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
         downloader.downloadBlockRange(range) { (error) in
@@ -58,8 +58,8 @@ class BlockDownloaderTests: XCTestCase {
     
     func testSmallDownload() {
         
-        let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let upperRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
         var latest: BlockHeight = 0
@@ -90,8 +90,8 @@ class BlockDownloaderTests: XCTestCase {
         
         let expect = XCTestExpectation(description: self.description)
         expect.expectedFulfillmentCount = 1
-        let lowerRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let upperRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
         

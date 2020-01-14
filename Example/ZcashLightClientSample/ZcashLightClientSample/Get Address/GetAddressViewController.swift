@@ -44,8 +44,14 @@ class GetAddressViewController: UIViewController {
     }
     
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
+        guard let key =  SampleStorage.shared.privateKey else {
+            print("nothing to copy")
+            return
+        }
+        
         print("copied to clipboard")
-        UIPasteboard.general.string = legibleAddresses()
+        
+        UIPasteboard.general.string = key
         let alert = UIAlertController(title: "", message: "Spending Key Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
@@ -57,11 +63,5 @@ class GetAddressViewController: UIViewController {
         let alert = UIAlertController(title: "", message: "Address Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
-    }
-}
-
-extension SeedProvider {
-    func seed() -> [UInt8] {
-        Array(DemoAppConfig.address.utf8)
     }
 }

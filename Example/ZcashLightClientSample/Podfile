@@ -17,14 +17,29 @@ target 'ZcashLightClientSample' do
     inherit! :search_paths
     # Pods for testing
   end
-
 end
+
+target 'ZcashLightClientSample-Mainnet' do
+  inherit! :search_paths
+  use_frameworks!
+  pod "KRProgressHUD"
+  pod 'PaginatedTableView'
+  pod 'NotificationBubbles'
+  pod 'ZcashLightClientKit', :path => '../../'
+end
+
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
 #    if target.name.include? '-Unit-Tests'
 #      Xcodeproj::XCScheme.share_scheme(installer.pods_project.path, target.name)
 #    end
     target.build_configurations.each do |config|
+
+      
+      if target.name == 'ZcashLightClientKit'
+         config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
+      end
       config.build_settings['ENABLE_BITCODE'] = 'NO'
     end
   end
