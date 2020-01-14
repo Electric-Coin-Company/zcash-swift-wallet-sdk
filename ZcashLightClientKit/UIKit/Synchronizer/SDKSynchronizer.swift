@@ -405,7 +405,7 @@ public class SDKSynchronizer: Synchronizer {
     private func removeConfirmedTransactions() throws {
         let latestHeight = try transactionRepository.lastScannedHeight()
         
-        try transactionManager.allPendingTransactions()?.filter( { abs($0.minedHeight - latestHeight) >= DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
+        try transactionManager.allPendingTransactions()?.filter( { abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
     }
     
     private func refreshPendingTransactions() {

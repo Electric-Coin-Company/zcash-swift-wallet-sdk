@@ -118,16 +118,16 @@ class MockTransactionRepository: TransactionRepository {
     }
     
     func mockSent(_ index: Int) -> ConfirmedTransactionEntity {
-        ConfirmedTransaction(toAddress: "some_address", expiryHeight: BlockHeight.max, minedHeight: randomBlockHeight(), noteId: index, blockTimeInSeconds: randomTimeInterval(), transactionIndex: index, raw: Data(), id: index, value: Int.random(in: 1 ... ZATOSHI_PER_ZEC), memo: nil, rawTransactionId: Data())
+        ConfirmedTransaction(toAddress: "some_address", expiryHeight: BlockHeight.max, minedHeight: randomBlockHeight(), noteId: index, blockTimeInSeconds: randomTimeInterval(), transactionIndex: index, raw: Data(), id: index, value: Int.random(in: 1 ... ZcashSDK.ZATOSHI_PER_ZEC), memo: nil, rawTransactionId: Data())
     }
     
     
     func mockReceived(_ index: Int) -> ConfirmedTransactionEntity {
-         ConfirmedTransaction(toAddress: nil, expiryHeight: BlockHeight.max, minedHeight: randomBlockHeight(), noteId: index, blockTimeInSeconds: randomTimeInterval(), transactionIndex: index, raw: Data(), id: index, value: Int.random(in: 1 ... ZATOSHI_PER_ZEC), memo: nil, rawTransactionId: Data())
+         ConfirmedTransaction(toAddress: nil, expiryHeight: BlockHeight.max, minedHeight: randomBlockHeight(), noteId: index, blockTimeInSeconds: randomTimeInterval(), transactionIndex: index, raw: Data(), id: index, value: Int.random(in: 1 ... ZcashSDK.ZATOSHI_PER_ZEC), memo: nil, rawTransactionId: Data())
     }
     
     func randomBlockHeight() -> BlockHeight {
-        BlockHeight.random(in: SAPLING_ACTIVATION_HEIGHT ... 1_000_000)
+        BlockHeight.random(in: ZcashSDK.SAPLING_ACTIVATION_HEIGHT ... 1_000_000)
     }
     func randomTimeInterval() -> TimeInterval {
         Double.random(in: Date().timeIntervalSince1970 - 1000000.0 ... Date().timeIntervalSince1970)

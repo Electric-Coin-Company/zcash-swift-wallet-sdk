@@ -69,8 +69,8 @@ class CompactBlockReorgTests: XCTestCase {
             XCTAssertNotNil(notification.userInfo)
             if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
                 let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
-                XCTAssertTrue( reorg == 0 || reorg > SAPLING_ACTIVATION_HEIGHT)
-                XCTAssertTrue( rewind == 0 || rewind > SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue( reorg == 0 || reorg > ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue( rewind == 0 || rewind > ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
                 XCTAssertTrue( rewind <= reorg )
             } else {
                 XCTFail("CompactBlockProcessor reorg notification is malformed")

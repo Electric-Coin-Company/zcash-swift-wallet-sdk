@@ -113,10 +113,19 @@ extension AppDelegate {
         } catch {
             print("error clearing data db: \(error)")
         }
+        
+        var storage = SampleStorage.shared
+        storage!.seed = nil
+        storage!.privateKey = nil
+        
     }
 }
 
-extension DemoAppConfig: SeedProvider {}
+extension DemoAppConfig: SeedProvider {
+    func seed() -> [UInt8] {
+        DemoAppConfig.seed
+    }
+}
 
 extension Initializer {
     static var shared: Initializer {
@@ -135,15 +144,15 @@ func __documentsDirectory() throws -> URL {
 }
 
 func __cacheDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("cache.db", isDirectory: false)
+    try __documentsDirectory().appendingPathComponent(ZcashSDK.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_CACHES_DB_NAME, isDirectory: false)
 }
 
 func __dataDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
+    try __documentsDirectory().appendingPathComponent(ZcashSDK.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_DATA_DB_NAME, isDirectory: false)
 }
 
 func __pendingDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("pending.db")
+    try __documentsDirectory().appendingPathComponent(ZcashSDK.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_PENDING_DB_NAME)
 }
 
 func __spendParamsURL() throws -> URL {

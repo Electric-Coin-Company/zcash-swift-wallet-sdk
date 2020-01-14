@@ -19,7 +19,7 @@ class CompactBlockStorageTests: XCTestCase {
     
     func testStoreThousandBlocks() {
         let initialHeight = try! compactBlockDao.latestHeight()
-        let startHeight = SAPLING_ACTIVATION_HEIGHT
+        let startHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         
@@ -62,7 +62,7 @@ class CompactBlockStorageTests: XCTestCase {
     
     func testRewindTo() {
         
-        let startHeight = SAPLING_ACTIVATION_HEIGHT
+        let startHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         

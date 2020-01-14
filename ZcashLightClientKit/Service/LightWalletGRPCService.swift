@@ -94,9 +94,9 @@ extension LightWalletGRPCService: LightWalletService {
     
     public func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         do {
-            try compactTxStreamer.getLatestBlock(ChainSpec()) { (blockID, _) in
+            try compactTxStreamer.getLatestBlock(ChainSpec()) { (blockID, callResult) in
                 guard let rawHeight = blockID?.height, let blockHeight = Int(exactly: rawHeight) else {
-                    result(.failure(LightWalletServiceError.generalError))
+                    result(.failure(LightWalletServiceError.failed(statusCode: callResult.statusCode, message: callResult.statusMessage ?? "No message")))
                     return
                 }
                 result(.success(blockHeight))
@@ -126,7 +126,7 @@ extension LightWalletGRPCService: LightWalletService {
                             result(.failure(LightWalletServiceError.generalError))
                         }
                     default:
-                        result(.failure(LightWalletServiceError.failed(statusCode: code)))
+                        result(.failure(LightWalletServiceError.failed(statusCode: code, message: callResult.statusMessage ?? "No Message")))
                     }
                     
                 } else {

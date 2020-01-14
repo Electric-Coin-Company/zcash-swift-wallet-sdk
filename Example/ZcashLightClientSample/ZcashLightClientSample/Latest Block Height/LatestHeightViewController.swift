@@ -13,7 +13,7 @@ class LatestHeightViewController: UIViewController {
     
     @IBOutlet weak var blockHeightLabel: UILabel!
     
-    var service: LightWalletService = LightWalletGRPCService(host: DemoAppConfig.address, secure: false)
+    var service: LightWalletService = LightWalletGRPCService(endpoint: DemoAppConfig.endpoint)
     var model: BlockHeight? {
         didSet {
             if viewIfLoaded != nil {
@@ -53,7 +53,7 @@ class LatestHeightViewController: UIViewController {
     func fail(_ error: LightWalletServiceError) {
         self.blockHeightLabel.text = "Error"
         
-        let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+        let alert = UIAlertController(title: "Error", message: String(describing: error), preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }

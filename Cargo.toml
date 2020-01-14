@@ -38,3 +38,6 @@ crate-type = ["staticlib"]
 
 [profile.release]
 lto = true
+
+[features]
+mainnet = ["zcash_client_sqlite/mainnet"]

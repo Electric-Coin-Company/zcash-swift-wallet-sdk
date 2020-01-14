@@ -1,4 +1,0 @@
-module Zcashlc [system][extern_c] {
-    header "zcashlc.h"
-    export *
-}
