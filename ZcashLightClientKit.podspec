@@ -39,7 +39,7 @@ Pod::Spec.new do |s|
       test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
       test_spec.script_phase = {
          :name => 'Build generate constants and build librustzcash',
-         :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh --testing}',
+         :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh --testing',
          :execution_position => :before_compile
       }
       test_spec.dependency 'SwiftGRPC', '~> 0.10.0'
