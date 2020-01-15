@@ -64,6 +64,6 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
     }
     
     func transactionString(_ tx: TransactionEntity) -> String {
-        tx.transactionId.hexEncodedString()
+        tx.transactionId.toHexStringTxId()
     }
 }
