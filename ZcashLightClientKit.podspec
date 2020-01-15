@@ -15,8 +15,6 @@ Pod::Spec.new do |s|
      }
     s.source           = { :git => 'https://github.com/zcash/ZcashLightClientKit.git', :tag => s.version.to_s }
 
-    s.public_header_files = 'ZcashLightClientKit/ZcashLightClientKit.h'
-    s.private_header_files = 'ZcashLightClientKit/zcashlc/zcashlc.h'
     s.source_files = 'ZcashLightClientKit/**/*.{swift,h,a}'
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.1'
