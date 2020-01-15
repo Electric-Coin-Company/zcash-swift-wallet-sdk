@@ -70,6 +70,7 @@ function existing_build_mismatch {
     fi
     # There's a TESTNET flag and we are on a MAINNET Environment 
     if [ -f "$ZCASH_LIB_RUST_BUILD_PATH/$ZCASH_BUILD_TYPE_TESTNET_FLAG" ] && [[ "$ZCASH_NETWORK_ENVIRONMENT" = "$ZCASH_MAINNET" ]]
+    then
         warn_mismatch $ZCASH_TESTNET $ZCASH_NETWORK_ENVIRONMENT
         return 0 # build mismatch in place 
     fi

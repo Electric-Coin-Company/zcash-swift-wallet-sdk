@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = 'ZcashLightClientKit'
-    s.version          = '0.0.1'
+    s.version          = '0.1.0'
     s.summary          = 'Zcash Light Client wallet SDK for iOS'
   
     s.description      = <<-DESC
@@ -21,8 +21,8 @@ Pod::Spec.new do |s|
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.1'
     s.ios.deployment_target = '12.0'
-    s.dependency 'SwiftGRPC'
-    s.dependency 'SQLite.swift'    
+    s.dependency 'SwiftGRPC', '~> 0.10.0'
+    s.dependency 'SQLite.swift', '~> 0.12.2' 
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
     s.preserve_paths = ['Scripts', 'rust','docs','Cargo.*','ZcashLightClientKit/Stencil']
     s.prepare_command = <<-CMD
@@ -42,7 +42,7 @@ Pod::Spec.new do |s|
          :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh --testing}',
          :execution_position => :before_compile
       }
-      test_spec.dependency 'SwiftGRPC'
-      test_spec.dependency 'SQLite.swift'
+      test_spec.dependency 'SwiftGRPC', '~> 0.10.0'
+      test_spec.dependency 'SQLite.swift', '~> 0.12.2'
   end
 end

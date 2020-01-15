@@ -33,10 +33,10 @@ fi
 
 echo "Building Rust backend"
 echo ""
-echo "cargo build $FEATURE_FLAGS --release && cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --release"
+echo "cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --release"
 
 if [ ! -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ]; then
-    cargo build --release $FEATURE_FLAGS && cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --release
+    cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --release
     persist_environment
 fi
 
