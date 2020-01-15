@@ -22,6 +22,10 @@ echo "   touch ${ZCASH_POD_ROOT}/zcashlc/libzcashlc.a"
 echo "***************************************************************************"
 touch ${ZCASH_POD_SRCROOT}/zcashlc/libzcashlc.a
 
+echo "***************************************************************************"
+echo "   touch ${ZCASH_POD_ROOT}/zcashlc/zcashlc.h" 
+echo "***************************************************************************"
+touch ${ZCASH_POD_SRCROOT}/zcashlc/zcashlc.h
 
 echo "make ${ZCASH_SDK_GENERATED_SOURCES_FOLDER} folder"
 mkdir -p ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}
