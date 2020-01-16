@@ -137,7 +137,7 @@ A lot of important environment variables and helper functions live in the `scrip
 # Testing
 
 Currently tests depend on a `lightwalletd` server instance runnning locally or remotely to pass.
-To know more about running `lightwalletd`, refer to its repo https://github.com/zcash-hackworks/lightwalletd
+To know more about running `lightwalletd`, refer to its repo https://github.com/zcash/lightwalletd
 
 ## Pointing tests to a lightwalletd instance
 
