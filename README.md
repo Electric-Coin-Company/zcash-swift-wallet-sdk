@@ -10,7 +10,9 @@ This is an alpha build and is currently under active development. Please be advi
 
 🔒 Security Warnings
 
-The Zcash iOS Wallet SDK is experimental and a work in progress. Use it at your own risk.
+- The Zcash iOS Wallet SDK is experimental and a work in progress. Use it at your own risk.
+- Developers using this SDK must familiarize themselves with the current [threat
+  model](docs/ThreatModel.md), especially the known weaknesses described there.
 
 # Build dependencies
 
