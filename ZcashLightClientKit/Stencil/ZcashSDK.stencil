@@ -50,7 +50,7 @@ public class ZcashSDK {
      Default amount of time, in in seconds, to poll for new blocks. Typically, this should be about half the average
      block time.
      */
-    public static let DEFAULT_POLL_INTERVAL: TimeInterval = 37.5
+    public static let DEFAULT_POLL_INTERVAL: TimeInterval = 20
     
     /**
      Default attempts at retrying.

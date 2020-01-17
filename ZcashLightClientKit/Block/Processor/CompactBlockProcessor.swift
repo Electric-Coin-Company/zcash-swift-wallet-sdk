@@ -51,7 +51,10 @@ public class CompactBlockProcessor {
         public var cacheDb: URL
         public var dataDb: URL
         public var downloadBatchSize = ZcashSDK.DEFAULT_BATCH_SIZE
-        public var blockPollInterval = ZcashSDK.DEFAULT_POLL_INTERVAL
+        public var blockPollInterval: TimeInterval {
+            TimeInterval.random(in: ZcashSDK.DEFAULT_POLL_INTERVAL/2 ... ZcashSDK.DEFAULT_POLL_INTERVAL * 1.5) // 
+        }
+        
         public var retries = ZcashSDK.DEFAULT_RETRIES
         public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
         public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
