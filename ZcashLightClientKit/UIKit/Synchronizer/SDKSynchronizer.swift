@@ -83,9 +83,9 @@ public class SDKSynchronizer: Synchronizer {
             assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion some time in the near future
             return
         }
-  
+        
         try processor.start()
-       
+        
     }
     
     public func stop() throws {
@@ -204,7 +204,7 @@ public class SDKSynchronizer: Synchronizer {
         
         print("handling reorg at: \(progress) with rewind height: \(rewindHeight)")
         do {
-          try transactionManager.handleReorg(at: rewindHeight)
+            try transactionManager.handleReorg(at: rewindHeight)
         } catch {
             print("error handling reorg: \(error)")
             notifyFailure(error)
@@ -213,9 +213,9 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func processorUpdated(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
-              let progress = userInfo[CompactBlockProcessorNotificationKey.progress] as? Float,
-              let height = userInfo[CompactBlockProcessorNotificationKey.progressHeight] as? BlockHeight else {
-            return
+            let progress = userInfo[CompactBlockProcessorNotificationKey.progress] as? Float,
+            let height = userInfo[CompactBlockProcessorNotificationKey.progressHeight] as? BlockHeight else {
+                return
         }
         
         self.progress = progress
@@ -245,7 +245,7 @@ public class SDKSynchronizer: Synchronizer {
     @objc func processorIdle(_ notification: Notification) {
         DispatchQueue.main.async { self.status = .disconnected }
     }
-        
+    
     @objc func processorFinished(_ notification: Notification) {
         DispatchQueue.global().async {
             self.refreshPendingTransactions()
@@ -345,20 +345,20 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.cancel(pendingTransaction: transaction)
     }
     
-    public var pendingTransactions: [PendingTransactionEntity] {
-        (try? transactionManager.allPendingTransactions()) ?? [PendingTransactionEntity]()
+    public func allReceivedTransactions() throws -> [ConfirmedTransactionEntity] {
+        try transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
     }
     
-    public var clearedTransactions: [ConfirmedTransactionEntity] {
-        (try? transactionRepository.findAll(offset: 0, limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+    public func allPendingTransactions() throws -> [PendingTransactionEntity] {
+        try transactionManager.allPendingTransactions() ?? [PendingTransactionEntity]()
     }
     
-    public var sentTransactions: [ConfirmedTransactionEntity] {
-        (try? transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+    public func allClearedTransactions() throws -> [ConfirmedTransactionEntity] {
+        try transactionRepository.findAll(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
     }
     
-    public var receivedTransactions: [ConfirmedTransactionEntity] {
-        (try? transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max)) ?? [ConfirmedTransactionEntity]()
+    public func allSentTransactions() throws -> [ConfirmedTransactionEntity] {
+        try transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
     }
     
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
@@ -383,13 +383,13 @@ public class SDKSynchronizer: Synchronizer {
             NotificationCenter.default.post(name: Notification.Name.synchronizerSynced, object: self)
         case .syncing:
             NotificationCenter.default.post(name: Notification.Name.synchronizerSyncing, object: self)
-
+            
         }
     }
     // MARK: book keeping
     
     private func updateMinedTransactions() throws {
-            try transactionManager.allPendingTransactions()?.filter( { $0.isSubmitSuccess && !$0.isMined } ).forEach( { pendingTx in
+        try transactionManager.allPendingTransactions()?.filter( { $0.isSubmitSuccess && !$0.isMined } ).forEach( { pendingTx in
             guard let rawId = pendingTx.rawTransactionId else { return }
             let tx = try transactionRepository.findBy(rawId: rawId)
             
@@ -425,7 +425,27 @@ public class SDKSynchronizer: Synchronizer {
     
     private func notifyFailure(_ error: Error) {
         DispatchQueue.main.async {
-             NotificationCenter.default.post(name: Notification.Name.synchronizerFailed, object: self, userInfo: [NotificationKeys.error : error])
+            NotificationCenter.default.post(name: Notification.Name.synchronizerFailed, object: self, userInfo: [NotificationKeys.error : error])
         }
     }
 }
+
+extension SDKSynchronizer {
+    
+    public var pendingTransactions: [PendingTransactionEntity] {
+        (try? self.allPendingTransactions()) ?? [PendingTransactionEntity]()
+    }
+    
+    public var clearedTransactions: [ConfirmedTransactionEntity] {
+        (try? self.allClearedTransactions()) ?? [ConfirmedTransactionEntity]()
+    }
+    
+    public var sentTransactions: [ConfirmedTransactionEntity] {
+        (try? self.allSentTransactions()) ?? [ConfirmedTransactionEntity]()
+    }
+    
+    public var receivedTransactions: [ConfirmedTransactionEntity] {
+        (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
+    }
+}
+
