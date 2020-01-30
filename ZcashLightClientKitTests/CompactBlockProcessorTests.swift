@@ -134,4 +134,28 @@ class CompactBlockProcessorTests: XCTestCase {
         
         XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
     }
+    
+    func testDetermineLowerBoundPastBirthday() {
+        let errorHeight = 781_906
+        
+        let walletBirthday = 781_900
+        
+        let result = processor.determineLowerBound(errorHeight: errorHeight, consecutiveErrors: 1, walletBirthday: walletBirthday)
+        let expected = 781_900
+        
+        XCTAssertEqual(result, expected)
+        
+    }
+    
+    func testDetermineLowerBound() {
+        let errorHeight = 781_906
+        
+        let walletBirthday = 780_900
+        
+        let result = processor.determineLowerBound(errorHeight: errorHeight, consecutiveErrors: 0, walletBirthday: walletBirthday)
+        let expected = 781_896
+        
+        XCTAssertEqual(result, expected)
+        
+    }
 }

@@ -323,7 +323,7 @@ public class CompactBlockProcessor {
         
         // rewind
         
-        let rewindHeight = determineLowerBound(errorHeight: height)
+        let rewindHeight = determineLowerBound(errorHeight: height, consecutiveErrors: consecutiveChainValidationErrors, walletBirthday: self.config.walletBirthday)
         guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight)) else {
             fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
@@ -342,11 +342,11 @@ public class CompactBlockProcessor {
         }
     }
     
-    func determineLowerBound(errorHeight: Int) -> BlockHeight {
-        let offset = min(ZcashSDK.MAX_REORG_SIZE, ZcashSDK.DEFAULT_REWIND_DISTANCE * (consecutiveChainValidationErrors + 1))
-        return max(errorHeight - offset, lowerBoundHeight ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
+    func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
+            let offset = min(ZcashSDK.MAX_REORG_SIZE, ZcashSDK.DEFAULT_REWIND_DISTANCE * (consecutiveErrors + 1))
+            return max(errorHeight - offset, walletBirthday)
     }
-    
+        
     private func processBatchFinished(range: CompactBlockRange) {
         
         guard processingError == nil else {
