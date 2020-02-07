@@ -141,7 +141,7 @@ class CompactBlockProcessorTests: XCTestCase {
         let walletBirthday = 781_900
         
         let result = processor.determineLowerBound(errorHeight: errorHeight, consecutiveErrors: 1, walletBirthday: walletBirthday)
-        let expected = 781_900
+        let expected = 781_886
         
         XCTAssertEqual(result, expected)
         

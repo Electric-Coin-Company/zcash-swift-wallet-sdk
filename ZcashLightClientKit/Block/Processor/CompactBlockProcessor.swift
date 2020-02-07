@@ -344,7 +344,7 @@ public class CompactBlockProcessor {
     
     func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
             let offset = min(ZcashSDK.MAX_REORG_SIZE, ZcashSDK.DEFAULT_REWIND_DISTANCE * (consecutiveErrors + 1))
-            return max(errorHeight - offset, walletBirthday)
+            return max(errorHeight - offset, walletBirthday - ZcashSDK.MAX_REORG_SIZE)
     }
         
     private func processBatchFinished(range: CompactBlockRange) {
