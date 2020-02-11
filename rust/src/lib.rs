@@ -5,9 +5,12 @@ use std::os::raw::c_char;
 use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::slice;
+use std::str::FromStr;
 use zcash_client_backend::{
-    constants::{testnet::HRP_SAPLING_EXTENDED_SPENDING_KEY},
-    encoding::{decode_extended_spending_key, encode_extended_spending_key},
+    encoding::{
+        decode_extended_spending_key, encode_extended_full_viewing_key,
+        encode_extended_spending_key,
+    },
     keys::spending_key,
 };
 use zcash_client_sqlite::{
@@ -23,10 +26,25 @@ use zcash_client_sqlite::{
     transact::create_to_address,
 };
 use zcash_primitives::{
-    block::BlockHash, note_encryption::Memo, transaction::components::Amount,
-    zip32::ExtendedFullViewingKey,
+    block::BlockHash,
+    consensus::BranchId,
+    note_encryption::Memo, 
+    transaction::components::Amount,
+    zip32::{ExtendedFullViewingKey},
 };
+
 use zcash_proofs::prover::LocalTxProver;
+
+
+#[cfg(feature = "mainnet")]
+use zcash_client_backend::constants::mainnet::{
+    COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY
+};
+#[cfg(not(feature = "mainnet"))]
+use zcash_client_backend::constants::testnet::{
+    COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY
+};
+
 
 fn unwrap_exc_or<T>(exc: Result<T, ()>, def: T) -> T {
     match exc {
@@ -168,6 +186,111 @@ pub extern "C" fn zcashlc_init_blocks_table(
     unwrap_exc_or_null(res)
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_deriveExtendedSpendingKeys(
+    seed: *const u8,
+    seed_len: usize,
+    accounts: i32,
+) -> *mut *mut c_char {
+    let res = catch_panic(|| {
+        let seed =  slice::from_raw_parts(seed, seed_len);
+        let accounts = if accounts > 0 {
+            accounts as u32
+        } else {
+            return Err(format_err!("accounts argument must be greater than zero"));
+        };
+
+        let extsks: Vec<_> = (0..accounts)
+            .map(|account| spending_key(&seed, COIN_TYPE, account))
+            .collect();
+
+    
+        // Return the ExtendedSpendingKeys for the created accounts.
+        let mut v: Vec<_> = extsks
+            .iter()
+            .map(|extsk| {
+                let encoded =
+                    encode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, extsk);
+                CString::new(encoded).unwrap().into_raw()
+            })
+            .collect();
+        assert!(v.len() == v.capacity());
+        let p = v.as_mut_ptr();
+        std::mem::forget(v);
+        Ok(p)
+    });
+    unwrap_exc_or_null(res)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_deriveExtendedFullViewingKeys(
+    seed: *const u8,
+    seed_len: usize,
+    accounts: i32,
+) -> *mut *mut c_char {
+    let res = catch_panic(|| {
+        let seed =  slice::from_raw_parts(seed, seed_len);
+        let accounts = if accounts > 0 {
+            accounts as u32
+        } else {
+            return Err(format_err!("accounts argument must be greater than zero"));
+        };
+
+        let extsks: Vec<_> = (0..accounts)
+            .map(|account| ExtendedFullViewingKey::from(&spending_key(&seed, COIN_TYPE, account)))
+            .collect();
+
+    
+        // Return the ExtendedSpendingKeys for the created accounts.
+        let mut v: Vec<_> = extsks
+            .iter()
+            .map(|extsk| {
+                let encoded =
+                encode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, extsk);
+                CString::new(encoded).unwrap().into_raw()
+            })
+            .collect();
+        assert!(v.len() == v.capacity());
+        let p = v.as_mut_ptr();
+        std::mem::forget(v);
+        Ok(p)
+    });
+    unwrap_exc_or_null(res)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_deriveExtendedFullViewingKey(
+    extsk: *const c_char,
+) -> *mut c_char {
+    let res = catch_panic(|| {
+        let extsk = CStr::from_ptr(extsk).to_str()?;
+        let extfvk = match decode_extended_spending_key(
+            HRP_SAPLING_EXTENDED_SPENDING_KEY,
+            &extsk,
+        ) {
+            Ok(Some(extsk)) => ExtendedFullViewingKey::from(&extsk),
+            Ok(None) => {
+                return Err(format_err!("Deriving viewing key from spending key returned no results. Encoding was valid but type was incorrect."));
+            }
+            Err(e) => {
+                return Err(format_err!(
+                    "Error while deriving viewing key from spending key: {}",
+                    e
+                ));
+            }
+        };
+
+        let encoded = encode_extended_full_viewing_key(
+            HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY,
+            &extfvk,
+        );
+     
+        Ok(CString::new(encoded).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
+
+
 /// Returns the address for the account.
 ///
 /// Call `zcashlc_string_free` on the returned pointer when you are finished with it.
@@ -218,6 +341,49 @@ pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, ac
     });
     unwrap_exc_or(res, -1)
 }
+
+/// Returns 1 when the address is valid and shielded. 
+/// Returns 0 in any other case
+/// Errors when the provided address belongs to another network
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_isValidShieldedAddress(
+    address: *const c_char,
+) -> u8 {
+    let res = catch_panic(|| {
+        let addr = CStr::from_ptr(address).to_str()?;
+
+        match RecipientAddress::from_str(&addr) {
+            Some(addr) => match addr {
+                RecipientAddress::Shielded(_) => Ok(1),
+                RecipientAddress::Transparent(_) => Ok(0),
+            },
+            None => Err(format_err!("Address is for the wrong network")),
+        }
+    });
+    unwrap_exc_or(res, 0)
+}
+
+
+/// Returns 1 when the address is valid and transparent. 
+/// Returns 0 in any other case
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_isValidTransparentAddress(
+    address: *const c_char,
+) -> u8 {
+    let res = catch_panic(|| {
+        let addr = CStr::from_ptr(address).to_str()?;
+
+        match RecipientAddress::from_str(&addr) {
+            Some(addr) => match addr {
+                RecipientAddress::Shielded(_) => Ok(0),
+                RecipientAddress::Transparent(_) => Ok(1),
+            },
+            None => Err(format_err!("Address is for the wrong network")),
+        }
+    });
+    unwrap_exc_or(res, 0)
+}
+
 
 /// Returns the verified balance for the account, which ignores notes that have been
 /// received too recently and are not yet deemed spendable.
@@ -470,18 +636,18 @@ pub extern "C" fn zcashlc_create_to_address(
             }
         };
 
-        let memo = Memo::from_str(&memo);
+        let memo = Memo::from_str(&memo).map_err(|_| format_err!("Invalid memo"))?;
 
         let prover = LocalTxProver::new(spend_params, output_params);
         
         create_to_address(
             &db_data,
-            0x2bb4_0e60, // BLOSSOM_CONSENSUS_BRANCH_ID
+            BranchId::Blossom,
             prover,
             (account, &extsk),
             &to,
             value,
-            memo,
+            Some(memo),
         )
         .map_err(|e| format_err!("Error while sending funds: {}", e))
     });

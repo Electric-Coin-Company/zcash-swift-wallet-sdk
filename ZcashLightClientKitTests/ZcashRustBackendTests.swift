@@ -27,22 +27,15 @@ class ZcashRustBackendTests: XCTestCase {
         dataDbHandle.dispose()
     }
     
-    func testInitAndGetAddress() {
+    func testInitWithShortSeedAndFail() {
         let seed = "seed"
         
         XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         
         let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
+        XCTAssertNotNil(ZcashRustBackend.getLastError())
         
-        let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0)
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        XCTAssertEqual(addr, Optional("ztestsapling1meqz0cd598fw0jlq2htkuarg8gqv36fam83yxmu5mu3wgkx4khlttqhqaxvwf57urm3rqsq9t07"))
-        
-        // Test invalid account
-        let addr2 = ZcashRustBackend.getAddress(dbData: dbData!, account: 1)
-        XCTAssert(ZcashRustBackend.getLastError() != nil)
-        XCTAssertEqual(addr2, nil)
+
     }
     
     func testInitAndScanBlocks() {
@@ -50,7 +43,7 @@ class ZcashRustBackendTests: XCTestCase {
             XCTFail("pre populated Db not present")
             return
         }
-        let seed = "testreferencealice"
+        let seed = "testreferencealicetestreferencealice"
         XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
@@ -59,7 +52,7 @@ class ZcashRustBackendTests: XCTestCase {
         
         let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0)
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        XCTAssertEqual(addr, Optional("ztestsapling12pxv67r0kdw58q8tcn8kxhfy9n4vgaa7q8vp0dg24aueuz2mpgv2x7mw95yetcc37efc6q3hewn"))
+        XCTAssertEqual(addr, Optional("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"))
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData))
         
