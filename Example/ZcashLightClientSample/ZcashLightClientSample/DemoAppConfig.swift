@@ -14,7 +14,7 @@ struct DemoAppConfig {
     static var port = "9067"
     static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 643_500 : 620_000
     static var network = ZcashSDK.isMainnet ? ZcashNetwork.mainNet : ZcashNetwork.testNet
-    static var seed = ZcashSDK.isMainnet ? Array("testreferencealice".utf8) : Array("testreferencealice".utf8)
+    static var seed = ZcashSDK.isMainnet ? Array("testreferencealicetestreferencealice".utf8) : Array("testreferencealicetestreferencealice".utf8)
     static var address: String {
         "\(host):\(port)"
     }
