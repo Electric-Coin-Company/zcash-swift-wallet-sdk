@@ -72,12 +72,11 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
     
     func createSpend(spendingKey: String, zatoshi: Int, to address: String, memo: String?, from accountIndex: Int) throws -> Int {
-        guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL),
-            let spend = URL(string: self.spendParamsURL.path), let output = URL(string: self.outputParamsURL.path) else {
+        guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
                 
-        let txId = rustBackend.createToAddress(dbData: self.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParams: spend, outputParams: output)
+        let txId = rustBackend.createToAddress(dbData: self.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParamsPath: self.spendParamsURL.path, outputParamsPath: self.outputParamsURL.path)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
