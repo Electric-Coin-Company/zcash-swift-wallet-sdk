@@ -60,20 +60,32 @@ public protocol ZcashRustBackendWelding {
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool
     
     /**
-    * Scans new blocks added to the cache for any transactions received by the tracked
-    * accounts.
-    * This function pays attention only to cached blocks with heights greater than the
-    * highest scanned block in `db_data`. Cached blocks with lower heights are not verified
-    * against previously-scanned blocks. In particular, this function **assumes** that the
-    * caller is handling rollbacks.
-    * For brand-new light client databases, this function starts scanning from the Sapling
-    * activation height. This height can be fast-forwarded to a more recent block by calling
-    * [`zcashlc_init_blocks_table`] before this function.
-    * Scanned blocks are required to be height-sequential. If a block is missing from the
-    * cache, an error will be signalled.
+     Scans new blocks added to the cache for any transactions received by the tracked
+     accounts.
+     This function pays attention only to cached blocks with heights greater than the
+     highest scanned block in `db_data`. Cached blocks with lower heights are not verified
+     against previously-scanned blocks. In particular, this function **assumes** that the
+     caller is handling rollbacks.
+     For brand-new light client databases, this function starts scanning from the Sapling
+     activation height. This height can be fast-forwarded to a more recent block by calling
+     [`zcashlc_init_blocks_table`] before this function.
+     Scanned blocks are required to be height-sequential. If a block is missing from the
+     cache, an error will be signalled.
     */
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
-
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64
+    
+    /**
+     Creates a transaction to the given address from the given account
+     - Parameters:
+        - dbData: URL for the Data DB
+        - account: the account index that will originate the transaction
+        - extsk: extended spending key string
+        - to: recipient address
+        - value: transaction amount in Zatoshi
+        - memo: the memo string for this transaction
+        - spendParamsPath: path escaped String for the filesystem locations where the spend paremeters are located
+        - outputParamsPath: path escaped String for the filesystem locations where the output paremeters are located
+     */
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
 
 }
