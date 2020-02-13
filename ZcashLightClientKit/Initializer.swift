@@ -53,7 +53,16 @@ public class Initializer {
     private var walletBirthday: WalletBirthday?
     
     public private(set) var endpoint: LightWalletEndpoint
-    
+    /**
+     Constructs the Initializer
+     - Parameters:
+        - cacheDbURL: location of the compact blocks cache db
+        - dataDbURL: Location of the data db
+        - pendingDbURL: location of the pending transactions database
+        - endpoint: the endpoint representing the lightwalletd instance you want to point to
+        - spendParamsURL: location of the spend parameters
+        - outputParamsURL: location of the output parameters
+     */
     public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL) {
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
@@ -74,10 +83,10 @@ public class Initializer {
      'compactBlockCache.db' and 'transactionData.db' files are created by this function (if they
      do not already exist). These files can be given a prefix for scenarios where multiple wallets
      operate in one app--for instance, when sweeping funds from another wallet seed.
-     - Parameter seedProvider   the seed to use for initializing this wallet.
-     - Parameter walletBirthdayHeight the height corresponding to when the wallet seed was created. If null,
-     this signals that the wallet is being born.
-     - Parameter numberOfAccounts the number of accounts to create from this seed.
+     - Parameters:
+       - seedProvider:  the seed to use for initializing this wallet.
+       - walletBirthdayHeight: the height corresponding to when the wallet seed was created. If null, this signals that the wallet is being born.
+       - numberOfAccounts: the number of accounts to create from this seed.
      */
     
     public func initialize(seedProvider: SeedProvider, walletBirthdayHeight: BlockHeight, numberOfAccounts: Int = 1) throws -> [String]? {
@@ -90,11 +99,11 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        guard let birthday = WalletBirthday.birthday(with: walletBirthdayHeight) else {
+        self.walletBirthday = WalletBirthday.birthday(with: walletBirthdayHeight)
+        guard let birthday = self.walletBirthday else {
             throw InitializerError.falseStart
         }
         
-        self.walletBirthday = birthday
         
         do {
             try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
@@ -106,7 +115,7 @@ public class Initializer {
         
         let downloader = CompactBlockStorage(url: cacheDbURL, readonly: true)
         
-        let lastDownloaded = (try? downloader.latestHeight()) ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let lastDownloaded = (try? downloader.latestHeight()) ?? self.walletBirthday?.height ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         // resume from last downloaded block
         lowerBoundHeight = max(birthday.height, lastDownloaded)
         
@@ -117,20 +126,38 @@ public class Initializer {
         return accounts
     }
     
+    /**
+     get address from the given account index
+     - Parameter account:  the index of the account
+     */
     public func getAddress(index account: Int = 0) -> String? {
         rustBackend.getAddress(dbData: dataDbURL, account: Int32(account))
     }
-    
+    /**
+     get (unverified) balance from the given account index
+     - Parameter account: the index of the account
+     */
     public func getBalance(account index: Int = 0) -> Int64 {
         rustBackend.getBalance(dbData: dataDbURL, account: Int32(index))
     }
     
+    /**
+    get verified balance from the given account index
+    - Parameter account: the index of the account
+    */
     public func getVerifiedBalance(account index: Int = 0) -> Int64 {
         rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index))
     }
     
-    // TODO: make internal
-    public func blockProcessor() -> CompactBlockProcessor? {
+    public func isValidShieldedAddress(_ address: String) -> Bool {
+        false
+    }
+    
+    public func isValidTransparentAddress(_ address: String) -> Bool {
+        false
+    }
+    
+    func blockProcessor() -> CompactBlockProcessor? {
         var configuration = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL)
         
         configuration.walletBirthday = walletBirthday?.height ?? self.lowerBoundHeight // check if this make sense
@@ -154,16 +181,17 @@ public class Initializer {
  
  New wallets can ignore any blocks created before their birthday.
  
- - Parameter height the height at the time the wallet was born
- - Parameter hash the block hash corresponding to the given height
- - Parameter time the time the wallet was born, in seconds
- - Parameter tree the sapling tree corresponding to the given height. This takes around 15 minutes of processing to
+ - Parameters:
+    - height: the height at the time the wallet was born
+    -  hash: the block hash corresponding to the given height
+    -  time: the time the wallet was born, in seconds
+    -  tree: the sapling tree corresponding to the given height. This takes around 15 minutes of processing to
  generate from scratch because all blocks since activation need to be considered. So when it is calculated in
  advance it can save the user a lot of time.
  */
 public struct WalletBirthday {
-    var height: BlockHeight = -1
-    var hash: String = ""
-    var time: UInt32 = 0
-    var tree: String = ""
+   public private(set) var height: BlockHeight = -1
+   public private(set) var hash: String = ""
+   public private(set) var time: UInt32 = 0
+   public private(set) var tree: String = ""
 }

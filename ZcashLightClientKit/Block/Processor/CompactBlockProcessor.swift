@@ -160,9 +160,7 @@ public class CompactBlockProcessor {
             return
         }
         
-        guard let birthday = WalletBirthday.birthday(with: config.walletBirthday) else {
-            throw CompactBlockProcessorError.invalidConfiguration
-        }
+        let birthday = WalletBirthday.birthday(with: config.walletBirthday)
         
         do {
             try rustBackend.initDataDb(dbData: config.dataDb)

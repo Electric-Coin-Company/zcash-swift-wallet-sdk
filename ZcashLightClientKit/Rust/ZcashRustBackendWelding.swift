@@ -20,24 +20,68 @@ public struct ZcashRustBackendWeldingConstants {
 }
 
 public protocol ZcashRustBackendWelding {
+    /**
+     gets the latest error if available
+     */
     static func lastError() -> RustWeldingError?
-    
+    /**
+     gets the latest error message from librustzcash
+     */
     static func getLastError() -> String?
-
+/**
+     initializes the data db
+     - Parameter dbData: location of the data db sql file
+     */
     static func initDataDb(dbData: URL) throws
-
+    /**
+    initialize the blocks table from a given checkpoint (birthday)
+     - Parameters:
+       - dbData: location of the data db
+       - seed: byte array of the zip32 seed
+       - accounts: how many accounts you want to have
+ */
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]?
     
+    /**
+    initialize the blocks table from a given checkpoint (birthday)
+     - Parameters:
+       - dbData: location of the data db
+       - height: represents the block height of the given checkpoint
+       - hash: hash of the merkle tree
+       - time: in milliseconds from reference
+       - saplingTree: hash of the sapling tree
+     */
     static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws
 
     static func getAddress(dbData: URL, account: Int32) -> String?
-
+    /**
+    get the (unverified) balance from the given account
+    - Parameters:
+       - dbData: location of the data db
+       - account: index of the given account
+    */
     static func getBalance(dbData: URL, account: Int32) -> Int64
-
+    /**
+     get the verified balance from the given account
+     - Parameters:
+        - dbData: location of the data db
+        - account: index of the given account
+     */
     static func getVerifiedBalance(dbData: URL, account: Int32) -> Int64
-
+    /**
+    get received memo from note
+    - Parameters:
+       - dbData: location of the data db file
+       - idNote: note_id of note where the memo is located
+    */
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64) -> String?
-
+    
+    /**
+     get sent memo from note
+     - Parameters:
+        - dbData: location of the data db file
+        - idNote: note_id of note where the memo is located
+     */
     static func getSentMemoAsUTF8(dbData: URL, idNote: Int64) -> String?
     
     /**
@@ -56,7 +100,12 @@ public protocol ZcashRustBackendWelding {
     * This function does not mutate either of the databases.
     */
     static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32
-
+    /**
+     rewinds the compact block storage to the given height. clears up all derived data as well
+      - Parameters:
+        - dbData: location of the data db file
+        - height: height to rewind to
+     */
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool
     
     /**
@@ -71,6 +120,11 @@ public protocol ZcashRustBackendWelding {
      [`zcashlc_init_blocks_table`] before this function.
      Scanned blocks are required to be height-sequential. If a block is missing from the
      cache, an error will be signalled.
+     
+     - Parameters:
+        - dbCache: location of the compact block cache db
+        - dbData:  location of the data db file
+     returns false if fails to scan.
     */
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
     

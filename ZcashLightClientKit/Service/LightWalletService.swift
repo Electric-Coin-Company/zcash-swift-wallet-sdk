@@ -27,9 +27,9 @@ extension LightWalletServiceError: Equatable {
             default:
                 return false
             }
-        case .failed(let statusCode):
+        case .failed(let statusCode, _):
             switch rhs {
-            case .failed(let anotherStatus):
+            case .failed(let anotherStatus, _):
                 return statusCode == anotherStatus
             default:
                 return false

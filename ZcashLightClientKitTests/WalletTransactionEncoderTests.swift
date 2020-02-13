@@ -118,8 +118,8 @@ class WalletTransactionEncoderTests: XCTestCase {
                                                 to: self.recipientAddress,
                                                 value: Int64(self.zpend),
                                                 memo: nil,
-                                                spendParams:  try! __spendParamsURL(),
-                                                outputParams: try! __outputParamsURL())
+                                                spendParamsPath:  try! __spendParamsURL().path,
+                                                outputParamsPath: try! __outputParamsURL().path)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 240)
@@ -162,7 +162,15 @@ class SpendOperation: Operation {
     
     override func main() {
         
-        txId = rustBackend.createToAddress(dbData: dataDbURL, account: Int32(fromAccount), extsk: spendingKey, to: recipient, value: Int64(zatoshi), memo: memo, spendParams: spendURL, outputParams: outputURL)
+        txId = rustBackend.createToAddress(
+            dbData: dataDbURL,
+            account: Int32(fromAccount),
+            extsk: spendingKey,
+            to: recipient,
+            value: Int64(zatoshi),
+            memo: memo,
+            spendParamsPath: spendURL.path,
+            outputParamsPath: outputURL.path)
         
     }
     
@@ -201,7 +209,7 @@ class CreateToAddressThread: Thread {
     override func main() {
         self._working = true
         
-        txId = rustBackend.createToAddress(dbData: dataDbURL, account: Int32(fromAccount), extsk: spendingKey, to: recipient, value: Int64(zatoshi), memo: memo, spendParams: spendURL, outputParams: outputURL)
+        txId = rustBackend.createToAddress(dbData: dataDbURL, account: Int32(fromAccount), extsk: spendingKey, to: recipient, value: Int64(zatoshi), memo: memo, spendParamsPath: spendURL.path, outputParamsPath: outputURL.path)
         self._working = false
     }
 }
