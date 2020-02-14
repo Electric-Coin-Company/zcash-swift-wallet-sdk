@@ -169,12 +169,32 @@ We don't like reinveing the wheel, so be gently borrowed swift lint rules from A
 
 ## Troubleshooting
 
-#### No network environment....
+### No network environment....
 if you see this message when building:
 ```No network environment. Set ZCASH_NETWORK_ENVIRONMENT to MAINNET or TESTNET```
 make sure your dev environment is has this variable set before the build starts. *DO NOT CHANGE IT DURING THE BUILD PROCESS*. 
 
-#### _function_name  referenced from...
+If the variable was properly set *after* you've seen this message, you will need to either a) set it manually on the pod's target or b) doing a clean pod install and subsequent build.
+
+#### a) setting the flag manually
+1. on your workspace, select the Pods project. 
+2. on the Targets pane, select ZcashLightClientKit 
+3. go to build settings
+4. scroll down to see ZCASH_NETWORK_ENVIRONMENT and complete with TESTNET or MAINNET
+
+![how to complete network environtment manually](docs/images/complete_environment_manually.png)
+
+#### b) clean pod install
+it's not necessary to delete the whole Pods/ directory and download all of your dependencies again. 
+1. on your project root, locate the `Pods/` directory
+2. remove ZcashLightClientKit from it
+3. clean derived data from xcode
+4. close xcode
+5. run `pod install` (run --verbose to see more details)
+6. open xcode project
+7. build
+
+### _function_name  referenced from...
 if you get a build error similar to ```_function_name  referenced from...``` 
 
 * on your project root directory *
