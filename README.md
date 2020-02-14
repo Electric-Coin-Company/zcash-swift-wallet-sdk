@@ -203,6 +203,15 @@ if you get a build error similar to ```_function_name  referenced from...```
 3. run `pod install`
 4. build
 
+### ZcashLightClientKitSample missing .params
+ZcashLightClientKit has an external dependency on 2 files containing Sapling parameters. Although you can provide those files as you seem fit, the sample app requires them on the main bundle. 
+
+You can download these files from https://z.cash/downloads/sapling-spend.params
+and https://z.cash/downloads/sapling-output.params and then move them to the correct folder, which is specified on the error itself.
+
+![how to fix missing params files](docs/images/output_params_error.png)
+
+
 ## Versioning
 
 This project follows [semantic versioning](https://semver.org/) with pre-release versions. An example of a valid version number is `1.0.4-alpha11` denoting the `11th` iteration of the `alpha` pre-release of version `1.0.4`. Stable releases, such as `1.0.4` will not contain any pre-release identifiers. Pre-releases include the following, in order of stability: `alpha`, `beta`, `rc`. Version codes offer a numeric representation of the build name that always increases. The first six significant digits represent the major, minor and patch number (two digits each) and the last 3 significant digits represent the pre-release identifier. The first digit of the identifier signals the build type. Lastly, each new build has a higher version code than all previous builds. The following table breaks this down:
