@@ -19,6 +19,9 @@ public enum InitializerError: Error {
     case falseStart
 }
 
+/**
+ Represents a lightwallet instance endpoint to connect to
+ */
 public struct LightWalletEndpoint {
     public var address: String
     public var port: String
@@ -27,7 +30,13 @@ public struct LightWalletEndpoint {
     public var host: String {
         "\(address):\(port)"
     }
-    
+/**
+     initializes a LightWalletEndpoint
+     - Parameters:
+        - address: a String containing the host address
+        - port: string with the port of the host address
+        - secure: true if connecting through TLS. Default value is true
+     */
     public init(address: String, port: String, secure: Bool = true) {
         self.address = address
         self.port = port
@@ -52,6 +61,9 @@ public class Initializer {
     private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
     
+    /**
+     the LightWalletEndpoint that this initializer is connecting to
+     */
     public private(set) var endpoint: LightWalletEndpoint
     /**
      Constructs the Initializer
@@ -104,7 +116,6 @@ public class Initializer {
             throw InitializerError.falseStart
         }
         
-        
         do {
             try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
         } catch RustWeldingError.dataDbNotEmpty {
@@ -149,15 +160,26 @@ public class Initializer {
         rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index))
     }
     
+    /**
+     checks if the provided address is a valid shielded zAddress
+     */
     public func isValidShieldedAddress(_ address: String) -> Bool {
         false
     }
-    
+    /**
+     checks if the provided address is a transparent zAddress
+     */
     public func isValidTransparentAddress(_ address: String) -> Bool {
         false
     }
     
-    func blockProcessor() -> CompactBlockProcessor? {
+    /**
+     underlying CompactBlockProcessor for this initializer
+     
+     Although it is recommended to always use the higher abstraction first, if you need a more fine grained control over synchronization, you can use a CompactBlockProcessor instead of a Synchronizer.
+     
+     */
+    public func blockProcessor() -> CompactBlockProcessor? {
         var configuration = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL)
         
         configuration.walletBirthday = walletBirthday?.height ?? self.lowerBoundHeight // check if this make sense

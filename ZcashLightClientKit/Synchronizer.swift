@@ -8,6 +8,9 @@
 
 import Foundation
 
+/**
+Represents errors thrown by a Synchronizer
+ */
 public enum SynchronizerError: Error {
     case initFailed
     case syncFailed
@@ -16,15 +19,13 @@ public enum SynchronizerError: Error {
 
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
-implementations like [MockSynchronizer] and [SdkSynchronizer] fulfill. Given the language-level
-support for coroutines, we favor their use in the SDK and incorporate that choice into this
-contract.
+implementations like SdkSynchronizer fulfill.
 */
 
 public protocol Synchronizer {
     /**
     Starts this synchronizer within the given scope.
-    *
+    
     Implementations should leverage structured concurrency and
     cancel all jobs when this scope completes.
     */
@@ -37,40 +38,39 @@ public protocol Synchronizer {
     func stop() throws
     
     /**
-    Value representing the [Status] of this Synchronizer. As the status changes, a new
+    Value representing the Status of this Synchronizer. As the status changes, a new
     value will be emitted by KVO
     */
     var status: Status { get }
     
     /**
      A flow of progress values, typically corresponding to this Synchronizer downloading blocks.
-     Typically, any non- zero value below 1.0 indicates that progress indicators can be shown and
+     Typically, any non-zero value below 1.0 indicates that progress indicators can be shown and
      a value of 1.0 signals that progress is complete and any progress indicators can be hidden. KVO Compliant
      */
     var progress: Float { get }
     
     /**
     Gets the address for the given account.
-    - Parameter accountIndex the optional accountId whose address is of interest. By default, the first account is used.
+    - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     */
     func getAddress(accountIndex: Int) -> String
     
     /**
     Sends zatoshi.
-    - Parameter spendingKey the key that allows spends to occur.
-    - Parameter zatoshi the amount of zatoshi to send.
-    - Parameter toAddress the recipient's address.
-    - Parameter memo the optional memo to include as part of the transaction.
-    - Parameter accountIndex  the optional account id to use. By default, the first account is used.
+    - Parameter spendingKey: the key that allows spends to occur.
+    - Parameter zatoshi: the amount of zatoshi to send.
+    - Parameter toAddress: the recipient's address.
+    - Parameter memo: the optional memo to include as part of the transaction.
+    - Parameter accountIndex: the optional account id to use. By default, the first account is used.
     */
     func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
     
     /**
        Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
        an option if the transaction has not yet been submitted to the server.
-    
-       - Parameter transaction the transaction to cancel.
-        - Returns true when the cancellation request was successful. False when it is too late.
+    - Parameter transaction: the transaction to cancel.
+    - Returns: true when the cancellation request was successful. False when it is too late.
        */
     
     func cancelSpend(transaction: PendingTransactionEntity) -> Bool
@@ -94,11 +94,15 @@ public protocol Synchronizer {
     
     /**
         a repository serving transactions in a paginated manner
+     - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
      */
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
     
 }
 
+/**
+ The Status of the synchronizer
+ */
 public enum Status {
     
     /**
@@ -126,6 +130,9 @@ public enum Status {
     case synced
 }
 
+/**
+ Kind of transactions handled by a Synchronizer
+ */
 public enum TransactionKind {
     case sent
     case received

@@ -9,6 +9,8 @@
 import Foundation
 import SwiftGRPC
 
+/**
+ Swift GRPC implementation of Lightwalletd service */
 public class LightWalletGRPCService {
     
     var queue = DispatchQueue.init(label: "LightWalletGRPCService")

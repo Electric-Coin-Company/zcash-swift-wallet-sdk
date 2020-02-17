@@ -85,19 +85,18 @@ public protocol ZcashRustBackendWelding {
     static func getSentMemoAsUTF8(dbData: URL, idNote: Int64) -> String?
     
     /**
-    * Checks that the scanned blocks in the data database, when combined with the recent
-    * `CompactBlock`s in the cache database, form a valid chain.
-    * This function is built on the core assumption that the information provided in the
-    * cache database is more likely to be accurate than the previously-scanned information.
-    * This follows from the design (and trust) assumption that the `lightwalletd` server
-    * provides accurate block information as of the time it was requested.
-    * Returns:
-    * - `-1` if the combined chain is valid.
-    * - `upper_bound` if the combined chain is invalid.
-    * `upper_bound` is the height of the highest invalid block (on the assumption that the
-    * highest block in the cache database is correct).
-    * - `0` if there was an error during validation unrelated to chain validity.
-    * This function does not mutate either of the databases.
+     Checks that the scanned blocks in the data database, when combined with the recent
+     `CompactBlock`s in the cache database, form a valid chain.
+     This function is built on the core assumption that the information provided in the
+     cache database is more likely to be accurate than the previously-scanned information.
+     This follows from the design (and trust) assumption that the `lightwalletd` server
+     provides accurate block information as of the time it was requested.
+- Returns:
+     * `-1` if the combined chain is valid.
+     * `upper_bound` if the combined chain is invalid.
+     * `upper_bound` is the height of the highest invalid block (on the assumption that the highest block in the cache database is correct).
+     * `0` if there was an error during validation unrelated to chain validity.
+     - Important: This function does not mutate either of the databases.
     */
     static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32
     /**

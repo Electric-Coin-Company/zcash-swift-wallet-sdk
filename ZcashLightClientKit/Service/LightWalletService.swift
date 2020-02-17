@@ -9,6 +9,10 @@
 import Foundation
 import SwiftGRPC
 import SwiftProtobuf
+
+/**
+ Wrapper for errors received from  a Lightwalletd endpoint
+ */
 public enum LightWalletServiceError: Error {
     case generalError
     case failed(statusCode: StatusCode, message: String)
@@ -92,7 +96,8 @@ public protocol LightWalletService {
              Return the given range of blocks.
          
              - Parameter range: the inclusive range to fetch.
-             For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
+            
+     For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
             blocking
      
        */
@@ -100,11 +105,16 @@ public protocol LightWalletService {
     
     /**
      Submits a raw transaction over lightwalletd. Non-Blocking
+     - Parameter spendTransaction: data representing the transaction to be sent
+     - Parameter result: escaping closure that takes a result containing either LightWalletServiceResponse or LightWalletServiceError
      */
     func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void)
     
     /**
     Submits a raw transaction over lightwalletd. Blocking
+     - Parameter spendTransaction: data representing the transaction to be sent
+     - Throws: LightWalletServiceError
+     - Returns: LightWalletServiceResponse
     */
     
     func submit(spendTransaction: Data) throws -> LightWalletServiceResponse

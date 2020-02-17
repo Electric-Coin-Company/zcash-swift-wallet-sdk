@@ -10,14 +10,52 @@ import Foundation
 import UIKit
 
 public extension Notification.Name {
-    static let transactionsUpdated = Notification.Name("SDKSyncronizerTransactionUpdates")
+    /**
+     Notification is posted whenever transactions are updated
+     
+     - Important: not yet posted
+     */
+    
+    static let transactionsUpdated = Notification.Name("SDKSyncronizerTransactionUpdated")
+    
+    /**
+     Posted when the synchronizer is started.
+     */
     static let synchronizerStarted = Notification.Name("SDKSyncronizerStarted")
+    
+    /**
+     Posted when there are progress updates.
+     
+     - Note: Query userInfo object for NotificationKeys.progress  for Float progress percentage and NotificationKeys.blockHeight  for the current progress height
+     */
     static let synchronizerProgressUpdated = Notification.Name("SDKSyncronizerProgressUpdated")
+    
+    /**
+     Posted when the synchronizer is synced to latest height
+     */
     static let synchronizerSynced = Notification.Name("SDKSyncronizerSynced")
+    
+    /**
+    Posted when the synchronizer is stopped
+    */
     static let synchronizerStopped = Notification.Name("SDKSyncronizerStopped")
+    /**
+    Posted when the synchronizer loses connection
+    */
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
+    /**
+      Posted when the synchronizer starts syncing
+      */
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
+    /**
+      Posted when the synchronizer finds a mined transaction
+     - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
+      */
     static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
+    /**
+      Posted when the synchronizer presents an error
+     - Note: query userInfo on NotificationKeys.error for an error
+      */
     static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
 }
 
@@ -56,6 +94,10 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
+    /**
+     Creates an SDKSynchronizer instance
+     - Parameter initializer: a wallet Initializer object
+     */
     public init(initializer: Initializer) throws {
         self.status = .disconnected
         self.initializer = initializer
@@ -69,7 +111,10 @@ public class SDKSynchronizer: Synchronizer {
         self.blockProcessor = nil
         self.taskIdentifier = .invalid
     }
-    
+    /**
+     Starts the synchronizer
+     - Throws: CompactBlockProcessorError when failures occur
+     */
     public func start() throws {
         
         guard let processor = initializer.blockProcessor() else {
@@ -88,6 +133,10 @@ public class SDKSynchronizer: Synchronizer {
         
     }
     
+    /**
+    Stops the synchronizer
+    - Throws: CompactBlockProcessorError when failures occur
+    */
     public func stop() throws {
         
         guard status != .stopped, status != .disconnected else { return }
@@ -96,6 +145,7 @@ public class SDKSynchronizer: Synchronizer {
         
         processor.stop(cancelTasks: true)
     }
+    
     // MARK: event subscription
     private func subscribeToAppDelegateNotifications() {
         // todo: ios 13 platform specific
