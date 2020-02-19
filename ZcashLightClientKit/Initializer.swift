@@ -164,13 +164,13 @@ public class Initializer {
      checks if the provided address is a valid shielded zAddress
      */
     public func isValidShieldedAddress(_ address: String) -> Bool {
-        false
+        (try? rustBackend.isValidShieldedAddress(address)) ?? false
     }
     /**
      checks if the provided address is a transparent zAddress
      */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        false
+        (try? rustBackend.isValidTransparentAddress(address)) ?? false
     }
     
     /**
