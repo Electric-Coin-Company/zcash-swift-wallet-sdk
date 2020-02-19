@@ -35,7 +35,7 @@ class ZcashRustBackendTests: XCTestCase {
         let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)
         XCTAssertNotNil(ZcashRustBackend.getLastError())
         
-
+        
     }
     
     func testInitAndScanBlocks() {
@@ -64,4 +64,55 @@ class ZcashRustBackendTests: XCTestCase {
         XCTAssert(tx > 0)
         XCTAssertNil(ZcashRustBackend.lastError())
     }
+    
+    func testIsValidTransparentAddressFalse() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc") }())
+        
+        if let valid = isValid {
+            XCTAssertFalse(valid)
+        } else {
+            XCTFail()
+        }
+        
+        
+    }
+    
+    func testIsValidTransparentAddressTrue() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7") }())
+        
+        if let valid = isValid {
+            XCTAssertTrue(valid)
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func testIsValidShieldedAddressTrue() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc") }())
+        
+        if let valid = isValid {
+            XCTAssertTrue(valid)
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func testIsValidShieldedAddressFalse() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7") }())
+        
+        if let valid = isValid {
+            XCTAssertFalse(valid)
+        } else {
+            XCTFail()
+        }
+    }
+    
 }

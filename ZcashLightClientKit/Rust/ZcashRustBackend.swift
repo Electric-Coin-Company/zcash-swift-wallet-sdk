@@ -44,6 +44,27 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
+    
+    static func isValidShieldedAddress(_ address: String) throws -> Bool {
+        guard zcashlc_isValidShieldedAddress([CChar](address.utf8CString)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+        return true
+    }
+    
+    static func isValidTransparentAddress(_ address: String) throws -> Bool {
+        guard zcashlc_isValidTransparentAddress([CChar](address.utf8CString)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+        return true
+    }
+    
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]? {
         let dbData = dbData.osStr()
         let extsksCStr = zcashlc_init_accounts_table(dbData.0, dbData.1, seed, UInt(seed.count), accounts)

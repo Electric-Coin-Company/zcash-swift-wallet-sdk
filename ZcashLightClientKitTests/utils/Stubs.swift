@@ -105,6 +105,14 @@ class MockRustBackend: ZcashRustBackendWelding {
         mockLastError ?? rustBackend.getLastError()
     }
     
+    static func isValidShieldedAddress(_ address: String) throws -> Bool {
+        true
+    }
+    
+    static func isValidTransparentAddress(_ address: String) throws -> Bool {
+        true
+    }
+    
     static func initDataDb(dbData: URL) throws {
         if !mockDataDb {
             try rustBackend.initDataDb(dbData: dbData)

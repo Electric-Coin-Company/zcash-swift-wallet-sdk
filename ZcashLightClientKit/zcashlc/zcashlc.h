@@ -110,17 +110,17 @@ int32_t zcashlc_init_blocks_table(const uint8_t *db_data,
 int32_t zcashlc_init_data_database(const uint8_t *db_data, uintptr_t db_data_len);
 
 /**
- * Returns 1 when the address is valid and shielded.
- * Returns 0 in any other case
+ * Returns true when the address is valid and shielded.
+ * Returns false in any other case
  * Errors when the provided address belongs to another network
  */
-uint8_t zcashlc_isValidShieldedAddress(const char *address);
+bool zcashlc_isValidShieldedAddress(const char *address);
 
 /**
- * Returns 1 when the address is valid and transparent.
- * Returns 0 in any other case
+ * Returns true when the address is valid and transparent.
+ * Returns false in any other case
  */
-uint8_t zcashlc_isValidTransparentAddress(const char *address);
+bool zcashlc_isValidTransparentAddress(const char *address);
 
 /**
  * Returns the length of the last error message to be logged.

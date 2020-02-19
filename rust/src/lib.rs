@@ -342,46 +342,46 @@ pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, ac
     unwrap_exc_or(res, -1)
 }
 
-/// Returns 1 when the address is valid and shielded. 
-/// Returns 0 in any other case
+/// Returns true when the address is valid and shielded. 
+/// Returns false in any other case
 /// Errors when the provided address belongs to another network
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_isValidShieldedAddress(
     address: *const c_char,
-) -> u8 {
+) -> bool {
     let res = catch_panic(|| {
         let addr = CStr::from_ptr(address).to_str()?;
 
         match RecipientAddress::from_str(&addr) {
             Some(addr) => match addr {
-                RecipientAddress::Shielded(_) => Ok(1),
-                RecipientAddress::Transparent(_) => Ok(0),
+                RecipientAddress::Shielded(_) => Ok(true),
+                RecipientAddress::Transparent(_) => Ok(false),
             },
             None => Err(format_err!("Address is for the wrong network")),
         }
     });
-    unwrap_exc_or(res, 0)
+    unwrap_exc_or(res, false)
 }
 
 
-/// Returns 1 when the address is valid and transparent. 
-/// Returns 0 in any other case
+/// Returns true when the address is valid and transparent. 
+/// Returns false in any other case
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_isValidTransparentAddress(
     address: *const c_char,
-) -> u8 {
+) -> bool {
     let res = catch_panic(|| {
         let addr = CStr::from_ptr(address).to_str()?;
 
         match RecipientAddress::from_str(&addr) {
             Some(addr) => match addr {
-                RecipientAddress::Shielded(_) => Ok(0),
-                RecipientAddress::Transparent(_) => Ok(1),
+                RecipientAddress::Shielded(_) => Ok(false),
+                RecipientAddress::Transparent(_) => Ok(true),
             },
             None => Err(format_err!("Address is for the wrong network")),
         }
     });
-    unwrap_exc_or(res, 0)
+    unwrap_exc_or(res, false)
 }
 
 

@@ -33,6 +33,19 @@ public protocol ZcashRustBackendWelding {
      - Parameter dbData: location of the data db sql file
      */
     static func initDataDb(dbData: URL) throws
+    
+    /**
+    - Returns: true when the address is valid and shielded. Returns false in any other case
+    - Throws: Error when the provided address belongs to another network
+    */
+    static func isValidShieldedAddress(_ address: String) throws -> Bool
+    
+    /**
+     - Returns: true when the address is valid and transparent. false in any other case
+     - Throws: Error when the provided address belongs to another network
+    */
+    static func isValidTransparentAddress(_ address: String) throws -> Bool
+    
     /**
     initialize the blocks table from a given checkpoint (birthday)
      - Parameters:
