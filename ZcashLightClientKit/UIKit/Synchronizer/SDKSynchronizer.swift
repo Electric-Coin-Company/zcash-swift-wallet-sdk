@@ -498,4 +498,3 @@ extension SDKSynchronizer {
         (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
     }
 }
-

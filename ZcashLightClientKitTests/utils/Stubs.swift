@@ -207,4 +207,16 @@ class MockRustBackend: ZcashRustBackendWelding {
         return random <= successRate
     }
     
+    static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
+        nil
+    }
+    
+    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]? {
+        nil
+    }
+    
+    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
+        nil
+    }
+    
 }

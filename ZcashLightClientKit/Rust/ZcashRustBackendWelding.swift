@@ -153,5 +153,30 @@ public protocol ZcashRustBackendWelding {
         - outputParamsPath: path escaped String for the filesystem locations where the output paremeters are located
      */
     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
-
+    
+    /**
+     Derives a full viewing key from a seed
+     - Parameter spendingKey: a string containing the spending key
+     - Returns: the derived key
+     - Throws: RustBackendError if fatal error occurs
+     */
+    static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String?
+    
+    /**
+    Derives a set of full viewing keys from a seed
+    - Parameter spendingKey: a string containing the spending key
+    - Parameter accounts: the number of accounts you want to derive from this seed
+    - Returns: an array containing the derived keys
+    - Throws: RustBackendError if fatal error occurs
+    */
+    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]?
+    
+    /**
+    Derives a set of full viewing keys from a seed
+    - Parameter seed: a string containing the seed
+    - Parameter accounts: the number of accounts you want to derive from this seed
+    - Returns: an array containing the spending keys
+    - Throws: RustBackendError if fatal error occurs
+    */
+    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]?
 }

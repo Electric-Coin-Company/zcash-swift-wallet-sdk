@@ -51,7 +51,6 @@ public protocol CompactBlockDownloading {
     */
     func downloadBlockRange(_ range: CompactBlockRange) throws
     
-    
     /**
      Restore the download progress up to the given height. 
      */

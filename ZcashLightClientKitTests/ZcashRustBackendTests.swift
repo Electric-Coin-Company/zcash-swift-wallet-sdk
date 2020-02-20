@@ -28,7 +28,7 @@ class ZcashRustBackendTests: XCTestCase {
     }
     
     func testInitWithShortSeedAndFail() {
-        let seed = "seed"
+        let seed = "testreferencealicetestreferencealice"
         
         XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         
@@ -36,6 +36,49 @@ class ZcashRustBackendTests: XCTestCase {
         XCTAssertNotNil(ZcashRustBackend.getLastError())
         
         
+    }
+    
+    func testDeriveExtendedSpendingKeys() {
+        let seed = "testreferencealicetestreferencealice"
+        
+        var spendingKeys: [String]? = nil
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1) }())
+        
+        XCTAssertNotNil(spendingKeys)
+        XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
+        
+    }
+    
+    func testDeriveExtendedFullViewingKeys() {
+        let seed = "testreferencealicetestreferencealice"
+        
+        var fullViewingKeys: [String]? = nil
+        XCTAssertNoThrow(try { fullViewingKeys = try ZcashRustBackend.deriveExtendedFullViewingKeys(seed: seed, accounts: 1) }())
+        
+        XCTAssertNotNil(fullViewingKeys)
+        XCTAssertFalse(fullViewingKeys?.first?.isEmpty ?? true)
+    }
+    
+    func testDeriveExtendedFullViewingKey() {
+        let seed = "testreferencealicetestreferencealice"
+        var fullViewingKey: String? = nil
+        
+        
+        var spendingKeys: [String]? = nil
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1) }())
+        
+        XCTAssertNotNil(spendingKeys)
+        XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
+        
+        guard let spendingKey = spendingKeys?.first else {
+            XCTFail("no spending key generated")
+            return
+        }
+        
+        XCTAssertNoThrow(try { fullViewingKey = try ZcashRustBackend.deriveExtendedFullViewingKey(spendingKey) }())
+        
+        XCTAssertNotNil(fullViewingKey)
+        XCTAssertFalse(fullViewingKey?.isEmpty ?? true)
     }
     
     func testInitAndScanBlocks() {

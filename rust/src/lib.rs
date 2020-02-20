@@ -187,7 +187,7 @@ pub extern "C" fn zcashlc_init_blocks_table(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn zcashlc_deriveExtendedSpendingKeys(
+pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
     seed: *const u8,
     seed_len: usize,
     accounts: i32,
@@ -223,7 +223,7 @@ pub unsafe extern "C" fn zcashlc_deriveExtendedSpendingKeys(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn zcashlc_deriveExtendedFullViewingKeys(
+pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
     seed: *const u8,
     seed_len: usize,
     accounts: i32,
@@ -259,7 +259,7 @@ pub unsafe extern "C" fn zcashlc_deriveExtendedFullViewingKeys(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn zcashlc_deriveExtendedFullViewingKey(
+pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
     extsk: *const c_char,
 ) -> *mut c_char {
     let res = catch_panic(|| {
@@ -346,7 +346,7 @@ pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, ac
 /// Returns false in any other case
 /// Errors when the provided address belongs to another network
 #[no_mangle]
-pub unsafe extern "C" fn zcashlc_isValidShieldedAddress(
+pub unsafe extern "C" fn zcashlc_is_valid_shielded_address(
     address: *const c_char,
 ) -> bool {
     let res = catch_panic(|| {
@@ -367,7 +367,7 @@ pub unsafe extern "C" fn zcashlc_isValidShieldedAddress(
 /// Returns true when the address is valid and transparent. 
 /// Returns false in any other case
 #[no_mangle]
-pub unsafe extern "C" fn zcashlc_isValidTransparentAddress(
+pub unsafe extern "C" fn zcashlc_is_valid_transparent_address(
     address: *const c_char,
 ) -> bool {
     let res = catch_panic(|| {
