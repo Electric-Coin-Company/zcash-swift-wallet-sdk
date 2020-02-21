@@ -435,13 +435,16 @@ public class CompactBlockProcessor {
     private func processingFinished(height: BlockHeight) {
         self.state = .synced
         NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self, userInfo: [CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height])
-        self.backoffTimer = Timer(timeInterval: self.config.blockPollInterval, repeats: true, block: { _ in
+        let interval = self.config.blockPollInterval
+        let timer = Timer(timeInterval: interval, repeats: true, block: { _ in
             do {
                 try self.start()
             } catch {
                 self.fail(error)
             }
         })
+        RunLoop.main.add(timer, forMode: .default)
+        self.backoffTimer = timer
     }
     
     func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
