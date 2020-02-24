@@ -69,7 +69,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             result(.failure(TransactionManagerError.notPending(tx: pendingTransaction)))// this transaction is not stored
             return
         }
-        // FIX: change to async when librustzcash is updated to v6
+        
         queue.async { [weak self] in
             guard let self = self else { return }
             

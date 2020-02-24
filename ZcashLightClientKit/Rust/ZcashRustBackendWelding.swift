@@ -66,6 +66,13 @@ public protocol ZcashRustBackendWelding {
      */
     static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws
 
+    /**
+     gets the address from data db from the given account
+     - Parameters:
+       - dbData: location of the data db
+       - account: index of the given account
+     - Returns: an optional string with the address if found
+     */
     static func getAddress(dbData: URL, account: Int32) -> String?
     /**
     get the (unverified) balance from the given account

@@ -135,7 +135,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try storage.write(blocks: blocks)
     }
     
-    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void){
+    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void) {
         
         storage.rewind(to: height) { (e) in
             completion(e)

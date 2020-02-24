@@ -113,7 +113,10 @@ extension LightWalletGRPCService: LightWalletService {
     // TODO: Make cancellable
     public func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         
-        queue.async {
+        queue.async { [weak self] in
+            
+            guard let self = self else { return }
+            
             var blocks = [CompactBlock]()
             var isSyncing = true
             guard let response = try? self.compactTxStreamer.getBlockRange(range.blockRange(),completion: { (callResult) in

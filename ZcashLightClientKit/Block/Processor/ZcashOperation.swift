@@ -61,8 +61,8 @@ class ZcashOperation: Operation {
             return
         }
         
-        self.handlerDispatchQueue.async {
-            errorHandler(self.error ?? ZcashOperationError.unknown)
+        self.handlerDispatchQueue.async { [weak self] in
+            errorHandler(self?.error ?? ZcashOperationError.unknown)
         }
         
     }

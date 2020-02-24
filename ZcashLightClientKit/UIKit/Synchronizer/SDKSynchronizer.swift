@@ -273,31 +273,50 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorStartedDownloading(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .syncing }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .syncing
+        }
     }
     
     @objc func processorStartedValidating(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .syncing }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .syncing
+        }
     }
     
     @objc func processorStartedScanning(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .syncing }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .syncing
+        }
     }
     
     @objc func processorStopped(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .stopped }
+        DispatchQueue.main.async { [weak self] in
+        guard let self = self else { return }
+            self.status = .stopped
+        }
     }
     
     @objc func processorFailed(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .disconnected }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .disconnected
+        }
     }
     
     @objc func processorIdle(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .disconnected }
+        DispatchQueue.main.async { [weak self] in
+        guard let self = self else { return }
+            self.status = .disconnected
+        }
     }
     
     @objc func processorFinished(_ notification: Notification) {
-        DispatchQueue.global().async {
+        DispatchQueue.global().async {[ weak self ] in
+            guard let self = self else { return }
             self.refreshPendingTransactions()
             DispatchQueue.main.async {
                 self.status = .synced
@@ -469,12 +488,18 @@ public class SDKSynchronizer: Synchronizer {
     
     private func notifyMinedTransaction(_ tx: PendingTransactionEntity) {
         DispatchQueue.main.async {
+            [weak self] in
+            guard let self = self else { return }
+            
             NotificationCenter.default.post(name: Notification.Name.synchronizerMinedTransaction, object: self, userInfo: [NotificationKeys.minedTransaction : tx])
         }
     }
     
     private func notifyFailure(_ error: Error) {
         DispatchQueue.main.async {
+            [weak self] in
+        guard let self = self else { return }
+            
             NotificationCenter.default.post(name: Notification.Name.synchronizerFailed, object: self, userInfo: [NotificationKeys.error : error])
         }
     }
