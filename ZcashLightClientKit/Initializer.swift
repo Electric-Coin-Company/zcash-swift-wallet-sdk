@@ -60,7 +60,8 @@ public class Initializer {
     private(set) var spendParamsURL: URL
     private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
-    
+    private(set) var lightWalletService: LightWalletService
+    private(set) var transactionRepository: TransactionRepository
     /**
      the LightWalletEndpoint that this initializer is connecting to
      */
@@ -82,6 +83,8 @@ public class Initializer {
         self.pendingDbURL = pendingDbURL
         self.spendParamsURL = spendParamsURL
         self.outputParamsURL = outputParamsURL
+        self.lightWalletService = LightWalletGRPCService(endpoint: endpoint)
+        self.transactionRepository = TransactionRepositoryBuilder.build(dataDbURL: dataDbURL)
     }
     
     /**
@@ -183,7 +186,7 @@ public class Initializer {
         var configuration = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL)
         
         configuration.walletBirthday = walletBirthday?.height ?? self.lowerBoundHeight // check if this make sense
-           guard let downloader = CompactBlockDownloader.sqlDownloader(service: LightWalletGRPCService(endpoint: endpoint), at: self.cacheDbURL) else {
+           guard let downloader = CompactBlockDownloader.sqlDownloader(service: lightWalletService, at: self.cacheDbURL) else {
                return nil
            }
            
