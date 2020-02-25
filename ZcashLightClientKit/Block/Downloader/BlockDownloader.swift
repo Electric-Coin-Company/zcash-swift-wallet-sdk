@@ -80,7 +80,7 @@ public protocol CompactBlockDownloading {
 class CompactBlockDownloader {
     
     fileprivate var lightwalletService: LightWalletService
-    fileprivate var storage: CompactBlockRepository
+    private(set) var storage: CompactBlockRepository
     
     init(service: LightWalletService, storage: CompactBlockRepository) {
         self.lightwalletService = service

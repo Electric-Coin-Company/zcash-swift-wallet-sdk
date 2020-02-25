@@ -62,6 +62,8 @@ public class Initializer {
     private var walletBirthday: WalletBirthday?
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
+    private(set) var downloader: CompactBlockDownloader
+    private(set) var processor: CompactBlockProcessor?
     /**
      the LightWalletEndpoint that this initializer is connecting to
      */
@@ -85,6 +87,11 @@ public class Initializer {
         self.outputParamsURL = outputParamsURL
         self.lightWalletService = LightWalletGRPCService(endpoint: endpoint)
         self.transactionRepository = TransactionRepositoryBuilder.build(dataDbURL: dataDbURL)
+        
+        let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
+        try? storage.createTable()
+        self.downloader = CompactBlockDownloader(service: lightWalletService, storage: storage)
+        
     }
     
     /**
@@ -127,11 +134,11 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        let downloader = CompactBlockStorage(url: cacheDbURL, readonly: true)
-        
-        let lastDownloaded = (try? downloader.latestHeight()) ?? self.walletBirthday?.height ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? self.walletBirthday?.height ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         // resume from last downloaded block
         lowerBoundHeight = max(birthday.height, lastDownloaded)
+        
+        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL, walletBirthday: walletBirthday?.height ?? self.lowerBoundHeight), downloader: self.downloader, backend: rustBackend)
         
         guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
@@ -183,15 +190,14 @@ public class Initializer {
      
      */
     public func blockProcessor() -> CompactBlockProcessor? {
-        var configuration = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL)
-        
-        configuration.walletBirthday = walletBirthday?.height ?? self.lowerBoundHeight // check if this make sense
-           guard let downloader = CompactBlockDownloader.sqlDownloader(service: lightWalletService, at: self.cacheDbURL) else {
-               return nil
-           }
-           
-           return CompactBlockProcessor(downloader: downloader, backend: self.rustBackend, config: configuration)
-       }
+        self.processor
+    }
+}
+
+class CompactBlockProcessorBuilder {
+    static func buildProcessor(configuration: CompactBlockProcessor.Configuration, downloader: CompactBlockDownloader, backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
+           return CompactBlockProcessor(downloader: downloader, backend: backend, config: configuration)
+    }
 }
 
 /**

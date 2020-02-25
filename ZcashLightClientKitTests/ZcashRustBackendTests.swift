@@ -28,14 +28,13 @@ class ZcashRustBackendTests: XCTestCase {
     }
     
     func testInitWithShortSeedAndFail() {
-        let seed = "testreferencealicetestreferencealice"
+        let seed = "testreferencealice"
         
         XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         
         let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)
         XCTAssertNotNil(ZcashRustBackend.getLastError())
-        
-        
+ 
     }
     
     func testDeriveExtendedSpendingKeys() {

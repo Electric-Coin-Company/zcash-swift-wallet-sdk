@@ -43,7 +43,7 @@ class LightWalletServiceTests: XCTestCase {
         let count = 99
         let lowerRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         let upperRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + count
-        let blockRange = Range<BlockHeight>(uncheckedBounds: (lower: lowerRange, upper: upperRange))
+        let blockRange = lowerRange ... upperRange
         
         service.blockRange(blockRange) { (result) in
             expect.fulfill()
@@ -52,8 +52,9 @@ class LightWalletServiceTests: XCTestCase {
                 XCTFail("failed with error \(error)")
                 
             case .success(let blocks):
-                XCTAssertEqual(blocks.count, count)
+                XCTAssertEqual(blocks.count, blockRange.count)
                 XCTAssertEqual(blocks[0].height, lowerRange)
+                XCTAssertEqual(blocks.last!.height, upperRange)
             }
         }
         
@@ -63,11 +64,11 @@ class LightWalletServiceTests: XCTestCase {
     func testSyncBlockRange() {
         let lowerRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         let upperRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 99
-        let blockRange = CompactBlockRange(uncheckedBounds: (lower: lowerRange, upper: upperRange))
+        let blockRange = lowerRange ... upperRange
         
         do {
             let blocks = try service.blockRange(blockRange)
-            XCTAssertEqual(blocks.count, blockRange.count + 1)
+            XCTAssertEqual(blocks.count, blockRange.count)
         } catch {
             XCTFail("\(error)")
         }

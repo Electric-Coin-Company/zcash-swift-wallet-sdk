@@ -34,7 +34,7 @@ class MockLightWalletService: LightWalletService {
         return self.latestHeight
     }
     
-    func blockRange(_ range: Range<BlockHeight>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
+    func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         self.service.blockRange(range, result: result)
     }
     

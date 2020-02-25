@@ -90,7 +90,7 @@ public protocol LightWalletService {
           For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
         Non blocking
     */
-    func blockRange(_ range: Range<BlockHeight>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void )
+    func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void )
     
     /**
              Return the given range of blocks.

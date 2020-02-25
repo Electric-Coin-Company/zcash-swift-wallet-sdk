@@ -283,15 +283,19 @@ public class CompactBlockProcessor {
         if self.latestBlockHeight > latestDownloadedBlockHeight {
             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
         } else {
-            self.downloader.latestBlockHeight { (result) in
+            self.downloader.latestBlockHeight { [weak self] (result) in
+                guard let self = self else { return }
                 switch result {
                 case .success(let blockHeight):
-                    self.latestBlockHeight = blockHeight
-                    
-                    if self.latestBlockHeight == latestDownloadedBlockHeight  {
-                        self.processingFinished(height: blockHeight)
-                    } else {
-                        self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self = self else { return }
+                        self.latestBlockHeight = blockHeight
+                        
+                        if self.latestBlockHeight == latestDownloadedBlockHeight  {
+                            self.processingFinished(height: blockHeight)
+                        } else {
+                            self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                        }
                     }
                 case .failure(let e):
                     DispatchQueue.main.async { [weak self] in
@@ -310,13 +314,17 @@ public class CompactBlockProcessor {
         let downloadBlockOperation = CompactBlockDownloadOperation(downloader: self.downloader, range: range)
         
         downloadBlockOperation.startedHandler = { [weak self] in
-            self?.state = .downloading
+         
+                self?.state = .downloading
+            
         }
         
         downloadBlockOperation.errorHandler = { [weak self] (error) in
             guard let self = self else { return }
-            self.processingError = error
-            self.fail(error)
+          
+                self.processingError = error
+                self.fail(error)
+           
         }
         
         let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
@@ -332,20 +340,24 @@ public class CompactBlockProcessor {
         
         validateChainOperation.errorHandler = { [weak self] (error) in
             guard let self = self else { return }
-            guard let validationError = error as? CompactBlockValidationError else {
-                print("Warning: validateChain operation returning generic error: \(error)")
-                return
-            }
+           
+                guard let validationError = error as? CompactBlockValidationError else {
+                    print("Warning: validateChain operation returning generic error: \(error)")
+                    return
+                }
+                
+                switch validationError {
+                case .validationFailed(let height):
+                    print("chain validation at height: \(height)")
+                    self.validationFailed(at: height)
+                }
             
-            switch validationError {
-            case .validationFailed(let height):
-                print("chain validation at height: \(height)")
-                self.validationFailed(at: height)
-            }
         }
         
         validateChainOperation.startedHandler = { [weak self] in
-            self?.state = .validating
+            
+                self?.state = .validating
+            
         }
         
         validateChainOperation.addDependency(downloadBlockOperation)
@@ -353,22 +365,24 @@ public class CompactBlockProcessor {
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
         scanBlocksOperation.startedHandler = { [weak self] in
-            self?.state = .scanning
+                self?.state = .scanning
         }
+        
         
         scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
                 print("Warning: operation cancelled")
                 return
             }
-         
-            self?.processBatchFinished(range: range)
+                self?.processBatchFinished(range: range)
         }
         
         scanBlocksOperation.errorHandler = { [weak self] (error) in
             guard let self = self else { return }
-            self.processingError = error
-            self.fail(error)
+
+                self.processingError = error
+                self.fail(error)
+            
         }
         
         scanBlocksOperation.addDependency(downloadBlockOperation)
@@ -476,7 +490,9 @@ public class CompactBlockProcessor {
     func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
         
         let lowerBound = latestDownloadedHeight <= config.walletBirthday ? config.walletBirthday : latestDownloadedHeight + 1
-        return CompactBlockRange(uncheckedBounds: (lowerBound, min(lowerBound + BlockHeight(config.downloadBatchSize - 1), latestHeight)))
+        
+        let upperBound = BlockHeight(min(lowerBound + BlockHeight(config.downloadBatchSize - 1), latestHeight))
+        return lowerBound ... upperBound
     }
     
     func retryProcessing(range: CompactBlockRange) {
@@ -496,6 +512,7 @@ public class CompactBlockProcessor {
         // todo specify: failure
         print(error)
         queue.cancelAllOperations()
+        self.retryAttempts = self.retryAttempts + 1
         self.processingError = error
         self.state = .error(error)
         

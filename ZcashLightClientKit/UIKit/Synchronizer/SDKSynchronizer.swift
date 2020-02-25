@@ -102,7 +102,7 @@ public class SDKSynchronizer: Synchronizer {
         self.status = .disconnected
         self.initializer = initializer
         self.transactionManager = try OutboundTransactionManagerBuilder.build(initializer: initializer)
-        self.transactionRepository = TransactionRepositoryBuilder.build(initializer: initializer)
+        self.transactionRepository = initializer.transactionRepository
     }
     
     deinit {
@@ -427,7 +427,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func allSentTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+        try transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
     }
     
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
@@ -474,7 +474,7 @@ public class SDKSynchronizer: Synchronizer {
     private func removeConfirmedTransactions() throws {
         let latestHeight = try transactionRepository.lastScannedHeight()
         
-        try transactionManager.allPendingTransactions()?.filter( { abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
+        try transactionManager.allPendingTransactions()?.filter( { $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
     }
     
     private func refreshPendingTransactions() {

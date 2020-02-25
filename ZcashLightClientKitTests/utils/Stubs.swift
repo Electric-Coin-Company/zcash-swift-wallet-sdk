@@ -27,7 +27,7 @@ class AwfulLightWalletService: MockLightWalletService {
         
     }
     
-    override func blockRange(_ range: Range<BlockHeight>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
+    override func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             result(.failure(LightWalletServiceError.generalError))
         }
