@@ -404,7 +404,8 @@ public class CompactBlockProcessor {
         print("\(self) progress: \(progress)")
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
                                         object: self,
-                                        userInfo: [ CompactBlockProcessorNotificationKey.progress : progress ])
+                                        userInfo: [ CompactBlockProcessorNotificationKey.progress : progress,
+                                                    CompactBlockProcessorNotificationKey.progressHeight : self.latestBlockHeight])
     }
     
     private func validationFailed(at height: BlockHeight) {
