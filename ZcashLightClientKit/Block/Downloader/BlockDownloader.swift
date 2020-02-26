@@ -12,7 +12,9 @@ enum CompactBlockDownloadError: Error {
     case timeout
     case generalError(error: Error)
 }
-
+/**
+ Represents what a compact block downloaded should provide to its clients
+ */
 public protocol CompactBlockDownloading {
     /**
     Downloads and stores the given block range.
@@ -21,6 +23,13 @@ public protocol CompactBlockDownloading {
     func downloadBlockRange(_ heightRange: CompactBlockRange,
                             completion: @escaping (Error?) -> Void)
     
+    /**
+     Remove newer blocks and go back to the given height
+     - Parameters:
+       - height: the given height to rewind to
+       - completion: block to be executed after completing rewind
+    
+     */
     func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void)
     
     /**
@@ -42,6 +51,9 @@ public protocol CompactBlockDownloading {
     */
     func downloadBlockRange(_ range: CompactBlockRange) throws
     
+    /**
+     Restore the download progress up to the given height. 
+     */
     func rewind(to height: BlockHeight) throws
     /**
         returns the height of the latest compact block stored locally.
@@ -68,7 +80,7 @@ public protocol CompactBlockDownloading {
 class CompactBlockDownloader {
     
     fileprivate var lightwalletService: LightWalletService
-    fileprivate var storage: CompactBlockRepository
+    private(set) var storage: CompactBlockRepository
     
     init(service: LightWalletService, storage: CompactBlockRepository) {
         self.lightwalletService = service
@@ -123,7 +135,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try storage.write(blocks: blocks)
     }
     
-    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void){
+    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void) {
         
         storage.rewind(to: height) { (e) in
             completion(e)

@@ -8,7 +8,9 @@
 import Foundation
 
 public extension Data {
-    
+    /**
+     Transforms the data info bytes into a Zcash hex transaction id
+     */
     func toHexStringTxId() -> String {
         self.hexEncodedString().toTxIdString()
     }

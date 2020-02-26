@@ -70,7 +70,22 @@ extension PendingTransaction {
     
     // TODO: Handle Memo
     init(value: Int, toAddress: String, memo: String?, account index: Int) {
-        self = PendingTransaction(toAddress: toAddress, accountIndex: index, minedHeight: -1, expiryHeight: -1, cancelled: 0, encodeAttempts: 0, submitAttempts: 0, errorMessage: nil, errorCode: nil, createTime: Date().timeIntervalSince1970, raw: nil, id: nil, value: Int(value), memo: nil, rawTransactionId: nil)
+        
+        self = PendingTransaction(toAddress: toAddress,
+                                  accountIndex: index,
+                                  minedHeight: -1,
+                                  expiryHeight: -1,
+                                  cancelled: 0,
+                                  encodeAttempts: 0,
+                                  submitAttempts: 0,
+                                  errorMessage: nil,
+                                  errorCode: nil,
+                                  createTime: Date().timeIntervalSince1970,
+                                  raw: nil,
+                                  id: nil,
+                                  value: Int(value),
+                                  memo: memo?.encodeAsZcashTransactionMemo(),
+                                  rawTransactionId: nil)
     }
 }
 

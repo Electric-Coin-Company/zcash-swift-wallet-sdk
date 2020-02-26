@@ -69,7 +69,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             result(.failure(TransactionManagerError.notPending(tx: pendingTransaction)))// this transaction is not stored
             return
         }
-        // FIX: change to async when librustzcash is updated to v6
+        
         queue.async { [weak self] in
             guard let self = self else { return }
             
@@ -189,7 +189,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
 class OutboundTransactionManagerBuilder {
     
     static func build(initializer: Initializer) throws -> OutboundTransactionManager {
-        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: LightWalletGRPCService(endpoint: initializer.endpoint), repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer))
+        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: initializer.lightWalletService, repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer))
         
     }
 }

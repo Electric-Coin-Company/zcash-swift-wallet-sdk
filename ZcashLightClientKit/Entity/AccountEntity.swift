@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  AccountEntity.swift
 //  ZcashLightClientKit
 //
 //  Created by Francisco Gindre on 11/14/19.
@@ -7,13 +7,13 @@
 
 import Foundation
 
-public protocol AccountEntity: Hashable {
+protocol AccountEntity: Hashable {
     var account: Int { get set }
     var extfvk: String { get set }
     var address: String { get set }
 }
 
-public extension AccountEntity {
+extension AccountEntity {
     func hash(into hasher: inout Hasher) {
         hasher.combine(account)
         hasher.combine(extfvk)
