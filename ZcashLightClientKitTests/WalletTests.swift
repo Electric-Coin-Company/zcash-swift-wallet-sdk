@@ -44,7 +44,7 @@ class WalletTests: XCTestCase {
 
 struct SampleSeedProvider: SeedProvider {
     func seed() -> [UInt8] {
-        Array("seed".utf8)
+        Array("testreferencealicetestreferencealice".utf8)
     }
 }
 

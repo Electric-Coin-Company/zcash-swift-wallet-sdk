@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol CompactBlockEntity {
+protocol CompactBlockEntity {
     var height: BlockHeight { get set }
     var data: Data { get set }
 }

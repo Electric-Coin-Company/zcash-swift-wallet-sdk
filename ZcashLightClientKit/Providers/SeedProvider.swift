@@ -7,7 +7,9 @@
 //
 
 import Foundation
-
+/**
+ Describes an interface for an entity that provides seed bytes
+ */
 public protocol SeedProvider {
     func seed() -> [UInt8]
 }

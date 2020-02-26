@@ -9,7 +9,7 @@
 import Foundation
 
 public typealias BlockHeight = Int
-public typealias CompactBlockRange = Range<BlockHeight>
+public typealias CompactBlockRange = ClosedRange<BlockHeight>
 
 enum ZcashCompactBlockError: Error {
     case unreadableBlock(compactBlock: CompactBlock)

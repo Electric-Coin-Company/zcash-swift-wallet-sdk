@@ -17,7 +17,9 @@ public protocol ResourceProvider {
     var cacheDbURL: URL { get }
     
 }
-
+/**
+ Convenience provider for a data db and cache db resources. 
+ */
 public struct DefaultResourceProvider: ResourceProvider {
      
      public var dataDbURL: URL {

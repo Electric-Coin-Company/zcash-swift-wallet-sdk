@@ -23,6 +23,15 @@ protocol TransactionEncoder {
     doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
     double-bangs for things).
      Blocking
+     
+     - Parameters:
+     - Parameter spendingKey: a string containing the spending key
+     - Parameter zatoshi: the amount to send in zatoshis
+     - Parameter to: string containing the recipient address
+     - Parameter memo: string containin the memo (optional)
+     - Parameter accountIndex: index of the account that will be used to send the funds
+     
+     - Throws: a TransactionEncoderError
     */
     func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction
     
@@ -31,6 +40,14 @@ protocol TransactionEncoder {
     doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
     double-bangs for things).
      Non-blocking
+     
+     - Parameters:
+    - Parameter spendingKey: a string containing the spending key
+    - Parameter zatoshi: the amount to send in zatoshis
+    - Parameter to: string containing the recipient address
+    - Parameter memo: string containin the memo (optional)
+    - Parameter accountIndex: index of the account that will be used to send the funds
+    - Parameter result: a non escaping closure that receives a Result containing either an EncodedTransaction or an TransactionEncoderError
     */
     func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
     

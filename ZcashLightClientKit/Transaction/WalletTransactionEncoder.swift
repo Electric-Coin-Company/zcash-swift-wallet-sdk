@@ -35,7 +35,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     convenience init(initializer: Initializer) {
         self.init(rust: initializer.rustBackend,
                   dataDb: initializer.dataDbURL,
-                  repository: TransactionRepositoryBuilder.build(initializer: initializer),
+                  repository: initializer.transactionRepository,
                   outputParams: initializer.outputParamsURL,
                   spendParams: initializer.spendParamsURL)
         

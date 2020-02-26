@@ -7,37 +7,84 @@
 //
 
 import Foundation
-
+/**
+ Errors thrown by CompactBlock Processor
+ */
 public enum CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
     case dataDbInitFailed(path: String)
 }
-
+/**
+ CompactBlockProcessor notification userInfo object keys.
+ check Notification.Name extensions for more details.
+ */
 public struct CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
     public static let progressHeight = "CompactBlockProcessorNotificationKey.progressHeight"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
     public static let rewindHeight = "CompactBlockProcessorNotificationKey.rewindHeight"
+    public static let error = "error"
 }
 
 public extension Notification.Name {
     /**
-     Processing progress update. usertInfo["progress"]
+     Processing progress update
+     
+     Query the userInfo object for the key CompactBlockProcessorNotificationKey.progress and CompactBlockProcessorNotificationKey.progressheight for more information on progress % and height
      */
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
+    
+    /**
+     Notification sent when a compact block processor starts downloading
+     */
     static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
+    /**
+     Notification sent when the compact block processor starts validating the chain state
+     */
     static let blockProcessorStartedValidating = Notification.Name(rawValue: "CompactBlockProcessorStartedValidating")
+    /**
+     Notification sent when the compact block processor starts scanning blocks from the cache
+     */
     static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
+    
+    /**
+     Notification sent when the compact block processsor stop() method is called
+     */
     static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
+    
+    /**
+    Notification sent when the compact block processsor presented an error.
+     
+     Query userInfo object on the key CompactBlockProcessorNotificationKey.error
+    */
     static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
+    /**
+    Notification sent when the compact block processsor has finished syncing the blockchain to latest height
+    */
     static let blockProcessorFinished = Notification.Name(rawValue: "CompactBlockProcessorFinished")
+    /**
+    Notification sent when the compact block processsor is doing nothing
+    */
     static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
+    /**
+    Notification sent when something odd happened. probably going from a state to another state that shouldn't be the next state.
+    */
     static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
+    /**
+    Notification sent when the compact block processsor handled a ReOrg.
+     
+     Query the userInfo object on the key CompactBlockProcessorNotificationKey.reorgHeight for the height on which the reorg was detected. CompactBlockProcessorNotificationKey.rewindHeight for the height that the processor backed to in order to solve the Reorg
+    */
     static let blockProcessorHandledReOrg = Notification.Name(rawValue: "CompactBlockProcessorHandledReOrg")
 }
 
+/**
+ The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
+ when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
+ 
+ */
 public class CompactBlockProcessor {
     /**
      Compact Block Processor configuration
@@ -46,13 +93,12 @@ public class CompactBlockProcessor {
      Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
      */
     
-    // TODO: make internal again
     public struct Configuration {
         public var cacheDb: URL
         public var dataDb: URL
         public var downloadBatchSize = ZcashSDK.DEFAULT_BATCH_SIZE
         public var blockPollInterval: TimeInterval {
-            TimeInterval.random(in: ZcashSDK.DEFAULT_POLL_INTERVAL/2 ... ZcashSDK.DEFAULT_POLL_INTERVAL * 1.5) // 
+            TimeInterval.random(in: ZcashSDK.DEFAULT_POLL_INTERVAL / 2 ... ZcashSDK.DEFAULT_POLL_INTERVAL * 1.5)
         }
         
         public var retries = ZcashSDK.DEFAULT_RETRIES
@@ -66,7 +112,9 @@ public class CompactBlockProcessor {
             self.walletBirthday = walletBirthday
         }
     }
-    
+    /**
+     Represents the possible states of a CompactBlockProcessor
+     */
     public enum State {
         
         /**
@@ -129,6 +177,12 @@ public class CompactBlockProcessor {
         BlockHeight(self.config.downloadBatchSize)
     }
     
+    /**
+     Initializes a CompactBlockProcessor instance
+     - Parameters:
+        - downloader: an instance that complies to CompactBlockDownloading protocol
+        - backend: a class that complies to ZcashRustBackendWelding
+     */
     public init(downloader: CompactBlockDownloading, backend: ZcashRustBackendWelding.Type, config: Configuration) {
         self.downloader = downloader
         self.rustBackend = backend
@@ -140,6 +194,16 @@ public class CompactBlockProcessor {
         self.queue.cancelAllOperations()
     }
     
+    
+    var shouldStart: Bool {
+        switch self.state {
+        case .stopped, .synced, .error(_):
+            return self.retryAttempts < self.config.retries
+        default:
+            return false
+        }
+    }
+    
     private func validateConfiguration() throws {
         guard FileManager.default.isReadableFile(atPath: config.cacheDb.absoluteString) else {
             throw CompactBlockProcessorError.missingDbPath(path: config.cacheDb.absoluteString)
@@ -149,7 +213,14 @@ public class CompactBlockProcessor {
             throw CompactBlockProcessorError.missingDbPath(path: config.dataDb.absoluteString)
         }
     }
-    
+    /**
+     Starts the CompactBlockProcessor instance and starts downloading and processing blocks
+     
+     triggers the blockProcessorStartedDownloading notification
+     
+     - Important: subscribe to the notifications before calling this method
+     
+     */
     public func start() throws {
         
         // TODO: check if this validation makes sense at all
@@ -160,9 +231,12 @@ public class CompactBlockProcessor {
             return
         }
         
-        guard let birthday = WalletBirthday.birthday(with: config.walletBirthday) else {
-            throw CompactBlockProcessorError.invalidConfiguration
+        guard shouldStart else {
+            print("Warning: compact block processor was started while busy!!!!")
+            return
         }
+        
+        let birthday = WalletBirthday.birthday(with: config.walletBirthday)
         
         do {
             try rustBackend.initDataDb(dbData: config.dataDb)
@@ -177,6 +251,13 @@ public class CompactBlockProcessor {
         
     }
     
+    
+    /**
+     Stops the CompactBlockProcessor
+     
+     Note: retry count is reset
+     - Parameter cancelTasks: cancel the pending tasks. Defaults to true
+     */
     public func stop(cancelTasks: Bool = true) {
            self.backoffTimer?.invalidate()
            self.backoffTimer = nil
@@ -202,18 +283,23 @@ public class CompactBlockProcessor {
         if self.latestBlockHeight > latestDownloadedBlockHeight {
             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
         } else {
-            self.downloader.latestBlockHeight { (result) in
+            self.downloader.latestBlockHeight { [weak self] (result) in
+                guard let self = self else { return }
                 switch result {
                 case .success(let blockHeight):
-                    self.latestBlockHeight = blockHeight
-                    
-                    if self.latestBlockHeight == latestDownloadedBlockHeight  {
-                        self.processingFinished(height: blockHeight)
-                    } else {
-                        self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self = self else { return }
+                        self.latestBlockHeight = blockHeight
+                        
+                        if self.latestBlockHeight == latestDownloadedBlockHeight  {
+                            self.processingFinished(height: blockHeight)
+                        } else {
+                            self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                        }
                     }
                 case .failure(let e):
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { [weak self] in
+                        guard let self = self else { return }
                         self.fail(e)
                     }
                 }
@@ -222,22 +308,23 @@ public class CompactBlockProcessor {
     }
     
     func processNewBlocks(range: CompactBlockRange) {
-//        guard !range.isEmpty else {
-//            processingFinished(height: range.upperBound)
-//            return
-//        }
         
         let cfg = self.config
         
         let downloadBlockOperation = CompactBlockDownloadOperation(downloader: self.downloader, range: range)
         
-        downloadBlockOperation.startedHandler = {
-            self.state = .downloading
+        downloadBlockOperation.startedHandler = { [weak self] in
+         
+                self?.state = .downloading
+            
         }
         
-        downloadBlockOperation.errorHandler = { (error) in
-            self.processingError = error
-            self.fail(error)
+        downloadBlockOperation.errorHandler = { [weak self] (error) in
+            guard let self = self else { return }
+          
+                self.processingError = error
+                self.fail(error)
+           
         }
         
         let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
@@ -251,43 +338,51 @@ public class CompactBlockProcessor {
             print("validateChainFinished")
         }
         
-        validateChainOperation.errorHandler = { (error) in
-            guard let validationError = error as? CompactBlockValidationError else {
-                print("Warning: validateChain operation returning generic error: \(error)")
-                return
-            }
+        validateChainOperation.errorHandler = { [weak self] (error) in
+            guard let self = self else { return }
+           
+                guard let validationError = error as? CompactBlockValidationError else {
+                    print("Warning: validateChain operation returning generic error: \(error)")
+                    return
+                }
+                
+                switch validationError {
+                case .validationFailed(let height):
+                    print("chain validation at height: \(height)")
+                    self.validationFailed(at: height)
+                }
             
-            switch validationError {
-            case .validationFailed(let height):
-                print("chain validation at height: \(height)")
-                self.validationFailed(at: height)
-            }
         }
         
-        validateChainOperation.startedHandler = {
-            self.state = .validating
+        validateChainOperation.startedHandler = { [weak self] in
+            
+                self?.state = .validating
+            
         }
         
         validateChainOperation.addDependency(downloadBlockOperation)
         
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
-        scanBlocksOperation.startedHandler = {
-            self.state = .scanning
+        scanBlocksOperation.startedHandler = { [weak self] in
+                self?.state = .scanning
         }
         
-        scanBlocksOperation.completionHandler = { (finished, cancelled) in
+        
+        scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
                 print("Warning: operation cancelled")
                 return
             }
-            print("scan operation completed: \(scanBlocksOperation)")
-            self.processBatchFinished(range: range)
+                self?.processBatchFinished(range: range)
         }
         
-        scanBlocksOperation.errorHandler = { (error) in
-            self.processingError = error
-            self.fail(error)
+        scanBlocksOperation.errorHandler = { [weak self] (error) in
+            guard let self = self else { return }
+
+                self.processingError = error
+                self.fail(error)
+            
         }
         
         scanBlocksOperation.addDependency(downloadBlockOperation)
@@ -309,7 +404,8 @@ public class CompactBlockProcessor {
         print("\(self) progress: \(progress)")
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
                                         object: self,
-                                        userInfo: [ CompactBlockProcessorNotificationKey.progress : progress ])
+                                        userInfo: [ CompactBlockProcessorNotificationKey.progress : progress,
+                                                    CompactBlockProcessorNotificationKey.progressHeight : self.latestBlockHeight])
     }
     
     private func validationFailed(at height: BlockHeight) {
@@ -374,19 +470,30 @@ public class CompactBlockProcessor {
     private func processingFinished(height: BlockHeight) {
         self.state = .synced
         NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self, userInfo: [CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height])
-        self.backoffTimer = Timer(timeInterval: self.config.blockPollInterval, repeats: true, block: { _ in
-            do {
-                try self.start()
-            } catch {
-                self.fail(error)
+        let interval = self.config.blockPollInterval
+        self.backoffTimer?.invalidate() 
+        let timer = Timer(timeInterval: interval, repeats: true, block: { [weak self] _ in
+            
+            DispatchQueue.global().async { [weak self] in
+                guard let self = self else { return }
+                    do {
+                    try self.start()
+                } catch {
+                    self.fail(error)
+                }
             }
         })
+        RunLoop.main.add(timer, forMode: .default)
+        
+        self.backoffTimer = timer
     }
     
     func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
         
         let lowerBound = latestDownloadedHeight <= config.walletBirthday ? config.walletBirthday : latestDownloadedHeight + 1
-        return CompactBlockRange(uncheckedBounds: (lowerBound, min(lowerBound + BlockHeight(config.downloadBatchSize - 1), latestHeight)))
+        
+        let upperBound = BlockHeight(min(lowerBound + BlockHeight(config.downloadBatchSize - 1), latestHeight))
+        return lowerBound ... upperBound
     }
     
     func retryProcessing(range: CompactBlockRange) {
@@ -406,6 +513,7 @@ public class CompactBlockProcessor {
         // todo specify: failure
         print(error)
         queue.cancelAllOperations()
+        self.retryAttempts = self.retryAttempts + 1
         self.processingError = error
         self.state = .error(error)
         
@@ -422,7 +530,7 @@ public class CompactBlockProcessor {
         case .synced:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorIdle, object: self)
         case .error(let err):
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: ["error": err])
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: [CompactBlockProcessorNotificationKey.error: err])
         case .scanning:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
         case .stopped:
@@ -434,6 +542,9 @@ public class CompactBlockProcessor {
 }
 
 public extension CompactBlockProcessor.Configuration {
+    /**
+    Standard configuration for most compact block processors
+    */
     static var standard: CompactBlockProcessor.Configuration {
         let pathProvider = DefaultResourceProvider()
         return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL, dataDb: pathProvider.dataDbURL)
