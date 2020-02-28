@@ -27,7 +27,7 @@ class AwfulLightWalletService: MockLightWalletService {
         
     }
     
-    override func blockRange(_ range: Range<BlockHeight>, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
+    override func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             result(.failure(LightWalletServiceError.generalError))
         }
@@ -77,6 +77,7 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    
     static var mockDataDb = false
     static var mockAcounts = false
     static var mockError: RustWeldingError?
@@ -102,6 +103,14 @@ class MockRustBackend: ZcashRustBackendWelding {
     
     static func getLastError() -> String? {
         mockLastError ?? rustBackend.getLastError()
+    }
+    
+    static func isValidShieldedAddress(_ address: String) throws -> Bool {
+        true
+    }
+    
+    static func isValidTransparentAddress(_ address: String) throws -> Bool {
+        true
     }
     
     static func initDataDb(dbData: URL) throws {
@@ -189,13 +198,25 @@ class MockRustBackend: ZcashRustBackendWelding {
         return rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData)
     }
     
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParams: URL, outputParams: URL) -> Int64 {
-        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, to: to, value: value, memo: memo, spendParams: spendParams, outputParams: outputParams)
+     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
     }
     
     static func shouldSucceed(successRate: Float) -> Bool {
         let random = Float.random(in: 0.0...1.0)
         return random <= successRate
+    }
+    
+    static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
+        nil
+    }
+    
+    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]? {
+        nil
+    }
+    
+    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
+        nil
     }
     
 }

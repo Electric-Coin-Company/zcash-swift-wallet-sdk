@@ -10,14 +10,52 @@ import Foundation
 import UIKit
 
 public extension Notification.Name {
-    static let transactionsUpdated = Notification.Name("SDKSyncronizerTransactionUpdates")
+    /**
+     Notification is posted whenever transactions are updated
+     
+     - Important: not yet posted
+     */
+    
+    static let transactionsUpdated = Notification.Name("SDKSyncronizerTransactionUpdated")
+    
+    /**
+     Posted when the synchronizer is started.
+     */
     static let synchronizerStarted = Notification.Name("SDKSyncronizerStarted")
+    
+    /**
+     Posted when there are progress updates.
+     
+     - Note: Query userInfo object for NotificationKeys.progress  for Float progress percentage and NotificationKeys.blockHeight  for the current progress height
+     */
     static let synchronizerProgressUpdated = Notification.Name("SDKSyncronizerProgressUpdated")
+    
+    /**
+     Posted when the synchronizer is synced to latest height
+     */
     static let synchronizerSynced = Notification.Name("SDKSyncronizerSynced")
+    
+    /**
+    Posted when the synchronizer is stopped
+    */
     static let synchronizerStopped = Notification.Name("SDKSyncronizerStopped")
+    /**
+    Posted when the synchronizer loses connection
+    */
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
+    /**
+      Posted when the synchronizer starts syncing
+      */
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
+    /**
+      Posted when the synchronizer finds a mined transaction
+     - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
+      */
     static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
+    /**
+      Posted when the synchronizer presents an error
+     - Note: query userInfo on NotificationKeys.error for an error
+      */
     static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
 }
 
@@ -56,11 +94,15 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
+    /**
+     Creates an SDKSynchronizer instance
+     - Parameter initializer: a wallet Initializer object
+     */
     public init(initializer: Initializer) throws {
         self.status = .disconnected
         self.initializer = initializer
         self.transactionManager = try OutboundTransactionManagerBuilder.build(initializer: initializer)
-        self.transactionRepository = TransactionRepositoryBuilder.build(initializer: initializer)
+        self.transactionRepository = initializer.transactionRepository
     }
     
     deinit {
@@ -69,7 +111,10 @@ public class SDKSynchronizer: Synchronizer {
         self.blockProcessor = nil
         self.taskIdentifier = .invalid
     }
-    
+    /**
+     Starts the synchronizer
+     - Throws: CompactBlockProcessorError when failures occur
+     */
     public func start() throws {
         
         guard let processor = initializer.blockProcessor() else {
@@ -88,6 +133,10 @@ public class SDKSynchronizer: Synchronizer {
         
     }
     
+    /**
+    Stops the synchronizer
+    - Throws: CompactBlockProcessorError when failures occur
+    */
     public func stop() throws {
         
         guard status != .stopped, status != .disconnected else { return }
@@ -96,6 +145,7 @@ public class SDKSynchronizer: Synchronizer {
         
         processor.stop(cancelTasks: true)
     }
+    
     // MARK: event subscription
     private func subscribeToAppDelegateNotifications() {
         // todo: ios 13 platform specific
@@ -223,31 +273,50 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorStartedDownloading(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .syncing }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .syncing
+        }
     }
     
     @objc func processorStartedValidating(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .syncing }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .syncing
+        }
     }
     
     @objc func processorStartedScanning(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .syncing }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .syncing
+        }
     }
     
     @objc func processorStopped(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .stopped }
+        DispatchQueue.main.async { [weak self] in
+        guard let self = self else { return }
+            self.status = .stopped
+        }
     }
     
     @objc func processorFailed(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .disconnected }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.status = .disconnected
+        }
     }
     
     @objc func processorIdle(_ notification: Notification) {
-        DispatchQueue.main.async { self.status = .disconnected }
+        DispatchQueue.main.async { [weak self] in
+        guard let self = self else { return }
+            self.status = .disconnected
+        }
     }
     
     @objc func processorFinished(_ notification: Notification) {
-        DispatchQueue.global().async {
+        DispatchQueue.global().async {[ weak self ] in
+            guard let self = self else { return }
             self.refreshPendingTransactions()
             DispatchQueue.main.async {
                 self.status = .synced
@@ -358,7 +427,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func allSentTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+        try transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
     }
     
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
@@ -405,7 +474,7 @@ public class SDKSynchronizer: Synchronizer {
     private func removeConfirmedTransactions() throws {
         let latestHeight = try transactionRepository.lastScannedHeight()
         
-        try transactionManager.allPendingTransactions()?.filter( { abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
+        try transactionManager.allPendingTransactions()?.filter( { $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
     }
     
     private func refreshPendingTransactions() {
@@ -419,12 +488,18 @@ public class SDKSynchronizer: Synchronizer {
     
     private func notifyMinedTransaction(_ tx: PendingTransactionEntity) {
         DispatchQueue.main.async {
+            [weak self] in
+            guard let self = self else { return }
+            
             NotificationCenter.default.post(name: Notification.Name.synchronizerMinedTransaction, object: self, userInfo: [NotificationKeys.minedTransaction : tx])
         }
     }
     
     private func notifyFailure(_ error: Error) {
         DispatchQueue.main.async {
+            [weak self] in
+        guard let self = self else { return }
+            
             NotificationCenter.default.post(name: Notification.Name.synchronizerFailed, object: self, userInfo: [NotificationKeys.error : error])
         }
     }
@@ -448,4 +523,3 @@ extension SDKSynchronizer {
         (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
     }
 }
-

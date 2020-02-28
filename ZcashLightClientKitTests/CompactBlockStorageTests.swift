@@ -24,7 +24,7 @@ class CompactBlockStorageTests: XCTestCase {
         let finalHeight = startHeight + blockCount
         
         do {
-            try TestDbBuilder.seed(db: compactBlockDao, with: CompactBlockRange(startHeight...finalHeight))
+            try TestDbBuilder.seed(db: compactBlockDao, with: startHeight...finalHeight)
         } catch {
             XCTFail("seed faild with error: \(error)")
             return
@@ -67,7 +67,7 @@ class CompactBlockStorageTests: XCTestCase {
         let finalHeight = startHeight + blockCount
         
         do {
-            try TestDbBuilder.seed(db: compactBlockDao, with: CompactBlockRange(startHeight...finalHeight))
+            try TestDbBuilder.seed(db: compactBlockDao, with: startHeight...finalHeight)
         } catch {
             XCTFail("seed faild with error: \(error)")
             return

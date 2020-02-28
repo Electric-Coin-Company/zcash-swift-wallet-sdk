@@ -47,7 +47,7 @@ class BlockScanOperationTests: XCTestCase {
         let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
         let service = LightWalletGRPCService(channel: ChannelProvider().channel())
         let blockCount = 100
-        let range = ZcashSDK.SAPLING_ACTIVATION_HEIGHT ..< ZcashSDK.SAPLING_ACTIVATION_HEIGHT + blockCount
+        let range = ZcashSDK.SAPLING_ACTIVATION_HEIGHT ... ZcashSDK.SAPLING_ACTIVATION_HEIGHT + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)
         let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL)
         
@@ -88,7 +88,7 @@ class BlockScanOperationTests: XCTestCase {
         
         latestScannedBlockOperation.completionBlock = {
             latestScannedBlockExpect.fulfill()
-            XCTAssertEqual(latestScannedheight, range.endIndex)
+            XCTAssertEqual(latestScannedheight, range.upperBound)
         }
         
         latestScannedBlockOperation.addDependency(scanOperation)

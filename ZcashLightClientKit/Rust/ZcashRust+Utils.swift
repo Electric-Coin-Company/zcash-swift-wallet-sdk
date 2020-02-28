@@ -10,12 +10,12 @@ import Foundation
 
 extension Data {
     func asZcashTransactionMemo() -> String? {
-        return nil
+        return String(bytes: self, encoding: .utf8)
     }
 }
 
 extension String {
     func encodeAsZcashTransactionMemo() -> Data? {
-        return nil
+        return self.data(using: .utf8)
     }
 }

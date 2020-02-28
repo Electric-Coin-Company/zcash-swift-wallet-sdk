@@ -27,22 +27,57 @@ class ZcashRustBackendTests: XCTestCase {
         dataDbHandle.dispose()
     }
     
-    func testInitAndGetAddress() {
-        let seed = "seed"
+    func testInitWithShortSeedAndFail() {
+        let seed = "testreferencealice"
         
         XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         
         let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
+        XCTAssertNotNil(ZcashRustBackend.getLastError())
+ 
+    }
+    
+    func testDeriveExtendedSpendingKeys() {
+        let seed = "testreferencealicetestreferencealice"
         
-        let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0)
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        XCTAssertEqual(addr, Optional("ztestsapling1meqz0cd598fw0jlq2htkuarg8gqv36fam83yxmu5mu3wgkx4khlttqhqaxvwf57urm3rqsq9t07"))
+        var spendingKeys: [String]? = nil
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1) }())
         
-        // Test invalid account
-        let addr2 = ZcashRustBackend.getAddress(dbData: dbData!, account: 1)
-        XCTAssert(ZcashRustBackend.getLastError() != nil)
-        XCTAssertEqual(addr2, nil)
+        XCTAssertNotNil(spendingKeys)
+        XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
+        
+    }
+    
+    func testDeriveExtendedFullViewingKeys() {
+        let seed = "testreferencealicetestreferencealice"
+        
+        var fullViewingKeys: [String]? = nil
+        XCTAssertNoThrow(try { fullViewingKeys = try ZcashRustBackend.deriveExtendedFullViewingKeys(seed: seed, accounts: 1) }())
+        
+        XCTAssertNotNil(fullViewingKeys)
+        XCTAssertFalse(fullViewingKeys?.first?.isEmpty ?? true)
+    }
+    
+    func testDeriveExtendedFullViewingKey() {
+        let seed = "testreferencealicetestreferencealice"
+        var fullViewingKey: String? = nil
+        
+        
+        var spendingKeys: [String]? = nil
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1) }())
+        
+        XCTAssertNotNil(spendingKeys)
+        XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
+        
+        guard let spendingKey = spendingKeys?.first else {
+            XCTFail("no spending key generated")
+            return
+        }
+        
+        XCTAssertNoThrow(try { fullViewingKey = try ZcashRustBackend.deriveExtendedFullViewingKey(spendingKey) }())
+        
+        XCTAssertNotNil(fullViewingKey)
+        XCTAssertFalse(fullViewingKey?.isEmpty ?? true)
     }
     
     func testInitAndScanBlocks() {
@@ -50,7 +85,7 @@ class ZcashRustBackendTests: XCTestCase {
             XCTFail("pre populated Db not present")
             return
         }
-        let seed = "testreferencealice"
+        let seed = "testreferencealicetestreferencealice"
         XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
@@ -59,7 +94,7 @@ class ZcashRustBackendTests: XCTestCase {
         
         let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0)
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        XCTAssertEqual(addr, Optional("ztestsapling12pxv67r0kdw58q8tcn8kxhfy9n4vgaa7q8vp0dg24aueuz2mpgv2x7mw95yetcc37efc6q3hewn"))
+        XCTAssertEqual(addr, Optional("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"))
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData))
         
@@ -67,8 +102,59 @@ class ZcashRustBackendTests: XCTestCase {
     
     func testSendToAddress() {
         
-        let tx = try! ZcashRustBackend.createToAddress(dbData: dataDbHandle.readWriteDb, account: 0, extsk: spendingKey, to: recipientAddress, value: Int64(zpend), memo: nil, spendParams: URL(string: __spendParamsURL().path)!, outputParams: URL(string: __outputParamsURL().path)!)
+        let tx = try! ZcashRustBackend.createToAddress(dbData: dataDbHandle.readWriteDb, account: 0, extsk: spendingKey, to: recipientAddress, value: Int64(zpend), memo: nil, spendParamsPath: __spendParamsURL().path, outputParamsPath: __outputParamsURL().path)
         XCTAssert(tx > 0)
         XCTAssertNil(ZcashRustBackend.lastError())
     }
+    
+    func testIsValidTransparentAddressFalse() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc") }())
+        
+        if let valid = isValid {
+            XCTAssertFalse(valid)
+        } else {
+            XCTFail()
+        }
+        
+        
+    }
+    
+    func testIsValidTransparentAddressTrue() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7") }())
+        
+        if let valid = isValid {
+            XCTAssertTrue(valid)
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func testIsValidShieldedAddressTrue() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc") }())
+        
+        if let valid = isValid {
+            XCTAssertTrue(valid)
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func testIsValidShieldedAddressFalse() {
+        var isValid: Bool? = nil
+        
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7") }())
+        
+        if let valid = isValid {
+            XCTAssertFalse(valid)
+        } else {
+            XCTFail()
+        }
+    }
+    
 }

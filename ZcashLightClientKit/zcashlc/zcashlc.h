@@ -28,6 +28,16 @@ int64_t zcashlc_create_to_address(const uint8_t *db_data,
                                   const uint8_t *output_params,
                                   uintptr_t output_params_len);
 
+char *zcashlc_derive_extended_full_viewing_key(const char *extsk);
+
+char **zcashlc_derive_extended_full_viewing_keys(const uint8_t *seed,
+                                                 uintptr_t seed_len,
+                                                 int32_t accounts);
+
+char **zcashlc_derive_extended_spending_keys(const uint8_t *seed,
+                                             uintptr_t seed_len,
+                                             int32_t accounts);
+
 /**
  * Copies the last error message into the provided allocated buffer.
  */
@@ -98,6 +108,19 @@ int32_t zcashlc_init_blocks_table(const uint8_t *db_data,
  * Sets up the internal structure of the data database.
  */
 int32_t zcashlc_init_data_database(const uint8_t *db_data, uintptr_t db_data_len);
+
+/**
+ * Returns true when the address is valid and shielded.
+ * Returns false in any other case
+ * Errors when the provided address belongs to another network
+ */
+bool zcashlc_is_valid_shielded_address(const char *address);
+
+/**
+ * Returns true when the address is valid and transparent.
+ * Returns false in any other case
+ */
+bool zcashlc_is_valid_transparent_address(const char *address);
 
 /**
  * Returns the length of the last error message to be logged.

@@ -192,9 +192,9 @@ class TransactionSQLDAO: TransactionRepository {
                       blocktimeinseconds DESC,
                       id DESC
              LIMIT  \(limit) OFFSET \(offset)
-            """).map({ (bindings) -> ConfirmedTransactionEntity in
+            """).compactMap({ (bindings) -> ConfirmedTransactionEntity? in
                 guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
-                    throw TransactionRepositoryError.malformedTransaction
+                   return nil
                 }
                 return tx
             })
