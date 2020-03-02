@@ -122,7 +122,7 @@ pub extern "C" fn zcashlc_init_accounts_table(
         };
 
         let extsks: Vec<_> = (0..accounts)
-            .map(|account| spending_key(&seed, 1, account))
+            .map(|account| spending_key(&seed, COIN_TYPE, account))
             .collect();
         let extfvks: Vec<_> = extsks.iter().map(ExtendedFullViewingKey::from).collect();
 
