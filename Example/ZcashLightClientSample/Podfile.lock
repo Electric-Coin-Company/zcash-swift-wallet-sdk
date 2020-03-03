@@ -30,10 +30,10 @@ PODS:
     - gRPC-Core (~> 1.23.0)
     - SwiftProtobuf (~> 1.7.0)
   - SwiftProtobuf (1.7.0)
-  - ZcashLightClientKit (0.2.0):
+  - ZcashLightClientKit (0.2.1):
     - SQLite.swift (~> 0.12.2)
     - SwiftGRPC (~> 0.10.0)
-  - ZcashLightClientKit/Tests (0.2.0):
+  - ZcashLightClientKit/Tests (0.2.1):
     - SQLite.swift (~> 0.12.2)
     - SwiftGRPC (~> 0.10.0)
 
@@ -72,7 +72,7 @@ SPEC CHECKSUMS:
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
   SwiftGRPC: f8fcfecb547c96cc6913de619f95fa3cd09838ee
   SwiftProtobuf: 4fd9645e69b72cbae6ec8da5be0cdd20ca6565dd
-  ZcashLightClientKit: 3c41d8d99d601efdd22cbae7c0561d3b28b97d8c
+  ZcashLightClientKit: 8f195725d2ec3d579c78b228a0d3a384e21f56b9
 
 PODFILE CHECKSUM: 5a1fb98512fa179a4e83d67d14dd402f6d129a4d
 
