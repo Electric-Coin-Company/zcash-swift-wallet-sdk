@@ -52,7 +52,7 @@ class WalletTransactionEncoder: TransactionEncoder {
                 throw TransactionEncoderError.notFound(transactionId: txId)
             }
             
-            print("sentTransaction id: \(txId)")
+            LoggerProxy.debug("sentTransaction id: \(txId)")
             return EncodedTransaction(transactionId: tx.transactionId , raw: tx.raw)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)

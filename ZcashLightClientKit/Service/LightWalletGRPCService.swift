@@ -79,7 +79,7 @@ extension LightWalletGRPCService: LightWalletService {
         var blocks = [ZcashCompactBlock]()
         
         let call = try compactTxStreamer.getBlockRange(range.blockRange(), completion: { statusCode in
-            print("finished with statusCode: \(statusCode)")
+            LoggerProxy.debug("finished with statusCode: \(statusCode)")
         })
         
         while let block = try call.receive() {
@@ -105,7 +105,7 @@ extension LightWalletGRPCService: LightWalletService {
             }
         } catch {
             // TODO: Handle Error
-            print(error.localizedDescription)
+            LoggerProxy.debug(error.localizedDescription)
             result(.failure(LightWalletServiceError.generalError))
         }
     }

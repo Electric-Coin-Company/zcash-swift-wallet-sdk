@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0D2343EE238C91B900606F71 /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0D2343EC238C91B900606F71 /* sapling-output.params */; };
 		0D2343EF238C91B900606F71 /* sapling-spend.params in Resources */ = {isa = PBXBuildFile; fileRef = 0D2343ED238C91B900606F71 /* sapling-spend.params */; };
+		0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
 		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
 		0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
@@ -72,6 +73,7 @@
 /* Begin PBXFileReference section */
 		0D2343EC238C91B900606F71 /* sapling-output.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-output.params"; path = "../../../ZcashLightClientKitTests/sapling-output.params"; sourceTree = "<group>"; };
 		0D2343ED238C91B900606F71 /* sapling-spend.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-spend.params"; path = "../../../ZcashLightClientKitTests/sapling-spend.params"; sourceTree = "<group>"; };
+		0D49A18B241698A800CC0649 /* SampleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLogger.swift; sourceTree = "<group>"; };
 		0D4EBA302396CFD70041B507 /* SendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewController.swift; sourceTree = "<group>"; };
 		0D756A93236C761E009B041B /* GetAddressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetAddressViewController.swift; sourceTree = "<group>"; };
 		0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBlocksViewController.swift; sourceTree = "<group>"; };
@@ -218,6 +220,7 @@
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
 				0D7C85E423AD5A9B006878FC /* SampleStorage.swift */,
+				0D49A18B241698A800CC0649 /* SampleLogger.swift */,
 			);
 			path = ZcashLightClientSample;
 			sourceTree = "<group>";
@@ -668,6 +671,7 @@
 				0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */,
 				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
 				0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */,
+				0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */,
 				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
 				0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */,
 			);

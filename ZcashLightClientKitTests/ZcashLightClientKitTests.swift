@@ -51,7 +51,7 @@ class ZcashLightClientKitTests: XCTestCase {
 //
 //        let expect = XCTestExpectation(description: self.debugDescription)
 //        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
-//            print(result)
+//            LoggerProxy.debug(result)
 //            expect.fulfill()
 //            XCTAssert(result.success)
 //            XCTAssertNotNil(result.resultData)

@@ -249,14 +249,14 @@ public class SDKSynchronizer: Synchronizer {
         guard let userInfo = notification.userInfo,
             let progress = userInfo[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
             let rewindHeight = userInfo[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight else {
-                print("error processing reorg notification")
+                LoggerProxy.debug("error processing reorg notification")
                 return }
         
-        print("handling reorg at: \(progress) with rewind height: \(rewindHeight)")
+        LoggerProxy.debug("handling reorg at: \(progress) with rewind height: \(rewindHeight)")
         do {
             try transactionManager.handleReorg(at: rewindHeight)
         } catch {
-            print("error handling reorg: \(error)")
+            LoggerProxy.debug("error handling reorg: \(error)")
             notifyFailure(error)
         }
     }
@@ -364,7 +364,7 @@ public class SDKSynchronizer: Synchronizer {
         do {
             try stop()
         } catch {
-            print("stop failed with error: \(error)")
+            LoggerProxy.debug("stop failed with error: \(error)")
         }
     }
     
@@ -482,7 +482,7 @@ public class SDKSynchronizer: Synchronizer {
             try updateMinedTransactions()
             try removeConfirmedTransactions()
         } catch {
-            print("error refreshing pending transactions: \(error)")
+            LoggerProxy.debug("error refreshing pending transactions: \(error)")
         }
     }
     

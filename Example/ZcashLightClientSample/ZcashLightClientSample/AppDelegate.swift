@@ -9,6 +9,9 @@
 import UIKit
 import ZcashLightClientKit
 import NotificationBubbles
+
+var loggerProxy = SampleLogger(logLevel: .info)
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     
@@ -30,8 +33,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let wallet = wallet {
             return wallet
         } else {
-            let wallet = Initializer(cacheDbURL:try! __cacheDbURL() , dataDbURL: try! __dataDbURL(), pendingDbURL: try! __pendingDbURL(), endpoint: DemoAppConfig.endpoint, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
-            let addresses = try! wallet.initialize(seedProvider: DemoAppConfig(), walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
+            let wallet = Initializer(cacheDbURL:try! __cacheDbURL(),
+                                     dataDbURL: try! __dataDbURL(),
+                                     pendingDbURL: try! __pendingDbURL(),
+                                     endpoint: DemoAppConfig.endpoint,
+                                     spendParamsURL: try! __spendParamsURL(),
+                                     outputParamsURL: try! __outputParamsURL(),
+                                     loggerProxy: loggerProxy)
+            let addresses = try! wallet.initialize(seedProvider: DemoAppConfig(),
+                                                   walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig().seed())
@@ -47,7 +57,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     @objc func txMinedNotification(_ notification: Notification) {
         guard let tx = notification.userInfo?[SDKSynchronizer.NotificationKeys.minedTransaction] as? PendingTransactionEntity else {
-            print("no tx information on notification")
+            loggerProxy.error("no tx information on notification")
             return
         }
         NotificationBubble.display(in: window!.rootViewController!.view, options: NotificationBubble.sucessOptions(animation: NotificationBubble.Animation.fade(duration: 1)), attributedText: NSAttributedString(string: "Transaction \(String(describing: tx.id))mined!")) {}
@@ -57,7 +67,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         _ = self.sharedWallet
-        subscribeToMinedTxNotifications() 
+        subscribeToMinedTxNotifications()
+        
         return true
     }
     
@@ -99,19 +110,19 @@ extension AppDelegate {
         do {
             try FileManager.default.removeItem(at: try __cacheDbURL())
         } catch {
-            print("error clearing cache DB: \(error)")
+            loggerProxy.error("error clearing cache DB: \(error)")
         }
         
         do {
             try FileManager.default.removeItem(at: try __dataDbURL())
         } catch {
-            print("error clearing data db: \(error)")
+            loggerProxy.error("error clearing data db: \(error)")
         }
         
         do {
             try FileManager.default.removeItem(at: try __pendingDbURL())
         } catch {
-            print("error clearing data db: \(error)")
+            loggerProxy.error("error clearing data db: \(error)")
         }
         
         var storage = SampleStorage.shared

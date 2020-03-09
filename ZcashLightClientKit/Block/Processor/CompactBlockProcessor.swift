@@ -232,7 +232,7 @@ public class CompactBlockProcessor {
         }
         
         guard shouldStart else {
-            print("Warning: compact block processor was started while busy!!!!")
+            LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
             return
         }
         
@@ -331,24 +331,24 @@ public class CompactBlockProcessor {
         
         validateChainOperation.completionHandler = { (finished, cancelled) in
             guard !cancelled else {
-                print("Warning: operation cancelled")
+                LoggerProxy.debug("Warning: operation cancelled")
                 return
             }
             
-            print("validateChainFinished")
+            LoggerProxy.debug("validateChainFinished")
         }
         
         validateChainOperation.errorHandler = { [weak self] (error) in
             guard let self = self else { return }
            
                 guard let validationError = error as? CompactBlockValidationError else {
-                    print("Warning: validateChain operation returning generic error: \(error)")
+                    LoggerProxy.debug("Warning: validateChain operation returning generic error: \(error)")
                     return
                 }
                 
                 switch validationError {
                 case .validationFailed(let height):
-                    print("chain validation at height: \(height)")
+                    LoggerProxy.debug("chain validation at height: \(height)")
                     self.validationFailed(at: height)
                 }
             
@@ -371,7 +371,7 @@ public class CompactBlockProcessor {
         
         scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
-                print("Warning: operation cancelled")
+                LoggerProxy.debug("Warning: operation cancelled")
                 return
             }
                 self?.processBatchFinished(range: range)
@@ -401,7 +401,7 @@ public class CompactBlockProcessor {
     func notifyProgress(completedRange: CompactBlockRange) {
         let progress = calculateProgress(start: self.lowerBoundHeight ?? config.walletBirthday, current: completedRange.upperBound, latest: self.latestBlockHeight)
         
-        print("\(self) progress: \(progress)")
+        LoggerProxy.debug("\(self) progress: \(progress)")
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
                                         object: self,
                                         userInfo: [ CompactBlockProcessorNotificationKey.progress : progress,
@@ -511,7 +511,7 @@ public class CompactBlockProcessor {
     
     func fail(_ error: Error) {
         // todo specify: failure
-        print(error)
+        LoggerProxy.error("\(error)")
         queue.cancelAllOperations()
         self.retryAttempts = self.retryAttempts + 1
         self.processingError = error
