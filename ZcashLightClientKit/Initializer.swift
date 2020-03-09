@@ -78,7 +78,9 @@ public class Initializer {
         - spendParamsURL: location of the spend parameters
         - outputParamsURL: location of the output parameters
      */
-    public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL) {
+    public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL, loggerProxy: Logger? = nil) {
+        
+        logger = loggerProxy
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
         self.endpoint = endpoint

@@ -163,6 +163,29 @@ The `LIGHTWALLETD_ADDRESS` environment variable can also be added to your shell 
 
 We advice setting this value as a secret variable on your CD/CI environment when possible
 
+# Integrating with logging tools
+There are a lots of good logging tools for iOS. So we'll leave that choice to you. ZcashLightClientKit relies on a simple protocol to bubble up logs to client applications, which is called `Logger` (kudos for the naming originality...)
+```
+public protocol Logger {
+    
+    func debug(_ message: String, file: String, function: String, line: Int)
+    
+    func info(_ message: String, file: String, function: String, line: Int)
+    
+    func event(_ message: String, file: String, function: String, line: Int)
+    
+    func warn(_ message: String, file: String, function: String, line: Int)
+    
+    func error(_ message: String, file: String, function: String, line: Int)
+    
+}
+```
+To enable logging you need to do 2 simple steps:
+1. have one class conform the `Logger` protocol
+2. inject that logger when creating the `Initializer`
+
+For more details look the Sample App's `AppDelegate` code.
+
 # Swiftlint
 
 We don't like reinveing the wheel, so be gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.

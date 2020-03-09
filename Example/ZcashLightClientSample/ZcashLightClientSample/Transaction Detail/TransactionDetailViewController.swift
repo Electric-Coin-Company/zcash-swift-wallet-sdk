@@ -35,7 +35,7 @@ class TransactionDetailViewController: UITableViewController {
         expiryHeightLabel.text = heightToString(height: model.expiryHeight)
         createdLabel.text = model.created
         
-        print(model.transactionId.toHexStringTxId())
+        loggerProxy.debug("tx id: \(model.transactionId.toHexStringTxId()))")
     }
     
     func formatMemo(_ memo: Data?) -> String {

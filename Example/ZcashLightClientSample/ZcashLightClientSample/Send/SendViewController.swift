@@ -122,7 +122,7 @@ class SendViewController: UIViewController {
       
     @IBAction func send(_ sender: Any) {
         guard isFormValid() else {
-            print("WARNING: Form is invalid")
+            loggerProxy.warn("WARNING: Form is invalid")
             return
         }
         
@@ -146,13 +146,13 @@ class SendViewController: UIViewController {
     
     func send() {
         guard isFormValid(), let amount = amountTextField.text, let zec = Double(amount)?.toZatoshi(), let recipient = addressTextField.text else {
-            print("WARNING: Form is invalid")
+            loggerProxy.warn("WARNING: Form is invalid")
             return
         }
         
         
         guard let address = SampleStorage.shared.privateKey else {
-            print("NO ADDRESS")
+            loggerProxy.error("NO ADDRESS")
             return
         }
         
@@ -165,12 +165,12 @@ class SendViewController: UIViewController {
             }
             switch result {
             case .success(let pendingTransaction):
-                    print("transaction created: \(pendingTransaction)")
+                loggerProxy.info("transaction created: \(pendingTransaction)")
                 
             case .failure(let error):
                 DispatchQueue.main.async {
                     self?.fail(error)
-                    print("SEND FAILED: \(error)")
+                    loggerProxy.error("SEND FAILED: \(error)")
                 }
             }
         }

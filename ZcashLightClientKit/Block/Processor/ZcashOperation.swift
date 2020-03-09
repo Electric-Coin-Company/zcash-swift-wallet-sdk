@@ -41,7 +41,7 @@ class ZcashOperation: Operation {
     }
     
     override func start() {
-        print("\(self) started")
+        LoggerProxy.debug("\(self) started")
         startedHandler?()
         super.start()
     }
@@ -55,7 +55,7 @@ class ZcashOperation: Operation {
     }
     
     func fail() {
-        print("\(self) started")
+        LoggerProxy.debug("\(self) started")
         self.cancel()
         guard let errorHandler = self.errorHandler else {
             return

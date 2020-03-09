@@ -24,7 +24,8 @@ class GetAddressViewController: UIViewController {
         
         spendingKeyLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(spendingKeyTapped(_:))))
         spendingKeyLabel.isUserInteractionEnabled = true
-        print("Address: \(String(describing: Initializer.shared.getAddress()))")
+        loggerProxy.info("Address: \(String(describing: Initializer.shared.getAddress()))")
+        // NOTE: NEVER LOG YOUR PRIVATE KEYS IN REAL LIFE
         print("Spending Key: \(SampleStorage.shared.privateKey ?? "No Spending Key found")")
     }
     
@@ -45,11 +46,11 @@ class GetAddressViewController: UIViewController {
     
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
         guard let key =  SampleStorage.shared.privateKey else {
-            print("nothing to copy")
+            loggerProxy.warn("nothing to copy")
             return
         }
         
-        print("copied to clipboard")
+        loggerProxy.event("copied to clipboard")
         
         UIPasteboard.general.string = key
         let alert = UIAlertController(title: "", message: "Spending Key Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
@@ -58,7 +59,7 @@ class GetAddressViewController: UIViewController {
     }
     
     @IBAction func addressTapped(_ gesture: UIGestureRecognizer) {
-        print("copied to clipboard")
+        loggerProxy.event("copied to clipboard")
         UIPasteboard.general.string = legibleAddresses()
         let alert = UIAlertController(title: "", message: "Address Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))

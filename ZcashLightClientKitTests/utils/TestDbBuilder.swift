@@ -111,7 +111,7 @@ struct InMemoryDbProvider: ConnectionProvider {
 struct StubBlockCreator {
     static func createRandomDataBlock(with height: BlockHeight) -> ZcashCompactBlock? {
         guard let data = randomData(ofLength: 100) else {
-            print("error creating stub block")
+            LoggerProxy.debug("error creating stub block")
             return nil
         }
         return ZcashCompactBlock(height: height, data: data)
@@ -135,7 +135,7 @@ struct StubBlockCreator {
         if status == errSecSuccess {
             return Data(bytes: &bytes, count: bytes.count)
         }
-        print("Status \(status)")
+        LoggerProxy.debug("Status \(status)")
         return nil
         
     }
