@@ -301,8 +301,12 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorFailed(_ notification: Notification) {
+        
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            if let error = notification.userInfo?[CompactBlockProcessorNotificationKey.error] as? Error {
+                self.notifyFailure(error)
+            }
             self.status = .disconnected
         }
     }

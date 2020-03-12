@@ -309,6 +309,9 @@ public class CompactBlockProcessor {
     
     func processNewBlocks(range: CompactBlockRange) {
         
+        self.backoffTimer?.invalidate()
+        self.backoffTimer = nil
+        
         let cfg = self.config
         
         let downloadBlockOperation = CompactBlockDownloadOperation(downloader: self.downloader, range: range)
@@ -470,8 +473,12 @@ public class CompactBlockProcessor {
     private func processingFinished(height: BlockHeight) {
         self.state = .synced
         NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self, userInfo: [CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height])
+        setTimer()
+    }
+    
+    private func setTimer() {
         let interval = self.config.blockPollInterval
-        self.backoffTimer?.invalidate() 
+        self.backoffTimer?.invalidate()
         let timer = Timer(timeInterval: interval, repeats: true, block: { [weak self] _ in
             
             DispatchQueue.global().async { [weak self] in
