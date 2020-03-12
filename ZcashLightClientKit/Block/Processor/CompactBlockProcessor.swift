@@ -293,6 +293,10 @@ public class CompactBlockProcessor {
                         
                         if self.latestBlockHeight == latestDownloadedBlockHeight  {
                             self.processingFinished(height: blockHeight)
+                        } else if self.latestBlockHeight < latestDownloadedBlockHeight {
+                            // Lightwalletd might be syncing
+                            LoggerProxy.info("Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadedBlockHeight) while latest blockheight is reported at: \(blockHeight)")
+                            self.processingFinished(height: latestDownloadedBlockHeight)
                         } else {
                             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
                         }
