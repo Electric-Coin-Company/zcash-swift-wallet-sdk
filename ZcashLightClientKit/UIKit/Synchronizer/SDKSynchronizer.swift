@@ -63,6 +63,7 @@ public extension Notification.Name {
  Synchronizer implementation  for UIKit  and iOS 12+
  */
 public class SDKSynchronizer: Synchronizer {
+
     
     public struct NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
@@ -82,7 +83,7 @@ public class SDKSynchronizer: Synchronizer {
     
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
-    
+    private var isFirstApplicationStart = true
     var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
     private var isBackgroundAllowed: Bool {
@@ -103,6 +104,7 @@ public class SDKSynchronizer: Synchronizer {
         self.initializer = initializer
         self.transactionManager = try OutboundTransactionManagerBuilder.build(initializer: initializer)
         self.transactionRepository = initializer.transactionRepository
+        self.subscribeToAppDelegateNotifications()
     }
     
     deinit {
@@ -115,21 +117,22 @@ public class SDKSynchronizer: Synchronizer {
      Starts the synchronizer
      - Throws: CompactBlockProcessorError when failures occur
      */
-    public func start() throws {
-        
+    public func start(retry: Bool = false) throws {
+        let connectivityState = initializer.lightWalletService.resume()
+        LoggerProxy.info("service started with connectivityState: \(connectivityState)")
         guard let processor = initializer.blockProcessor() else {
-            throw SynchronizerError.initFailed
+            throw SynchronizerError.generalError(message: "compact block processor initialization failed")
         }
         
         subscribeToProcessorNotifications(processor)
-        registerBackgroundActivity()
+        
         self.blockProcessor = processor
         guard status == .stopped || status == .disconnected || status == .synced else {
             assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion some time in the near future
             return
         }
         
-        try processor.start()
+        try processor.start(retry: retry)
         
     }
     
@@ -139,6 +142,10 @@ public class SDKSynchronizer: Synchronizer {
     */
     public func stop() throws {
         
+        defer {
+           
+            self.invalidateBackgroundActivity()
+        }
         guard status != .stopped, status != .disconnected else { return }
         
         guard let processor = self.blockProcessor else { return }
@@ -181,12 +188,18 @@ public class SDKSynchronizer: Synchronizer {
     
     private func registerBackgroundActivity() {
         if self.taskIdentifier == .invalid {
-            self.taskIdentifier = UIApplication.shared.beginBackgroundTask(expirationHandler: {
-                self.blockProcessor?.stop(cancelTasks: true)
-                UIApplication.shared.endBackgroundTask(self.taskIdentifier)
-                self.taskIdentifier = .invalid
+            self.taskIdentifier = UIApplication.shared.beginBackgroundTask(withName: "ZcashLightClientKit.SDKSynchronizer", expirationHandler: {
+                self.invalidateBackgroundActivity()
             })
         }
+    }
+    
+    private func invalidateBackgroundActivity() {
+        guard self.taskIdentifier != .invalid else {
+            return
+        }
+        UIApplication.shared.endBackgroundTask(self.taskIdentifier)
+        self.taskIdentifier = .invalid
     }
     
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
@@ -334,12 +347,7 @@ public class SDKSynchronizer: Synchronizer {
     
     // MARK: application notifications
     @objc func applicationDidBecomeActive(_ notification: Notification) {
-        registerBackgroundActivity()
-        do {
-            try self.start()
-        } catch {
-            self.status = .disconnected
-        }
+        
     }
     
     @objc func applicationDidEnterBackground(_ notification: Notification) {
@@ -353,8 +361,13 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func applicationWillEnterForeground(_ notification: Notification) {
+        guard !self.isFirstApplicationStart else {
+            self.isFirstApplicationStart = false
+            return
+        }
         let status = self.status
-        
+        LoggerProxy.debug("applicationWillEnterForeground")
+        invalidateBackgroundActivity()
         if status == .stopped || status == .disconnected {
             do {
                 try start()
@@ -365,11 +378,14 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func applicationWillResignActive(_ notification: Notification) {
-        do {
-            try stop()
-        } catch {
-            LoggerProxy.debug("stop failed with error: \(error)")
-        }
+        registerBackgroundActivity()
+        LoggerProxy.debug("applicationWillResignActive")
+//        do {
+//
+//            try stop()
+//        } catch {
+//            LoggerProxy.debug("stop failed with error: \(error)")
+//        }
     }
     
     @objc func applicationWillTerminate(_ notification: Notification) {
@@ -499,12 +515,33 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
+    private func mapError(_ error: Error) -> Error {
+            if let compactBlockProcessorError =  error as? CompactBlockProcessorError {
+            switch compactBlockProcessorError {
+            case .dataDbInitFailed(let path):
+                return SynchronizerError.initFailed(message: "DataDb init failed at path: \(path)")
+            case .connectionError(let message):
+                return SynchronizerError.connectionFailed(message: message)
+            case .invalidConfiguration:
+                return SynchronizerError.generalError(message: "Invalid Configuration")
+            case .missingDbPath(let path):
+                return SynchronizerError.initFailed(message: "missing Db path: \(path)")
+            case .generalError(let message):
+                return SynchronizerError.generalError(message: message)
+            case .maxAttemptsReached(attempts: let attempts):
+                return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)    
+            }
+        }
+        return error
+    }
+    
     private func notifyFailure(_ error: Error) {
+        
         DispatchQueue.main.async {
             [weak self] in
         guard let self = self else { return }
             
-            NotificationCenter.default.post(name: Notification.Name.synchronizerFailed, object: self, userInfo: [NotificationKeys.error : error])
+            NotificationCenter.default.post(name: Notification.Name.synchronizerFailed, object: self, userInfo: [NotificationKeys.error : self.mapError(error)])
         }
     }
 }

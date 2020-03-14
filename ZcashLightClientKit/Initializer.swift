@@ -60,7 +60,7 @@ public class Initializer {
     private(set) var spendParamsURL: URL
     private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
-    private(set) var lightWalletService: LightWalletService
+    private(set) var lightWalletService: LightWalletGRPCService
     private(set) var transactionRepository: TransactionRepository
     private(set) var downloader: CompactBlockDownloader
     private(set) var processor: CompactBlockProcessor?
