@@ -29,9 +29,7 @@ class ZcashOperation: Operation {
         completionBlock = { [weak self] in
             guard let self = self, let handler = self.completionHandler else { return }
             
-            //            self.handlerDispatchQueue.async {
             handler(self.isFinished, self.isCancelled)
-            //            }
         }
     }
     
@@ -47,7 +45,7 @@ class ZcashOperation: Operation {
     }
     
     func shouldCancel() -> Bool {
-        isCancelled || dependencyCancelled()
+        self.error != nil || isCancelled || dependencyCancelled()
     }
     
     func dependencyCancelled() -> Bool {

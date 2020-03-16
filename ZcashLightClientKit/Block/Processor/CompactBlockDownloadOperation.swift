@@ -11,7 +11,7 @@ import Foundation
 class CompactBlockDownloadOperation: ZcashOperation {
     
     override var isConcurrent: Bool { false }
-       
+    
     override var isAsynchronous: Bool { false }
     
     private var downloader: CompactBlockDownloading

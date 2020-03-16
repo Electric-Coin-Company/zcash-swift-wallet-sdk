@@ -335,7 +335,11 @@ public class CompactBlockProcessor {
             }
         }
     }
-    
+    /**
+        processes new blocks on the given range based on the configuration set for this instance
+     the way operations are queued is implemented based on the following good practice https://forums.developer.apple.com/thread/25761
+     
+     */
     func processNewBlocks(range: CompactBlockRange) {
         
         self.backoffTimer?.invalidate()
@@ -346,9 +350,7 @@ public class CompactBlockProcessor {
         let downloadBlockOperation = CompactBlockDownloadOperation(downloader: self.downloader, range: range)
         
         downloadBlockOperation.startedHandler = { [weak self] in
-         
                 self?.state = .downloading
-            
         }
         
         downloadBlockOperation.errorHandler = { [weak self] (error) in
@@ -358,8 +360,11 @@ public class CompactBlockProcessor {
                 self.fail(error)
            
         }
-        
         let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        
+        let downloadValidateAdapterOperation = BlockOperation {
+            validateChainOperation.error = downloadBlockOperation.error
+        }
         
         validateChainOperation.completionHandler = { (finished, cancelled) in
             guard !cancelled else {
@@ -396,6 +401,9 @@ public class CompactBlockProcessor {
         
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
+        let validateScanningAdapterOperation = BlockOperation {
+            scanBlocksOperation.error = validateChainOperation.error
+        }
         scanBlocksOperation.startedHandler = { [weak self] in
                 self?.state = .scanning
         }
@@ -417,9 +425,15 @@ public class CompactBlockProcessor {
             
         }
         
-        scanBlocksOperation.addDependency(downloadBlockOperation)
-        scanBlocksOperation.addDependency(validateChainOperation)
-        queue.addOperations([downloadBlockOperation, validateChainOperation, scanBlocksOperation], waitUntilFinished: false)
+        downloadValidateAdapterOperation.addDependency(downloadBlockOperation)
+        validateChainOperation.addDependency(downloadValidateAdapterOperation)
+        scanBlocksOperation.addDependency(validateScanningAdapterOperation)
+    
+        queue.addOperations([downloadBlockOperation,
+                             downloadValidateAdapterOperation,
+                             validateChainOperation,
+                             validateScanningAdapterOperation,
+                             scanBlocksOperation], waitUntilFinished: false)
         
     }
     
