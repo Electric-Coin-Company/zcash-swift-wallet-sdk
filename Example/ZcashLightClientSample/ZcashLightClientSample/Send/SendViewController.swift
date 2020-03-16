@@ -36,7 +36,7 @@ class SendViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         do {
-            try synchronizer.start()
+            try synchronizer.start(retry: false)
             self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: .syncing)
         } catch {
             self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: .stopped)

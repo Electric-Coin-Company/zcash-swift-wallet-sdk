@@ -14,27 +14,27 @@ hex = "0.3"
 
 [dependencies.ff]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "f3f5338282eeda6d9f5bff69f6930a5473c95925"
+rev = "52d8b436300724bc4b83aa4a0c659ab34c3dbce7"
 
 [dependencies.pairing]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "f3f5338282eeda6d9f5bff69f6930a5473c95925"
+rev = "52d8b436300724bc4b83aa4a0c659ab34c3dbce7"
 
 [dependencies.zcash_client_backend]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "f3f5338282eeda6d9f5bff69f6930a5473c95925"
+rev = "52d8b436300724bc4b83aa4a0c659ab34c3dbce7"
 
 [dependencies.zcash_client_sqlite]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "f3f5338282eeda6d9f5bff69f6930a5473c95925"
+rev = "52d8b436300724bc4b83aa4a0c659ab34c3dbce7"
 
 [dependencies.zcash_primitives]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "f3f5338282eeda6d9f5bff69f6930a5473c95925"
+rev = "52d8b436300724bc4b83aa4a0c659ab34c3dbce7"
 
 [dependencies.zcash_proofs]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "f3f5338282eeda6d9f5bff69f6930a5473c95925"
+rev = "52d8b436300724bc4b83aa4a0c659ab34c3dbce7"
 default-features = false
 features = ["local-prover"]
 

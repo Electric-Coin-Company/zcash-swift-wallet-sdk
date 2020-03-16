@@ -32,6 +32,14 @@ public class LightWalletGRPCService {
         self.init(channel: channel)
     }
     
+    func stop() {
+        channel.shutdown()
+    }
+    
+    func resume() -> Channel.ConnectivityState {
+        channel.connectivityState(tryToConnect: true)
+    }
+    
     func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil, result: @escaping (CallResult) -> Void) throws -> CompactTxStreamerGetBlockRangeCall {
         try compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight)) { result($0) }
     }

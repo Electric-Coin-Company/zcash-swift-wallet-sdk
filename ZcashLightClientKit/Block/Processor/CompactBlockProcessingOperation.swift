@@ -33,7 +33,7 @@ class CompactBlockScanningOperation: ZcashOperation {
         guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb) else {
             self.error = self.rustBackend.lastError() ?? ZcashOperationError.unknown
             LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
-            self.cancel()
+            self.fail()
             return
         }
     }

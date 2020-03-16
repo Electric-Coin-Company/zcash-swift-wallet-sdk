@@ -7,13 +7,18 @@
 //
 
 import Foundation
+import SwiftGRPC
 /**
+
  Errors thrown by CompactBlock Processor
  */
 public enum CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
     case dataDbInitFailed(path: String)
+    case connectionError(message: String)
+    case generalError(message: String)
+    case maxAttemptsReached(attempts: Int)
 }
 /**
  CompactBlockProcessor notification userInfo object keys.
@@ -194,11 +199,13 @@ public class CompactBlockProcessor {
         self.queue.cancelAllOperations()
     }
     
-    
+    var maxAttemptsReached: Bool {
+        self.retryAttempts < self.config.retries
+    }
     var shouldStart: Bool {
         switch self.state {
         case .stopped, .synced, .error(_):
-            return self.retryAttempts < self.config.retries
+            return maxAttemptsReached
         default:
             return false
         }
@@ -221,18 +228,36 @@ public class CompactBlockProcessor {
      - Important: subscribe to the notifications before calling this method
      
      */
-    public func start() throws {
+    public func start(retry: Bool = false) throws {
         
         // TODO: check if this validation makes sense at all
         //        try validateConfiguration()
-        
+        if retry {
+            self.retryAttempts = 0
+        }
         guard !queue.isSuspended else {
             queue.isSuspended = false
             return
         }
         
         guard shouldStart else {
-            LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
+            switch self.state {
+            case .error(let e):
+                // max attempts have been reached
+                LoggerProxy.info("max retry attempts reached with error: \(e)")
+                notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+                self.state = .stopped
+            case .stopped:
+                // max attempts have been reached
+               LoggerProxy.info("max retry attempts reached")
+               notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+            case .synced:
+                // max attempts have been reached
+                LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
+                notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+            default:
+                LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
+            }
             return
         }
         
@@ -293,6 +318,10 @@ public class CompactBlockProcessor {
                         
                         if self.latestBlockHeight == latestDownloadedBlockHeight  {
                             self.processingFinished(height: blockHeight)
+                        } else if self.latestBlockHeight < latestDownloadedBlockHeight {
+                            // Lightwalletd might be syncing
+                            LoggerProxy.info("Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadedBlockHeight) while latest blockheight is reported at: \(blockHeight)")
+                            self.processingFinished(height: latestDownloadedBlockHeight)
                         } else {
                             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
                         }
@@ -308,6 +337,9 @@ public class CompactBlockProcessor {
     }
     
     func processNewBlocks(range: CompactBlockRange) {
+        
+        self.backoffTimer?.invalidate()
+        self.backoffTimer = nil
         
         let cfg = self.config
         
@@ -470,14 +502,22 @@ public class CompactBlockProcessor {
     private func processingFinished(height: BlockHeight) {
         self.state = .synced
         NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self, userInfo: [CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height])
+        setTimer()
+    }
+    
+    private func setTimer() {
         let interval = self.config.blockPollInterval
-        self.backoffTimer?.invalidate() 
+        self.backoffTimer?.invalidate()
         let timer = Timer(timeInterval: interval, repeats: true, block: { [weak self] _ in
             
             DispatchQueue.global().async { [weak self] in
                 guard let self = self else { return }
                     do {
-                    try self.start()
+                        if self.shouldStart {
+                            try self.start()
+                        } else if self.maxAttemptsReached {
+                            self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
+                        }
                 } catch {
                     self.fail(error)
                 }
@@ -502,6 +542,7 @@ public class CompactBlockProcessor {
         // update retries
         self.retryAttempts = self.retryAttempts + 1
         guard self.retryAttempts < config.retries else {
+            self.notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.retryAttempts))
             self.stop()
             return
         }
@@ -515,7 +556,14 @@ public class CompactBlockProcessor {
         queue.cancelAllOperations()
         self.retryAttempts = self.retryAttempts + 1
         self.processingError = error
+        switch self.state {
+        case .error(_):
+            notifyError(error)
+        default:
+            break
+        }
         self.state = .error(error)
+        self.setTimer()
         
     }
     
@@ -530,7 +578,7 @@ public class CompactBlockProcessor {
         case .synced:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorIdle, object: self)
         case .error(let err):
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: [CompactBlockProcessorNotificationKey.error: err])
+           notifyError(err)
         case .scanning:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
         case .stopped:
@@ -538,6 +586,32 @@ public class CompactBlockProcessor {
         case .validating:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedValidating, object: self)
         }
+    }
+    private func notifyError(_ err: Error) {
+         NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: [CompactBlockProcessorNotificationKey.error: mapError(err)])
+    }
+    // TODO: encapsulate service errors better
+    func mapError(_ error: Error) -> Error {
+        if let lwdError = error as? LightWalletServiceError {
+            switch lwdError {
+            case .failed(let statusCode, let message):
+                return CompactBlockProcessorError.connectionError(message: "Connection failed - Status code: \(statusCode) - message: \(message)")
+            case .invalidBlock:
+                return CompactBlockProcessorError.generalError(message: "Invalid block: \(lwdError)")
+            default:
+                return CompactBlockProcessorError.generalError(message: "Error: \(lwdError)")
+            }
+        } else if let rpcError = error as? SwiftGRPC.RPCError {
+            switch rpcError {
+            case .invalidMessageReceived:
+                return CompactBlockProcessorError.connectionError(message: "invalid GRPC Message received")
+            case .timedOut:
+                return CompactBlockProcessorError.connectionError(message: "connection timeout")
+            case .callError(let callResult):
+                return CompactBlockProcessorError.connectionError(message: "GRPC Call error. Success: \(callResult.success) - StatusCode: \(callResult.statusCode)")
+            }
+        }
+        return error
     }
 }
 
