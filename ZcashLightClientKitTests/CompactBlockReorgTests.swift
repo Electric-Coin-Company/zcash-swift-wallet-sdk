@@ -65,17 +65,18 @@ class CompactBlockReorgTests: XCTestCase {
     }
     
     @objc func processorHandledReorg(_ notification: Notification) {
-        DispatchQueue.main.sync {
+//        DispatchQueue.main.sync {
             XCTAssertNotNil(notification.userInfo)
             if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
                 let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
                 XCTAssertTrue( reorg == 0 || reorg > ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
                 XCTAssertTrue( rewind == 0 || rewind > ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
                 XCTAssertTrue( rewind <= reorg )
+                reorgNotificationExpectation.fulfill()
             } else {
                 XCTFail("CompactBlockProcessor reorg notification is malformed")
             }
-        }
+//        }
         
     }
     
@@ -116,7 +117,7 @@ class CompactBlockReorgTests: XCTestCase {
                    startedScanningNotificationExpectation,
                    reorgNotificationExpectation,
                    idleNotificationExpectation,
-                   ], timeout: 300,enforceOrder: true)
+                   ], timeout: 10,enforceOrder: true)
     }
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {
