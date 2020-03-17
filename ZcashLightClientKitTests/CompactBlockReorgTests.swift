@@ -115,9 +115,10 @@ class CompactBlockReorgTests: XCTestCase {
                    downloadStartedExpect,
                    startedValidatingNotificationExpectation,
                    startedScanningNotificationExpectation,
+                
                    reorgNotificationExpectation,
                    idleNotificationExpectation,
-                   ], timeout: 10,enforceOrder: true)
+                   ], timeout: 3000,enforceOrder: true)
     }
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {
