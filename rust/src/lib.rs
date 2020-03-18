@@ -565,7 +565,7 @@ pub extern "C" fn zcashlc_scan_blocks(
             slice::from_raw_parts(db_data, db_data_len)
         }));
 
-        match scan_cached_blocks(&db_cache, &db_data, None) {
+        match scan_cached_blocks(&db_cache, &db_data) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while scanning blocks: {}", e)),
         }
