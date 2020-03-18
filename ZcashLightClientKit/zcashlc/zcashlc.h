@@ -28,6 +28,11 @@ int64_t zcashlc_create_to_address(const uint8_t *db_data,
                                   const uint8_t *output_params,
                                   uintptr_t output_params_len);
 
+int32_t zcashlc_decrypt_and_store_transaction(const uint8_t *db_data,
+                                              uintptr_t db_data_len,
+                                              const uint8_t *tx,
+                                              uintptr_t tx_len);
+
 char *zcashlc_derive_extended_full_viewing_key(const char *extsk);
 
 char **zcashlc_derive_extended_full_viewing_keys(const uint8_t *seed,

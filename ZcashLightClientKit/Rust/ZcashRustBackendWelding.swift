@@ -146,6 +146,17 @@ public protocol ZcashRustBackendWelding {
      returns false if fails to scan.
     */
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
+
+    /**
+     Scans a transaction for any information that can be decrypted by the accounts in the
+     wallet, and saves it to the wallet.
+
+     - Parameters:
+        - dbData: location of the data db file
+        - tx:     the transaction to decrypt
+     returns false if fails to decrypt.
+     */
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool
     
     /**
      Creates a transaction to the given address from the given account

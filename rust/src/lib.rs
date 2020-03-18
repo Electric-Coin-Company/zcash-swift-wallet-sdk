@@ -22,11 +22,14 @@ use zcash_client_sqlite::{
         get_address, get_balance, get_received_memo_as_utf8, get_sent_memo_as_utf8,
         get_verified_balance,
     },
-    scan::scan_cached_blocks,
+    scan::{decrypt_and_store_transaction, scan_cached_blocks},
     transact::create_to_address,
 };
 use zcash_primitives::{
-    block::BlockHash, consensus::BranchId, note_encryption::Memo, transaction::components::Amount,
+    block::BlockHash,
+    consensus::BranchId,
+    note_encryption::Memo,
+    transaction::{components::Amount, Transaction},
     zip32::ExtendedFullViewingKey,
 };
 
@@ -549,6 +552,28 @@ pub extern "C" fn zcashlc_scan_blocks(
         match scan_cached_blocks(&db_cache, &db_data, None) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while scanning blocks: {}", e)),
+        }
+    });
+    unwrap_exc_or_null(res)
+}
+
+#[no_mangle]
+pub extern "C" fn zcashlc_decrypt_and_store_transaction(
+    db_data: *const u8,
+    db_data_len: usize,
+    tx: *const u8,
+    tx_len: usize,
+) -> i32 {
+    let res = catch_panic(|| {
+        let db_data = Path::new(OsStr::from_bytes(unsafe {
+            slice::from_raw_parts(db_data, db_data_len)
+        }));
+        let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
+        let tx = Transaction::read(&tx_bytes[..])?;
+
+        match decrypt_and_store_transaction(&db_data, &tx) {
+            Ok(()) => Ok(1),
+            Err(e) => Err(format_err!("Error while decrypting transaction: {}", e)),
         }
     });
     unwrap_exc_or_null(res)
