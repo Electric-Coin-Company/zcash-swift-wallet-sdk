@@ -368,7 +368,7 @@ public class CompactBlockProcessor {
         
         validateChainOperation.completionHandler = { (finished, cancelled) in
             guard !cancelled else {
-                LoggerProxy.debug("Warning: operation cancelled")
+                LoggerProxy.debug("Warning: validateChainOperation operation cancelled")
                 return
             }
             
@@ -411,7 +411,7 @@ public class CompactBlockProcessor {
         
         scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
-                LoggerProxy.debug("Warning: operation cancelled")
+                LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
                 return
             }
                 self?.processBatchFinished(range: range)
