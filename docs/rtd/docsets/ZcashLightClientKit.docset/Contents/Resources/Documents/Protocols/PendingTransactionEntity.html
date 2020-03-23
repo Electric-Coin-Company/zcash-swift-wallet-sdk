@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>PendingTransactionEntity Protocol Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Protocol/PendingTransactionEntity" class="dashAnchor"></a>
+    <a title="PendingTransactionEntity Protocol Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">ZcashLightClientKit Docs</a> (68% documented)</p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">ZcashLightClientKit Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        PendingTransactionEntity Protocol Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor.html">CompactBlockProcessor</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/Configuration.html">– Configuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/State.html">– State</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Initializer.html">Initializer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LightWalletGRPCService.html">LightWalletGRPCService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer.html">SDKSynchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer/NotificationKeys.html">– NotificationKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ZcashSDK.html">ZcashSDK</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProcessorError.html">CompactBlockProcessorError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/InitializerError.html">InitializerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LightWalletServiceError.html">LightWalletServiceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ResourceProviderError.html">ResourceProviderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/RustWeldingError.html">RustWeldingError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Status.html">Status</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SynchronizerError.html">SynchronizerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionEncoderError.html">TransactionEncoderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionKind.html">TransactionKind</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/BlockHeight.html">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Collection.html">Collection</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/CompactBlockRange.html">CompactBlockRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data.html">Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data/HexEncodingOptions.html">– HexEncodingOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification.html">Notification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification/Name.html">– Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/AbstractTransaction.html">AbstractTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CompactBlockDownloading.html">CompactBlockDownloading</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletService.html">LightWalletService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletServiceResponse.html">LightWalletServiceResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Logger.html">Logger</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/MinedTransactionEntity.html">MinedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PaginatedTransactionRepository.html">PaginatedTransactionRepository</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RawIdentifiable.html">RawIdentifiable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ResourceProvider.html">ResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SeedProvider.html">SeedProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SignedTransactionEntity.html">SignedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Synchronizer.html">Synchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/TransactionEntity.html">TransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ZcashRustBackendWelding.html">ZcashRustBackendWelding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/CompactBlockProcessorNotificationKey.html">CompactBlockProcessorNotificationKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DefaultResourceProvider.html">DefaultResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LightWalletEndpoint.html">LightWalletEndpoint</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/WalletBirthday.html">WalletBirthday</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ZcashCompactBlock.html">ZcashCompactBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs.html#/s:19ZcashLightClientKit0A27RustBackendWeldingConstantsV">ZcashRustBackendWeldingConstants</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17CompactBlockRangea">CompactBlockRange</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>PendingTransactionEntity</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">PendingTransactionEntity</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/AbstractTransaction.html">AbstractTransaction</a></span><span class="p">,</span> <span class="kt"><a href="../Protocols/RawIdentifiable.html">RawIdentifiable</a></span><span class="p">,</span> <span class="kt"><a href="../Protocols/SignedTransactionEntity.html">SignedTransactionEntity</a></span></code></pre>
+
+                </div>
+              </div>
+            <p>Represents a sent transaction that has not been confirmed yet on the blockchain</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP9toAddressSSvp"></a>
+                    <a name="//apple_ref/swift/Property/toAddress" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP9toAddressSSvp">toAddress</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>recipient address</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">toAddress</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP12accountIndexSivp"></a>
+                    <a name="//apple_ref/swift/Property/accountIndex" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP12accountIndexSivp">accountIndex</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>index of the account from which the funds were sent</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP11minedHeightSivp"></a>
+                    <a name="//apple_ref/swift/Property/minedHeight" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP11minedHeightSivp">minedHeight</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>height which the block was mined at.
+-1 when block has not been mined yet</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">minedHeight</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP12expiryHeightSivp"></a>
+                    <a name="//apple_ref/swift/Property/expiryHeight" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP12expiryHeightSivp">expiryHeight</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>height for which the represented transaction would be considered expired</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">expiryHeight</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP9cancelledSivp"></a>
+                    <a name="//apple_ref/swift/Property/cancelled" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP9cancelledSivp">cancelled</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>value is 1 if the transaction was cancelled</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">cancelled</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP14encodeAttemptsSivp"></a>
+                    <a name="//apple_ref/swift/Property/encodeAttempts" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP14encodeAttemptsSivp">encodeAttempts</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>how many times this transaction encoding was attempted</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">encodeAttempts</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP14submitAttemptsSivp"></a>
+                    <a name="//apple_ref/swift/Property/submitAttempts" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP14submitAttemptsSivp">submitAttempts</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>How many attempts to send this transaction have been done</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">submitAttempts</span><span class="p">:</span> <span class="kt">Int</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP12errorMessageSSSgvp"></a>
+                    <a name="//apple_ref/swift/Property/errorMessage" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP12errorMessageSSSgvp">errorMessage</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Error message if available.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">errorMessage</span><span class="p">:</span> <span class="kt">String</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP9errorCodeSiSgvp"></a>
+                    <a name="//apple_ref/swift/Property/errorCode" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP9errorCodeSiSgvp">errorCode</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>error code, if available</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">errorCode</span><span class="p">:</span> <span class="kt">Int</span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP10createTimeSdvp"></a>
+                    <a name="//apple_ref/swift/Property/createTime" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP10createTimeSdvp">createTime</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>create time of the represented transaction</p>
+<div class="aside aside-note">
+    <p class="aside-title">Note</p>
+    represented in timeIntervalySince1970
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">createTime</span><span class="p">:</span> <span class="kt">TimeInterval</span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP06isSameF2Id5otherSbqd___tAA15RawIdentifiableRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/isSameTransactionId(other:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP06isSameF2Id5otherSbqd___tAA15RawIdentifiableRd__lF">isSameTransactionId(other:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Checks whether this transaction is the same as the given transaction</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">isSameTransactionId</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">other</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/RawIdentifiable.html">RawIdentifiable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP02isE013currentHeightSbSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/isPending(currentHeight:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP02isE013currentHeightSbSi_tF">isPending(currentHeight:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction is pending based on the provided block height</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">isPending</span><span class="p">(</span><span class="nv">currentHeight</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP10isCreatingSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isCreating" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP10isCreatingSbvp">isCreating</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>if the represented transaction is being created</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isCreating</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP16isFailedEncodingSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isFailedEncoding" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP16isFailedEncodingSbvp">isFailedEncoding</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction has failed to be encoded</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isFailedEncoding</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP14isFailedSubmitSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isFailedSubmit" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP14isFailedSubmitSbvp">isFailedSubmit</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction has failed to be submitted</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isFailedSubmit</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP9isFailureSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isFailure" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP9isFailureSbvp">isFailure</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction presents some kind of error</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isFailure</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP11isCancelledSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isCancelled" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP11isCancelledSbvp">isCancelled</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction has been cancelled by the user</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isCancelled</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP7isMinedSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isMined" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP7isMinedSbvp">isMined</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction has been succesfully mined</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isMined</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP11isSubmittedSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isSubmitted" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP11isSubmittedSbvp">isSubmitted</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction has been submitted</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isSubmitted</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityP15isSubmitSuccessSbvp"></a>
+                    <a name="//apple_ref/swift/Property/isSubmitSuccess" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityP15isSubmitSuccessSbvp">isSubmitSuccess</a>
+                    </code>
+                      <span class="declaration-note">
+                        Default implementation
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>returns whether the represented transaction has been submitted successfully</p>
+
+                      </div>
+                      <h4>Default Implementation</h4>
+                      <div class="default_impl abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">isSubmitSuccess</span><span class="p">:</span> <span class="kt">Bool</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityPAAE06isSameF05otherSbqd___tAA15RawIdentifiableRd__lF"></a>
+                    <a name="//apple_ref/swift/Method/isSameTransaction(other:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityPAAE06isSameF05otherSbqd___tAA15RawIdentifiableRd__lF">isSameTransaction(other:)</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">func</span> <span class="n">isSameTransaction</span><span class="o">&lt;</span><span class="kt">T</span><span class="o">&gt;</span><span class="p">(</span><span class="nv">other</span><span class="p">:</span> <span class="kt">T</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span> <span class="k">where</span> <span class="kt">T</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/RawIdentifiable.html">RawIdentifiable</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit24PendingTransactionEntityPAAE011transactionG0AA0fG0_pvp"></a>
+                    <a name="//apple_ref/swift/Property/transactionEntity" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit24PendingTransactionEntityPAAE011transactionG0AA0fG0_pvp">transactionEntity</a>
+                    </code>
+                      <span class="declaration-note">
+                        Extension method
+                      </span>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>TransactionEntity representation of this PendingTransactionEntity transaction</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="k">var</span> <span class="nv">transactionEntity</span><span class="p">:</span> <span class="kt"><a href="../Protocols/TransactionEntity.html">TransactionEntity</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-03-17)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

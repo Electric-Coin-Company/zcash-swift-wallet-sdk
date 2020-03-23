@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Initializer Class Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Class/Initializer" class="dashAnchor"></a>
+    <a title="Initializer Class Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">ZcashLightClientKit Docs</a> (68% documented)</p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">ZcashLightClientKit Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        Initializer Class Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor.html">CompactBlockProcessor</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/Configuration.html">– Configuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/State.html">– State</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Initializer.html">Initializer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LightWalletGRPCService.html">LightWalletGRPCService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer.html">SDKSynchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer/NotificationKeys.html">– NotificationKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ZcashSDK.html">ZcashSDK</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProcessorError.html">CompactBlockProcessorError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/InitializerError.html">InitializerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LightWalletServiceError.html">LightWalletServiceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ResourceProviderError.html">ResourceProviderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/RustWeldingError.html">RustWeldingError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Status.html">Status</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SynchronizerError.html">SynchronizerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionEncoderError.html">TransactionEncoderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionKind.html">TransactionKind</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/BlockHeight.html">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Collection.html">Collection</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/CompactBlockRange.html">CompactBlockRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data.html">Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data/HexEncodingOptions.html">– HexEncodingOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification.html">Notification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification/Name.html">– Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/AbstractTransaction.html">AbstractTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CompactBlockDownloading.html">CompactBlockDownloading</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletService.html">LightWalletService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletServiceResponse.html">LightWalletServiceResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Logger.html">Logger</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/MinedTransactionEntity.html">MinedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PaginatedTransactionRepository.html">PaginatedTransactionRepository</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RawIdentifiable.html">RawIdentifiable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ResourceProvider.html">ResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SeedProvider.html">SeedProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SignedTransactionEntity.html">SignedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Synchronizer.html">Synchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/TransactionEntity.html">TransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ZcashRustBackendWelding.html">ZcashRustBackendWelding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/CompactBlockProcessorNotificationKey.html">CompactBlockProcessorNotificationKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DefaultResourceProvider.html">DefaultResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LightWalletEndpoint.html">LightWalletEndpoint</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/WalletBirthday.html">WalletBirthday</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ZcashCompactBlock.html">ZcashCompactBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs.html#/s:19ZcashLightClientKit0A27RustBackendWeldingConstantsV">ZcashRustBackendWeldingConstants</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17CompactBlockRangea">CompactBlockRange</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>Initializer</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">Initializer</span></code></pre>
+
+                </div>
+              </div>
+            <p>Wrapper for all the Rust backend functionality that does not involve processing blocks. This
+class initializes the Rust backend and the supporting data required to exercise those abilities.
+The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
+functionality, related to processing blocks.</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC8endpointAA0B14WalletEndpointVvp"></a>
+                    <a name="//apple_ref/swift/Property/endpoint" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC8endpointAA0B14WalletEndpointVvp">endpoint</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>the LightWalletEndpoint that this initializer is connecting to</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">endpoint</span><span class="p">:</span> <span class="kt"><a href="../Structs/LightWalletEndpoint.html">LightWalletEndpoint</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC10cacheDbURL04datagH007pendinggH08endpoint011spendParamsH006outputmH011loggerProxyAC10Foundation0H0V_A2mA0B14WalletEndpointVA2mA6Logger_pSgtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(cacheDbURL:dataDbURL:pendingDbURL:endpoint:spendParamsURL:outputParamsURL:loggerProxy:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC10cacheDbURL04datagH007pendinggH08endpoint011spendParamsH006outputmH011loggerProxyAC10Foundation0H0V_A2mA0B14WalletEndpointVA2mA6Logger_pSgtcfc">init(cacheDbURL:dataDbURL:pendingDbURL:endpoint:spendParamsURL:outputParamsURL:loggerProxy:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Constructs the Initializer</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">cacheDbURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">dataDbURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">pendingDbURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">endpoint</span><span class="p">:</span> <span class="kt"><a href="../Structs/LightWalletEndpoint.html">LightWalletEndpoint</a></span><span class="p">,</span> <span class="nv">spendParamsURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">outputParamsURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">loggerProxy</span><span class="p">:</span> <span class="kt"><a href="../Protocols/Logger.html">Logger</a></span><span class="p">?</span> <span class="o">=</span> <span class="kc">nil</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>cacheDbURL</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the compact blocks cache db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dataDbURL</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Location of the data db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>pendingDbURL</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the pending transactions database</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>endpoint</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the endpoint representing the lightwalletd instance you want to point to</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>spendParamsURL</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the spend parameters</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>outputParamsURL</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the output parameters</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC10initialize12seedProvider20walletBirthdayHeight16numberOfAccountsSaySSGSgAA04SeedH0_p_S2itKF"></a>
+                    <a name="//apple_ref/swift/Method/initialize(seedProvider:walletBirthdayHeight:numberOfAccounts:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC10initialize12seedProvider20walletBirthdayHeight16numberOfAccountsSaySSGSgAA04SeedH0_p_S2itKF">initialize(seedProvider:walletBirthdayHeight:numberOfAccounts:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Initialize the wallet with the given seed and return the related private keys for each
+account specified or null if the wallet was previously initialized and block data exists on
+disk. When this method returns null, that signals that the wallet will need to retrieve the
+private keys from its own secure storage. In other words, the private keys are only given out
+once for each set of database files. Subsequent calls to [initialize] will only load the Rust
+library and return null.</p>
+
+<p>&lsquo;compactBlockCache.db&rsquo; and &lsquo;transactionData.db&rsquo; files are created by this function (if they
+do not already exist). These files can be given a prefix for scenarios where multiple wallets
+operate in one app&ndash;for instance, when sweeping funds from another wallet seed.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">initialize</span><span class="p">(</span><span class="nv">seedProvider</span><span class="p">:</span> <span class="kt"><a href="../Protocols/SeedProvider.html">SeedProvider</a></span><span class="p">,</span> <span class="nv">walletBirthdayHeight</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span><span class="p">,</span> <span class="nv">numberOfAccounts</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>seedProvider</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the seed to use for initializing this wallet.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>walletBirthdayHeight</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the height corresponding to when the wallet seed was created. If null, this signals that the wallet is being born.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>numberOfAccounts</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the number of accounts to create from this seed.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC10getAddress5indexSSSgSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getAddress(index:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC10getAddress5indexSSSgSi_tF">getAddress(index:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>get address from the given account index</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getAddress</span><span class="p">(</span><span class="n">index</span> <span class="nv">account</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>account</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the index of the account</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC10getBalance7accounts5Int64VSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getBalance(account:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC10getBalance7accounts5Int64VSi_tF">getBalance(account:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>get (unverified) balance from the given account index</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getBalance</span><span class="p">(</span><span class="n">account</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int64</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>account</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the index of the account</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC18getVerifiedBalance7accounts5Int64VSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getVerifiedBalance(account:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC18getVerifiedBalance7accounts5Int64VSi_tF">getVerifiedBalance(account:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>get verified balance from the given account index</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getVerifiedBalance</span><span class="p">(</span><span class="n">account</span> <span class="nv">index</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int64</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>account</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the index of the account</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC22isValidShieldedAddressySbSSF"></a>
+                    <a name="//apple_ref/swift/Method/isValidShieldedAddress(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC22isValidShieldedAddressySbSSF">isValidShieldedAddress(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>checks if the provided address is a valid shielded zAddress</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">isValidShieldedAddress</span><span class="p">(</span><span class="n">_</span> <span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC25isValidTransparentAddressySbSSF"></a>
+                    <a name="//apple_ref/swift/Method/isValidTransparentAddress(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC25isValidTransparentAddressySbSSF">isValidTransparentAddress(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>checks if the provided address is a transparent zAddress</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">isValidTransparentAddress</span><span class="p">(</span><span class="n">_</span> <span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit11InitializerC14blockProcessorAA012CompactBlockG0CSgyF"></a>
+                    <a name="//apple_ref/swift/Method/blockProcessor()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit11InitializerC14blockProcessorAA012CompactBlockG0CSgyF">blockProcessor()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>underlying CompactBlockProcessor for this initializer</p>
+
+<p>Although it is recommended to always use the higher abstraction first, if you need a more fine grained control over synchronization, you can use a CompactBlockProcessor instead of a Synchronizer.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">blockProcessor</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Classes/CompactBlockProcessor.html">CompactBlockProcessor</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-03-17)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

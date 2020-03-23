@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ZcashLightClientKit  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a title="ZcashLightClientKit  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html">ZcashLightClientKit Docs</a> (68% documented)</p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html">ZcashLightClientKit Reference</a>
+        <img id="carat" src="img/carat.png" />
+        ZcashLightClientKit  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/CompactBlockProcessor.html">CompactBlockProcessor</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/CompactBlockProcessor/Configuration.html">– Configuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/CompactBlockProcessor/State.html">– State</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/Initializer.html">Initializer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/LightWalletGRPCService.html">LightWalletGRPCService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/SDKSynchronizer.html">SDKSynchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/SDKSynchronizer/NotificationKeys.html">– NotificationKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/ZcashSDK.html">ZcashSDK</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Enums/CompactBlockProcessorError.html">CompactBlockProcessorError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/InitializerError.html">InitializerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/LightWalletServiceError.html">LightWalletServiceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/ResourceProviderError.html">ResourceProviderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/RustWeldingError.html">RustWeldingError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/Status.html">Status</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/SynchronizerError.html">SynchronizerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/TransactionEncoderError.html">TransactionEncoderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Enums/TransactionKind.html">TransactionKind</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/BlockHeight.html">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Collection.html">Collection</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/CompactBlockRange.html">CompactBlockRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Data.html">Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Data/HexEncodingOptions.html">– HexEncodingOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Notification.html">Notification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Notification/Name.html">– Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Protocols/AbstractTransaction.html">AbstractTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/CompactBlockDownloading.html">CompactBlockDownloading</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/LightWalletService.html">LightWalletService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/LightWalletServiceResponse.html">LightWalletServiceResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/Logger.html">Logger</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/MinedTransactionEntity.html">MinedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/PaginatedTransactionRepository.html">PaginatedTransactionRepository</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/RawIdentifiable.html">RawIdentifiable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/ResourceProvider.html">ResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/SeedProvider.html">SeedProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/SignedTransactionEntity.html">SignedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/Synchronizer.html">Synchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/TransactionEntity.html">TransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Protocols/ZcashRustBackendWelding.html">ZcashRustBackendWelding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Structs/CompactBlockProcessorNotificationKey.html">CompactBlockProcessorNotificationKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/DefaultResourceProvider.html">DefaultResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/LightWalletEndpoint.html">LightWalletEndpoint</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/WalletBirthday.html">WalletBirthday</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs/ZcashCompactBlock.html">ZcashCompactBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Structs.html#/s:19ZcashLightClientKit0A27RustBackendWeldingConstantsV">ZcashRustBackendWeldingConstants</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Typealiases.html#/s:19ZcashLightClientKit17CompactBlockRangea">CompactBlockRange</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            
+            <h1 id='zcash-ios-framework' class='heading'>Zcash iOS Framework</h1>
+
+<p>A Zcash Lightweight Client SDK for iOS</p>
+
+<p>This is an alpha build and is currently under active development. Please be advised of the following:</p>
+
+<ul>
+<li>This code currently is not audited by an external security auditor, use it at your own risk</li>
+<li>The code <strong>has not been subjected to thorough review</strong> by engineers at the Electric Coin Company</li>
+<li>We <strong>are actively changing</strong> the codebase and adding features where/when needed</li>
+</ul>
+
+<p>🔒 Security Warnings</p>
+
+<ul>
+<li>The Zcash iOS Wallet SDK is experimental and a work in progress. Use it at your own risk.</li>
+<li>Developers using this SDK must familiarize themselves with the current <a href="docs/ThreatModel.md">threat
+model</a>, especially the known weaknesses described there.</li>
+</ul>
+<h1 id='build-dependencies' class='heading'>Build dependencies</h1>
+
+<p>ZcashLightClientKit uses a rust library called Librustzcash. In order to build it, you need to have rust and cargo installed on your environment. </p>
+
+<p>Install <a href="https://www.rust-lang.org/learn/get-started">Rust</a>, and then <code>cargo-lipo</code>:</p>
+<pre class="highlight plaintext"><code>$ cargo install cargo-lipo
+$ rustup target add aarch64-apple-ios x86_64-apple-ios
+</code></pre>
+<h1 id='cocoapods-support' class='heading'>Cocoapods Support</h1>
+<h2 id='installing-as-a-zcashlightclientkit-as-a-contributor' class='heading'>Installing as a ZcashLightClientKit as a Contributor</h2>
+<pre class="highlight ruby"><code><span class="n">use_frameworks!</span>
+
+<span class="n">pod</span> <span class="s1">'ZcashLightClientKit'</span><span class="p">,</span> <span class="ss">:path</span> <span class="o">=&gt;</span> <span class="s1">'../../'</span><span class="p">,</span> <span class="ss">:testspecs</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="s1">'Tests'</span><span class="p">]</span>  <span class="c1"># include testspecs if you want to run the tests</span>
+</code></pre>
+<h2 id='installing-a-wallet-app-developer' class='heading'>Installing a wallet app developer</h2>
+<pre class="highlight ruby"><code><span class="n">use_frameworks!</span>
+
+<span class="n">pod</span> <span class="s1">'ZcashLightClientKit'</span>
+</code></pre>
+<h3 id='set-testnet-or-mainnet-environment' class='heading'>Set Testnet or Mainnet environment</h3>
+
+<p>Before building, make sure that your enviroment has the variable <code>ZCASH_NETWORK_ENVIRONMENT</code> set to <code>MAINNET</code> or <code>TESTNET</code>.</p>
+<h3 id='custom-build-phases-warning' class='heading'>Custom build phases warning</h3>
+
+<p>When running <code>pod install</code> you will see this warning upon sucess:</p>
+<pre class="highlight shell"><code><span class="o">[!]</span> ZcashLightClientKit has added 2 script phases. Please inspect before executing a build. 
+See <span class="sb">`</span>https://guides.cocoapods.org/syntax/podspec.html#script_phases<span class="sb">`</span> <span class="k">for </span>more information.
+</code></pre>
+
+<p>Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We&rsquo;ve taken the lead to get that burden off your shoulders as much as possible by leveraging the <code>prepare_command</code> and <code>script_phases</code> features from Cocoapods to carefully generate the <code>TESTNET</code> and <code>MAINNET</code> builds as simple and less error prone as we could think it could be. Which started as some simple vanilla scripts, ended up being some kind of &ldquo;Build System&rdquo; on its own. Nothing is written on stone, and we accept collaborations and improvements in this matter too. </p>
+<h2 id='build-system' class='heading'>Build system</h2>
+
+<p>This section explains the &lsquo;Build System&rsquo; that integrates the rust code and creates the corresponding environment</p>
+<h3 id='overview' class='heading'>Overview</h3>
+
+<p>There are some basic steps to build ZcashLightClientKit. Even though they are &lsquo;basic&rsquo; they can be cumbersome. So we automated them in scripts.</p>
+
+<p><strong>1. Pod install and <code>prepare_command</code></strong></p>
+
+<p>ZcashLightClientKit needs files to be present at pod installation time, but that can&rsquo;t be defined properly yet and depend on librustzcash building properly and for an environment to be set up at build time. For know we just need to let Cocoapods that these files exist:</p>
+
+<ul>
+<li><code>${ZCASH_POD_SRCROOT}/zcashlc/libzcashlc.a</code> this is the librustzcash build .a file itself</li>
+<li><code>lib/libzcashlc.a</code> (as vendored library that will be added as an asset by xcodeproj)</li>
+<li><code>ZcashSDK.generated.swift</code> which contains sensitive values for the SDK that change depending on the network environment we are building for</li>
+<li><code>WalletBirthday+saplingtree.generated.swift</code> helper functions to import existing wallets.</li>
+</ul>
+
+<p><strong>2. Build Phase</strong></p>
+
+<p>The build Phase scripts executes withing the Xcode Build Step and has all the known variables of a traditional build at hand.</p>
+<pre class="highlight ruby"><code><span class="n">s</span><span class="p">.</span><span class="nf">script_phase</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Build generate constants and build librustzcash'</span><span class="p">,</span>
+      <span class="ss">:script</span> <span class="o">=&gt;</span> <span class="s1">'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_zcashsdk_constants.sh &amp;&amp; sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh'</span><span class="p">,</span>
+      <span class="ss">:execution_position</span> <span class="o">=&gt;</span> <span class="ss">:before_compile</span>
+   <span class="p">}</span>
+</code></pre>
+
+<p>This step will generate files needed on the next steps and build the librustzcash with Xcode but <em>not using cargo&rsquo;s built-in xcode integration</em></p>
+
+<p><strong>a. Generating ZcashSDK constants</strong></p>
+
+<p>To run this you need <code>Sourcery</code>. We use <code>Stencil</code> templates to create this files based on the <code>ZCASH_NETWORK_ENVIRONMENT</code> value of your choice. You can either integrate sourcery with cocoapods or as part of your environment.</p>
+
+<p>All generated files will be located in the Pods source root within the <code>Generated</code> folder. <code>ZCASH_SDK_GENERATED_SOURCES_FOLDER</code> represents that path in the build system</p>
+
+<p><strong>b. Building librust zcash and integrating it to the pod structure.</strong></p>
+
+<p>Where the magic happens. Here we will make sure that everything is set up properly to start building librustzcash. When on mainnet, the build will append a parameter to include mainnet features. </p>
+
+<p><strong>Safeguards points</strong>: 
+if it appears that you are about to build something smelly, we will let you know. Combining testnet and mainnet values and artifacts and viceversa leads to unstable builds and may cause lost of funds if ran on production. </p>
+<pre class="highlight plaintext"><code>if [ existing_build_mismatch = true ]; then 
+        # clean
+        echo "build mismatch. You previously build a Different network environment. It appears that your build could be inconsistent if proceeding. Please clean your Pods/ folder and clean your build before running your next build."
+        exit 1
+fi
+</code></pre>
+
+<p><strong>3. Xcode clean integration</strong></p>
+
+<p>When performing a clean, we will clean the rust build folders. </p>
+<h3 id='scripts' class='heading'>Scripts</h3>
+
+<p>On the Scripts folder you will find the following files:</p>
+<pre class="highlight plaintext"><code> | Scripts
+ |-/prepare_zcash_sdk.sh
+ |-/generate_test_constants.sh
+ |-/build_librustzcash_xcode.sh
+ |-/build_librustzcash.sh
+ |-/generate_zcashsdk_constants.sh
+ |-/script_commons.sh
+</code></pre>
+<h4 id='prepare_zcash_sdk-sh' class='heading'>prepare_zcash_sdk.sh</h4>
+
+<p>This script is run by the Cocoapods &lsquo;preapare_command&rsquo;. </p>
+<pre class="highlight plaintext"><code>s.prepare_command = &lt;&lt;-CMD
+      sh Scripts/prepare_zcash_sdk.sh
+    CMD
+</code></pre>
+
+<p>It basically creates empty files that cocoapods needs to pick up on it&rsquo;s pod structure but that are still not present in the file system and that will be generated in later build phases. </p>
+
+<p>NOTE: pod install will only run this phase when no Pods/ folder is present or if your pod hash has changed or is not present on manifest.lock. When in doubt, just clean the Pods/ folder and start over. That usually gets rid of weirdness caused by Xcode caching a lot of stuff you are not aware of. </p>
+<h4 id='script_commons-sh' class='heading'>script_commons.sh</h4>
+
+<p>A lot of important environment variables and helper functions live in the <code>script_commons.sh</code>. </p>
+<h1 id='testing' class='heading'>Testing</h1>
+
+<p>Currently tests depend on a <code>lightwalletd</code> server instance runnning locally or remotely to pass.
+To know more about running <code>lightwalletd</code>, refer to its repo <a href="https://github.com/zcash/lightwalletd">https://github.com/zcash/lightwalletd</a></p>
+<h2 id='pointing-tests-to-a-lightwalletd-instance' class='heading'>Pointing tests to a lightwalletd instance</h2>
+
+<p>Tests use <code>Sourcery</code> to generate a Constants file which injects the <code>lightwalletd</code> server address to the test themselves</p>
+<h3 id='installing-sourcery' class='heading'>Installing sourcery</h3>
+
+<p>refer to the official repo <a href="https://github.com/krzysztofzablocki/Sourcery">https://github.com/krzysztofzablocki/Sourcery</a></p>
+<h3 id='setting-env-var-sh-file-to-run-locally' class='heading'>Setting env-var.sh file to run locally</h3>
+
+<p>create a file called <code>env-var.sh</code> on the project root to create the <code>LIGHTWALLETD_ADDRESS</code> environment variable on build time.</p>
+<pre class="highlight plaintext"><code>export LIGHTWALLETD_ADDRESS="localhost%3a9067"
+</code></pre>
+<h3 id='integrating-with-cd-ci' class='heading'>Integrating with CD/CI</h3>
+
+<p>The <code>LIGHTWALLETD_ADDRESS</code> environment variable can also be added to your shell of choice and <code>xcodebuild</code> will pick it up accordingly.</p>
+
+<p>We advice setting this value as a secret variable on your CD/CI environment when possible</p>
+<h1 id='integrating-with-logging-tools' class='heading'>Integrating with logging tools</h1>
+
+<p>There are a lots of good logging tools for iOS. So we&rsquo;ll leave that choice to you. ZcashLightClientKit relies on a simple protocol to bubble up logs to client applications, which is called <code><a href="Protocols/Logger.html">Logger</a></code> (kudos for the naming originality&hellip;)</p>
+<pre class="highlight plaintext"><code>public protocol Logger {
+
+    func debug(_ message: String, file: String, function: String, line: Int)
+
+    func info(_ message: String, file: String, function: String, line: Int)
+
+    func event(_ message: String, file: String, function: String, line: Int)
+
+    func warn(_ message: String, file: String, function: String, line: Int)
+
+    func error(_ message: String, file: String, function: String, line: Int)
+
+}
+</code></pre>
+
+<p>To enable logging you need to do 2 simple steps:</p>
+
+<ol>
+<li>have one class conform the <code><a href="Protocols/Logger.html">Logger</a></code> protocol</li>
+<li>inject that logger when creating the <code><a href="Classes/Initializer.html">Initializer</a></code></li>
+</ol>
+
+<p>For more details look the Sample App&rsquo;s <code>AppDelegate</code> code.</p>
+<h1 id='swiftlint' class='heading'>Swiftlint</h1>
+
+<p>We don&rsquo;t like reinveing the wheel, so be gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.</p>
+<h2 id='troubleshooting' class='heading'>Troubleshooting</h2>
+<h3 id='no-network-environment' class='heading'>No network environment&hellip;.</h3>
+
+<p>if you see this message when building:
+<code>No network environment. Set ZCASH_NETWORK_ENVIRONMENT to MAINNET or TESTNET</code>
+make sure your dev environment is has this variable set before the build starts. <em>DO NOT CHANGE IT DURING THE BUILD PROCESS</em>. </p>
+
+<p>If the variable was properly set <em>after</em> you&rsquo;ve seen this message, you will need to either a) set it manually on the pod&rsquo;s target or b) doing a clean pod install and subsequent build.</p>
+<h4 id='a-setting-the-flag-manually' class='heading'>a) setting the flag manually</h4>
+
+<ol>
+<li>on your workspace, select the Pods project.</li>
+<li>on the Targets pane, select ZcashLightClientKit</li>
+<li>go to build settings</li>
+<li>scroll down to see ZCASH_NETWORK_ENVIRONMENT and complete with TESTNET or MAINNET</li>
+</ol>
+
+<p><img src="docs/images/complete_environment_manually.png" alt="how to complete network environtment manually"></p>
+<h4 id='b-clean-pod-install' class='heading'>b) clean pod install</h4>
+
+<p>it&rsquo;s not necessary to delete the whole Pods/ directory and download all of your dependencies again. </p>
+
+<ol>
+<li>on your project root, locate the <code>Pods/</code> directory</li>
+<li>remove ZcashLightClientKit from it</li>
+<li>clean derived data from xcode</li>
+<li>close xcode</li>
+<li>run <code>pod install</code> (run &ndash;verbose to see more details)</li>
+<li>open xcode project</li>
+<li>build</li>
+</ol>
+<h3 id='_function_name-referenced-from' class='heading'>_function_name  referenced from&hellip;</h3>
+
+<p>if you get a build error similar to <code>_function_name  referenced from...</code> </p>
+
+<ul>
+<li>on your project root directory *</li>
+<li>remove the &lsquo;Pods&rsquo; directory <code>rm -rf Pods/</code></li>
+<li>delete derived data and clean</li>
+<li>run <code>pod install</code></li>
+<li>build</li>
+</ul>
+<h3 id='zcashlightclientkitsample-missing-params' class='heading'>ZcashLightClientKitSample missing .params</h3>
+
+<p>ZcashLightClientKit has an external dependency on 2 files containing Sapling parameters. Although you can provide those files as you seem fit, the sample app requires them on the main bundle. </p>
+
+<p>You can download these files from <a href="https://z.cash/downloads/sapling-spend.params">https://z.cash/downloads/sapling-spend.params</a>
+and <a href="https://z.cash/downloads/sapling-output.params">https://z.cash/downloads/sapling-output.params</a> and then move them to the correct folder, which is specified on the error itself.</p>
+
+<p><img src="docs/images/output_params_error.png" alt="how to fix missing params files"></p>
+<h2 id='versioning' class='heading'>Versioning</h2>
+
+<p>This project follows <a href="https://semver.org/">semantic versioning</a> with pre-release versions. An example of a valid version number is <code>1.0.4-alpha11</code> denoting the <code>11th</code> iteration of the <code>alpha</code> pre-release of version <code>1.0.4</code>. Stable releases, such as <code>1.0.4</code> will not contain any pre-release identifiers. Pre-releases include the following, in order of stability: <code>alpha</code>, <code>beta</code>, <code>rc</code>. Version codes offer a numeric representation of the build name that always increases. The first six significant digits represent the major, minor and patch number (two digits each) and the last 3 significant digits represent the pre-release identifier. The first digit of the identifier signals the build type. Lastly, each new build has a higher version code than all previous builds. The following table breaks this down:</p>
+<h4 id='build-types' class='heading'>Build Types</h4>
+
+<table><thead>
+<tr>
+<th style="text-align: left">Type</th>
+<th style="text-align: left">Purpose</th>
+<th style="text-align: left">Stability</th>
+<th style="text-align: left">Audience</th>
+<th style="text-align: left">Identifier</th>
+<th style="text-align: left">Example Version</th>
+</tr>
+</thead><tbody>
+<tr>
+<td style="text-align: left"><strong>alpha</strong></td>
+<td style="text-align: left"><strong>Sandbox.</strong> For developers to verify behavior and try features. Things seen here might never go to production. Most bugs here can be ignored.</td>
+<td style="text-align: left">Unstable: Expect bugs</td>
+<td style="text-align: left">Internal developers</td>
+<td style="text-align: left">0XX</td>
+<td style="text-align: left">1.2.3-alpha04 (10203004)</td>
+</tr>
+<tr>
+<td style="text-align: left"><strong>beta</strong></td>
+<td style="text-align: left"><strong>Hand-off.</strong> For developers to present finished features. Bugs found here should be reported and immediately addressed, if they relate to recent changes.</td>
+<td style="text-align: left">Unstable: Report bugs</td>
+<td style="text-align: left">Internal stakeholders</td>
+<td style="text-align: left">2XX</td>
+<td style="text-align: left">1.2.3-beta04 (10203204)</td>
+</tr>
+<tr>
+<td style="text-align: left"><strong>release candidate</strong></td>
+<td style="text-align: left"><strong>Hardening.</strong> Final testing for an app release that we believe is ready to go live. The focus here is regression testing to ensure that new changes have not introduced instability in areas that were previously working.</td>
+<td style="text-align: left">Stable: Hunt for bugs</td>
+<td style="text-align: left">External testers</td>
+<td style="text-align: left">4XX</td>
+<td style="text-align: left">1.2.3-rc04 (10203404)</td>
+</tr>
+<tr>
+<td style="text-align: left"><strong>production</strong></td>
+<td style="text-align: left"><strong>Dellivery.</strong> Deliver new features to end users. Any bugs found here need to be prioritized. Some will require immediate attention but most can be worked into a future release.</td>
+<td style="text-align: left">Stable: Prioritize bugs</td>
+<td style="text-align: left">Public</td>
+<td style="text-align: left">8XX</td>
+<td style="text-align: left">1.2.3 (10203800)</td>
+</tr>
+</tbody></table>
+<h2 id='examples' class='heading'>Examples</h2>
+
+<p>This repo contains demos of isolated functionality that this SDK provides. They can be found in the examples folder</p>
+
+<p>Examples can be found in the <a href="/Example/ZcashLightClientSample">Demo App</a></p>
+<h1 id='license' class='heading'>License</h1>
+
+<p>Apache License Version 2.0</p>
+
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-03-17)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

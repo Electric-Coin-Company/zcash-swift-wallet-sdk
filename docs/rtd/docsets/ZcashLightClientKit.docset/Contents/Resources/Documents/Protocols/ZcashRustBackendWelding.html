@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>ZcashRustBackendWelding Protocol Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Protocol/ZcashRustBackendWelding" class="dashAnchor"></a>
+    <a title="ZcashRustBackendWelding Protocol Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">ZcashLightClientKit Docs</a> (68% documented)</p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">ZcashLightClientKit Reference</a>
+        <img id="carat" src="../img/carat.png" />
+        ZcashRustBackendWelding Protocol Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor.html">CompactBlockProcessor</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/Configuration.html">– Configuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/State.html">– State</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Initializer.html">Initializer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LightWalletGRPCService.html">LightWalletGRPCService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer.html">SDKSynchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer/NotificationKeys.html">– NotificationKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ZcashSDK.html">ZcashSDK</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProcessorError.html">CompactBlockProcessorError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/InitializerError.html">InitializerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LightWalletServiceError.html">LightWalletServiceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ResourceProviderError.html">ResourceProviderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/RustWeldingError.html">RustWeldingError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/Status.html">Status</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SynchronizerError.html">SynchronizerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionEncoderError.html">TransactionEncoderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionKind.html">TransactionKind</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/Array.html">Array</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/BlockHeight.html">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Collection.html">Collection</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/CompactBlockRange.html">CompactBlockRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data.html">Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data/HexEncodingOptions.html">– HexEncodingOptions</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification.html">Notification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification/Name.html">– Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/AbstractTransaction.html">AbstractTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CompactBlockDownloading.html">CompactBlockDownloading</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletService.html">LightWalletService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletServiceResponse.html">LightWalletServiceResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Logger.html">Logger</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/MinedTransactionEntity.html">MinedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PaginatedTransactionRepository.html">PaginatedTransactionRepository</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RawIdentifiable.html">RawIdentifiable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ResourceProvider.html">ResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SeedProvider.html">SeedProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SignedTransactionEntity.html">SignedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Synchronizer.html">Synchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/TransactionEntity.html">TransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ZcashRustBackendWelding.html">ZcashRustBackendWelding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/CompactBlockProcessorNotificationKey.html">CompactBlockProcessorNotificationKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DefaultResourceProvider.html">DefaultResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LightWalletEndpoint.html">LightWalletEndpoint</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/WalletBirthday.html">WalletBirthday</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ZcashCompactBlock.html">ZcashCompactBlock</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs.html#/s:19ZcashLightClientKit0A27RustBackendWeldingConstantsV">ZcashRustBackendWeldingConstants</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17CompactBlockRangea">CompactBlockRange</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>ZcashRustBackendWelding</h1>
+              <div class="declaration">
+                <div class="language">
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">protocol</span> <span class="kt">ZcashRustBackendWelding</span></code></pre>
+
+                </div>
+              </div>
+            <p>Undocumented</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP9lastErrorAA0egI0OSgyFZ"></a>
+                    <a name="//apple_ref/swift/Method/lastError()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP9lastErrorAA0egI0OSgyFZ">lastError()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>gets the latest error if available</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">lastError</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Enums/RustWeldingError.html">RustWeldingError</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP12getLastErrorSSSgyFZ"></a>
+                    <a name="//apple_ref/swift/Method/getLastError()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP12getLastErrorSSSgyFZ">getLastError()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>gets the latest error message from librustzcash</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getLastError</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP10initDataDb02dbI0y10Foundation3URLV_tKFZ"></a>
+                    <a name="//apple_ref/swift/Method/initDataDb(dbData:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP10initDataDb02dbI0y10Foundation3URLV_tKFZ">initDataDb(dbData:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initializes the data db</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">initDataDb</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db sql file</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP22isValidShieldedAddressySbSSKFZ"></a>
+                    <a name="//apple_ref/swift/Method/isValidShieldedAddress(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP22isValidShieldedAddressySbSSKFZ">isValidShieldedAddress(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    Error when the provided address belongs to another network
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">isValidShieldedAddress</span><span class="p">(</span><span class="n">_</span> <span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>true when the address is valid and shielded. Returns false in any other case</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP25isValidTransparentAddressySbSSKFZ"></a>
+                    <a name="//apple_ref/swift/Method/isValidTransparentAddress(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP25isValidTransparentAddressySbSSKFZ">isValidTransparentAddress(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    Error when the provided address belongs to another network
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">isValidTransparentAddress</span><span class="p">(</span><span class="n">_</span> <span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>true when the address is valid and transparent. false in any other case</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP17initAccountsTable6dbData4seed8accountsSaySSGSg10Foundation3URLV_Says5UInt8VGs5Int32VtFZ"></a>
+                    <a name="//apple_ref/swift/Method/initAccountsTable(dbData:seed:accounts:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP17initAccountsTable6dbData4seed8accountsSaySSGSg10Foundation3URLV_Says5UInt8VGs5Int32VtFZ">initAccountsTable(dbData:seed:accounts:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initialize the blocks table from a given checkpoint (birthday)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">initAccountsTable</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">seed</span><span class="p">:</span> <span class="p">[</span><span class="kt">UInt8</span><span class="p">],</span> <span class="nv">accounts</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>seed</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>byte array of the zip32 seed</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>accounts</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>how many accounts you want to have</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP15initBlocksTable6dbData6height4hash4time11saplingTreey10Foundation3URLV_s5Int32VSSs6UInt32VSStKFZ"></a>
+                    <a name="//apple_ref/swift/Method/initBlocksTable(dbData:height:hash:time:saplingTree:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP15initBlocksTable6dbData6height4hash4time11saplingTreey10Foundation3URLV_s5Int32VSSs6UInt32VSStKFZ">initBlocksTable(dbData:height:hash:time:saplingTree:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>initialize the blocks table from a given checkpoint (birthday)</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">initBlocksTable</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">,</span> <span class="nv">hash</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">time</span><span class="p">:</span> <span class="kt">UInt32</span><span class="p">,</span> <span class="nv">saplingTree</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>height</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>represents the block height of the given checkpoint</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>hash</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>hash of the merkle tree</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>time</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>in milliseconds from reference</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>saplingTree</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>hash of the sapling tree</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP10getAddress6dbData7accountSSSg10Foundation3URLV_s5Int32VtFZ"></a>
+                    <a name="//apple_ref/swift/Method/getAddress(dbData:account:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP10getAddress6dbData7accountSSSg10Foundation3URLV_s5Int32VtFZ">getAddress(dbData:account:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>gets the address from data db from the given account</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getAddress</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">account</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>account</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>index of the given account</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an optional string with the address if found</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP10getBalance6dbData7accounts5Int64V10Foundation3URLV_s5Int32VtFZ"></a>
+                    <a name="//apple_ref/swift/Method/getBalance(dbData:account:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP10getBalance6dbData7accounts5Int64V10Foundation3URLV_s5Int32VtFZ">getBalance(dbData:account:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>get the (unverified) balance from the given account</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getBalance</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">account</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int64</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>account</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>index of the given account</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP18getVerifiedBalance6dbData7accounts5Int64V10Foundation3URLV_s5Int32VtFZ"></a>
+                    <a name="//apple_ref/swift/Method/getVerifiedBalance(dbData:account:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP18getVerifiedBalance6dbData7accounts5Int64V10Foundation3URLV_s5Int32VtFZ">getVerifiedBalance(dbData:account:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>get the verified balance from the given account</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getVerifiedBalance</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">account</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int64</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>account</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>index of the given account</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP21getReceivedMemoAsUTF86dbData6idNoteSSSg10Foundation3URLV_s5Int64VtFZ"></a>
+                    <a name="//apple_ref/swift/Method/getReceivedMemoAsUTF8(dbData:idNote:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP21getReceivedMemoAsUTF86dbData6idNoteSSSg10Foundation3URLV_s5Int64VtFZ">getReceivedMemoAsUTF8(dbData:idNote:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>get received memo from note</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getReceivedMemoAsUTF8</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">idNote</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db file</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>idNote</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>note_id of note where the memo is located</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP17getSentMemoAsUTF86dbData6idNoteSSSg10Foundation3URLV_s5Int64VtFZ"></a>
+                    <a name="//apple_ref/swift/Method/getSentMemoAsUTF8(dbData:idNote:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP17getSentMemoAsUTF86dbData6idNoteSSSg10Foundation3URLV_s5Int64VtFZ">getSentMemoAsUTF8(dbData:idNote:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>get sent memo from note</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getSentMemoAsUTF8</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">idNote</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db file</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>idNote</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>note_id of note where the memo is located</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP21validateCombinedChain7dbCache0K4Datas5Int32V10Foundation3URLV_AKtFZ"></a>
+                    <a name="//apple_ref/swift/Method/validateCombinedChain(dbCache:dbData:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP21validateCombinedChain7dbCache0K4Datas5Int32V10Foundation3URLV_AKtFZ">validateCombinedChain(dbCache:dbData:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <pre class="highlight swift"><code> <span class="kt">Checks</span> <span class="n">that</span> <span class="n">the</span> <span class="n">scanned</span> <span class="n">blocks</span> <span class="k">in</span> <span class="n">the</span> <span class="n">data</span> <span class="n">database</span><span class="p">,</span> <span class="n">when</span> <span class="n">combined</span> <span class="n">with</span> <span class="n">the</span> <span class="n">recent</span>
+ <span class="p">`</span><span class="nv">CompactBlock</span><span class="p">`</span><span class="n">s</span> <span class="k">in</span> <span class="n">the</span> <span class="n">cache</span> <span class="n">database</span><span class="p">,</span> <span class="n">form</span> <span class="n">a</span> <span class="n">valid</span> <span class="n">chain</span><span class="o">.</span>
+ <span class="kt">This</span> <span class="n">function</span> <span class="k">is</span> <span class="n">built</span> <span class="n">on</span> <span class="n">the</span> <span class="n">core</span> <span class="n">assumption</span> <span class="n">that</span> <span class="n">the</span> <span class="n">information</span> <span class="n">provided</span> <span class="k">in</span> <span class="n">the</span>
+ <span class="n">cache</span> <span class="n">database</span> <span class="k">is</span> <span class="n">more</span> <span class="n">likely</span> <span class="n">to</span> <span class="n">be</span> <span class="n">accurate</span> <span class="n">than</span> <span class="n">the</span> <span class="n">previously</span><span class="o">-</span><span class="n">scanned</span> <span class="n">information</span><span class="o">.</span>
+ <span class="kt">This</span> <span class="n">follows</span> <span class="n">from</span> <span class="n">the</span> <span class="nf">design</span> <span class="p">(</span><span class="n">and</span> <span class="n">trust</span><span class="p">)</span> <span class="n">assumption</span> <span class="n">that</span> <span class="n">the</span> <span class="p">`</span><span class="nv">lightwalletd</span><span class="p">`</span> <span class="n">server</span>
+ <span class="n">provides</span> <span class="n">accurate</span> <span class="n">block</span> <span class="n">information</span> <span class="k">as</span> <span class="n">of</span> <span class="n">the</span> <span class="n">time</span> <span class="n">it</span> <span class="n">was</span> <span class="n">requested</span><span class="o">.</span>
+</code></pre>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">validateCombinedChain</span><span class="p">(</span><span class="nv">dbCache</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int32</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p><ul>
+<li><code>-1</code> if the combined chain is valid.</li>
+<li><code>upper_bound</code> if the combined chain is invalid.</li>
+<li><code>upper_bound</code> is the height of the highest invalid block (on the assumption that the highest block in the cache database is correct).</li>
+<li><code>0</code> if there was an error during validation unrelated to chain validity.</li>
+</ul><div class="aside aside-important">
+    <p class="aside-title">Important</p>
+    This function does not mutate either of the databases.
+
+</div></p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP14rewindToHeight6dbData6heightSb10Foundation3URLV_s5Int32VtFZ"></a>
+                    <a name="//apple_ref/swift/Method/rewindToHeight(dbData:height:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP14rewindToHeight6dbData6heightSb10Foundation3URLV_s5Int32VtFZ">rewindToHeight(dbData:height:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>rewinds the compact block storage to the given height. clears up all derived data as well</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">rewindToHeight</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">height</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db file</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>height</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>height to rewind to</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP10scanBlocks7dbCache0J4DataSb10Foundation3URLV_AItFZ"></a>
+                    <a name="//apple_ref/swift/Method/scanBlocks(dbCache:dbData:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP10scanBlocks7dbCache0J4DataSb10Foundation3URLV_AItFZ">scanBlocks(dbCache:dbData:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Scans new blocks added to the cache for any transactions received by the tracked
+accounts.
+This function pays attention only to cached blocks with heights greater than the
+highest scanned block in <code>db_data</code>. Cached blocks with lower heights are not verified
+against previously-scanned blocks. In particular, this function <strong>assumes</strong> that the
+caller is handling rollbacks.
+For brand-new light client databases, this function starts scanning from the Sapling
+activation height. This height can be fast-forwarded to a more recent block by calling
+[<code>zcashlc_init_blocks_table</code>] before this function.
+Scanned blocks are required to be height-sequential. If a block is missing from the
+cache, an error will be signalled.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">scanBlocks</span><span class="p">(</span><span class="nv">dbCache</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbCache</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the compact block cache db</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db file
+returns false if fails to scan.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP15createToAddress6dbData7account5extsk2to5value4memo15spendParamsPath06outputsT0s5Int64V10Foundation3URLV_s5Int32VS2SANSSSgS2StFZ"></a>
+                    <a name="//apple_ref/swift/Method/createToAddress(dbData:account:extsk:to:value:memo:spendParamsPath:outputParamsPath:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP15createToAddress6dbData7account5extsk2to5value4memo15spendParamsPath06outputsT0s5Int64V10Foundation3URLV_s5Int32VS2SANSSSgS2StFZ">createToAddress(dbData:account:extsk:to:value:memo:spendParamsPath:outputParamsPath:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Creates a transaction to the given address from the given account</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">createToAddress</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">account</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">,</span> <span class="nv">extsk</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">to</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">value</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">,</span> <span class="nv">memo</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">spendParamsPath</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">outputParamsPath</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int64</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>URL for the Data DB</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>account</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the account index that will originate the transaction</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>extsk</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>extended spending key string</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>to</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>recipient address</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>value</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>transaction amount in Zatoshi</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>memo</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the memo string for this transaction</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>spendParamsPath</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path escaped String for the filesystem locations where the spend paremeters are located</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>outputParamsPath</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>path escaped String for the filesystem locations where the output paremeters are located</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP28deriveExtendedFullViewingKeyySSSgSSKFZ"></a>
+                    <a name="//apple_ref/swift/Method/deriveExtendedFullViewingKey(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP28deriveExtendedFullViewingKeyySSSgSSKFZ">deriveExtendedFullViewingKey(_:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Derives a full viewing key from a seed</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    RustBackendError if fatal error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">deriveExtendedFullViewingKey</span><span class="p">(</span><span class="n">_</span> <span class="nv">spendingKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>spendingKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>a string containing the spending key</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>the derived key</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP29deriveExtendedFullViewingKeys4seed8accountsSaySSGSgSS_s5Int32VtKFZ"></a>
+                    <a name="//apple_ref/swift/Method/deriveExtendedFullViewingKeys(seed:accounts:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP29deriveExtendedFullViewingKeys4seed8accountsSaySSGSgSS_s5Int32VtKFZ">deriveExtendedFullViewingKeys(seed:accounts:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Derives a set of full viewing keys from a seed</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    RustBackendError if fatal error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">deriveExtendedFullViewingKeys</span><span class="p">(</span><span class="nv">seed</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">accounts</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>spendingKey</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>a string containing the spending key</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>accounts</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the number of accounts you want to derive from this seed</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an array containing the derived keys</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP26deriveExtendedSpendingKeys4seed8accountsSaySSGSgSS_s5Int32VtKFZ"></a>
+                    <a name="//apple_ref/swift/Method/deriveExtendedSpendingKeys(seed:accounts:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP26deriveExtendedSpendingKeys4seed8accountsSaySSGSgSS_s5Int32VtKFZ">deriveExtendedSpendingKeys(seed:accounts:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Derives a set of full viewing keys from a seed</p>
+<div class="aside aside-throws">
+    <p class="aside-title">Throws</p>
+    RustBackendError if fatal error occurs
+
+</div>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">deriveExtendedSpendingKeys</span><span class="p">(</span><span class="nv">seed</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">accounts</span><span class="p">:</span> <span class="kt">Int32</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>seed</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>a string containing the seed</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>accounts</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the number of accounts you want to derive from this seed</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>an array containing the spending keys</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-03-17)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

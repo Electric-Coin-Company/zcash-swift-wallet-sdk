@@ -1,0 +1,964 @@
+{
+  "warnings": [
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Downloader/CompactBlockDownloaderBuilder.swift",
+      "line": 13,
+      "symbol": "CompactBlockDownloader.sqlDownloader(service:at:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Downloader/CompactBlockDownloaderBuilder.swift",
+      "line": 25,
+      "symbol": "CompactBlockStorage.init(url:readonly:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 16,
+      "symbol": "CompactBlockProcessorError.invalidConfiguration",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 17,
+      "symbol": "CompactBlockProcessorError.missingDbPath(path:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 18,
+      "symbol": "CompactBlockProcessorError.dataDbInitFailed(path:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 19,
+      "symbol": "CompactBlockProcessorError.connectionError(message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 20,
+      "symbol": "CompactBlockProcessorError.generalError(message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 21,
+      "symbol": "CompactBlockProcessorError.maxAttemptsReached(attempts:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 28,
+      "symbol": "CompactBlockProcessorNotificationKey.progress",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 29,
+      "symbol": "CompactBlockProcessorNotificationKey.progressHeight",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 30,
+      "symbol": "CompactBlockProcessorNotificationKey.reorgHeight",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 31,
+      "symbol": "CompactBlockProcessorNotificationKey.latestScannedBlockHeight",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 32,
+      "symbol": "CompactBlockProcessorNotificationKey.rewindHeight",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 33,
+      "symbol": "CompactBlockProcessorNotificationKey.error",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 102,
+      "symbol": "CompactBlockProcessor.Configuration.cacheDb",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 103,
+      "symbol": "CompactBlockProcessor.Configuration.dataDb",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 104,
+      "symbol": "CompactBlockProcessor.Configuration.downloadBatchSize",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 105,
+      "symbol": "CompactBlockProcessor.Configuration.blockPollInterval",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 109,
+      "symbol": "CompactBlockProcessor.Configuration.retries",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 110,
+      "symbol": "CompactBlockProcessor.Configuration.maxBackoffInterval",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 111,
+      "symbol": "CompactBlockProcessor.Configuration.rewindDistance",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 112,
+      "symbol": "CompactBlockProcessor.Configuration.walletBirthday",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 114,
+      "symbol": "CompactBlockProcessor.Configuration.init(cacheDb:dataDb:walletBirthday:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
+      "line": 154,
+      "symbol": "CompactBlockProcessor.state",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/DAO/BlockDao.swift",
+      "line": 33,
+      "symbol": "BlockSQLDAO.lastScannedBlockHeight()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/DAO/PendingTransactionDao.swift",
+      "line": 72,
+      "symbol": "PendingTransaction.init(value:toAddress:memo:account:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/DAO/TransactionDao.swift",
+      "line": 205,
+      "symbol": "Data.init(blob:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/DAO/TransactionDao.swift",
+      "line": 210,
+      "symbol": "Data.bytes",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/DAO/TransactionDao.swift",
+      "line": 216,
+      "symbol": "Array.data",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/PendingTransactionEntity.swift",
+      "line": 105,
+      "symbol": "PendingTransactionEntity.isSameTransaction(other:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 28,
+      "symbol": "TransactionEntity.transactionIndex",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 29,
+      "symbol": "TransactionEntity.expiryHeight",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 30,
+      "symbol": "TransactionEntity.minedHeight",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 31,
+      "symbol": "TransactionEntity.raw",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 37,
+      "symbol": "TransactionEntity.hash(into:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 45,
+      "symbol": "TransactionEntity.==(_:_:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 82,
+      "symbol": "SignedTransactionEntity.raw",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 89,
+      "symbol": "RawIdentifiable.rawTransactionId",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 115,
+      "symbol": "ConfirmedTransactionEntity",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Entity/TransactionEntity.swift",
+      "line": 157,
+      "symbol": "ConfirmedTransactionEntity",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Extensions/Data+Zcash.swift",
+      "line": 20,
+      "symbol": "String.toTxIdString()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Extensions/Data+Zcash.swift",
+      "line": 32,
+      "symbol": "Collection.pairs",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Extensions/HexEncode.swift",
+      "line": 15,
+      "symbol": "Data.HexEncodingOptions",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Extensions/HexEncode.swift",
+      "line": 17,
+      "symbol": "Data.HexEncodingOptions.upperCase",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Extensions/HexEncode.swift",
+      "line": 24,
+      "symbol": "Data.hexEncodedString(options:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Generated/WalletBirthday+saplingtree.generated.swift",
+      "line": 8,
+      "symbol": "WalletBirthday.birthday(with:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Generated/ZcashSDK.generated.swift",
+      "line": 80,
+      "symbol": "ZcashSDK.DEFAULT_DB_NAME_PREFIX",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Generated/ZcashSDK.generated.swift",
+      "line": 96,
+      "symbol": "ZcashSDK.isMainnet",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 16,
+      "symbol": "InitializerError.cacheDbInitFailed",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 17,
+      "symbol": "InitializerError.dataDbInitFailed",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 18,
+      "symbol": "InitializerError.accountInitFailed",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 19,
+      "symbol": "InitializerError.falseStart",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 26,
+      "symbol": "LightWalletEndpoint.address",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 27,
+      "symbol": "LightWalletEndpoint.port",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 28,
+      "symbol": "LightWalletEndpoint.secure",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 30,
+      "symbol": "LightWalletEndpoint.host",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 226,
+      "symbol": "WalletBirthday.height",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 227,
+      "symbol": "WalletBirthday.hash",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 228,
+      "symbol": "WalletBirthday.time",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Initializer.swift",
+      "line": 229,
+      "symbol": "WalletBirthday.tree",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/ResourceProvider.swift",
+      "line": 11,
+      "symbol": "ResourceProviderError",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/ResourceProvider.swift",
+      "line": 12,
+      "symbol": "ResourceProviderError.unavailableResource",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/ResourceProvider.swift",
+      "line": 14,
+      "symbol": "ResourceProvider",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/ResourceProvider.swift",
+      "line": 16,
+      "symbol": "ResourceProvider.dataDbURL",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/ResourceProvider.swift",
+      "line": 17,
+      "symbol": "ResourceProvider.cacheDbURL",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/ResourceProvider.swift",
+      "line": 25,
+      "symbol": "DefaultResourceProvider.dataDbURL",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/ResourceProvider.swift",
+      "line": 35,
+      "symbol": "DefaultResourceProvider.cacheDbURL",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Providers/SeedProvider.swift",
+      "line": 14,
+      "symbol": "SeedProvider.seed()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Repository/CompactBlockRepository.swift",
+      "line": 14,
+      "symbol": "ZcashCompactBlock.height",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Repository/CompactBlockRepository.swift",
+      "line": 15,
+      "symbol": "ZcashCompactBlock.data",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Repository/PaginatedTransactionRepository.swift",
+      "line": 10,
+      "symbol": "PaginatedTransactionRepository",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRust+Utils.swift",
+      "line": 12,
+      "symbol": "Data.asZcashTransactionMemo()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRust+Utils.swift",
+      "line": 18,
+      "symbol": "String.encodeAsZcashTransactionMemo()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRustBackendWelding.swift",
+      "line": 11,
+      "symbol": "RustWeldingError",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRustBackendWelding.swift",
+      "line": 12,
+      "symbol": "RustWeldingError.genericError(message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRustBackendWelding.swift",
+      "line": 13,
+      "symbol": "RustWeldingError.dataDbInitFailed(message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRustBackendWelding.swift",
+      "line": 14,
+      "symbol": "RustWeldingError.dataDbNotEmpty",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRustBackendWelding.swift",
+      "line": 15,
+      "symbol": "RustWeldingError.saplingSpendParametersNotFound",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRustBackendWelding.swift",
+      "line": 18,
+      "symbol": "ZcashRustBackendWeldingConstants",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Rust/ZcashRustBackendWelding.swift",
+      "line": 22,
+      "symbol": "ZcashRustBackendWelding",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletGRPCService.swift",
+      "line": 21,
+      "symbol": "LightWalletGRPCService.init(channel:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletGRPCService.swift",
+      "line": 26,
+      "symbol": "LightWalletGRPCService.init(endpoint:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletGRPCService.swift",
+      "line": 30,
+      "symbol": "LightWalletGRPCService.init(host:secure:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 17,
+      "symbol": "LightWalletServiceError.generalError",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 18,
+      "symbol": "LightWalletServiceError.failed(statusCode:message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 19,
+      "symbol": "LightWalletServiceError.invalidBlock",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 20,
+      "symbol": "LightWalletServiceError.sentFailed(sendResponse:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 21,
+      "symbol": "LightWalletServiceError.genericError(error:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 63,
+      "symbol": "LightWalletServiceResponse",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 64,
+      "symbol": "LightWalletServiceResponse.errorCode",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 65,
+      "symbol": "LightWalletServiceResponse.errorMessage",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 66,
+      "symbol": "LightWalletServiceResponse.unknownFields",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/LightWalletService.swift",
+      "line": 71,
+      "symbol": "LightWalletService",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/Model/ZcashCompactBlock.swift",
+      "line": 11,
+      "symbol": "BlockHeight",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/Model/ZcashCompactBlock.swift",
+      "line": 11,
+      "symbol": "CompactBlockRange",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/Model/ZcashCompactBlock.swift",
+      "line": 12,
+      "symbol": "CompactBlockRange",
+      "symbol_kind": "source.lang.swift.decl.typealias",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/Model/ZcashCompactBlock.swift",
+      "line": 18,
+      "symbol": "BlockHeight",
+      "symbol_kind": "source.lang.swift.decl.extension",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/Model/ZcashCompactBlock.swift",
+      "line": 19,
+      "symbol": "BlockHeight.empty()",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/Model/ZcashCompactBlock.swift",
+      "line": 25,
+      "symbol": "ZcashCompactBlock.init(compactBlock:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 12,
+      "symbol": "CompactBlockRange.blockRange()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 19,
+      "symbol": "BlockID.saplingActivationHeight",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 21,
+      "symbol": "BlockID.init(height:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 26,
+      "symbol": "BlockID.saplingActivation",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 30,
+      "symbol": "BlockID.init(height:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 34,
+      "symbol": "BlockID.compactBlockHeight()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 41,
+      "symbol": "BlockRange.init(startHeight:endHeight:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 49,
+      "symbol": "BlockRange.sinceSaplingActivation(to:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Service/ProtoBuf/Extensions/Protocolbuffer+Extensions.swift",
+      "line": 62,
+      "symbol": "Array.asZcashCompactBlocks()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 15,
+      "symbol": "SynchronizerError.initFailed(message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 16,
+      "symbol": "SynchronizerError.syncFailed",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 17,
+      "symbol": "SynchronizerError.connectionFailed(message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 18,
+      "symbol": "SynchronizerError.generalError(message:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 19,
+      "symbol": "SynchronizerError.maxRetryAttemptsReached(attempts:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 139,
+      "symbol": "TransactionKind.sent",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 140,
+      "symbol": "TransactionKind.received",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Synchronizer.swift",
+      "line": 141,
+      "symbol": "TransactionKind.all",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Transaction/TransactionEncoder.swift",
+      "line": 12,
+      "symbol": "TransactionEncoderError",
+      "symbol_kind": "source.lang.swift.decl.enum",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Transaction/TransactionEncoder.swift",
+      "line": 13,
+      "symbol": "TransactionEncoderError.notFound(transactionId:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Transaction/TransactionEncoder.swift",
+      "line": 14,
+      "symbol": "TransactionEncoderError.NotEncoded(transactionId:)",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Transaction/TransactionEncoder.swift",
+      "line": 15,
+      "symbol": "TransactionEncoderError.missingParams",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Transaction/TransactionEncoder.swift",
+      "line": 16,
+      "symbol": "TransactionEncoderError.spendingKeyWrongNetwork",
+      "symbol_kind": "source.lang.swift.decl.enumelement",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 68,
+      "symbol": "SDKSynchronizer.NotificationKeys",
+      "symbol_kind": "source.lang.swift.decl.struct",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 69,
+      "symbol": "SDKSynchronizer.NotificationKeys.progress",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 70,
+      "symbol": "SDKSynchronizer.NotificationKeys.blockHeight",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 71,
+      "symbol": "SDKSynchronizer.NotificationKeys.minedTransaction",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 72,
+      "symbol": "SDKSynchronizer.NotificationKeys.error",
+      "symbol_kind": "source.lang.swift.decl.var.static",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 81,
+      "symbol": "SDKSynchronizer.blockProcessor",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 82,
+      "symbol": "SDKSynchronizer.initializer",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 437,
+      "symbol": "SDKSynchronizer.allReceivedTransactions()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 441,
+      "symbol": "SDKSynchronizer.allPendingTransactions()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 445,
+      "symbol": "SDKSynchronizer.allClearedTransactions()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
+      "line": 449,
+      "symbol": "SDKSynchronizer.allSentTransactions()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Utils/LoggingProxy.swift",
+      "line": 15,
+      "symbol": "Logger.debug(_:file:function:line:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Utils/LoggingProxy.swift",
+      "line": 17,
+      "symbol": "Logger.info(_:file:function:line:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Utils/LoggingProxy.swift",
+      "line": 19,
+      "symbol": "Logger.event(_:file:function:line:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Utils/LoggingProxy.swift",
+      "line": 21,
+      "symbol": "Logger.warn(_:file:function:line:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/Utils/LoggingProxy.swift",
+      "line": 23,
+      "symbol": "Logger.error(_:file:function:line:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Users/pacu/Repos/ECC/ZcashLightClientKit"
+}
