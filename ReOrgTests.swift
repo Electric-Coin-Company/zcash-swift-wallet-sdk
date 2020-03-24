@@ -38,14 +38,15 @@ class ReOrgTests: XCTestCase {
     let walletBirthday = BlockHeight(663150)
     
     override func setUpWithError() throws {
-        let service = DarksideWalletService()
-        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
-        try! storage.createTable()
-        downloader = CompactBlockDownloader(service: service, storage: storage)
         var config = CompactBlockProcessor.Configuration.standard
         
         config.walletBirthday = walletBirthday
         processorConfig = config
+        
+        let service = DarksideWalletService()
+        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
+        try! storage.createTable()
+        downloader = CompactBlockDownloader(service: service, storage: storage)
         processor = CompactBlockProcessor(downloader: downloader,
                                           backend: ZcashRustBackend.self,
                                             config: processorConfig)
@@ -91,20 +92,24 @@ class ReOrgTests: XCTestCase {
           
           XCTAssertNoThrow(try processor.start())
       }
-    
     func testBasicReOrg() throws {
+        
+        try basicReOrgTest(firstLatestHeight: mockLatestHeight, walletBirthday: walletBirthday, targetHeight: targetLatestHeight)
+    }
+    
+    func basicReOrgTest(firstLatestHeight: BlockHeight, walletBirthday: BlockHeight, targetHeight: BlockHeight) throws {
         
         var latestHeight = BlockHeight(0)
         
         /**
         connect to dLWD
-        request latest height -> receive 663250
+        request latest height -> receive firstLatestHeight
         */
         XCTAssertNoThrow(try { latestHeight = try darksideWalletService.latestBlockHeight() }())
-        XCTAssertEqual(latestHeight, mockLatestHeight)
+        XCTAssertEqual(latestHeight, firstLatestHeight)
         
         /**
-         download and sync blocks from 663150 to 663250
+         download and sync blocks from walletBirthday to firstLatestHeight
          */
         startProcessing()
         wait(for: [idleNotificationExpectation], timeout: 30)
@@ -116,7 +121,7 @@ class ReOrgTests: XCTestCase {
          */
         var latestDownloadedHeight = BlockHeight(0)
         XCTAssertNoThrow(try {latestDownloadedHeight = try downloader.lastDownloadedBlockHeight()}())
-        XCTAssertEqual(latestDownloadedHeight, mockLatestHeight)
+        XCTAssertEqual(latestDownloadedHeight, firstLatestHeight)
         
         /**
          trigger reorg!
@@ -124,17 +129,17 @@ class ReOrgTests: XCTestCase {
         darksideWalletService.triggerReOrg()
         
         /**
-         request latest height -> receive 663251!
+         request latest height -> receive targetHeight!
          */
         
         XCTAssertNoThrow(try {latestDownloadedHeight = try downloader.lastDownloadedBlockHeight()}())
         afterReorgIdleNotification.subscribe(to: .blockProcessorIdle, object: processor)
         
         /**
-         request latest height -> receive 663251!
+         request latest height -> receive targetHeight!
          download that block
-         observe that the prev hash of that block does not match the hash that we have for 663250
-         rewind 10 blocks and request blocks 663241 to 663251
+         observe that the prev hash of that block does not match the hash that we have for firstLatestHeight
+         rewind 10 blocks and request blocks targetHeight-10 to targetHeight
          */
         try processor.start(retry: true)
         
@@ -142,10 +147,10 @@ class ReOrgTests: XCTestCase {
         
         wait(for: [reorgNotificationExpectation, afterReorgIdleNotification], timeout: 10)
         
-        // now everything should be fine. latest block should be 663251
+        // now everything should be fine. latest block should be targetHeight
         
          XCTAssertNoThrow(try {latestDownloadedHeight = try downloader.lastDownloadedBlockHeight()}())
-               XCTAssertEqual(latestDownloadedHeight, targetLatestHeight)
+               XCTAssertEqual(latestDownloadedHeight, targetHeight)
     }
 
     @objc func processorHandledReorg(_ notification: Notification) {
