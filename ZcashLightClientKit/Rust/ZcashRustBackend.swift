@@ -167,7 +167,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
         
-        let derived =  String(validatingUTF8: extsk)
+        let derived = String(validatingUTF8: extsk)
         
         zcashlc_string_free(extsk)
         return derived

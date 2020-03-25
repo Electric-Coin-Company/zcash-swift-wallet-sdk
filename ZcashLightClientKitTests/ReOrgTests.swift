@@ -9,7 +9,7 @@ import XCTest
 @testable import ZcashLightClientKit
 /**
  basic reorg test.  Scan, get a reorg and then reach latest height.
-    
+ 
  * connect to dLWD
  * request latest height -> receive 663250
  * download and sync blocks from 663150 to 663250
@@ -44,12 +44,13 @@ class ReOrgTests: XCTestCase {
         processorConfig = config
         
         let service = DarksideWalletService()
+        darksideWalletService = service
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
         downloader = CompactBlockDownloader(service: service, storage: storage)
         processor = CompactBlockProcessor(downloader: downloader,
                                           backend: ZcashRustBackend.self,
-                                            config: processorConfig)
+                                          config: processorConfig)
         
         downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
@@ -63,7 +64,7 @@ class ReOrgTests: XCTestCase {
         NotificationCenter.default.addObserver(self, selector: #selector(processorHandledReorg(_:)), name: Notification.Name.blockProcessorHandledReOrg, object: processor)
         NotificationCenter.default.addObserver(self, selector: #selector(processorFailed(_:)), name: Notification.Name.blockProcessorFailed, object: processor)
     }
-
+    
     override func tearDownWithError() throws {
         try! FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
@@ -77,34 +78,42 @@ class ReOrgTests: XCTestCase {
         afterReorgIdleNotification.unsubscribeFromNotifications()
         NotificationCenter.default.removeObserver(self)
     }
-
+    
     fileprivate func startProcessing() {
-          XCTAssertNotNil(processor)
-          
-          // Subscribe to notifications
-          downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
-          stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
-          updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-          startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
-          startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
-          idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
-          reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
-          
-          XCTAssertNoThrow(try processor.start())
-      }
+        XCTAssertNotNil(processor)
+        
+        // Subscribe to notifications
+        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
+        stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
+        updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
+        startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
+        startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
+        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
+        reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
+        
+        XCTAssertNoThrow(try processor.start())
+    }
+    
     func testBasicReOrg() throws {
+        let mockLatestHeight = BlockHeight(663250)
+        let targetLatestHeight = BlockHeight(663251)
+        let walletBirthday = BlockHeight(663150)
         
         try basicReOrgTest(firstLatestHeight: mockLatestHeight, walletBirthday: walletBirthday, targetHeight: targetLatestHeight)
     }
     
     func basicReOrgTest(firstLatestHeight: BlockHeight, walletBirthday: BlockHeight, targetHeight: BlockHeight) throws {
         
+        XCTAssertNoThrow(
+                  try darksideWalletService.setLatestHeight(firstLatestHeight)
+              )
+        
         var latestHeight = BlockHeight(0)
         
         /**
-        connect to dLWD
-        request latest height -> receive firstLatestHeight
-        */
+         connect to dLWD
+         request latest height -> receive firstLatestHeight
+         */
         XCTAssertNoThrow(try { latestHeight = try darksideWalletService.latestBlockHeight() }())
         XCTAssertEqual(latestHeight, firstLatestHeight)
         
@@ -117,7 +126,7 @@ class ReOrgTests: XCTestCase {
         idleNotificationExpectation.unsubscribeFromNotifications()
         
         /**
-            verify that mock height has been reached
+         verify that mock height has been reached
          */
         var latestDownloadedHeight = BlockHeight(0)
         XCTAssertNoThrow(try {latestDownloadedHeight = try downloader.lastDownloadedBlockHeight()}())
@@ -126,7 +135,9 @@ class ReOrgTests: XCTestCase {
         /**
          trigger reorg!
          */
-        darksideWalletService.triggerReOrg()
+        XCTAssertNoThrow(
+            try darksideWalletService.triggerReOrg(latestHeight: targetHeight, reOrgHeight: latestHeight)
+        )
         
         /**
          request latest height -> receive targetHeight!
@@ -149,30 +160,30 @@ class ReOrgTests: XCTestCase {
         
         // now everything should be fine. latest block should be targetHeight
         
-         XCTAssertNoThrow(try {latestDownloadedHeight = try downloader.lastDownloadedBlockHeight()}())
-               XCTAssertEqual(latestDownloadedHeight, targetHeight)
+        XCTAssertNoThrow(try {latestDownloadedHeight = try downloader.lastDownloadedBlockHeight()}())
+        XCTAssertEqual(latestDownloadedHeight, targetHeight)
     }
-
+    
     @objc func processorHandledReorg(_ notification: Notification) {
-
-                XCTAssertNotNil(notification.userInfo)
-                if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
-                    let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
-                    XCTAssertEqual(reorg, mockLatestHeight)
-                    XCTAssertTrue( rewind <= mockLatestHeight - processorConfig.rewindDistance)
-                    XCTAssertTrue( rewind <= reorg )
-                    reorgNotificationExpectation.fulfill()
-                } else {
-                    XCTFail("CompactBlockProcessor reorg notification is malformed")
-                }
-        }
         
-        @objc func processorFailed(_ notification: Notification) {
-                XCTAssertNotNil(notification.userInfo)
-                if let error = notification.userInfo?["error"] {
-                    XCTFail("CompactBlockProcessor failed with Error: \(error)")
-                } else {
-                    XCTFail("CompactBlockProcessor failed")
-                }
+        XCTAssertNotNil(notification.userInfo)
+        if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
+            let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
+            XCTAssertEqual(reorg, mockLatestHeight)
+            XCTAssertTrue( rewind <= mockLatestHeight - processorConfig.rewindDistance)
+            XCTAssertTrue( rewind <= reorg )
+            reorgNotificationExpectation.fulfill()
+        } else {
+            XCTFail("CompactBlockProcessor reorg notification is malformed")
         }
+    }
+    
+    @objc func processorFailed(_ notification: Notification) {
+        XCTAssertNotNil(notification.userInfo)
+        if let error = notification.userInfo?["error"] {
+            XCTFail("CompactBlockProcessor failed with Error: \(error)")
+        } else {
+            XCTFail("CompactBlockProcessor failed")
+        }
+    }
 }

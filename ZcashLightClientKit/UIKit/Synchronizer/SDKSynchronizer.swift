@@ -64,7 +64,6 @@ public extension Notification.Name {
  */
 public class SDKSynchronizer: Synchronizer {
 
-    
     public struct NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
@@ -516,7 +515,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     private func mapError(_ error: Error) -> Error {
-            if let compactBlockProcessorError =  error as? CompactBlockProcessorError {
+            if let compactBlockProcessorError = error as? CompactBlockProcessorError {
             switch compactBlockProcessorError {
             case .dataDbInitFailed(let path):
                 return SynchronizerError.initFailed(message: "DataDb init failed at path: \(path)")

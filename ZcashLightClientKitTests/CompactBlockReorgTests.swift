@@ -65,7 +65,7 @@ class CompactBlockReorgTests: XCTestCase {
     }
     
     @objc func processorHandledReorg(_ notification: Notification) {
-//        DispatchQueue.main.sync {
+
             XCTAssertNotNil(notification.userInfo)
             if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
                 let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
@@ -76,8 +76,6 @@ class CompactBlockReorgTests: XCTestCase {
             } else {
                 XCTFail("CompactBlockProcessor reorg notification is malformed")
             }
-//        }
-        
     }
     
     @objc func processorFailed(_ notification: Notification) {
@@ -88,7 +86,6 @@ class CompactBlockReorgTests: XCTestCase {
             } else {
                 XCTFail("CompactBlockProcessor failed")
             }
-
         }
     }
     
