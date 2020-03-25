@@ -89,15 +89,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "bellman"
 version = "0.2.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
  "bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "blake2s_simd 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "futures 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)",
- "group 0.2.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "group 0.2.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -298,17 +298,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "ff"
 version = "0.5.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff_derive 0.4.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff_derive 0.4.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "ff_derive"
 version = "0.4.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
  "num-bigint 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-integer 0.1.41 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -366,9 +366,9 @@ dependencies = [
 [[package]]
 name = "group"
 version = "0.2.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_xorshift 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -409,14 +409,14 @@ version = "0.0.2"
 dependencies = [
  "cbindgen 0.8.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "ffi_helpers 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "zcash_client_backend 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "zcash_client_sqlite 0.0.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "zcash_proofs 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "zcash_client_backend 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "zcash_client_sqlite 0.0.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "zcash_proofs 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
 ]
 
 [[package]]
@@ -480,11 +480,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "pairing"
 version = "0.15.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "group 0.2.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "group 0.2.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -810,51 +810,51 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "zcash_client_backend"
 version = "0.1.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
  "bech32 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bs58 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "protobuf 2.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf-codegen-pure 2.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "subtle 2.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
 ]
 
 [[package]]
 name = "zcash_client_sqlite"
 version = "0.0.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
  "bech32 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bs58 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "protobuf 2.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusqlite 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
- "zcash_client_backend 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "zcash_client_backend 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
 ]
 
 [[package]]
 name = "zcash_primitives"
 version = "0.1.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
  "aes 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "blake2b_simd 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "blake2s_simd 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "crypto_api_chachapoly 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "fpe 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -863,16 +863,16 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.1.0"
-source = "git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925#f3f5338282eeda6d9f5bff69f6930a5473c95925"
+source = "git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7#24ab2ed19cd627d17c4a5fc4eb9d2f90b0011a11"
 dependencies = [
- "bellman 0.2.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "bellman 0.2.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "blake2b_simd 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "byteorder 1.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "directories 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
- "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
+ "pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
  "rand_core 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)",
+ "zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)",
 ]
 
 [metadata]
@@ -887,7 +887,7 @@ dependencies = [
 "checksum backtrace 0.3.40 (registry+https://github.com/rust-lang/crates.io-index)" = "924c76597f0d9ca25d762c25a4d369d51267536465dc5064bdf0eb073ed477ea"
 "checksum backtrace-sys 0.1.32 (registry+https://github.com/rust-lang/crates.io-index)" = "5d6575f128516de27e3ce99689419835fce9643a9b215a14d2b5b685be018491"
 "checksum bech32 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "9e0089c35ab7c6f2bc55ab23f769913f0ac65b1023e7e74638a1f43128dd5df2"
-"checksum bellman 0.2.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
+"checksum bellman 0.2.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
 "checksum bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "02b4ff8b16e6076c3e14220b39fbc1fabb6737522281a388998046859400895f"
 "checksum bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 "checksum blake2b_simd 0.5.9 (registry+https://github.com/rust-lang/crates.io-index)" = "b83b7baab1e671718d78204225800d6b170e648188ac7dc992e9d6bddf87d0c0"
@@ -913,14 +913,14 @@ dependencies = [
 "checksum fake-simd 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e88a8acf291dafb59c2d96e8f59828f3838bb1a70398823ade51a84de6a6deed"
 "checksum fallible-iterator 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "4443176a9f2c162692bd3d352d745ef9413eec5782a80d8fd6f8a1ac692a07f7"
 "checksum fallible-streaming-iterator 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)" = "7360491ce676a36bf9bb3c56c1aa791658183a54d2744120f27285738d90465a"
-"checksum ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
-"checksum ff_derive 0.4.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
+"checksum ff 0.5.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
+"checksum ff_derive 0.4.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
 "checksum ffi_helpers 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "545c5db858a1f8749e81b22cb9e10a5412c9775441a53c4bd1d1f28531edc843"
 "checksum fpe 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "21988a326139165b75e3196bc6962ca638e5fb0c95102fbf152a3743174b01e4"
 "checksum futures 0.1.29 (registry+https://github.com/rust-lang/crates.io-index)" = "1b980f2816d6ee8673b6517b52cb0e808a180efc92e5c19d02cdda79066703ef"
 "checksum generic-array 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)" = "c68f0274ae0e023facc3c97b2e00f076be70e254bc851d972503b328db79b2ec"
 "checksum getrandom 0.1.13 (registry+https://github.com/rust-lang/crates.io-index)" = "e7db7ca94ed4cd01190ceee0d8a8052f08a247aa1b469a7f68c6a3b71afcf407"
-"checksum group 0.2.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
+"checksum group 0.2.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
 "checksum hex 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "805026a5d0141ffc30abb3be3173848ad46a1b1664fe632428479619a3644d77"
 "checksum itoa 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "501266b7edd0174f8530248f87f99c88fbe60ca4ef3dd486835b8d8d53136f7f"
 "checksum lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
@@ -934,7 +934,7 @@ dependencies = [
 "checksum num-integer 0.1.41 (registry+https://github.com/rust-lang/crates.io-index)" = "b85e541ef8255f6cf42bbfe4ef361305c6c135d10919ecc26126c4e5ae94bc09"
 "checksum num-traits 0.2.10 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c81ffc11c212fa327657cb19dd85eb7419e163b5b076bede2bdb5c974c07e4"
 "checksum opaque-debug 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "2839e79665f131bdb5782e51f2c6c9599c133c6098982a54c794358bf432529c"
-"checksum pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
+"checksum pairing 0.15.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
 "checksum pkg-config 0.3.17 (registry+https://github.com/rust-lang/crates.io-index)" = "05da548ad6865900e60eaba7f589cc0783590a92e940c26953ff81ddbab2d677"
 "checksum ppv-lite86 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "74490b50b9fbe561ac330df47c08f3f33073d2d00c150f719147d7c54522fa1b"
 "checksum proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)" = "cf3d2011ab5c909338f7887f4fc896d35932e29146c12c8d01da6b22a80ba759"
@@ -977,7 +977,7 @@ dependencies = [
 "checksum winapi 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)" = "8093091eeb260906a183e6ae1abdba2ef5ef2257a21801128899c3fc699229c6"
 "checksum winapi-i686-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ac3b87c63620426dd9b991e5ce0329eff545bccbbb34f3be09ff6fb6ab51b7b6"
 "checksum winapi-x86_64-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
-"checksum zcash_client_backend 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
-"checksum zcash_client_sqlite 0.0.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
-"checksum zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
-"checksum zcash_proofs 0.1.0 (git+https://github.com/str4d/librustzcash.git?rev=f3f5338282eeda6d9f5bff69f6930a5473c95925)" = "<none>"
+"checksum zcash_client_backend 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
+"checksum zcash_client_sqlite 0.0.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
+"checksum zcash_primitives 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
+"checksum zcash_proofs 0.1.0 (git+https://github.com/str4d/librustzcash.git?branch=note-spending-v7)" = "<none>"
