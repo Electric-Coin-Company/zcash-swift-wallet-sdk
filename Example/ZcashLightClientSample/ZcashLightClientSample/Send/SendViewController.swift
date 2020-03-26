@@ -127,7 +127,7 @@ class SendViewController: UIViewController {
         }
         
         let alert = UIAlertController(title: "About To send funds!",
-                                      message: "This is an ugly confirmation message. You should come up with something fancier that let's the user be sure about sending funds without disturbing the user experience with an annoying alert like this one",
+                                      message: "This is an ugly confirmation message. You should come up with something fancier that lets the user be sure about sending funds without disturbing the user experience with an annoying alert like this one",
                                       preferredStyle: UIAlertController.Style.alert)
         
         let sendAction = UIAlertAction(title: "Send!", style: UIAlertAction.Style.default) { (_) in

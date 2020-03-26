@@ -33,7 +33,7 @@ public class ZcashSDK {
     
     /**
      The amount of blocks ahead of the current height where new transactions are set to expire. This value is controlled
-     by the rust backend but it is helpful to know what it is set to and shdould be kept in sync.
+     by the rust backend but it is helpful to know what it is set to and should be kept in sync.
      */
     public static let EXPIRY_OFFSET = 20
     
@@ -93,7 +93,7 @@ public class ZcashSDK {
     public static let DEFAULT_DB_NAME_PREFIX = "{{ argument.dbprefix }}"
     
     /**
-     File name for the sappling spend params
+     File name for the sapling spend params
      */
     public static let SPEND_PARAM_FILE_NAME = "sapling-spend.params"
     

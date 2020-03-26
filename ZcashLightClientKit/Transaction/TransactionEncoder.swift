@@ -28,7 +28,7 @@ protocol TransactionEncoder {
      - Parameter spendingKey: a string containing the spending key
      - Parameter zatoshi: the amount to send in zatoshis
      - Parameter to: string containing the recipient address
-     - Parameter memo: string containin the memo (optional)
+     - Parameter memo: string containing the memo (optional)
      - Parameter accountIndex: index of the account that will be used to send the funds
      
      - Throws: a TransactionEncoderError
@@ -45,9 +45,9 @@ protocol TransactionEncoder {
     - Parameter spendingKey: a string containing the spending key
     - Parameter zatoshi: the amount to send in zatoshis
     - Parameter to: string containing the recipient address
-    - Parameter memo: string containin the memo (optional)
+    - Parameter memo: string containing the memo (optional)
     - Parameter accountIndex: index of the account that will be used to send the funds
-    - Parameter result: a non escaping closure that receives a Result containing either an EncodedTransaction or an TransactionEncoderError
+    - Parameter result: a non escaping closure that receives a Result containing either an EncodedTransaction or a TransactionEncoderError
     */
     func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
     

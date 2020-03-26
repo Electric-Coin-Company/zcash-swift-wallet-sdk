@@ -34,7 +34,7 @@ To explore the app, click on each menu item, in order, and also look at the asso
 
 ![The android demo app, running in Android Studio](assets/ios-demo-app.png?raw=true "Demo app built with Xcode")
 
-The demo app is not trying to show what's possible, but to present how to accomplish the building blocks of wallet functionality in a simple way in code. It is comprised of the following self-contained demos. All data is reset between demos in order to keep the behavior repeatable and independant of state.
+The demo app is not trying to show what's possible, but to present how to accomplish the building blocks of wallet functionality in a simple way in code. It is comprised of the following self-contained demos. All data is reset between demos in order to keep the behavior repeatable and independent of state.
 
 ### Demos
 

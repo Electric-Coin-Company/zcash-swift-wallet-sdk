@@ -60,7 +60,7 @@ public extension Notification.Name {
 }
 
 /**
- Synchronizer implementation  for UIKit  and iOS 12+
+ Synchronizer implementation for UIKit and iOS 12+
  */
 public class SDKSynchronizer: Synchronizer {
 
@@ -128,7 +128,7 @@ public class SDKSynchronizer: Synchronizer {
         
         self.blockProcessor = processor
         guard status == .stopped || status == .disconnected || status == .synced else {
-            assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion some time in the near future
+            assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
             return
         }
         
@@ -155,7 +155,7 @@ public class SDKSynchronizer: Synchronizer {
     
     // MARK: event subscription
     private func subscribeToAppDelegateNotifications() {
-        // todo: ios 13 platform specific
+        // todo: iOS 13 platform specific
         
         let center = NotificationCenter.default
         

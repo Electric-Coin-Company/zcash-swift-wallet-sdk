@@ -156,8 +156,8 @@ public protocol ZcashRustBackendWelding {
         - to: recipient address
         - value: transaction amount in Zatoshi
         - memo: the memo string for this transaction
-        - spendParamsPath: path escaped String for the filesystem locations where the spend paremeters are located
-        - outputParamsPath: path escaped String for the filesystem locations where the output paremeters are located
+        - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
+        - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
     

@@ -11,7 +11,7 @@ import SwiftGRPC
 import SwiftProtobuf
 
 /**
- Wrapper for errors received from  a Lightwalletd endpoint
+ Wrapper for errors received from a Lightwalletd endpoint
  */
 public enum LightWalletServiceError: Error {
     case generalError
