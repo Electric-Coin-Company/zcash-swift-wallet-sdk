@@ -102,11 +102,18 @@ class ReOrgTests: XCTestCase {
         try basicReOrgTest(firstLatestHeight: mockLatestHeight, walletBirthday: walletBirthday, targetHeight: targetLatestHeight)
     }
     
+    func testTenPlusBlockReOrg() throws {
+        let mockLatestHeight = BlockHeight(663250)
+        let targetLatestHeight = BlockHeight(663270)
+        let walletBirthday = BlockHeight(663150)
+        
+        try basicReOrgTest(firstLatestHeight: mockLatestHeight, walletBirthday: walletBirthday, targetHeight: targetLatestHeight)
+    }
     func basicReOrgTest(firstLatestHeight: BlockHeight, walletBirthday: BlockHeight, targetHeight: BlockHeight) throws {
         
         XCTAssertNoThrow(
-                  try darksideWalletService.setLatestHeight(firstLatestHeight)
-              )
+            try darksideWalletService.setLatestHeight(firstLatestHeight)
+        )
         
         var latestHeight = BlockHeight(0)
         
