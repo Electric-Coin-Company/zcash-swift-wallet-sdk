@@ -11,7 +11,7 @@ import Foundation
  */
 public protocol TransactionEntity {
     /**
-     Internal transactio id
+     Internal transaction id
      */
     var id: Int? { get set }
     /**

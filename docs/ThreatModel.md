@@ -56,7 +56,7 @@ In the UNTRUSTED scenario:
 ## Security Invariants
 
 Given these scenarios and adversaries, we can now state the security invariants
-we stive to satisfy. While we pride ourselves on building high-quality software,
+we strive to satisfy. While we pride ourselves on building high-quality software,
 all software contains bugs, and so this threat model must not be construed as
 any kind of warranty that our software satisfies these properties.
 

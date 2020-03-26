@@ -55,22 +55,22 @@ public extension Notification.Name {
     static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
     
     /**
-     Notification sent when the compact block processsor stop() method is called
+     Notification sent when the compact block processor stop() method is called
      */
     static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
     
     /**
-    Notification sent when the compact block processsor presented an error.
+    Notification sent when the compact block processor presented an error.
      
      Query userInfo object on the key CompactBlockProcessorNotificationKey.error
     */
     static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
     /**
-    Notification sent when the compact block processsor has finished syncing the blockchain to latest height
+    Notification sent when the compact block processor has finished syncing the blockchain to latest height
     */
     static let blockProcessorFinished = Notification.Name(rawValue: "CompactBlockProcessorFinished")
     /**
-    Notification sent when the compact block processsor is doing nothing
+    Notification sent when the compact block processor is doing nothing
     */
     static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
     /**
@@ -78,7 +78,7 @@ public extension Notification.Name {
     */
     static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
     /**
-    Notification sent when the compact block processsor handled a ReOrg.
+    Notification sent when the compact block processor handled a ReOrg.
      
      Query the userInfo object on the key CompactBlockProcessorNotificationKey.reorgHeight for the height on which the reorg was detected. CompactBlockProcessorNotificationKey.rewindHeight for the height that the processor backed to in order to solve the Reorg
     */
@@ -145,7 +145,7 @@ public class CompactBlockProcessor {
         case error(_ e: Error)
         
         /**
-         Processor is up to date with the blockchain and  you can now make trasnsactions.
+         Processor is up to date with the blockchain and you can now make transactions.
          */
         case synced
         
