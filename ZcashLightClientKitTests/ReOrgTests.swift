@@ -38,11 +38,15 @@ class ReOrgTests: XCTestCase {
     let walletBirthday = BlockHeight(663150)
     
     override func setUpWithError() throws {
+        
         var config = CompactBlockProcessor.Configuration.standard
         
-        config.walletBirthday = walletBirthday
+        let birthday = WalletBirthday.birthday(with: walletBirthday)
+        config.walletBirthday = birthday.height
         processorConfig = config
         
+        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? FileManager.default.removeItem(at: processorConfig.dataDb)
         let service = DarksideWalletService()
         darksideWalletService = service
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
