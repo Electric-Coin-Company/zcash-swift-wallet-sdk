@@ -8,7 +8,7 @@
 
 import XCTest
 @testable import ZcashLightClientKit
-import SwiftGRPC
+import GRPC
 class LightWalletServiceTests: XCTestCase {
     
     var service: LightWalletService!

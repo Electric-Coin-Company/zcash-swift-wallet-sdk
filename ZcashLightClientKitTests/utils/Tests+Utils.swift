@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
 import ZcashLightClientKit
 import XCTest
 

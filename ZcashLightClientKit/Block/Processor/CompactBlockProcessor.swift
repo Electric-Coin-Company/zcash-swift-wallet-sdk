@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
 /**
 
  Errors thrown by CompactBlock Processor

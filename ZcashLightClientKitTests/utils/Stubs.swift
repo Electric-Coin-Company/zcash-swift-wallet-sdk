@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 

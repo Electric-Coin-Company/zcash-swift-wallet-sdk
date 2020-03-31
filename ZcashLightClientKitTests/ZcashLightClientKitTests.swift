@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import SwiftGRPC
+import GRPC
 
 @testable import ZcashLightClientKit
 
@@ -43,21 +43,6 @@ class ZcashLightClientKitTests: XCTestCase {
         XCTAssert(latestBlockHeight > 0)
         
     }
-    
-//    /**
-//     LIGHTWALLETD KILLER TEST - DO NOT USE
-//     */
-//    func testBlockRangeService() {
-//
-//        let expect = XCTestExpectation(description: self.debugDescription)
-//        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
-//            LoggerProxy.debug(result)
-//            expect.fulfill()
-//            XCTAssert(result.success)
-//            XCTAssertNotNil(result.resultData)
-//        }
-//        wait(for: [expect], timeout: 10)
-//    }
     
     func testBlockRangeServiceTilLastest() {
         let expectedCount: BlockHeight = 99

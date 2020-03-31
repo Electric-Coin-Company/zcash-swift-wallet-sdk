@@ -7,7 +7,9 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
+import NIO
+public typealias Channel = GRPC.GRPCChannel
 
 /**
  Swift GRPC implementation of Lightwalletd service */
@@ -16,31 +18,32 @@ public class LightWalletGRPCService {
     var queue = DispatchQueue.init(label: "LightWalletGRPCService")
     let channel: Channel
     
-    let compactTxStreamer: CompactTxStreamerServiceClient
+    let compactTxStreamer: CompactTxStreamerClient
     
     public init(channel: Channel) {
         self.channel = channel
-        compactTxStreamer = CompactTxStreamerServiceClient(channel: self.channel)
+        compactTxStreamer = CompactTxStreamerClient(channel: self.channel)
     }
     
     public convenience init(endpoint: LightWalletEndpoint) {
         self.init(host: endpoint.host, secure: endpoint.secure)
     }
     
-    public convenience init(host: String, secure: Bool = true) {
-        let channel = Channel(address: host, secure: secure, arguments: [])
+    public convenience init(host: String, port: Int = 9067, secure: Bool = true) {
+        let configuration = ClientConnection.Configuration(target: .hostAndPort(host, port), eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1), tls: secure ? .init() : nil)
+        let channel = ClientConnection(configuration: configuration)
         self.init(channel: channel)
     }
     
     func stop() {
-        channel.shutdown()
+        _ = channel.close()
     }
     
-    func resume() -> Channel.ConnectivityState {
-        channel.connectivityState(tryToConnect: true)
-    }
-    
-    func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil, result: @escaping (CallResult) -> Void) throws -> CompactTxStreamerGetBlockRangeCall {
+//    func resume() -> Channel.ConnectivityState {
+//        channel.connectivityState(tryToConnect: true)
+//    }
+//
+    func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil, result: @escaping (CallResult) -> Void) throws -> ServerStreamingCall<BlockRange, CompactBlock> {
         try compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight)) { result($0) }
     }
     
@@ -52,10 +55,6 @@ public class LightWalletGRPCService {
         var filter = TxFilter()
         filter.hash = Data(hash.utf8)
         return try compactTxStreamer.getTransaction(filter)
-    }
-    
-    func getAllBlocksSinceSaplingLaunch(_ result: @escaping (CallResult) -> Void) throws -> CompactTxStreamerGetBlockRangeCall {
-        try compactTxStreamer.getBlockRange(BlockRange.sinceSaplingActivation(), completion: result)
     }
     
 }
