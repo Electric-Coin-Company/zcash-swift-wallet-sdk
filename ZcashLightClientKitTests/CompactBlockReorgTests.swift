@@ -20,7 +20,7 @@ class CompactBlockReorgTests: XCTestCase {
     var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
-    let mockLatestHeight = 282_000
+    let mockLatestHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 2000
     
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -33,7 +33,7 @@ class CompactBlockReorgTests: XCTestCase {
         let mockBackend = MockRustBackend.self
         mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
         mockBackend.mockValidateCombinedChainKeepFailing = false
-        mockBackend.mockValidateCombinedChainFailureHeight = 280_320
+        mockBackend.mockValidateCombinedChainFailureHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 320
         
         processor = CompactBlockProcessor(downloader: downloader,
                                             backend: mockBackend,
@@ -65,7 +65,7 @@ class CompactBlockReorgTests: XCTestCase {
     }
     
     @objc func processorHandledReorg(_ notification: Notification) {
-//        DispatchQueue.main.sync {
+
             XCTAssertNotNil(notification.userInfo)
             if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
                 let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
@@ -76,8 +76,6 @@ class CompactBlockReorgTests: XCTestCase {
             } else {
                 XCTFail("CompactBlockProcessor reorg notification is malformed")
             }
-//        }
-        
     }
     
     @objc func processorFailed(_ notification: Notification) {
@@ -88,7 +86,6 @@ class CompactBlockReorgTests: XCTestCase {
             } else {
                 XCTFail("CompactBlockProcessor failed")
             }
-
         }
     }
     
@@ -115,10 +112,9 @@ class CompactBlockReorgTests: XCTestCase {
                    downloadStartedExpect,
                    startedValidatingNotificationExpectation,
                    startedScanningNotificationExpectation,
-                
                    reorgNotificationExpectation,
                    idleNotificationExpectation,
-                   ], timeout: 3000,enforceOrder: true)
+                   ], timeout: 300,enforceOrder: true)
     }
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {

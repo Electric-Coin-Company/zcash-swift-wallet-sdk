@@ -65,6 +65,34 @@ fileprivate final class CompactTxStreamerSendTransactionCallBase: ClientCallUnar
   override class var method: String { return "/cash.z.wallet.sdk.rpc.CompactTxStreamer/SendTransaction" }
 }
 
+internal protocol CompactTxStreamerGetAddressTxidsCall: ClientCallServerStreaming {
+  /// Do not call this directly, call `receive()` in the protocol extension below instead.
+  func _receive(timeout: DispatchTime) throws -> RawTransaction?
+  /// Call this to wait for a result. Nonblocking.
+  func receive(completion: @escaping (ResultOrRPCError<RawTransaction?>) -> Void) throws
+}
+
+internal extension CompactTxStreamerGetAddressTxidsCall {
+  /// Call this to wait for a result. Blocking.
+  func receive(timeout: DispatchTime = .distantFuture) throws -> RawTransaction? { return try self._receive(timeout: timeout) }
+}
+
+fileprivate final class CompactTxStreamerGetAddressTxidsCallBase: ClientCallServerStreamingBase<TransparentAddressBlockFilter, RawTransaction>, CompactTxStreamerGetAddressTxidsCall {
+  override class var method: String { return "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressTxids" }
+}
+
+internal protocol CompactTxStreamerGetLightdInfoCall: ClientCallUnary {}
+
+fileprivate final class CompactTxStreamerGetLightdInfoCallBase: ClientCallUnaryBase<Empty, LightdInfo>, CompactTxStreamerGetLightdInfoCall {
+  override class var method: String { return "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLightdInfo" }
+}
+
+internal protocol CompactTxStreamerPingCall: ClientCallUnary {}
+
+fileprivate final class CompactTxStreamerPingCallBase: ClientCallUnaryBase<Duration, PingResponse>, CompactTxStreamerPingCall {
+  override class var method: String { return "/cash.z.wallet.sdk.rpc.CompactTxStreamer/Ping" }
+}
+
 
 /// Instantiate CompactTxStreamerServiceClient, then call methods of this protocol to make API calls.
 internal protocol CompactTxStreamerService: ServiceClient {
@@ -96,6 +124,23 @@ internal protocol CompactTxStreamerService: ServiceClient {
   /// Asynchronous. Unary.
   @discardableResult
   func sendTransaction(_ request: RawTransaction, metadata customMetadata: Metadata, completion: @escaping (SendResponse?, CallResult) -> Void) throws -> CompactTxStreamerSendTransactionCall
+
+  /// Asynchronous. Server-streaming.
+  /// Send the initial message.
+  /// Use methods on the returned object to get streamed responses.
+  func getAddressTxids(_ request: TransparentAddressBlockFilter, metadata customMetadata: Metadata, completion: ((CallResult) -> Void)?) throws -> CompactTxStreamerGetAddressTxidsCall
+
+  /// Synchronous. Unary.
+  func getLightdInfo(_ request: Empty, metadata customMetadata: Metadata) throws -> LightdInfo
+  /// Asynchronous. Unary.
+  @discardableResult
+  func getLightdInfo(_ request: Empty, metadata customMetadata: Metadata, completion: @escaping (LightdInfo?, CallResult) -> Void) throws -> CompactTxStreamerGetLightdInfoCall
+
+  /// Synchronous. Unary.
+  func ping(_ request: Duration, metadata customMetadata: Metadata) throws -> PingResponse
+  /// Asynchronous. Unary.
+  @discardableResult
+  func ping(_ request: Duration, metadata customMetadata: Metadata, completion: @escaping (PingResponse?, CallResult) -> Void) throws -> CompactTxStreamerPingCall
 
 }
 
@@ -143,6 +188,31 @@ internal extension CompactTxStreamerService {
   @discardableResult
   func sendTransaction(_ request: RawTransaction, completion: @escaping (SendResponse?, CallResult) -> Void) throws -> CompactTxStreamerSendTransactionCall {
     return try self.sendTransaction(request, metadata: self.metadata, completion: completion)
+  }
+
+  /// Asynchronous. Server-streaming.
+  func getAddressTxids(_ request: TransparentAddressBlockFilter, completion: ((CallResult) -> Void)?) throws -> CompactTxStreamerGetAddressTxidsCall {
+    return try self.getAddressTxids(request, metadata: self.metadata, completion: completion)
+  }
+
+  /// Synchronous. Unary.
+  func getLightdInfo(_ request: Empty) throws -> LightdInfo {
+    return try self.getLightdInfo(request, metadata: self.metadata)
+  }
+  /// Asynchronous. Unary.
+  @discardableResult
+  func getLightdInfo(_ request: Empty, completion: @escaping (LightdInfo?, CallResult) -> Void) throws -> CompactTxStreamerGetLightdInfoCall {
+    return try self.getLightdInfo(request, metadata: self.metadata, completion: completion)
+  }
+
+  /// Synchronous. Unary.
+  func ping(_ request: Duration) throws -> PingResponse {
+    return try self.ping(request, metadata: self.metadata)
+  }
+  /// Asynchronous. Unary.
+  @discardableResult
+  func ping(_ request: Duration, completion: @escaping (PingResponse?, CallResult) -> Void) throws -> CompactTxStreamerPingCall {
+    return try self.ping(request, metadata: self.metadata, completion: completion)
   }
 
 }
@@ -201,6 +271,38 @@ internal final class CompactTxStreamerServiceClient: ServiceClientBase, CompactT
   @discardableResult
   internal func sendTransaction(_ request: RawTransaction, metadata customMetadata: Metadata, completion: @escaping (SendResponse?, CallResult) -> Void) throws -> CompactTxStreamerSendTransactionCall {
     return try CompactTxStreamerSendTransactionCallBase(channel)
+      .start(request: request, metadata: customMetadata, completion: completion)
+  }
+
+  /// Asynchronous. Server-streaming.
+  /// Send the initial message.
+  /// Use methods on the returned object to get streamed responses.
+  internal func getAddressTxids(_ request: TransparentAddressBlockFilter, metadata customMetadata: Metadata, completion: ((CallResult) -> Void)?) throws -> CompactTxStreamerGetAddressTxidsCall {
+    return try CompactTxStreamerGetAddressTxidsCallBase(channel)
+      .start(request: request, metadata: customMetadata, completion: completion)
+  }
+
+  /// Synchronous. Unary.
+  internal func getLightdInfo(_ request: Empty, metadata customMetadata: Metadata) throws -> LightdInfo {
+    return try CompactTxStreamerGetLightdInfoCallBase(channel)
+      .run(request: request, metadata: customMetadata)
+  }
+  /// Asynchronous. Unary.
+  @discardableResult
+  internal func getLightdInfo(_ request: Empty, metadata customMetadata: Metadata, completion: @escaping (LightdInfo?, CallResult) -> Void) throws -> CompactTxStreamerGetLightdInfoCall {
+    return try CompactTxStreamerGetLightdInfoCallBase(channel)
+      .start(request: request, metadata: customMetadata, completion: completion)
+  }
+
+  /// Synchronous. Unary.
+  internal func ping(_ request: Duration, metadata customMetadata: Metadata) throws -> PingResponse {
+    return try CompactTxStreamerPingCallBase(channel)
+      .run(request: request, metadata: customMetadata)
+  }
+  /// Asynchronous. Unary.
+  @discardableResult
+  internal func ping(_ request: Duration, metadata customMetadata: Metadata, completion: @escaping (PingResponse?, CallResult) -> Void) throws -> CompactTxStreamerPingCall {
+    return try CompactTxStreamerPingCallBase(channel)
       .start(request: request, metadata: customMetadata, completion: completion)
   }
 

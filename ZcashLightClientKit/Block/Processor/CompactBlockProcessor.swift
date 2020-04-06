@@ -204,7 +204,7 @@ public class CompactBlockProcessor {
     }
     var shouldStart: Bool {
         switch self.state {
-        case .stopped, .synced, .error(_):
+        case .stopped, .synced, .error:
             return maxAttemptsReached
         default:
             return false
@@ -275,7 +275,6 @@ public class CompactBlockProcessor {
         try nextBatch()
         
     }
-    
     
     /**
      Stops the CompactBlockProcessor
@@ -407,7 +406,6 @@ public class CompactBlockProcessor {
         scanBlocksOperation.startedHandler = { [weak self] in
                 self?.state = .scanning
         }
-        
         
         scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
@@ -571,7 +569,7 @@ public class CompactBlockProcessor {
         self.retryAttempts = self.retryAttempts + 1
         self.processingError = error
         switch self.state {
-        case .error(_):
+        case .error:
             notifyError(error)
         default:
             break

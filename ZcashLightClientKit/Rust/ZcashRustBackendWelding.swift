@@ -21,11 +21,11 @@ public struct ZcashRustBackendWeldingConstants {
 
 public protocol ZcashRustBackendWelding {
     /**
-     gets the latest error if available
+     gets the latest error if available. Clear the existing error
      */
     static func lastError() -> RustWeldingError?
     /**
-     gets the latest error message from librustzcash
+     gets the latest error message from librustzcash. Does not clear existing error
      */
     static func getLastError() -> String?
 /**

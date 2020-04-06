@@ -15,6 +15,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         zcashlc_clear_last_error()
         if message.contains("couldn't load Sapling spend parameters") {
             return RustWeldingError.saplingSpendParametersNotFound
+        } else if message.contains("is not empty") {
+            return RustWeldingError.dataDbNotEmpty
         }
         return RustWeldingError.genericError(message: message)
     }
@@ -83,7 +85,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         let dbData = dbData.osStr()
         guard zcashlc_init_blocks_table(dbData.0, dbData.1, height, [CChar](hash.utf8CString), time, [CChar](saplingTree.utf8CString)) != 0 else {
             if let error = lastError() {
-                throw throwDataDbError(error)
+                throw error
             }
             throw RustWeldingError.dataDbInitFailed(message: "Unknown Error")
         }
@@ -167,7 +169,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
         
-        let derived =  String(validatingUTF8: extsk)
+        let derived = String(validatingUTF8: extsk)
         
         zcashlc_string_free(extsk)
         return derived

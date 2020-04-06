@@ -219,4 +219,8 @@ class MockRustBackend: ZcashRustBackendWelding {
         nil
     }
     
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool {
+        false
+    }
+    
 }
