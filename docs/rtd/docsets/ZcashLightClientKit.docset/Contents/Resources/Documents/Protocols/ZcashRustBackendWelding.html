@@ -14,7 +14,7 @@
     <a title="ZcashRustBackendWelding Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">ZcashLightClientKit Docs</a> (68% documented)</p>
+        <p><a href="../index.html">ZcashLightClientKit Docs</a> (71% documented)</p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -238,7 +238,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>gets the latest error if available</p>
+                        <p>gets the latest error if available. Clear the existing error</p>
 
                       </div>
                       <div class="declaration">
@@ -265,7 +265,7 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>gets the latest error message from librustzcash</p>
+                        <p>gets the latest error message from librustzcash. Does not clear existing error</p>
 
                       </div>
                       <div class="declaration">
@@ -1029,6 +1029,66 @@ returns false if fails to scan.</p>
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP26decryptAndStoreTransaction6dbData2txSb10Foundation3URLV_Says5UInt8VGtFZ"></a>
+                    <a name="//apple_ref/swift/Method/decryptAndStoreTransaction(dbData:tx:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP26decryptAndStoreTransaction6dbData2txSb10Foundation3URLV_Says5UInt8VGtFZ">decryptAndStoreTransaction(dbData:tx:)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Scans a transaction for any information that can be decrypted by the accounts in the
+wallet, and saves it to the wallet.</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">decryptAndStoreTransaction</span><span class="p">(</span><span class="nv">dbData</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">tx</span><span class="p">:</span> <span class="p">[</span><span class="kt">UInt8</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kt">Bool</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>dbData</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>location of the data db file</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>tx</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>the transaction to decrypt
+returns false if fails to decrypt.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:19ZcashLightClientKit0A18RustBackendWeldingP15createToAddress6dbData7account5extsk2to5value4memo15spendParamsPath06outputsT0s5Int64V10Foundation3URLV_s5Int32VS2SANSSSgS2StFZ"></a>
                     <a name="//apple_ref/swift/Method/createToAddress(dbData:account:extsk:to:value:memo:spendParamsPath:outputParamsPath:)" class="dashAnchor"></a>
                     <a class="token" href="#/s:19ZcashLightClientKit0A18RustBackendWeldingP15createToAddress6dbData7account5extsk2to5value4memo15spendParamsPath06outputsT0s5Int64V10Foundation3URLV_s5Int32VS2SANSSSgS2StFZ">createToAddress(dbData:account:extsk:to:value:memo:spendParamsPath:outputParamsPath:)</a>
@@ -1134,7 +1194,7 @@ returns false if fails to scan.</p>
                               </td>
                               <td>
                                 <div>
-                                  <p>path escaped String for the filesystem locations where the spend paremeters are located</p>
+                                  <p>path escaped String for the filesystem locations where the spend parameters are located</p>
                                 </div>
                               </td>
                             </tr>
@@ -1146,7 +1206,7 @@ returns false if fails to scan.</p>
                               </td>
                               <td>
                                 <div>
-                                  <p>path escaped String for the filesystem locations where the output paremeters are located</p>
+                                  <p>path escaped String for the filesystem locations where the output parameters are located</p>
                                 </div>
                               </td>
                             </tr>
@@ -1350,7 +1410,7 @@ returns false if fails to scan.</p>
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-03-17)</p>
+          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-04-06)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
