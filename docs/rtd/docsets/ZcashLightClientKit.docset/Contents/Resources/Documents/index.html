@@ -13,7 +13,7 @@
     <a title="ZcashLightClientKit  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">ZcashLightClientKit Docs</a> (68% documented)</p>
+        <p><a href="index.html">ZcashLightClientKit Docs</a> (71% documented)</p>
       </div>
     </header>
     <div class="content-wrapper">
@@ -233,7 +233,7 @@ model</a>, especially the known weaknesses described there.</li>
 </ul>
 <h1 id='build-dependencies' class='heading'>Build dependencies</h1>
 
-<p>ZcashLightClientKit uses a rust library called Librustzcash. In order to build it, you need to have rust and cargo installed on your environment. </p>
+<p>ZcashLightClientKit uses a rust library called Librustzcash. In order to build it, you need to have rust and cargo installed on your environment.</p>
 
 <p>Install <a href="https://www.rust-lang.org/learn/get-started">Rust</a>, and then <code>cargo-lipo</code>:</p>
 <pre class="highlight plaintext"><code>$ cargo install cargo-lipo
@@ -252,18 +252,18 @@ $ rustup target add aarch64-apple-ios x86_64-apple-ios
 </code></pre>
 <h3 id='set-testnet-or-mainnet-environment' class='heading'>Set Testnet or Mainnet environment</h3>
 
-<p>Before building, make sure that your enviroment has the variable <code>ZCASH_NETWORK_ENVIRONMENT</code> set to <code>MAINNET</code> or <code>TESTNET</code>.</p>
+<p>Before building, make sure that your environment has the variable <code>ZCASH_NETWORK_ENVIRONMENT</code> set to <code>MAINNET</code> or <code>TESTNET</code>.</p>
 <h3 id='custom-build-phases-warning' class='heading'>Custom build phases warning</h3>
 
-<p>When running <code>pod install</code> you will see this warning upon sucess:</p>
+<p>When running <code>pod install</code> you will see this warning upon success:</p>
 <pre class="highlight shell"><code><span class="o">[!]</span> ZcashLightClientKit has added 2 script phases. Please inspect before executing a build. 
 See <span class="sb">`</span>https://guides.cocoapods.org/syntax/podspec.html#script_phases<span class="sb">`</span> <span class="k">for </span>more information.
 </code></pre>
 
-<p>Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We&rsquo;ve taken the lead to get that burden off your shoulders as much as possible by leveraging the <code>prepare_command</code> and <code>script_phases</code> features from Cocoapods to carefully generate the <code>TESTNET</code> and <code>MAINNET</code> builds as simple and less error prone as we could think it could be. Which started as some simple vanilla scripts, ended up being some kind of &ldquo;Build System&rdquo; on its own. Nothing is written on stone, and we accept collaborations and improvements in this matter too. </p>
+<p>Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We&rsquo;ve taken the lead to get that burden off your shoulders as much as possible by leveraging the <code>prepare_command</code> and <code>script_phases</code> features from Cocoapods to carefully generate the <code>TESTNET</code> and <code>MAINNET</code> builds as simple and less error prone as we could think it could be. Which started as some simple vanilla scripts, ended up being some kind of &ldquo;Build System&rdquo; on its own. Nothing is written on stone, and we accept collaborations and improvements in this matter too.</p>
 <h2 id='build-system' class='heading'>Build system</h2>
 
-<p>This section explains the &lsquo;Build System&rsquo; that integrates the rust code and creates the corresponding environment</p>
+<p>This section explains the &lsquo;Build System&rsquo; that integrates the rust code and creates the corresponding environment.</p>
 <h3 id='overview' class='heading'>Overview</h3>
 
 <p>There are some basic steps to build ZcashLightClientKit. Even though they are &lsquo;basic&rsquo; they can be cumbersome. So we automated them in scripts.</p>
@@ -276,12 +276,12 @@ See <span class="sb">`</span>https://guides.cocoapods.org/syntax/podspec.html#sc
 <li><code>${ZCASH_POD_SRCROOT}/zcashlc/libzcashlc.a</code> this is the librustzcash build .a file itself</li>
 <li><code>lib/libzcashlc.a</code> (as vendored library that will be added as an asset by xcodeproj)</li>
 <li><code>ZcashSDK.generated.swift</code> which contains sensitive values for the SDK that change depending on the network environment we are building for</li>
-<li><code>WalletBirthday+saplingtree.generated.swift</code> helper functions to import existing wallets.</li>
+<li><code>WalletBirthday+saplingtree.generated.swift</code> helper functions to import existing wallets</li>
 </ul>
 
 <p><strong>2. Build Phase</strong></p>
 
-<p>The build Phase scripts executes withing the Xcode Build Step and has all the known variables of a traditional build at hand.</p>
+<p>The build Phase scripts executes within the Xcode Build Step and has all the known variables of a traditional build at hand.</p>
 <pre class="highlight ruby"><code><span class="n">s</span><span class="p">.</span><span class="nf">script_phase</span> <span class="o">=</span> <span class="p">{</span>
       <span class="ss">:name</span> <span class="o">=&gt;</span> <span class="s1">'Build generate constants and build librustzcash'</span><span class="p">,</span>
       <span class="ss">:script</span> <span class="o">=&gt;</span> <span class="s1">'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_zcashsdk_constants.sh &amp;&amp; sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh'</span><span class="p">,</span>
@@ -289,20 +289,20 @@ See <span class="sb">`</span>https://guides.cocoapods.org/syntax/podspec.html#sc
    <span class="p">}</span>
 </code></pre>
 
-<p>This step will generate files needed on the next steps and build the librustzcash with Xcode but <em>not using cargo&rsquo;s built-in xcode integration</em></p>
+<p>This step will generate files needed on the next steps and build the librustzcash with Xcode but <em>not using cargo&rsquo;s built-in Xcode integration</em></p>
 
 <p><strong>a. Generating ZcashSDK constants</strong></p>
 
-<p>To run this you need <code>Sourcery</code>. We use <code>Stencil</code> templates to create this files based on the <code>ZCASH_NETWORK_ENVIRONMENT</code> value of your choice. You can either integrate sourcery with cocoapods or as part of your environment.</p>
+<p>To run this you need <code>Sourcery</code>. We use <code>Stencil</code> templates to create these files based on the <code>ZCASH_NETWORK_ENVIRONMENT</code> value of your choice. You can either integrate sourcery with cocoapods or as part of your environment.</p>
 
-<p>All generated files will be located in the Pods source root within the <code>Generated</code> folder. <code>ZCASH_SDK_GENERATED_SOURCES_FOLDER</code> represents that path in the build system</p>
+<p>All generated files will be located in the Pods source root within the <code>Generated</code> folder. <code>ZCASH_SDK_GENERATED_SOURCES_FOLDER</code> represents that path in the build system.</p>
 
-<p><strong>b. Building librust zcash and integrating it to the pod structure.</strong></p>
+<p><strong>b. Building librustzcash and integrating it to the pod structure</strong></p>
 
-<p>Where the magic happens. Here we will make sure that everything is set up properly to start building librustzcash. When on mainnet, the build will append a parameter to include mainnet features. </p>
+<p>Where the magic happens. Here we will make sure that everything is set up properly to start building librustzcash. When on mainnet, the build will append a parameter to include mainnet features.</p>
 
-<p><strong>Safeguards points</strong>: 
-if it appears that you are about to build something smelly, we will let you know. Combining testnet and mainnet values and artifacts and viceversa leads to unstable builds and may cause lost of funds if ran on production. </p>
+<p><strong>Safeguards points</strong>:
+if it appears that you are about to build something smelly, we will let you know. Combining testnet and mainnet values and artifacts and viceversa leads to unstable builds and may cause loss of funds if ran on production.</p>
 <pre class="highlight plaintext"><code>if [ existing_build_mismatch = true ]; then 
         # clean
         echo "build mismatch. You previously build a Different network environment. It appears that your build could be inconsistent if proceeding. Please clean your Pods/ folder and clean your build before running your next build."
@@ -312,7 +312,7 @@ fi
 
 <p><strong>3. Xcode clean integration</strong></p>
 
-<p>When performing a clean, we will clean the rust build folders. </p>
+<p>When performing a clean, we will clean the rust build folders.</p>
 <h3 id='scripts' class='heading'>Scripts</h3>
 
 <p>On the Scripts folder you will find the following files:</p>
@@ -326,38 +326,38 @@ fi
 </code></pre>
 <h4 id='prepare_zcash_sdk-sh' class='heading'>prepare_zcash_sdk.sh</h4>
 
-<p>This script is run by the Cocoapods &lsquo;preapare_command&rsquo;. </p>
+<p>This script is run by the Cocoapods &lsquo;preapare_command&rsquo;.</p>
 <pre class="highlight plaintext"><code>s.prepare_command = &lt;&lt;-CMD
       sh Scripts/prepare_zcash_sdk.sh
     CMD
 </code></pre>
 
-<p>It basically creates empty files that cocoapods needs to pick up on it&rsquo;s pod structure but that are still not present in the file system and that will be generated in later build phases. </p>
+<p>It basically creates empty files that cocoapods needs to pick up on its pod structure but that are still not present in the file system and that will be generated in later build phases.</p>
 
-<p>NOTE: pod install will only run this phase when no Pods/ folder is present or if your pod hash has changed or is not present on manifest.lock. When in doubt, just clean the Pods/ folder and start over. That usually gets rid of weirdness caused by Xcode caching a lot of stuff you are not aware of. </p>
+<p>NOTE: pod install will only run this phase when no Pods/ folder is present or if your pod hash has changed or is not present on manifest.lock. When in doubt, just clean the Pods/ folder and start over. That usually gets rid of weirdness caused by Xcode caching a lot of stuff you are not aware of.</p>
 <h4 id='script_commons-sh' class='heading'>script_commons.sh</h4>
 
-<p>A lot of important environment variables and helper functions live in the <code>script_commons.sh</code>. </p>
+<p>A lot of important environment variables and helper functions live in the <code>script_commons.sh</code>.</p>
 <h1 id='testing' class='heading'>Testing</h1>
 
-<p>Currently tests depend on a <code>lightwalletd</code> server instance runnning locally or remotely to pass.
+<p>Currently tests depend on a <code>lightwalletd</code> server instance running locally or remotely to pass.
 To know more about running <code>lightwalletd</code>, refer to its repo <a href="https://github.com/zcash/lightwalletd">https://github.com/zcash/lightwalletd</a></p>
 <h2 id='pointing-tests-to-a-lightwalletd-instance' class='heading'>Pointing tests to a lightwalletd instance</h2>
 
-<p>Tests use <code>Sourcery</code> to generate a Constants file which injects the <code>lightwalletd</code> server address to the test themselves</p>
+<p>Tests use <code>Sourcery</code> to generate a Constants file which injects the <code>lightwalletd</code> server address to the test themselves.</p>
 <h3 id='installing-sourcery' class='heading'>Installing sourcery</h3>
 
-<p>refer to the official repo <a href="https://github.com/krzysztofzablocki/Sourcery">https://github.com/krzysztofzablocki/Sourcery</a></p>
+<p>Refer to the official repo <a href="https://github.com/krzysztofzablocki/Sourcery">https://github.com/krzysztofzablocki/Sourcery</a></p>
 <h3 id='setting-env-var-sh-file-to-run-locally' class='heading'>Setting env-var.sh file to run locally</h3>
 
-<p>create a file called <code>env-var.sh</code> on the project root to create the <code>LIGHTWALLETD_ADDRESS</code> environment variable on build time.</p>
+<p>Create a file called <code>env-var.sh</code> on the project root to create the <code>LIGHTWALLETD_ADDRESS</code> environment variable on build time.</p>
 <pre class="highlight plaintext"><code>export LIGHTWALLETD_ADDRESS="localhost%3a9067"
 </code></pre>
 <h3 id='integrating-with-cd-ci' class='heading'>Integrating with CD/CI</h3>
 
 <p>The <code>LIGHTWALLETD_ADDRESS</code> environment variable can also be added to your shell of choice and <code>xcodebuild</code> will pick it up accordingly.</p>
 
-<p>We advice setting this value as a secret variable on your CD/CI environment when possible</p>
+<p>We advise setting this value as a secret variable on your CD/CI environment when possible.</p>
 <h1 id='integrating-with-logging-tools' class='heading'>Integrating with logging tools</h1>
 
 <p>There are a lots of good logging tools for iOS. So we&rsquo;ll leave that choice to you. ZcashLightClientKit relies on a simple protocol to bubble up logs to client applications, which is called <code><a href="Protocols/Logger.html">Logger</a></code> (kudos for the naming originality&hellip;)</p>
@@ -386,41 +386,41 @@ To know more about running <code>lightwalletd</code>, refer to its repo <a href=
 <p>For more details look the Sample App&rsquo;s <code>AppDelegate</code> code.</p>
 <h1 id='swiftlint' class='heading'>Swiftlint</h1>
 
-<p>We don&rsquo;t like reinveing the wheel, so be gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.</p>
+<p>We don&rsquo;t like reinventing the wheel, so we gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.</p>
 <h2 id='troubleshooting' class='heading'>Troubleshooting</h2>
 <h3 id='no-network-environment' class='heading'>No network environment&hellip;.</h3>
 
 <p>if you see this message when building:
 <code>No network environment. Set ZCASH_NETWORK_ENVIRONMENT to MAINNET or TESTNET</code>
-make sure your dev environment is has this variable set before the build starts. <em>DO NOT CHANGE IT DURING THE BUILD PROCESS</em>. </p>
+make sure your dev environment has this variable set before the build starts. <em>DO NOT CHANGE IT DURING THE BUILD PROCESS</em>.</p>
 
 <p>If the variable was properly set <em>after</em> you&rsquo;ve seen this message, you will need to either a) set it manually on the pod&rsquo;s target or b) doing a clean pod install and subsequent build.</p>
 <h4 id='a-setting-the-flag-manually' class='heading'>a) setting the flag manually</h4>
 
 <ol>
-<li>on your workspace, select the Pods project.</li>
+<li>on your workspace, select the Pods project</li>
 <li>on the Targets pane, select ZcashLightClientKit</li>
 <li>go to build settings</li>
 <li>scroll down to see ZCASH_NETWORK_ENVIRONMENT and complete with TESTNET or MAINNET</li>
 </ol>
 
-<p><img src="docs/images/complete_environment_manually.png" alt="how to complete network environtment manually"></p>
+<p><img src="docs/images/complete_environment_manually.png" alt="how to complete network environment manually"></p>
 <h4 id='b-clean-pod-install' class='heading'>b) clean pod install</h4>
 
-<p>it&rsquo;s not necessary to delete the whole Pods/ directory and download all of your dependencies again. </p>
+<p>it&rsquo;s not necessary to delete the whole Pods/ directory and download all of your dependencies again</p>
 
 <ol>
 <li>on your project root, locate the <code>Pods/</code> directory</li>
 <li>remove ZcashLightClientKit from it</li>
-<li>clean derived data from xcode</li>
-<li>close xcode</li>
+<li>clean derived data from Xcode</li>
+<li>close Xcode</li>
 <li>run <code>pod install</code> (run &ndash;verbose to see more details)</li>
-<li>open xcode project</li>
+<li>open Xcode project</li>
 <li>build</li>
 </ol>
 <h3 id='_function_name-referenced-from' class='heading'>_function_name  referenced from&hellip;</h3>
 
-<p>if you get a build error similar to <code>_function_name  referenced from...</code> </p>
+<p>if you get a build error similar to <code>_function_name  referenced from...</code></p>
 
 <ul>
 <li>on your project root directory *</li>
@@ -431,7 +431,7 @@ make sure your dev environment is has this variable set before the build starts.
 </ul>
 <h3 id='zcashlightclientkitsample-missing-params' class='heading'>ZcashLightClientKitSample missing .params</h3>
 
-<p>ZcashLightClientKit has an external dependency on 2 files containing Sapling parameters. Although you can provide those files as you seem fit, the sample app requires them on the main bundle. </p>
+<p>ZcashLightClientKit has an external dependency on 2 files containing Sapling parameters. Although you can provide those files as you seem fit, the sample app requires them on the main bundle.</p>
 
 <p>You can download these files from <a href="https://z.cash/downloads/sapling-spend.params">https://z.cash/downloads/sapling-spend.params</a>
 and <a href="https://z.cash/downloads/sapling-output.params">https://z.cash/downloads/sapling-output.params</a> and then move them to the correct folder, which is specified on the error itself.</p>
@@ -478,7 +478,7 @@ and <a href="https://z.cash/downloads/sapling-output.params">https://z.cash/down
 </tr>
 <tr>
 <td style="text-align: left"><strong>production</strong></td>
-<td style="text-align: left"><strong>Dellivery.</strong> Deliver new features to end users. Any bugs found here need to be prioritized. Some will require immediate attention but most can be worked into a future release.</td>
+<td style="text-align: left"><strong>Delivery.</strong> Deliver new features to end users. Any bugs found here need to be prioritized. Some will require immediate attention but most can be worked into a future release.</td>
 <td style="text-align: left">Stable: Prioritize bugs</td>
 <td style="text-align: left">Public</td>
 <td style="text-align: left">8XX</td>
@@ -487,9 +487,9 @@ and <a href="https://z.cash/downloads/sapling-output.params">https://z.cash/down
 </tbody></table>
 <h2 id='examples' class='heading'>Examples</h2>
 
-<p>This repo contains demos of isolated functionality that this SDK provides. They can be found in the examples folder</p>
+<p>This repo contains demos of isolated functionality that this SDK provides. They can be found in the examples folder.</p>
 
-<p>Examples can be found in the <a href="/Example/ZcashLightClientSample">Demo App</a></p>
+<p>Examples can be found in the <a href="/Example/ZcashLightClientSample">Demo App</a>.</p>
 <h1 id='license' class='heading'>License</h1>
 
 <p>Apache License Version 2.0</p>
@@ -497,7 +497,7 @@ and <a href="https://z.cash/downloads/sapling-output.params">https://z.cash/down
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-03-17)</p>
+          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-04-06)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>

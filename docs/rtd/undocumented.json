@@ -849,77 +849,77 @@
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 68,
+      "line": 67,
       "symbol": "SDKSynchronizer.NotificationKeys",
       "symbol_kind": "source.lang.swift.decl.struct",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 69,
+      "line": 68,
       "symbol": "SDKSynchronizer.NotificationKeys.progress",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 70,
+      "line": 69,
       "symbol": "SDKSynchronizer.NotificationKeys.blockHeight",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 71,
+      "line": 70,
       "symbol": "SDKSynchronizer.NotificationKeys.minedTransaction",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 72,
+      "line": 71,
       "symbol": "SDKSynchronizer.NotificationKeys.error",
       "symbol_kind": "source.lang.swift.decl.var.static",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 81,
+      "line": 80,
       "symbol": "SDKSynchronizer.blockProcessor",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 82,
+      "line": 81,
       "symbol": "SDKSynchronizer.initializer",
       "symbol_kind": "source.lang.swift.decl.var.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 437,
+      "line": 436,
       "symbol": "SDKSynchronizer.allReceivedTransactions()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 441,
+      "line": 440,
       "symbol": "SDKSynchronizer.allPendingTransactions()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 445,
+      "line": 444,
       "symbol": "SDKSynchronizer.allClearedTransactions()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/ZcashLightClientKit/UIKit/Synchronizer/SDKSynchronizer.swift",
-      "line": 449,
+      "line": 448,
       "symbol": "SDKSynchronizer.allSentTransactions()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"

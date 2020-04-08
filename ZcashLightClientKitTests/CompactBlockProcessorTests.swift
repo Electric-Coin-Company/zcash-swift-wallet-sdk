@@ -18,7 +18,7 @@ class CompactBlockProcessorTests: XCTestCase {
     var startedScanningNotificationExpectation: XCTestExpectation!
     var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
-    let mockLatestHeight = 282_000
+    let mockLatestHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 2000
     
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -108,27 +108,24 @@ class CompactBlockProcessorTests: XCTestCase {
         
         // test first range
         var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
-        var latestBlockchainHeight = BlockHeight(281_000)
+        var latestBlockchainHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 1000)
         
         var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestDownloadedHeight + processorConfig.downloadBatchSize - 1))
         
         XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
         
         // Test mid-range
-        latestDownloadedHeight = BlockHeight(280_100)
-        latestBlockchainHeight = BlockHeight(281_000)
+        latestDownloadedHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + ZcashSDK.DEFAULT_BATCH_SIZE)
+        latestBlockchainHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 1000)
         
         expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper:latestDownloadedHeight + processorConfig.downloadBatchSize))
         
         XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
         
-        latestDownloadedHeight = BlockHeight(280_950)
-        latestBlockchainHeight = BlockHeight(281_000)
-        
         // Test last batch range
         
-        latestDownloadedHeight = BlockHeight(280_950)
-        latestBlockchainHeight = BlockHeight(281_000)
+        latestDownloadedHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 950)
+        latestBlockchainHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 1000)
         
         expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
         

@@ -18,8 +18,8 @@ class LightWalletEndpointBuilder {
 }
 
 class ChannelProvider {
-    func channel() -> SwiftGRPC.Channel {
-        Channel(address: Constants.address, secure: false)
+    func channel(secure: Bool = false) -> SwiftGRPC.Channel {
+        Channel(address: Constants.address, secure: secure)
     }
 }
 

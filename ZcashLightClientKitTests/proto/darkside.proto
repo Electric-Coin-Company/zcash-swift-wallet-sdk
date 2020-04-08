@@ -1,0 +1,25 @@
+// Copyright (c) 2019-2020 The Zcash developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://www.opensource.org/licenses/mit-license.php .
+
+syntax = "proto3";
+package cash.z.wallet.sdk.rpc;
+option go_package = "walletrpc";
+option swift_prefix = "";
+import "service.proto";
+
+message DarksideState {
+    uint64 latestHeight = 1;
+    uint64 reorgHeight = 2;
+}
+
+service DarksideStreamer {
+    // Darkside (testing, see --darkside-very-insecure):
+
+    // Return the list of transactions that have been submitted (via SendTransaction).
+    rpc DarksideGetIncomingTransactions(Empty) returns (stream RawTransaction) {}
+
+    // Set the information that GetLightdInfo returns, except that chainName specifies
+    // a file of blocks within testdata/darkside that GetBlock will return.
+    rpc DarksideSetState(DarksideState) returns (Empty) {}
+}
