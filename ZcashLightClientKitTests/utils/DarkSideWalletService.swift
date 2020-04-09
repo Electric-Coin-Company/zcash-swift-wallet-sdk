@@ -7,17 +7,17 @@
 
 import Foundation
 import ZcashLightClientKit
-import SwiftGRPC
+import GRPC
 class DarksideWalletService: LightWalletService {
     var channel: Channel
     init() {
         let channel = ChannelProvider().channel()
         self.channel = channel
         self.service = LightWalletGRPCService(channel: channel)
-        self.darksideService = DarksideStreamerServiceClient(channel: channel)
+        self.darksideService = DarksideStreamerClient(channel: channel)
     }
     var service: LightWalletGRPCService
-    var darksideService: DarksideStreamerServiceClient
+    var darksideService: DarksideStreamerClient
     
     func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         service.latestBlockHeight(result: result)
@@ -48,14 +48,14 @@ class DarksideWalletService: LightWalletService {
         darksideState.latestHeight = UInt64(latestHeight)
         darksideState.reorgHeight = UInt64(reOrgHeight)
         
-       _ = try darksideService.darksideSetState(darksideState, metadata: Metadata())
+        _ = try darksideService.darksideSetState(darksideState).response.wait()
     }
     
     func setLatestHeight(_ latestHeight: BlockHeight) throws {
-        var state = DarksideState()
-        state.reorgHeight = 0
-        state.latestHeight = UInt64(latestHeight)
-        _ = try darksideService.darksideSetState(state, metadata: Metadata())
+        var darksideState = DarksideState()
+        darksideState.reorgHeight = 0
+        darksideState.latestHeight = UInt64(latestHeight)
+        _ = try darksideService.darksideSetState(darksideState).response.wait()
     }
     
     

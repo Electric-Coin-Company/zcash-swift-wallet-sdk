@@ -20,87 +20,65 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-import Dispatch
 import Foundation
-import SwiftGRPC
+import GRPC
+import NIO
+import NIOHTTP1
 import SwiftProtobuf
-@testable import ZcashLightClientKit
-internal protocol DarksideStreamerDarksideGetIncomingTransactionsCall: ClientCallServerStreaming {
-  /// Do not call this directly, call `receive()` in the protocol extension below instead.
-  func _receive(timeout: DispatchTime) throws -> RawTransaction?
-  /// Call this to wait for a result. Nonblocking.
-  func receive(completion: @escaping (ResultOrRPCError<RawTransaction?>) -> Void) throws
+
+
+/// Usage: instantiate DarksideStreamerClient, then call methods of this protocol to make API calls.
+internal protocol DarksideStreamerClientProtocol {
+  func darksideGetIncomingTransactions(_ request: Empty, callOptions: CallOptions?, handler: @escaping (RawTransaction) -> Void) -> ServerStreamingCall<Empty, RawTransaction>
+  func darksideSetState(_ request: DarksideState, callOptions: CallOptions?) -> UnaryCall<DarksideState, Empty>
 }
 
-internal extension DarksideStreamerDarksideGetIncomingTransactionsCall {
-  /// Call this to wait for a result. Blocking.
-  func receive(timeout: DispatchTime = .distantFuture) throws -> RawTransaction? { return try self._receive(timeout: timeout) }
-}
+internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientProtocol {
+  internal let channel: GRPCChannel
+  internal var defaultCallOptions: CallOptions
 
-fileprivate final class DarksideStreamerDarksideGetIncomingTransactionsCallBase: ClientCallServerStreamingBase<Empty, RawTransaction>, DarksideStreamerDarksideGetIncomingTransactionsCall {
-  override class var method: String { return "/cash.z.wallet.sdk.rpc.DarksideStreamer/DarksideGetIncomingTransactions" }
-}
-
-internal protocol DarksideStreamerDarksideSetStateCall: ClientCallUnary {}
-
-fileprivate final class DarksideStreamerDarksideSetStateCallBase: ClientCallUnaryBase<DarksideState, Empty>, DarksideStreamerDarksideSetStateCall {
-  override class var method: String { return "/cash.z.wallet.sdk.rpc.DarksideStreamer/DarksideSetState" }
-}
-
-
-/// Instantiate DarksideStreamerServiceClient, then call methods of this protocol to make API calls.
-internal protocol DarksideStreamerService: ServiceClient {
-  /// Asynchronous. Server-streaming.
-  /// Send the initial message.
-  /// Use methods on the returned object to get streamed responses.
-  func darksideGetIncomingTransactions(_ request: Empty, metadata customMetadata: Metadata, completion: ((CallResult) -> Void)?) throws -> DarksideStreamerDarksideGetIncomingTransactionsCall
-
-  /// Synchronous. Unary.
-  func darksideSetState(_ request: DarksideState, metadata customMetadata: Metadata) throws -> Empty
-  /// Asynchronous. Unary.
-  @discardableResult
-  func darksideSetState(_ request: DarksideState, metadata customMetadata: Metadata, completion: @escaping (Empty?, CallResult) -> Void) throws -> DarksideStreamerDarksideSetStateCall
-
-}
-
-internal extension DarksideStreamerService {
-  /// Asynchronous. Server-streaming.
-  func darksideGetIncomingTransactions(_ request: Empty, completion: ((CallResult) -> Void)?) throws -> DarksideStreamerDarksideGetIncomingTransactionsCall {
-    return try self.darksideGetIncomingTransactions(request, metadata: self.metadata, completion: completion)
+  /// Creates a client for the cash.z.wallet.sdk.rpc.DarksideStreamer service.
+  ///
+  /// - Parameters:
+  ///   - channel: `GRPCChannel` to the service host.
+  ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
+  internal init(channel: GRPCChannel, defaultCallOptions: CallOptions = CallOptions()) {
+    self.channel = channel
+    self.defaultCallOptions = defaultCallOptions
   }
 
-  /// Synchronous. Unary.
-  func darksideSetState(_ request: DarksideState) throws -> Empty {
-    return try self.darksideSetState(request, metadata: self.metadata)
+  /// Return the list of transactions that have been submitted (via SendTransaction).
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to DarksideGetIncomingTransactions.
+  ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
+  ///   - handler: A closure called when each response is received from the server.
+  /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
+  internal func darksideGetIncomingTransactions(_ request: Empty, callOptions: CallOptions? = nil, handler: @escaping (RawTransaction) -> Void) -> ServerStreamingCall<Empty, RawTransaction> {
+    return self.makeServerStreamingCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/DarksideGetIncomingTransactions",
+                                        request: request,
+                                        callOptions: callOptions ?? self.defaultCallOptions,
+                                        handler: handler)
   }
-  /// Asynchronous. Unary.
-  @discardableResult
-  func darksideSetState(_ request: DarksideState, completion: @escaping (Empty?, CallResult) -> Void) throws -> DarksideStreamerDarksideSetStateCall {
-    return try self.darksideSetState(request, metadata: self.metadata, completion: completion)
+
+  /// Set the information that GetLightdInfo returns, except that chainName specifies
+  /// a file of blocks within testdata/darkside that GetBlock will return.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to DarksideSetState.
+  ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func darksideSetState(_ request: DarksideState, callOptions: CallOptions? = nil) -> UnaryCall<DarksideState, Empty> {
+    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/DarksideSetState",
+                              request: request,
+                              callOptions: callOptions ?? self.defaultCallOptions)
   }
 
 }
 
-internal final class DarksideStreamerServiceClient: ServiceClientBase, DarksideStreamerService {
-  /// Asynchronous. Server-streaming.
-  /// Send the initial message.
-  /// Use methods on the returned object to get streamed responses.
-  internal func darksideGetIncomingTransactions(_ request: Empty, metadata customMetadata: Metadata, completion: ((CallResult) -> Void)?) throws -> DarksideStreamerDarksideGetIncomingTransactionsCall {
-    return try DarksideStreamerDarksideGetIncomingTransactionsCallBase(channel)
-      .start(request: request, metadata: customMetadata, completion: completion)
-  }
 
-  /// Synchronous. Unary.
-  internal func darksideSetState(_ request: DarksideState, metadata customMetadata: Metadata) throws -> Empty {
-    return try DarksideStreamerDarksideSetStateCallBase(channel)
-      .run(request: request, metadata: customMetadata)
-  }
-  /// Asynchronous. Unary.
-  @discardableResult
-  internal func darksideSetState(_ request: DarksideState, metadata customMetadata: Metadata, completion: @escaping (Empty?, CallResult) -> Void) throws -> DarksideStreamerDarksideSetStateCall {
-    return try DarksideStreamerDarksideSetStateCallBase(channel)
-      .start(request: request, metadata: customMetadata, completion: completion)
-  }
-
-}
+// Provides conformance to `GRPCPayload` for request and response messages
+extension Empty: GRPCProtobufPayload {}
+extension RawTransaction: GRPCProtobufPayload {}
+extension DarksideState: GRPCProtobufPayload {}
 

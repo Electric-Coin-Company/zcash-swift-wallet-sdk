@@ -8,7 +8,7 @@
 
 import XCTest
 @testable import ZcashLightClientKit
-import SwiftGRPC
+import GRPC
 class LightWalletServiceTests: XCTestCase {
     
     var service: LightWalletService!
@@ -21,8 +21,6 @@ class LightWalletServiceTests: XCTestCase {
 
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
-        
-        channel.shutdown()
     }
 
     /// FIXME: check whether this test is stil valid on in memory lwd implementatiojn

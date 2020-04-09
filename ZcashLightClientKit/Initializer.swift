@@ -23,13 +23,11 @@ public enum InitializerError: Error {
  Represents a lightwallet instance endpoint to connect to
  */
 public struct LightWalletEndpoint {
-    public var address: String
-    public var port: String
+    public var host: String
+    public var port: Int
     public var secure: Bool
     
-    public var host: String {
-        "\(address):\(port)"
-    }
+    
 /**
      initializes a LightWalletEndpoint
      - Parameters:
@@ -37,8 +35,8 @@ public struct LightWalletEndpoint {
         - port: string with the port of the host address
         - secure: true if connecting through TLS. Default value is true
      */
-    public init(address: String, port: String, secure: Bool = true) {
-        self.address = address
+    public init(address: String, port: Int, secure: Bool = true) {
+        self.host = address
         self.port = port
         self.secure = secure
     }

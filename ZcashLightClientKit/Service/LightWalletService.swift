@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
 import SwiftProtobuf
 
 /**
@@ -15,7 +15,7 @@ import SwiftProtobuf
  */
 public enum LightWalletServiceError: Error {
     case generalError
-    case failed(statusCode: StatusCode, message: String)
+    case failed(statusCode: Int, message: String)
     case invalidBlock
     case sentFailed(sendResponse: LightWalletServiceResponse)
     case genericError(error: Error)
