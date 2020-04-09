@@ -6,7 +6,7 @@ target 'ZcashLightClientSample' do
   pod "KRProgressHUD"
   # Pods for ZcashLightClientSample
   pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']
-  pod 'gRPC-Swift', :git => 'https://github.com/Jake-Prickett/grpc-swift.git', :branch => 'jake-prickett/grpc-swift-cocoapod-support'
+  pod 'gRPC-Swift', '~> 1.0.0-alpha.11'
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'
   target 'ZcashLightClientSampleTests' do

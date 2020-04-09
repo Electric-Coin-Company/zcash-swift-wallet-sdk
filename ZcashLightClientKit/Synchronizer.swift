@@ -17,6 +17,7 @@ public enum SynchronizerError: Error {
     case connectionFailed(message: String)
     case generalError(message: String)
     case maxRetryAttemptsReached(attempts: Int)
+    case connectionError(status: Int, message: String)
 }
 
 /**

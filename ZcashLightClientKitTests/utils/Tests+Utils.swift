@@ -10,16 +10,20 @@ import Foundation
 import GRPC
 import ZcashLightClientKit
 import XCTest
-
+import NIO
 class LightWalletEndpointBuilder {
     static var `default`: LightWalletEndpoint {
-        LightWalletEndpoint(address: "localhost", port: "9067", secure: false)
+        LightWalletEndpoint(address: Constants.address, port: 9067, secure: false)
     }
 }
 
 class ChannelProvider {
-    func channel(secure: Bool = false) -> SwiftGRPC.Channel {
-        Channel(address: Constants.address, secure: secure)
+    func channel(secure: Bool = false) -> GRPCChannel {
+        let endpoint = LightWalletEndpointBuilder.default
+        
+        let configuration = ClientConnection.Configuration(target: .hostAndPort(endpoint.host, endpoint.port), eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1), tls: secure ? .init() : nil)
+        return ClientConnection(configuration: configuration)
+       
     }
 }
 

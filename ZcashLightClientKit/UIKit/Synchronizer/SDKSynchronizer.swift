@@ -117,8 +117,7 @@ public class SDKSynchronizer: Synchronizer {
      - Throws: CompactBlockProcessorError when failures occur
      */
     public func start(retry: Bool = false) throws {
-        let connectivityState = initializer.lightWalletService.resume()
-        LoggerProxy.info("service started with connectivityState: \(connectivityState)")
+        
         guard let processor = initializer.blockProcessor() else {
             throw SynchronizerError.generalError(message: "compact block processor initialization failed")
         }
@@ -529,6 +528,8 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.generalError(message: message)
             case .maxAttemptsReached(attempts: let attempts):
                 return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)    
+            case .grpcError(let statusCode, let message):
+                return SynchronizerError.connectionError(status: statusCode, message: message)
             }
         }
         return error

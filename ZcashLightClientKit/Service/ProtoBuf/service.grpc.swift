@@ -34,6 +34,9 @@ internal protocol CompactTxStreamerClientProtocol {
   func getBlockRange(_ request: BlockRange, callOptions: CallOptions?, handler: @escaping (CompactBlock) -> Void) -> ServerStreamingCall<BlockRange, CompactBlock>
   func getTransaction(_ request: TxFilter, callOptions: CallOptions?) -> UnaryCall<TxFilter, RawTransaction>
   func sendTransaction(_ request: RawTransaction, callOptions: CallOptions?) -> UnaryCall<RawTransaction, SendResponse>
+  func getAddressTxids(_ request: TransparentAddressBlockFilter, callOptions: CallOptions?, handler: @escaping (RawTransaction) -> Void) -> ServerStreamingCall<TransparentAddressBlockFilter, RawTransaction>
+  func getLightdInfo(_ request: Empty, callOptions: CallOptions?) -> UnaryCall<Empty, LightdInfo>
+  func ping(_ request: Duration, callOptions: CallOptions?) -> UnaryCall<Duration, PingResponse>
 }
 
 internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClientProtocol {
@@ -50,7 +53,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
     self.defaultCallOptions = defaultCallOptions
   }
 
-  /// Unary call to GetLatestBlock
+  /// Compact Blocks
   ///
   /// - Parameters:
   ///   - request: Request to send to GetLatestBlock.
@@ -88,7 +91,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                                         handler: handler)
   }
 
-  /// Unary call to GetTransaction
+  /// Transactions
   ///
   /// - Parameters:
   ///   - request: Request to send to GetTransaction.
@@ -112,6 +115,44 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                               callOptions: callOptions ?? self.defaultCallOptions)
   }
 
+  /// t-Address support
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetAddressTxids.
+  ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
+  ///   - handler: A closure called when each response is received from the server.
+  /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
+  internal func getAddressTxids(_ request: TransparentAddressBlockFilter, callOptions: CallOptions? = nil, handler: @escaping (RawTransaction) -> Void) -> ServerStreamingCall<TransparentAddressBlockFilter, RawTransaction> {
+    return self.makeServerStreamingCall(path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressTxids",
+                                        request: request,
+                                        callOptions: callOptions ?? self.defaultCallOptions,
+                                        handler: handler)
+  }
+
+  /// Misc
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetLightdInfo.
+  ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func getLightdInfo(_ request: Empty, callOptions: CallOptions? = nil) -> UnaryCall<Empty, LightdInfo> {
+    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLightdInfo",
+                              request: request,
+                              callOptions: callOptions ?? self.defaultCallOptions)
+  }
+
+  /// Unary call to Ping
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to Ping.
+  ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func ping(_ request: Duration, callOptions: CallOptions? = nil) -> UnaryCall<Duration, PingResponse> {
+    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/Ping",
+                              request: request,
+                              callOptions: callOptions ?? self.defaultCallOptions)
+  }
+
 }
 
 
@@ -123,4 +164,9 @@ extension BlockRange: GRPCProtobufPayload {}
 extension TxFilter: GRPCProtobufPayload {}
 extension RawTransaction: GRPCProtobufPayload {}
 extension SendResponse: GRPCProtobufPayload {}
+extension TransparentAddressBlockFilter: GRPCProtobufPayload {}
+extension Empty: GRPCProtobufPayload {}
+extension LightdInfo: GRPCProtobufPayload {}
+extension Duration: GRPCProtobufPayload {}
+extension PingResponse: GRPCProtobufPayload {}
 

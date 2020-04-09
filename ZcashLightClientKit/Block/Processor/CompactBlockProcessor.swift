@@ -17,6 +17,7 @@ public enum CompactBlockProcessorError: Error {
     case missingDbPath(path: String)
     case dataDbInitFailed(path: String)
     case connectionError(message: String)
+    case grpcError(statusCode: Int, message: String)
     case generalError(message: String)
     case maxAttemptsReached(attempts: Int)
 }
@@ -613,14 +614,15 @@ public class CompactBlockProcessor {
             default:
                 return CompactBlockProcessorError.generalError(message: "Error: \(lwdError)")
             }
-        } else if let rpcError = error as? SwiftGRPC.RPCError {
+        } else if let rpcError = error as? GRPC.GRPCStatus {
             switch rpcError {
-            case .invalidMessageReceived:
-                return CompactBlockProcessorError.connectionError(message: "invalid GRPC Message received")
-            case .timedOut:
-                return CompactBlockProcessorError.connectionError(message: "connection timeout")
-            case .callError(let callResult):
-                return CompactBlockProcessorError.connectionError(message: "GRPC Call error. Success: \(callResult.success) - StatusCode: \(callResult.statusCode)")
+            case .ok:
+                let msg = "Error Raised when status is OK"
+                LoggerProxy.warn(msg)
+                return CompactBlockProcessorError.grpcError(statusCode: rpcError.code.rawValue, message: rpcError.message ?? "Error Raised when status is OK")
+            default:
+                return CompactBlockProcessorError.grpcError(statusCode: rpcError.code.rawValue, message: rpcError.message ?? "No message")
+                
             }
         }
         return error

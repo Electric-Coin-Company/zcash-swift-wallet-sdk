@@ -26,7 +26,7 @@ public class LightWalletGRPCService {
     }
     
     public convenience init(endpoint: LightWalletEndpoint) {
-        self.init(host: endpoint.host, secure: endpoint.secure)
+        self.init(host: endpoint.host, port: endpoint.port, secure: endpoint.secure)
     }
     
     public convenience init(host: String, port: Int = 9067, secure: Bool = true) {
@@ -39,38 +39,38 @@ public class LightWalletGRPCService {
         _ = channel.close()
     }
     
-//    func resume() -> Channel.ConnectivityState {
-//        channel.connectivityState(tryToConnect: true)
-//    }
-//
-    func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil, result: @escaping (CallResult) -> Void) throws -> ServerStreamingCall<BlockRange, CompactBlock> {
-        try compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight)) { result($0) }
+    func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil, result: @escaping (CompactBlock) -> Void) throws -> ServerStreamingCall<BlockRange, CompactBlock> {
+        compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight), handler: result)
     }
     
     func latestBlock() throws -> BlockID {
-        try compactTxStreamer.getLatestBlock(ChainSpec())
+        try compactTxStreamer.getLatestBlock(ChainSpec()).response.wait()
     }
     
     func getTx(hash: String) throws -> RawTransaction {
         var filter = TxFilter()
         filter.hash = Data(hash.utf8)
-        return try compactTxStreamer.getTransaction(filter)
+        return try compactTxStreamer.getTransaction(filter).response.wait()
     }
     
 }
 
 extension LightWalletGRPCService: LightWalletService {
     public func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        do {
+            let tx = try RawTransaction(serializedData: spendTransaction)
+            let response = self.compactTxStreamer.sendTransaction(tx).response
             
-            guard let self = self else { return }
-            
-            do {
-                let response = try self.compactTxStreamer.sendTransaction(RawTransaction(serializedData: spendTransaction))
-                result(.success(response))
-            } catch {
-                result(.failure(LightWalletServiceError.genericError(error: error)))
+            response.whenComplete { (responseResult) in
+                switch responseResult {
+                case .failure(let e):
+                    result(.failure(LightWalletServiceError.genericError(error: e)))
+                case .success(let s):
+                    result(.success(s))
+                }
             }
+        } catch {
+            result(.failure(LightWalletServiceError.genericError(error: error)))
         }
     }
     
@@ -79,89 +79,78 @@ extension LightWalletGRPCService: LightWalletService {
         let rawTx = RawTransaction.with { (raw) in
             raw.data = spendTransaction
         }
-        return try compactTxStreamer.sendTransaction(rawTx)
+        return try compactTxStreamer.sendTransaction(rawTx).response.wait()
     }
     
     public func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
-        var blocks = [ZcashCompactBlock]()
+        var blocks = [CompactBlock]()
         
-        let call = try compactTxStreamer.getBlockRange(range.blockRange(), completion: { statusCode in
-            LoggerProxy.debug("finished with statusCode: \(statusCode)")
-        })
+        let response = compactTxStreamer.getBlockRange(range.blockRange(), handler: {
+            blocks.append($0)
+            })
         
-        while let block = try call.receive() {
-            
-            if let compactBlock = ZcashCompactBlock(compactBlock: block) {
-                blocks.append(compactBlock)
-            } else {
-                throw LightWalletServiceError.invalidBlock
-            }
+        do {
+           _ = try response.status.wait()
+        } catch {
+            throw LightWalletServiceError.genericError(error: error)
         }
         
-        return blocks
+        do {
+            return try blocks.asZcashCompactBlocks()
+        } catch {
+            LoggerProxy.error("invalid block in range: \(range) - Error: \(error)")
+            throw LightWalletServiceError.genericError(error: error)
+        }
     }
     
     public func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
-        do {
-            try compactTxStreamer.getLatestBlock(ChainSpec()) { (blockID, callResult) in
-                guard let rawHeight = blockID?.height, let blockHeight = Int(exactly: rawHeight) else {
-                    result(.failure(LightWalletServiceError.failed(statusCode: callResult.statusCode, message: callResult.statusMessage ?? "No message")))
-                    return
-                }
-                result(.success(blockHeight))
+        let response = compactTxStreamer.getLatestBlock(ChainSpec()).response
+        
+        response.whenSuccess { (blockID) in
+            guard let blockHeight = Int(exactly: blockID.height) else {
+                result(.failure(LightWalletServiceError.generalError))
+                return
             }
-        } catch {
-            // TODO: Handle Error
-            LoggerProxy.debug(error.localizedDescription)
-            result(.failure(LightWalletServiceError.generalError))
+            result(.success(blockHeight))
         }
+        
+        response.whenFailure { (error) in
+            result(.failure(LightWalletServiceError.genericError(error: error)))
+        }
+        
     }
     
     // TODO: Make cancellable
     public func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
+        
+       
         
         queue.async { [weak self] in
             
             guard let self = self else { return }
             
             var blocks = [CompactBlock]()
-            var isSyncing = true
-            guard let response = try? self.compactTxStreamer.getBlockRange(range.blockRange(),completion: { (callResult) in
-                isSyncing = false
-                if callResult.success {
-                    let code = callResult.statusCode
-                    switch code{
-                    case .ok:
-                        do {
-                            result(.success(try blocks.asZcashCompactBlocks()))
-                        } catch {
-                            result(.failure(LightWalletServiceError.generalError))
-                        }
-                    default:
-                        result(.failure(LightWalletServiceError.failed(statusCode: code, message: callResult.statusMessage ?? "No Message")))
-                    }
-                    
-                } else {
-                    result(.failure(LightWalletServiceError.generalError))
-                    return
-                }
-            }) else {
-                result(.failure(LightWalletServiceError.generalError))
-                return
-            }
+            
+            let response = self.compactTxStreamer.getBlockRange(range.blockRange(), handler: { blocks.append($0) })
+            
             do {
-                
-                var element: CompactBlock?
-                repeat {
-                    element = try response.receive()
-                    if let e = element {
-                        blocks.append(e)
+                let status = try response.status.wait()
+                switch status.code {
+                case .ok:
+                    do {
+                        result(.success(try blocks.asZcashCompactBlocks()))
+                    } catch {
+                        result(.failure(LightWalletServiceError.generalError))
                     }
-                } while isSyncing && element != nil
+                   
+                default:
+                        result(Result.failure(LightWalletServiceError.failed(statusCode: status.code.rawValue, message: status.message ?? "No Message")))
+                }
                 
             } catch {
-                result(.failure(LightWalletServiceError.generalError))
+                result(.failure(LightWalletServiceError.genericError(error: error)))
             }
+            
         }
         
     }
