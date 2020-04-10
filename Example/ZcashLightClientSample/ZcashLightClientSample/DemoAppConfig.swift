@@ -8,13 +8,13 @@
 
 import Foundation
 import ZcashLightClientKit
-
+import MnemonicKit
 struct DemoAppConfig {
     static var host = ZcashSDK.isMainnet ? "lightwalletd.z.cash" : "lightwalletd.testnet.z.cash"
     static var port: Int = 9067
-    static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 643_500 : 620_000
+    static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 735_000 : 620_000
     static var network = ZcashSDK.isMainnet ? ZcashNetwork.mainNet : ZcashNetwork.testNet
-    static var seed = ZcashSDK.isMainnet ? Array("testreferencealicetestreferencealice".utf8) : Array("testreferencealicetestreferencealice".utf8)
+    static var seed = ZcashSDK.isMainnet ? Mnemonic.deterministicSeedBytes(from: "wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame")! : Array("testreferencealicetestreferencealice".utf8)
     static var address: String {
         "\(host):\(port)"
     }

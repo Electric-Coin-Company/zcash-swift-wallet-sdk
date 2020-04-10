@@ -199,6 +199,29 @@ class TransactionSQLDAO: TransactionRepository {
                 return tx
             })
     }
+    
+    func findTransactions(in range: BlockRange, limit: Int = Int.max) throws -> [TransactionEntity]? {
+        try dbProvider.connection().run("""
+        SELECT transactions.id_tx         AS id,
+               transactions.block         AS minedHeight,
+               transactions.tx_index      AS transactionIndex,
+               transactions.txid          AS rawTransactionId,
+               transactions.expiry_height AS expiryHeight,
+               transactions.raw           AS raw
+        FROM   transactions
+        WHERE  :blockRangeStart <= minedheight
+               AND minedheight <= :blockRangeEnd
+        ORDER  BY ( minedheight IS NOT NULL ),
+                  minedheight ASC,
+                  id DESC
+        LIMIT  \(limit)
+        """).compactMap({ (bindings) -> TransactionEntity? in
+            guard let tx = TransactionBuilder.createTransactionEntity(from: bindings) else {
+               return nil
+            }
+            return tx
+        })
+    }
 }
 
 extension Data {

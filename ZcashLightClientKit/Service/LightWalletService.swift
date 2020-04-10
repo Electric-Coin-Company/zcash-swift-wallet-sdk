@@ -119,4 +119,21 @@ public protocol LightWalletService {
     
     func submit(spendTransaction: Data) throws -> LightWalletServiceResponse
     
+    /**
+    Gets a transaction by id
+     - Parameter txId: data representing the transaction ID
+     - Throws: LightWalletServiceError
+     - Returns: LightWalletServiceResponse
+     */
+    
+    func fetchTransaction(txId: Data) throws -> TransactionEntity
+    
+    /**
+    Gets a transaction by id
+     - Parameter txId: data representing the transaction ID
+     - Parameter result: handler for the result
+     - Throws: LightWalletServiceError
+     - Returns: LightWalletServiceResponse
+     */
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity,LightWalletServiceError>) -> Void)
 }

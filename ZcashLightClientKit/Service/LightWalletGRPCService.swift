@@ -56,6 +56,30 @@ public class LightWalletGRPCService {
 }
 
 extension LightWalletGRPCService: LightWalletService {
+    public func fetchTransaction(txId: Data) throws -> TransactionEntity {
+        var txFilter = TxFilter()
+        txFilter.hash = txId
+        let rawTx = try compactTxStreamer.getTransaction(txFilter).response.wait()
+        
+        return TransactionBuilder.createTransactionEntity(txId: txId, rawTransaction: rawTx)
+    }
+    
+    public func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
+        
+        var txFilter = TxFilter()
+        txFilter.hash = txId
+        
+        compactTxStreamer.getTransaction(txFilter).response.whenComplete({ response in
+            
+            switch response {
+            case .failure(let error):
+                result(.failure(LightWalletServiceError.genericError(error: error)))
+            case .success(let rawTx):
+                result(.success(TransactionBuilder.createTransactionEntity(txId: txId, rawTransaction: rawTx)))
+            }
+        })
+    }
+    
     public func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
         do {
             let tx = try RawTransaction(serializedData: spendTransaction)
@@ -87,10 +111,10 @@ extension LightWalletGRPCService: LightWalletService {
         
         let response = compactTxStreamer.getBlockRange(range.blockRange(), handler: {
             blocks.append($0)
-            })
+        })
         
         do {
-           _ = try response.status.wait()
+            _ = try response.status.wait()
         } catch {
             throw LightWalletServiceError.genericError(error: error)
         }
@@ -123,8 +147,7 @@ extension LightWalletGRPCService: LightWalletService {
     // TODO: Make cancellable
     public func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         
-       
-        
+
         queue.async { [weak self] in
             
             guard let self = self else { return }
@@ -142,9 +165,9 @@ extension LightWalletGRPCService: LightWalletService {
                     } catch {
                         result(.failure(LightWalletServiceError.generalError))
                     }
-                   
+                    
                 default:
-                        result(Result.failure(LightWalletServiceError.failed(statusCode: status.code.rawValue, message: status.message ?? "No Message")))
+                    result(Result.failure(LightWalletServiceError.failed(statusCode: status.code.rawValue, message: status.message ?? "No Message")))
                 }
                 
             } catch {

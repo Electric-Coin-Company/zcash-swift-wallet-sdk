@@ -23,7 +23,7 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
     
     private var status: TransactionType
     var synchronizer: Synchronizer!
-    var transactions = [TransactionEntity]()
+    var transactions = [TransactionDetailModel]()
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return transactions.count
@@ -33,7 +33,7 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
         
         let tx = transactions[indexPath.row]
-        cell.detailTextLabel?.text = transactionString(tx)
+        cell.detailTextLabel?.text = tx.id ?? "no id"
         cell.textLabel?.text = tx.created ?? "No date"
         
         return cell
@@ -48,18 +48,18 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
     func load() {
         switch status {
         case .pending:
-            transactions = synchronizer.pendingTransactions.map { $0.transactionEntity }
+            transactions = synchronizer.pendingTransactions.map { TransactionDetailModel(pendingTransaction: $0) }
         case .cleared:
-            transactions = synchronizer.clearedTransactions.map { $0.transactionEntity }
+            transactions = synchronizer.clearedTransactions.map { TransactionDetailModel(confirmedTransaction: $0) }
         case .received:
-            transactions = synchronizer.receivedTransactions.map { $0.transactionEntity }
+            transactions = synchronizer.receivedTransactions.map { TransactionDetailModel(confirmedTransaction: $0) }
         case .sent:
-            transactions = synchronizer.sentTransactions.map { $0.transactionEntity }
+            transactions = synchronizer.sentTransactions.map { TransactionDetailModel(confirmedTransaction: $0) }
         case .all:
-            transactions = synchronizer.pendingTransactions.map { $0.transactionEntity } +
+            transactions = (synchronizer.pendingTransactions.map { $0.transactionEntity } +
                 synchronizer.clearedTransactions.map { $0.transactionEntity } +
                 synchronizer.receivedTransactions.map { $0.transactionEntity } +
-                synchronizer.sentTransactions.map { $0.transactionEntity }
+                synchronizer.sentTransactions.map { $0.transactionEntity }).map { TransactionDetailModel(transaction: $0)}
         }        
     }
     

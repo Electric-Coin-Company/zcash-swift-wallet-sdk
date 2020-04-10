@@ -20,7 +20,7 @@ class TransactionsTableViewController: UITableViewController {
         }
     }
     
-    var selectedTx: TransactionEntity?
+    var selectedTx: TransactionDetailModel?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -56,7 +56,7 @@ class TransactionsTableViewController: UITableViewController {
         if identifier == "TransactionDetail",
             let row = selectedRow,
             let tx = datasource?.transactions[row] {
-             selectedTx = tx
+            selectedTx = tx
             return true
             
         }
