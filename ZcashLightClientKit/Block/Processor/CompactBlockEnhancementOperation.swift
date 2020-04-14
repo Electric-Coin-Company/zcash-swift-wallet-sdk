@@ -46,7 +46,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         do {
 
             guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), transactions.count > 0 else {
-                LoggerProxy.info("no transactions detected on range: \(range.printRange)")
+                LoggerProxy.debug("no transactions detected on range: \(range.printRange)")
                 return
             }
             /// TODO: Retry failed enhancements
