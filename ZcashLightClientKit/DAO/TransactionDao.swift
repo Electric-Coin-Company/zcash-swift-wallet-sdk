@@ -113,12 +113,13 @@ class TransactionSQLDAO: TransactionRepository {
                    sent_notes.id_note         AS noteId,
                    blocks.time                AS blockTimeInSeconds
             FROM   transactions
-                   LEFT JOIN sent_notes
+                   INNER JOIN sent_notes
                           ON transactions.id_tx = sent_notes.tx
                    LEFT JOIN blocks
                           ON transactions.block = blocks.height
             WHERE  transactions.raw IS NOT NULL
                    AND minedheight > 0
+                   
             ORDER  BY block IS NOT NULL, height DESC, time DESC, txid DESC
             LIMIT  \(limit) OFFSET \(offset)
         """).map({ (bindings) -> ConfirmedTransactionEntity in
@@ -202,18 +203,18 @@ class TransactionSQLDAO: TransactionRepository {
     
     func findTransactions(in range: BlockRange, limit: Int = Int.max) throws -> [TransactionEntity]? {
         try dbProvider.connection().run("""
-        SELECT transactions.id_tx         AS id,
-               transactions.block         AS minedHeight,
-               transactions.tx_index      AS transactionIndex,
-               transactions.txid          AS rawTransactionId,
-               transactions.expiry_height AS expiryHeight,
-               transactions.raw           AS raw
-        FROM   transactions
-        WHERE  :blockRangeStart <= minedheight
-               AND minedheight <= :blockRangeEnd
-        ORDER  BY ( minedheight IS NOT NULL ),
-                  minedheight ASC,
-                  id DESC
+            SELECT transactions.id_tx         AS id,
+                   transactions.block         AS minedHeight,
+                   transactions.tx_index      AS transactionIndex,
+                   transactions.txid          AS rawTransactionId,
+                   transactions.expiry_height AS expiryHeight,
+                   transactions.raw           AS raw
+            FROM   transactions
+                WHERE  \(range.start.height) <= minedheight
+                AND minedheight <= \(range.end.height)
+            ORDER  BY ( minedheight IS NOT NULL ),
+                      minedheight ASC,
+                      id DESC
         LIMIT  \(limit)
         """).compactMap({ (bindings) -> TransactionEntity? in
             guard let tx = TransactionBuilder.createTransactionEntity(from: bindings) else {

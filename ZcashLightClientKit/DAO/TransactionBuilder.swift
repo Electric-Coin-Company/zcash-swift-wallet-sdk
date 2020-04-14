@@ -34,11 +34,10 @@ struct TransactionBuilder {
     }
     
     enum TransactionEntityColumns: Int {
-        case idTx
-        case txid
-        case created
-        case block
+        case id
+        case minedHeight
         case txIndex
+        case txid
         case expiryHeight
         case raw
     }
@@ -63,12 +62,12 @@ struct TransactionBuilder {
         if let raw = bindings[TransactionEntityColumns.raw.rawValue] as? Blob {
             rawData = Data(blob: raw)
         }
-        return Transaction(id: bindings[TransactionEntityColumns.idTx.rawValue] as? Int,
+        return Transaction(id: bindings[TransactionEntityColumns.id.rawValue] as? Int,
                            transactionId:  Data(blob: txId),
-                           created: bindings[TransactionEntityColumns.created.rawValue] as? String,
-                           transactionIndex: nil,
+                           created: nil,
+                           transactionIndex: bindings[TransactionEntityColumns.txIndex.rawValue] as? Int,
                            expiryHeight: bindings[TransactionEntityColumns.expiryHeight.rawValue] as? Int,
-                           minedHeight: bindings[TransactionEntityColumns.block.rawValue] as? Int,
+                           minedHeight: bindings[TransactionEntityColumns.minedHeight.rawValue] as? Int,
                            raw: rawData)
     }
     

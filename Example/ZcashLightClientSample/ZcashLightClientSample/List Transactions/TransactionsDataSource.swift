@@ -48,13 +48,21 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
     func load() {
         switch status {
         case .pending:
-            transactions = synchronizer.pendingTransactions.map { TransactionDetailModel(pendingTransaction: $0) }
+            transactions = synchronizer.pendingTransactions.map {
+                TransactionDetailModel(pendingTransaction: $0)
+            }
         case .cleared:
-            transactions = synchronizer.clearedTransactions.map { TransactionDetailModel(confirmedTransaction: $0) }
+            transactions = synchronizer.clearedTransactions.map {
+                TransactionDetailModel(confirmedTransaction: $0)
+            }
         case .received:
-            transactions = synchronizer.receivedTransactions.map { TransactionDetailModel(confirmedTransaction: $0) }
+            transactions = synchronizer.receivedTransactions.map {
+                TransactionDetailModel(confirmedTransaction: $0)
+            }
         case .sent:
-            transactions = synchronizer.sentTransactions.map { TransactionDetailModel(confirmedTransaction: $0) }
+            transactions = synchronizer.sentTransactions.map {
+                TransactionDetailModel(confirmedTransaction: $0)
+            }
         case .all:
             transactions = (synchronizer.pendingTransactions.map { $0.transactionEntity } +
                 synchronizer.clearedTransactions.map { $0.transactionEntity } +

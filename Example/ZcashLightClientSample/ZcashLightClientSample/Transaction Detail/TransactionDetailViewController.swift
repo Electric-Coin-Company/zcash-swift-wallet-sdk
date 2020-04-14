@@ -30,11 +30,19 @@ final class TransactionDetailModel {
         }
     }
     init(pendingTransaction: PendingTransactionEntity) {
-        
+        self.id = pendingTransaction.rawTransactionId?.toHexStringTxId()
+        self.minedHeight = pendingTransaction.minedHeight.description
+        self.expiryHeight = pendingTransaction.expiryHeight.description
+        self.created = Date(timeIntervalSince1970: pendingTransaction.createTime).description
+        self.zatoshi = pendingTransaction.value.description
     }
     
     init(transaction: TransactionEntity) {
-        
+        self.id = transaction.transactionId.toHexStringTxId()
+        self.minedHeight = transaction.minedHeight?.description ?? "no height"
+        self.expiryHeight = transaction.expiryHeight?.description ?? "no height"
+        self.created = transaction.created ?? "no date"
+        self.zatoshi = "not available in this entity"
     }
 }
 class TransactionDetailViewController: UITableViewController {
@@ -64,7 +72,8 @@ class TransactionDetailViewController: UITableViewController {
         minedHeightLabel.text = model.minedHeight ?? "no height"
         expiryHeightLabel.text = model.expiryHeight ?? "no height"
         createdLabel.text = model.created
-        
+        zatoshiLabel.text = model.zatoshi
+        memoLabel.text = model.memo ?? "No memo"
         loggerProxy.debug("tx id: \(model.id ?? "no id!!"))")
     }
     

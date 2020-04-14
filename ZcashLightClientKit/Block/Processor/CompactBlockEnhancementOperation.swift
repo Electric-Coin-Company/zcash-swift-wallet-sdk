@@ -45,8 +45,8 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         
         do {
 
-            guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max) else {
-                LoggerProxy.info("no transactions detected on range: \(range)")
+            guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), transactions.count > 0 else {
+                LoggerProxy.info("no transactions detected on range: \(range.printRange)")
                 return
             }
             /// TODO: Retry failed enhancements
@@ -69,9 +69,9 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         
         let tx = try downloader.fetchTransaction(txId: transaction.transactionId)
         
-        LoggerProxy.debug("Decrypting and storing transaction id: \(tx.transactionId.toHexStringTxId()) block: \(String(describing: transaction.minedHeight))")
+        LoggerProxy.debug("Decrypting and storing transaction id: \(tx.transactionId.toHexStringTxId()) block: \(String(describing: tx.minedHeight))")
         
-        guard let rawBytes = transaction.raw?.bytes else {
+        guard let rawBytes = tx.raw?.bytes else {
             let error = EnhancementError.noRawData(message: "Critical Error: transaction id: \(tx.transactionId.toHexStringTxId()) has no data")
             LoggerProxy.error("\(error)")
             throw error
@@ -84,5 +84,11 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             throw EnhancementError.unknownError
         }
         
+    }
+}
+
+fileprivate extension BlockRange {
+    var printRange: String {
+        "\(self.start.height) ... \(self.end.height)"
     }
 }
