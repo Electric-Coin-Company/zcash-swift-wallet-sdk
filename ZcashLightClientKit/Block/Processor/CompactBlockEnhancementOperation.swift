@@ -18,10 +18,11 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     override var isAsynchronous: Bool { false }
     
     var rustBackend: ZcashRustBackendWelding.Type
-    
+    var txFoundHandler: (([TransactionEntity]) -> Void)?
     var downloader: CompactBlockDownloading
     var repository: TransactionRepository
-    var retries: Int = 5
+    var maxRetries: Int = 5
+    var retries: Int = 0
     private var dataDb: URL
     
     var range: BlockRange
@@ -44,23 +45,35 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         // fetch transactions
         
         do {
-
             guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), transactions.count > 0 else {
                 LoggerProxy.debug("no transactions detected on range: \(range.printRange)")
                 return
             }
-            /// TODO: Retry failed enhancements
+            
             for tx in transactions {
-                do {
-                    try enhance(transaction: tx)
-                } catch {
-                    LoggerProxy.error("could not enhance txId \(tx.transactionId.toHexStringTxId())")
+                var retry = true
+                while retry && self.retries < maxRetries {
+                    do {
+                        try enhance(transaction: tx)
+                        retry = false
+                    } catch {
+                        self.retries = self.retries + 1
+                        LoggerProxy.error("could not enhance txId \(tx.transactionId.toHexStringTxId())")
+                        if retries > maxRetries {
+                            throw error
+                        }
+                    }
                 }
             }
         } catch {
             LoggerProxy.error("error enhancing transactions! \(error)")
-            self.cancel()
+            self.error = error
+            self.fail()
             return
+        }
+        
+        if let handler = self.txFoundHandler, let foundTxs = try? repository.findTransactions(in: self.range, limit: Int.max) {
+            handler(foundTxs)
         }
     }
     
@@ -83,7 +96,6 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             }
             throw EnhancementError.unknownError
         }
-        
     }
 }
 

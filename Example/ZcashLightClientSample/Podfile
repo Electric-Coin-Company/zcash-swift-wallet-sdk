@@ -13,12 +13,14 @@ target 'ZcashLightClientSample' do
   target 'ZcashLightClientSampleTests' do
     inherit! :search_paths
     # Pods for testing
+    pod 'MnemonicKit', :git => 'git@github.com:pacu/MnemonicKit.git', :commit => '49ab6726fe8a15e1e615942b0b42a0cd83308090'
   end
 
   target 'ZcashLightClientSampleUITests' do
     inherit! :search_paths
     # Pods for testing
   end
+  
 end
 
 target 'ZcashLightClientSample-Mainnet' do

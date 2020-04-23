@@ -31,6 +31,7 @@ public struct CompactBlockProcessorNotificationKey {
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
     public static let rewindHeight = "CompactBlockProcessorNotificationKey.rewindHeight"
+    public static let foundTransactions = "CompactBlockProcessorNotificationKey.foundTransactions"
     public static let error = "error"
 }
 
@@ -84,6 +85,12 @@ public extension Notification.Name {
      Query the userInfo object on the key CompactBlockProcessorNotificationKey.reorgHeight for the height on which the reorg was detected. CompactBlockProcessorNotificationKey.rewindHeight for the height that the processor backed to in order to solve the Reorg
      */
     static let blockProcessorHandledReOrg = Notification.Name(rawValue: "CompactBlockProcessorHandledReOrg")
+    
+    /**
+     Notification sent when the compact block processor enhanced a bunch of transactions
+    Query the user info object for CompactBlockProcessorNotificationKey.foundTransactions which will contain an [TransactionEntity] Array with the found transactions
+     */
+    static let blockProcessorFoundTransactions = Notification.Name(rawValue: "CompactBlockProcessorFoundTransactions")
 }
 
 /**
@@ -449,6 +456,11 @@ public class CompactBlockProcessor {
         enhanceOperation.startedHandler = {
             LoggerProxy.debug("Started Enhancing range: \(range)")
         }
+        
+        enhanceOperation.txFoundHandler = { [weak self] txs in
+            self?.notifyTransactions(txs)
+        }
+        
         enhanceOperation.completionHandler  = { (finished, cancelled) in
             
             guard !cancelled else {
@@ -493,6 +505,12 @@ public class CompactBlockProcessor {
                                         object: self,
                                         userInfo: [ CompactBlockProcessorNotificationKey.progress : progress,
                                                     CompactBlockProcessorNotificationKey.progressHeight : self.latestBlockHeight])
+    }
+    
+    func notifyTransactions(_ txs: [TransactionEntity]) {
+        NotificationCenter.default.post(name: .blockProcessorFoundTransactions,
+                                        object: self,
+                                        userInfo: [ CompactBlockProcessorNotificationKey.foundTransactions : txs])
     }
     
     private func validationFailed(at height: BlockHeight) {

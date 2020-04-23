@@ -8,7 +8,16 @@
 import Foundation
 
 @testable import ZcashLightClientKit
+
 class MockTransactionRepository: TransactionRepository {
+    func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
+        nil
+    }
+    
+//    func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
+//        nil
+//    }
+    
     
     var unminedCount: Int
     var receivedCount: Int
