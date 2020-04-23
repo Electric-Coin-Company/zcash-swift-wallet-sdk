@@ -20,6 +20,7 @@ PODS:
   - KRProgressHUD (3.4.4):
     - KRActivityIndicatorView (= 3.0.4)
   - Logging (1.2.0)
+  - MnemonicKit (2.0.0)
   - NotificationBubbles (0.1.1)
   - PaginatedTableView (1.0.1)
   - SQLite.swift (0.12.2):
@@ -73,6 +74,7 @@ PODS:
 DEPENDENCIES:
   - gRPC-Swift (~> 1.0.0-alpha.11)
   - KRProgressHUD
+  - "MnemonicKit (from `git@github.com:pacu/MnemonicKit.git`, commit `49ab6726fe8a15e1e615942b0b42a0cd83308090`)"
   - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
@@ -107,8 +109,16 @@ SPEC REPOS:
     - SwiftProtobuf
 
 EXTERNAL SOURCES:
+  MnemonicKit:
+    :commit: 49ab6726fe8a15e1e615942b0b42a0cd83308090
+    :git: "git@github.com:pacu/MnemonicKit.git"
   ZcashLightClientKit:
     :path: "../../"
+
+CHECKOUT OPTIONS:
+  MnemonicKit:
+    :commit: 49ab6726fe8a15e1e615942b0b42a0cd83308090
+    :git: "git@github.com:pacu/MnemonicKit.git"
 
 SPEC CHECKSUMS:
   CGRPCZlib: e595387378d0601be796e858dd30c505458c4b1f
@@ -123,6 +133,7 @@ SPEC CHECKSUMS:
   KRActivityIndicatorView: 549db10b9578d58bac73db063d8b544e8970f7f2
   KRProgressHUD: c3b9a48a0ee4824ea13212ac3f1efa50dca021e3
   Logging: 7838d379d234d7e5ae1265fa02804a9084caf04c
+  MnemonicKit: dfbb4b7e2ccb3a67a56e519158501b27c519e2c8
   NotificationBubbles: 91ee10deee54f35b5d49a161e1cb3d788ab5d011
   PaginatedTableView: 294d9831d5ddf5c0dcfbb4a281d4fcfb8d12f55a
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
@@ -138,6 +149,6 @@ SPEC CHECKSUMS:
   SwiftProtobuf: 2cbd9409689b7df170d82a92a33443c8e3e14a70
   ZcashLightClientKit: 47e707be6657391d5d4fd7db1544b0d98ce45e42
 
-PODFILE CHECKSUM: 4022861094cde8ab9d9c2f650b4a4adec279287f
+PODFILE CHECKSUM: 7d65b875006037abc9e43948c04d9cde039718a3
 
 COCOAPODS: 1.9.1

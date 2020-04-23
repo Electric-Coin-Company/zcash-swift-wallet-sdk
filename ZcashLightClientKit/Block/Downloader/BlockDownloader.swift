@@ -67,6 +67,21 @@ public protocol CompactBlockDownloading {
      Blocking
      */
     func latestBlockHeight() throws -> BlockHeight
+    
+    /**
+    Gets the transaction for the Id given
+    - Parameter txId: Data representing the transaction Id
+    - Returns: a transaction entity with the requested transaction
+    - Throws: An error if the fetch failed
+     */
+    func fetchTransaction(txId: Data) throws -> TransactionEntity
+    
+    /**
+     Gets the transaction for the Id given
+     - Parameter txId: Data representing the transaction Id
+     - Parameter result: a handler for the result of the operation
+     */
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void)
 }
 
 /**
@@ -90,6 +105,7 @@ class CompactBlockDownloader {
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
+    
     func latestBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         lightwalletService.latestBlockHeight { (r) in
             
@@ -163,4 +179,18 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try self.storage.latestHeight()
     }
     
+    func fetchTransaction(txId: Data) throws -> TransactionEntity{
+        try lightwalletService.fetchTransaction(txId: txId)
+    }
+    
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void) {
+        lightwalletService.fetchTransaction(txId: txId) { (txResult) in
+            switch txResult {
+            case .failure(let error):
+                result(.failure(error))
+            case .success(let transaction):
+                result(.success(transaction))
+            }
+        }
+    }
 }

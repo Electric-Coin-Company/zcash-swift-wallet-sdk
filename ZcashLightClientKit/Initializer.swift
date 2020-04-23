@@ -138,7 +138,7 @@ public class Initializer {
         // resume from last downloaded block
         lowerBoundHeight = max(birthday.height, lastDownloaded)
         
-        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL, walletBirthday: walletBirthday?.height ?? self.lowerBoundHeight), downloader: self.downloader, backend: rustBackend)
+        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL, walletBirthday: walletBirthday?.height ?? self.lowerBoundHeight), downloader: self.downloader, transactionRepository: transactionRepository, backend: rustBackend)
         
         guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
@@ -195,8 +195,8 @@ public class Initializer {
 }
 
 class CompactBlockProcessorBuilder {
-    static func buildProcessor(configuration: CompactBlockProcessor.Configuration, downloader: CompactBlockDownloader, backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
-           return CompactBlockProcessor(downloader: downloader, backend: backend, config: configuration)
+    static func buildProcessor(configuration: CompactBlockProcessor.Configuration, downloader: CompactBlockDownloader, transactionRepository: TransactionRepository, backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
+        return CompactBlockProcessor(downloader: downloader, backend: backend, config: configuration, repository: transactionRepository)
     }
 }
 

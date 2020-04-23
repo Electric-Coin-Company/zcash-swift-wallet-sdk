@@ -10,7 +10,7 @@ import UIKit
 import ZcashLightClientKit
 import NotificationBubbles
 
-var loggerProxy = SampleLogger(logLevel: .info)
+var loggerProxy = SampleLogger(logLevel: .debug)
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

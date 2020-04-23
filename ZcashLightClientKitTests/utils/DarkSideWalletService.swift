@@ -9,6 +9,14 @@ import Foundation
 import ZcashLightClientKit
 import GRPC
 class DarksideWalletService: LightWalletService {
+    func fetchTransaction(txId: Data) throws -> TransactionEntity {
+        try service.fetchTransaction(txId: txId)
+    }
+    
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
+        service.fetchTransaction(txId: txId, result: result)
+    }
+    
     var channel: Channel
     init() {
         let channel = ChannelProvider().channel()

@@ -113,12 +113,13 @@ class TransactionSQLDAO: TransactionRepository {
                    sent_notes.id_note         AS noteId,
                    blocks.time                AS blockTimeInSeconds
             FROM   transactions
-                   LEFT JOIN sent_notes
+                   INNER JOIN sent_notes
                           ON transactions.id_tx = sent_notes.tx
                    LEFT JOIN blocks
                           ON transactions.block = blocks.height
             WHERE  transactions.raw IS NOT NULL
                    AND minedheight > 0
+                   
             ORDER  BY block IS NOT NULL, height DESC, time DESC, txid DESC
             LIMIT  \(limit) OFFSET \(offset)
         """).map({ (bindings) -> ConfirmedTransactionEntity in
@@ -158,39 +159,39 @@ class TransactionSQLDAO: TransactionRepository {
     func findAll(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
         try dbProvider.connection().run("""
              SELECT transactions.id_tx          AS id,
-                   transactions.block           AS minedHeight,
-                   transactions.tx_index        AS transactionIndex,
-                   transactions.txid            AS rawTransactionId,
-                   transactions.expiry_height   AS expiryHeight,
-                   transactions.raw             AS raw,
-                   sent_notes.address           AS toAddress,
-                   CASE
-                     WHEN transactions.raw IS NOT NULL THEN sent_notes.value
-                     ELSE received_notes.value
-                   end                          AS value,
-                   CASE
-                     WHEN transactions.raw IS NOT NULL THEN sent_notes.memo
-                     ELSE received_notes.memo
-                   end                          AS memo,
-                   CASE
-                     WHEN transactions.raw IS NOT NULL THEN sent_notes.id_note
-                     ELSE received_notes.id_note
-                   end                          AS noteId,
-                   blocks.time                  AS blockTimeInSeconds
-             FROM   transactions
-                   LEFT JOIN received_notes
-                          ON transactions.id_tx = received_notes.tx
-                   LEFT JOIN sent_notes
-                          ON transactions.id_tx = sent_notes.tx
-                   LEFT JOIN blocks
-                          ON transactions.block = blocks.height
-             WHERE  ( transactions.raw IS NULL
-                     AND received_notes.is_change != 1 )
-                    OR ( transactions.raw IS NOT NULL )
-             ORDER  BY ( minedheight IS NOT NULL ),
-                      minedheight DESC,
-                      blocktimeinseconds DESC,
-                      id DESC
+                           transactions.block           AS minedHeight,
+                           transactions.tx_index        AS transactionIndex,
+                           transactions.txid            AS rawTransactionId,
+                           transactions.expiry_height   AS expiryHeight,
+                           transactions.raw             AS raw,
+                           sent_notes.address           AS toAddress,
+                           CASE
+                             WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
+                             ELSE received_notes.value
+                           end                          AS value,
+                           CASE
+                             WHEN sent_notes.memo IS NOT NULL THEN sent_notes.memo
+                             ELSE received_notes.memo
+                           end                          AS memo,
+                           CASE
+                             WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
+                             ELSE received_notes.id_note
+                           end                          AS noteId,
+                           blocks.time                  AS blockTimeInSeconds
+                     FROM   transactions
+                           LEFT JOIN received_notes
+                                  ON transactions.id_tx = received_notes.tx
+                           LEFT JOIN sent_notes
+                                  ON transactions.id_tx = sent_notes.tx
+                           LEFT JOIN blocks
+                                  ON transactions.block = blocks.height
+                     WHERE  ( transactions.raw IS NULL
+                             AND received_notes.is_change != 1 )
+                            OR ( transactions.raw IS NOT NULL )
+                     ORDER  BY ( minedheight IS NOT NULL ),
+                              minedheight DESC,
+                              blocktimeinseconds DESC,
+                              id DESC
              LIMIT  \(limit) OFFSET \(offset)
             """).compactMap({ (bindings) -> ConfirmedTransactionEntity? in
                 guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
@@ -198,6 +199,29 @@ class TransactionSQLDAO: TransactionRepository {
                 }
                 return tx
             })
+    }
+    
+    func findTransactions(in range: BlockRange, limit: Int = Int.max) throws -> [TransactionEntity]? {
+        try dbProvider.connection().run("""
+            SELECT transactions.id_tx         AS id,
+                   transactions.block         AS minedHeight,
+                   transactions.tx_index      AS transactionIndex,
+                   transactions.txid          AS rawTransactionId,
+                   transactions.expiry_height AS expiryHeight,
+                   transactions.raw           AS raw
+            FROM   transactions
+                WHERE  \(range.start.height) <= minedheight
+                AND minedheight <= \(range.end.height)
+            ORDER  BY ( minedheight IS NOT NULL ),
+                      minedheight ASC,
+                      id DESC
+        LIMIT  \(limit)
+        """).compactMap({ (bindings) -> TransactionEntity? in
+            guard let tx = TransactionBuilder.createTransactionEntity(from: bindings) else {
+               return nil
+            }
+            return tx
+        })
     }
 }
 

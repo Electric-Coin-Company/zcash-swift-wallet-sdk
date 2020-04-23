@@ -9,17 +9,17 @@ import Foundation
 import SQLite
 struct TransactionBuilder {
     enum ConfirmedColumns: Int {
-           case id
-           case minedHeight
-           case transactionIndex
-           case rawTransactionId
-           case expiryHeight
-           case raw
-           case toAddress
-           case value
-           case memo
-           case noteId
-           case blockTimeInSeconds
+        case id
+        case minedHeight
+        case transactionIndex
+        case rawTransactionId
+        case expiryHeight
+        case raw
+        case toAddress
+        case value
+        case memo
+        case noteId
+        case blockTimeInSeconds
     }
     
     enum ReceivedColumns: Int {
@@ -31,6 +31,44 @@ struct TransactionBuilder {
         case memo
         case noteId
         case blockTimeInSeconds
+    }
+    
+    enum TransactionEntityColumns: Int {
+        case id
+        case minedHeight
+        case txIndex
+        case txid
+        case expiryHeight
+        case raw
+    }
+    
+    static func createTransactionEntity(txId: Data, rawTransaction: RawTransaction) -> TransactionEntity {
+        Transaction(id: nil,
+                    transactionId: txId,
+                    created: nil,
+                    transactionIndex: nil,
+                    expiryHeight: nil,
+                    minedHeight: Int(exactly: rawTransaction.height),
+                    raw: rawTransaction.data)
+    }
+    
+    static func createTransactionEntity(from bindings: [Binding?]) -> TransactionEntity? {
+        guard
+            let txId = bindings[TransactionEntityColumns.txid.rawValue] as? Blob
+            else {
+                return nil
+        }
+        var rawData: Data? = nil
+        if let raw = bindings[TransactionEntityColumns.raw.rawValue] as? Blob {
+            rawData = Data(blob: raw)
+        }
+        return Transaction(id: bindings[TransactionEntityColumns.id.rawValue] as? Int,
+                           transactionId:  Data(blob: txId),
+                           created: nil,
+                           transactionIndex: bindings[TransactionEntityColumns.txIndex.rawValue] as? Int,
+                           expiryHeight: bindings[TransactionEntityColumns.expiryHeight.rawValue] as? Int,
+                           minedHeight: bindings[TransactionEntityColumns.minedHeight.rawValue] as? Int,
+                           raw: rawData)
     }
     
     static func createConfirmedTransaction(from bindings: [Binding?]) -> ConfirmedTransaction? {
@@ -70,16 +108,16 @@ struct TransactionBuilder {
         }
         
         return ConfirmedTransaction(toAddress: toAddress,
-             expiryHeight: expiryHeight,
-             minedHeight: Int(minedHeight),
-             noteId: Int(noteId),
-             blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
-             transactionIndex: Int(transactionIndex),
-             raw: raw,
-             id: Int(id),
-             value: Int(value),
-             memo: memo,
-             rawTransactionId: transactionId)
+                                    expiryHeight: expiryHeight,
+                                    minedHeight: Int(minedHeight),
+                                    noteId: Int(noteId),
+                                    blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
+                                    transactionIndex: Int(transactionIndex),
+                                    raw: raw,
+                                    id: Int(id),
+                                    value: Int(value),
+                                    memo: memo,
+                                    rawTransactionId: transactionId)
     }
     
     static func createReceivedTransaction(from bindings: [Binding?]) -> ConfirmedTransaction? {
@@ -104,15 +142,15 @@ struct TransactionBuilder {
         }
         
         return ConfirmedTransaction(toAddress: nil,
-             expiryHeight: nil,
-             minedHeight: Int(minedHeight),
-             noteId: Int(noteId),
-             blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
-             transactionIndex: Int(transactionIndex),
-             raw: nil,
-             id: Int(id),
-             value: Int(value),
-             memo: memo,
-             rawTransactionId: transactionId)
+                                    expiryHeight: nil,
+                                    minedHeight: Int(minedHeight),
+                                    noteId: Int(noteId),
+                                    blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
+                                    transactionIndex: Int(transactionIndex),
+                                    raw: nil,
+                                    id: Int(id),
+                                    value: Int(value),
+                                    memo: memo,
+                                    rawTransactionId: transactionId)
     }
 }

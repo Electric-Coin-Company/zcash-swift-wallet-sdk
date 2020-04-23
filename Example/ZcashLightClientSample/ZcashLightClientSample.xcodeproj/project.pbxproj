@@ -361,6 +361,7 @@
 				0D907F222322CC5B00D641FE /* Sources */,
 				0D907F232322CC5B00D641FE /* Frameworks */,
 				0D907F242322CC5B00D641FE /* Resources */,
+				7A57B65D55A9E13EAF5B4322 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -570,6 +571,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7A57B65D55A9E13EAF5B4322 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		A18B8A4D55F1DF8B808ABB67 /* [CP] Embed Pods Frameworks */ = {
@@ -897,6 +915,7 @@
 				DEVELOPMENT_TEAM = 6J82A38BF9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -919,6 +938,7 @@
 				DEVELOPMENT_TEAM = 6J82A38BF9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -936,7 +956,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 501B4B56030ED65B9C170CE2 /* Pods-ZcashLightClientSampleTests.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6J82A38BF9;
@@ -958,7 +978,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BEA142AE2F3C339269CBA120 /* Pods-ZcashLightClientSampleTests.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6J82A38BF9;
