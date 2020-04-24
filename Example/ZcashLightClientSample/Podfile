@@ -1,4 +1,4 @@
-platform :ios, '12.0'
+platform :ios, '13.0'
 
 target 'ZcashLightClientSample' do
   # Comment the next line if you don't want to use dynamic frameworks
@@ -6,17 +6,21 @@ target 'ZcashLightClientSample' do
   pod "KRProgressHUD"
   # Pods for ZcashLightClientSample
   pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']
+  pod 'gRPC-Swift', '~> 1.0.0-alpha.11'
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'
+  pod 'MnemonicKit', :git => 'git@github.com:pacu/MnemonicKit.git', :commit => '49ab6726fe8a15e1e615942b0b42a0cd83308090'
   target 'ZcashLightClientSampleTests' do
     inherit! :search_paths
     # Pods for testing
+    pod 'MnemonicKit', :git => 'git@github.com:pacu/MnemonicKit.git', :commit => '49ab6726fe8a15e1e615942b0b42a0cd83308090'
   end
 
   target 'ZcashLightClientSampleUITests' do
     inherit! :search_paths
     # Pods for testing
   end
+  
 end
 
 target 'ZcashLightClientSample-Mainnet' do

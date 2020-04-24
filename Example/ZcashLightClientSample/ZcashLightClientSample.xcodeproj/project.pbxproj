@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0D2343EE238C91B900606F71 /* sapling-output.params in Resources */ = {isa = PBXBuildFile; fileRef = 0D2343EC238C91B900606F71 /* sapling-output.params */; };
 		0D2343EF238C91B900606F71 /* sapling-spend.params in Resources */ = {isa = PBXBuildFile; fileRef = 0D2343ED238C91B900606F71 /* sapling-spend.params */; };
+		0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
 		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
 		0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
@@ -72,6 +73,7 @@
 /* Begin PBXFileReference section */
 		0D2343EC238C91B900606F71 /* sapling-output.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-output.params"; path = "../../../ZcashLightClientKitTests/sapling-output.params"; sourceTree = "<group>"; };
 		0D2343ED238C91B900606F71 /* sapling-spend.params */ = {isa = PBXFileReference; lastKnownFileType = file; name = "sapling-spend.params"; path = "../../../ZcashLightClientKitTests/sapling-spend.params"; sourceTree = "<group>"; };
+		0D49A18B241698A800CC0649 /* SampleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLogger.swift; sourceTree = "<group>"; };
 		0D4EBA302396CFD70041B507 /* SendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewController.swift; sourceTree = "<group>"; };
 		0D756A93236C761E009B041B /* GetAddressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetAddressViewController.swift; sourceTree = "<group>"; };
 		0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBlocksViewController.swift; sourceTree = "<group>"; };
@@ -218,6 +220,7 @@
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
 				0D7C85E423AD5A9B006878FC /* SampleStorage.swift */,
+				0D49A18B241698A800CC0649 /* SampleLogger.swift */,
 			);
 			path = ZcashLightClientSample;
 			sourceTree = "<group>";
@@ -358,6 +361,7 @@
 				0D907F222322CC5B00D641FE /* Sources */,
 				0D907F232322CC5B00D641FE /* Frameworks */,
 				0D907F242322CC5B00D641FE /* Resources */,
+				7A57B65D55A9E13EAF5B4322 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -569,6 +573,23 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		7A57B65D55A9E13EAF5B4322 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		A18B8A4D55F1DF8B808ABB67 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -668,6 +689,7 @@
 				0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */,
 				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
 				0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */,
+				0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */,
 				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
 				0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */,
 			);
@@ -893,6 +915,7 @@
 				DEVELOPMENT_TEAM = 6J82A38BF9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -915,6 +938,7 @@
 				DEVELOPMENT_TEAM = 6J82A38BF9;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -932,7 +956,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 501B4B56030ED65B9C170CE2 /* Pods-ZcashLightClientSampleTests.debug.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6J82A38BF9;
@@ -954,7 +978,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = BEA142AE2F3C339269CBA120 /* Pods-ZcashLightClientSampleTests.release.xcconfig */;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6J82A38BF9;

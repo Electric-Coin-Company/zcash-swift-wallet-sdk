@@ -6,6 +6,10 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+// Copyright (c) 2019-2020 The Zcash developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://www.opensource.org/licenses/mit-license.php .
+
 import Foundation
 import SwiftProtobuf
 
@@ -20,7 +24,7 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
 }
 
 /// A BlockID message contains identifiers to select a block: a height or a
-/// hash. If the hash is present it takes precedence.
+/// hash. Specification by hash is not implemented, but may be in the future.
 struct BlockID {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -35,9 +39,8 @@ struct BlockID {
   init() {}
 }
 
-/// BlockRange technically allows ranging from hash to hash etc but this is not
-/// currently intended for support, though there is no reason you couldn't do
-/// it. Further permutations are left as an exercise.
+/// BlockRange specifies a series of blocks from start to end inclusive.
+/// Both BlockIDs must be heights; specification by hash is not yet supported.
 struct BlockRange {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -71,6 +74,7 @@ struct BlockRange {
 
 /// A TxFilter contains the information needed to identify a particular
 /// transaction: either a block and an index, or a direct transaction hash.
+/// Currently, only specification by hash is supported.
 struct TxFilter {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -96,7 +100,8 @@ struct TxFilter {
   fileprivate var _block: BlockID? = nil
 }
 
-/// RawTransaction contains the complete transaction data.
+/// RawTransaction contains the complete transaction data. It also optionally includes 
+/// the block height in which the transaction was included
 struct RawTransaction {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -104,11 +109,16 @@ struct RawTransaction {
 
   var data: Data = SwiftProtobuf.Internal.emptyData
 
+  var height: UInt64 = 0
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
+/// A SendResponse encodes an error code and a string. It is currently used
+/// only by SendTransaction(). If error code is zero, the operation was
+/// successful; if non-zero, it and the message specify the failure.
 struct SendResponse {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -123,11 +133,104 @@ struct SendResponse {
   init() {}
 }
 
-/// Empty placeholder. Someday we may want to specify e.g. a particular chain fork.
+/// Chainspec is a placeholder to allow specification of a particular chain fork.
 struct ChainSpec {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// Empty is for gRPCs that take no arguments, currently only GetLightdInfo.
+struct Empty {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// LightdInfo returns various information about this lightwalletd instance
+/// and the state of the blockchain.
+struct LightdInfo {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var version: String = String()
+
+  var vendor: String = String()
+
+  var taddrSupport: Bool = false
+
+  var chainName: String = String()
+
+  var saplingActivationHeight: UInt64 = 0
+
+  var consensusBranchID: String = String()
+
+  var blockHeight: UInt64 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// TransparentAddressBlockFilter restricts the results to the given address
+/// or block range.
+struct TransparentAddressBlockFilter {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var address: String = String()
+
+  var range: BlockRange {
+    get {return _range ?? BlockRange()}
+    set {_range = newValue}
+  }
+  /// Returns true if `range` has been explicitly set.
+  var hasRange: Bool {return self._range != nil}
+  /// Clears the value of `range`. Subsequent reads from it will return its default value.
+  mutating func clearRange() {self._range = nil}
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+
+  fileprivate var _range: BlockRange? = nil
+}
+
+/// Duration is currently used only for testing, so that the Ping rpc
+/// can simulate a delay, to create many simultaneous connections. Units
+/// are microseconds.
+struct Duration {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var intervalUs: Int64 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// PingResponse is used to indicate concurrency, how many Ping rpcs
+/// are executing upon entry and upon exit (after the delay).
+struct PingResponse {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var entry: Int64 = 0
+
+  var exit: Int64 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -253,12 +356,14 @@ extension RawTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
   static let protoMessageName: String = _protobuf_package + ".RawTransaction"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "data"),
+    2: .same(proto: "height"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       switch fieldNumber {
       case 1: try decoder.decodeSingularBytesField(value: &self.data)
+      case 2: try decoder.decodeSingularUInt64Field(value: &self.height)
       default: break
       }
     }
@@ -268,11 +373,15 @@ extension RawTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
     if !self.data.isEmpty {
       try visitor.visitSingularBytesField(value: self.data, fieldNumber: 1)
     }
+    if self.height != 0 {
+      try visitor.visitSingularUInt64Field(value: self.height, fieldNumber: 2)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: RawTransaction, rhs: RawTransaction) -> Bool {
     if lhs.data != rhs.data {return false}
+    if lhs.height != rhs.height {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -327,6 +436,189 @@ extension ChainSpec: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
   }
 
   static func ==(lhs: ChainSpec, rhs: ChainSpec) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Empty: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Empty"
+  static let _protobuf_nameMap = SwiftProtobuf._NameMap()
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let _ = try decoder.nextFieldNumber() {
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Empty, rhs: Empty) -> Bool {
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".LightdInfo"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "version"),
+    2: .same(proto: "vendor"),
+    3: .same(proto: "taddrSupport"),
+    4: .same(proto: "chainName"),
+    5: .same(proto: "saplingActivationHeight"),
+    6: .same(proto: "consensusBranchId"),
+    7: .same(proto: "blockHeight"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularStringField(value: &self.version)
+      case 2: try decoder.decodeSingularStringField(value: &self.vendor)
+      case 3: try decoder.decodeSingularBoolField(value: &self.taddrSupport)
+      case 4: try decoder.decodeSingularStringField(value: &self.chainName)
+      case 5: try decoder.decodeSingularUInt64Field(value: &self.saplingActivationHeight)
+      case 6: try decoder.decodeSingularStringField(value: &self.consensusBranchID)
+      case 7: try decoder.decodeSingularUInt64Field(value: &self.blockHeight)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.version.isEmpty {
+      try visitor.visitSingularStringField(value: self.version, fieldNumber: 1)
+    }
+    if !self.vendor.isEmpty {
+      try visitor.visitSingularStringField(value: self.vendor, fieldNumber: 2)
+    }
+    if self.taddrSupport != false {
+      try visitor.visitSingularBoolField(value: self.taddrSupport, fieldNumber: 3)
+    }
+    if !self.chainName.isEmpty {
+      try visitor.visitSingularStringField(value: self.chainName, fieldNumber: 4)
+    }
+    if self.saplingActivationHeight != 0 {
+      try visitor.visitSingularUInt64Field(value: self.saplingActivationHeight, fieldNumber: 5)
+    }
+    if !self.consensusBranchID.isEmpty {
+      try visitor.visitSingularStringField(value: self.consensusBranchID, fieldNumber: 6)
+    }
+    if self.blockHeight != 0 {
+      try visitor.visitSingularUInt64Field(value: self.blockHeight, fieldNumber: 7)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: LightdInfo, rhs: LightdInfo) -> Bool {
+    if lhs.version != rhs.version {return false}
+    if lhs.vendor != rhs.vendor {return false}
+    if lhs.taddrSupport != rhs.taddrSupport {return false}
+    if lhs.chainName != rhs.chainName {return false}
+    if lhs.saplingActivationHeight != rhs.saplingActivationHeight {return false}
+    if lhs.consensusBranchID != rhs.consensusBranchID {return false}
+    if lhs.blockHeight != rhs.blockHeight {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension TransparentAddressBlockFilter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".TransparentAddressBlockFilter"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "address"),
+    2: .same(proto: "range"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularStringField(value: &self.address)
+      case 2: try decoder.decodeSingularMessageField(value: &self._range)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.address.isEmpty {
+      try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
+    }
+    if let v = self._range {
+      try visitor.visitSingularMessageField(value: v, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: TransparentAddressBlockFilter, rhs: TransparentAddressBlockFilter) -> Bool {
+    if lhs.address != rhs.address {return false}
+    if lhs._range != rhs._range {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Duration: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Duration"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "intervalUs"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularInt64Field(value: &self.intervalUs)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.intervalUs != 0 {
+      try visitor.visitSingularInt64Field(value: self.intervalUs, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Duration, rhs: Duration) -> Bool {
+    if lhs.intervalUs != rhs.intervalUs {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension PingResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".PingResponse"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "entry"),
+    2: .same(proto: "exit"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularInt64Field(value: &self.entry)
+      case 2: try decoder.decodeSingularInt64Field(value: &self.exit)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.entry != 0 {
+      try visitor.visitSingularInt64Field(value: self.entry, fieldNumber: 1)
+    }
+    if self.exit != 0 {
+      try visitor.visitSingularInt64Field(value: self.exit, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: PingResponse, rhs: PingResponse) -> Bool {
+    if lhs.entry != rhs.entry {return false}
+    if lhs.exit != rhs.exit {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

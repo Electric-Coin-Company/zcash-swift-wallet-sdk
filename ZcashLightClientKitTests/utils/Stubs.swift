@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 
@@ -217,6 +217,10 @@ class MockRustBackend: ZcashRustBackendWelding {
     
     static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
         nil
+    }
+    
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool {
+        false
     }
     
 }

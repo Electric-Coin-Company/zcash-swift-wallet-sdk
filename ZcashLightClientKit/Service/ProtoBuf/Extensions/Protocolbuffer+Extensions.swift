@@ -16,7 +16,7 @@ extension CompactBlockRange {
 
 extension BlockID {
     
-    static let saplingActivationHeight: UInt64 = 280_000
+    static let saplingActivationHeight: UInt64 = UInt64(ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
     
     init(height: UInt64) {
         self = BlockID()

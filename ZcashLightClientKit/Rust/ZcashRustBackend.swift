@@ -15,6 +15,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         zcashlc_clear_last_error()
         if message.contains("couldn't load Sapling spend parameters") {
             return RustWeldingError.saplingSpendParametersNotFound
+        } else if message.contains("is not empty") {
+            return RustWeldingError.dataDbNotEmpty
         }
         return RustWeldingError.genericError(message: message)
     }
@@ -83,7 +85,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         let dbData = dbData.osStr()
         guard zcashlc_init_blocks_table(dbData.0, dbData.1, height, [CChar](hash.utf8CString), time, [CChar](saplingTree.utf8CString)) != 0 else {
             if let error = lastError() {
-                throw throwDataDbError(error)
+                throw error
             }
             throw RustWeldingError.dataDbInitFailed(message: "Unknown Error")
         }
@@ -145,7 +147,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         let dbData = dbData.osStr()
         return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1) != 0
     }
-    
+
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool {
+        let dbData = dbData.osStr()
+        return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count)) != 0
+    }
+
     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
         let dbData = dbData.osStr()
         let memoBytes = memo ?? ""
@@ -162,7 +169,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return nil
         }
         
-        let derived =  String(validatingUTF8: extsk)
+        let derived = String(validatingUTF8: extsk)
         
         zcashlc_string_free(extsk)
         return derived

@@ -7,19 +7,23 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
 import ZcashLightClientKit
 import XCTest
-
+import NIO
 class LightWalletEndpointBuilder {
     static var `default`: LightWalletEndpoint {
-        LightWalletEndpoint(address: "localhost", port: "9067", secure: false)
+        LightWalletEndpoint(address: Constants.address, port: 9067, secure: false)
     }
 }
 
 class ChannelProvider {
-    func channel() -> SwiftGRPC.Channel {
-        Channel(address: Constants.address, secure: false)
+    func channel(secure: Bool = false) -> GRPCChannel {
+        let endpoint = LightWalletEndpointBuilder.default
+        
+        let configuration = ClientConnection.Configuration(target: .hostAndPort(endpoint.host, endpoint.port), eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1), tls: secure ? .init() : nil)
+        return ClientConnection(configuration: configuration)
+       
     }
 }
 
@@ -104,5 +108,18 @@ class StubTest: XCTestCase {}
 extension Bundle {
     static var testBundle: Bundle {
         Bundle(for: StubTest.self)
+    }
+}
+
+
+class TestSeed: SeedProvider {
+    
+    /**
+     test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+     */
+    let seedString = "f550d5399659396587a59b6ad446eb89da7741ebb1e42f87c22451d20ece8bb1e09ccb3c19f967f37fbf435367bc295c692c0ce000c52f5b991f1ca91169565e"
+    
+    func seed() -> [UInt8] {
+        [UInt8](seedString.hexDecodedData())
     }
 }

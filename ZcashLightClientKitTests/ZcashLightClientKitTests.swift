@@ -7,7 +7,7 @@
 //
 
 import XCTest
-import SwiftGRPC
+import GRPC
 
 @testable import ZcashLightClientKit
 
@@ -25,7 +25,6 @@ class ZcashLightClientKitTests: XCTestCase {
     
     override func tearDown() {
         super.tearDown()
-        service.channel.shutdown()
         service = nil
         latestBlockHeight = nil
     }
@@ -44,48 +43,23 @@ class ZcashLightClientKitTests: XCTestCase {
         
     }
     
-//    /**
-//     LIGHTWALLETD KILLER TEST - DO NOT USE
-//     */
-//    func testBlockRangeService() {
-//
-//        let expect = XCTestExpectation(description: self.debugDescription)
-//        let _ = try? service.getAllBlocksSinceSaplingLaunch(){ result in
-//            print(result)
-//            expect.fulfill()
-//            XCTAssert(result.success)
-//            XCTAssertNotNil(result.resultData)
-//        }
-//        wait(for: [expect], timeout: 10)
-//    }
-    
     func testBlockRangeServiceTilLastest() {
         let expectedCount: BlockHeight = 99
         var count: BlockHeight = 0
         
         let startHeight = latestBlockHeight - expectedCount
         let endHeight = latestBlockHeight!
-        
-        guard let call = try? service!.blockRange(startHeight: startHeight, endHeight: endHeight,result: {
-            result in
-            XCTAssert(result.success)
-          
+        var blocks = [CompactBlock]()
+        guard let call = try? service!.blockRange(startHeight: startHeight, endHeight: endHeight, result: {
+            blocks.append($0)
+            count += 1
+            
         }) else {
             XCTFail("failed to create getBlockRange( \(startHeight) ..<= \(endHeight)")
             return
         }
         
-        var blocks = [CompactBlock]()
-        while true {
-            guard let block = try? call.receive() else {
-               
-                break
-                
-            }
-            blocks.append(block)
-            count += 1
-        }
-     
+        _ = try! call.status.wait()
         XCTAssertEqual(expectedCount + 1, count)
         
     }

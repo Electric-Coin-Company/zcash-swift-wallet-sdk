@@ -17,6 +17,14 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
 }
 
 class MockLightWalletService: LightWalletService {
+    func fetchTransaction(txId: Data) throws -> TransactionEntity {
+        Transaction(id: 1, transactionId: Data(), created: "Today", transactionIndex: 1, expiryHeight: -1, minedHeight: -1, raw: nil)
+    }
+    
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
+        
+    }
+    
     
     private var service = LightWalletGRPCService(channel: ChannelProvider().channel())
     private var latestHeight: BlockHeight

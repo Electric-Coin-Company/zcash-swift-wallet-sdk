@@ -30,7 +30,7 @@ function check_environment {
     fi
 
     if [[ ! $ZCASH_SDK_GENERATED_SOURCES_FOLDER ]]; then
-        echo "No 'ZCASH_SDK_GENERATED_SOURCES_FOLDER' variable present. delete Pods/ and run 'pod install --verbose'"
+        echo "No 'ZCASH_SDK_GENERATED_SOURCES_FOLDER' variable present. Delete Pods/ and run 'pod install --verbose'"
         exit 1
     fi
 
@@ -80,7 +80,7 @@ function existing_build_mismatch {
 }
 
 function warn_mismatch {
-    echo "*** WARNING: *** build mismatch. found ${0} but environment is ${1}"
+    echo "*** WARNING: *** build mismatch. Found ${0} but environment is ${1}"
 }
 
 function persist_environment {

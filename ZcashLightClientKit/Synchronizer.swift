@@ -12,9 +12,12 @@ import Foundation
 Represents errors thrown by a Synchronizer
  */
 public enum SynchronizerError: Error {
-    case initFailed
+    case initFailed(message: String)
     case syncFailed
+    case connectionFailed(message: String)
     case generalError(message: String)
+    case maxRetryAttemptsReached(attempts: Int)
+    case connectionError(status: Int, message: String)
 }
 
 /**
@@ -29,7 +32,7 @@ public protocol Synchronizer {
     Implementations should leverage structured concurrency and
     cancel all jobs when this scope completes.
     */
-    func start() throws
+    func start(retry: Bool) throws
     
     /**
      Stop this synchronizer. Implementations should ensure that calling this method cancels all

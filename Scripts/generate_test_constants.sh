@@ -12,5 +12,5 @@ if [ ! ${LIGHTWALLETD_ADDRESS} ]; then
     exit 1
 fi
 echo "export ZCASH_TEST_SRC_PATH=$ZCASH_TEST_SRC_PATH"
-#no `else` case needed if the CI works as expecteds
+#no `else` case needed if the CI works as expected
 sourcery --templates "${ZCASH_TEST_SRC_PATH}/Stencil"  --sources ${ZCASH_TEST_SRC_PATH} --output ${ZCASH_TEST_SRC_PATH} --args addr=$LIGHTWALLETD_ADDRESS

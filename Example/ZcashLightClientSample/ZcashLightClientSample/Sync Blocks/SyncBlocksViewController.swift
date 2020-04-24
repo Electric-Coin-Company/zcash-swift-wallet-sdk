@@ -11,7 +11,7 @@ import ZcashLightClientKit
 
 /**
  Sync blocks view controller leverages Compact Block Processor directly. This provides more detail on block processing if needed.
- We advice to use the SDKSynchronizer first since it provides a lot of functionality out of the box.
+ We advise to use the SDKSynchronizer first since it provides a lot of functionality out of the box.
  */
 class SyncBlocksViewController: UIViewController {
     

@@ -7,15 +7,15 @@
 //
 
 import Foundation
-import SwiftGRPC
+import GRPC
 import SwiftProtobuf
 
 /**
- Wrapper for errors received from  a Lightwalletd endpoint
+ Wrapper for errors received from a Lightwalletd endpoint
  */
 public enum LightWalletServiceError: Error {
     case generalError
-    case failed(statusCode: StatusCode, message: String)
+    case failed(statusCode: Int, message: String)
     case invalidBlock
     case sentFailed(sendResponse: LightWalletServiceResponse)
     case genericError(error: Error)
@@ -119,4 +119,21 @@ public protocol LightWalletService {
     
     func submit(spendTransaction: Data) throws -> LightWalletServiceResponse
     
+    /**
+    Gets a transaction by id
+     - Parameter txId: data representing the transaction ID
+     - Throws: LightWalletServiceError
+     - Returns: LightWalletServiceResponse
+     */
+    
+    func fetchTransaction(txId: Data) throws -> TransactionEntity
+    
+    /**
+    Gets a transaction by id
+     - Parameter txId: data representing the transaction ID
+     - Parameter result: handler for the result
+     - Throws: LightWalletServiceError
+     - Returns: LightWalletServiceResponse
+     */
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity,LightWalletServiceError>) -> Void)
 }

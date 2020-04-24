@@ -6,6 +6,10 @@
 // For information on using the generated types, please see the documentation:
 //   https://github.com/apple/swift-protobuf/
 
+// Copyright (c) 2019-2020 The Zcash developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or https://www.opensource.org/licenses/mit-license.php .
+
 import Foundation
 import SwiftProtobuf
 
@@ -51,14 +55,14 @@ struct CompactBlock {
   init() {}
 }
 
+/// Index and hash will allow the receiver to call out to chain
+/// explorers or other data structures to retrieve more information
+/// about this transaction.
 struct CompactTx {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// Index and hash will allow the receiver to call out to chain
-  /// explorers or other data structures to retrieve more information
-  /// about this transaction.
   var index: UInt64 = 0
 
   var hash: Data = SwiftProtobuf.Internal.emptyData

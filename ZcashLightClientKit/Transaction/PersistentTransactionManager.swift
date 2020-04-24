@@ -35,7 +35,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         guard let insertedTx = try repository.find(by: try repository.create(PendingTransaction(value: zatoshi, toAddress: toAddress, memo: memo, account: accountIndex))) else {
             throw TransactionManagerError.couldNotCreateSpend(toAddress: toAddress, account: accountIndex, zatoshi: zatoshi)
         }
-        print("pending transaction \(String(describing: insertedTx.id)) created")
+        LoggerProxy.debug("pending transaction \(String(describing: insertedTx.id)) created")
         return insertedTx
     }
     
@@ -80,13 +80,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 }
                 
                 guard !storedTx.isCancelled  else {
-                    print("ignoring cancelled transaction \(storedTx)")
+                    LoggerProxy.debug("ignoring cancelled transaction \(storedTx)")
                     result(.failure(TransactionManagerError.cancelled(tx: storedTx)))
                     return
                 }
                 
                 guard let raw = storedTx.raw else {
-                    print("INCONSISTENCY: attempt to send pending transaction \(txId) that has not raw data")
+                    LoggerProxy.debug("INCONSISTENCY: attempt to send pending transaction \(txId) that has not raw data")
                     result(.failure(TransactionManagerError.internalInconsistency(tx: storedTx)))
                     return
                 }

@@ -16,7 +16,7 @@ This is an alpha build and is currently under active development. Please be advi
 
 # Build dependencies
 
-ZcashLightClientKit uses a rust library called Librustzcash. In order to build it, you need to have rust and cargo installed on your environment. 
+ZcashLightClientKit uses a rust library called Librustzcash. In order to build it, you need to have rust and cargo installed on your environment.
 
 Install [Rust](https://www.rust-lang.org/learn/get-started), and then `cargo-lipo`:
 
@@ -42,19 +42,19 @@ pod 'ZcashLightClientKit'
 ````
 
 ### Set Testnet or Mainnet environment
-Before building, make sure that your enviroment has the variable `ZCASH_NETWORK_ENVIRONMENT` set to `MAINNET` or `TESTNET`.
+Before building, make sure that your environment has the variable `ZCASH_NETWORK_ENVIRONMENT` set to `MAINNET` or `TESTNET`.
 
-### Custom build phases warning 
-When running `pod install` you will see this warning upon sucess:
+### Custom build phases warning
+When running `pod install` you will see this warning upon success:
 ```` bash
 [!] ZcashLightClientKit has added 2 script phases. Please inspect before executing a build. 
 See `https://guides.cocoapods.org/syntax/podspec.html#script_phases` for more information.
 ````
-Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We've taken the lead to get that burden off your shoulders as much as possible by leveraging the `prepare_command` and `script_phases` features from Cocoapods to carefully generate the `TESTNET` and `MAINNET` builds as simple and less error prone as we could think it could be. Which started as some simple vanilla scripts, ended up being some kind of "Build System" on its own. Nothing is written on stone, and we accept collaborations and improvements in this matter too. 
+Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We've taken the lead to get that burden off your shoulders as much as possible by leveraging the `prepare_command` and `script_phases` features from Cocoapods to carefully generate the `TESTNET` and `MAINNET` builds as simple and less error prone as we could think it could be. Which started as some simple vanilla scripts, ended up being some kind of "Build System" on its own. Nothing is written on stone, and we accept collaborations and improvements in this matter too.
 
 ## Build system
 
-This section explains the 'Build System' that integrates the rust code and creates the corresponding environment
+This section explains the 'Build System' that integrates the rust code and creates the corresponding environment.
 
 ### Overview
 
@@ -67,11 +67,11 @@ ZcashLightClientKit needs files to be present at pod installation time, but that
 - `${ZCASH_POD_SRCROOT}/zcashlc/libzcashlc.a` this is the librustzcash build .a file itself
 - `lib/libzcashlc.a` (as vendored library that will be added as an asset by xcodeproj)
 - `ZcashSDK.generated.swift` which contains sensitive values for the SDK that change depending on the network environment we are building for
-- `WalletBirthday+saplingtree.generated.swift` helper functions to import existing wallets. 
+- `WalletBirthday+saplingtree.generated.swift` helper functions to import existing wallets
 
 **2. Build Phase**
 
-The build Phase scripts executes withing the Xcode Build Step and has all the known variables of a traditional build at hand.
+The build Phase scripts executes within the Xcode Build Step and has all the known variables of a traditional build at hand.
 
 ```` ruby
 s.script_phase = {
@@ -81,21 +81,21 @@ s.script_phase = {
    }
 ````
 
-This step will generate files needed on the next steps and build the librustzcash with Xcode but *not using cargo's built-in xcode integration*
+This step will generate files needed on the next steps and build the librustzcash with Xcode but *not using cargo's built-in Xcode integration*
 
 **a. Generating ZcashSDK constants**
 
-To run this you need `Sourcery`. We use `Stencil` templates to create this files based on the `ZCASH_NETWORK_ENVIRONMENT` value of your choice. You can either integrate sourcery with cocoapods or as part of your environment.
+To run this you need `Sourcery`. We use `Stencil` templates to create these files based on the `ZCASH_NETWORK_ENVIRONMENT` value of your choice. You can either integrate sourcery with cocoapods or as part of your environment.
 
-All generated files will be located in the Pods source root within the `Generated` folder. `ZCASH_SDK_GENERATED_SOURCES_FOLDER` represents that path in the build system
+All generated files will be located in the Pods source root within the `Generated` folder. `ZCASH_SDK_GENERATED_SOURCES_FOLDER` represents that path in the build system.
 
-**b. Building librust zcash and integrating it to the pod structure.**
+**b. Building librustzcash and integrating it to the pod structure**
 
-Where the magic happens. Here we will make sure that everything is set up properly to start building librustzcash. When on mainnet, the build will append a parameter to include mainnet features. 
+Where the magic happens. Here we will make sure that everything is set up properly to start building librustzcash. When on mainnet, the build will append a parameter to include mainnet features.
 
 
-**Safeguards points**: 
-if it appears that you are about to build something smelly, we will let you know. Combining testnet and mainnet values and artifacts and viceversa leads to unstable builds and may cause lost of funds if ran on production. 
+**Safeguards points**:
+if it appears that you are about to build something smelly, we will let you know. Combining testnet and mainnet values and artifacts and viceversa leads to unstable builds and may cause loss of funds if ran on production.
 ```
 if [ existing_build_mismatch = true ]; then 
         # clean
@@ -105,7 +105,7 @@ fi
 ```
 **3. Xcode clean integration**
 
-When performing a clean, we will clean the rust build folders. 
+When performing a clean, we will clean the rust build folders.
 
 ### Scripts
 
@@ -121,37 +121,37 @@ On the Scripts folder you will find the following files:
  ````
 
 #### prepare_zcash_sdk.sh
-This script is run by the Cocoapods 'preapare_command'. 
+This script is run by the Cocoapods 'preapare_command'.
 
 ```` Ruby
 s.prepare_command = <<-CMD
       sh Scripts/prepare_zcash_sdk.sh
     CMD
 ````
-It basically creates empty files that cocoapods needs to pick up on it's pod structure but that are still not present in the file system and that will be generated in later build phases. 
+It basically creates empty files that cocoapods needs to pick up on its pod structure but that are still not present in the file system and that will be generated in later build phases.
 
-NOTE: pod install will only run this phase when no Pods/ folder is present or if your pod hash has changed or is not present on manifest.lock. When in doubt, just clean the Pods/ folder and start over. That usually gets rid of weirdness caused by Xcode caching a lot of stuff you are not aware of. 
+NOTE: pod install will only run this phase when no Pods/ folder is present or if your pod hash has changed or is not present on manifest.lock. When in doubt, just clean the Pods/ folder and start over. That usually gets rid of weirdness caused by Xcode caching a lot of stuff you are not aware of.
 
 #### script_commons.sh
-A lot of important environment variables and helper functions live in the `script_commons.sh`. 
+A lot of important environment variables and helper functions live in the `script_commons.sh`.
 
 
 # Testing
 
-Currently tests depend on a `lightwalletd` server instance runnning locally or remotely to pass.
+Currently tests depend on a `lightwalletd` server instance running locally or remotely to pass.
 To know more about running `lightwalletd`, refer to its repo https://github.com/zcash/lightwalletd
 
 ## Pointing tests to a lightwalletd instance
 
-Tests use `Sourcery` to generate a Constants file which injects the `lightwalletd` server address to the test themselves
+Tests use `Sourcery` to generate a Constants file which injects the `lightwalletd` server address to the test themselves.
 
 ### Installing sourcery
 
-refer to the official repo https://github.com/krzysztofzablocki/Sourcery
+Refer to the official repo https://github.com/krzysztofzablocki/Sourcery
 
 ### Setting env-var.sh file to run locally
 
-create a file called `env-var.sh` on the project root to create the `LIGHTWALLETD_ADDRESS` environment variable on build time.
+Create a file called `env-var.sh` on the project root to create the `LIGHTWALLETD_ADDRESS` environment variable on build time.
 
 ```
 export LIGHTWALLETD_ADDRESS="localhost%3a9067"
@@ -161,41 +161,64 @@ export LIGHTWALLETD_ADDRESS="localhost%3a9067"
 
 The `LIGHTWALLETD_ADDRESS` environment variable can also be added to your shell of choice and `xcodebuild` will pick it up accordingly.
 
-We advice setting this value as a secret variable on your CD/CI environment when possible
+We advise setting this value as a secret variable on your CD/CI environment when possible.
+
+# Integrating with logging tools
+There are a lots of good logging tools for iOS. So we'll leave that choice to you. ZcashLightClientKit relies on a simple protocol to bubble up logs to client applications, which is called `Logger` (kudos for the naming originality...)
+```
+public protocol Logger {
+    
+    func debug(_ message: String, file: String, function: String, line: Int)
+    
+    func info(_ message: String, file: String, function: String, line: Int)
+    
+    func event(_ message: String, file: String, function: String, line: Int)
+    
+    func warn(_ message: String, file: String, function: String, line: Int)
+    
+    func error(_ message: String, file: String, function: String, line: Int)
+    
+}
+```
+To enable logging you need to do 2 simple steps:
+1. have one class conform the `Logger` protocol
+2. inject that logger when creating the `Initializer`
+
+For more details look the Sample App's `AppDelegate` code.
 
 # Swiftlint
 
-We don't like reinveing the wheel, so be gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.
+We don't like reinventing the wheel, so we gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.
 
 ## Troubleshooting
 
 ### No network environment....
 if you see this message when building:
 ```No network environment. Set ZCASH_NETWORK_ENVIRONMENT to MAINNET or TESTNET```
-make sure your dev environment is has this variable set before the build starts. *DO NOT CHANGE IT DURING THE BUILD PROCESS*. 
+make sure your dev environment has this variable set before the build starts. *DO NOT CHANGE IT DURING THE BUILD PROCESS*.
 
 If the variable was properly set *after* you've seen this message, you will need to either a) set it manually on the pod's target or b) doing a clean pod install and subsequent build.
 
 #### a) setting the flag manually
-1. on your workspace, select the Pods project. 
-2. on the Targets pane, select ZcashLightClientKit 
+1. on your workspace, select the Pods project
+2. on the Targets pane, select ZcashLightClientKit
 3. go to build settings
 4. scroll down to see ZCASH_NETWORK_ENVIRONMENT and complete with TESTNET or MAINNET
 
-![how to complete network environtment manually](docs/images/complete_environment_manually.png)
+![how to complete network environment manually](docs/images/complete_environment_manually.png)
 
 #### b) clean pod install
-it's not necessary to delete the whole Pods/ directory and download all of your dependencies again. 
+it's not necessary to delete the whole Pods/ directory and download all of your dependencies again
 1. on your project root, locate the `Pods/` directory
 2. remove ZcashLightClientKit from it
-3. clean derived data from xcode
-4. close xcode
+3. clean derived data from Xcode
+4. close Xcode
 5. run `pod install` (run --verbose to see more details)
-6. open xcode project
+6. open Xcode project
 7. build
 
 ### _function_name  referenced from...
-if you get a build error similar to ```_function_name  referenced from...``` 
+if you get a build error similar to ```_function_name  referenced from...```
 
 * on your project root directory *
 1. remove the 'Pods' directory ``` rm -rf Pods/```
@@ -204,7 +227,7 @@ if you get a build error similar to ```_function_name  referenced from...```
 4. build
 
 ### ZcashLightClientKitSample missing .params
-ZcashLightClientKit has an external dependency on 2 files containing Sapling parameters. Although you can provide those files as you seem fit, the sample app requires them on the main bundle. 
+ZcashLightClientKit has an external dependency on 2 files containing Sapling parameters. Although you can provide those files as you seem fit, the sample app requires them on the main bundle.
 
 You can download these files from https://z.cash/downloads/sapling-spend.params
 and https://z.cash/downloads/sapling-output.params and then move them to the correct folder, which is specified on the error itself.
@@ -223,13 +246,13 @@ This project follows [semantic versioning](https://semver.org/) with pre-release
 | **alpha** | **Sandbox.** For developers to verify behavior and try features. Things seen here might never go to production. Most bugs here can be ignored.| Unstable: Expect bugs | Internal developers | 0XX | 1.2.3-alpha04 (10203004) |
 | **beta** | **Hand-off.** For developers to present finished features. Bugs found here should be reported and immediately addressed, if they relate to recent changes. | Unstable: Report bugs | Internal stakeholders | 2XX | 1.2.3-beta04 (10203204) |
 | **release candidate** | **Hardening.** Final testing for an app release that we believe is ready to go live. The focus here is regression testing to ensure that new changes have not introduced instability in areas that were previously working.  | Stable: Hunt for bugs | External testers | 4XX | 1.2.3-rc04 (10203404) |
-| **production** | **Dellivery.** Deliver new features to end users. Any bugs found here need to be prioritized. Some will require immediate attention but most can be worked into a future release. | Stable: Prioritize bugs | Public | 8XX | 1.2.3 (10203800) |
+| **production** | **Delivery.** Deliver new features to end users. Any bugs found here need to be prioritized. Some will require immediate attention but most can be worked into a future release. | Stable: Prioritize bugs | Public | 8XX | 1.2.3 (10203800) |
 
 ## Examples
 
-This repo contains demos of isolated functionality that this SDK provides. They can be found in the examples folder
+This repo contains demos of isolated functionality that this SDK provides. They can be found in the examples folder.
 
-Examples can be found in the [Demo App](/Example/ZcashLightClientSample)
+Examples can be found in the [Demo App](/Example/ZcashLightClientSample).
 
 # License
 

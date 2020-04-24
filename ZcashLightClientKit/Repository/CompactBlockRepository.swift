@@ -57,7 +57,7 @@ protocol CompactBlockRepository {
      Remove every block above and including the given height.
      
      After this operation, the data store will look the same as one that has not yet stored the given block height.
-     Meaning, if max height is 100 block and  rewindTo(50) is called, then the highest block remaining will be 49.
+     Meaning, if max height is 100 block and rewindTo(50) is called, then the highest block remaining will be 49.
      
      - Parameter height: the height to rewind to
      */
@@ -67,8 +67,8 @@ protocol CompactBlockRepository {
     /**
      Remove every block above and including the given height.
      
-     After this operation, the data store will look the same as one that has not yet  stored the given block height.
-     Meaning, if max height is 100 block and  rewindTo(50) is called, then the highest block remaining will be 49.
+     After this operation, the data store will look the same as one that has not yet stored the given block height.
+     Meaning, if max height is 100 block and rewindTo(50) is called, then the highest block remaining will be 49.
      
      - Parameters:
 - Parameter height: the height to rewind to

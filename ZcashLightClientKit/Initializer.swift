@@ -23,13 +23,11 @@ public enum InitializerError: Error {
  Represents a lightwallet instance endpoint to connect to
  */
 public struct LightWalletEndpoint {
-    public var address: String
-    public var port: String
+    public var host: String
+    public var port: Int
     public var secure: Bool
     
-    public var host: String {
-        "\(address):\(port)"
-    }
+    
 /**
      initializes a LightWalletEndpoint
      - Parameters:
@@ -37,8 +35,8 @@ public struct LightWalletEndpoint {
         - port: string with the port of the host address
         - secure: true if connecting through TLS. Default value is true
      */
-    public init(address: String, port: String, secure: Bool = true) {
-        self.address = address
+    public init(address: String, port: Int, secure: Bool = true) {
+        self.host = address
         self.port = port
         self.secure = secure
     }
@@ -60,7 +58,7 @@ public class Initializer {
     private(set) var spendParamsURL: URL
     private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
-    private(set) var lightWalletService: LightWalletService
+    private(set) var lightWalletService: LightWalletGRPCService
     private(set) var transactionRepository: TransactionRepository
     private(set) var downloader: CompactBlockDownloader
     private(set) var processor: CompactBlockProcessor?
@@ -78,7 +76,9 @@ public class Initializer {
         - spendParamsURL: location of the spend parameters
         - outputParamsURL: location of the output parameters
      */
-    public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL) {
+    public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL, loggerProxy: Logger? = nil) {
+        
+        logger = loggerProxy
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
         self.endpoint = endpoint
@@ -138,7 +138,7 @@ public class Initializer {
         // resume from last downloaded block
         lowerBoundHeight = max(birthday.height, lastDownloaded)
         
-        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL, walletBirthday: walletBirthday?.height ?? self.lowerBoundHeight), downloader: self.downloader, backend: rustBackend)
+        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL, walletBirthday: walletBirthday?.height ?? self.lowerBoundHeight), downloader: self.downloader, transactionRepository: transactionRepository, backend: rustBackend)
         
         guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
@@ -195,8 +195,8 @@ public class Initializer {
 }
 
 class CompactBlockProcessorBuilder {
-    static func buildProcessor(configuration: CompactBlockProcessor.Configuration, downloader: CompactBlockDownloader, backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
-           return CompactBlockProcessor(downloader: downloader, backend: backend, config: configuration)
+    static func buildProcessor(configuration: CompactBlockProcessor.Configuration, downloader: CompactBlockDownloader, transactionRepository: TransactionRepository, backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
+        return CompactBlockProcessor(downloader: downloader, backend: backend, config: configuration, repository: transactionRepository)
     }
 }
 

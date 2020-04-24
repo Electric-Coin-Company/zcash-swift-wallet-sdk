@@ -71,7 +71,7 @@ class PaginatedTransactionsViewController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? TransactionDetailViewController, let row = selectedRow {
-            destination.model = transactions[row]
+            destination.model = TransactionDetailModel(transaction: transactions[row])
             selectedRow = nil
         }
     }

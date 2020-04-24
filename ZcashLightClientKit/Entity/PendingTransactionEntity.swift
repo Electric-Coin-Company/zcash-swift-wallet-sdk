@@ -88,7 +88,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
      */
     var isCancelled: Bool { get }
     /**
-     returns whether the represented transaction has been succesfully mined
+     returns whether the represented transaction has been successfully mined
      */
     var isMined: Bool { get }
     /**
