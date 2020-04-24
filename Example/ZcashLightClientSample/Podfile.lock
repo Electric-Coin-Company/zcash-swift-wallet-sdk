@@ -74,7 +74,7 @@ PODS:
 DEPENDENCIES:
   - gRPC-Swift (~> 1.0.0-alpha.11)
   - KRProgressHUD
-  - "MnemonicKit (from `git@github.com:pacu/MnemonicKit.git`, commit `49ab6726fe8a15e1e615942b0b42a0cd83308090`)"
+  - MnemonicKit (from `https://github.com/pacu/MnemonicKit.git`, commit `49ab6726fe8a15e1e615942b0b42a0cd83308090`)
   - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
@@ -111,14 +111,14 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   MnemonicKit:
     :commit: 49ab6726fe8a15e1e615942b0b42a0cd83308090
-    :git: "git@github.com:pacu/MnemonicKit.git"
+    :git: https://github.com/pacu/MnemonicKit.git
   ZcashLightClientKit:
     :path: "../../"
 
 CHECKOUT OPTIONS:
   MnemonicKit:
     :commit: 49ab6726fe8a15e1e615942b0b42a0cd83308090
-    :git: "git@github.com:pacu/MnemonicKit.git"
+    :git: https://github.com/pacu/MnemonicKit.git
 
 SPEC CHECKSUMS:
   CGRPCZlib: e595387378d0601be796e858dd30c505458c4b1f
@@ -149,6 +149,6 @@ SPEC CHECKSUMS:
   SwiftProtobuf: 2cbd9409689b7df170d82a92a33443c8e3e14a70
   ZcashLightClientKit: 47e707be6657391d5d4fd7db1544b0d98ce45e42
 
-PODFILE CHECKSUM: 7d65b875006037abc9e43948c04d9cde039718a3
+PODFILE CHECKSUM: 4d581b852dd79d74135c22bf1337b5b02f9b54e9
 
-COCOAPODS: 1.9.1
+COCOAPODS: 1.8.4
