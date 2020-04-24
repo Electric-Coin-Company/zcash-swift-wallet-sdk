@@ -9,13 +9,6 @@ import XCTest
 @testable import ZcashLightClientKit
 class MemoTests: XCTestCase {
     
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-    }
-    
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
     
     /**
      Non-utf8 memos are properly ignored
@@ -40,6 +33,12 @@ class MemoTests: XCTestCase {
         XCTAssertNotNil(memo)
         XCTAssertEqual(memo!, Self.validMemoDataExpectedString)
         
+    }
+    
+    func testEmojiUnicodeCharacters() throws {
+        let memo = Self.emojiMemoData.asZcashTransactionMemo()
+        XCTAssertNotNil(memo)
+        XCTAssertEqual(memo!, Self.expectedEmojiMemoString)
     }
     
     /**
@@ -70,6 +69,11 @@ class MemoTests: XCTestCase {
     let totallyRandomDataMemo = randomMemoData()!
     
     
+    static let emojiDataBase64 = "8J+SlfCfkpXwn5KV8J+mk/CfppPwn6aT8J+bofCfm6Hwn5uhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+    
+    static let emojiMemoData = Data(base64Encoded: emojiDataBase64)!
+    
+    static let expectedEmojiMemoString = "💕💕💕🦓🦓🦓🛡🛡🛡"
     
     static func randomMemoData() -> Data? {
         let length: Int = 512
