@@ -50,6 +50,13 @@ class MemoTests: XCTestCase {
     }
     
     /**
+     test canonical memos
+     */
+    func testCanonicalBlankMemos() throws {
+        XCTAssertNil(Self.canonicalEmptyMemo().asZcashTransactionMemo())
+    }
+    
+    /**
      *******
      * mocked memos
      * ******
@@ -74,6 +81,12 @@ class MemoTests: XCTestCase {
     static let emojiMemoData = Data(base64Encoded: emojiDataBase64)!
     
     static let expectedEmojiMemoString = "💕💕💕🦓🦓🦓🛡🛡🛡"
+    
+    static func canonicalEmptyMemo() -> Data {
+        var bytes = [UInt8](repeating: 0, count: 512)
+        bytes[0] = UInt8(0xF6)
+        return Data(bytes: &bytes, count: 512)
+    }
     
     static func randomMemoData() -> Data? {
         let length: Int = 512
