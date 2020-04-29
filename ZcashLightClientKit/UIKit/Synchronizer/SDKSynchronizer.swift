@@ -98,12 +98,24 @@ public class SDKSynchronizer: Synchronizer {
      Creates an SDKSynchronizer instance
      - Parameter initializer: a wallet Initializer object
      */
-    public init(initializer: Initializer) throws {
-        self.status = .disconnected
-        self.initializer = initializer
-        self.transactionManager = try OutboundTransactionManagerBuilder.build(initializer: initializer)
-        self.transactionRepository = initializer.transactionRepository
+    public convenience init(initializer: Initializer) throws {
+        
+        self.init(status: .disconnected,
+                  initializer: initializer,
+                  transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
+                  transactionRepository: initializer.transactionRepository)
+        
         self.subscribeToAppDelegateNotifications()
+    }
+    
+    init(status: Status,
+         initializer: Initializer,
+         transactionManager: OutboundTransactionManager,
+         transactionRepository: TransactionRepository) {
+        self.status = status
+        self.initializer = initializer
+        self.transactionManager = transactionManager
+        self.transactionRepository = transactionRepository
     }
     
     deinit {
