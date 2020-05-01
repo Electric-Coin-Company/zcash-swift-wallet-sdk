@@ -78,7 +78,4 @@ internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientP
 
 
 // Provides conformance to `GRPCPayload` for request and response messages
-extension Empty: GRPCProtobufPayload {}
-extension RawTransaction: GRPCProtobufPayload {}
 extension DarksideState: GRPCProtobufPayload {}
-

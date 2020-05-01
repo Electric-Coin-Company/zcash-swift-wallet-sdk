@@ -35,6 +35,10 @@ class ReceivedNotesSQLDAO: ReceivedNoteRepository {
     func count() throws -> Int {
         try dbProvider.connection().scalar(table.count)
     }
+    
+    func receivedNote(byTransactionId: Int) -> ReceivedNoteEntity? {
+        nil
+    }
 }
 
 struct SentNote: SentNoteEntity {
@@ -57,5 +61,9 @@ class SentNotesSQLDAO: SentNotesRepository {
     
     func count() throws -> Int {
         try dbProvider.connection().scalar(table.count)
+    }
+    
+    func sentNote(byTransactionId: Int) -> SentNoteEntity? {
+        nil
     }
 }
