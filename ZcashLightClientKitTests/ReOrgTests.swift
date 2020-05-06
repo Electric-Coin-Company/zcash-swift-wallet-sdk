@@ -131,7 +131,12 @@ class ReOrgTests: XCTestCase {
         let reOrgHeight = BlockHeight(663195)
         let walletBirthday = WalletBirthday.birthday(with: 663151).height
         
-        try basicReOrgTest(firstLatestHeight: mockLatestHeight, reorgHeight: reOrgHeight, walletBirthday: walletBirthday, targetHeight: targetLatestHeight)
+        try basicReOrgTest(baseDataset: .beforeReOrg,
+                            reorgDataset: .afterLargeReorg,
+                            firstLatestHeight: mockLatestHeight,
+                            reorgHeight: reOrgHeight,
+                            walletBirthday: walletBirthday,
+                            targetHeight: targetLatestHeight)
     }
     
     func testTenPlusBlockReOrg() throws {
@@ -140,19 +145,27 @@ class ReOrgTests: XCTestCase {
         let reOrgHeight = BlockHeight(663180)
         let walletBirthday = WalletBirthday.birthday(with: BlockHeight(663150)).height
         
-        try basicReOrgTest(firstLatestHeight: mockLatestHeight, reorgHeight: reOrgHeight, walletBirthday: walletBirthday, targetHeight: targetLatestHeight)
+        try basicReOrgTest(baseDataset: .beforeReOrg,
+                           reorgDataset: .afterLargeReorg,
+                           firstLatestHeight: mockLatestHeight,
+                           reorgHeight: reOrgHeight,
+                           walletBirthday: walletBirthday,
+                           targetHeight: targetLatestHeight)
     }
     
-    func basicReOrgTest(firstLatestHeight: BlockHeight, reorgHeight: BlockHeight, walletBirthday: BlockHeight, targetHeight: BlockHeight) throws {
+    func basicReOrgTest(baseDataset: DarksideWalletService.DarksideDataset,
+                        reorgDataset: DarksideWalletService.DarksideDataset,
+                        firstLatestHeight: BlockHeight,
+                        reorgHeight: BlockHeight,
+                        walletBirthday: BlockHeight,
+                        targetHeight: BlockHeight) throws {
      
         do {
-            try darksideWalletService.setLatestHeight(firstLatestHeight)
-           
+            try darksideWalletService.useDataset(baseDataset)
         } catch  {
             XCTFail("Error: \(error)")
             return
         }
-        
       
         /**
          connect to dLWD
@@ -190,7 +203,7 @@ class ReOrgTests: XCTestCase {
          trigger reorg!
          */
         XCTAssertNoThrow(
-            try darksideWalletService.triggerReOrg(latestHeight: targetHeight, reOrgHeight: reorgHeight)
+            try darksideWalletService.useDataset(reorgDataset   )
         )
         
         /**

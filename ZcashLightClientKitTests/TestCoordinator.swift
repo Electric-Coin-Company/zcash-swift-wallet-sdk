@@ -63,7 +63,7 @@ class TestCoordinator {
             throw CoordinatorError.notDarksideWallet
         }
         
-        try darksideWalletd.triggerReOrg(latestHeight: at, reOrgHeight: backTo)
+//        try darksideWalletd.triggerReOrg(latestHeight: at, reOrgHeight: backTo)
     }
     
     private func service(_ serviceStype: ServiceType) -> LightWalletService {

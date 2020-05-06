@@ -23,14 +23,55 @@ fileprivate struct _GeneratedWithProtocGenSwiftVersion: SwiftProtobuf.ProtobufAP
   typealias Version = _2
 }
 
-struct DarksideState {
+struct DarksideMetaState {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var latestHeight: UInt64 = 0
+  var saplingActivation: Int32 = 0
 
-  var reorgHeight: UInt64 = 0
+  var branchID: String = String()
+
+  var chainName: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct DarksideBlock {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var block: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct DarksideBlocksURL {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var url: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// A single transaction that should appear to be mined at the given height.
+struct DarksideTx {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var height: Int32 = 0
+
+  var transaction: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -41,36 +82,135 @@ struct DarksideState {
 
 fileprivate let _protobuf_package = "cash.z.wallet.sdk.rpc"
 
-extension DarksideState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".DarksideState"
+extension DarksideMetaState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DarksideMetaState"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "latestHeight"),
-    2: .same(proto: "reorgHeight"),
+    1: .same(proto: "saplingActivation"),
+    2: .same(proto: "branchID"),
+    3: .same(proto: "chainName"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       switch fieldNumber {
-      case 1: try decoder.decodeSingularUInt64Field(value: &self.latestHeight)
-      case 2: try decoder.decodeSingularUInt64Field(value: &self.reorgHeight)
+      case 1: try decoder.decodeSingularInt32Field(value: &self.saplingActivation)
+      case 2: try decoder.decodeSingularStringField(value: &self.branchID)
+      case 3: try decoder.decodeSingularStringField(value: &self.chainName)
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if self.latestHeight != 0 {
-      try visitor.visitSingularUInt64Field(value: self.latestHeight, fieldNumber: 1)
+    if self.saplingActivation != 0 {
+      try visitor.visitSingularInt32Field(value: self.saplingActivation, fieldNumber: 1)
     }
-    if self.reorgHeight != 0 {
-      try visitor.visitSingularUInt64Field(value: self.reorgHeight, fieldNumber: 2)
+    if !self.branchID.isEmpty {
+      try visitor.visitSingularStringField(value: self.branchID, fieldNumber: 2)
+    }
+    if !self.chainName.isEmpty {
+      try visitor.visitSingularStringField(value: self.chainName, fieldNumber: 3)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: DarksideState, rhs: DarksideState) -> Bool {
-    if lhs.latestHeight != rhs.latestHeight {return false}
-    if lhs.reorgHeight != rhs.reorgHeight {return false}
+  static func ==(lhs: DarksideMetaState, rhs: DarksideMetaState) -> Bool {
+    if lhs.saplingActivation != rhs.saplingActivation {return false}
+    if lhs.branchID != rhs.branchID {return false}
+    if lhs.chainName != rhs.chainName {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension DarksideBlock: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DarksideBlock"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "block"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularStringField(value: &self.block)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.block.isEmpty {
+      try visitor.visitSingularStringField(value: self.block, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: DarksideBlock, rhs: DarksideBlock) -> Bool {
+    if lhs.block != rhs.block {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension DarksideBlocksURL: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DarksideBlocksURL"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    2: .same(proto: "url"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 2: try decoder.decodeSingularStringField(value: &self.url)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.url.isEmpty {
+      try visitor.visitSingularStringField(value: self.url, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: DarksideBlocksURL, rhs: DarksideBlocksURL) -> Bool {
+    if lhs.url != rhs.url {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension DarksideTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DarksideTx"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "height"),
+    2: .same(proto: "transaction"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularInt32Field(value: &self.height)
+      case 2: try decoder.decodeSingularStringField(value: &self.transaction)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.height != 0 {
+      try visitor.visitSingularInt32Field(value: self.height, fieldNumber: 1)
+    }
+    if !self.transaction.isEmpty {
+      try visitor.visitSingularStringField(value: self.transaction, fieldNumber: 2)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: DarksideTx, rhs: DarksideTx) -> Bool {
+    if lhs.height != rhs.height {return false}
+    if lhs.transaction != rhs.transaction {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

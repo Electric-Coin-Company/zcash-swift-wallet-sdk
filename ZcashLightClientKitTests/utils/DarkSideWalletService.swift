@@ -6,9 +6,16 @@
 //
 
 import Foundation
-import ZcashLightClientKit
+@testable import ZcashLightClientKit
 import GRPC
 class DarksideWalletService: LightWalletService {
+    
+    enum DarksideDataset: String {
+        case afterLargeReorg = "https://raw.githubusercontent.com/defuse/darksidewalletd-test-data/basic-reorg/basic-reorg/after-large-large.txt"
+        case afterSmallReorg =  "https://raw.githubusercontent.com/defuse/darksidewalletd-test-data/basic-reorg/basic-reorg/after-small-reorg.txt"
+        case beforeReOrg = "https://raw.githubusercontent.com/defuse/darksidewalletd-test-data/basic-reorg/basic-reorg/before-reorg.txt"
+        
+    }
     func fetchTransaction(txId: Data) throws -> TransactionEntity {
         try service.fetchTransaction(txId: txId)
     }
@@ -51,20 +58,10 @@ class DarksideWalletService: LightWalletService {
         try service.submit(spendTransaction: spendTransaction)
     }
     
-    func triggerReOrg(latestHeight: BlockHeight, reOrgHeight: BlockHeight) throws {
-        var darksideState = DarksideState()
-        darksideState.latestHeight = UInt64(latestHeight)
-        darksideState.reorgHeight = UInt64(reOrgHeight)
-        
-        _ = try darksideService.darksideSetState(darksideState).response.wait()
+    func useDataset(_ dataset: DarksideDataset) throws {
+        var blocksUrl = DarksideBlocksURL()
+        blocksUrl.url = dataset.rawValue
+        _ = try darksideService.setBlocksURL(blocksUrl).response.wait()
     }
-    
-    func setLatestHeight(_ latestHeight: BlockHeight) throws {
-        var darksideState = DarksideState()
-        darksideState.reorgHeight = 0
-        darksideState.latestHeight = UInt64(latestHeight)
-        _ = try darksideService.darksideSetState(darksideState).response.wait()
-    }
-    
     
 }
