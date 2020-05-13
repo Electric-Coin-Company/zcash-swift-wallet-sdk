@@ -69,6 +69,7 @@ PODS:
     - SQLite.swift (~> 0.12.2)
   - ZcashLightClientKit/Tests (0.4.0):
     - gRPC-Swift (~> 1.0.0-alpha.11)
+    - MnemonicKit
     - SQLite.swift (~> 0.12.2)
 
 DEPENDENCIES:
@@ -147,8 +148,8 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 51580e51240d1a4d51efb2d317e92cf243181042
   SwiftNIOTransportServices: 26d40c589fc8fe667af51b06ef0aa49fbc9ae7f2
   SwiftProtobuf: 2cbd9409689b7df170d82a92a33443c8e3e14a70
-  ZcashLightClientKit: 47e707be6657391d5d4fd7db1544b0d98ce45e42
+  ZcashLightClientKit: 1bdf183e536fc9a8fdc8374edcc8aee31d3d65cb
 
-PODFILE CHECKSUM: 7d65b875006037abc9e43948c04d9cde039718a3
+PODFILE CHECKSUM: 326f0edcabb6aea4146adf836e54fb12282533ff
 
 COCOAPODS: 1.9.1

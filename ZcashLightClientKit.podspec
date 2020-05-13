@@ -42,5 +42,6 @@ Pod::Spec.new do |s|
       }
       test_spec.dependency 'gRPC-Swift', '~> 1.0.0-alpha.11'
       test_spec.dependency 'SQLite.swift', '~> 0.12.2'
+      test_spec.dependency 'MnemonicKit'
   end
 end
