@@ -161,7 +161,7 @@ class ReOrgTests: XCTestCase {
                         targetHeight: BlockHeight) throws {
      
         do {
-            try darksideWalletService.useDataset(baseDataset)
+            try darksideWalletService.useDataset(baseDataset.rawValue)
         } catch  {
             XCTFail("Error: \(error)")
             return
@@ -203,7 +203,7 @@ class ReOrgTests: XCTestCase {
          trigger reorg!
          */
         XCTAssertNoThrow(
-            try darksideWalletService.useDataset(reorgDataset   )
+            try darksideWalletService.useDataset(reorgDataset.rawValue)
         )
         
         /**

@@ -14,11 +14,13 @@ message DarksideMetaState {
     string chainName = 3;
 }
 
-message DarksideBlock {
-    string block = 1;
+// A list of sequential blocks starting at the given height.
+message DarksideBlocks {
+    int32 startHeight = 1;
+    repeated string blocks = 2;
 }
-
-message DarksideBlocksURL {
+message DarksideBlocksUrl {
+    int32 startHeight = 1;
     string url = 2;
 }
 
@@ -28,10 +30,14 @@ message DarksideTx {
     string transaction = 2;
 }
 
+message DarksideSetTx {
+    repeated DarksideTx transactions = 1;
+}
+
 // This service implements the following rpc methods:
 //     SetMetaState
 //     SetBlocks
-//     SetBlocksURL
+//     SetBlocksUrl
 //     SetTx
 //     GetIncomingTransactions
 //
@@ -44,12 +50,11 @@ service DarksideStreamer {
     // 1003-1004. This preserves blocks 1000-1002, replaces blocks 1003-1004,
     // and removes blocks 1005-1006. This can be used to simulate a chain reorg.
     // Blocks are hex-encoded.
-    rpc SetBlocks(stream DarksideBlock) returns (Empty) {}
+    rpc SetBlocks(DarksideBlocks) returns (Empty) {}
 
     // This is the same as SetBlocks(), except the blocks are fetched
     // from the given URL. Blocks are one per line, hex-encoded (not JSON).
-    // SetBlocksURL("file:testdata/darkside/init-blocks") is done at startup.
-    rpc SetBlocksURL(DarksideBlocksURL) returns (Empty) {}
+    rpc SetBlocksUrl(DarksideBlocksUrl) returns (Empty) {}
 
     // SetTx() allows the test coordinator to submit a list of transactions and
     // for each indicate in which block it should appear.
@@ -70,7 +75,7 @@ service DarksideStreamer {
     // the submitted blocks.
     //
     // Each call to SetTx() completely replaces the stored transaction set.
-    rpc SetTx(stream DarksideTx) returns (Empty) {}
+    rpc SetTx(DarksideTx) returns (Empty) {}
 
     // Calls to SendTransaction() are accepted and stored; this method returns
     // all transactions that were previously submitted. This enables the

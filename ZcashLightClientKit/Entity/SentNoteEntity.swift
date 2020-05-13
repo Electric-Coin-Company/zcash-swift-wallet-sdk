@@ -16,8 +16,7 @@ protocol SentNoteEntity {
     var value: Int { get set }
     var memo: Data? { get set }
 }
-
-
+    
 extension SentNoteEntity {
     static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs.id == rhs.id,

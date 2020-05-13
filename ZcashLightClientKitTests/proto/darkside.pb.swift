@@ -39,22 +39,27 @@ struct DarksideMetaState {
   init() {}
 }
 
-struct DarksideBlock {
+/// A list of sequential blocks starting at the given height.
+struct DarksideBlocks {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var block: String = String()
+  var startHeight: Int32 = 0
+
+  var blocks: [String] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
-struct DarksideBlocksURL {
+struct DarksideBlocksUrl {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
+
+  var startHeight: Int32 = 0
 
   var url: String = String()
 
@@ -72,6 +77,18 @@ struct DarksideTx {
   var height: Int32 = 0
 
   var transaction: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct DarksideSetTx {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var transactions: [DarksideTx] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -123,44 +140,52 @@ extension DarksideMetaState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 }
 
-extension DarksideBlock: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".DarksideBlock"
+extension DarksideBlocks: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DarksideBlocks"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "block"),
+    1: .same(proto: "startHeight"),
+    2: .same(proto: "blocks"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.block)
+      case 1: try decoder.decodeSingularInt32Field(value: &self.startHeight)
+      case 2: try decoder.decodeRepeatedStringField(value: &self.blocks)
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.block.isEmpty {
-      try visitor.visitSingularStringField(value: self.block, fieldNumber: 1)
+    if self.startHeight != 0 {
+      try visitor.visitSingularInt32Field(value: self.startHeight, fieldNumber: 1)
+    }
+    if !self.blocks.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.blocks, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: DarksideBlock, rhs: DarksideBlock) -> Bool {
-    if lhs.block != rhs.block {return false}
+  static func ==(lhs: DarksideBlocks, rhs: DarksideBlocks) -> Bool {
+    if lhs.startHeight != rhs.startHeight {return false}
+    if lhs.blocks != rhs.blocks {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension DarksideBlocksURL: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".DarksideBlocksURL"
+extension DarksideBlocksUrl: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DarksideBlocksUrl"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "startHeight"),
     2: .same(proto: "url"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       switch fieldNumber {
+      case 1: try decoder.decodeSingularInt32Field(value: &self.startHeight)
       case 2: try decoder.decodeSingularStringField(value: &self.url)
       default: break
       }
@@ -168,13 +193,17 @@ extension DarksideBlocksURL: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.startHeight != 0 {
+      try visitor.visitSingularInt32Field(value: self.startHeight, fieldNumber: 1)
+    }
     if !self.url.isEmpty {
       try visitor.visitSingularStringField(value: self.url, fieldNumber: 2)
     }
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: DarksideBlocksURL, rhs: DarksideBlocksURL) -> Bool {
+  static func ==(lhs: DarksideBlocksUrl, rhs: DarksideBlocksUrl) -> Bool {
+    if lhs.startHeight != rhs.startHeight {return false}
     if lhs.url != rhs.url {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
@@ -211,6 +240,35 @@ extension DarksideTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
   static func ==(lhs: DarksideTx, rhs: DarksideTx) -> Bool {
     if lhs.height != rhs.height {return false}
     if lhs.transaction != rhs.transaction {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension DarksideSetTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".DarksideSetTx"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "transactions"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeRepeatedMessageField(value: &self.transactions)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.transactions.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.transactions, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: DarksideSetTx, rhs: DarksideSetTx) -> Bool {
+    if lhs.transactions != rhs.transactions {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

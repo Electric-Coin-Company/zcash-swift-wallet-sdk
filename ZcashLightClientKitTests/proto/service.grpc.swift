@@ -53,7 +53,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
     self.defaultCallOptions = defaultCallOptions
   }
 
-  /// Return the height of the tip of the best chain
+  /// Compact Blocks
   ///
   /// - Parameters:
   ///   - request: Request to send to GetLatestBlock.
@@ -65,7 +65,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                               callOptions: callOptions ?? self.defaultCallOptions)
   }
 
-  /// Return the compact block corresponding to the given block identifier
+  /// Unary call to GetBlock
   ///
   /// - Parameters:
   ///   - request: Request to send to GetBlock.
@@ -77,7 +77,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                               callOptions: callOptions ?? self.defaultCallOptions)
   }
 
-  /// Return a list of consecutive compact blocks
+  /// Server streaming call to GetBlockRange
   ///
   /// - Parameters:
   ///   - request: Request to send to GetBlockRange.
@@ -91,7 +91,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                                         handler: handler)
   }
 
-  /// Return the requested full (not compact) transaction (as from zcashd)
+  /// Transactions
   ///
   /// - Parameters:
   ///   - request: Request to send to GetTransaction.
@@ -103,7 +103,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                               callOptions: callOptions ?? self.defaultCallOptions)
   }
 
-  /// Submit the given transaction to the zcash network
+  /// Unary call to SendTransaction
   ///
   /// - Parameters:
   ///   - request: Request to send to SendTransaction.
@@ -115,7 +115,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                               callOptions: callOptions ?? self.defaultCallOptions)
   }
 
-  /// Return the txids corresponding to the given t-address within the given block range
+  /// t-Address support
   ///
   /// - Parameters:
   ///   - request: Request to send to GetAddressTxids.
@@ -129,7 +129,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                                         handler: handler)
   }
 
-  /// Return information about this lightwalletd instance and the blockchain
+  /// Misc
   ///
   /// - Parameters:
   ///   - request: Request to send to GetLightdInfo.
@@ -141,7 +141,7 @@ internal final class CompactTxStreamerClient: GRPCClient, CompactTxStreamerClien
                               callOptions: callOptions ?? self.defaultCallOptions)
   }
 
-  /// Testing-only
+  /// Unary call to Ping
   ///
   /// - Parameters:
   ///   - request: Request to send to Ping.

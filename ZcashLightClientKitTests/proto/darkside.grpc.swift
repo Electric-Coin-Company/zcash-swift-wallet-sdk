@@ -30,9 +30,9 @@ import SwiftProtobuf
 /// Usage: instantiate DarksideStreamerClient, then call methods of this protocol to make API calls.
 internal protocol DarksideStreamerClientProtocol {
   func setMetaState(_ request: DarksideMetaState, callOptions: CallOptions?) -> UnaryCall<DarksideMetaState, Empty>
-  func setBlocks(callOptions: CallOptions?) -> ClientStreamingCall<DarksideBlock, Empty>
-  func setBlocksURL(_ request: DarksideBlocksURL, callOptions: CallOptions?) -> UnaryCall<DarksideBlocksURL, Empty>
-  func setTx(callOptions: CallOptions?) -> ClientStreamingCall<DarksideTx, Empty>
+  func setBlocks(_ request: DarksideBlocks, callOptions: CallOptions?) -> UnaryCall<DarksideBlocks, Empty>
+  func setBlocksUrl(_ request: DarksideBlocksUrl, callOptions: CallOptions?) -> UnaryCall<DarksideBlocksUrl, Empty>
+  func setTx(_ request: DarksideTx, callOptions: CallOptions?) -> UnaryCall<DarksideTx, Empty>
   func getIncomingTransactions(_ request: Empty, callOptions: CallOptions?, handler: @escaping (RawTransaction) -> Void) -> ServerStreamingCall<Empty, RawTransaction>
 }
 
@@ -68,27 +68,25 @@ internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientP
   /// and removes blocks 1005-1006. This can be used to simulate a chain reorg.
   /// Blocks are hex-encoded.
   ///
-  /// Callers should use the `send` method on the returned object to send messages
-  /// to the server. The caller should send an `.end` after the final message has been sent.
-  ///
   /// - Parameters:
+  ///   - request: Request to send to SetBlocks.
   ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
-  /// - Returns: A `ClientStreamingCall` with futures for the metadata, status and response.
-  internal func setBlocks(callOptions: CallOptions? = nil) -> ClientStreamingCall<DarksideBlock, Empty> {
-    return self.makeClientStreamingCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetBlocks",
-                                        callOptions: callOptions ?? self.defaultCallOptions)
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func setBlocks(_ request: DarksideBlocks, callOptions: CallOptions? = nil) -> UnaryCall<DarksideBlocks, Empty> {
+    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetBlocks",
+                              request: request,
+                              callOptions: callOptions ?? self.defaultCallOptions)
   }
 
   /// This is the same as SetBlocks(), except the blocks are fetched
   /// from the given URL. Blocks are one per line, hex-encoded (not JSON).
-  /// SetBlocksURL("file:testdata/darkside/init-blocks") is done at startup.
   ///
   /// - Parameters:
-  ///   - request: Request to send to SetBlocksURL.
+  ///   - request: Request to send to SetBlocksUrl.
   ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
   /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
-  internal func setBlocksURL(_ request: DarksideBlocksURL, callOptions: CallOptions? = nil) -> UnaryCall<DarksideBlocksURL, Empty> {
-    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetBlocksURL",
+  internal func setBlocksUrl(_ request: DarksideBlocksUrl, callOptions: CallOptions? = nil) -> UnaryCall<DarksideBlocksUrl, Empty> {
+    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetBlocksUrl",
                               request: request,
                               callOptions: callOptions ?? self.defaultCallOptions)
   }
@@ -113,15 +111,14 @@ internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientP
   ///
   /// Each call to SetTx() completely replaces the stored transaction set.
   ///
-  /// Callers should use the `send` method on the returned object to send messages
-  /// to the server. The caller should send an `.end` after the final message has been sent.
-  ///
   /// - Parameters:
+  ///   - request: Request to send to SetTx.
   ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
-  /// - Returns: A `ClientStreamingCall` with futures for the metadata, status and response.
-  internal func setTx(callOptions: CallOptions? = nil) -> ClientStreamingCall<DarksideTx, Empty> {
-    return self.makeClientStreamingCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetTx",
-                                        callOptions: callOptions ?? self.defaultCallOptions)
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func setTx(_ request: DarksideTx, callOptions: CallOptions? = nil) -> UnaryCall<DarksideTx, Empty> {
+    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/SetTx",
+                              request: request,
+                              callOptions: callOptions ?? self.defaultCallOptions)
   }
 
   /// Calls to SendTransaction() are accepted and stored; this method returns
@@ -150,8 +147,8 @@ internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientP
 // Provides conformance to `GRPCPayload` for request and response messages
 extension DarksideMetaState: GRPCProtobufPayload {}
 //extension Empty: GRPCProtobufPayload {}
-extension DarksideBlock: GRPCProtobufPayload {}
-extension DarksideBlocksURL: GRPCProtobufPayload {}
+extension DarksideBlocks: GRPCProtobufPayload {}
+extension DarksideBlocksUrl: GRPCProtobufPayload {}
 extension DarksideTx: GRPCProtobufPayload {}
 //extension RawTransaction: GRPCProtobufPayload {}
 

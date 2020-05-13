@@ -82,8 +82,9 @@ public class Initializer {
                  loggerProxy: Logger? = nil) {
         
         let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
-        let lwdService = LightWalletGRPCService(endpoint: endpoint)
         try? storage.createTable()
+        
+        let lwdService = LightWalletGRPCService(endpoint: endpoint)
         
         self.init(rustBackend: ZcashRustBackend.self,
                   lowerBoundHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT,

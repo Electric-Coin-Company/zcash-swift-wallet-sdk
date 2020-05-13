@@ -50,6 +50,9 @@ class DarksideWalletService: LightWalletService {
         try service.blockRange(range)
     }
     
+    /**
+     Darskside lightwalletd should do a fake submission, by sending over the tx, retrieving it and including it in a new block
+     */
     func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
         service.submit(spendTransaction: spendTransaction, result: result)
     }
@@ -58,10 +61,42 @@ class DarksideWalletService: LightWalletService {
         try service.submit(spendTransaction: spendTransaction)
     }
     
-    func useDataset(_ dataset: DarksideDataset) throws {
-        var blocksUrl = DarksideBlocksURL()
-        blocksUrl.url = dataset.rawValue
-        _ = try darksideService.setBlocksURL(blocksUrl).response.wait()
+    func useDataset(_ datasetUrl: String, startHeight: BlockHeight = 663174) throws {
+        try useDataset(from: datasetUrl, startHeight: startHeight)
+    }
+    
+    func useDataset(from urlString: String, startHeight: BlockHeight) throws {
+        var blocksUrl = DarksideBlocksUrl()
+        blocksUrl.url = urlString
+        blocksUrl.startHeight = Int32(startHeight)
+        _ = try darksideService.setBlocksUrl(blocksUrl).response.wait()
+    }
+    
+    func applyStaged(nextLatestHeight: BlockHeight) throws {
+        
+    }
+    
+    func clearIncomingTransactions() throws {
+        
+    }
+    
+    func getIncomingTransactions() throws -> [RawTransaction]? {
+        nil
+    }
+    
+    func reset() throws {
+        
+    }
+    
+    func stageBlocksCreate(from height: BlockHeight, count: Int = 1) throws {
+        
+    }
+    
+    func stageTransaction(_ rawTransaction: RawTransaction, at height: BlockHeight) throws {
+        var darkTx = DarksideTx()
+        darkTx.transaction = rawTransaction.data.hexEncodedString()
+        darkTx.height = Int32(height)
+        _ = try darksideService.setTx(darkTx, callOptions: CallOptions()).response.wait()
     }
     
 }
