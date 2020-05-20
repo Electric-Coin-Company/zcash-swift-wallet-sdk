@@ -38,16 +38,19 @@ struct CompactBlock {
   /// the height of this block
   var height: UInt64 = 0
 
+  /// the ID (hash) of this block, same as in block explorers
   var hash: Data = SwiftProtobuf.Internal.emptyData
 
+  /// the ID (hash) of this block's predecessor
   var prevHash: Data = SwiftProtobuf.Internal.emptyData
 
+  /// Unix epoch time when the block was mined
   var time: UInt32 = 0
 
   /// (hash, prevHash, and time) OR (full header)
   var header: Data = SwiftProtobuf.Internal.emptyData
 
-  /// compact transactions from this block
+  /// zero or more compact transactions from this block
   var vtx: [CompactTx] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -55,16 +58,18 @@ struct CompactBlock {
   init() {}
 }
 
-/// Index and hash will allow the receiver to call out to chain
-/// explorers or other data structures to retrieve more information
-/// about this transaction.
+/// CompactTx contains the minimum information for a wallet to know if this transaction
+/// is relevant to it (either pays to it or spends from it) via shielded elements
+/// only. This message will not encode a transparent-to-transparent transaction.
 struct CompactTx {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// the index within the full block
   var index: UInt64 = 0
 
+  /// the ID (hash) of this transaction, same as in block explorers
   var hash: Data = SwiftProtobuf.Internal.emptyData
 
   /// The transaction fee: present if server can provide. In the case of a
@@ -74,8 +79,10 @@ struct CompactTx {
   ///    valueBalance + (sum(vPubNew) - sum(vPubOld) - sum(tOut))
   var fee: UInt32 = 0
 
+  /// inputs
   var spends: [CompactSpend] = []
 
+  /// outputs
   var outputs: [CompactOutput] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -83,11 +90,14 @@ struct CompactTx {
   init() {}
 }
 
+/// CompactSpend is a Sapling Spend Description as described in 7.3 of the Zcash
+/// protocol specification.
 struct CompactSpend {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// nullifier (see the Zcash protocol specification)
   var nf: Data = SwiftProtobuf.Internal.emptyData
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -95,15 +105,20 @@ struct CompactSpend {
   init() {}
 }
 
+/// output is a Sapling Output Description as described in section 7.4 of the
+/// Zcash protocol spec. Total size is 948.
 struct CompactOutput {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// note commitment u-coordinate
   var cmu: Data = SwiftProtobuf.Internal.emptyData
 
+  /// ephemeral public key
   var epk: Data = SwiftProtobuf.Internal.emptyData
 
+  /// ciphertext and zkproof
   var ciphertext: Data = SwiftProtobuf.Internal.emptyData
 
   var unknownFields = SwiftProtobuf.UnknownStorage()

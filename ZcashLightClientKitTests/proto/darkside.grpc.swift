@@ -27,13 +27,15 @@ import NIOHTTP1
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 
+
 /// Usage: instantiate DarksideStreamerClient, then call methods of this protocol to make API calls.
 internal protocol DarksideStreamerClientProtocol {
   func reset(_ request: DarksideMetaState, callOptions: CallOptions?) -> UnaryCall<DarksideMetaState, Empty>
   func stageBlocksStream(callOptions: CallOptions?) -> ClientStreamingCall<DarksideBlock, Empty>
   func stageBlocks(_ request: DarksideBlocksURL, callOptions: CallOptions?) -> UnaryCall<DarksideBlocksURL, Empty>
   func stageBlocksCreate(_ request: DarksideEmptyBlocks, callOptions: CallOptions?) -> UnaryCall<DarksideEmptyBlocks, Empty>
-  func stageTransactions(callOptions: CallOptions?) -> ClientStreamingCall<RawTransaction, Empty>
+  func stageTransactionsStream(callOptions: CallOptions?) -> ClientStreamingCall<RawTransaction, Empty>
+  func stageTransactions(_ request: DarksideTransactionsURL, callOptions: CallOptions?) -> UnaryCall<DarksideTransactionsURL, Empty>
   func applyStaged(_ request: DarksideHeight, callOptions: CallOptions?) -> UnaryCall<DarksideHeight, Empty>
   func getIncomingTransactions(_ request: Empty, callOptions: CallOptions?, handler: @escaping (RawTransaction) -> Void) -> ServerStreamingCall<Empty, RawTransaction>
   func clearIncomingTransactions(_ request: Empty, callOptions: CallOptions?) -> UnaryCall<Empty, Empty>
@@ -126,9 +128,21 @@ internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientP
   /// - Parameters:
   ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
   /// - Returns: A `ClientStreamingCall` with futures for the metadata, status and response.
-  internal func stageTransactions(callOptions: CallOptions? = nil) -> ClientStreamingCall<RawTransaction, Empty> {
-    return self.makeClientStreamingCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageTransactions",
+  internal func stageTransactionsStream(callOptions: CallOptions? = nil) -> ClientStreamingCall<RawTransaction, Empty> {
+    return self.makeClientStreamingCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageTransactionsStream",
                                         callOptions: callOptions ?? self.defaultCallOptions)
+  }
+
+  /// Unary call to StageTransactions
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to StageTransactions.
+  ///   - callOptions: Call options; `self.defaultCallOptions` is used if `nil`.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func stageTransactions(_ request: DarksideTransactionsURL, callOptions: CallOptions? = nil) -> UnaryCall<DarksideTransactionsURL, Empty> {
+    return self.makeUnaryCall(path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageTransactions",
+                              request: request,
+                              callOptions: callOptions ?? self.defaultCallOptions)
   }
 
   /// ApplyStaged iterates the list of blocks that were staged by the
@@ -193,10 +207,11 @@ internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientP
 
 // Provides conformance to `GRPCPayload` for request and response messages
 extension DarksideMetaState: GRPCProtobufPayload {}
-extension Empty: GRPCProtobufPayload {}
+//extension Empty: GRPCProtobufPayload {}
 extension DarksideBlock: GRPCProtobufPayload {}
 extension DarksideBlocksURL: GRPCProtobufPayload {}
 extension DarksideEmptyBlocks: GRPCProtobufPayload {}
-extension RawTransaction: GRPCProtobufPayload {}
+//extension RawTransaction: GRPCProtobufPayload {}
+extension DarksideTransactionsURL: GRPCProtobufPayload {}
 extension DarksideHeight: GRPCProtobufPayload {}
 

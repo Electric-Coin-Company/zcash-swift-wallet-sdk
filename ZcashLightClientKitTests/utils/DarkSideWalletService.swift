@@ -113,7 +113,7 @@ class DarksideWalletService: LightWalletService {
     func stageTransaction(_ rawTransaction: RawTransaction, at height: BlockHeight) throws {
         var tx = rawTransaction
         tx.height = UInt64(height)
-        _ = try darksideService.stageTransactions().sendMessage(tx).wait()
+        _ = try darksideService.stageTransactionsStream().sendMessage(tx).wait()
     }
     
 }
