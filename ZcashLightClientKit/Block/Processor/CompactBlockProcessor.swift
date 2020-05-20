@@ -118,11 +118,34 @@ public class CompactBlockProcessor {
         public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
         public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
         public var walletBirthday: BlockHeight
+        private(set) var saplingActivation: BlockHeight
+        
+        
+        init (
+               cacheDb: URL,
+               dataDb: URL,
+               downloadBatchSize: Int,
+               retries: Int,
+               maxBackoffInterval: TimeInterval,
+               rewindDistance: Int,
+               walletBirthday: BlockHeight,
+               saplingActivation: BlockHeight
+           ) {
+            self.cacheDb = cacheDb
+            self.dataDb = dataDb
+            self.downloadBatchSize = downloadBatchSize
+            self.retries = retries
+            self.maxBackoffInterval = maxBackoffInterval
+            self.rewindDistance = rewindDistance
+            self.walletBirthday = walletBirthday
+            self.saplingActivation = saplingActivation
+        }
         
         public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT){
             self.cacheDb = cacheDb
             self.dataDb = dataDb
             self.walletBirthday = walletBirthday
+            self.saplingActivation = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         }
     }
     /**

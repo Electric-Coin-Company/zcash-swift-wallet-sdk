@@ -153,8 +153,8 @@ class ReOrgTests: XCTestCase {
                            targetHeight: targetLatestHeight)
     }
     
-    func basicReOrgTest(baseDataset: DarksideWalletService.DarksideDataset,
-                        reorgDataset: DarksideWalletService.DarksideDataset,
+    func basicReOrgTest(baseDataset: DarksideDataset,
+                        reorgDataset: DarksideDataset,
                         firstLatestHeight: BlockHeight,
                         reorgHeight: BlockHeight,
                         walletBirthday: BlockHeight,

@@ -35,7 +35,7 @@ class TestCoordinator {
     
     enum DarksideData {
         case `default`
-        case predefined(dataset: DarksideWalletService.DarksideDataset)
+        case predefined(dataset: DarksideDataset)
         case url(urlString: String, startHeigth: BlockHeight)
     }
     
@@ -60,6 +60,11 @@ class TestCoordinator {
         self.channelProvider = channelProvider
         self.databases = TemporaryDbBuilder.build()
         self.service = Self.serviceFor(serviceType, channelProvider: channelProvider)
+        let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
+        try storage.createTable()
+        let downloader = CompactBlockDownloader(service: self.service, storage: storage)
+        
+        
         let buildResult = try TestSynchronizerBuilder.build(
                                 rustBackend: ZcashRustBackend.self,
                                 lowerBoundHeight: self.birthday,
@@ -68,11 +73,12 @@ class TestCoordinator {
                                 pendingDbURL: databases.pendingDB,
                                 service: self.service,
                                 repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
-                                downloader: CompactBlockDownloader(service: self.service, storage: CompactBlockStorage(url: databases.cacheDB, readonly: false)),
+                                downloader: downloader,
                                 spendParamsURL: try __spendParamsURL(),
                                 outputParamsURL: try __outputParamsURL(),
                                 seedBytes: Mnemonic.deterministicSeedBytes(from: self.seed)!,
-                                walletBirthday: WalletBirthday.birthday(with: birthday))
+                                walletBirthday: WalletBirthday.birthday(with: birthday),
+                                loggerProxy: SampleLogger(logLevel: .debug))
         
         self.synchronizer = buildResult.synchronizer
         self.spendingKeys = buildResult.spendingKeys
@@ -85,7 +91,7 @@ class TestCoordinator {
         }
         switch state {
         case .default:
-            try darksideWallet.useDataset(DarksideWalletService.DarksideDataset.beforeReOrg.rawValue)
+            try darksideWallet.useDataset(DarksideDataset.beforeReOrg.rawValue)
         case .predefined(let dataset):
             try darksideWallet.useDataset(dataset.rawValue)
         case .url(let urlString, let startHeight):
@@ -140,8 +146,10 @@ class TestCoordinator {
     }
     
     @objc func synchronizerSynced(_ notification: Notification) {
-       
-        self.completionHandler?(synchronizer)
+        DispatchQueue.main.async {  [weak self] in
+            guard let self = self else { return }
+            self.completionHandler?(self.synchronizer)
+        }
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {
@@ -166,11 +174,9 @@ extension TestCoordinator {
         guard let service = self.service as? DarksideWalletService else {
             throw CoordinatorError.notDarksideWallet
         }
-        
-        try service.reset()
         switch dataset {
         case .default:
-            try service.useDataset(DarksideWalletService.DarksideDataset.beforeReOrg.rawValue)
+            try service.useDataset(DarksideDataset.beforeReOrg.rawValue)
         case .predefined(let blocks):
             try service.useDataset(blocks.rawValue)
         case .url(let urlString, let startHeight):
@@ -178,30 +184,36 @@ extension TestCoordinator {
         }
     }
     
-    func generateNext() throws {
-        
-    }
-    
     func stageBlockCreate(height: BlockHeight, count: Int = 1) throws {
         guard let dlwd = self.service as? DarksideWalletService else {
             throw CoordinatorError.notDarksideWallet
         }
-        
+        try dlwd.stageBlocksCreate(from: height, count: count)
     }
     
     func applyStaged(blockheight: BlockHeight) throws {
-        
+        guard let dlwd = self.service as? DarksideWalletService else {
+            throw CoordinatorError.notDarksideWallet
+        }
+        try dlwd.applyStaged(nextLatestHeight: blockheight)
     }
     
     func stageTransaction(_ tx: RawTransaction, at height: BlockHeight) throws {
         guard let dlwd = self.service as? DarksideWalletService else {
             throw CoordinatorError.notDarksideWallet
         }
-        
+        try dlwd.stageTransaction(tx, at: height)
     }
     
     func latestHeight() throws -> BlockHeight {
         try service.latestBlockHeight()
+    }
+    
+    func reset(saplingActivation: BlockHeight) throws {
+        guard let dlwd = self.service as? DarksideWalletService else {
+                   throw CoordinatorError.notDarksideWallet
+        }
+        try dlwd.reset(saplingActivation: saplingActivation)
     }
 }
 
@@ -214,8 +226,8 @@ struct TemporaryTestDatabases {
 class TemporaryDbBuilder {
 
     static func build() -> TemporaryTestDatabases {
-        let tempUrl = FileManager.default.temporaryDirectory
-        let timestamp = String(Date().timeIntervalSince1970)
+        let tempUrl = try! __documentsDirectory()
+        let timestamp = String(Int(Date().timeIntervalSince1970))
         
         return TemporaryTestDatabases(cacheDB: tempUrl.appendingPathComponent("cache_db_\(timestamp).db"),
                                       dataDB: tempUrl.appendingPathComponent("data_db_\(timestamp).db"),
@@ -254,10 +266,8 @@ class TestSynchronizerBuilder {
             outputParamsURL: outputParamsURL,
             loggerProxy: loggerProxy
         )
-        
-        return (
-            try initializer.initialize(seedProvider: StubSeedProvider(bytes: seedBytes), walletBirthdayHeight: walletBirthday.height),
-            try SDKSynchronizer(initializer: initializer)
+        let credentials =  try initializer.initialize(seedProvider: StubSeedProvider(bytes: seedBytes), walletBirthdayHeight: walletBirthday.height)
+        return (credentials, try SDKSynchronizer(initializer: initializer)
         )
     }
 }

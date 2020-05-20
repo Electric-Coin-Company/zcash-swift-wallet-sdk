@@ -13,8 +13,8 @@ class BalanceTests: XCTestCase {
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
     
     let sendAmount: Int64 = 1000
-    var birthday: BlockHeight = 663174
-    let defaultLatestHeight: BlockHeight = 663250
+    var birthday: BlockHeight = 663150
+    let defaultLatestHeight: BlockHeight = 663201
     var coordinator: TestCoordinator!
     
     var syncedExpectation = XCTestExpectation(description: "synced")
@@ -50,6 +50,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyAvailableBalanceDuringSend() throws {
+        try coordinator.applyStaged(blockheight: defaultLatestHeight)
         var syncedSynchronizer: SDKSynchronizer?
         
         try coordinator.sync(completion: { (synchronizer) in

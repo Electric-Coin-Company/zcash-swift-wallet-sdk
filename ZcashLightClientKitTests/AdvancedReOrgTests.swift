@@ -30,10 +30,16 @@ class AdvancedReOrgTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
+        try coordinator.reset(saplingActivation: birthday)
         try coordinator.resetBlocks(dataset: .default)
         
     }
     
+    override func tearDownWithError() throws {
+        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
+    }
     @objc func handleReorg(_ notification: Notification) {
         
         guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
@@ -64,7 +70,7 @@ class AdvancedReOrgTests: XCTestCase {
      11. verify that balance equals initial balance + tx amount
      */
     func testAdvancedReOrg() throws {
-        
+        var shouldContinue =  false
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
         var initialVerifiedBalance: Int64 = -1
@@ -83,9 +89,15 @@ class AdvancedReOrgTests: XCTestCase {
             initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
             initialTotalBalance = synchronizer.initializer.getBalance()
             preTxExpectation.fulfill()
+            shouldContinue = true
         }, error: self.handleError)
         
         wait(for: [preTxExpectation], timeout: 5)
+        
+        guard shouldContinue else {
+            XCTFail("pre receive sync failed")
+            return
+        }
         /*
          2. applyStaged(received_Tx_height)
          */
@@ -97,8 +109,6 @@ class AdvancedReOrgTests: XCTestCase {
          */
         
         let receivedTxExpectation = XCTestExpectation(description: "received tx")
-        
-        
         var receivedTxTotalBalance = Int64(-1)
         var receivedTxVerifiedBalance = Int64(-1)
         
@@ -235,7 +245,7 @@ class AdvancedReOrgTests: XCTestCase {
      10. sync up to received_Tx_height + 10
      11. verify that balance equals initial balance + tx amount
      */
-    func testTxIndexChangeReorg() {
+    func testTxIndexChangeReorg() throws {
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
         var initialVerifiedBalance: Int64 = -1
@@ -361,7 +371,7 @@ class AdvancedReOrgTests: XCTestCase {
         let finalSyncExpectation = XCTestExpectation(description: "final transaction")
         var finalTotalBalance = Int64(-1)
         var finalVerifiedBalance = Int64(-1)
-        coordinator.sync(completion: { (synchronizer) in
+        try coordinator.sync(completion: { (synchronizer) in
             finalTotalBalance = synchronizer.initializer.getBalance()
             finalVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
             finalSyncExpectation.fulfill()

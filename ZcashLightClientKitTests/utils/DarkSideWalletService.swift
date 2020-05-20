@@ -8,14 +8,16 @@
 import Foundation
 @testable import ZcashLightClientKit
 import GRPC
-class DarksideWalletService: LightWalletService {
+
+enum DarksideDataset: String {
+    case afterLargeReorg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/after-large-large.txt"
+    case afterSmallReorg =  "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/after-small-reorg.txt"
+    case beforeReOrg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/before-reorg.txt"
     
-    enum DarksideDataset: String {
-        case afterLargeReorg = "https://raw.githubusercontent.com/defuse/darksidewalletd-test-data/basic-reorg/basic-reorg/after-large-large.txt"
-        case afterSmallReorg =  "https://raw.githubusercontent.com/defuse/darksidewalletd-test-data/basic-reorg/basic-reorg/after-small-reorg.txt"
-        case beforeReOrg = "https://raw.githubusercontent.com/defuse/darksidewalletd-test-data/basic-reorg/basic-reorg/before-reorg.txt"
-        
-    }
+}
+
+class DarksideWalletService: LightWalletService {
+
     func fetchTransaction(txId: Data) throws -> TransactionEntity {
         try service.fetchTransaction(txId: txId)
     }
@@ -66,37 +68,52 @@ class DarksideWalletService: LightWalletService {
     }
     
     func useDataset(from urlString: String, startHeight: BlockHeight) throws {
-        var blocksUrl = DarksideBlocksUrl()
+        var blocksUrl = DarksideBlocksURL()
         blocksUrl.url = urlString
-        blocksUrl.startHeight = Int32(startHeight)
-        _ = try darksideService.setBlocksUrl(blocksUrl).response.wait()
+        _ = try darksideService.stageBlocks(blocksUrl, callOptions: CallOptions()).response.wait()
     }
     
     func applyStaged(nextLatestHeight: BlockHeight) throws {
-        
+        var darksideHeight = DarksideHeight()
+        darksideHeight.height = Int32(nextLatestHeight)
+        _ = try darksideService.applyStaged(darksideHeight).response.wait()
     }
     
     func clearIncomingTransactions() throws {
-        
+        _ = try darksideService.clearIncomingTransactions(Empty()).response.wait()
     }
     
     func getIncomingTransactions() throws -> [RawTransaction]? {
-        nil
+        var txs = [RawTransaction]()
+        let response = try darksideService.getIncomingTransactions(Empty(), handler: { txs.append($0) }).status.wait()
+        switch response {
+        case .ok:
+            return txs.count > 0 ? txs : nil
+        default:
+            throw response
+        }
     }
     
-    func reset() throws {
-        
+    func reset(saplingActivation: BlockHeight) throws {
+        var metaState = DarksideMetaState()
+        metaState.saplingActivation = Int32(saplingActivation)
+        metaState.branchID = "DEADBEEF"
+        metaState.chainName = "MAINNET"
+        // TODO: complete meta state correctly
+        _ = try darksideService.reset(metaState).response.wait()
     }
     
     func stageBlocksCreate(from height: BlockHeight, count: Int = 1) throws {
-        
+        var emptyBlocks = DarksideEmptyBlocks()
+        emptyBlocks.count = Int32(count)
+        emptyBlocks.height = Int32(height)
+        _ = try darksideService.stageBlocksCreate(emptyBlocks).response.wait()
     }
     
     func stageTransaction(_ rawTransaction: RawTransaction, at height: BlockHeight) throws {
-        var darkTx = DarksideTx()
-        darkTx.transaction = rawTransaction.data.hexEncodedString()
-        darkTx.height = Int32(height)
-        _ = try darksideService.setTx(darkTx, callOptions: CallOptions()).response.wait()
+        var tx = rawTransaction
+        tx.height = UInt64(height)
+        _ = try darksideService.stageTransactions().sendMessage(tx).wait()
     }
     
 }
