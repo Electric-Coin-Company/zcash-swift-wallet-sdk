@@ -27,7 +27,6 @@ public struct LightWalletEndpoint {
     public var port: Int
     public var secure: Bool
     
-    
 /**
      initializes a LightWalletEndpoint
      - Parameters:

@@ -146,7 +146,6 @@ extension LightWalletGRPCService: LightWalletService {
     
     // TODO: Make cancellable
     public func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
-        
 
         queue.async { [weak self] in
             

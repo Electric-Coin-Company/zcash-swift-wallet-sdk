@@ -120,7 +120,6 @@ public class CompactBlockProcessor {
         public var walletBirthday: BlockHeight
         private(set) var saplingActivation: BlockHeight
         
-        
         init (
                cacheDb: URL,
                dataDb: URL,
