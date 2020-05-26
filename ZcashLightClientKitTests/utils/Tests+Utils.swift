@@ -120,6 +120,6 @@ class TestSeed: SeedProvider {
     let seedString = "f550d5399659396587a59b6ad446eb89da7741ebb1e42f87c22451d20ece8bb1e09ccb3c19f967f37fbf435367bc295c692c0ce000c52f5b991f1ca91169565e"
     
     func seed() -> [UInt8] {
-        [UInt8](seedString.hexDecodedData())
+        [UInt8](Data(fromHexEncodedString: seedString)!)
     }
 }

@@ -58,7 +58,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
                         retry = false
                     } catch {
                         self.retries = self.retries + 1
-                        LoggerProxy.error("could not enhance txId \(tx.transactionId.toHexStringTxId())")
+                        LoggerProxy.error("could not enhance txId \(tx.transactionId.toHexStringTxId()) - Error: \(error)")
                         if retries > maxRetries {
                             throw error
                         }

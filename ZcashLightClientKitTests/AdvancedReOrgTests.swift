@@ -30,9 +30,7 @@ class AdvancedReOrgTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: birthday)
-        try coordinator.resetBlocks(dataset: .default)
-        
+        try coordinator.reset(saplingActivation: 663150)
     }
     
     override func tearDownWithError() throws {
@@ -69,7 +67,8 @@ class AdvancedReOrgTests: XCTestCase {
      10. sync up to received_Tx_height + 3
      11. verify that balance equals initial balance + tx amount
      */
-    func testAdvancedReOrg() throws {
+    func testReOrgChangesInboundTxMinedHeight() throws {
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service as! DarksideWalletService)
         var shouldContinue =  false
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
@@ -78,7 +77,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
          precondition:know balances before tx at received_Tx_height arrives
          */
-        try coordinator.applyStaged(blockheight: receivedTxHeight - 1)
+        try coordinator.applyStaged(blockheight: receivedTxHeight)
         
         let preTxExpectation = XCTestExpectation(description: "pre receive")
         
@@ -103,6 +102,7 @@ class AdvancedReOrgTests: XCTestCase {
          */
         
         try coordinator.applyStaged(blockheight: receivedTxHeight)
+//        sleep(1)
         
         /*
          3. sync up to received_Tx_height
@@ -246,6 +246,8 @@ class AdvancedReOrgTests: XCTestCase {
      11. verify that balance equals initial balance + tx amount
      */
     func testTxIndexChangeReorg() throws {
+        try coordinator.reset(saplingActivation: birthday)
+        try coordinator.resetBlocks(dataset: .default)
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
         var initialVerifiedBalance: Int64 = -1
@@ -379,6 +381,54 @@ class AdvancedReOrgTests: XCTestCase {
         
         XCTAssertEqual(finalTotalBalance, initialTotalBalance + Int64(receivedTx.value))
         XCTAssertEqual(finalVerifiedBalance, finalTotalBalance)
+        
+    }
+    
+    func testIncomingTransactionIndexChange() throws {
+        try coordinator.reset(saplingActivation: birthday)
+        try coordinator.resetBlocks(dataset: .predefined(dataset: .txIndexChangeBefore))
+        try coordinator.applyStaged(blockheight: 663200)
+        sleep(1)
+        let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
+        
+        var preReorgTotalBalance = Int64(0)
+        var preReorgVerifiedBalance = Int64(0)
+        try coordinator.sync(completion: { (synchronizer) in
+            preReorgTotalBalance = synchronizer.initializer.getBalance()
+            preReorgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+            firstSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 5)
+        
+        
+        /*
+         trigger reorg
+         */
+        
+        try coordinator.resetBlocks(dataset: .predefined(dataset: .txIndexChangeAfter))
+        try coordinator.applyStaged(blockheight: 663200)
+        
+        sleep(1)
+        
+        let afterReorgSync = XCTestExpectation(description: "after reorg sync")
+        
+        var postReorgTotalBalance = Int64(0)
+        var postReorgVerifiedBalance = Int64(0)
+        try coordinator.sync(completion: { (synchronizer) in
+            postReorgTotalBalance = synchronizer.initializer.getBalance()
+            postReorgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+            afterReorgSync.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [reorgExpectation,afterReorgSync], timeout: 5)
+        
+        XCTAssertEqual(postReorgVerifiedBalance, preReorgVerifiedBalance)
+        XCTAssertEqual(postReorgTotalBalance, preReorgTotalBalance)
+        
+    }
+    
+    func testReOrgExpiresInboundTransaction() {
         
     }
     

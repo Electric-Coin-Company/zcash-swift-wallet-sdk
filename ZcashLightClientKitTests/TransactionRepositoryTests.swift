@@ -51,7 +51,7 @@ class TransactionRepositoryTests: XCTestCase {
     func testFindByTxId() {
         var tx: TransactionEntity?
         
-        let id = "0BAFC5B83F5B39A5270144ECD98DBC65115055927EDDA8FF20F081FFF13E4780".hexDecodedData()
+        let id = Data(fromHexEncodedString: "0BAFC5B83F5B39A5270144ECD98DBC65115055927EDDA8FF20F081FFF13E4780")!
         
         XCTAssertNoThrow(try { tx = try self.transactionRepository.findBy(rawId: id)}())
         guard let transaction = tx else {
@@ -109,34 +109,57 @@ class TransactionRepositoryTests: XCTestCase {
             }
         }
     }
-    
+}
+
+extension Data {
+
+    init?(fromHexEncodedString string: String) {
+
+        // Convert 0 ... 9, a ... f, A ...F to their decimal value,
+        // return nil for all other input characters
+        func decodeNibble(u: UInt16) -> UInt8? {
+            switch(u) {
+            case 0x30 ... 0x39:
+                return UInt8(u - 0x30)
+            case 0x41 ... 0x46:
+                return UInt8(u - 0x41 + 10)
+            case 0x61 ... 0x66:
+                return UInt8(u - 0x61 + 10)
+            default:
+                return nil
+            }
+        }
+
+        self.init(capacity: string.utf16.count/2)
+        var even = true
+        var byte: UInt8 = 0
+        for c in string.utf16 {
+            guard let val = decodeNibble(u: c) else { return nil }
+            if even {
+                byte = val << 4
+            } else {
+                byte += val
+                self.append(byte)
+            }
+            even = !even
+        }
+        guard even else { return nil }
+    }
 }
 
 extension String {
-    /// A data representation of the hexadecimal bytes in this string.
-    func hexDecodedData() -> Data {
-        // Get the UTF8 characters of this string
-        let chars = Array(utf8)
-        
-        // Keep the bytes in an UInt8 array and later convert it to Data
-        var bytes = [UInt8]()
-        bytes.reserveCapacity(count / 2)
-        
-        // It is a lot faster to use a lookup map instead of strtoul
-        let map: [UInt8] = [
-            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, // 01234567
-            0x08, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // 89:;<=>?
-            0x00, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00, // @ABCDEFG
-            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // HIJKLMNO
-        ]
-        
-        // Grab two characters at a time, map them and turn it into a byte
-        for i in stride(from: 0, to: count, by: 2) {
-            let index1 = Int(chars[i] & 0x1F ^ 0x10)
-            let index2 = Int(chars[i + 1] & 0x1F ^ 0x10)
-            bytes.append(map[index1] << 4 | map[index2])
+    var hexadecimal: Data? {
+        var data = Data(capacity: count / 2)
+
+        let regex = try! NSRegularExpression(pattern: "[0-9a-f]{1,2}", options: .caseInsensitive)
+        regex.enumerateMatches(in: self, range: NSRange(startIndex..., in: self)) { match, _, _ in
+            let byteString = (self as NSString).substring(with: match!.range)
+            let num = UInt8(byteString, radix: 16)!
+            data.append(num)
         }
-        
-        return Data(bytes)
+
+        guard data.count > 0 else { return nil }
+
+        return data
     }
 }

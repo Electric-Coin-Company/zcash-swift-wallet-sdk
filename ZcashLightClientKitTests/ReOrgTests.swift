@@ -74,12 +74,12 @@ class ReOrgTests: XCTestCase {
     
     func testBasicReOrg() throws {
         let mockLatestHeight = BlockHeight(663200)
-        let targetLatestHeight = BlockHeight(663250)
+        let targetLatestHeight = BlockHeight(663202)
         let reOrgHeight = BlockHeight(663195)
         let walletBirthday = WalletBirthday.birthday(with: 663150).height
         
         try basicReOrgTest(baseDataset: .beforeReOrg,
-                            reorgDataset: .afterLargeReorg,
+                            reorgDataset: .afterSmallReorg,
                             firstLatestHeight: mockLatestHeight,
                             reorgHeight: reOrgHeight,
                             walletBirthday: walletBirthday,
@@ -146,14 +146,7 @@ class ReOrgTests: XCTestCase {
       
         try coordinator.resetBlocks(dataset: .predefined(dataset: reorgDataset))
         try coordinator.applyStaged(blockheight: targetHeight)
-        
-        /**
-         request latest height -> receive targetHeight!
-         */
-        
-        XCTAssertNoThrow(try {latestDownloadedHeight = try syncedSynchronizer.initializer.downloader.latestBlockHeight()}())
-        
-        
+     
         /**
          request latest height -> receive targetHeight!
          download that block
@@ -161,10 +154,16 @@ class ReOrgTests: XCTestCase {
          rewind 10 blocks and request blocks targetHeight-10 to targetHeight
          */
         
+        let secondSyncExpectation = XCTestExpectation(description: "second sync")
+        
+        sleep(2)
+        try coordinator.sync(completion: { (_) in
+            secondSyncExpectation.fulfill()
+               }, error: self.handleError)
         
         // now reorg should happen and reorg notifications and idle notification should be triggered
         
-        wait(for: [reorgExpectation], timeout: 10)
+        wait(for: [reorgExpectation,secondSyncExpectation], timeout: 5)
         
         // now everything should be fine. latest block should be targetHeight
         

@@ -14,6 +14,9 @@ enum DarksideDataset: String {
     case afterSmallReorg =  "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/after-small-reorg.txt"
     case beforeReOrg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/before-reorg.txt"
     
+    case txIndexChangeBefore = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/before-reorg.txt"
+    
+    case txIndexChangeAfter = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/after-reorg.txt"
 }
 
 class DarksideWalletService: LightWalletService {
@@ -114,6 +117,13 @@ class DarksideWalletService: LightWalletService {
         var tx = rawTransaction
         tx.height = UInt64(height)
         _ = try darksideService.stageTransactionsStream().sendMessage(tx).wait()
+    }
+    
+    func stageTransaction(from url: String, at height: BlockHeight) throws {
+        var txUrl = DarksideTransactionsURL()
+        txUrl.height = Int32(height)
+        txUrl.url = url
+        _ = try darksideService.stageTransactions(txUrl, callOptions: nil).response.wait()
     }
     
 }
