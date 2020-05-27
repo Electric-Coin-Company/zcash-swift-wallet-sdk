@@ -94,8 +94,8 @@ class TestCoordinator {
             try darksideWallet.useDataset(DarksideDataset.beforeReOrg.rawValue)
         case .predefined(let dataset):
             try darksideWallet.useDataset(dataset.rawValue)
-        case .url(let urlString, let startHeight):
-            try darksideWallet.useDataset(from: urlString, startHeight: startHeight)
+        case .url(let urlString,_):
+            try darksideWallet.useDataset(from: urlString)
         }
         
     }
@@ -179,8 +179,8 @@ extension TestCoordinator {
             try service.useDataset(DarksideDataset.beforeReOrg.rawValue)
         case .predefined(let blocks):
             try service.useDataset(blocks.rawValue)
-        case .url(let urlString, let startHeight):
-            try service.useDataset(urlString, startHeight: startHeight)
+        case .url(let urlString,_):
+            try service.useDataset(urlString)
         }
     }
     

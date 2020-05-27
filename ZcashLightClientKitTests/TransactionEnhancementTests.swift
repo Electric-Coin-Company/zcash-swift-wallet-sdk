@@ -107,7 +107,7 @@ class TransactionEnhancementTests: XCTestCase {
     func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) throws {
      
         do {
-            try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue, startHeight: walletBirthday)
+            try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue)
         } catch  {
             XCTFail("Error: \(error)")
             return

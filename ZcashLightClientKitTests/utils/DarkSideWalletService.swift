@@ -66,11 +66,11 @@ class DarksideWalletService: LightWalletService {
         try service.submit(spendTransaction: spendTransaction)
     }
     
-    func useDataset(_ datasetUrl: String, startHeight: BlockHeight = 663174) throws {
-        try useDataset(from: datasetUrl, startHeight: startHeight)
+    func useDataset(_ datasetUrl: String) throws {
+        try useDataset(from: datasetUrl)
     }
     
-    func useDataset(from urlString: String, startHeight: BlockHeight) throws {
+    func useDataset(from urlString: String) throws {
         var blocksUrl = DarksideBlocksURL()
         blocksUrl.url = urlString
         _ = try darksideService.stageBlocks(blocksUrl, callOptions: CallOptions()).response.wait()
@@ -125,5 +125,7 @@ class DarksideWalletService: LightWalletService {
         txUrl.url = url
         _ = try darksideService.stageTransactions(txUrl, callOptions: nil).response.wait()
     }
+    
+    
     
 }
