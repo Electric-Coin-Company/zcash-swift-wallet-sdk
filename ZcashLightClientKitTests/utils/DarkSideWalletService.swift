@@ -106,10 +106,11 @@ class DarksideWalletService: LightWalletService {
         _ = try darksideService.reset(metaState).response.wait()
     }
     
-    func stageBlocksCreate(from height: BlockHeight, count: Int = 1) throws {
+    func stageBlocksCreate(from height: BlockHeight, count: Int = 1, nonce: Int = 0) throws {
         var emptyBlocks = DarksideEmptyBlocks()
         emptyBlocks.count = Int32(count)
         emptyBlocks.height = Int32(height)
+        emptyBlocks.nonce = Int32(nonce)
         _ = try darksideService.stageBlocksCreate(emptyBlocks).response.wait()
     }
     

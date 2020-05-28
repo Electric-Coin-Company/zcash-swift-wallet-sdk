@@ -62,6 +62,7 @@ class TestCoordinator {
         self.service = Self.serviceFor(serviceType, channelProvider: channelProvider)
         let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
         try storage.createTable()
+        
         let downloader = CompactBlockDownloader(service: self.service, storage: storage)
         
         
@@ -83,6 +84,10 @@ class TestCoordinator {
         self.synchronizer = buildResult.synchronizer
         self.spendingKeys = buildResult.spendingKeys
         subscribeToNotifications(synchronizer: self.synchronizer)
+    }
+    
+    func stop() throws {
+        try synchronizer.stop()
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
@@ -146,10 +151,7 @@ class TestCoordinator {
     }
     
     @objc func synchronizerSynced(_ notification: Notification) {
-        DispatchQueue.main.async {  [weak self] in
-            guard let self = self else { return }
             self.completionHandler?(self.synchronizer)
-        }
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {
@@ -184,11 +186,11 @@ extension TestCoordinator {
         }
     }
     
-    func stageBlockCreate(height: BlockHeight, count: Int = 1) throws {
+    func stageBlockCreate(height: BlockHeight, count: Int = 1, nonce: Int = 0) throws {
         guard let dlwd = self.service as? DarksideWalletService else {
             throw CoordinatorError.notDarksideWallet
         }
-        try dlwd.stageBlocksCreate(from: height, count: count)
+        try dlwd.stageBlocksCreate(from: height, count: count, nonce: 0)
     }
     
     func applyStaged(blockheight: BlockHeight) throws {
@@ -203,6 +205,13 @@ extension TestCoordinator {
             throw CoordinatorError.notDarksideWallet
         }
         try dlwd.stageTransaction(tx, at: height)
+    }
+    
+    func stageTransaction(url: String, at height: BlockHeight) throws {
+        guard let dlwd = self.service as? DarksideWalletService else {
+                   throw CoordinatorError.notDarksideWallet
+        }
+        try dlwd.stageTransaction(from: url, at: height)
     }
     
     func latestHeight() throws -> BlockHeight {

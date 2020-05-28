@@ -12,7 +12,7 @@ enum FakeChainBuilderError: Error {
     case fakeHexDataConversionFailed
 }
 class FakeChainBuilder {
-    
+    static let someOtherTxUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/t-shielded-spend.txt"
     static let txMainnetBlockUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/663150.txt"
     static func buildChain(darksideWallet: DarksideWalletService) throws {
         try darksideWallet.reset(saplingActivation: 663150)
