@@ -22,7 +22,6 @@ class BalanceTests: XCTestCase {
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
-            serviceType: .darksideLightwallet(threshold: .upTo(height: defaultLatestHeight),dataset: .default),
             seed: seedPhrase,
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
@@ -264,7 +263,6 @@ class BalanceTests: XCTestCase {
      */
     func testVerifyIncomingTransaction() throws {
         coordinator = try TestCoordinator(
-            serviceType: .darksideLightwallet(threshold: .upTo(height: 663230), dataset: .default),
             seed: seedPhrase,
             walletBirthday: birthday,
             channelProvider: ChannelProvider()

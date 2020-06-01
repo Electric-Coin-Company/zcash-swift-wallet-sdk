@@ -14,9 +14,20 @@ enum DarksideDataset: String {
     case afterSmallReorg =  "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/after-small-reorg.txt"
     case beforeReOrg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/before-reorg.txt"
     
+    /**
+     see
+     https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-index-reorg
+     */
     case txIndexChangeBefore = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/before-reorg.txt"
     
     case txIndexChangeAfter = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/after-reorg.txt"
+    
+    /**
+        See https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-height-reorg
+     */
+    case txHeightReOrgBefore = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-height-reorg/before-reorg.txt"
+    
+    case txHeightReOrgAfter = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-height-reorg/after-reorg.txt"
 }
 
 class DarksideWalletService: LightWalletService {
@@ -30,11 +41,14 @@ class DarksideWalletService: LightWalletService {
     }
     
     var channel: Channel
-    init() {
-        let channel = ChannelProvider().channel()
-        self.channel = channel
+    init(channelProvider: ChannelProvider) {
+        self.channel = ChannelProvider().channel()
         self.service = LightWalletGRPCService(channel: channel)
         self.darksideService = DarksideStreamerClient(channel: channel)
+    }
+    
+    convenience init() {
+        self.init(channelProvider: ChannelProvider())
     }
     var service: LightWalletGRPCService
     var darksideService: DarksideStreamerClient
@@ -73,7 +87,7 @@ class DarksideWalletService: LightWalletService {
     func useDataset(from urlString: String) throws {
         var blocksUrl = DarksideBlocksURL()
         blocksUrl.url = urlString
-        _ = try darksideService.stageBlocks(blocksUrl, callOptions: CallOptions()).response.wait()
+        _ = try darksideService.stageBlocks(blocksUrl, callOptions: nil).response.wait()
     }
     
     func applyStaged(nextLatestHeight: BlockHeight) throws {
@@ -89,7 +103,7 @@ class DarksideWalletService: LightWalletService {
     func getIncomingTransactions() throws -> [RawTransaction]? {
         var txs = [RawTransaction]()
         let response = try darksideService.getIncomingTransactions(Empty(), handler: { txs.append($0) }).status.wait()
-        switch response {
+        switch response.code {
         case .ok:
             return txs.count > 0 ? txs : nil
         default:
@@ -100,8 +114,8 @@ class DarksideWalletService: LightWalletService {
     func reset(saplingActivation: BlockHeight) throws {
         var metaState = DarksideMetaState()
         metaState.saplingActivation = Int32(saplingActivation)
-        metaState.branchID = "DEADBEEF"
-        metaState.chainName = "MAINNET"
+        metaState.branchID = "d3adb33f"
+        metaState.chainName = "test"
         // TODO: complete meta state correctly
         _ = try darksideService.reset(metaState).response.wait()
     }
@@ -126,7 +140,5 @@ class DarksideWalletService: LightWalletService {
         txUrl.url = url
         _ = try darksideService.stageTransactions(txUrl, callOptions: nil).response.wait()
     }
-    
-    
-    
+ 
 }

@@ -463,7 +463,7 @@ public class CompactBlockProcessor {
                 LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
                 return
             }
-            self?.processBatchFinished(range: range)
+            
         }
         
         scanBlocksOperation.errorHandler = { [weak self] (error) in
@@ -483,12 +483,13 @@ public class CompactBlockProcessor {
             self?.notifyTransactions(txs)
         }
         
-        enhanceOperation.completionHandler  = { (finished, cancelled) in
-            
+        enhanceOperation.completionHandler  = { [weak self] (finished, cancelled) in
+            guard let self = self else { return }
             guard !cancelled else {
                 LoggerProxy.debug("Warning: enhance operation on range \(range) cancelled")
                 return
             }
+            self.processBatchFinished(range: range)
         }
         
         enhanceOperation.errorHandler = { [weak self] (error) in

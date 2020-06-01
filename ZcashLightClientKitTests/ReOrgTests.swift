@@ -36,7 +36,6 @@ class ReOrgTests: XCTestCase {
        override func setUpWithError() throws {
             NotificationCenter.default.addObserver(self, selector: #selector(handleReOrgNotification(_:)), name: Notification.Name.blockProcessorHandledReOrg, object: nil)
            coordinator = try TestCoordinator(
-               serviceType: .darksideLightwallet(threshold: .upTo(height: defaultLatestHeight),dataset: .default),
                seed: seedPhrase,
                walletBirthday: birthday,
                channelProvider: ChannelProvider()

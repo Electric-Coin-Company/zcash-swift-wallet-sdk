@@ -26,7 +26,6 @@ class DarksideSanityCheckTests: XCTestCase {
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
-            serviceType: .darksideLightwallet(threshold: .upTo(height: defaultLatestHeight),dataset: .default),
             seed: seedPhrase,
             walletBirthday: birthday,
             channelProvider: ChannelProvider()

@@ -28,38 +28,30 @@ class TestCoordinator {
         case latestHeight
     }
     
-    enum ServiceType {
-        case lightwallet(threshold: SyncThreshold)
-        case darksideLightwallet(threshold: SyncThreshold, dataset: DarksideData)
-    }
-    
     enum DarksideData {
         case `default`
         case predefined(dataset: DarksideDataset)
         case url(urlString: String, startHeigth: BlockHeight)
     }
     
-    var serviceType: ServiceType
     var completionHandler: ((SDKSynchronizer) -> Void)?
     var errorHandler: ((Error?) -> Void)?
     var seed: String
     var birthday: BlockHeight
     var channelProvider: ChannelProvider
     var synchronizer: SDKSynchronizer
-    var service: LightWalletService
+    var service: DarksideWalletService
     var spendingKeys: [String]?
     var databases: TemporaryTestDatabases
     
-    init(serviceType: ServiceType = .lightwallet(threshold: .latestHeight),
-         seed: String,
+    init(seed: String,
          walletBirthday: BlockHeight,
          channelProvider: ChannelProvider) throws {
-        self.serviceType = serviceType
         self.seed = seed
         self.birthday = walletBirthday
         self.channelProvider = channelProvider
         self.databases = TemporaryDbBuilder.build()
-        self.service = Self.serviceFor(serviceType, channelProvider: channelProvider)
+        self.service = DarksideWalletService()
         let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
         try storage.createTable()
         
@@ -88,31 +80,26 @@ class TestCoordinator {
     
     func stop() throws {
         try synchronizer.stop()
+        self.completionHandler = nil
+        self.errorHandler = nil
+        
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
-        guard let darksideWallet = self.service as? DarksideWalletService else {
-            throw CoordinatorError.notDarksideWallet
-        }
+       
         switch state {
         case .default:
-            try darksideWallet.useDataset(DarksideDataset.beforeReOrg.rawValue)
+            try service.useDataset(DarksideDataset.beforeReOrg.rawValue)
         case .predefined(let dataset):
-            try darksideWallet.useDataset(dataset.rawValue)
+            try service.useDataset(dataset.rawValue)
         case .url(let urlString,_):
-            try darksideWallet.useDataset(from: urlString)
+            try service.useDataset(from: urlString)
         }
         
     }
     
     func setLatestHeight(height: BlockHeight) throws {
-        if let mocklwdService = self.service as? MockLightWalletService  {
-            mocklwdService.latestHeight = height
-        } else if let darkLwdService = self.service as? DarksideWalletService {
-            try darkLwdService.applyStaged(nextLatestHeight: height)
-        } else {
-            throw CoordinatorError.notDarksideWallet
-        }
+        try service.applyStaged(nextLatestHeight: height)
     }
     
     func sync(completion: @escaping (SDKSynchronizer) -> Void, error: @escaping (Error?) -> Void) throws {
@@ -122,19 +109,6 @@ class TestCoordinator {
         try synchronizer.start()
     }
     
-    private static func serviceFor(_ serviceStype: ServiceType, channelProvider: ChannelProvider) -> LightWalletService {
-        switch serviceStype {
-        case .darksideLightwallet:
-            return DarksideWalletService()
-        case .lightwallet(let threshold):
-            switch threshold {
-            case .latestHeight:
-                return LightWalletGRPCService(channel: channelProvider.channel())
-            case .upTo(let height):
-                return MockLightWalletService(latestBlockHeight: height)
-            }
-        }
-    }
     
     /**
      Notifications
@@ -151,7 +125,11 @@ class TestCoordinator {
     }
     
     @objc func synchronizerSynced(_ notification: Notification) {
-            self.completionHandler?(self.synchronizer)
+        if case .stopped = self.synchronizer.status {
+            LoggerProxy.debug("WARNING: notification received after synchronizer was stopped")
+            return
+        }
+        self.completionHandler?(self.synchronizer)
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {
@@ -173,9 +151,7 @@ class TestCoordinator {
 
 extension TestCoordinator {
     func resetBlocks(dataset: DarksideData) throws {
-        guard let service = self.service as? DarksideWalletService else {
-            throw CoordinatorError.notDarksideWallet
-        }
+    
         switch dataset {
         case .default:
             try service.useDataset(DarksideDataset.beforeReOrg.rawValue)
@@ -187,31 +163,19 @@ extension TestCoordinator {
     }
     
     func stageBlockCreate(height: BlockHeight, count: Int = 1, nonce: Int = 0) throws {
-        guard let dlwd = self.service as? DarksideWalletService else {
-            throw CoordinatorError.notDarksideWallet
-        }
-        try dlwd.stageBlocksCreate(from: height, count: count, nonce: 0)
+        try service.stageBlocksCreate(from: height, count: count, nonce: 0)
     }
     
     func applyStaged(blockheight: BlockHeight) throws {
-        guard let dlwd = self.service as? DarksideWalletService else {
-            throw CoordinatorError.notDarksideWallet
-        }
-        try dlwd.applyStaged(nextLatestHeight: blockheight)
+        try service.applyStaged(nextLatestHeight: blockheight)
     }
     
     func stageTransaction(_ tx: RawTransaction, at height: BlockHeight) throws {
-        guard let dlwd = self.service as? DarksideWalletService else {
-            throw CoordinatorError.notDarksideWallet
-        }
-        try dlwd.stageTransaction(tx, at: height)
+        try service.stageTransaction(tx, at: height)
     }
     
     func stageTransaction(url: String, at height: BlockHeight) throws {
-        guard let dlwd = self.service as? DarksideWalletService else {
-                   throw CoordinatorError.notDarksideWallet
-        }
-        try dlwd.stageTransaction(from: url, at: height)
+        try service.stageTransaction(from: url, at: height)
     }
     
     func latestHeight() throws -> BlockHeight {
@@ -219,10 +183,11 @@ extension TestCoordinator {
     }
     
     func reset(saplingActivation: BlockHeight) throws {
-        guard let dlwd = self.service as? DarksideWalletService else {
-                   throw CoordinatorError.notDarksideWallet
-        }
-        try dlwd.reset(saplingActivation: saplingActivation)
+        try service.reset(saplingActivation: saplingActivation)
+    }
+    
+    func getIncomingTransactions() throws -> [RawTransaction]? {
+        return try service.getIncomingTransactions()
     }
 }
 

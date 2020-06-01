@@ -136,10 +136,12 @@ class TransactionSQLDAO: TransactionRepository {
                    transactions.block     AS minedHeight,
                    transactions.tx_index  AS transactionIndex,
                    transactions.txid      AS rawTransactionId,
+                   transactions.raw       AS raw,
                    received_notes.value   AS value,
                    received_notes.memo    AS memo,
                    received_notes.id_note AS noteId,
                    blocks.time            AS blockTimeInSeconds
+                   
             FROM   transactions
                    LEFT JOIN received_notes
                           ON transactions.id_tx = received_notes.tx
