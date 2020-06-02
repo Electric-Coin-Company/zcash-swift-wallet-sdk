@@ -42,13 +42,14 @@ class AdvancedReOrgTests: XCTestCase {
     
     @objc func handleReorg(_ notification: Notification) {
         
-        guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
-            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight else {
+        guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight
+//            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
+            else {
                 XCTFail("empty reorg notification")
                 return
         }
         
-        XCTAssertEqual(rewindHeight, expectedRewindHeight)
+//        XCTAssertEqual(rewindHeight, expectedRewindHeight)
         XCTAssertEqual(reorgHeight, expectedReorgHeight)
         reorgExpectation.fulfill()
     }
@@ -1012,8 +1013,10 @@ class AdvancedReOrgTests: XCTestCase {
          1. create fake chain
          */
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        let sentTxHeight: BlockHeight = 663195
+        try coordinator.applyStaged(blockheight: sentTxHeight - 1)
         
-        try coordinator.applyStaged(blockheight: 663188)
+        
         sleep(2)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
@@ -1062,8 +1065,7 @@ class AdvancedReOrgTests: XCTestCase {
             return
         }
         
-        let sentTxHeight: BlockHeight = 663189
-        
+        self.expectedReorgHeight = sentTxHeight
         /*
          4. stage transaction at sentTxHeight
          */
@@ -1088,8 +1090,8 @@ class AdvancedReOrgTests: XCTestCase {
         }, error: self.handleError)
         
         wait(for: [secondSyncExpectation], timeout: 5)
-        
-        try coordinator.stageBlockCreate(height: sentTxHeight, count: 15, nonce: 5)
+        let extraBlocks = 20
+        try coordinator.stageBlockCreate(height: sentTxHeight, count: extraBlocks, nonce: 5)
         
         try coordinator.applyStaged(blockheight: sentTxHeight + 5)
         
@@ -1100,7 +1102,7 @@ class AdvancedReOrgTests: XCTestCase {
             reorgSyncExpectation.fulfill()
         }, error: self.handleError)
         
-        wait(for: [reorgSyncExpectation], timeout: 5)
+        wait(for: [reorgExpectation, reorgSyncExpectation], timeout: 5)
         
         guard let pendingTx = coordinator.synchronizer.pendingTransactions.first else {
             XCTFail("no pending transaction after reorg sync")
@@ -1109,7 +1111,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         XCTAssertFalse(pendingTx.isMined)
         
-        try coordinator.applyStaged(blockheight: sentTxHeight + 14)
+        try coordinator.applyStaged(blockheight: sentTxHeight + extraBlocks - 1)
         
         sleep(2)
         
