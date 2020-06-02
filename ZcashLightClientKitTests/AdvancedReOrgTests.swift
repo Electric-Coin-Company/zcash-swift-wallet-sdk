@@ -709,7 +709,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         wait(for: [sendExpectation], timeout: 11)
         
-        guard let pendingTransaction = p else {
+        guard let _ = p else {
             XCTFail("no pending transaction after sending")
             try coordinator.stop()
             return
@@ -988,6 +988,142 @@ class AdvancedReOrgTests: XCTestCase {
         
         XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
+    }
+    
+    /**
+     Transaction was included in a block, and then is not included in a block after a reorg, and expires.
+     Steps:
+     1. create fake chain
+     1a. sync to latest height
+     2. send transaction to recipient address
+     3. getIncomingTransaction
+     4. stage transaction at sentTxHeight
+     5. applyHeight(sentTxHeight)
+     6. sync to latest height
+     6a. verify that there's a pending transaction with a mined height of sentTxHeight
+     7. stage 15 blocks from sentTxHeigth to cause a reorg
+     8. sync to latest height
+     9. verify that there's an expired transaction as a pending transaction
+     */
+    func testReOrgRemovesOutboundTxAndIsNeverMined() throws {
+        hookToReOrgNotification()
+        
+        /*
+         1. create fake chain
+         */
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        
+        try coordinator.applyStaged(blockheight: 663188)
+        sleep(2)
+        
+        let firstSyncExpectation = XCTestExpectation(description: "first sync")
+        /*
+         1a. sync to latest height
+         */
+        try coordinator.sync(completion: { (s) in
+            firstSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 5)
+        
+        sleep(1)
+        let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
+        let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        
+        let sendExpectation = XCTestExpectation(description: "send expectation")
+        var p: PendingTransactionEntity? = nil
+        
+        /*
+         2. send transaction to recipient address
+         */
+        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: 20000, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
+            switch result {
+            case .failure(let e):
+                self.handleError(e)
+            case .success(let pendingTx):
+                p = pendingTx
+            }
+            sendExpectation.fulfill()
+        })
+        
+        wait(for: [sendExpectation], timeout: 11)
+        
+        guard let _ = p else {
+            XCTFail("no pending transaction after sending")
+            try coordinator.stop()
+            return
+        }
+        /**
+         3. getIncomingTransaction
+         */
+        guard let incomingTx = try coordinator.getIncomingTransactions()?.first else {
+            XCTFail("no incoming transaction")
+            try coordinator.stop()
+            return
+        }
+        
+        let sentTxHeight: BlockHeight = 663189
+        
+        /*
+         4. stage transaction at sentTxHeight
+         */
+        
+        try coordinator.stageBlockCreate(height: sentTxHeight)
+        
+        try coordinator.stageTransaction(incomingTx, at: sentTxHeight)
+        /*
+         5. applyHeight(sentTxHeight)
+         */
+        try coordinator.applyStaged(blockheight: sentTxHeight)
+        
+        sleep(2)
+        
+        /*
+         6. sync to latest height
+         */
+        let secondSyncExpectation =  XCTestExpectation(description: "after send expectation")
+        
+        try coordinator.sync(completion: { (s) in
+            secondSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [secondSyncExpectation], timeout: 5)
+        
+        try coordinator.stageBlockCreate(height: sentTxHeight, count: 15, nonce: 5)
+        
+        try coordinator.applyStaged(blockheight: sentTxHeight + 5)
+        
+        sleep(2)
+        let reorgSyncExpectation = XCTestExpectation(description: "reorg sync expectation")
+        
+        try coordinator.sync(completion: { (s) in
+            reorgSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [reorgSyncExpectation], timeout: 5)
+        
+        guard let pendingTx = coordinator.synchronizer.pendingTransactions.first else {
+            XCTFail("no pending transaction after reorg sync")
+            return
+        }
+        
+        XCTAssertFalse(pendingTx.isMined)
+        
+        try coordinator.applyStaged(blockheight: sentTxHeight + 14)
+        
+        sleep(2)
+        
+        let lastSyncExpectation = XCTestExpectation(description: "last sync expectation")
+        
+        try coordinator.sync(completion: { (s) in
+            lastSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [lastSyncExpectation], timeout: 5)
+        
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), initialVerifiedBalance)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), initialTotalBalance)
+        
     }
     
     func handleError(_ error: Error?) {
