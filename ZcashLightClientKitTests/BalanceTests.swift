@@ -14,7 +14,7 @@ class BalanceTests: XCTestCase {
     
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
-    let defaultLatestHeight: BlockHeight = 663201
+    let defaultLatestHeight: BlockHeight = 663188
     var coordinator: TestCoordinator!
     
     var syncedExpectation = XCTestExpectation(description: "synced")
@@ -26,7 +26,7 @@ class BalanceTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.resetBlocks(dataset: .default)
+        try coordinator.reset(saplingActivation: 663150)
         
     }
     
@@ -49,21 +49,24 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyAvailableBalanceDuringSend() throws {
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
-        var syncedSynchronizer: SDKSynchronizer?
+        
         
         try coordinator.sync(completion: { (synchronizer) in
-            syncedSynchronizer = syncedSynchronizer
+            
+            self.syncedExpectation.fulfill()
         }, error: handleError)
         
         wait(for: [syncedExpectation], timeout: 60)
         
-        guard let synchronizer = syncedSynchronizer, let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create synchronizer")
+        guard let spendingKey = coordinator.spendingKeys?.first else {
+            XCTFail("failed to create spending keys")
             return
         }
         
-        let presendBalance = synchronizer.initializer.getVerifiedBalance()
+        let presendBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         /*
          there's more zatoshi to send than network fee
@@ -71,79 +74,46 @@ class BalanceTests: XCTestCase {
         XCTAssertTrue(presendBalance >= (Int64(ZcashSDK.MINERS_FEE_ZATOSHI) + sendAmount))
         
         var pendingTx: PendingTransactionEntity?
-        synchronizer.sendToAddress(spendingKey: spendingKey,
-                                   zatoshi: Int64(sendAmount),
-                                   toAddress: testRecipientAddress,
-                                   memo: "test send \(self.description) \(Date().description)",
+        coordinator.synchronizer.sendToAddress(spendingKey: spendingKey,
+                                               zatoshi: Int64(sendAmount),
+                                               toAddress: testRecipientAddress,
+                                               memo: "test send \(self.description) \(Date().description)",
         from: 0) { result in
             switch result {
             case .failure(let error):
                 /*
                  balance should be the same as before sending if transaction failed
                  */
-                XCTAssertEqual(synchronizer.initializer.getVerifiedBalance(), presendBalance)
+                XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), presendBalance)
                 XCTFail("sendToAddress failed: \(error)")
             case .success(let transaction):
                 
                 pendingTx = transaction
-                /*
-                 basic health check
-                 */
-                XCTAssertEqual(Int64(transaction.value), self.sendAmount)
-                
-                /*
-                 build up repos to get data
-                 */
-                guard let txid = transaction.id else {
-                    XCTFail("sent transaction has no internal id")
-                    return
-                }
-                let sentNoteDAO = SentNotesSQLDAO(dbProvider: SimpleConnectionProvider(path: synchronizer.initializer.dataDbURL.absoluteString, readonly: true))
-                
-                let receivedNoteDAO = ReceivedNotesSQLDAO(dbProvider: SimpleConnectionProvider(path: synchronizer.initializer.dataDbURL.absoluteString, readonly: true))
-                
-                guard let sentNote =  sentNoteDAO.sentNote(byTransactionId: txid) else {
-                    XCTFail("could not find sent note for this transaction")
-                    return
-                }
-                
-                guard let receivedNote = receivedNoteDAO.receivedNote(byTransactionId: txid) else {
-                    XCTFail("could not find sent note for this transaction")
-                    return
-                }
-                //  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
-                
-                XCTAssertTrue(
-                    self.verifiedBalanceValidation(previousBalance: presendBalance,
-                                                   spentNoteValue:  Int64(sentNote.value),
-                                                   changeValue: Int64(receivedNote.value),
-                                                   sentAmount: Int64(self.sendAmount),
-                                                   currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance())
-                )
                 
             }
             self.sentTransactionExpectation.fulfill()
         }
         
-        XCTAssertTrue(synchronizer.initializer.getVerifiedBalance() > 0)
+        XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > 0)
         wait(for: [sentTransactionExpectation], timeout: 12)
         
         // sync and mine
         
-        guard let tx = pendingTx, let txData = tx.raw else {
-            XCTFail("pending transaction nil after send")
+        guard let rawTx = try coordinator.getIncomingTransactions()?.first else {
+            XCTFail("no incoming transaction after")
             return
         }
         let latestHeight = try coordinator.latestHeight()
-        try coordinator.stageBlockCreate(height: latestHeight)
-        try coordinator.stageTransaction(try RawTransaction(serializedData: txData), at:  latestHeight + 1)
-        try coordinator.applyStaged(blockheight: latestHeight + 1)
+        let sentTxHeight = latestHeight + 1
+        try coordinator.stageBlockCreate(height: sentTxHeight)
         
+        try coordinator.stageTransaction(rawTx, at: sentTxHeight)
+        try coordinator.applyStaged(blockheight: sentTxHeight)
+        sleep(1)
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
         try coordinator.sync(completion: { (synchronizer) in
-            XCTAssertEqual(presendBalance - self.sendAmount,synchronizer.initializer.getBalance())
-            XCTAssertEqual(presendBalance - self.sendAmount,synchronizer.initializer.getVerifiedBalance ())
+            
             mineExpectation.fulfill()
             
         }, error: { (error) in
@@ -155,7 +125,61 @@ class BalanceTests: XCTestCase {
             XCTFail("Error: \(e)")
         })
         
-        wait(for: [mineExpectation], timeout: 2)
+        wait(for: [mineExpectation], timeout: 5)
+        
+        XCTAssertEqual(presendBalance - self.sendAmount,coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(presendBalance - self.sendAmount,coordinator.synchronizer.initializer.getVerifiedBalance())
+        
+        guard let transaction = pendingTx else {
+            XCTFail("pending transaction nil")
+            return
+        }
+        /*
+         basic health check
+         */
+        XCTAssertEqual(Int64(transaction.value), self.sendAmount)
+        
+        /*
+         build up repos to get data
+         */
+        guard let txid = transaction.rawTransactionId else {
+            XCTFail("sent transaction has no internal id")
+            return
+        }
+        let sentNoteDAO = SentNotesSQLDAO(dbProvider: SimpleConnectionProvider(path: self.coordinator.synchronizer.initializer.dataDbURL.absoluteString, readonly: true))
+        
+        let receivedNoteDAO = ReceivedNotesSQLDAO(dbProvider: SimpleConnectionProvider(path: self.coordinator.synchronizer.initializer.dataDbURL.absoluteString, readonly: true))
+        var s: SentNoteEntity?
+        do {
+            s = try sentNoteDAO.sentNote(byRawTransactionId: txid)
+        } catch {
+            XCTFail("error retrieving sent note: \(error)")
+        }
+        
+        guard let sentNote = s else {
+            XCTFail("could not find sent note for this transaction")
+            return
+        }
+        var r: ReceivedNoteEntity?
+        
+        do {
+            r = try receivedNoteDAO.receivedNote(byRawTransactionId: txid)
+        } catch {
+            XCTFail("error retrieving received note: \(error)")
+        }
+        
+        guard let receivedNote = r else {
+            XCTFail("could not find sent note for this transaction")
+            return
+        }
+        //  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
+        
+            self.verifiedBalanceValidation(previousBalance: presendBalance,
+                                           spentNoteValue:  Int64(sentNote.value),
+                                           changeValue: Int64(receivedNote.value),
+                                           sentAmount: Int64(self.sendAmount),
+                                           currentVerifiedBalance: self.coordinator.synchronizer.initializer.getVerifiedBalance())
+        
     }
     
     /**
@@ -175,65 +199,80 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyTotalBalanceDuringSend() throws {
-        var syncedSynchronizer: SDKSynchronizer?
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+               
+        try coordinator.applyStaged(blockheight: defaultLatestHeight)
         
+        sleep(2)
         try coordinator.sync(completion: { (synchronizer) in
-            syncedSynchronizer = syncedSynchronizer
+            self.syncedExpectation.fulfill()
         }, error: handleError)
         
-        wait(for: [syncedExpectation], timeout: 60)
+        wait(for: [syncedExpectation], timeout: 5)
         
-        guard let synchronizer = syncedSynchronizer, let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create synchronizer")
+        guard let spendingKey = coordinator.spendingKeys?.first else {
+            XCTFail("failed to create spending keys")
             return
         }
         
-        let presendBalance = synchronizer.initializer.getVerifiedBalance()
+        let presendBalance = coordinator.synchronizer.initializer.getBalance()
         XCTAssertTrue(presendBalance >= (Int64(ZcashSDK.MINERS_FEE_ZATOSHI) + sendAmount))  // there's more zatoshi to send than network fee
         
         var pendingTx: PendingTransactionEntity?
         
-        synchronizer.sendToAddress(spendingKey: spendingKey,
+        var error: Error?
+        coordinator.synchronizer.sendToAddress(spendingKey: spendingKey,
                                    zatoshi: Int64(sendAmount),
                                    toAddress: testRecipientAddress,
                                    memo: "test send \(self.description) \(Date().description)",
         from: 0) { result in
             switch result {
-            case .failure(let error):
+            case .failure(let e):
                 // balance should be the same as before sending if transaction failed
-                XCTAssertEqual(synchronizer.initializer.getVerifiedBalance(), presendBalance)
-                XCTFail("sendToAddress failed: \(error)")
-            case .success(let transaction):
-                XCTAssertEqual(Int64(transaction.value), self.sendAmount)
                 
-                XCTAssertTrue(
-                    self.totalBalanceValidation(totalBalance: synchronizer.initializer.getBalance(), previousTotalbalance: presendBalance, sentAmount: Int64(self.sendAmount))
-                )
-                XCTAssertNil(transaction.errorCode)
+                error = e
+                XCTFail("sendToAddress failed: \(e)")
+            case .success(let transaction):
+                
                 pendingTx = transaction
             }
             self.sentTransactionExpectation.fulfill()
         }
         
-        XCTAssertTrue(synchronizer.initializer.getVerifiedBalance() > 0)
+        XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > 0)
         wait(for: [sentTransactionExpectation], timeout: 12)
         
-        guard let tx = pendingTx, let txData = tx.raw else {
+        if let e = error {
+            XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), presendBalance)
+            XCTFail("error: \(e)")
+            return
+        }
+        guard let transaction = pendingTx else {
             XCTFail("pending transaction nil after send")
             return
         }
-        let latestHeight = try coordinator.latestHeight()
-        try coordinator.stageBlockCreate(height: latestHeight)
-        try coordinator.stageTransaction(try RawTransaction(serializedData: txData), at:  latestHeight + 1)
-        try coordinator.applyStaged(blockheight: latestHeight + 1)
         
+        XCTAssertEqual(Int64(transaction.value), self.sendAmount)
+        
+        XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), presendBalance - Int64(self.sendAmount))
+
+        XCTAssertNil(transaction.errorCode)
+        
+        let latestHeight = try coordinator.latestHeight()
+        let sentTxHeight = latestHeight + 1
+        try coordinator.stageBlockCreate(height: sentTxHeight)
+        guard let rawTx = try coordinator.getIncomingTransactions()?.first else {
+            XCTFail("no incoming transaction after send")
+            return
+        }
+        
+        try coordinator.stageTransaction(rawTx, at:  latestHeight + 1)
+        try coordinator.applyStaged(blockheight: latestHeight + 1)
+        sleep(2)
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
         try coordinator.sync(completion: { (synchronizer) in
-            XCTAssertEqual(presendBalance - self.sendAmount,synchronizer.initializer.getBalance())
-            
             mineExpectation.fulfill()
-            
         }, error: { (error) in
             guard let e = error else {
                 XCTFail("unknown error syncing after sending transaction")
@@ -243,7 +282,9 @@ class BalanceTests: XCTestCase {
             XCTFail("Error: \(e)")
         })
         
-        wait(for: [mineExpectation], timeout: 2)
+        wait(for: [mineExpectation], timeout: 5)
+        
+        XCTAssertEqual(presendBalance - self.sendAmount - Int64(ZcashSDK.MINERS_FEE_ZATOSHI),coordinator.synchronizer.initializer.getBalance())
     }
     
     /**
@@ -262,19 +303,16 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyIncomingTransaction() throws {
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider()
-        )
-        
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try coordinator.applyStaged(blockheight: defaultLatestHeight)
         try coordinator.sync(completion: { (syncronizer) in
-            XCTAssertEqual(syncronizer.clearedTransactions.count, 5)
-            XCTAssertEqual(syncronizer.initializer.getBalance(), 410000)
             self.syncedExpectation.fulfill()
         }, error: self.handleError)
         
-        wait(for: [syncedExpectation], timeout: 60)
+        wait(for: [syncedExpectation], timeout: 5)
+        
+        XCTAssertEqual(coordinator.synchronizer.clearedTransactions.count, 2)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), 200000)
     }
     
     /**
@@ -300,9 +338,12 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyChangeTransaction() throws {
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        
+        try coordinator.applyStaged(blockheight: defaultLatestHeight)
         let sendExpectation = XCTestExpectation(description: "send expectation")
         let createToAddressExpectation = XCTestExpectation(description: "create to address")
-        var sdkSynchronizer: SDKSynchronizer?
+        
         
         try coordinator.setLatestHeight(height: defaultLatestHeight)
         /*
@@ -311,18 +352,14 @@ class BalanceTests: XCTestCase {
         
         try coordinator.sync(completion: { (synchronizer) in
             self.syncedExpectation.fulfill()
-            sdkSynchronizer = synchronizer
         }, error: self.handleError)
         
         wait(for: [syncedExpectation], timeout: 6)
         
-        guard let syncedSynchronizer = sdkSynchronizer else {
-            XCTFail("null synchronizer")
-            return
-        }
+     
         
-        let previousVerifiedBalance = syncedSynchronizer.initializer.getVerifiedBalance()
-        let previousTotalBalance = syncedSynchronizer.initializer.getBalance()
+        let previousVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let previousTotalBalance = coordinator.synchronizer.initializer.getBalance()
         
         guard let spendingKeys = coordinator.spendingKeys?.first else {
             XCTFail("null spending keys")
@@ -334,7 +371,7 @@ class BalanceTests: XCTestCase {
          */
         
         var pendingTx: PendingTransactionEntity?
-        syncedSynchronizer.sendToAddress(spendingKey: spendingKeys, zatoshi: Int64(sendAmount), toAddress: testRecipientAddress, memo: "test memo \(self.description)", from: 0) { (sendResult) in
+        coordinator.synchronizer.sendToAddress(spendingKey: spendingKeys, zatoshi: Int64(sendAmount), toAddress: testRecipientAddress, memo: "test memo \(self.description)", from: 0) { (sendResult) in
             switch sendResult {
             case .failure(let sendError):
                 XCTFail("error sending \(sendError)")
@@ -351,15 +388,17 @@ class BalanceTests: XCTestCase {
         /*
          include sent transaction in block
          */
-        guard let tx = pendingTx, let txData = tx.raw else {
+        guard let rawTx = try coordinator.getIncomingTransactions()?.first else {
             XCTFail("pending transaction nil after send")
             return
         }
-        let latestHeight = try coordinator.latestHeight()
-        try coordinator.stageBlockCreate(height: latestHeight)
-        try coordinator.stageTransaction(try RawTransaction(serializedData: txData), at:  latestHeight + 1)
-        try coordinator.applyStaged(blockheight: latestHeight + 1)
         
+        let latestHeight = try coordinator.latestHeight()
+        let sentTxHeight = latestHeight + 1
+        try coordinator.stageBlockCreate(height: sentTxHeight, count: 12)
+        try coordinator.stageTransaction(rawTx, at: sentTxHeight)
+        try coordinator.applyStaged(blockheight: sentTxHeight + 11  )
+        sleep(2)
         
         /*
          Sync to that block
@@ -385,24 +424,27 @@ class BalanceTests: XCTestCase {
             XCTAssertEqual(Int64(confirmedTx.value), self.sendAmount)
             XCTAssertEqual(confirmedTx.toAddress, self.testRecipientAddress)
             
-            let transactionId = confirmedTx.transactionIndex
+            guard let transactionId = confirmedTx.rawTransactionId else {
+                XCTFail("no raw transaction id")
+                return
+            }
             
             /*
              Find out what note was used
              */
             let sentNotesRepo = SentNotesSQLDAO(dbProvider: SimpleConnectionProvider(path: synchronizer.initializer.dataDbURL.absoluteString, readonly: true))
             
-            guard let sentNote = sentNotesRepo.sentNote(byTransactionId: transactionId) else {
+            guard let sentNote = try? sentNotesRepo.sentNote(byRawTransactionId: transactionId) else {
                 XCTFail("Could not finde sent note with transaction Id \(transactionId)")
                 return
             }
             
-            let receivedNotesRepo = ReceivedNotesSQLDAO(dbProvider: SimpleConnectionProvider(path: syncedSynchronizer.initializer.dataDbURL.absoluteString, readonly: true))
+            let receivedNotesRepo = ReceivedNotesSQLDAO(dbProvider: SimpleConnectionProvider(path: self.coordinator.synchronizer.initializer.dataDbURL.absoluteString, readonly: true))
             
             /*
              get change note
              */
-            guard let receivedNote = receivedNotesRepo.receivedNote(byTransactionId: transactionId) else {
+            guard let receivedNote = try? receivedNotesRepo.receivedNote(byRawTransactionId: transactionId) else {
                 XCTFail("Could not find received not with change for transaction Id \(transactionId)")
                 return
             }
@@ -416,24 +458,24 @@ class BalanceTests: XCTestCase {
             /*
              Balance meets verified Balance and total balance criteria
              */
-            XCTAssertTrue(
-                self.verifiedBalanceValidation(
+            
+            self.verifiedBalanceValidation(
                     previousBalance: previousVerifiedBalance,
                     spentNoteValue: Int64(sentNote.value),
                     changeValue: Int64(receivedNote.value),
                     sentAmount: Int64(self.sendAmount),
                     currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance())
-            )
             
-            XCTAssertTrue(
-                self.totalBalanceValidation(totalBalance: synchronizer.initializer.getBalance(),
+            
+            
+            self.totalBalanceValidation(totalBalance: synchronizer.initializer.getBalance(),
                                             previousTotalbalance: previousTotalBalance,
                                             sentAmount: Int64(self.sendAmount))
-            )
+            
             syncToMinedheightExpectation.fulfill()
         }, error: self.handleError)
         
-        wait(for: [syncToMinedheightExpectation], timeout: ZcashSDK.DEFAULT_POLL_INTERVAL * 2)
+        wait(for: [syncToMinedheightExpectation], timeout: 5)
     }
     
     /**
@@ -461,48 +503,51 @@ class BalanceTests: XCTestCase {
      */
     func testVerifyBalanceAfterExpiredTransaction() throws {
         
-        var syncedSynchronizer: SDKSynchronizer?
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
         
+        try coordinator.applyStaged(blockheight: self.defaultLatestHeight)
+        sleep(2)
         try coordinator.sync(completion: { (syncronizer) in
-            syncedSynchronizer = syncronizer
             self.syncedExpectation.fulfill()
         }, error: self.handleError)
         
-        wait(for: [syncedExpectation], timeout: 10)
+        wait(for: [syncedExpectation], timeout: 5)
         
         
-        guard let sdkSynchronizer = syncedSynchronizer, let spendingKey = coordinator.spendingKeys?.first else {
+        guard let spendingKey = coordinator.spendingKeys?.first else {
             XCTFail("no synchronizer or spending keys")
             return
         }
         
-        let previousVerifiedBalance = sdkSynchronizer.initializer.getVerifiedBalance()
-        let previousTotalBalance = sdkSynchronizer.initializer.getBalance()
+        let previousVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let previousTotalBalance = coordinator.synchronizer.initializer.getBalance()
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingTx: PendingTransactionEntity?
-        sdkSynchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: sendAmount, toAddress: testRecipientAddress, memo: "test send \(self.description)", from: 0) { (result) in
+        coordinator.synchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: sendAmount, toAddress: testRecipientAddress, memo: "test send \(self.description)", from: 0) { (result) in
             switch result {
             case .failure(let error):
                 // balance should be the same as before sending if transaction failed
-                XCTAssertEqual(sdkSynchronizer.initializer.getVerifiedBalance(), previousVerifiedBalance)
-                XCTAssertEqual(sdkSynchronizer.initializer.getBalance(), previousTotalBalance)
+                XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), previousVerifiedBalance)
+                XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), previousTotalBalance)
                 XCTFail("sendToAddress failed: \(error)")
             case .success(let pending):
                 pendingTx = pending
             }
         }
-        wait(for: [sendExpectation], timeout: 11)
+        wait(for: [sendExpectation], timeout: 12)
         
-        guard let pendingTransaction = pendingTx else {
+        guard let pendingTransaction = pendingTx, pendingTransaction.expiryHeight > defaultLatestHeight else {
             XCTFail("No pending transaction")
             return
         }
         
         let expirationSyncExpectation = XCTestExpectation(description: "expiration sync expectation")
         let expiryHeight = pendingTransaction.expiryHeight
+        let blockCount = abs(self.defaultLatestHeight - expiryHeight)
+        try coordinator.stageBlockCreate(height: self.defaultLatestHeight  + 1, count: blockCount)
+        try coordinator.applyStaged(blockheight: expiryHeight)
         
-        try coordinator.setLatestHeight(height: expiryHeight)
-        
+        sleep(2)
         try coordinator.sync(completion: { (synchronizer) in
             
             /*
@@ -551,15 +596,15 @@ class BalanceTests: XCTestCase {
                                    spentNoteValue: Int64,
                                    changeValue: Int64,
                                    sentAmount: Int64,
-                                   currentVerifiedBalance: Int64) -> Bool {
+                                   currentVerifiedBalance: Int64)  {
         //  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
-        previousBalance - spentNoteValue + changeValue == currentVerifiedBalance - sentAmount
+        XCTAssertEqual(previousBalance - spentNoteValue + changeValue, currentVerifiedBalance - sentAmount)
     }
     
     func totalBalanceValidation(totalBalance: Int64,
                                 previousTotalbalance: Int64,
-                                sentAmount: Int64) -> Bool {
-        totalBalance == previousTotalbalance - sentAmount
+                                sentAmount: Int64)  {
+        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - Int64(ZcashSDK.MINERS_FEE_ZATOSHI))
     }
     
 }

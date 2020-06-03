@@ -7,9 +7,15 @@
 
 import Foundation
 
-protocol ReceivedNoteEntity: SentNoteEntity {
+protocol ReceivedNoteEntity {
+    var id: Int { get set }
+    var transactionId: Int { get set }
+    var outputIndex: Int { get set }
+    var account: Int { get set }
+    var value: Int { get set }
+    var memo: Data? { get set }
     var spent: Int? { get set }
-    var diverifier: Data { get set }
+    var diversifier: Data { get set }
     var rcm: Data { get set }
     var nf: Data { get set }
     var isChange: Bool { get set }
