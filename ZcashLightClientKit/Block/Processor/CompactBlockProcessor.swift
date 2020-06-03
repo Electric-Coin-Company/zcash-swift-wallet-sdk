@@ -118,11 +118,33 @@ public class CompactBlockProcessor {
         public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
         public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
         public var walletBirthday: BlockHeight
+        private(set) var saplingActivation: BlockHeight
+        
+        init (
+               cacheDb: URL,
+               dataDb: URL,
+               downloadBatchSize: Int,
+               retries: Int,
+               maxBackoffInterval: TimeInterval,
+               rewindDistance: Int,
+               walletBirthday: BlockHeight,
+               saplingActivation: BlockHeight
+           ) {
+            self.cacheDb = cacheDb
+            self.dataDb = dataDb
+            self.downloadBatchSize = downloadBatchSize
+            self.retries = retries
+            self.maxBackoffInterval = maxBackoffInterval
+            self.rewindDistance = rewindDistance
+            self.walletBirthday = walletBirthday
+            self.saplingActivation = saplingActivation
+        }
         
         public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT){
             self.cacheDb = cacheDb
             self.dataDb = dataDb
             self.walletBirthday = walletBirthday
+            self.saplingActivation = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         }
     }
     /**
@@ -441,7 +463,7 @@ public class CompactBlockProcessor {
                 LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
                 return
             }
-            self?.processBatchFinished(range: range)
+            
         }
         
         scanBlocksOperation.errorHandler = { [weak self] (error) in
@@ -461,12 +483,13 @@ public class CompactBlockProcessor {
             self?.notifyTransactions(txs)
         }
         
-        enhanceOperation.completionHandler  = { (finished, cancelled) in
-            
+        enhanceOperation.completionHandler  = { [weak self] (finished, cancelled) in
+            guard let self = self else { return }
             guard !cancelled else {
                 LoggerProxy.debug("Warning: enhance operation on range \(range) cancelled")
                 return
             }
+            self.processBatchFinished(range: range)
         }
         
         enhanceOperation.errorHandler = { [weak self] (error) in

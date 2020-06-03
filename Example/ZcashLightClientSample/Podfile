@@ -35,12 +35,12 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
-#    if target.name.include? '-Unit-Tests'
-#      Xcodeproj::XCScheme.share_scheme(installer.pods_project.path, target.name)
-#    end
+
     target.build_configurations.each do |config|
 
-      
+      if target.name == 'ZcashLightClientKit-Unit-Tests'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = "13.0"
+      end
       if target.name == 'ZcashLightClientKit'
          config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
       end

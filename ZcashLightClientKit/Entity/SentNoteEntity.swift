@@ -7,7 +7,7 @@
 
 import Foundation
 
-protocol SentNoteEntity: Hashable {
+protocol SentNoteEntity {
     var id: Int { get set }
     var transactionId: Int { get set }
     var outputIndex: Int { get set }
@@ -16,7 +16,7 @@ protocol SentNoteEntity: Hashable {
     var value: Int { get set }
     var memo: Data? { get set }
 }
-
+    
 extension SentNoteEntity {
     static func == (lhs: Self, rhs: Self) -> Bool {
         guard lhs.id == rhs.id,

@@ -80,6 +80,7 @@ struct TxFilter {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// block identifier, height or hash
   var block: BlockID {
     get {return _block ?? BlockID()}
     set {_block = newValue}
@@ -89,8 +90,10 @@ struct TxFilter {
   /// Clears the value of `block`. Subsequent reads from it will return its default value.
   mutating func clearBlock() {self._block = nil}
 
+  /// index within the block
   var index: UInt64 = 0
 
+  /// transaction ID (hash, txid)
   var hash: Data = SwiftProtobuf.Internal.emptyData
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -101,14 +104,16 @@ struct TxFilter {
 }
 
 /// RawTransaction contains the complete transaction data. It also optionally includes 
-/// the block height in which the transaction was included
+/// the block height in which the transaction was included.
 struct RawTransaction {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// exact data returned by zcash 'getrawtransaction'
   var data: Data = SwiftProtobuf.Internal.emptyData
 
+  /// height that the transaction was mined (or -1)
   var height: UInt64 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -166,14 +171,19 @@ struct LightdInfo {
 
   var vendor: String = String()
 
+  /// true
   var taddrSupport: Bool = false
 
+  /// either "main" or "test"
   var chainName: String = String()
 
+  /// depends on mainnet or testnet
   var saplingActivationHeight: UInt64 = 0
 
+  /// protocol identifier, see consensus/upgrades.cpp
   var consensusBranchID: String = String()
 
+  /// latest block on the best chain
   var blockHeight: UInt64 = 0
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -188,8 +198,10 @@ struct TransparentAddressBlockFilter {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
+  /// t-address
   var address: String = String()
 
+  /// start, end heights
   var range: BlockRange {
     get {return _range ?? BlockRange()}
     set {_range = newValue}
@@ -223,6 +235,7 @@ struct Duration {
 
 /// PingResponse is used to indicate concurrency, how many Ping rpcs
 /// are executing upon entry and upon exit (after the delay).
+/// This rpc is used for testing only.
 struct PingResponse {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for

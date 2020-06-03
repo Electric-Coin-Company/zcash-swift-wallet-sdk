@@ -27,7 +27,6 @@ public struct LightWalletEndpoint {
     public var port: Int
     public var secure: Bool
     
-    
 /**
      initializes a LightWalletEndpoint
      - Parameters:
@@ -50,22 +49,19 @@ public struct LightWalletEndpoint {
  */
 public class Initializer {
     
-    private(set) var rustBackend: ZcashRustBackendWelding.Type = ZcashRustBackend.self
-    private var lowerBoundHeight: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+    private(set) var rustBackend: ZcashRustBackendWelding.Type
+    private var lowerBoundHeight: BlockHeight
     private(set) var cacheDbURL: URL
     private(set) var dataDbURL: URL
     private(set) var pendingDbURL: URL
     private(set) var spendParamsURL: URL
     private(set) var outputParamsURL: URL
     private var walletBirthday: WalletBirthday?
-    private(set) var lightWalletService: LightWalletGRPCService
+    private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
     private(set) var downloader: CompactBlockDownloader
     private(set) var processor: CompactBlockProcessor?
-    /**
-     the LightWalletEndpoint that this initializer is connecting to
-     */
-    public private(set) var endpoint: LightWalletEndpoint
+
     /**
      Constructs the Initializer
      - Parameters:
@@ -76,22 +72,59 @@ public class Initializer {
         - spendParamsURL: location of the spend parameters
         - outputParamsURL: location of the output parameters
      */
-    public init (cacheDbURL: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, spendParamsURL: URL, outputParamsURL: URL, loggerProxy: Logger? = nil) {
-        
-        logger = loggerProxy
-        self.cacheDbURL = cacheDbURL
-        self.dataDbURL = dataDbURL
-        self.endpoint = endpoint
-        self.pendingDbURL = pendingDbURL
-        self.spendParamsURL = spendParamsURL
-        self.outputParamsURL = outputParamsURL
-        self.lightWalletService = LightWalletGRPCService(endpoint: endpoint)
-        self.transactionRepository = TransactionRepositoryBuilder.build(dataDbURL: dataDbURL)
+    convenience public init (cacheDbURL: URL,
+                 dataDbURL: URL,
+                 pendingDbURL: URL,
+                 endpoint: LightWalletEndpoint,
+                 spendParamsURL: URL,
+                 outputParamsURL: URL,
+                 loggerProxy: Logger? = nil) {
         
         let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
         try? storage.createTable()
-        self.downloader = CompactBlockDownloader(service: lightWalletService, storage: storage)
         
+        let lwdService = LightWalletGRPCService(endpoint: endpoint)
+        
+        self.init(rustBackend: ZcashRustBackend.self,
+                  lowerBoundHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT,
+                  cacheDbURL: cacheDbURL,
+                  dataDbURL: dataDbURL,
+                  pendingDbURL: pendingDbURL,
+                  service: lwdService,
+                  repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
+                  downloader: CompactBlockDownloader(service: lwdService, storage: storage),
+                  spendParamsURL: spendParamsURL,
+                  outputParamsURL: outputParamsURL,
+                  loggerProxy: loggerProxy
+        )
+    }
+    
+    /**
+        internal for dependency injection purposes
+     */
+    init(rustBackend: ZcashRustBackendWelding.Type,
+         lowerBoundHeight: BlockHeight,
+         cacheDbURL: URL,
+         dataDbURL: URL,
+         pendingDbURL: URL,
+         service: LightWalletService,
+         repository: TransactionRepository,
+         downloader: CompactBlockDownloader,
+         spendParamsURL: URL,
+         outputParamsURL: URL,
+         loggerProxy: Logger? = nil
+    ) {
+        logger = loggerProxy
+        self.rustBackend = rustBackend
+        self.lowerBoundHeight = lowerBoundHeight
+        self.cacheDbURL = cacheDbURL
+        self.dataDbURL = dataDbURL
+        self.pendingDbURL = pendingDbURL
+        self.spendParamsURL = spendParamsURL
+        self.outputParamsURL = outputParamsURL
+        self.lightWalletService = service
+        self.transactionRepository = repository
+        self.downloader = downloader
     }
     
     /**

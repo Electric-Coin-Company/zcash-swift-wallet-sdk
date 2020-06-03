@@ -49,6 +49,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 pending.encodeAttempts = pending.encodeAttempts + 1
                 pending.raw = encodedTransaction.raw
                 pending.rawTransactionId = encodedTransaction.transactionId
+                
                 try self.repository.update(pending)
                 result(.success(pending))
             } catch StorageError.updateFailed {
@@ -170,7 +171,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         var tx = transaction
         tx.submitAttempts = tx.submitAttempts + 1
         let error = sendResponse.errorCode < 0
-        tx.errorCode = Int(sendResponse.errorCode)
+        tx.errorCode = error ? Int(sendResponse.errorCode) : nil
         tx.errorMessage = error ? sendResponse.errorMessage : nil
         try repository.update(tx)
         return tx
