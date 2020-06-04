@@ -648,7 +648,7 @@ pub extern "C" fn zcashlc_create_to_address(
 
         create_to_address(
             &db_data,
-            BranchId::Blossom,
+            BranchId::Heartwood,
             prover,
             (account, &extsk),
             &to,
