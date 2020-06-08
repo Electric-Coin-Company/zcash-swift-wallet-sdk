@@ -10,16 +10,16 @@ import XCTest
 class NullBytesTests: XCTestCase {
     
     func testZaddrNullBytes() throws {
-        let ZaddrWithNullBytes = "zs1vsfpknuh5afwe2wl7v0uwlx2n87n57r905472zym8zq20a8k56mvvu6g0x2g9atgqlkru5w7cxa\0something else that makes the address invalid"
+        let validZaddr = "zs1gqtfu59z20s9t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp" // this is a valid zAddr. if you send ZEC to it, you will be contributing to Human Rights Foundation. see more ways to help at https://paywithz.cash/
+        let ZaddrWithNullBytes = "\(validZaddr)\0something else that makes the address invalid"
         
         XCTAssertFalse(try ZcashRustBackend.isValidShieldedAddress(ZaddrWithNullBytes))
     }
     
     func testTaddrNullBytes() throws {
-        let TaddrWithNullBytes = "t1WLeAK9npDSRg7SAM5DMJSeYk45aCvpcdX\0fasdfasdf"
-        let validTAddr = "t1WLeAK9npDSRg7SAM5DMJSeYk45aCvpcdX" // this is a valid tAddr. if you send ZEC to it, you will be contributing to WikiLeaks foundation. see more ways to help at https://paywithz.cash/
+        let validTAddr = "t1J5pTRzJi7j8Xw9VJTrPxPEkaigr69gKVT" // this is a valid tAddr. if you send ZEC to it, you will be contributing to Human Rights Foundation. see more ways to help at https://paywithz.cash/
+        let TaddrWithNullBytes = "\(validTAddr)\0fasdfasdf"
         XCTAssertFalse(try ZcashRustBackend.isValidTransparentAddress(TaddrWithNullBytes))
-        
     }
     
     func testInitAccountTableNullBytes() throws {
@@ -62,7 +62,7 @@ class NullBytesTests: XCTestCase {
     }
     
     func testderiveExtendedFullViewingKeyWithNullBytes() throws {
-        let wrongSpendingKeys = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mq\0uy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv"
+        let wrongSpendingKeys = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mq\0uy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv" //this spending key corresponds to the "demo app reference seed"
         
         let goodSpendingKeys = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv"
         
@@ -86,9 +86,10 @@ class NullBytesTests: XCTestCase {
     }
     
     func testCheckNullBytes() throws {
-        XCTAssertFalse("zs1vsfpknuh5afwe2wl7v0uwlx2n87n57r905472zym8zq20a8k56mvvu6g0x2g9atgqlkru5w7cxa".containsCStringNullBytesBeforeStringEnding())
+         let validZaddr = "zs1gqtfu59z20s9t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp" // this is a valid zAddr. if you send ZEC to it, you will be contributing to Human Rights Foundation. see more ways to help at https://paywithz.cash/
+        XCTAssertFalse(validZaddr.containsCStringNullBytesBeforeStringEnding())
         
-        XCTAssertTrue("zs1vsfpknu\0h5afwe2wl7v0uwlx2n87n57r905472zym8zq20a8k56mvvu6g0x2g9atgqlkru5w7cxa".containsCStringNullBytesBeforeStringEnding())
+        XCTAssertTrue("zs1gqtfu59z20s\09t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp".containsCStringNullBytesBeforeStringEnding())
         
         XCTAssertTrue("\0".containsCStringNullBytesBeforeStringEnding())
         XCTAssertFalse("".containsCStringNullBytesBeforeStringEnding())
