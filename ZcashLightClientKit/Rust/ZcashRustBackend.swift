@@ -255,6 +255,6 @@ extension String {
      Checks whether this string contains null bytes before it's real ending
      */
     func containsCStringNullBytesBeforeStringEnding() -> Bool {
-        self.utf8CString.firstIndex(of: 0) != (self.utf8.count)
+        self.utf8CString.firstIndex(of: 0) != (self.utf8CString.count - 1)
     }
 }
