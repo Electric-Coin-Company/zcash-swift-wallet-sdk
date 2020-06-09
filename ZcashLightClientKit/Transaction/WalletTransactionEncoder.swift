@@ -75,8 +75,23 @@ class WalletTransactionEncoder: TransactionEncoder {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
+        
+        let scannedHeight = try repository.lastScannedHeight()
+        guard let latestHeight = Int32(exactly: scannedHeight) else {
+            throw RustWeldingError.genericError(message: "could not convert \(scannedHeight)")
+        }
+        
+        let consensusBranchId = try rustBackend.consensusBranchIdFor(height: latestHeight)
                 
-        let txId = rustBackend.createToAddress(dbData: self.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParamsPath: self.spendParamsURL.path, outputParamsPath: self.outputParamsURL.path)
+        let txId = rustBackend.createToAddress(dbData: self.dataDbURL,
+                                               account: Int32(accountIndex),
+                                               extsk: spendingKey,
+                                               consensusBranchId: consensusBranchId,
+                                               to: address,
+                                               value: Int64(zatoshi),
+                                               memo: memo,
+                                               spendParamsPath: self.spendParamsURL.path,
+                                               outputParamsPath: self.outputParamsURL.path)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
@@ -91,5 +106,9 @@ class WalletTransactionEncoder: TransactionEncoder {
         let readableOutput = FileManager.default.isReadableFile(atPath: output.path)
         
         return readableSpend && readableOutput // Todo: change this to something that makes sense
+    }
+    
+    func getConsensusBranchId() throws -> Int32 {
+        -1
     }
 }

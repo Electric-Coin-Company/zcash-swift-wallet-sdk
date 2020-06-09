@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+int32_t zcashlc_branch_id_for_height(int32_t height);
+
 /**
  * Clears the record of the last error message.
  */
@@ -20,6 +22,7 @@ int64_t zcashlc_create_to_address(const uint8_t *db_data,
                                   uintptr_t db_data_len,
                                   int32_t account,
                                   const char *extsk,
+                                  int32_t consensus_branch_id,
                                   const char *to,
                                   int64_t value,
                                   const char *memo,

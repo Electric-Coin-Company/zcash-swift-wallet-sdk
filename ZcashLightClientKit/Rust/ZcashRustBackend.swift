@@ -153,11 +153,22 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count)) != 0
     }
 
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32,to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
         let dbData = dbData.osStr()
         let memoBytes = memo ?? ""
         
-        return zcashlc_create_to_address(dbData.0, dbData.1, account, extsk, to, value, memoBytes, spendParamsPath, UInt(spendParamsPath.lengthOfBytes(using: .utf8)), outputParamsPath, UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
+        return zcashlc_create_to_address(dbData.0,
+                                         dbData.1,
+                                         account,
+                                         extsk,
+                                         consensusBranchId,
+                                         to,
+                                         value,
+                                         memoBytes,
+                                         spendParamsPath,
+                                         UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
+                                         outputParamsPath,
+                                         UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
     }
     
     static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
@@ -207,6 +218,16 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         zcashlc_vec_string_free(extsksCStr, UInt(accounts))
         return extsks
     }
+    
+    static func consensusBranchIdFor(height: Int32) throws -> Int32 {
+        let branchId = zcashlc_branch_id_for_height(height)
+        
+        guard branchId != -1 else {
+            throw RustWeldingError.noConsensusBranchId(height: height)
+        }
+        
+        return branchId
+    }
 }
 
 private extension ZcashRustBackend {
@@ -217,6 +238,7 @@ private extension ZcashRustBackend {
         }
         return RustWeldingError.dataDbInitFailed(message: error.localizedDescription)
     }
+    
 }
 
 private extension URL {
