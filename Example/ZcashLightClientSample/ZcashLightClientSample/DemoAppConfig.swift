@@ -8,7 +8,7 @@
 
 import Foundation
 import ZcashLightClientKit
-import MnemonicKit
+import MnemonicSwift
 struct DemoAppConfig {
     static var host = ZcashSDK.isMainnet ? "lightwalletd.z.cash" : "lightwalletd.testnet.z.cash"
     static var port: Int = 9067

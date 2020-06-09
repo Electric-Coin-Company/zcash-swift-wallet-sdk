@@ -13,6 +13,7 @@ public enum RustWeldingError: Error {
     case dataDbInitFailed(message: String)
     case dataDbNotEmpty
     case saplingSpendParametersNotFound
+    case malformedStringInput
     case noConsensusBranchId(height: Int32)
 }
 

@@ -44,7 +44,6 @@ class BlockSQLDAO: BlockDao {
                         .first
     }
     
-    
     var dbProvider: ConnectionProvider
     var table: Table
     var height = Expression<Int>("height")

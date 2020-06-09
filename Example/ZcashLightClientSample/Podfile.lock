@@ -20,7 +20,7 @@ PODS:
   - KRProgressHUD (3.4.4):
     - KRActivityIndicatorView (= 3.0.4)
   - Logging (1.2.0)
-  - MnemonicKit (2.0.0)
+  - MnemonicSwift (1.0.0)
   - NotificationBubbles (0.1.1)
   - PaginatedTableView (1.0.1)
   - SQLite.swift (0.12.2):
@@ -69,12 +69,13 @@ PODS:
     - SQLite.swift (~> 0.12.2)
   - ZcashLightClientKit/Tests (0.4.0):
     - gRPC-Swift (~> 1.0.0-alpha.11)
+    - MnemonicSwift
     - SQLite.swift (~> 0.12.2)
 
 DEPENDENCIES:
   - gRPC-Swift (~> 1.0.0-alpha.11)
   - KRProgressHUD
-  - "MnemonicKit (from `git@github.com:pacu/MnemonicKit.git`, branch `master`)"
+  - MnemonicSwift
   - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
@@ -94,6 +95,7 @@ SPEC REPOS:
     - KRActivityIndicatorView
     - KRProgressHUD
     - Logging
+    - MnemonicSwift
     - NotificationBubbles
     - PaginatedTableView
     - SQLite.swift
@@ -109,16 +111,8 @@ SPEC REPOS:
     - SwiftProtobuf
 
 EXTERNAL SOURCES:
-  MnemonicKit:
-    :branch: master
-    :git: "git@github.com:pacu/MnemonicKit.git"
   ZcashLightClientKit:
     :path: "../../"
-
-CHECKOUT OPTIONS:
-  MnemonicKit:
-    :commit: cc1ea43583408c54876123e53e049e1fc243a753
-    :git: "git@github.com:pacu/MnemonicKit.git"
 
 SPEC CHECKSUMS:
   CGRPCZlib: e595387378d0601be796e858dd30c505458c4b1f
@@ -133,7 +127,7 @@ SPEC CHECKSUMS:
   KRActivityIndicatorView: 549db10b9578d58bac73db063d8b544e8970f7f2
   KRProgressHUD: c3b9a48a0ee4824ea13212ac3f1efa50dca021e3
   Logging: 7838d379d234d7e5ae1265fa02804a9084caf04c
-  MnemonicKit: 244ab34c98a8e69a6c96b338897c6308c1aba94d
+  MnemonicSwift: d743ec3dcc1cdce706a1876dba0b6250ad1ef90d
   NotificationBubbles: 91ee10deee54f35b5d49a161e1cb3d788ab5d011
   PaginatedTableView: 294d9831d5ddf5c0dcfbb4a281d4fcfb8d12f55a
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
@@ -147,8 +141,8 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 51580e51240d1a4d51efb2d317e92cf243181042
   SwiftNIOTransportServices: 26d40c589fc8fe667af51b06ef0aa49fbc9ae7f2
   SwiftProtobuf: 2cbd9409689b7df170d82a92a33443c8e3e14a70
-  ZcashLightClientKit: 47e707be6657391d5d4fd7db1544b0d98ce45e42
+  ZcashLightClientKit: 3a123d6e947680a66b466d884ca8cf5b23502a73
 
-PODFILE CHECKSUM: ca2613840562c49950aaf17d35c1ebfe831c6dec
+PODFILE CHECKSUM: e0da7003580e48622285c4dd6b8c881ca170f6bf
 
-COCOAPODS: 1.9.1
+COCOAPODS: 1.9.3

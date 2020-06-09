@@ -189,19 +189,40 @@ class SendViewController: UIViewController {
     
     // MARK: synchronizer notifications
     @objc func synchronizerUpdated(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
     }
     
     @objc func synchronizerStarted(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
     }
     
     @objc func synchronizerStopped(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
+        
     }
     
     @objc func synchronizerSynced(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
     }
 }
 

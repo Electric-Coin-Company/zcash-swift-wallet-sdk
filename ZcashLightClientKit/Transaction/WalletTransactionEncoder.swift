@@ -11,12 +11,11 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     var rustBackend: ZcashRustBackendWelding.Type
     var repository: TransactionRepository
-//    var initializer: Initializer
     var queue: DispatchQueue
     private var outputParamsURL: URL
     private var spendParamsURL: URL
     private var dataDbURL: URL
-
+    
     init(rust: ZcashRustBackendWelding.Type,
          dataDb: URL,
          repository: TransactionRepository,
@@ -108,7 +107,16 @@ class WalletTransactionEncoder: TransactionEncoder {
         return readableSpend && readableOutput // Todo: change this to something that makes sense
     }
     
-    func getConsensusBranchId() throws -> Int32 {
-        -1
+    /**
+     Fetch the Transaction Entity from the encoded representation
+     - Parameter encodedTransaction: The encoded transaction to expand
+     - Returns: a TransactionEntity based on the given Encoded Transaction
+     - Throws: a TransactionEncoderError
+     */
+    func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity {
+        guard let t = try? repository.findBy(rawId: encodedTransaction.transactionId) else {
+            throw TransactionEncoderError.couldNotExpand(txId: encodedTransaction.transactionId)
+        }
+        return t
     }
 }

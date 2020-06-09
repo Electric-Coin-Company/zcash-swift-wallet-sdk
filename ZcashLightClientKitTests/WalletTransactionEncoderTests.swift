@@ -74,47 +74,15 @@ class WalletTransactionEncoderTests: XCTestCase {
         
     }
     
-    
-    func testOperation() {
-        
-        let expect = XCTestExpectation(description: self.description)
-        let operation = SpendOperation(rust: rustBackend, spendingKey: self.spendingKey, zatoshi: self.zpend, to: self.recipientAddress, memo: nil, from: 0, dataDbURL: dataDbHandle.readWriteDb, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
-        operation.completionBlock = {
-            expect.fulfill()
-            XCTAssertTrue(operation.txId > 0)
-        }
-        queue.addOperation(operation)
-        
-        wait(for: [expect], timeout: 500)
-        
-    }
-    
-    func testStandaloneOperation() {
-        
-        let operation = SpendOperation(rust: rustBackend, spendingKey: self.spendingKey, zatoshi: self.zpend, to: self.recipientAddress, memo: nil, from: 0, dataDbURL: dataDbHandle.readWriteDb, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
-        operation.main()
-        XCTAssertTrue(operation.txId > 0)
-    }
-    
-    func testSpendThread() {
-        let operation = CreateToAddressThread(rust: rustBackend, spendingKey: self.spendingKey, zatoshi: self.zpend, to: self.recipientAddress, memo: nil, from: 0, dataDbURL: dataDbHandle.readWriteDb, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
-        
-        operation.start()
-        while (operation.isExecuting) {
-            sleep(1)
-        }
-        
-        
-        XCTAssertTrue(operation.txId > 0)
-    }
-    
-    func testSpendGlobalQueue() {
+    func testSpendGlobalQueue() throws {
         var txId: Int64 = -1
         let expectation = XCTestExpectation(description: self.description)
+        let branchId = try rustBackend.consensusBranchIdFor(height: Int32(exactly: try repository.lastScannedHeight())!)
         DispatchQueue.global().async {
+            
             txId = self.rustBackend.createToAddress(dbData: self.dataDbHandle.readWriteDb,
                                                 account: 0,
-                                                extsk: self.spendingKey,
+                                                extsk: self.spendingKey, consensusBranchId: branchId,
                                                 to: self.recipientAddress,
                                                 value: Int64(self.zpend),
                                                 memo: nil,
@@ -126,90 +94,4 @@ class WalletTransactionEncoderTests: XCTestCase {
         XCTAssertTrue(txId >= 0)
     }
     
-}
-
-
-class SpendOperation: Operation {
-    override var isConcurrent: Bool {
-        false
-    }
-    override var isAsynchronous: Bool {
-        false
-    }
-    
-    private var rustBackend: ZcashRustBackendWelding.Type
-    private var spendingKey: String
-    private var zatoshi: Int
-    private var recipient: String
-    private var memo: String?
-    private var fromAccount: Int
-    private var spendURL: URL
-    private var outputURL: URL
-    private var dataDbURL: URL
-    
-    var txId: Int64 = -1
-    init(rust: ZcashRustBackendWelding.Type, spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, dataDbURL: URL, spendParamsURL: URL, outputParamsURL: URL) {
-        self.rustBackend = rust
-        self.spendingKey = spendingKey
-        self.zatoshi = zatoshi
-        self.recipient = to
-        self.memo = memo
-        self.fromAccount = accountIndex
-        self.spendURL = spendParamsURL
-        self.outputURL = outputParamsURL
-        self.dataDbURL = dataDbURL
-    }
-    
-    override func main() {
-        
-        txId = rustBackend.createToAddress(
-            dbData: dataDbURL,
-            account: Int32(fromAccount),
-            extsk: spendingKey,
-            to: recipient,
-            value: Int64(zatoshi),
-            memo: memo,
-            spendParamsPath: spendURL.path,
-            outputParamsPath: outputURL.path)
-        
-    }
-    
-}
-
-
-class CreateToAddressThread: Thread {
-    
-    private var rustBackend: ZcashRustBackendWelding.Type
-    private var spendingKey: String
-    private var zatoshi: Int
-    private var recipient: String
-    private var memo: String?
-    private var fromAccount: Int
-    private var spendURL: URL
-    private var outputURL: URL
-    private var dataDbURL: URL
-    override var isExecuting: Bool {
-        _working
-    }
-    
-    private var _working: Bool = true
-    var txId: Int64 = -1
-    init(rust: ZcashRustBackendWelding.Type, spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, dataDbURL: URL, spendParamsURL: URL, outputParamsURL: URL) {
-        self.rustBackend = rust
-        self.spendingKey = spendingKey
-        self.zatoshi = zatoshi
-        self.recipient = to
-        self.memo = memo
-        self.fromAccount = accountIndex
-        self.spendURL = spendParamsURL
-        self.outputURL = outputParamsURL
-        self.dataDbURL = dataDbURL
-    }
-    
-    override func main() {
-        self._working = true
-        
-        txId = rustBackend.createToAddress(dbData: dataDbURL, account: Int32(fromAccount), extsk: spendingKey, to: recipient, value: Int64(zatoshi), memo: memo, spendParamsPath: spendURL.path, outputParamsPath: outputURL.path)
-        self._working = false
-    }
 }

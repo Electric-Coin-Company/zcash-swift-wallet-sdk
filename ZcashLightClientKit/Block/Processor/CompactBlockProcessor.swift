@@ -458,12 +458,11 @@ public class CompactBlockProcessor {
             self?.state = .scanning
         }
         
-        scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
+        scanBlocksOperation.completionHandler = { (finished, cancelled) in
             guard !cancelled else {
                 LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
                 return
             }
-            
         }
         
         scanBlocksOperation.errorHandler = { [weak self] (error) in

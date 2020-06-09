@@ -78,6 +78,11 @@ extension LightWalletServiceMockResponse {
 
 class MockRustBackend: ZcashRustBackendWelding {
     
+    static func consensusBranchIdFor(height: Int32) throws -> Int32 {
+        -1
+    }
+    
+    
     static var mockDataDb = false
     static var mockAcounts = false
     static var mockError: RustWeldingError?
@@ -198,8 +203,8 @@ class MockRustBackend: ZcashRustBackendWelding {
         return rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData)
     }
     
-     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
-        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
+     static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, consensusBranchId: consensusBranchId, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
     }
     
     static func shouldSucceed(successRate: Float) -> Bool {

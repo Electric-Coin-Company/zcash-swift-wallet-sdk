@@ -14,6 +14,7 @@ public enum TransactionEncoderError: Error {
     case NotEncoded(transactionId: Int)
     case missingParams
     case spendingKeyWrongNetwork
+    case couldNotExpand(txId: Data)
 }
 
 protocol TransactionEncoder {
@@ -51,4 +52,11 @@ protocol TransactionEncoder {
     */
     func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
     
+    /**
+        Fetch the Transaction Entity from the encoded representation
+     - Parameter encodedTransaction: The encoded transaction to expand
+     - Returns: a TransactionEntity based on the given Encoded Transaction
+     - Throws: a TransactionEncoderError
+     */
+    func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity
 }

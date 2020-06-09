@@ -174,11 +174,11 @@ class BalanceTests: XCTestCase {
         }
         //  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
         
-            self.verifiedBalanceValidation(previousBalance: presendBalance,
-                                           spentNoteValue:  Int64(sentNote.value),
-                                           changeValue: Int64(receivedNote.value),
-                                           sentAmount: Int64(self.sendAmount),
-                                           currentVerifiedBalance: self.coordinator.synchronizer.initializer.getVerifiedBalance())
+        self.verifiedBalanceValidation(previousBalance: presendBalance,
+                                       spentNoteValue:  Int64(sentNote.value),
+                                       changeValue: Int64(receivedNote.value),
+                                       sentAmount: Int64(self.sendAmount),
+                                       currentVerifiedBalance: self.coordinator.synchronizer.initializer.getVerifiedBalance())
         
     }
     
@@ -200,7 +200,7 @@ class BalanceTests: XCTestCase {
      */
     func testVerifyTotalBalanceDuringSend() throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
-               
+        
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         
         sleep(2)
@@ -222,9 +222,9 @@ class BalanceTests: XCTestCase {
         
         var error: Error?
         coordinator.synchronizer.sendToAddress(spendingKey: spendingKey,
-                                   zatoshi: Int64(sendAmount),
-                                   toAddress: testRecipientAddress,
-                                   memo: "test send \(self.description) \(Date().description)",
+                                               zatoshi: Int64(sendAmount),
+                                               toAddress: testRecipientAddress,
+                                               memo: "test send \(self.description) \(Date().description)",
         from: 0) { result in
             switch result {
             case .failure(let e):
@@ -255,7 +255,7 @@ class BalanceTests: XCTestCase {
         XCTAssertEqual(Int64(transaction.value), self.sendAmount)
         
         XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), presendBalance - Int64(self.sendAmount))
-
+        
         XCTAssertNil(transaction.errorCode)
         
         let latestHeight = try coordinator.latestHeight()
@@ -356,7 +356,7 @@ class BalanceTests: XCTestCase {
         
         wait(for: [syncedExpectation], timeout: 6)
         
-     
+        
         
         let previousVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let previousTotalBalance = coordinator.synchronizer.initializer.getBalance()
@@ -460,17 +460,17 @@ class BalanceTests: XCTestCase {
              */
             
             self.verifiedBalanceValidation(
-                    previousBalance: previousVerifiedBalance,
-                    spentNoteValue: Int64(sentNote.value),
-                    changeValue: Int64(receivedNote.value),
-                    sentAmount: Int64(self.sendAmount),
-                    currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance())
+                previousBalance: previousVerifiedBalance,
+                spentNoteValue: Int64(sentNote.value),
+                changeValue: Int64(receivedNote.value),
+                sentAmount: Int64(self.sendAmount),
+                currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance())
             
             
             
             self.totalBalanceValidation(totalBalance: synchronizer.initializer.getBalance(),
-                                            previousTotalbalance: previousTotalBalance,
-                                            sentAmount: Int64(self.sendAmount))
+                                        previousTotalbalance: previousTotalBalance,
+                                        sentAmount: Int64(self.sendAmount))
             
             syncToMinedheightExpectation.fulfill()
         }, error: self.handleError)
@@ -544,41 +544,44 @@ class BalanceTests: XCTestCase {
         let expirationSyncExpectation = XCTestExpectation(description: "expiration sync expectation")
         let expiryHeight = pendingTransaction.expiryHeight
         let blockCount = abs(self.defaultLatestHeight - expiryHeight)
-        try coordinator.stageBlockCreate(height: self.defaultLatestHeight  + 1, count: blockCount)
-        try coordinator.applyStaged(blockheight: expiryHeight)
+        try coordinator.stageBlockCreate(height: self.defaultLatestHeight + 1, count: blockCount)
+        try coordinator.applyStaged(blockheight: expiryHeight + 1)
         
         sleep(2)
         try coordinator.sync(completion: { (synchronizer) in
-            
-            /*
-             Verified Balance is equal to verified balance previously shown before sending the expired transaction
-             */
-            XCTAssertEqual(synchronizer.initializer.getVerifiedBalance(), previousVerifiedBalance)
-            
-            /*
-             Total Balance is equal to total balance previously shown before sending the expired transaction
-             */
-            XCTAssertEqual(synchronizer.initializer.getBalance(), previousTotalBalance)
-            
-            let pendingRepo = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: synchronizer.initializer.pendingDbURL.absoluteString))
-            
-            guard let expiredPending = try? pendingRepo.find(by: pendingTransaction.id!),
-                let id = expiredPending.id,
-                let sentExpired = try? synchronizer.allSentTransactions().first(where: { $0.id ==  id}) else {
-                    XCTFail("expired transaction not found")
-                    return
-            }
-            /*
-             There’s a pending transaction that has expired
-             */
-            XCTAssertEqual(expiredPending.minedHeight, -1)
-            XCTAssertEqual(sentExpired.expiryHeight,expiryHeight)
-            XCTAssertEqual(Int64(sentExpired.value), self.sendAmount)
-            
             expirationSyncExpectation.fulfill()
         }, error: self.handleError)
         
-        wait(for: [expirationSyncExpectation], timeout: 10)
+        wait(for: [expirationSyncExpectation], timeout: 5)
+        
+        /*
+         Verified Balance is equal to verified balance previously shown before sending the expired transaction
+         */
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), previousVerifiedBalance)
+        
+        /*
+         Total Balance is equal to total balance previously shown before sending the expired transaction
+         */
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), previousTotalBalance)
+        
+        let pendingRepo = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: coordinator.synchronizer.initializer.pendingDbURL.absoluteString))
+        
+        guard let expiredPending = try? pendingRepo.find(by: pendingTransaction.id!),
+            let id = expiredPending.id else {
+                XCTFail("pending transaction not found")
+                return
+        }
+        
+        /*
+         there no sent transaction displayed
+         */
+        
+        XCTAssertNil( try coordinator.synchronizer.allSentTransactions().first(where: { $0.id ==  id}))
+        /*
+         There’s a pending transaction that has expired
+         */
+        XCTAssertEqual(expiredPending.minedHeight, -1)
+
     }
     
     func handleError(_ error: Error?) {

@@ -9,11 +9,11 @@ target 'ZcashLightClientSample' do
   pod 'gRPC-Swift', '~> 1.0.0-alpha.11'
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'
-  pod 'MnemonicKit', :git => 'git@github.com:pacu/MnemonicKit.git', :branch => 'master'
+  pod 'MnemonicSwift'
   target 'ZcashLightClientSampleTests' do
     inherit! :search_paths
     # Pods for testing
-    pod 'MnemonicKit', :git => 'git@github.com:pacu/MnemonicKit.git', :branch => 'master'
+    pod 'MnemonicSwift'
   end
 
   target 'ZcashLightClientSampleUITests' do
