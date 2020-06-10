@@ -14,6 +14,7 @@ public enum RustWeldingError: Error {
     case dataDbNotEmpty
     case saplingSpendParametersNotFound
     case malformedStringInput
+    case noConsensusBranchId(height: Int32)
 }
 
 public struct ZcashRustBackendWeldingConstants {
@@ -165,13 +166,14 @@ public protocol ZcashRustBackendWelding {
         - dbData: URL for the Data DB
         - account: the account index that will originate the transaction
         - extsk: extended spending key string
+        - consensusBranchId: the current consensus ID
         - to: recipient address
         - value: transaction amount in Zatoshi
         - memo: the memo string for this transaction
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
     
     /**
      Derives a full viewing key from a seed
@@ -198,4 +200,10 @@ public protocol ZcashRustBackendWelding {
     - Throws: RustBackendError if fatal error occurs
     */
     static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]?
+    
+    /**
+     Gets the consensus branch id for the given height
+     - Parameter height: the height you what to know the branch id for
+     */
+    static func consensusBranchIdFor(height: Int32) throws -> Int32
 }

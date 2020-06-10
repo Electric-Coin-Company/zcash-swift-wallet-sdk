@@ -7,7 +7,7 @@
 
 import Foundation
 @testable import ZcashLightClientKit
-import MnemonicKit
+import MnemonicSwift
 
 /**
  This is the TestCoordinator

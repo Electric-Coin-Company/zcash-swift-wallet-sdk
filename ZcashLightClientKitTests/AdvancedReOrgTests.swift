@@ -275,12 +275,10 @@ class AdvancedReOrgTests: XCTestCase {
         sleep(2)
         let preTxExpectation = XCTestExpectation(description: "pre receive")
         
-        var s: SDKSynchronizer?
         /*
          3. sync up to received_Tx_height
          */
         try coordinator.sync(completion: { (synchronizer) in
-            s = synchronizer
             initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
             initialTotalBalance = synchronizer.initializer.getBalance()
             preTxExpectation.fulfill()

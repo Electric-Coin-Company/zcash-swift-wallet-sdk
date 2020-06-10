@@ -33,6 +33,11 @@ use zcash_primitives::{
     zip32::ExtendedFullViewingKey,
 };
 
+#[cfg(feature = "mainnet")]
+use zcash_primitives::consensus::MainNetwork as Network;
+#[cfg(not(feature = "mainnet"))]
+use zcash_primitives::consensus::TestNetwork as Network;
+
 use zcash_proofs::prover::LocalTxProver;
 
 #[cfg(feature = "mainnet")]
@@ -43,6 +48,8 @@ use zcash_client_backend::constants::mainnet::{
 use zcash_client_backend::constants::testnet::{
     COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY,
 };
+
+use std::convert::TryFrom;
 
 fn unwrap_exc_or<T>(exc: Result<T, ()>, def: T) -> T {
     match exc {
@@ -593,6 +600,7 @@ pub extern "C" fn zcashlc_create_to_address(
     db_data_len: usize,
     account: i32,
     extsk: *const c_char,
+    consensus_branch_id: i32,
     to: *const c_char,
     value: i64,
     memo: *const c_char,
@@ -602,6 +610,14 @@ pub extern "C" fn zcashlc_create_to_address(
     output_params_len: usize,
 ) -> i64 {
     let res = catch_panic(|| {
+
+        let branch_id = match BranchId::try_from(consensus_branch_id as u32) {
+            Ok(extsk) => extsk,
+            Err(e) => {
+                return Err(format_err!("Invalid consensus branch id: {}", e));
+            }
+        };
+
         let db_data = Path::new(OsStr::from_bytes(unsafe {
             slice::from_raw_parts(db_data, db_data_len)
         }));
@@ -648,7 +664,7 @@ pub extern "C" fn zcashlc_create_to_address(
 
         create_to_address(
             &db_data,
-            BranchId::Blossom,
+            branch_id,
             prover,
             (account, &extsk),
             &to,
@@ -657,6 +673,18 @@ pub extern "C" fn zcashlc_create_to_address(
         )
         .map_err(|e| format_err!("Error while sending funds: {}", e))
     });
+    unwrap_exc_or(res, -1)
+}
+
+#[no_mangle]
+pub extern "C" fn zcashlc_branch_id_for_height(
+    height: i32,
+) -> i32 {
+    let res = catch_panic(|| {
+        let branch: BranchId = BranchId::for_height::<Network>(height as u32);
+        let branch_id:u32 = u32::from(branch);
+        Ok(branch_id as i32)
+    }); 
     unwrap_exc_or(res, -1)
 }
 
