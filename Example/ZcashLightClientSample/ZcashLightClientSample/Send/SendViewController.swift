@@ -109,7 +109,10 @@ class SendViewController: UIViewController {
     }
     
     func isRecipientValid() -> Bool {
-        (addressTextField.text ?? "").starts(with: "z") // todo: improve this validation
+        guard let addr = self.addressTextField.text else {
+            return false
+        }
+        return wallet.isValidShieldedAddress(addr) || wallet.isValidTransparentAddress(addr)
     }
     
     @IBAction func maxFundsValueChanged(_ sender: Any) {
