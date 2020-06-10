@@ -7,7 +7,6 @@
 
 import Foundation
 @testable import ZcashLightClientKit
-import MnemonicSwift
 
 /**
  This is the TestCoordinator
@@ -69,7 +68,7 @@ class TestCoordinator {
                                 downloader: downloader,
                                 spendParamsURL: try __spendParamsURL(),
                                 outputParamsURL: try __outputParamsURL(),
-                                seedBytes: Mnemonic.deterministicSeedBytes(from: self.seed)!,
+                                seedBytes: TestSeed().seed(),
                                 walletBirthday: WalletBirthday.birthday(with: birthday),
                                 loggerProxy: SampleLogger(logLevel: .debug))
         
