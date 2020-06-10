@@ -256,4 +256,4 @@ Examples can be found in the [Demo App](/Example/ZcashLightClientSample).
 
 # License
 
-Apache License Version 2.0
+MIT
