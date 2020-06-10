@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = 'ZcashLightClientKit'
-    s.version          = '0.4.0'
+    s.version          = '0.5.0'
     s.summary          = 'Zcash Light Client wallet SDK for iOS'
   
     s.description      = <<-DESC
@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
                          DESC
   
     s.homepage         = 'https://github.com/zcash/ZcashLightClientKit'
-    s.license          = { :type => 'Apache 2.0', :file => 'LICENSE' }
+    s.license          = { :type => 'MIT', :file => 'LICENSE' }
     s.author           = { 
         'Francisco Gindre' => 'francisco.gindre@gmail.com',
         'Jack Grigg' => 'str4d@electriccoin.co'
