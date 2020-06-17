@@ -11,12 +11,14 @@ target 'ZcashLightClientSample' do
   pod 'NotificationBubbles'
   pod 'MnemonicSwift'
   target 'ZcashLightClientSampleTests' do
+    use_frameworks!
     inherit! :search_paths
     # Pods for testing
     pod 'MnemonicSwift'
   end
 
   target 'ZcashLightClientSampleUITests' do
+    use_frameworks!
     inherit! :search_paths
     # Pods for testing
   end
