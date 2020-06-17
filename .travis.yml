@@ -18,4 +18,5 @@ install:
   - curl https://z.cash/downloads/sapling-output.params > ${TRAVIS_BUILD_DIR}/ZcashLightClientKitTests/sapling-output.params
   - curl https://z.cash/downloads/sapling-output.params > ${TRAVIS_BUILD_DIR}/ZcashLightClientKitTests/sapling-spend.params
 script:
+  - swiftlint
   - travis_wait 60 xcodebuild -quiet -UseModernBuildSystem=NO -workspace ./Example/ZcashLightClientSample/ZcashLightClientSample.xcworkspace -scheme ZcashLightClientSample -destination platform\=iOS\ Simulator,OS\=13.1,name\=iPhone\ 8 build
