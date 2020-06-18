@@ -1,7 +1,9 @@
 # Zcash iOS Framework
 
-A Zcash Lightweight Client SDK for iOS
+[![Build Status](https://travis-ci.org/zcash/ZcashLightClientKit.svg?branch=master)](https://travis-ci.org/zcash/ZcashLightClientKit)
 
+
+A Zcash Lightweight Client SDK for iOS
 This is an alpha build and is currently under active development. Please be advised of the following:
 
 - This code currently is not audited by an external security auditor, use it at your own risk
