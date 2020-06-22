@@ -89,6 +89,15 @@ int64_t zcashlc_get_verified_balance(const uint8_t *db_data,
                                      int32_t account);
 
 /**
+ * Imports a viewing key. This key will be incorporated into scans such that any
+ * transactions that correspond to it will be decrypted and grouped by account.
+ * Returns the accountId of the newly imported key.
+ */
+int32_t zcashlc_import_viewing_key(const uint8_t *db_data,
+                                   uintptr_t db_data_len,
+                                   const char *extfvk);
+
+/**
  * Initialises the data database with the given number of accounts using the given seed.
  * Returns the ExtendedSpendingKeys for the accounts. The caller should store these
  * securely for use while spending.

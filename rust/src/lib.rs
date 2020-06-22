@@ -8,8 +8,8 @@ use std::slice;
 use std::str::FromStr;
 use zcash_client_backend::{
     encoding::{
-        decode_extended_spending_key, encode_extended_full_viewing_key,
-        encode_extended_spending_key,
+        decode_extended_full_viewing_key, decode_extended_spending_key,
+        encode_extended_full_viewing_key, encode_extended_spending_key,
     },
     keys::spending_key,
 };
@@ -17,7 +17,7 @@ use zcash_client_sqlite::{
     address::RecipientAddress,
     chain::{rewind_to_height, validate_combined_chain},
     error::ErrorKind,
-    init::{init_accounts_table, init_blocks_table, init_data_database},
+    init::{init_accounts_table, init_blocks_table, init_data_database, import_viewing_key},
     query::{
         get_address, get_balance, get_received_memo_as_utf8, get_sent_memo_as_utf8,
         get_verified_balance,
@@ -99,6 +99,46 @@ pub extern "C" fn zcashlc_init_data_database(db_data: *const u8, db_data_len: us
             .map_err(|e| format_err!("Error while initializing data DB: {}", e))
     });
     unwrap_exc_or_null(res)
+}
+
+/// Imports a viewing key. This key will be incorporated into scans such that any
+/// transactions that correspond to it will be decrypted and grouped by account.
+/// 
+/// Returns the accountId of the newly imported key.
+///
+#[no_mangle]
+pub extern "C" fn zcashlc_import_viewing_key(
+    db_data: *const u8,
+    db_data_len: usize,
+    extfvk: *const c_char,
+) -> i32 {
+    let res = catch_panic(|| {
+        let db_data = Path::new(OsStr::from_bytes(unsafe {
+            slice::from_raw_parts(db_data, db_data_len)
+        }));
+
+        let extfvk_str = unsafe { CStr::from_ptr(extfvk).to_str()? };
+        let extfvk = match decode_extended_full_viewing_key(
+            HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY,
+            &extfvk_str,
+        ) {
+            Ok(Some(extfvk)) => extfvk,
+            Ok(None) => {
+                return Err(format_err!("Failed to import viewing key. Deriving viewing key from string returned no results. Encoding was valid but type was incorrect. Failed with: {}", extfvk_str));
+            }
+            Err(e) => {
+                return Err(format_err!(
+                    "Error while deriving viewing key from string input: {}",
+                    e
+                ));
+            }
+        };
+        match import_viewing_key(&db_data, &extfvk) {
+            Ok(account_id) => Ok(account_id as i32),
+            Err(e) => Err(format_err!("Error while importing viewing key: {}", e)),
+        }
+    });
+    unwrap_exc_or_null(res)    
 }
 
 /// Initialises the data database with the given number of accounts using the given seed.
