@@ -1,6 +1,6 @@
 [package]
 name = "libzcashlc"
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Jack Grigg <jack@z.cash>",
             "Francisco Gindre <francisco@z.cash>",
 ]
@@ -14,27 +14,27 @@ hex = "0.3"
 
 [dependencies.ff]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "c72d374e28bea0c249a898f2c470ed3d58773d0c"
+branch = "zcash_client_sqlite"
 
 [dependencies.pairing]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "c72d374e28bea0c249a898f2c470ed3d58773d0c"
+branch = "zcash_client_sqlite"
 
 [dependencies.zcash_client_backend]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "c72d374e28bea0c249a898f2c470ed3d58773d0c"
+branch = "zcash_client_sqlite"
 
 [dependencies.zcash_client_sqlite]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "c72d374e28bea0c249a898f2c470ed3d58773d0c"
+branch = "zcash_client_sqlite"
 
 [dependencies.zcash_primitives]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "c72d374e28bea0c249a898f2c470ed3d58773d0c"
+branch = "zcash_client_sqlite"
 
 [dependencies.zcash_proofs]
 git = "https://github.com/str4d/librustzcash.git"
-rev = "c72d374e28bea0c249a898f2c470ed3d58773d0c"
+branch = "zcash_client_sqlite"
 default-features = false
 features = ["local-prover"]
 
