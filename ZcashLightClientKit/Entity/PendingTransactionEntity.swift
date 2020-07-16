@@ -137,11 +137,23 @@ public extension PendingTransactionEntity {
     
     func isPending(currentHeight: Int = -1) -> Bool {
         // not mined and not expired and successfully created
-        !isSubmitSuccess && minedHeight == -1 && (expiryHeight == -1 || expiryHeight > currentHeight) && raw != nil
+        isSubmitSuccess && !isConfirmed(currentHeight: currentHeight) && (expiryHeight == -1 || expiryHeight > currentHeight) && raw != nil
     }
         
     var isSubmitSuccess: Bool {
-        submitAttempts > 0 && (errorCode != nil && (errorCode ?? -1) >= 0) && errorMessage == nil
+        submitAttempts > 0 && (errorCode == nil || (errorCode ?? 0) >= 0) && errorMessage == nil
+    }
+    
+    func isConfirmed(currentHeight: Int = -1 ) -> Bool {
+        guard minedHeight > 0 else {
+            return false
+        }
+        
+        guard currentHeight > 0 else {
+            return false
+        }
+        
+        return abs(currentHeight - minedHeight) >= ZcashSDK.DEFAULT_STALE_TOLERANCE
     }
 }
 
