@@ -151,7 +151,10 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         guard let id = tx.id else {
             throw StorageError.malformedEntity(fields: ["id"])
         }
-        try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
+       let updatedRows = try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
+        if updatedRows == 0 {
+            LoggerProxy.error("attempted to update pending transactions but no rows were updated")
+        }
     }
     
     func delete(_ transaction: PendingTransactionEntity) throws {
@@ -195,4 +198,15 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         return allTxs
     }
     
+    func applyMinedHeight(_ height: BlockHeight, id: Int) throws {
+        
+        let tx = table.filter(TableColumns.id == id)
+        
+        let updatedRows = try dbProvider.connection().run(tx.update(
+            [TableColumns.minedHeight <- height]
+        ))
+        if updatedRows == 0  {
+            LoggerProxy.error("attempted to update a row but none was updated")
+        }
+    }
 }

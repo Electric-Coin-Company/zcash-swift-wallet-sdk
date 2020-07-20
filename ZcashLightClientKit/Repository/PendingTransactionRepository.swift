@@ -14,4 +14,6 @@ protocol PendingTransactionRepository {
     func cancel(_ transaction: PendingTransactionEntity) throws
     func find(by id: Int) throws -> PendingTransactionEntity?
     func getAll() throws -> [PendingTransactionEntity]
+    
+    func applyMinedHeight(_ height: BlockHeight, id: Int) throws
 }

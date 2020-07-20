@@ -121,9 +121,12 @@ class PersistentTransactionManager: OutboundTransactionManager {
         }
         
         tx.minedHeight = minedHeight
-        
+        guard let pendingTxId = pendingTransaction.id else {
+            throw TransactionManagerError.updateFailed(tx: pendingTransaction)
+        }
         do {
-            try repository.update(tx)
+            try repository.applyMinedHeight(minedHeight, id: pendingTxId)
+            
         } catch {
             throw TransactionManagerError.updateFailed(tx: tx)
         }
