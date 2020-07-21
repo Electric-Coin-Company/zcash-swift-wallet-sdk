@@ -23,7 +23,8 @@ use zcash_client_sqlite::{
         get_verified_balance,
     },
     scan::{decrypt_and_store_transaction, scan_cached_blocks},
-    transact::create_to_address,
+    transact::{create_to_address, OvkPolicy}
+    
 };
 use zcash_primitives::{
     block::BlockHash,
@@ -670,6 +671,7 @@ pub extern "C" fn zcashlc_create_to_address(
             &to,
             value,
             Some(memo),
+            OvkPolicy::Sender
         )
         .map_err(|e| format_err!("Error while sending funds: {}", e))
     });
