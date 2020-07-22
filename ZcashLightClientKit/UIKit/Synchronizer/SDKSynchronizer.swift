@@ -342,13 +342,14 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorFinished(_ notification: Notification) {
-        DispatchQueue.global().async {[ weak self ] in
-            guard let self = self else { return }
-            self.refreshPendingTransactions()
-            DispatchQueue.main.async {
+        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories
+//        DispatchQueue.global().async {[ weak self ] in
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.refreshPendingTransactions()
                 self.status = .synced
             }
-        }
+//        }
     }
     
     @objc func processorTransitionUnknown(_ notification: Notification) {
@@ -504,7 +505,11 @@ public class SDKSynchronizer: Synchronizer {
     private func removeConfirmedTransactions() throws {
         let latestHeight = try transactionRepository.lastScannedHeight()
         
-        try transactionManager.allPendingTransactions()?.filter( { $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
+        try transactionManager.allPendingTransactions()?.filter( {
+            $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_STALE_TOLERANCE }
+            ).forEach( {
+                try transactionManager.delete(pendingTransaction: $0)
+            } )
     }
     
     private func refreshPendingTransactions() {
