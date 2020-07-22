@@ -396,7 +396,7 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [lastSyncExpectation], timeout: 5)
         
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
-        XCTAssertEqual(initialVerifiedBalance - Int64(pendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(pendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), coordinator.synchronizer.initializer.getVerifiedBalance())
     }
     
@@ -451,7 +451,7 @@ class AdvancedReOrgTests: XCTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
         let receivedTxHeight = BlockHeight(663188)
         try coordinator.applyStaged(blockheight: receivedTxHeight - 1)
-        
+        sleep(2)
         let expectation = XCTestExpectation(description: "sync to \(receivedTxHeight - 1) expectation")
         var initialBalance: Int64 = -1
         var initialVerifiedBalance: Int64 = -1
@@ -466,7 +466,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         let afterTxHeight = receivedTxHeight + 1
         try coordinator.applyStaged(blockheight: afterTxHeight)
-        
+        sleep(2)
         let afterTxSyncExpectation = XCTestExpectation(description: "sync to \(afterTxHeight) expectation")
         
         var afterTxBalance: Int64 = -1
@@ -762,9 +762,9 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(afterStagePendingTx.minedHeight, sentTxHeight)
         
         /*
-         7. stage 15  blocks from sentTxHeight
+         7. stage 20  blocks from sentTxHeight
          */
-        try coordinator.stageBlockCreate(height: sentTxHeight, count: 15)
+        try coordinator.stageBlockCreate(height: sentTxHeight, count: 25)
         
         /*
          7a. stage sent tx to sentTxHeight + 2
@@ -833,10 +833,10 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(newlyPendingTx.minedHeight, sentTxHeight + 2)
         
         /*
-         13. apply height(sentTxHeight + 15)
+         13. apply height(sentTxHeight + 25)
          */
         
-        try coordinator.applyStaged(blockheight: sentTxHeight + 14)
+        try coordinator.applyStaged(blockheight: sentTxHeight + 25)
         
         sleep(2)
         
@@ -861,8 +861,8 @@ class AdvancedReOrgTests: XCTestCase {
             return txId == newlyPendingTx.rawTransactionId
         }), "Sent Tx is not on sent transactions")
         
-        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value), coordinator.synchronizer.initializer.getBalance())
-        XCTAssertEqual(initialVerifiedBalance - Int64(newlyPendingTx.value), coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getVerifiedBalance())
         
         
     }
@@ -1029,7 +1029,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         sleep(1)
         let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
-        let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var p: PendingTransactionEntity? = nil
@@ -1088,7 +1088,7 @@ class AdvancedReOrgTests: XCTestCase {
         }, error: self.handleError)
         
         wait(for: [secondSyncExpectation], timeout: 5)
-        let extraBlocks = 20
+        let extraBlocks = 25
         try coordinator.stageBlockCreate(height: sentTxHeight, count: extraBlocks, nonce: 5)
         
         try coordinator.applyStaged(blockheight: sentTxHeight + 5)
@@ -1109,6 +1109,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         XCTAssertFalse(pendingTx.isMined)
         
+        LoggerProxy.info("applyStaged(blockheight: \(sentTxHeight + extraBlocks - 1))")
         try coordinator.applyStaged(blockheight: sentTxHeight + extraBlocks - 1)
         
         sleep(2)
@@ -1121,7 +1122,6 @@ class AdvancedReOrgTests: XCTestCase {
         
         wait(for: [lastSyncExpectation], timeout: 5)
         
-        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), initialVerifiedBalance)
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), initialTotalBalance)
         
     }
