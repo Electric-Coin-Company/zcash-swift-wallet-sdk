@@ -167,11 +167,11 @@ class PendingTransactionUpdatesTest: XCTestCase {
          7. stage 15  blocks from sentTxHeight
          */
         LoggerProxy.info("7. stage 15  blocks from \(sentTxHeight)")
-        try coordinator.stageBlockCreate(height: sentTxHeight, count: 15)
-        
+        try coordinator.stageBlockCreate(height: sentTxHeight + 1, count: 15)
+        sleep(2)
         let lastStageHeight = sentTxHeight + 14
         LoggerProxy.info("applyStaged(\(lastStageHeight))")
-        try coordinator.applyStaged(blockheight: sentTxHeight)
+        try coordinator.applyStaged(blockheight: lastStageHeight)
         
         sleep(2)
         let syncToConfirmExpectation = XCTestExpectation(description: "sync to confirm expectation")
@@ -179,7 +179,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         /*
         8. last sync to latest height
         */
-        LoggerProxy.debug("last sync to latest height")
+        LoggerProxy.info("last sync to latest height: \(lastStageHeight)")
         
         try coordinator.sync(completion: { (s) in
             syncToConfirmExpectation.fulfill()
