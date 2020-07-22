@@ -342,6 +342,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorFinished(_ notification: Notification) {
+        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories
 //        DispatchQueue.global().async {[ weak self ] in
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
