@@ -18,8 +18,10 @@ public enum CompactBlockProcessorError: Error {
     case dataDbInitFailed(path: String)
     case connectionError(message: String)
     case grpcError(statusCode: Int, message: String)
+    case connectionTimeout
     case generalError(message: String)
     case maxAttemptsReached(attempts: Int)
+    case unspecifiedError(underlyingError: Error)
 }
 /**
  CompactBlockProcessor notification userInfo object keys.
@@ -686,7 +688,7 @@ public class CompactBlockProcessor {
         NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: [CompactBlockProcessorNotificationKey.error: mapError(err)])
     }
     // TODO: encapsulate service errors better
-    func mapError(_ error: Error) -> Error {
+    func mapError(_ error: Error) -> CompactBlockProcessorError {
         if let lwdError = error as? LightWalletServiceError {
             switch lwdError {
             case .failed(let statusCode, let message):
@@ -707,7 +709,7 @@ public class CompactBlockProcessor {
                 
             }
         }
-        return error
+        return .unspecifiedError(underlyingError: error)
     }
 }
 

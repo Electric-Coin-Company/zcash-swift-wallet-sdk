@@ -18,6 +18,8 @@ public enum SynchronizerError: Error {
     case generalError(message: String)
     case maxRetryAttemptsReached(attempts: Int)
     case connectionError(status: Int, message: String)
+    case networkTimeout
+    case uncategorized(underlyingError: Error)
 }
 
 /**
