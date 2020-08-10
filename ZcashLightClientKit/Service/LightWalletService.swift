@@ -14,20 +14,24 @@ import SwiftProtobuf
  Wrapper for errors received from a Lightwalletd endpoint
  */
 public enum LightWalletServiceError: Error {
-    case generalError
+    case generalError(message: String)
     case failed(statusCode: Int, message: String)
     case invalidBlock
-    case sentFailed(sendResponse: LightWalletServiceResponse)
+    case sentFailed(error: Error)
     case genericError(error: Error)
+    case timeOut
+    case criticalError
+    case userCancelled
+    case unknown
 }
 
 extension LightWalletServiceError: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch lhs {
-        case .generalError:
+        case .generalError(let m):
             switch rhs {
-            case .generalError:
-                return true
+            case .generalError(let msg):
+                return m == msg
             default:
                 return false
             }
@@ -46,18 +50,46 @@ extension LightWalletServiceError: Equatable {
             default:
                 return false
             }
-        case .sentFailed(let sendResponse):
+        case .sentFailed(_):
             switch rhs {
-            case .sentFailed(let response):
-                return response.errorCode == sendResponse.errorCode
+            case .sentFailed(_):
+                return true
             default:
                 return false
             }
         case .genericError:
             return false
+        
+        case .timeOut:
+            switch rhs {
+            case .timeOut:
+                return true
+            default:
+                return false
+            }
+        case .criticalError:
+            switch rhs  {
+            case .criticalError:
+                return true
+            default:
+                return false
+            }
+        case .userCancelled:
+            switch rhs  {
+            case .userCancelled:
+                return true
+            default:
+                return false
+            }
+        case .unknown:
+            switch rhs  {
+            case .unknown:
+                return true
+            default:
+                return false
+            }
         }
     }
-    
 }
 
 public protocol LightWalletServiceResponse {

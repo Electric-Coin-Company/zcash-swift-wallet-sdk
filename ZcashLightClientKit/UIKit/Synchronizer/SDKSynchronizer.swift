@@ -142,15 +142,18 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        try processor.start(retry: retry)
+        do {
+            try processor.start(retry: retry)
+        } catch {
+            throw mapError(error)
+        }
         
     }
     
     /**
     Stops the synchronizer
-    - Throws: CompactBlockProcessorError when failures occur
     */
-    public func stop() throws {
+    public func stop() {
         
         defer {
            
@@ -329,6 +332,8 @@ public class SDKSynchronizer: Synchronizer {
             guard let self = self else { return }
             if let error = notification.userInfo?[CompactBlockProcessorNotificationKey.error] as? Error {
                 self.notifyFailure(error)
+            } else {
+                self.notifyFailure(CompactBlockProcessorError.generalError(message: "This is strange. processorFailed Call received no error message"))
             }
             self.status = .disconnected
         }
@@ -400,9 +405,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func applicationWillTerminate(_ notification: Notification) {
-        do {
-            try stop()
-        } catch {}
+        stop()
     }
     
     // MARK: Synchronizer methods
@@ -547,9 +550,15 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)    
             case .grpcError(let statusCode, let message):
                 return SynchronizerError.connectionError(status: statusCode, message: message)
+            case .connectionTimeout:
+                return SynchronizerError.networkTimeout
+            case .unspecifiedError(let underlyingError):
+                return SynchronizerError.uncategorized(underlyingError: underlyingError)
+            case .criticalError:
+                return SynchronizerError.criticalError
             }
         }
-        return error
+        return SynchronizerError.uncategorized(underlyingError: error)
     }
     
     private func notifyFailure(_ error: Error) {

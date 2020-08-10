@@ -79,14 +79,14 @@ class CompactBlockReorgTests: XCTestCase {
     }
     
     @objc func processorFailed(_ notification: Notification) {
-        DispatchQueue.main.sync {
+        
             XCTAssertNotNil(notification.userInfo)
             if let error = notification.userInfo?["error"] {
                 XCTFail("CompactBlockProcessor failed with Error: \(error)")
             } else {
                 XCTFail("CompactBlockProcessor failed")
             }
-        }
+
     }
     
     fileprivate func startProcessing() {
