@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.1'
     s.ios.deployment_target = '12.0'
-    s.dependency 'gRPC-Swift', '~> 1.0.0-alpha.11'
+    s.dependency 'gRPC-Swift', '~> 1.0.0-alpha.17'
     s.dependency 'SQLite.swift', '~> 0.12.2' 
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
     s.preserve_paths = ['Scripts', 'rust','docs','Cargo.*','ZcashLightClientKit/Stencil']
