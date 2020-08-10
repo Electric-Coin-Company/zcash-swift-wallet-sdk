@@ -16,12 +16,13 @@ public enum CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
     case dataDbInitFailed(path: String)
-    case connectionError(message: String)
+    case connectionError(underlyingError: Error)
     case grpcError(statusCode: Int, message: String)
     case connectionTimeout
     case generalError(message: String)
     case maxAttemptsReached(attempts: Int)
     case unspecifiedError(underlyingError: Error)
+    case criticalError
 }
 /**
  CompactBlockProcessor notification userInfo object keys.
@@ -690,14 +691,7 @@ public class CompactBlockProcessor {
     // TODO: encapsulate service errors better
     func mapError(_ error: Error) -> CompactBlockProcessorError {
         if let lwdError = error as? LightWalletServiceError {
-            switch lwdError {
-            case .failed(let statusCode, let message):
-                return CompactBlockProcessorError.connectionError(message: "Connection failed - Status code: \(statusCode) - message: \(message)")
-            case .invalidBlock:
-                return CompactBlockProcessorError.generalError(message: "Invalid block: \(lwdError)")
-            default:
-                return CompactBlockProcessorError.generalError(message: "Error: \(lwdError)")
-            }
+            return lwdError.mapToProcessorError()
         } else if let rpcError = error as? GRPC.GRPCStatus {
             switch rpcError {
             case .ok:
@@ -723,6 +717,30 @@ public extension CompactBlockProcessor.Configuration {
     }
 }
 
+extension LightWalletServiceError {
+    func mapToProcessorError() -> CompactBlockProcessorError {
+        switch self {
+        case .failed(let statusCode, let message):
+            return CompactBlockProcessorError.grpcError(statusCode: statusCode, message: message)
+        case .invalidBlock:
+            return CompactBlockProcessorError.generalError(message: "\(self)")
+        case .generalError(let message):
+            return CompactBlockProcessorError.generalError(message: message)
+        case .sentFailed(let error):
+            return CompactBlockProcessorError.connectionError(underlyingError: error)
+        case .genericError(let error):
+            return CompactBlockProcessorError.unspecifiedError(underlyingError: error)
+        case .timeOut:
+            return CompactBlockProcessorError.connectionTimeout
+        case .criticalError:
+            return CompactBlockProcessorError.criticalError
+        case .userCancelled:
+            return CompactBlockProcessorError.connectionTimeout
+        case .unknown:
+            return CompactBlockProcessorError.unspecifiedError(underlyingError: self)
+        }
+    }
+}
 extension CompactBlockProcessor.State: Equatable {
     public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
         switch  lhs {

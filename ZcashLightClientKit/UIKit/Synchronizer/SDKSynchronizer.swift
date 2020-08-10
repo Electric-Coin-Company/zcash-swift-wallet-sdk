@@ -554,6 +554,8 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.networkTimeout
             case .unspecifiedError(let underlyingError):
                 return SynchronizerError.uncategorized(underlyingError: underlyingError)
+            case .criticalError:
+                return SynchronizerError.criticalError
             }
         }
         return SynchronizerError.uncategorized(underlyingError: error)

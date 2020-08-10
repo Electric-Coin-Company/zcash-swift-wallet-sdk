@@ -67,6 +67,27 @@ extension LightWalletServiceError: Equatable {
             default:
                 return false
             }
+        case .criticalError:
+            switch rhs  {
+            case .criticalError:
+                return true
+            default:
+                return false
+            }
+        case .userCancelled:
+            switch rhs  {
+            case .userCancelled:
+                return true
+            default:
+                return false
+            }
+        case .unknown:
+            switch rhs  {
+            case .unknown:
+                return true
+            default:
+                return false
+            }
         }
     }
 }
