@@ -1,6 +1,6 @@
 [package]
 name = "libzcashlc"
-version = "0.0.4"
+version = "0.0.5"
 authors = ["Jack Grigg <jack@z.cash>",
             "Francisco Gindre <francisco@z.cash>",
 ]
@@ -14,31 +14,31 @@ hex = "0.3"
 
 [dependencies.ff]
 git = "https://github.com/zcash/librustzcash.git"
-rev = "f55f094ef69c2caeaa941bcf851dac8cb5fa9942"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
 
 
 [dependencies.pairing]
 git = "https://github.com/zcash/librustzcash.git"
-rev = "f55f094ef69c2caeaa941bcf851dac8cb5fa9942"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
 
 
 [dependencies.zcash_client_backend]
 git = "https://github.com/zcash/librustzcash.git"
-rev = "f55f094ef69c2caeaa941bcf851dac8cb5fa9942"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
 
 
 [dependencies.zcash_client_sqlite]
 git = "https://github.com/zcash/librustzcash.git"
-rev = "f55f094ef69c2caeaa941bcf851dac8cb5fa9942"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
 
 [dependencies.zcash_primitives]
 git = "https://github.com/zcash/librustzcash.git"
-rev = "f55f094ef69c2caeaa941bcf851dac8cb5fa9942"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
 
 
 [dependencies.zcash_proofs]
 git = "https://github.com/zcash/librustzcash.git"
-rev = "f55f094ef69c2caeaa941bcf851dac8cb5fa9942"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
 
 default-features = false
 features = ["local-prover"]
