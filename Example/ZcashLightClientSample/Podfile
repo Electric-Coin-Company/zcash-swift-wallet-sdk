@@ -6,7 +6,7 @@ target 'ZcashLightClientSample' do
   pod "KRProgressHUD"
   # Pods for ZcashLightClientSample
   pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']
-  pod 'gRPC-Swift', '= 1.0.0-alpha.17'
+  pod 'gRPC-Swift', '= 1.0.0-alpha.19'
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'
   pod 'MnemonicSwift'
