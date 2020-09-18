@@ -1,7 +1,9 @@
 # Zcash iOS Framework
 
-A Zcash Lightweight Client SDK for iOS
+[![Build Status](https://travis-ci.org/zcash/ZcashLightClientKit.svg?branch=master)](https://travis-ci.org/zcash/ZcashLightClientKit)
 
+
+A Zcash Lightweight Client SDK for iOS
 This is an alpha build and is currently under active development. Please be advised of the following:
 
 - This code currently is not audited by an external security auditor, use it at your own risk
@@ -12,7 +14,7 @@ This is an alpha build and is currently under active development. Please be advi
 
 - The Zcash iOS Wallet SDK is experimental and a work in progress. Use it at your own risk.
 - Developers using this SDK must familiarize themselves with the current [threat
-  model](docs/ThreatModel.md), especially the known weaknesses described there.
+  model](https://zcash.readthedocs.io/en/latest/rtd_pages/wallet_threat_model.html), especially the known weaknesses described there.
 
 # Build dependencies
 
@@ -20,9 +22,19 @@ ZcashLightClientKit uses a rust library called Librustzcash. In order to build i
 
 Install [Rust](https://www.rust-lang.org/learn/get-started), and then `cargo-lipo`:
 
+**WORKAROUND**: we are having issues with rustc 1.46.0 we recommend using rustc 1.40.0 until we push a fix for this problem: see issue https://github.com/zcash/ZcashLightClientKit/issues/177
+
+
+_regular workflow_
 ```
 $ cargo install cargo-lipo
 $ rustup target add aarch64-apple-ios x86_64-apple-ios
+```
+_workaround to force 1.40.0_
+```
+rustup override set 1.40.0
+rustup target remove aarch64-apple-ios x86_64-apple-ios
+rustup target add aarch64-apple-ios x86_64-apple-ios
 ```
 
 # Cocoapods Support
@@ -256,4 +268,4 @@ Examples can be found in the [Demo App](/Example/ZcashLightClientSample).
 
 # License
 
-Apache License Version 2.0
+MIT

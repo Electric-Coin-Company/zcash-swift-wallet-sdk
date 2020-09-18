@@ -6,17 +6,19 @@ target 'ZcashLightClientSample' do
   pod "KRProgressHUD"
   # Pods for ZcashLightClientSample
   pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']
-  pod 'gRPC-Swift', '~> 1.0.0-alpha.11'
+  pod 'gRPC-Swift', '= 1.0.0-alpha.19'
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'
-  pod 'MnemonicKit', :git => 'https://github.com/pacu/MnemonicKit.git', :commit => '49ab6726fe8a15e1e615942b0b42a0cd83308090'
+  pod 'MnemonicSwift'
   target 'ZcashLightClientSampleTests' do
+    use_frameworks!
     inherit! :search_paths
     # Pods for testing
-    pod 'MnemonicKit', :git => 'https://github.com/pacu/MnemonicKit.git', :commit => '49ab6726fe8a15e1e615942b0b42a0cd83308090'
+    pod 'MnemonicSwift'
   end
 
   target 'ZcashLightClientSampleUITests' do
+    use_frameworks!
     inherit! :search_paths
     # Pods for testing
   end
@@ -35,12 +37,12 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
-#    if target.name.include? '-Unit-Tests'
-#      Xcodeproj::XCScheme.share_scheme(installer.pods_project.path, target.name)
-#    end
+
     target.build_configurations.each do |config|
 
-      
+      if target.name == 'ZcashLightClientKit-Unit-Tests'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = "13.0"
+      end
       if target.name == 'ZcashLightClientKit'
          config.build_settings['ZCASH_NETWORK_ENVIRONMENT'] = ENV["ZCASH_NETWORK_ENVIRONMENT"]
       end

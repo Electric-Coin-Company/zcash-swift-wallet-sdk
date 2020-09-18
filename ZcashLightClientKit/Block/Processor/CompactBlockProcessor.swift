@@ -16,10 +16,13 @@ public enum CompactBlockProcessorError: Error {
     case invalidConfiguration
     case missingDbPath(path: String)
     case dataDbInitFailed(path: String)
-    case connectionError(message: String)
+    case connectionError(underlyingError: Error)
     case grpcError(statusCode: Int, message: String)
+    case connectionTimeout
     case generalError(message: String)
     case maxAttemptsReached(attempts: Int)
+    case unspecifiedError(underlyingError: Error)
+    case criticalError
 }
 /**
  CompactBlockProcessor notification userInfo object keys.
@@ -118,11 +121,33 @@ public class CompactBlockProcessor {
         public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
         public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
         public var walletBirthday: BlockHeight
+        private(set) var saplingActivation: BlockHeight
+        
+        init (
+               cacheDb: URL,
+               dataDb: URL,
+               downloadBatchSize: Int,
+               retries: Int,
+               maxBackoffInterval: TimeInterval,
+               rewindDistance: Int,
+               walletBirthday: BlockHeight,
+               saplingActivation: BlockHeight
+           ) {
+            self.cacheDb = cacheDb
+            self.dataDb = dataDb
+            self.downloadBatchSize = downloadBatchSize
+            self.retries = retries
+            self.maxBackoffInterval = maxBackoffInterval
+            self.rewindDistance = rewindDistance
+            self.walletBirthday = walletBirthday
+            self.saplingActivation = saplingActivation
+        }
         
         public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT){
             self.cacheDb = cacheDb
             self.dataDb = dataDb
             self.walletBirthday = walletBirthday
+            self.saplingActivation = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
         }
     }
     /**
@@ -436,12 +461,11 @@ public class CompactBlockProcessor {
             self?.state = .scanning
         }
         
-        scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
+        scanBlocksOperation.completionHandler = { (finished, cancelled) in
             guard !cancelled else {
                 LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
                 return
             }
-            self?.processBatchFinished(range: range)
         }
         
         scanBlocksOperation.errorHandler = { [weak self] (error) in
@@ -461,12 +485,13 @@ public class CompactBlockProcessor {
             self?.notifyTransactions(txs)
         }
         
-        enhanceOperation.completionHandler  = { (finished, cancelled) in
-            
+        enhanceOperation.completionHandler  = { [weak self] (finished, cancelled) in
+            guard let self = self else { return }
             guard !cancelled else {
                 LoggerProxy.debug("Warning: enhance operation on range \(range) cancelled")
                 return
             }
+            self.processBatchFinished(range: range)
         }
         
         enhanceOperation.errorHandler = { [weak self] (error) in
@@ -664,16 +689,9 @@ public class CompactBlockProcessor {
         NotificationCenter.default.post(name: Notification.Name.blockProcessorFailed, object: self, userInfo: [CompactBlockProcessorNotificationKey.error: mapError(err)])
     }
     // TODO: encapsulate service errors better
-    func mapError(_ error: Error) -> Error {
+    func mapError(_ error: Error) -> CompactBlockProcessorError {
         if let lwdError = error as? LightWalletServiceError {
-            switch lwdError {
-            case .failed(let statusCode, let message):
-                return CompactBlockProcessorError.connectionError(message: "Connection failed - Status code: \(statusCode) - message: \(message)")
-            case .invalidBlock:
-                return CompactBlockProcessorError.generalError(message: "Invalid block: \(lwdError)")
-            default:
-                return CompactBlockProcessorError.generalError(message: "Error: \(lwdError)")
-            }
+            return lwdError.mapToProcessorError()
         } else if let rpcError = error as? GRPC.GRPCStatus {
             switch rpcError {
             case .ok:
@@ -685,7 +703,7 @@ public class CompactBlockProcessor {
                 
             }
         }
-        return error
+        return .unspecifiedError(underlyingError: error)
     }
 }
 
@@ -699,6 +717,30 @@ public extension CompactBlockProcessor.Configuration {
     }
 }
 
+extension LightWalletServiceError {
+    func mapToProcessorError() -> CompactBlockProcessorError {
+        switch self {
+        case .failed(let statusCode, let message):
+            return CompactBlockProcessorError.grpcError(statusCode: statusCode, message: message)
+        case .invalidBlock:
+            return CompactBlockProcessorError.generalError(message: "\(self)")
+        case .generalError(let message):
+            return CompactBlockProcessorError.generalError(message: message)
+        case .sentFailed(let error):
+            return CompactBlockProcessorError.connectionError(underlyingError: error)
+        case .genericError(let error):
+            return CompactBlockProcessorError.unspecifiedError(underlyingError: error)
+        case .timeOut:
+            return CompactBlockProcessorError.connectionTimeout
+        case .criticalError:
+            return CompactBlockProcessorError.criticalError
+        case .userCancelled:
+            return CompactBlockProcessorError.connectionTimeout
+        case .unknown:
+            return CompactBlockProcessorError.unspecifiedError(underlyingError: self)
+        }
+    }
+}
 extension CompactBlockProcessor.State: Equatable {
     public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
         switch  lhs {

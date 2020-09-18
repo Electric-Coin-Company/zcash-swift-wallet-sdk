@@ -98,12 +98,24 @@ public class SDKSynchronizer: Synchronizer {
      Creates an SDKSynchronizer instance
      - Parameter initializer: a wallet Initializer object
      */
-    public init(initializer: Initializer) throws {
-        self.status = .disconnected
-        self.initializer = initializer
-        self.transactionManager = try OutboundTransactionManagerBuilder.build(initializer: initializer)
-        self.transactionRepository = initializer.transactionRepository
+    public convenience init(initializer: Initializer) throws {
+        
+        self.init(status: .disconnected,
+                  initializer: initializer,
+                  transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
+                  transactionRepository: initializer.transactionRepository)
+        
         self.subscribeToAppDelegateNotifications()
+    }
+    
+    init(status: Status,
+         initializer: Initializer,
+         transactionManager: OutboundTransactionManager,
+         transactionRepository: TransactionRepository) {
+        self.status = status
+        self.initializer = initializer
+        self.transactionManager = transactionManager
+        self.transactionRepository = transactionRepository
     }
     
     deinit {
@@ -130,15 +142,18 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        try processor.start(retry: retry)
+        do {
+            try processor.start(retry: retry)
+        } catch {
+            throw mapError(error)
+        }
         
     }
     
     /**
     Stops the synchronizer
-    - Throws: CompactBlockProcessorError when failures occur
     */
-    public func stop() throws {
+    public func stop() {
         
         defer {
            
@@ -317,6 +332,8 @@ public class SDKSynchronizer: Synchronizer {
             guard let self = self else { return }
             if let error = notification.userInfo?[CompactBlockProcessorNotificationKey.error] as? Error {
                 self.notifyFailure(error)
+            } else {
+                self.notifyFailure(CompactBlockProcessorError.generalError(message: "This is strange. processorFailed Call received no error message"))
             }
             self.status = .disconnected
         }
@@ -330,13 +347,14 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorFinished(_ notification: Notification) {
-        DispatchQueue.global().async {[ weak self ] in
-            guard let self = self else { return }
-            self.refreshPendingTransactions()
-            DispatchQueue.main.async {
+        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories
+//        DispatchQueue.global().async {[ weak self ] in
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.refreshPendingTransactions()
                 self.status = .synced
             }
-        }
+//        }
     }
     
     @objc func processorTransitionUnknown(_ notification: Notification) {
@@ -387,9 +405,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func applicationWillTerminate(_ notification: Notification) {
-        do {
-            try stop()
-        } catch {}
+        stop()
     }
     
     // MARK: Synchronizer methods
@@ -492,7 +508,11 @@ public class SDKSynchronizer: Synchronizer {
     private func removeConfirmedTransactions() throws {
         let latestHeight = try transactionRepository.lastScannedHeight()
         
-        try transactionManager.allPendingTransactions()?.filter( { $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_REWIND_DISTANCE } ).forEach( { try transactionManager.delete(pendingTransaction: $0) } )
+        try transactionManager.allPendingTransactions()?.filter( {
+            $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_STALE_TOLERANCE }
+            ).forEach( {
+                try transactionManager.delete(pendingTransaction: $0)
+            } )
     }
     
     private func refreshPendingTransactions() {
@@ -530,9 +550,15 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)    
             case .grpcError(let statusCode, let message):
                 return SynchronizerError.connectionError(status: statusCode, message: message)
+            case .connectionTimeout:
+                return SynchronizerError.networkTimeout
+            case .unspecifiedError(let underlyingError):
+                return SynchronizerError.uncategorized(underlyingError: underlyingError)
+            case .criticalError:
+                return SynchronizerError.criticalError
             }
         }
-        return error
+        return SynchronizerError.uncategorized(underlyingError: error)
     }
     
     private func notifyFailure(_ error: Error) {

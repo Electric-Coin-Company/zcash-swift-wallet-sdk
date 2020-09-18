@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = 'ZcashLightClientKit'
-    s.version          = '0.4.0'
+    s.version          = '0.6.3'
     s.summary          = 'Zcash Light Client wallet SDK for iOS'
   
     s.description      = <<-DESC
@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
                          DESC
   
     s.homepage         = 'https://github.com/zcash/ZcashLightClientKit'
-    s.license          = { :type => 'Apache 2.0', :file => 'LICENSE' }
+    s.license          = { :type => 'MIT', :file => 'LICENSE' }
     s.author           = { 
         'Francisco Gindre' => 'francisco.gindre@gmail.com',
         'Jack Grigg' => 'str4d@electriccoin.co'
@@ -19,7 +19,7 @@ Pod::Spec.new do |s|
     s.module_map = 'ZcashLightClientKit.modulemap'
     s.swift_version = '5.1'
     s.ios.deployment_target = '12.0'
-    s.dependency 'gRPC-Swift', '~> 1.0.0-alpha.11'
+    s.dependency 'gRPC-Swift', '= 1.0.0-alpha.19'
     s.dependency 'SQLite.swift', '~> 0.12.2' 
     s.ios.vendored_libraries = 'lib/libzcashlc.a'
     s.preserve_paths = ['Scripts', 'rust','docs','Cargo.*','ZcashLightClientKit/Stencil']
@@ -40,7 +40,7 @@ Pod::Spec.new do |s|
          :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh --testing',
          :execution_position => :before_compile
       }
-      test_spec.dependency 'gRPC-Swift', '~> 1.0.0-alpha.11'
+      test_spec.dependency 'gRPC-Swift', '= 1.0.0-alpha.19'
       test_spec.dependency 'SQLite.swift', '~> 0.12.2'
   end
 end

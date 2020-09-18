@@ -20,6 +20,10 @@ class SendViewController: UIViewController {
     @IBOutlet weak var maxFunds: UISwitch!
     @IBOutlet weak var sendButton: UIButton!
     @IBOutlet weak var synchronizerStatusLabel: UILabel!
+    @IBOutlet weak var memoField: UITextView!
+    @IBOutlet weak var charactersLeftLabel: UILabel!
+    
+    let characterLimit: Int = 512
     
     var wallet: Initializer = Initializer.shared
     
@@ -50,6 +54,9 @@ class SendViewController: UIViewController {
             addressTextField.resignFirstResponder()
         } else if amountTextField.isFirstResponder && !amountTextField.frame.contains(point)  {
             amountTextField.resignFirstResponder()
+        } else if memoField.isFirstResponder &&
+            !memoField.frame.contains(point) {
+            memoField.resignFirstResponder()
         }
     }
     
@@ -57,7 +64,11 @@ class SendViewController: UIViewController {
         balanceLabel.text = format(balance: wallet.getBalance())
         verifiedBalanceLabel.text = format(balance: wallet.getVerifiedBalance())
         toggleSendButton()
-        
+        memoField.text = ""
+        memoField.layer.borderColor = UIColor.gray.cgColor
+        memoField.layer.borderWidth = 1
+        memoField.layer.cornerRadius = 5
+        charactersLeftLabel.text = textForCharacterCount(0)
         let center = NotificationCenter.default
         
         center.addObserver(self, selector: #selector(synchronizerStarted(_:)), name: Notification.Name.synchronizerStarted, object: synchronizer)
@@ -109,17 +120,20 @@ class SendViewController: UIViewController {
     }
     
     func isRecipientValid() -> Bool {
-        (addressTextField.text ?? "").starts(with: "z") // todo: improve this validation
+        guard let addr = self.addressTextField.text else {
+            return false
+        }
+        return wallet.isValidShieldedAddress(addr) || wallet.isValidTransparentAddress(addr)
     }
     
     @IBAction func maxFundsValueChanged(_ sender: Any) {
-          if maxFunds.isOn {
-              maxFundsOn()
-          } else {
-              maxFundsOff()
-          }
-      }
-      
+        if maxFunds.isOn {
+            maxFundsOn()
+        } else {
+            maxFundsOff()
+        }
+    }
+    
     @IBAction func send(_ sender: Any) {
         guard isFormValid() else {
             loggerProxy.warn("WARNING: Form is invalid")
@@ -135,7 +149,7 @@ class SendViewController: UIViewController {
         }
         let cancelAction = UIAlertAction(title: "Go back! I'm not sure about this.",
                                          style: UIAlertAction.Style.destructive) { (_) in
-            self.cancel()
+                                            self.cancel()
         }
         alert.addAction(sendAction)
         alert.addAction(cancelAction)
@@ -158,7 +172,7 @@ class SendViewController: UIViewController {
         
         KRProgressHUD.show()
         
-        synchronizer.sendToAddress(spendingKey: address, zatoshi: zec, toAddress: recipient, memo: nil, from: 0) {  [weak self] result in
+        synchronizer.sendToAddress(spendingKey: address, zatoshi: zec, toAddress: recipient, memo: self.memoField.text.count > 0 ? self.memoField.text : nil, from: 0) {  [weak self] result in
             
             DispatchQueue.main.async {
                 KRProgressHUD.dismiss()
@@ -189,19 +203,44 @@ class SendViewController: UIViewController {
     
     // MARK: synchronizer notifications
     @objc func synchronizerUpdated(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
     }
     
     @objc func synchronizerStarted(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
     }
     
     @objc func synchronizerStopped(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
+        
     }
     
     @objc func synchronizerSynced(_ notification: Notification) {
-        synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else {
+                return
+            }
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
+        }
+    }
+    
+    func textForCharacterCount(_ count: Int) -> String {
+        "\(count) of \(characterLimit) bytes left"
     }
 }
 
@@ -210,7 +249,7 @@ extension SendViewController: UITextFieldDelegate {
     
     func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
         if textField == amountTextField {
-           return !maxFunds.isOn
+            return !maxFunds.isOn
         }
         return true
     }
@@ -230,17 +269,28 @@ extension SendViewController: UITextFieldDelegate {
     }
 }
 
+extension SendViewController: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        let userPressedDelete = text.isEmpty && range.length > 0
+        return textView.text.utf8.count < characterLimit || userPressedDelete
+    }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        self.charactersLeftLabel.text = textForCharacterCount(textView.text.utf8.count)
+    }
+}
+
 extension SDKSynchronizer {
-      static func textFor(state: Status) -> String {
-          switch state {
-          case .disconnected:
-              return "disconnected 💔"
-          case .syncing:
-              return "Syncing Blocks 🤖"
-          case .stopped:
-              return "Stopped 🚫"
-          case .synced:
-              return "Synced 😎"
-          }
-      }
+    static func textFor(state: Status) -> String {
+        switch state {
+        case .disconnected:
+            return "disconnected 💔"
+        case .syncing:
+            return "Syncing Blocks 🤖"
+        case .stopped:
+            return "Stopped 🚫"
+        case .synced:
+            return "Synced 😎"
+        }
+    }
 }

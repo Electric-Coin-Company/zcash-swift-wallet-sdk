@@ -47,6 +47,10 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func isValidShieldedAddress(_ address: String) throws -> Bool {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            return false
+        }
+        
         guard zcashlc_is_valid_shielded_address([CChar](address.utf8CString)) else {
             if let error = lastError() {
                 throw error
@@ -57,6 +61,10 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func isValidTransparentAddress(_ address: String) throws -> Bool {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+                   return false
+        }
+        
         guard zcashlc_is_valid_transparent_address([CChar](address.utf8CString)) else {
             if let error = lastError() {
                 throw error
@@ -83,6 +91,15 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
         let dbData = dbData.osStr()
+        
+        guard !hash.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard !saplingTree.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
         guard zcashlc_init_blocks_table(dbData.0, dbData.1, height, [CChar](hash.utf8CString), time, [CChar](saplingTree.utf8CString)) != 0 else {
             if let error = lastError() {
                 throw error
@@ -153,14 +170,29 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count)) != 0
     }
 
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32,to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
         let dbData = dbData.osStr()
         let memoBytes = memo ?? ""
         
-        return zcashlc_create_to_address(dbData.0, dbData.1, account, extsk, to, value, memoBytes, spendParamsPath, UInt(spendParamsPath.lengthOfBytes(using: .utf8)), outputParamsPath, UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
+        return zcashlc_create_to_address(dbData.0,
+                                         dbData.1,
+                                         account,
+                                         extsk,
+                                         consensusBranchId,
+                                         to,
+                                         value,
+                                         memoBytes,
+                                         spendParamsPath,
+                                         UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
+                                         outputParamsPath,
+                                         UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
     }
     
     static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
+        
+        guard !spendingKey.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
         
         guard let extsk = zcashlc_derive_extended_full_viewing_key([CChar](spendingKey.utf8CString)) else {
             if let error = lastError() {
@@ -207,6 +239,16 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         zcashlc_vec_string_free(extsksCStr, UInt(accounts))
         return extsks
     }
+    
+    static func consensusBranchIdFor(height: Int32) throws -> Int32 {
+        let branchId = zcashlc_branch_id_for_height(height)
+        
+        guard branchId != -1 else {
+            throw RustWeldingError.noConsensusBranchId(height: height)
+        }
+        
+        return branchId
+    }
 }
 
 private extension ZcashRustBackend {
@@ -217,6 +259,7 @@ private extension ZcashRustBackend {
         }
         return RustWeldingError.dataDbInitFailed(message: error.localizedDescription)
     }
+    
 }
 
 private extension URL {
@@ -226,4 +269,14 @@ private extension URL {
         return (path, UInt(path.lengthOfBytes(using: .utf8)))
     }
     
+}
+
+extension String {
+    
+    /**
+     Checks whether this string contains null bytes before it's real ending
+     */
+    func containsCStringNullBytesBeforeStringEnding() -> Bool {
+        self.utf8CString.firstIndex(of: 0) != (self.utf8CString.count - 1)
+    }
 }

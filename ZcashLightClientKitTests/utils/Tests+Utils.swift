@@ -117,9 +117,9 @@ class TestSeed: SeedProvider {
     /**
      test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
      */
-    let seedString = "f550d5399659396587a59b6ad446eb89da7741ebb1e42f87c22451d20ece8bb1e09ccb3c19f967f37fbf435367bc295c692c0ce000c52f5b991f1ca91169565e"
+    let seedString = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
     
     func seed() -> [UInt8] {
-        [UInt8](seedString.hexDecodedData())
+        [UInt8](seedString)
     }
 }

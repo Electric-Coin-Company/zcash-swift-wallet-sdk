@@ -10,7 +10,7 @@ import Foundation
 import ZcashLightClientKit
 import os
 
-class SampleLogger: Logger {
+class SampleLogger: ZcashLightClientKit.Logger {
     enum LogLevel: Int {
         case debug
         case error

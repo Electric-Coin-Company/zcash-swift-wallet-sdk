@@ -13,6 +13,7 @@ export ZCASH_SRC_PATH="${PODS_TARGET_SRCROOT}/ZcashLightClientKit"
 export ZCASH_SDK_RUST_LIB_PATH="${ZCASH_SRC_PATH}/zcashlc"
 export ZCASH_SDK_GENERATED_SOURCES_FOLDER="${ZCASH_SRC_PATH}/Generated"
 function clean {
+    echo "CLEAN DETECTED"
     cargo clean
     if [ -d "${RUST_LIB_PATH}" ]; then 
         rm -rf "${RUST_LIB_PATH}"

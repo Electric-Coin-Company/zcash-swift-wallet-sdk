@@ -11,12 +11,11 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     var rustBackend: ZcashRustBackendWelding.Type
     var repository: TransactionRepository
-//    var initializer: Initializer
     var queue: DispatchQueue
     private var outputParamsURL: URL
     private var spendParamsURL: URL
     private var dataDbURL: URL
-
+    
     init(rust: ZcashRustBackendWelding.Type,
          dataDb: URL,
          repository: TransactionRepository,
@@ -75,8 +74,23 @@ class WalletTransactionEncoder: TransactionEncoder {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
+        
+        let scannedHeight = try repository.lastScannedHeight()
+        guard let latestHeight = Int32(exactly: scannedHeight) else {
+            throw RustWeldingError.genericError(message: "could not convert \(scannedHeight)")
+        }
+        
+        let consensusBranchId = try rustBackend.consensusBranchIdFor(height: latestHeight)
                 
-        let txId = rustBackend.createToAddress(dbData: self.dataDbURL, account: Int32(accountIndex), extsk: spendingKey, to: address, value: Int64(zatoshi), memo: memo, spendParamsPath: self.spendParamsURL.path, outputParamsPath: self.outputParamsURL.path)
+        let txId = rustBackend.createToAddress(dbData: self.dataDbURL,
+                                               account: Int32(accountIndex),
+                                               extsk: spendingKey,
+                                               consensusBranchId: consensusBranchId,
+                                               to: address,
+                                               value: Int64(zatoshi),
+                                               memo: memo,
+                                               spendParamsPath: self.spendParamsURL.path,
+                                               outputParamsPath: self.outputParamsURL.path)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
@@ -91,5 +105,18 @@ class WalletTransactionEncoder: TransactionEncoder {
         let readableOutput = FileManager.default.isReadableFile(atPath: output.path)
         
         return readableSpend && readableOutput // Todo: change this to something that makes sense
+    }
+    
+    /**
+     Fetch the Transaction Entity from the encoded representation
+     - Parameter encodedTransaction: The encoded transaction to expand
+     - Returns: a TransactionEntity based on the given Encoded Transaction
+     - Throws: a TransactionEncoderError
+     */
+    func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity {
+        guard let t = try? repository.findBy(rawId: encodedTransaction.transactionId) else {
+            throw TransactionEncoderError.couldNotExpand(txId: encodedTransaction.transactionId)
+        }
+        return t
     }
 }

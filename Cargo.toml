@@ -1,6 +1,6 @@
 [package]
 name = "libzcashlc"
-version = "0.0.2"
+version = "0.0.5"
 authors = ["Jack Grigg <jack@z.cash>",
             "Francisco Gindre <francisco@z.cash>",
 ]
@@ -13,28 +13,33 @@ ffi_helpers = "0.1"
 hex = "0.3"
 
 [dependencies.ff]
-git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v7"
+git = "https://github.com/zcash/librustzcash.git"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
+
 
 [dependencies.pairing]
-git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v7"
+git = "https://github.com/zcash/librustzcash.git"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
+
 
 [dependencies.zcash_client_backend]
-git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v7"
+git = "https://github.com/zcash/librustzcash.git"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
+
 
 [dependencies.zcash_client_sqlite]
-git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v7"
+git = "https://github.com/zcash/librustzcash.git"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
 
 [dependencies.zcash_primitives]
-git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v7"
+git = "https://github.com/zcash/librustzcash.git"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
+
 
 [dependencies.zcash_proofs]
-git = "https://github.com/str4d/librustzcash.git"
-branch = "note-spending-v7"
+git = "https://github.com/zcash/librustzcash.git"
+rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
+
 default-features = false
 features = ["local-prover"]
 

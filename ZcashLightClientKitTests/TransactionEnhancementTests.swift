@@ -42,7 +42,7 @@ class TransactionEnhancementTests: XCTestCase {
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         
-        rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: <#T##[UInt8]#>, accounts: <#T##Int32#>)
+        _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1)
         let service = DarksideWalletService()
         darksideWalletService = service
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
@@ -107,7 +107,7 @@ class TransactionEnhancementTests: XCTestCase {
     func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) throws {
      
         do {
-            try darksideWalletService.setLatestHeight(latestHeight)
+            try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue)
         } catch  {
             XCTFail("Error: \(error)")
             return

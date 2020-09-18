@@ -14,21 +14,15 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
     var errorCode: Int32
     var errorMessage: String
     var unknownFields: UnknownStorage
+    
 }
 
 class MockLightWalletService: LightWalletService {
-    func fetchTransaction(txId: Data) throws -> TransactionEntity {
-        Transaction(id: 1, transactionId: Data(), created: "Today", transactionIndex: 1, expiryHeight: -1, minedHeight: -1, raw: nil)
-    }
-    
-    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
-        
-    }
     
     
     private var service = LightWalletGRPCService(channel: ChannelProvider().channel())
-    private var latestHeight: BlockHeight
-    
+    var latestHeight: BlockHeight
+
     init(latestBlockHeight: BlockHeight) {
         self.latestHeight = latestBlockHeight
     }
@@ -59,4 +53,13 @@ class MockLightWalletService: LightWalletService {
     func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
         return LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
+    
+    func fetchTransaction(txId: Data) throws -> TransactionEntity {
+        Transaction(id: 1, transactionId: Data(), created: "Today", transactionIndex: 1, expiryHeight: -1, minedHeight: -1, raw: nil)
+    }
+    
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
+        
+    }
+    
 }

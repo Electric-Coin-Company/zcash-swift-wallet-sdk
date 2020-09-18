@@ -13,7 +13,7 @@ import SwiftProtobuf
 
 class AwfulLightWalletService: MockLightWalletService {
     override func latestBlockHeight() throws -> BlockHeight {
-        throw LightWalletServiceError.generalError
+        throw LightWalletServiceError.criticalError
     }
     
     override func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
@@ -22,20 +22,20 @@ class AwfulLightWalletService: MockLightWalletService {
     
     override func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            result(.failure(LightWalletServiceError.generalError))
+            result(.failure(LightWalletServiceError.invalidBlock))
         }
         
     }
     
     override func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            result(.failure(LightWalletServiceError.generalError))
+            result(.failure(LightWalletServiceError.invalidBlock))
         }
     }
     
     override func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void) {
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                  result(.failure(LightWalletServiceError.generalError))
+                  result(.failure(LightWalletServiceError.invalidBlock))
               }
     }
        
@@ -44,7 +44,7 @@ class AwfulLightWalletService: MockLightWalletService {
        */
        
     override func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
-        throw LightWalletServiceError.generalError
+        throw LightWalletServiceError.invalidBlock
     }
 }
 
@@ -77,6 +77,11 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    
+    static func consensusBranchIdFor(height: Int32) throws -> Int32 {
+        -1
+    }
+    
     
     static var mockDataDb = false
     static var mockAcounts = false
@@ -198,8 +203,8 @@ class MockRustBackend: ZcashRustBackendWelding {
         return rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData)
     }
     
-     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
-        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
+     static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, consensusBranchId: consensusBranchId, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
     }
     
     static func shouldSucceed(successRate: Float) -> Bool {

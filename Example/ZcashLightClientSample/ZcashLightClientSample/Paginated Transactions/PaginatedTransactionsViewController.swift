@@ -88,7 +88,7 @@ extension PaginatedTransactionsViewController: PaginatedTableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
         
         let tx = transactions[indexPath.row]
-        cell.detailTextLabel?.text = tx.transactionId.hexEncodedString()
+        cell.detailTextLabel?.text = tx.transactionId.toHexStringTxId()
         cell.textLabel?.text = tx.created ?? "No date"
         
         return cell

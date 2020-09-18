@@ -45,10 +45,14 @@ class PersistentTransactionManager: OutboundTransactionManager {
             guard let self = self else { return }
             do {
                 let encodedTransaction = try self.encoder.createTransaction(spendingKey: spendingKey, zatoshi: pendingTransaction.value, to: pendingTransaction.toAddress, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: pendingTransaction.accountIndex)
+                let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
+                
                 var pending = pendingTransaction
                 pending.encodeAttempts = pending.encodeAttempts + 1
                 pending.raw = encodedTransaction.raw
                 pending.rawTransactionId = encodedTransaction.transactionId
+                pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
+                pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
                 try self.repository.update(pending)
                 result(.success(pending))
             } catch StorageError.updateFailed {
@@ -117,9 +121,12 @@ class PersistentTransactionManager: OutboundTransactionManager {
         }
         
         tx.minedHeight = minedHeight
-        
+        guard let pendingTxId = pendingTransaction.id else {
+            throw TransactionManagerError.updateFailed(tx: pendingTransaction)
+        }
         do {
-            try repository.update(tx)
+            try repository.applyMinedHeight(minedHeight, id: pendingTxId)
+            
         } catch {
             throw TransactionManagerError.updateFailed(tx: tx)
         }
@@ -170,7 +177,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         var tx = transaction
         tx.submitAttempts = tx.submitAttempts + 1
         let error = sendResponse.errorCode < 0
-        tx.errorCode = Int(sendResponse.errorCode)
+        tx.errorCode = error ? Int(sendResponse.errorCode) : nil
         tx.errorMessage = error ? sendResponse.errorMessage : nil
         try repository.update(tx)
         return tx

@@ -27,6 +27,7 @@ struct TransactionBuilder {
         case minedHeight
         case transactionIndex
         case rawTransactionId
+        case raw
         case value
         case memo
         case noteId
@@ -141,13 +142,17 @@ struct TransactionBuilder {
             transactionId = Data(blob: txIdBlob)
         }
         
+        var rawData: Data?
+        if let rawBlob = bindings[ReceivedColumns.raw.rawValue] as? Blob {
+            rawData = Data(blob: rawBlob)
+        }
         return ConfirmedTransaction(toAddress: nil,
                                     expiryHeight: nil,
                                     minedHeight: Int(minedHeight),
                                     noteId: Int(noteId),
                                     blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
                                     transactionIndex: Int(transactionIndex),
-                                    raw: nil,
+                                    raw: rawData,
                                     id: Int(id),
                                     value: Int(value),
                                     memo: memo,
