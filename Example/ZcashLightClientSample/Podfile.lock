@@ -1,13 +1,13 @@
 PODS:
   - CGRPCZlib (1.0.0-alpha.19)
-  - CNIOAtomics (2.22.0)
+  - CNIOAtomics (2.22.1)
   - CNIOBoringSSL (2.9.1)
   - CNIOBoringSSLShims (2.9.1):
     - CNIOBoringSSL (= 2.9.1)
-  - CNIODarwin (2.22.0)
-  - CNIOHTTPParser (2.22.0)
-  - CNIOLinux (2.22.0)
-  - CNIOSHA1 (2.22.0)
+  - CNIODarwin (2.22.1)
+  - CNIOHTTPParser (2.22.1)
+  - CNIOLinux (2.22.1)
+  - CNIOSHA1 (2.22.1)
   - gRPC-Swift (1.0.0-alpha.19):
     - CGRPCZlib (= 1.0.0-alpha.19)
     - Logging (< 2, >= 1.2.0)
@@ -20,44 +20,44 @@ PODS:
   - KRProgressHUD (3.4.5):
     - KRActivityIndicatorView (= 3.0.5)
   - Logging (1.4.0)
-  - MnemonicSwift (1.0.0)
+  - MnemonicSwift (2.0.0)
   - NotificationBubbles (0.1.1)
   - PaginatedTableView (1.0.1)
   - SQLite.swift (0.12.2):
     - SQLite.swift/standard (= 0.12.2)
   - SQLite.swift/standard (0.12.2)
-  - SwiftNIO (2.22.0):
-    - CNIOAtomics (= 2.22.0)
-    - CNIODarwin (= 2.22.0)
-    - CNIOLinux (= 2.22.0)
-    - CNIOSHA1 (= 2.22.0)
-    - SwiftNIOConcurrencyHelpers (= 2.22.0)
-  - SwiftNIOConcurrencyHelpers (2.22.0):
-    - CNIOAtomics (= 2.22.0)
-  - SwiftNIOFoundationCompat (2.22.0):
-    - SwiftNIO (= 2.22.0)
-  - SwiftNIOHPACK (1.14.1):
-    - SwiftNIO (< 3, >= 2.22.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
-    - SwiftNIOHTTP1 (< 3, >= 2.22.0)
-  - SwiftNIOHTTP1 (2.22.0):
-    - CNIOHTTPParser (= 2.22.0)
-    - SwiftNIO (= 2.22.0)
-    - SwiftNIOConcurrencyHelpers (= 2.22.0)
-  - SwiftNIOHTTP2 (1.14.1):
-    - SwiftNIO (< 3, >= 2.22.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
-    - SwiftNIOHPACK (= 1.14.1)
-    - SwiftNIOHTTP1 (< 3, >= 2.22.0)
-    - SwiftNIOTLS (< 3, >= 2.22.0)
+  - SwiftNIO (2.22.1):
+    - CNIOAtomics (= 2.22.1)
+    - CNIODarwin (= 2.22.1)
+    - CNIOLinux (= 2.22.1)
+    - CNIOSHA1 (= 2.22.1)
+    - SwiftNIOConcurrencyHelpers (= 2.22.1)
+  - SwiftNIOConcurrencyHelpers (2.22.1):
+    - CNIOAtomics (= 2.22.1)
+  - SwiftNIOFoundationCompat (2.22.1):
+    - SwiftNIO (= 2.22.1)
+  - SwiftNIOHPACK (1.14.2):
+    - SwiftNIO (< 3, >= 2.11.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.11.0)
+    - SwiftNIOHTTP1 (< 3, >= 2.11.0)
+  - SwiftNIOHTTP1 (2.22.1):
+    - CNIOHTTPParser (= 2.22.1)
+    - SwiftNIO (= 2.22.1)
+    - SwiftNIOConcurrencyHelpers (= 2.22.1)
+  - SwiftNIOHTTP2 (1.14.2):
+    - SwiftNIO (< 3, >= 2.11.0)
+    - SwiftNIOConcurrencyHelpers (< 3, >= 2.11.0)
+    - SwiftNIOHPACK (= 1.14.2)
+    - SwiftNIOHTTP1 (< 3, >= 2.11.0)
+    - SwiftNIOTLS (< 3, >= 2.11.0)
   - SwiftNIOSSL (2.9.1):
     - CNIOBoringSSL (= 2.9.1)
     - CNIOBoringSSLShims (= 2.9.1)
     - SwiftNIO (< 3, >= 2.22.0)
     - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
     - SwiftNIOTLS (< 3, >= 2.22.0)
-  - SwiftNIOTLS (2.22.0):
-    - SwiftNIO (= 2.22.0)
+  - SwiftNIOTLS (2.22.1):
+    - SwiftNIO (= 2.22.1)
   - SwiftNIOTransportServices (1.9.0):
     - SwiftNIO (< 3, >= 2.22.0)
     - SwiftNIOConcurrencyHelpers (< 3, >= 2.22.0)
@@ -74,7 +74,7 @@ PODS:
 DEPENDENCIES:
   - gRPC-Swift (= 1.0.0-alpha.19)
   - KRProgressHUD
-  - MnemonicSwift
+  - MnemonicSwift (from `https://github.com/zcash-hackworks/MnemonicSwift.git`)
   - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
@@ -94,7 +94,6 @@ SPEC REPOS:
     - KRActivityIndicatorView
     - KRProgressHUD
     - Logging
-    - MnemonicSwift
     - NotificationBubbles
     - PaginatedTableView
     - SQLite.swift
@@ -110,38 +109,45 @@ SPEC REPOS:
     - SwiftProtobuf
 
 EXTERNAL SOURCES:
+  MnemonicSwift:
+    :git: https://github.com/zcash-hackworks/MnemonicSwift.git
   ZcashLightClientKit:
     :path: "../../"
 
+CHECKOUT OPTIONS:
+  MnemonicSwift:
+    :commit: 714cc6e2631ac322fc0067b2302358c1baad9275
+    :git: https://github.com/zcash-hackworks/MnemonicSwift.git
+
 SPEC CHECKSUMS:
   CGRPCZlib: befd9b92013c647f18aa9b7d9e9231d52e1ced1b
-  CNIOAtomics: fc22c21538d19cd55cce438146ce0388684601b4
+  CNIOAtomics: 55026298b0bd7524bb8ca85bd9d00983ef2b6ab5
   CNIOBoringSSL: ee7722e4355434b420eb06b3ca7535a6cfb09cf2
   CNIOBoringSSLShims: e76fde7b7972f242e250f76dafcfdbd23be26eca
-  CNIODarwin: efb83e040e8409494d0a5beeaa711fc95e7d94e9
-  CNIOHTTPParser: c5dc715ce6b8c06049b69a9337f8b6af4b2a5ffb
-  CNIOLinux: 11f69f76c12087a0752fa8a53f32f9853ef3f4f2
-  CNIOSHA1: ff4d77269adcb89f9a962abcbee55256a29b8a36
+  CNIODarwin: 65c40ddcfa113c0cb0bf5947dbef3165a0098b59
+  CNIOHTTPParser: 869e928f9f9b7bb68837e085b3ae921125d28d76
+  CNIOLinux: 896c5715ebe479fbfcdac5340717bbbd7936901b
+  CNIOSHA1: fd4d38fb42778ed971a75d87530f842106d4b4f4
   gRPC-Swift: 75a7a8d7cd08177165ef971159afb84e5130cfc9
   KRActivityIndicatorView: 912bc0413d98340f384b12a4e1e6aa8f42fb377d
   KRProgressHUD: df4cdc3a1baf708d4276a089ee34d133fa9a6f3e
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
-  MnemonicSwift: d743ec3dcc1cdce706a1876dba0b6250ad1ef90d
+  MnemonicSwift: 36384fc6b2640d93df9fe9fb60a8da7957cec36d
   NotificationBubbles: 91ee10deee54f35b5d49a161e1cb3d788ab5d011
   PaginatedTableView: 294d9831d5ddf5c0dcfbb4a281d4fcfb8d12f55a
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
-  SwiftNIO: e1995d88785db2db1ad5ee4590e4206b8c2658dc
-  SwiftNIOConcurrencyHelpers: d591e7cca9f9e61d2352a13303984b86cee2b212
-  SwiftNIOFoundationCompat: ebf639c373a7a4f074a6a727ba56dad4432a00d9
-  SwiftNIOHPACK: 25e34368f9633012479e3f9ec6c94d490c5852a9
-  SwiftNIOHTTP1: 54570af50938aa7ccae65392690401fa90a762ed
-  SwiftNIOHTTP2: 0ef3020ee88321d4932bf1a1007fa91e7800cbfd
+  SwiftNIO: 763188229de166e046cc8975383cca388832e992
+  SwiftNIOConcurrencyHelpers: 34d2e9d4d2b7886fa765086e845e6b19417be927
+  SwiftNIOFoundationCompat: 990bf137ed31a0907be67a0f80cfa9d3ad66289d
+  SwiftNIOHPACK: 38b7703a984bf25f7abcd468f66e4ac89e2a52dd
+  SwiftNIOHTTP1: c0a9ce48ba256f349af4f09648a0e0939b11a65c
+  SwiftNIOHTTP2: 2f6ea199f7df6e7041dcfb49fba175c69c8ca925
   SwiftNIOSSL: 2967e874b40d05904edde5c540c3157621e5ecc4
-  SwiftNIOTLS: 46bb3a0ff37d6b52ae6baf5207ec3cd411da327c
+  SwiftNIOTLS: 80eed55b4d2a455ba4b387b12cb41962095c713a
   SwiftNIOTransportServices: 801923921fbecdcde1e1c1ff38e812167d01ead1
   SwiftProtobuf: 4ef85479c18ca85b5482b343df9c319c62bda699
   ZcashLightClientKit: 6a7a724d5c249bc15983327157fe5ade6600dbcb
 
-PODFILE CHECKSUM: 712888df93841f6c9ab12b3b6db3edf7c2cac776
+PODFILE CHECKSUM: 7a4f52bbcdbb994923a317dc0cc4c0ea65a69cf0
 
-COCOAPODS: 1.9.3
+COCOAPODS: 1.8.4
