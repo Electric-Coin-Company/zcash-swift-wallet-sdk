@@ -9,8 +9,8 @@ build = "rust/build.rs"
 
 [dependencies]
 failure = "0.1"
-ffi_helpers = "0.1"
-hex = "0.3"
+ffi_helpers = "0.2"
+hex = "0.4"
 zcash_client_backend = "0.4"
 zcash_client_sqlite = "0.2"
 zcash_primitives = "0.4"
