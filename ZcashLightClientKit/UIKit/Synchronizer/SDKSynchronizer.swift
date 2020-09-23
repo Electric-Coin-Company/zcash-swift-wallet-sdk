@@ -368,11 +368,7 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func applicationDidEnterBackground(_ notification: Notification) {
         if !self.isBackgroundAllowed {
-            do {
-                try self.stop()
-            } catch {
-                self.status = .disconnected
-            }
+                self.stop()
         }
     }
     

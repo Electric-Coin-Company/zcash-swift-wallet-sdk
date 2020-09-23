@@ -12,7 +12,6 @@ import NIO
 import NIOHPACK
 public typealias Channel = GRPC.GRPCChannel
 
-
 extension TimeAmount {
     static let singleCallTimeout = TimeAmount.seconds(10)
     static let streamingCallTimeout = TimeAmount.seconds(90)
@@ -151,8 +150,6 @@ extension LightWalletGRPCService: LightWalletService {
         default:
             throw LightWalletServiceError.mapCode(status)
         }
-        
-        
     }
     
     public func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {

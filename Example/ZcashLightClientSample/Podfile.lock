@@ -16,6 +16,8 @@ PODS:
     - SwiftNIOSSL (< 3, >= 2.8.0)
     - SwiftNIOTransportServices (< 2, >= 1.6.0)
     - SwiftProtobuf (< 2, >= 1.9.0)
+  - gRPC-Swift-Plugins (1.0.0-alpha.19):
+    - gRPC-Swift (= 1.0.0-alpha.19)
   - KRActivityIndicatorView (3.0.5)
   - KRProgressHUD (3.4.5):
     - KRActivityIndicatorView (= 3.0.5)
@@ -64,15 +66,16 @@ PODS:
     - SwiftNIOFoundationCompat (< 3, >= 2.22.0)
     - SwiftNIOTLS (< 3, >= 2.22.0)
   - SwiftProtobuf (1.12.0)
-  - ZcashLightClientKit (0.6.3):
+  - ZcashLightClientKit (0.6.4):
     - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
-  - ZcashLightClientKit/Tests (0.6.3):
+  - ZcashLightClientKit/Tests (0.6.4):
     - gRPC-Swift (= 1.0.0-alpha.19)
     - SQLite.swift (~> 0.12.2)
 
 DEPENDENCIES:
   - gRPC-Swift (= 1.0.0-alpha.19)
+  - gRPC-Swift-Plugins (= 1.0.0-alpha.19)
   - KRProgressHUD
   - MnemonicSwift
   - NotificationBubbles
@@ -91,6 +94,7 @@ SPEC REPOS:
     - CNIOLinux
     - CNIOSHA1
     - gRPC-Swift
+    - gRPC-Swift-Plugins
     - KRActivityIndicatorView
     - KRProgressHUD
     - Logging
@@ -123,6 +127,7 @@ SPEC CHECKSUMS:
   CNIOLinux: 11f69f76c12087a0752fa8a53f32f9853ef3f4f2
   CNIOSHA1: ff4d77269adcb89f9a962abcbee55256a29b8a36
   gRPC-Swift: 75a7a8d7cd08177165ef971159afb84e5130cfc9
+  gRPC-Swift-Plugins: 5827cb75fe1f6e24423635fa1ec85fd67a529aef
   KRActivityIndicatorView: 912bc0413d98340f384b12a4e1e6aa8f42fb377d
   KRProgressHUD: df4cdc3a1baf708d4276a089ee34d133fa9a6f3e
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
@@ -140,8 +145,8 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 46bb3a0ff37d6b52ae6baf5207ec3cd411da327c
   SwiftNIOTransportServices: 801923921fbecdcde1e1c1ff38e812167d01ead1
   SwiftProtobuf: 4ef85479c18ca85b5482b343df9c319c62bda699
-  ZcashLightClientKit: 6a7a724d5c249bc15983327157fe5ade6600dbcb
+  ZcashLightClientKit: da23702d76723911cd52fbd033db240ea0b4e3a4
 
-PODFILE CHECKSUM: 712888df93841f6c9ab12b3b6db3edf7c2cac776
+PODFILE CHECKSUM: dc66de93ef2abbd39ca1595dd3020a5fbd62c9bd
 
 COCOAPODS: 1.9.3
