@@ -37,7 +37,7 @@ echo ""
 echo "platform name"
 echo $PLATFORM_NAME
 if [ $PLATFORM_NAME = "iphonesimulator" ]; then
-    ZCASH_ACTIVE_ARCHITECTURE="x86_64-apple-ios aarch64-apple-ios"
+    ZCASH_ACTIVE_ARCHITECTURE="x86_64-apple-ios"
 else 
     ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios"
 fi
