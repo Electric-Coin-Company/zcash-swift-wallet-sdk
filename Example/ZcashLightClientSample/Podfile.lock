@@ -22,7 +22,7 @@ PODS:
   - KRProgressHUD (3.4.5):
     - KRActivityIndicatorView (= 3.0.5)
   - Logging (1.4.0)
-  - MnemonicSwift (1.0.0)
+  - MnemonicSwift (2.0.0)
   - NotificationBubbles (0.1.1)
   - PaginatedTableView (1.0.1)
   - SQLite.swift (0.12.2):
@@ -78,6 +78,7 @@ DEPENDENCIES:
   - gRPC-Swift-Plugins (= 1.0.0-alpha.19)
   - KRProgressHUD
   - MnemonicSwift
+  - MnemonicSwift (~> 2.0.0)
   - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
@@ -131,7 +132,7 @@ SPEC CHECKSUMS:
   KRActivityIndicatorView: 912bc0413d98340f384b12a4e1e6aa8f42fb377d
   KRProgressHUD: df4cdc3a1baf708d4276a089ee34d133fa9a6f3e
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
-  MnemonicSwift: d743ec3dcc1cdce706a1876dba0b6250ad1ef90d
+  MnemonicSwift: 36384fc6b2640d93df9fe9fb60a8da7957cec36d
   NotificationBubbles: 91ee10deee54f35b5d49a161e1cb3d788ab5d011
   PaginatedTableView: 294d9831d5ddf5c0dcfbb4a281d4fcfb8d12f55a
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
@@ -145,8 +146,8 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 46bb3a0ff37d6b52ae6baf5207ec3cd411da327c
   SwiftNIOTransportServices: 801923921fbecdcde1e1c1ff38e812167d01ead1
   SwiftProtobuf: 4ef85479c18ca85b5482b343df9c319c62bda699
-  ZcashLightClientKit: b637da1fd41a82724135db844fb205d8a9edb0c3
+  ZcashLightClientKit: 07c805ae23308bf7a4e49c9a55a0e0d3f95bb32d
 
-PODFILE CHECKSUM: dc66de93ef2abbd39ca1595dd3020a5fbd62c9bd
+PODFILE CHECKSUM: ffeb4596d23ff6fe39bab7d0d8d99cb9916c4347
 
 COCOAPODS: 1.9.3
