@@ -12,6 +12,7 @@ export ZCASH_MAINNET="MAINNET"
 export ZCASH_SRC_PATH="${PODS_TARGET_SRCROOT}/ZcashLightClientKit"
 export ZCASH_SDK_RUST_LIB_PATH="${ZCASH_SRC_PATH}/zcashlc"
 export ZCASH_SDK_GENERATED_SOURCES_FOLDER="${ZCASH_SRC_PATH}/Generated"
+export ZCASH_NETWORK_ENVIRONMENT=MAINNET
 function clean {
     echo "CLEAN DETECTED"
     cargo clean
