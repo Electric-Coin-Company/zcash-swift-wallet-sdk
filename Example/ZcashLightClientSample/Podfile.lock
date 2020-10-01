@@ -77,7 +77,6 @@ DEPENDENCIES:
   - gRPC-Swift (= 1.0.0-alpha.19)
   - gRPC-Swift-Plugins (= 1.0.0-alpha.19)
   - KRProgressHUD
-  - MnemonicSwift
   - MnemonicSwift (~> 2.0.0)
   - NotificationBubbles
   - PaginatedTableView
@@ -146,8 +145,8 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 46bb3a0ff37d6b52ae6baf5207ec3cd411da327c
   SwiftNIOTransportServices: 801923921fbecdcde1e1c1ff38e812167d01ead1
   SwiftProtobuf: 4ef85479c18ca85b5482b343df9c319c62bda699
-  ZcashLightClientKit: 07c805ae23308bf7a4e49c9a55a0e0d3f95bb32d
+  ZcashLightClientKit: cf07efe70d59e33df138f16f260a48eba6aeb613
 
-PODFILE CHECKSUM: ffeb4596d23ff6fe39bab7d0d8d99cb9916c4347
+PODFILE CHECKSUM: 1c92e6c09a1a06d8ef4fcf753ebcbe9ea41fb771
 
 COCOAPODS: 1.9.3
