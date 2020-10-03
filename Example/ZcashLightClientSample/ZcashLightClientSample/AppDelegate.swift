@@ -44,7 +44,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                                    walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             
             var storage = SampleStorage.shared
-            storage!.seed = Data(DemoAppConfig().seed())
+            storage!.seed = Data(try! DemoAppConfig().seed())
             storage!.privateKey = addresses?[0]
             self.wallet = wallet
             return wallet
@@ -133,7 +133,7 @@ extension AppDelegate {
 }
 
 extension DemoAppConfig: SeedProvider {
-    func seed() -> [UInt8] {
+    func seed() throws -> [UInt8] {
         DemoAppConfig.seed
     }
 }

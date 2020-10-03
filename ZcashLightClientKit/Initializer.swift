@@ -173,7 +173,7 @@ public class Initializer {
         
         self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL, walletBirthday: walletBirthday?.height ?? self.lowerBoundHeight), downloader: self.downloader, transactionRepository: transactionRepository, backend: rustBackend)
         
-        guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
+        guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: try seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
         
