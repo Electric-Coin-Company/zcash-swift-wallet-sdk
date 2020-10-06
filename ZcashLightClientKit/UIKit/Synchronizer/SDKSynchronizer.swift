@@ -464,6 +464,18 @@ public class SDKSynchronizer: Synchronizer {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
     }
     
+    public func latestDownloadedHeight() throws  -> BlockHeight {
+        try initializer.downloader.lastDownloadedBlockHeight()
+    }
+    
+    public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
+        initializer.downloader.latestBlockHeight(result: result)
+    }
+    
+    public func latestHeight() throws -> BlockHeight {
+        try initializer.downloader.latestBlockHeight()
+    }
+    
     // MARK: notify state
     private func notify(progress: Float, height: BlockHeight) {
         NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: [
