@@ -67,11 +67,11 @@ func __dataDbURL() throws -> URL {
 }
 
 func __spendParamsURL() throws -> URL {
-    URL(string: Bundle.testBundle.url(forResource: "sapling-spend", withExtension: "params")!.path)!
+    try __documentsDirectory().appendingPathComponent("sapling-spend.params")
 }
 
 func __outputParamsURL() throws -> URL {
-    URL(string: Bundle.testBundle.url(forResource: "sapling-output", withExtension: "params")!.path)!
+    try __documentsDirectory().appendingPathComponent("sapling-output.params")
 }
 
 func copyParametersToDocuments() throws -> (spend: URL, output: URL) {

@@ -225,6 +225,14 @@ public class Initializer {
     public func blockProcessor() -> CompactBlockProcessor? {
         self.processor
     }
+    
+    func isSpendParameterPresent() -> Bool {
+        FileManager.default.isReadableFile(atPath: self.spendParamsURL.absoluteString)
+    }
+    
+    func isOutputParameterPresent() -> Bool {
+        FileManager.default.isExecutableFile(atPath: self.outputParamsURL.absoluteString)
+    }
 }
 
 class CompactBlockProcessorBuilder {

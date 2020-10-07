@@ -167,12 +167,13 @@ func __pendingDbURL() throws -> URL {
 }
 
 func __spendParamsURL() throws -> URL {
-    Bundle.main.url(forResource: "sapling-spend", withExtension: ".params")!
+    try __documentsDirectory().appendingPathComponent("sapling-spend.params")
 }
 
 func __outputParamsURL() throws -> URL {
-    Bundle.main.url(forResource: "sapling-output", withExtension: ".params")!
+    try __documentsDirectory().appendingPathComponent("sapling-output.params")
 }
+
 
 
 public extension NotificationBubble {
