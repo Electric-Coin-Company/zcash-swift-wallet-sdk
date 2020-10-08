@@ -234,8 +234,6 @@ public class Initializer {
         FileManager.default.isReadableFile(atPath: self.outputParamsURL.path)
     }
     
-    
-    
     func downloadParametersIfNeeded(result: @escaping (Result<Bool,Error>) -> Void)  {
         let spendParameterPresent = isSpendParameterPresent()
         let outputParameterPresent = isOutputParameterPresent()
@@ -247,7 +245,6 @@ public class Initializer {
         
         let outputURL = self.outputParamsURL
         let spendURL = self.spendParamsURL
-        
         
         if !outputParameterPresent {
             SaplingParameterDownloader.downloadOutputParameter(outputURL) { outputResult in
