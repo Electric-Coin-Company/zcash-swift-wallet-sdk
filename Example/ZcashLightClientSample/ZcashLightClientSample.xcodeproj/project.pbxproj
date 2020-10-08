@@ -46,9 +46,9 @@
 		0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
 		0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
 		0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
+		4B7E6D953A7CC9204FDE510C /* Pods_ZcashLightClientSample.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CB06C3C92417F3584991C0B /* Pods_ZcashLightClientSample.framework */; };
 		6355F11E6389A7F4FD9F21F7 /* Pods_ZcashLightClientSample_Mainnet.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49540782BAF7E579947E23C4 /* Pods_ZcashLightClientSample_Mainnet.framework */; };
 		742DCA7AFF9FBEA217FD3EED /* Pods_ZcashLightClientSampleUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33F67E6BA5A27016288E77EB /* Pods_ZcashLightClientSampleUITests.framework */; };
-		8B6C57670F3DC120D19643F4 /* libPods-ZcashLightClientSample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF3AF259726D0F9D6574293D /* libPods-ZcashLightClientSample.a */; };
 		A459F9A413C2AB70A02FE894 /* Pods_ZcashLightClientSampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C89C3AE14EA6993FECC643BC /* Pods_ZcashLightClientSampleTests.framework */; };
 /* End PBXBuildFile section */
 
@@ -105,11 +105,11 @@
 		47991618469ABD2A7FE69E73 /* Pods-ZcashLightClientSample-Mainnet.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSample-Mainnet.release.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSample-Mainnet/Pods-ZcashLightClientSample-Mainnet.release.xcconfig"; sourceTree = "<group>"; };
 		49540782BAF7E579947E23C4 /* Pods_ZcashLightClientSample_Mainnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample_Mainnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		501B4B56030ED65B9C170CE2 /* Pods-ZcashLightClientSampleTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSampleTests.debug.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests.debug.xcconfig"; sourceTree = "<group>"; };
+		6CB06C3C92417F3584991C0B /* Pods_ZcashLightClientSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		81B2AC726EA5CC3FEF521F84 /* Pods-ZcashLightClientSampleUITests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSampleUITests.debug.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSampleUITests/Pods-ZcashLightClientSampleUITests.debug.xcconfig"; sourceTree = "<group>"; };
 		90F55027AEE5406E35644223 /* Pods-ZcashLightClientSample-Mainnet.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSample-Mainnet.debug.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSample-Mainnet/Pods-ZcashLightClientSample-Mainnet.debug.xcconfig"; sourceTree = "<group>"; };
 		93F435FD5C95BEE3BC7BBC28 /* Pods-ZcashLightClientSample.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSample.debug.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample.debug.xcconfig"; sourceTree = "<group>"; };
 		BEA142AE2F3C339269CBA120 /* Pods-ZcashLightClientSampleTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ZcashLightClientSampleTests.release.xcconfig"; path = "Target Support Files/Pods-ZcashLightClientSampleTests/Pods-ZcashLightClientSampleTests.release.xcconfig"; sourceTree = "<group>"; };
-		BF3AF259726D0F9D6574293D /* libPods-ZcashLightClientSample.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ZcashLightClientSample.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C89C3AE14EA6993FECC643BC /* Pods_ZcashLightClientSampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -126,7 +126,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8B6C57670F3DC120D19643F4 /* libPods-ZcashLightClientSample.a in Frameworks */,
+				4B7E6D953A7CC9204FDE510C /* Pods_ZcashLightClientSample.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,7 +303,7 @@
 				C89C3AE14EA6993FECC643BC /* Pods_ZcashLightClientSampleTests.framework */,
 				33F67E6BA5A27016288E77EB /* Pods_ZcashLightClientSampleUITests.framework */,
 				49540782BAF7E579947E23C4 /* Pods_ZcashLightClientSample_Mainnet.framework */,
-				BF3AF259726D0F9D6574293D /* libPods-ZcashLightClientSample.a */,
+				6CB06C3C92417F3584991C0B /* Pods_ZcashLightClientSample.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -340,6 +340,7 @@
 				0D907F0E2322CC5900D641FE /* Sources */,
 				0D907F0F2322CC5900D641FE /* Frameworks */,
 				0D907F102322CC5900D641FE /* Resources */,
+				45EC872B9ED4F87BF9B92B1C /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -550,6 +551,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		45EC872B9ED4F87BF9B92B1C /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ZcashLightClientSample/Pods-ZcashLightClientSample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		A18B8A4D55F1DF8B808ABB67 /* [CP] Embed Pods Frameworks */ = {

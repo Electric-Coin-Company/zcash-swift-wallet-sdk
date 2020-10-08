@@ -22,19 +22,9 @@ ZcashLightClientKit uses a rust library called Librustzcash. In order to build i
 
 Install [Rust](https://www.rust-lang.org/learn/get-started), and then `cargo-lipo`:
 
-**WORKAROUND**: we are having issues with rustc 1.46.0 we recommend using rustc 1.40.0 until we push a fix for this problem: see issue https://github.com/zcash/ZcashLightClientKit/issues/177
-
-
-_regular workflow_
 ```
 $ cargo install cargo-lipo
 $ rustup target add aarch64-apple-ios x86_64-apple-ios
-```
-_workaround to force 1.40.0_
-```
-rustup override set 1.40.0
-rustup target remove aarch64-apple-ios x86_64-apple-ios
-rustup target add aarch64-apple-ios x86_64-apple-ios
 ```
 
 # Cocoapods Support
