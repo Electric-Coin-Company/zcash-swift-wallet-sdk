@@ -6,13 +6,21 @@
 //
 
 import Foundation
-
+/**
+ Helper class to handle the download of Sapling parameters
+ */
 public class SaplingParameterDownloader {
     public enum Errors: Error {
         case invalidURL(url: String)
         case failed(error: Error)
     }
     
+    /**
+     Download a Spend parameter from default host and stores it at given URL
+     - Parameters:
+      - at: The destination URL for the download
+      - result: block to handle the download success or error
+     */
     public static func downloadSpendParameter(_ at: URL, result: @escaping (Result<URL, Error>) -> Void) {
         
         guard let url = URL(string: spendParamsURLString) else {
@@ -21,7 +29,12 @@ public class SaplingParameterDownloader {
         }
        downloadFileWithRequest(URLRequest(url: url), at: at, result: result)
     }
-    
+    /**
+     Download an Output parameter from default host and stores it at given URL
+     - Parameters:
+      - at: The destination URL for the download
+      - result: block to handle the download success or error
+     */
     public static func downloadOutputParameter(_ at: URL, result: @escaping (Result<URL, Error>) -> Void) {
         guard let url = URL(string: outputParamsURLString) else {
             result(.failure(Errors.invalidURL(url: outputParamsURLString)))
@@ -45,6 +58,55 @@ public class SaplingParameterDownloader {
              }
          }
          task.resume()
+    }
+    /**
+     Downloads the parameters if not present and provides the resulting URLs for both parameters
+     - Parameters:
+       - spendURL: URL to check whether the parameter is already downloaded
+       - outputURL: URL to check whether the parameter is already downloaded
+       - result: block to handle success or error
+     */
+    public static func downloadParamsIfnotPresent(spendURL: URL, outputURL: URL, result: @escaping (Result<(spend: URL, output: URL),Error>) -> Void) {
+        
+        ensureSpendParameter(at: spendURL) { (spendResult) in
+            switch spendResult {
+            case .success(let spendResultURL):
+                ensureOutputParameter(at: outputURL) { (outputResult) in
+                    switch outputResult {
+                    case .success(let outputResultURL):
+                        result(.success((spendResultURL,outputResultURL)))
+                    case .failure(let outputResultError):
+                        result(.failure(Errors.failed(error: outputResultError)))
+                    }
+                }
+            case .failure(let spendResultError):
+                result(.failure(Errors.failed(error: spendResultError)))
+            }
+        }
+    }
+    
+    static func ensureSpendParameter(at url: URL, result: @escaping (Result<URL,Error>) -> Void) {
+        if isFilePresent(url: url) {
+            DispatchQueue.global().async {
+                result(.success(url))
+            }
+        } else {
+            downloadSpendParameter(url, result: result)
+        }
+    }
+    
+    static func ensureOutputParameter(at url: URL, result: @escaping (Result<URL,Error>) -> Void) {
+        if isFilePresent(url: url) {
+            DispatchQueue.global().async {
+                result(.success(url))
+            }
+        } else {
+            downloadOutputParameter(url, result: result)
+        }
+    }
+    
+    static func isFilePresent(url: URL) -> Bool {
+        (try? FileManager.default.attributesOfItem(atPath: url.path)) != nil
     }
     
     static var spendParamsURLString: String {

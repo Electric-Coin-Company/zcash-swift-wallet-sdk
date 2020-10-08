@@ -59,32 +59,18 @@ class SaplingParametersViewController: UIViewController {
     @IBAction func download(_ sender: Any) {
         let outputParameter = try! __outputParamsURL()
         let spendParameter = try! __spendParamsURL()
-        if !FileManager.default.isReadableFile(atPath: outputParameter.absoluteString) {
-            SaplingParameterDownloader.downloadOutputParameter(outputParameter) { [weak self] result in
+        SaplingParameterDownloader.downloadParamsIfnotPresent(spendURL: spendParameter, outputURL: outputParameter) { (result) in
+            DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
-                DispatchQueue.main.async {
-                    switch result{
-                    case .success:
-                        self.updateButtons()
-                        self.updateColor()
-                    case .failure(let error):
-                        self.showError(error)
-                    }
-                }
-            }
-        }
-        
-        if !FileManager.default.isReadableFile(atPath: spendParameter.absoluteString) {
-            SaplingParameterDownloader.downloadSpendParameter(try! __spendParamsURL()) { [weak self] result in
-                guard let self = self else { return }
-                DispatchQueue.main.async {
-                    switch result{
-                    case .success:
-                        self.updateButtons()
-                        self.updateColor()
-                    case .failure(let error):
-                        self.showError(error)
-                    }
+                switch result {
+                case .success(let urls):
+                    self.spendPath.text = urls.spend.path
+                    self.outputPath.text = urls.output.path
+                    self.updateColor()
+                    self.updateButtons()
+                    
+                case .failure(let error):
+                    self.showError(error)
                 }
             }
         }
@@ -109,14 +95,4 @@ class SaplingParametersViewController: UIViewController {
         self.updateColor()
         self.updateButtons()
     }
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }

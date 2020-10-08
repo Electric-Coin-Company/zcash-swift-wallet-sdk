@@ -227,11 +227,58 @@ public class Initializer {
     }
     
     func isSpendParameterPresent() -> Bool {
-        FileManager.default.isReadableFile(atPath: self.spendParamsURL.absoluteString)
+        FileManager.default.isReadableFile(atPath: self.spendParamsURL.path)
     }
     
     func isOutputParameterPresent() -> Bool {
-        FileManager.default.isExecutableFile(atPath: self.outputParamsURL.absoluteString)
+        FileManager.default.isReadableFile(atPath: self.outputParamsURL.path)
+    }
+    
+    
+    
+    func downloadParametersIfNeeded(result: @escaping (Result<Bool,Error>) -> Void)  {
+        let spendParameterPresent = isSpendParameterPresent()
+        let outputParameterPresent = isOutputParameterPresent()
+        
+        if spendParameterPresent && outputParameterPresent {
+            result(.success(true))
+            return
+        }
+        
+        let outputURL = self.outputParamsURL
+        let spendURL = self.spendParamsURL
+        
+        
+        if !outputParameterPresent {
+            SaplingParameterDownloader.downloadOutputParameter(outputURL) { outputResult in
+                switch outputResult {
+                case .failure(let e):
+                    result(.failure(e))
+                case .success:
+                    guard !spendParameterPresent else {
+                        result(.success(false))
+                        return
+                    }
+                    SaplingParameterDownloader.downloadSpendParameter(spendURL) { (spendResult) in
+                        switch spendResult {
+                        case .failure(let e):
+                            result(.failure(e))
+                        case .success:
+                            result(.success(false))
+                        }
+                    }
+                }
+            }
+        } else if !spendParameterPresent {
+            SaplingParameterDownloader.downloadSpendParameter(spendURL) { (spendResult) in
+                switch spendResult {
+                case .failure(let e):
+                    result(.failure(e))
+                case .success:
+                    result(.success(false))
+                }
+            }
+        }
     }
 }
 

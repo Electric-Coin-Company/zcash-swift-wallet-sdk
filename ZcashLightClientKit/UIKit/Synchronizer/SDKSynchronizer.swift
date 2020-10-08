@@ -392,12 +392,6 @@ public class SDKSynchronizer: Synchronizer {
     @objc func applicationWillResignActive(_ notification: Notification) {
         registerBackgroundActivity()
         LoggerProxy.debug("applicationWillResignActive")
-//        do {
-//
-//            try stop()
-//        } catch {
-//            LoggerProxy.debug("stop failed with error: \(error)")
-//        }
     }
     
     @objc func applicationWillTerminate(_ notification: Notification) {
@@ -407,6 +401,20 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: Synchronizer methods
     
     public func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
+        
+        initializer.downloadParametersIfNeeded { (downloadResult) in
+            DispatchQueue.main.async { [weak self] in
+                switch downloadResult {
+                case .success:
+                    self?.createToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo, from: accountIndex, resultBlock: resultBlock)
+                case .failure(let error):
+                    resultBlock(.failure(SynchronizerError.parameterMissing(underlyingError: error)))
+                }
+            }
+        }
+    }
+    
+    func createToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         
         do {
             let spend = try transactionManager.initSpend(zatoshi: Int(zatoshi), toAddress: toAddress, memo: memo, from: accountIndex)
@@ -435,7 +443,6 @@ public class SDKSynchronizer: Synchronizer {
             resultBlock(.failure(error))
         }
     }
-    
     public func getAddress(accountIndex: Int) -> String {
         initializer.getAddress(index: accountIndex) ?? ""
     }
@@ -464,7 +471,7 @@ public class SDKSynchronizer: Synchronizer {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
     }
     
-    public func latestDownloadedHeight() throws  -> BlockHeight {
+    public func latestDownloadedHeight() throws -> BlockHeight {
         try initializer.downloader.lastDownloadedBlockHeight()
     }
     

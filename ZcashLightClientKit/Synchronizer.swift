@@ -21,6 +21,7 @@ public enum SynchronizerError: Error {
     case networkTimeout
     case uncategorized(underlyingError: Error)
     case criticalError
+    case parameterMissing(underlyingError: Error)
 }
 
 /**
