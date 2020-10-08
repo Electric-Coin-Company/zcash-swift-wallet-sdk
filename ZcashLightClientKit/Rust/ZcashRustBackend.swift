@@ -76,7 +76,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]? {
         let dbData = dbData.osStr()
-        let capacity = UInt(0);
+        var capacity = UInt(0);
         let extsksCStr = zcashlc_init_accounts_table(dbData.0, dbData.1, seed, UInt(seed.count), accounts, &capacity)
         if extsksCStr == nil {
             return nil
@@ -209,8 +209,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]? {
-        let capacity = UInt(0);
-        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, capacity) else {
+        var capacity = UInt(0);
+        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, &capacity) else {
             if let error = lastError() {
                 throw error
             }
@@ -226,7 +226,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
-        let capacity = UInt(0);
+        var capacity = UInt(0);
         guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, &capacity) else {
             if let error = lastError() {
                 throw error
