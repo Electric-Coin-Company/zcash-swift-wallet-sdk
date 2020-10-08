@@ -76,7 +76,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]? {
         let dbData = dbData.osStr()
-        let extsksCStr = zcashlc_init_accounts_table(dbData.0, dbData.1, seed, UInt(seed.count), accounts)
+        let capacity = UInt(0);
+        let extsksCStr = zcashlc_init_accounts_table(dbData.0, dbData.1, seed, UInt(seed.count), accounts, &capacity)
         if extsksCStr == nil {
             return nil
         }
@@ -85,7 +86,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             guard let str = cStr else { return nil }
             return String(cString: str)
         })
-        zcashlc_vec_string_free(extsksCStr, UInt(accounts))
+        zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
         return extsks
     }
     
@@ -208,8 +209,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]? {
-        
-        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts) else {
+        let capacity = UInt(0);
+        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, capacity) else {
             if let error = lastError() {
                 throw error
             }
@@ -220,12 +221,13 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             guard let str = cStr else { return nil }
             return String(cString: str)
         })
-        zcashlc_vec_string_free(extsksCStr, UInt(accounts))
+        zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
         return extsks
     }
     
     static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
-        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts) else {
+        let capacity = UInt(0);
+        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, &capacity) else {
             if let error = lastError() {
                 throw error
             }
@@ -236,7 +238,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             guard let str = cStr else { return nil }
             return String(cString: str)
         })
-        zcashlc_vec_string_free(extsksCStr, UInt(accounts))
+        zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
         return extsks
     }
     

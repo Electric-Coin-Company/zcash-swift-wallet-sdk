@@ -42,11 +42,13 @@ char *zcashlc_derive_extended_full_viewing_key(const char *extsk);
 
 char **zcashlc_derive_extended_full_viewing_keys(const uint8_t *seed,
                                                  uintptr_t seed_len,
-                                                 int32_t accounts);
+                                                 int32_t accounts,
+                                                 uintptr_t *capacity_ret);
 
 char **zcashlc_derive_extended_spending_keys(const uint8_t *seed,
                                              uintptr_t seed_len,
-                                             int32_t accounts);
+                                             int32_t accounts,
+                                             uintptr_t *capacity_ret);
 
 /**
  * Copies the last error message into the provided allocated buffer.
@@ -107,7 +109,8 @@ char **zcashlc_init_accounts_table(const uint8_t *db_data,
                                    uintptr_t db_data_len,
                                    const uint8_t *seed,
                                    uintptr_t seed_len,
-                                   int32_t accounts);
+                                   int32_t accounts,
+                                   uintptr_t *capacity_ret);
 
 /**
  * Initialises the data database with the given block.
@@ -205,4 +208,4 @@ int32_t zcashlc_validate_combined_chain(const uint8_t *db_cache,
 /**
  * Frees vectors of strings returned by other zcashlc functions.
  */
-void zcashlc_vec_string_free(char **v, uintptr_t len);
+void zcashlc_vec_string_free(char **v, uintptr_t len, uintptr_t capacity);

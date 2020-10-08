@@ -115,6 +115,7 @@ pub extern "C" fn zcashlc_init_accounts_table(
     seed: *const u8,
     seed_len: usize,
     accounts: i32,
+    capacity_ret: *mut usize,
 ) -> *mut *mut c_char {
     let res = catch_panic(|| {
         let db_data = Path::new(OsStr::from_bytes(unsafe {
@@ -151,7 +152,8 @@ pub extern "C" fn zcashlc_init_accounts_table(
                 CString::new(encoded).unwrap().into_raw()
             })
             .collect();
-        assert!(v.len() == v.capacity());
+        assert!(v.len() == accounts as usize);
+        unsafe { *capacity_ret.as_mut().unwrap() = v.capacity() };
         let p = v.as_mut_ptr();
         std::mem::forget(v);
         Ok(p)
@@ -197,6 +199,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
     seed: *const u8,
     seed_len: usize,
     accounts: i32,
+    capacity_ret: *mut usize,
 ) -> *mut *mut c_char {
     let res = catch_panic(|| {
         let seed = slice::from_raw_parts(seed, seed_len);
@@ -219,7 +222,8 @@ pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
                 CString::new(encoded).unwrap().into_raw()
             })
             .collect();
-        assert!(v.len() == v.capacity());
+        assert!(v.len() == accounts as usize);
+        *capacity_ret.as_mut().unwrap() = v.capacity();
         let p = v.as_mut_ptr();
         std::mem::forget(v);
         Ok(p)
@@ -232,6 +236,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
     seed: *const u8,
     seed_len: usize,
     accounts: i32,
+    capacity_ret: *mut usize,
 ) -> *mut *mut c_char {
     let res = catch_panic(|| {
         let seed = slice::from_raw_parts(seed, seed_len);
@@ -254,7 +259,8 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
                 CString::new(encoded).unwrap().into_raw()
             })
             .collect();
-        assert!(v.len() == v.capacity());
+        assert!(v.len() == accounts as usize);
+        *capacity_ret.as_mut().unwrap() = v.capacity();
         let p = v.as_mut_ptr();
         std::mem::forget(v);
         Ok(p)
@@ -703,13 +709,13 @@ pub extern "C" fn zcashlc_string_free(s: *mut c_char) {
 
 /// Frees vectors of strings returned by other zcashlc functions.
 #[no_mangle]
-pub extern "C" fn zcashlc_vec_string_free(v: *mut *mut c_char, len: usize) {
+pub extern "C" fn zcashlc_vec_string_free(v: *mut *mut c_char, len: usize, capacity: usize) {
     unsafe {
         if v.is_null() {
             return;
         }
-        // All Vecs created by other functions MUST have length == capacity.
-        let v = Vec::from_raw_parts(v, len, len);
+        assert!(len <= capacity);
+        let v = Vec::from_raw_parts(v, len, capacity);
         v.into_iter().map(|s| CString::from_raw(s)).for_each(drop);
     };
 }
