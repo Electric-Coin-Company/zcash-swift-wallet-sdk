@@ -8,8 +8,8 @@ use std::slice;
 use std::str::FromStr;
 use zcash_client_backend::{
     encoding::{
-        decode_extended_spending_key, encode_extended_full_viewing_key,
-        encode_extended_spending_key,
+        decode_extended_full_viewing_key, decode_extended_spending_key,
+        encode_extended_full_viewing_key, encode_extended_spending_key, encode_payment_address,
     },
     keys::spending_key,
 };
@@ -43,13 +43,28 @@ use zcash_proofs::prover::LocalTxProver;
 #[cfg(feature = "mainnet")]
 use zcash_client_backend::constants::mainnet::{
     COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY,
+    HRP_SAPLING_PAYMENT_ADDRESS,
 };
 #[cfg(not(feature = "mainnet"))]
 use zcash_client_backend::constants::testnet::{
     COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY,
+    HRP_SAPLING_PAYMENT_ADDRESS,
 };
 
 use std::convert::TryFrom;
+
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+// Temporary Imports
+use base58::ToBase58;
+use sha2::{Digest, Sha256};
+// use zcash_primitives::legacy::TransparentAddress;
+use hdwallet::{ExtendedPrivKey, KeyIndex};
+use secp256k1::{PublicKey, Secp256k1};
+use zcash_client_backend::constants::mainnet::B58_PUBKEY_ADDRESS_PREFIX;
+
+// use crate::extended_key::{key_index::KeyIndex, ExtendedPrivKey, ExtendedPubKey, KeySeed};
+// /////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 fn unwrap_exc_or<T>(exc: Result<T, ()>, def: T) -> T {
     match exc {
@@ -290,6 +305,58 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
             encode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, &extfvk);
 
         Ok(CString::new(encoded).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
+    seed: *const u8,
+    seed_len: usize,
+    account_index: i32,
+) -> *mut c_char {
+    let res = catch_panic(|| {
+        let seed = slice::from_raw_parts(seed, seed_len);
+        let account_index = if account_index >= 0 {
+            account_index as u32
+        } else {
+            return Err(format_err!("accounts argument must be greater than zero"));
+        };
+        let address = spending_key(&seed, COIN_TYPE, account_index)
+            .default_address()
+            .unwrap()
+            .1;
+        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        Ok(CString::new(address_str).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_viewing_key(
+    extfvk: *const c_char,
+) -> *mut c_char {
+
+    let res = catch_panic(|| {
+        let extfvk_string = CStr::from_ptr(extfvk).to_str()?;
+        let extfvk = match decode_extended_full_viewing_key(
+            HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY,
+            &extfvk_string,
+        ) {
+            Ok(Some(extfvk)) => extfvk,
+            Ok(None) => {
+                return Err(format_err!("Failed to parse viewing key string in order to derive the address. Deriving a viewing key from the string returned no results. Encoding was valid but type was incorrect."));
+            }
+            Err(e) => {
+                return Err(format_err!(
+                    "Error while deriving viewing key from string input: {}",
+                    e
+                ));
+            }
+        };
+        let address = extfvk.default_address().unwrap().1;
+        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        Ok(CString::new(address_str).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
 }
@@ -714,4 +781,74 @@ pub extern "C" fn zcashlc_vec_string_free(v: *mut *mut c_char, len: usize, capac
         let v = Vec::from_raw_parts(v, len, capacity);
         v.into_iter().map(|s| CString::from_raw(s)).for_each(drop);
     };
+}
+
+
+//// TEST TEST 123 TEST 
+
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
+    seed: *const u8,
+    seed_len: usize,
+) -> *mut c_char {
+
+    let res = catch_panic(|| {
+        let seed = slice::from_raw_parts(seed, seed_len);
+        
+        // modified from: https://github.com/adityapk00/zecwallet-light-cli/blob/master/lib/src/lightwallet.rs
+
+        let ext_t_key = ExtendedPrivKey::with_seed(&seed).unwrap();
+        let address_sk = ext_t_key
+            .derive_private_key(KeyIndex::hardened_from_normalize_index(44).unwrap())
+            .unwrap()
+            .derive_private_key(KeyIndex::hardened_from_normalize_index(COIN_TYPE).unwrap())
+            .unwrap()
+            .derive_private_key(KeyIndex::hardened_from_normalize_index(0).unwrap())
+            .unwrap()
+            .derive_private_key(KeyIndex::Normal(0))
+            .unwrap()
+            .derive_private_key(KeyIndex::Normal(0))
+            .unwrap()
+            .private_key;
+        let secp = Secp256k1::new();
+        let pk = PublicKey::from_secret_key(&secp, &address_sk);
+        let mut hash160 = ripemd160::Ripemd160::new();
+        hash160.update(Sha256::digest(&pk.serialize()[..].to_vec()));
+        let address_string = hash160
+            .finalize()
+            .to_base58check(&B58_PUBKEY_ADDRESS_PREFIX, &[]);
+
+        Ok(CString::new(address_string).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
+
+//
+// Helper code from: https://github.com/adityapk00/zecwallet-light-cli/blob/master/lib/src/lightwallet.rs
+//
+
+/// A trait for converting a [u8] to base58 encoded string.
+pub trait ToBase58Check {
+    /// Converts a value of `self` to a base58 value, returning the owned string.
+    /// The version is a coin-specific prefix that is added.
+    /// The suffix is any bytes that we want to add at the end (like the "iscompressed" flag for
+    /// Secret key encoding)
+    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String;
+}
+impl ToBase58Check for [u8] {
+    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String {
+        let mut payload: Vec<u8> = Vec::new();
+        payload.extend_from_slice(version);
+        payload.extend_from_slice(self);
+        payload.extend_from_slice(suffix);
+
+        let checksum = double_sha256(&payload);
+        payload.append(&mut checksum[..4].to_vec());
+        payload.to_base58()
+    }
+}
+pub fn double_sha256(payload: &[u8]) -> Vec<u8> {
+    let h1 = Sha256::digest(&payload);
+    let h2 = Sha256::digest(&h1);
+    h2.to_vec()
 }

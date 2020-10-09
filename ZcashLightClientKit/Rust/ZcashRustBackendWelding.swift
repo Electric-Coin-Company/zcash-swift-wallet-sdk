@@ -190,7 +190,7 @@ public protocol ZcashRustBackendWelding {
     - Returns: an array containing the derived keys
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]?
+    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32) throws -> [String]?
     
     /**
     Derives a set of full viewing keys from a seed
@@ -199,7 +199,32 @@ public protocol ZcashRustBackendWelding {
     - Returns: an array containing the spending keys
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]?
+    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32) throws -> [String]?
+    
+    /**
+     Derives a shielded address from a seed
+     - Parameter seed: an array of bytes of the seed
+     - Parameter accountIndex: the index of the account you want the address for
+     - Returns: an optional String containing the Shielded address
+     - Throws: RustBackendError if fatal error occurs
+     */
+    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String?
+    
+    /**
+     Derives a shielded address from an Extended Full Viewing Key
+     - Parameter extfvk: a string containing the extended full viewing key
+     - Returns: an optional String containing the Shielded address
+     - Throws: RustBackendError if fatal error occurs
+     */
+    static func deriveShieldedAddressFromViewingKey(_  extfvk: String) throws -> String?
+    
+    /**
+     Derives a shielded address from an Extended Full Viewing Key
+     - Parameter seed: an array of bytes of the seed
+     - Returns: an optional String containing the transparent address
+     - Throws: RustBackendError if fatal error occurs
+     */
+    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String?
     
     /**
      Gets the consensus branch id for the given height

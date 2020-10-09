@@ -208,9 +208,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return derived
     }
     
-    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]? {
+    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
         var capacity = UInt(0);
-        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, &capacity) else {
+        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.count), accounts, &capacity) else {
             if let error = lastError() {
                 throw error
             }
@@ -225,9 +225,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
-    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
+    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
         var capacity = UInt(0);
-        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, &capacity) else {
+        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.count), accounts, &capacity) else {
             if let error = lastError() {
                 throw error
             }
@@ -240,6 +240,52 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         })
         zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
         return extsks
+    }
+    
+    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String? {
+        guard let zaddrCStr = zcashlc_derive_shielded_address_from_seed(seed, UInt(seed.count), accountIndex) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        let zAddr = String(validatingUTF8: zaddrCStr)
+        
+        zcashlc_string_free(zaddrCStr)
+        
+        return zAddr
+    }
+    
+    static func deriveShieldedAddressFromViewingKey(_ extfvk: String) throws -> String? {
+        guard !extfvk.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard let zaddrCStr = zcashlc_derive_shielded_address_from_viewing_key([CChar](extfvk.utf8CString)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        let zAddr = String(validatingUTF8: zaddrCStr)
+        
+        zcashlc_string_free(zaddrCStr)
+        
+        return zAddr
+    }
+    
+    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String? {
+        
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        
+        let tAddr = String(validatingUTF8: tAddrCStr)
+        
+        return tAddr
     }
     
     static func consensusBranchIdFor(height: Int32) throws -> Int32 {

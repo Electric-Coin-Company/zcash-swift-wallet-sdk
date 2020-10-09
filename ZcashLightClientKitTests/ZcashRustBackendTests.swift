@@ -38,7 +38,7 @@ class ZcashRustBackendTests: XCTestCase {
     }
     
     func testDeriveExtendedSpendingKeys() {
-        let seed = "testreferencealicetestreferencealice"
+        let seed = Array("testreferencealicetestreferencealice".utf8)
         
         var spendingKeys: [String]? = nil
         XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1) }())
@@ -49,7 +49,7 @@ class ZcashRustBackendTests: XCTestCase {
     }
     
     func testDeriveExtendedFullViewingKeys() {
-        let seed = "testreferencealicetestreferencealice"
+        let seed = Array("testreferencealicetestreferencealice".utf8)
         
         var fullViewingKeys: [String]? = nil
         XCTAssertNoThrow(try { fullViewingKeys = try ZcashRustBackend.deriveExtendedFullViewingKeys(seed: seed, accounts: 1) }())
@@ -59,7 +59,7 @@ class ZcashRustBackendTests: XCTestCase {
     }
     
     func testDeriveExtendedFullViewingKey() {
-        let seed = "testreferencealicetestreferencealice"
+        let seed = Array("testreferencealicetestreferencealice".utf8)
         var fullViewingKey: String? = nil
         
         

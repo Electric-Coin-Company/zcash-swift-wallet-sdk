@@ -50,6 +50,14 @@ char **zcashlc_derive_extended_spending_keys(const uint8_t *seed,
                                              int32_t accounts,
                                              uintptr_t *capacity_ret);
 
+char *zcashlc_derive_shielded_address_from_seed(const uint8_t *seed,
+                                                uintptr_t seed_len,
+                                                int32_t account_index);
+
+char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk);
+
+char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed, uintptr_t seed_len);
+
 /**
  * Copies the last error message into the provided allocated buffer.
  */
