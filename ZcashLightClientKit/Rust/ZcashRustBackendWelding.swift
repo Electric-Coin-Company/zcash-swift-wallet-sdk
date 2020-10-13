@@ -49,13 +49,23 @@ public protocol ZcashRustBackendWelding {
     static func isValidTransparentAddress(_ address: String) throws -> Bool
     
     /**
-    initialize the blocks table from a given checkpoint (birthday)
+    initialize the accounts table from a given seed and a number of accounts
      - Parameters:
        - dbData: location of the data db
        - seed: byte array of the zip32 seed
        - accounts: how many accounts you want to have
  */
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]?
+    
+    
+    /**
+    initialize the accounts table from a given seed and a number of accounts
+     - Parameters:
+       - dbData: location of the data db
+       - exfvks: byte array of the zip32 seed
+     - Returns: a boolean indicating if the database was initialized or an error
+ */
+    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool
     
     /**
     initialize the blocks table from a given checkpoint (birthday)

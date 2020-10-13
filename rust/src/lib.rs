@@ -175,39 +175,49 @@ pub extern "C" fn zcashlc_init_accounts_table(
     unwrap_exc_or_null(res)
 }
 
-/// Initialises the data database with the given block.
-///
-/// This enables a newly-created database to be immediately-usable, without needing to
-/// synchronise historic blocks.
+/// Initialises the data database with the given extended full viewing keys
+/// Call `zcashlc_vec_string_free` on the returned pointer when you are finished with it.
 #[no_mangle]
-pub extern "C" fn zcashlc_init_blocks_table(
+pub extern "C" fn zcashlc_init_accounts_table_with_keys(
     db_data: *const u8,
     db_data_len: usize,
-    height: i32,
-    hash_hex: *const c_char,
-    time: u32,
-    sapling_tree_hex: *const c_char,
-) -> i32 {
+    extfvks: *const *const c_char,
+    extfvks_len: usize,
+) -> bool {
     let res = catch_panic(|| {
         let db_data = Path::new(OsStr::from_bytes(unsafe {
             slice::from_raw_parts(db_data, db_data_len)
         }));
-        let hash = {
-            let mut hash = hex::decode(unsafe { CStr::from_ptr(hash_hex) }.to_str()?).unwrap();
-            hash.reverse();
-            BlockHash::from_slice(&hash)
-        };
-        let sapling_tree =
-            hex::decode(unsafe { CStr::from_ptr(sapling_tree_hex) }.to_str()?).unwrap();
 
-        match init_blocks_table(&db_data, height, hash, time, &sapling_tree) {
-            Ok(()) => Ok(1),
-            Err(e) => Err(format_err!("Error while initializing blocks table: {}", e)),
+    let extfvks = unsafe { std::slice::from_raw_parts(extfvks, extfvks_len)
+        .into_iter()
+        .map(|s| CStr::from_ptr(*s).to_str().unwrap())
+        .map( |vkstr|
+            decode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, &vkstr)
+                .unwrap()
+                .unwrap()
+        ).collect::<Vec<_>>() };
+        
+        match init_accounts_table(&db_data,&extfvks) {
+            Ok(()) => Ok(true),
+            Err(e) => match e.kind() {
+                ErrorKind::TableNotEmpty => {
+                    // Ignore this error.
+                    Ok(true)
+                }
+                _ => return Err(format_err!("Error while initializing accounts: {}", e)),
+            },
         }
+
     });
-    unwrap_exc_or_null(res)
+    unwrap_exc_or(res, false)
 }
 
+/// Derives Extended Spending Keys from the given seed into 'accounts' number of accounts.
+/// Returns the ExtendedSpendingKeys for the accounts. The caller should store these
+/// securely for use while spending.
+///
+/// Call `zcashlc_vec_string_free` on the returned pointer when you are finished with it.
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
     seed: *const u8,
@@ -244,7 +254,11 @@ pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
     });
     unwrap_exc_or_null(res)
 }
-
+/// Derives Extended Full Viewing Keys from the given seed into 'accounts' number of accounts.
+/// Returns the Extended Full Viewing Keys for the accounts. The caller should store these
+/// securely
+///
+/// Call `zcashlc_vec_string_free` on the returned pointer when you are finished with it.
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
     seed: *const u8,
@@ -281,7 +295,63 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
     });
     unwrap_exc_or_null(res)
 }
+/// derives a shielded address from the given seed. 
+/// call zcashlc_string_free with the returned pointer when done using it
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
+    seed: *const u8,
+    seed_len: usize,
+    account_index: i32,
+) -> *mut c_char {
+    let res = catch_panic(|| {
+        let seed = slice::from_raw_parts(seed, seed_len);
+        let account_index = if account_index >= 0 {
+            account_index as u32
+        } else {
+            return Err(format_err!("accounts argument must be greater than zero"));
+        };
+        let address = spending_key(&seed, COIN_TYPE, account_index)
+            .default_address()
+            .unwrap()
+            .1;
+        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        Ok(CString::new(address_str).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
+/// derives a shielded address from the given viewing key. 
+/// call zcashlc_string_free with the returned pointer when done using it
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_viewing_key(
+    extfvk: *const c_char,
+) -> *mut c_char {
 
+    let res = catch_panic(|| {
+        let extfvk_string = CStr::from_ptr(extfvk).to_str()?;
+        let extfvk = match decode_extended_full_viewing_key(
+            HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY,
+            &extfvk_string,
+        ) {
+            Ok(Some(extfvk)) => extfvk,
+            Ok(None) => {
+                return Err(format_err!("Failed to parse viewing key string in order to derive the address. Deriving a viewing key from the string returned no results. Encoding was valid but type was incorrect."));
+            }
+            Err(e) => {
+                return Err(format_err!(
+                    "Error while deriving viewing key from string input: {}",
+                    e
+                ));
+            }
+        };
+        let address = extfvk.default_address().unwrap().1;
+        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        Ok(CString::new(address_str).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
+
+/// derives a shielded address from the given extended full viewing key. 
+/// call zcashlc_string_free with the returned pointer when done using it
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
     extsk: *const c_char,
@@ -309,54 +379,35 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
     unwrap_exc_or_null(res)
 }
 
+/// Initialises the data database with the given block.
+///
+/// This enables a newly-created database to be immediately-usable, without needing to
+/// synchronise historic blocks.
 #[no_mangle]
-pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
-    seed: *const u8,
-    seed_len: usize,
-    account_index: i32,
-) -> *mut c_char {
+pub extern "C" fn zcashlc_init_blocks_table(
+    db_data: *const u8,
+    db_data_len: usize,
+    height: i32,
+    hash_hex: *const c_char,
+    time: u32,
+    sapling_tree_hex: *const c_char,
+) -> i32 {
     let res = catch_panic(|| {
-        let seed = slice::from_raw_parts(seed, seed_len);
-        let account_index = if account_index >= 0 {
-            account_index as u32
-        } else {
-            return Err(format_err!("accounts argument must be greater than zero"));
+        let db_data = Path::new(OsStr::from_bytes(unsafe {
+            slice::from_raw_parts(db_data, db_data_len)
+        }));
+        let hash = {
+            let mut hash = hex::decode(unsafe { CStr::from_ptr(hash_hex) }.to_str()?).unwrap();
+            hash.reverse();
+            BlockHash::from_slice(&hash)
         };
-        let address = spending_key(&seed, COIN_TYPE, account_index)
-            .default_address()
-            .unwrap()
-            .1;
-        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
-        Ok(CString::new(address_str).unwrap().into_raw())
-    });
-    unwrap_exc_or_null(res)
-}
+        let sapling_tree =
+            hex::decode(unsafe { CStr::from_ptr(sapling_tree_hex) }.to_str()?).unwrap();
 
-#[no_mangle]
-pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_viewing_key(
-    extfvk: *const c_char,
-) -> *mut c_char {
-
-    let res = catch_panic(|| {
-        let extfvk_string = CStr::from_ptr(extfvk).to_str()?;
-        let extfvk = match decode_extended_full_viewing_key(
-            HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY,
-            &extfvk_string,
-        ) {
-            Ok(Some(extfvk)) => extfvk,
-            Ok(None) => {
-                return Err(format_err!("Failed to parse viewing key string in order to derive the address. Deriving a viewing key from the string returned no results. Encoding was valid but type was incorrect."));
-            }
-            Err(e) => {
-                return Err(format_err!(
-                    "Error while deriving viewing key from string input: {}",
-                    e
-                ));
-            }
-        };
-        let address = extfvk.default_address().unwrap().1;
-        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
-        Ok(CString::new(address_str).unwrap().into_raw())
+        match init_blocks_table(&db_data, height, hash, time, &sapling_tree) {
+            Ok(()) => Ok(1),
+            Err(e) => Err(format_err!("Error while initializing blocks table: {}", e)),
+        }
     });
     unwrap_exc_or_null(res)
 }
@@ -389,27 +440,6 @@ pub extern "C" fn zcashlc_get_address(
         }
     });
     unwrap_exc_or_null(res)
-}
-
-/// Returns the balance for the account, including all unspent notes that we know about.
-#[no_mangle]
-pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, account: i32) -> i64 {
-    let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
-        let account = if account >= 0 {
-            account as u32
-        } else {
-            return Err(format_err!("account argument must be positive"));
-        };
-
-        match get_balance(&db_data, account) {
-            Ok(balance) => Ok(balance.into()),
-            Err(e) => Err(format_err!("Error while fetching balance: {}", e)),
-        }
-    });
-    unwrap_exc_or(res, -1)
 }
 
 /// Returns true when the address is valid and shielded.
@@ -447,6 +477,27 @@ pub unsafe extern "C" fn zcashlc_is_valid_transparent_address(address: *const c_
         }
     });
     unwrap_exc_or(res, false)
+}
+
+/// Returns the balance for the account, including all unspent notes that we know about.
+#[no_mangle]
+pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, account: i32) -> i64 {
+    let res = catch_panic(|| {
+        let db_data = Path::new(OsStr::from_bytes(unsafe {
+            slice::from_raw_parts(db_data, db_data_len)
+        }));
+        let account = if account >= 0 {
+            account as u32
+        } else {
+            return Err(format_err!("account argument must be positive"));
+        };
+
+        match get_balance(&db_data, account) {
+            Ok(balance) => Ok(balance.into()),
+            Err(e) => Err(format_err!("Error while fetching balance: {}", e)),
+        }
+    });
+    unwrap_exc_or(res, -1)
 }
 
 /// Returns the verified balance for the account, which ignores notes that have been
@@ -784,8 +835,8 @@ pub extern "C" fn zcashlc_vec_string_free(v: *mut *mut c_char, len: usize, capac
 }
 
 
-//// TEST TEST 123 TEST 
-
+/// TEST TEST 123 TEST 
+/// Derives a transparent address from the given seed 
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
     seed: *const u8,

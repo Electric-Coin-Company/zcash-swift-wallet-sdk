@@ -38,24 +38,54 @@ int32_t zcashlc_decrypt_and_store_transaction(const uint8_t *db_data,
                                               const uint8_t *tx,
                                               uintptr_t tx_len);
 
+/**
+ * derives a shielded address from the given extended full viewing key.
+ * call zcashlc_string_free with the returned pointer when done using it
+ */
 char *zcashlc_derive_extended_full_viewing_key(const char *extsk);
 
+/**
+ * Derives Extended Full Viewing Keys from the given seed into 'accounts' number of accounts.
+ * Returns the Extended Full Viewing Keys for the accounts. The caller should store these
+ * securely
+ *
+ * Call `zcashlc_vec_string_free` on the returned pointer when you are finished with it.
+ */
 char **zcashlc_derive_extended_full_viewing_keys(const uint8_t *seed,
                                                  uintptr_t seed_len,
                                                  int32_t accounts,
                                                  uintptr_t *capacity_ret);
 
+/**
+ * Derives Extended Spending Keys from the given seed into 'accounts' number of accounts.
+ * Returns the ExtendedSpendingKeys for the accounts. The caller should store these
+ * securely for use while spending.
+ *
+ * Call `zcashlc_vec_string_free` on the returned pointer when you are finished with it.
+ */
 char **zcashlc_derive_extended_spending_keys(const uint8_t *seed,
                                              uintptr_t seed_len,
                                              int32_t accounts,
                                              uintptr_t *capacity_ret);
 
+/**
+ * derives a shielded address from the given seed.
+ * call zcashlc_string_free with the returned pointer when done using it
+ */
 char *zcashlc_derive_shielded_address_from_seed(const uint8_t *seed,
                                                 uintptr_t seed_len,
                                                 int32_t account_index);
 
+/**
+ * derives a shielded address from the given viewing key.
+ * call zcashlc_string_free with the returned pointer when done using it
+ */
 char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk);
 
+/**
+ * TEST TEST 123 TEST
+ * Derives a transparent address from the given seed
+ */
 char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed, uintptr_t seed_len);
 
 /**
@@ -119,6 +149,15 @@ char **zcashlc_init_accounts_table(const uint8_t *db_data,
                                    uintptr_t seed_len,
                                    int32_t accounts,
                                    uintptr_t *capacity_ret);
+
+/**
+ * Initialises the data database with the given extended full viewing keys
+ * Call `zcashlc_vec_string_free` on the returned pointer when you are finished with it.
+ */
+bool zcashlc_init_accounts_table_with_keys(const uint8_t *db_data,
+                                           uintptr_t db_data_len,
+                                           const char *const *extfvks,
+                                           uintptr_t extfvks_len);
 
 /**
  * Initialises the data database with the given block.

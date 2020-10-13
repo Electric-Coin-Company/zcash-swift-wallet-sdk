@@ -90,6 +90,28 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
+    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+        let dbData = dbData.osStr()
+        let viewingKeys =  exfvks.map { UnsafePointer(strdup($0)) }
+        
+        guard exfvks.count > 0 else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let res = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, viewingKeys, UInt(viewingKeys.count));
+        
+        viewingKeys.compactMap({UnsafeMutablePointer(mutating: $0)}).forEach({ free($0) })
+        
+        guard res else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+        return res
+        
+    }
+    
     static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
         let dbData = dbData.osStr()
         
