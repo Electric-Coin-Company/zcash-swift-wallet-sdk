@@ -249,13 +249,3 @@ class TestSynchronizerBuilder {
     }
 }
 
-class StubSeedProvider: SeedProvider {
-    
-    let bytes: [UInt8]
-    init(bytes: [UInt8]) {
-        self.bytes = bytes
-    }
-    func seed() -> [UInt8] {
-        self.bytes
-    }
-}

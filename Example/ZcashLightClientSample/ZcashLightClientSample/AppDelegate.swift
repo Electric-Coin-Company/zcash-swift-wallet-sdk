@@ -132,12 +132,6 @@ extension AppDelegate {
     }
 }
 
-extension DemoAppConfig: SeedProvider {
-    func seed() throws -> [UInt8] {
-        DemoAppConfig.seed
-    }
-}
-
 extension Initializer {
     static var shared: Initializer {
         AppDelegate.shared.sharedWallet // AppDelegate or DIE.

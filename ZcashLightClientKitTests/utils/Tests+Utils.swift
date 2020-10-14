@@ -112,7 +112,7 @@ extension Bundle {
 }
 
 
-class TestSeed: SeedProvider {
+class TestSeed {
     
     /**
      test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
