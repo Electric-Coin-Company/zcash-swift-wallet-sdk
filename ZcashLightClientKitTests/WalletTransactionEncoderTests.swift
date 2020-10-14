@@ -28,7 +28,12 @@ class WalletTransactionEncoderTests: XCTestCase {
         queue.maxConcurrentOperationCount = 1
         queue.qualityOfService = .userInitiated
         
-        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(), endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
+        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb,
+                                  dataDbURL: dataDbHandle.readWriteDb,
+                                  pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(),
+                                  endpoint: LightWalletEndpointBuilder.default,
+                                  spendParamsURL: try! __spendParamsURL(),
+                                  outputParamsURL: try! __outputParamsURL())
         
         repository = TransactionSQLDAO(dbProvider: dataDbHandle.connectionProvider(readwrite: false))
         transactionEncoder = WalletTransactionEncoder(initializer:  initializer)

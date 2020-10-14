@@ -40,12 +40,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                      spendParamsURL: try! __spendParamsURL(),
                                      outputParamsURL: try! __outputParamsURL(),
                                      loggerProxy: loggerProxy)
-            let addresses = try! wallet.initialize(seedProvider: DemoAppConfig(),
-                                                   walletBirthdayHeight: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
+            try! wallet.initialize(viewingKeys: try DerivationTool.default.deriveViewingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1),
+                                   walletBirthday: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             
             var storage = SampleStorage.shared
             storage!.seed = Data(try! DemoAppConfig().seed())
-            storage!.privateKey = addresses?[0]
+            storage!.privateKey = try! DerivationTool.default.deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
             self.wallet = wallet
             return wallet
         }

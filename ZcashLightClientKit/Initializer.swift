@@ -17,6 +17,7 @@ public enum InitializerError: Error {
     case dataDbInitFailed
     case accountInitFailed
     case falseStart
+    case invalidViewingKey(key: String)
 }
 
 /**
@@ -50,13 +51,15 @@ public struct LightWalletEndpoint {
 public class Initializer {
     
     private(set) var rustBackend: ZcashRustBackendWelding.Type
+    private(set) var alias: String
+    private(set) var endpoint: LightWalletEndpoint
+    
     private var lowerBoundHeight: BlockHeight
     private(set) var cacheDbURL: URL
     private(set) var dataDbURL: URL
     private(set) var pendingDbURL: URL
     private(set) var spendParamsURL: URL
     private(set) var outputParamsURL: URL
-    private var walletBirthday: WalletBirthday?
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
     private(set) var downloader: CompactBlockDownloader
@@ -78,6 +81,7 @@ public class Initializer {
                  endpoint: LightWalletEndpoint,
                  spendParamsURL: URL,
                  outputParamsURL: URL,
+                 alias: String = "",
                  loggerProxy: Logger? = nil) {
         
         let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
@@ -90,11 +94,13 @@ public class Initializer {
                   cacheDbURL: cacheDbURL,
                   dataDbURL: dataDbURL,
                   pendingDbURL: pendingDbURL,
+                  endpoint: endpoint,
                   service: lwdService,
                   repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
                   downloader: CompactBlockDownloader(service: lwdService, storage: storage),
                   spendParamsURL: spendParamsURL,
                   outputParamsURL: outputParamsURL,
+                  alias: alias,
                   loggerProxy: loggerProxy
         )
     }
@@ -107,12 +113,15 @@ public class Initializer {
          cacheDbURL: URL,
          dataDbURL: URL,
          pendingDbURL: URL,
+         endpoint: LightWalletEndpoint,
          service: LightWalletService,
          repository: TransactionRepository,
          downloader: CompactBlockDownloader,
          spendParamsURL: URL,
          outputParamsURL: URL,
+         alias: String = "",
          loggerProxy: Logger? = nil
+         
     ) {
         logger = loggerProxy
         self.rustBackend = rustBackend
@@ -120,8 +129,10 @@ public class Initializer {
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
         self.pendingDbURL = pendingDbURL
+        self.endpoint = endpoint
         self.spendParamsURL = spendParamsURL
         self.outputParamsURL = outputParamsURL
+        self.alias = alias
         self.lightWalletService = service
         self.transactionRepository = repository
         self.downloader = downloader
@@ -139,12 +150,18 @@ public class Initializer {
      do not already exist). These files can be given a prefix for scenarios where multiple wallets
      operate in one app--for instance, when sweeping funds from another wallet seed.
      - Parameters:
-       - seedProvider:  the seed to use for initializing this wallet.
-       - walletBirthdayHeight: the height corresponding to when the wallet seed was created. If null, this signals that the wallet is being born.
-       - numberOfAccounts: the number of accounts to create from this seed.
+       - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
      */
     
-    public func initialize(seedProvider: SeedProvider, walletBirthdayHeight: BlockHeight, numberOfAccounts: Int = 1) throws -> [String]? {
+    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
+        let derivationTool = DerivationTool()
+        for vk in viewingKeys {
+            do {
+                try derivationTool.validateViewingKey(viewingKey: vk)
+            } catch {
+                throw InitializerError.invalidViewingKey(key: vk)
+            }
+        }
         
         do {
             try rustBackend.initDataDb(dbData: dataDbURL)
@@ -154,10 +171,7 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        self.walletBirthday = WalletBirthday.birthday(with: walletBirthdayHeight)
-        guard let birthday = self.walletBirthday else {
-            throw InitializerError.falseStart
-        }
+        let birthday = WalletBirthday.birthday(with: walletBirthday)
         
         do {
             try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
@@ -167,17 +181,24 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? self.walletBirthday?.height ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? birthday.height
         // resume from last downloaded block
         lowerBoundHeight = max(birthday.height, lastDownloaded)
         
-        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: CompactBlockProcessor.Configuration(cacheDb: cacheDbURL, dataDb: dataDbURL, walletBirthday: walletBirthday?.height ?? self.lowerBoundHeight), downloader: self.downloader, transactionRepository: transactionRepository, backend: rustBackend)
+        let config = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL,
+                                                         dataDb: dataDbURL,
+                                                         walletBirthday: birthday.height)
         
-        guard let accounts = rustBackend.initAccountsTable(dbData: dataDbURL, seed: try seedProvider.seed(), accounts: Int32(numberOfAccounts)) else {
+        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: config,
+                                                                     downloader: self.downloader,
+                                                                     transactionRepository: transactionRepository,
+                                                                     backend: rustBackend)
+        
+        
+        guard try rustBackend.initAccountsTable(dbData: dataDbURL, exfvks: viewingKeys) else {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
         
-        return accounts
     }
     
     /**
@@ -280,8 +301,14 @@ public class Initializer {
 }
 
 class CompactBlockProcessorBuilder {
-    static func buildProcessor(configuration: CompactBlockProcessor.Configuration, downloader: CompactBlockDownloader, transactionRepository: TransactionRepository, backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
-        return CompactBlockProcessor(downloader: downloader, backend: backend, config: configuration, repository: transactionRepository)
+    static func buildProcessor(configuration: CompactBlockProcessor.Configuration,
+                               downloader: CompactBlockDownloader,
+                               transactionRepository: TransactionRepository,
+                               backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
+        return CompactBlockProcessor(downloader: downloader,
+                                     backend: backend,
+                                     config: configuration,
+                                     repository: transactionRepository)
     }
 }
 
