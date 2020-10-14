@@ -124,7 +124,6 @@ public protocol ConfirmedTransactionEntity: MinedTransactionEntity, SignedTransa
     
 }
 
-
 public extension ConfirmedTransactionEntity {
     var isOutbound: Bool {
         self.toAddress != nil
@@ -133,4 +132,7 @@ public extension ConfirmedTransactionEntity {
         self.toAddress == nil
     }
     
+    var blockTimeInMilliseconds: Double {
+        self.blockTimeInSeconds * 1000
+    }
 }
