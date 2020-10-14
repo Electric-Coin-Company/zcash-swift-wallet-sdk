@@ -121,4 +121,18 @@ public protocol ConfirmedTransactionEntity: MinedTransactionEntity, SignedTransa
      expiration height for this transaction
      */
     var expiryHeight: BlockHeight? { get set }
+    
+    var isOutbound: Bool { get }
+    
+    var isInbound: Bool { get }
+}
+
+
+public extension ConfirmedTransactionEntity {
+    var isOutbound: Bool {
+        self.toAddress != nil
+    }
+    var isInbound: Bool {
+        self.toAddress == nil
+    }
 }
