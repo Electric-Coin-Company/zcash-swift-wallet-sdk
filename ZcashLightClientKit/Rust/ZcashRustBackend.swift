@@ -90,6 +90,28 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
+    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+        let dbData = dbData.osStr()
+        let viewingKeys =  exfvks.map { UnsafePointer(strdup($0)) }
+        
+        guard exfvks.count > 0 else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let res = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, viewingKeys, UInt(viewingKeys.count));
+        
+        viewingKeys.compactMap({UnsafeMutablePointer(mutating: $0)}).forEach({ free($0) })
+        
+        guard res else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+        return res
+        
+    }
+    
     static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
         let dbData = dbData.osStr()
         
@@ -208,9 +230,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return derived
     }
     
-    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]? {
+    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
         var capacity = UInt(0);
-        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, &capacity) else {
+        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.count), accounts, &capacity) else {
             if let error = lastError() {
                 throw error
             }
@@ -225,9 +247,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
-    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
+    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
         var capacity = UInt(0);
-        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.lengthOfBytes(using: .utf8)), accounts, &capacity) else {
+        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.count), accounts, &capacity) else {
             if let error = lastError() {
                 throw error
             }
@@ -240,6 +262,52 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         })
         zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
         return extsks
+    }
+    
+    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String? {
+        guard let zaddrCStr = zcashlc_derive_shielded_address_from_seed(seed, UInt(seed.count), accountIndex) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        let zAddr = String(validatingUTF8: zaddrCStr)
+        
+        zcashlc_string_free(zaddrCStr)
+        
+        return zAddr
+    }
+    
+    static func deriveShieldedAddressFromViewingKey(_ extfvk: String) throws -> String? {
+        guard !extfvk.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard let zaddrCStr = zcashlc_derive_shielded_address_from_viewing_key([CChar](extfvk.utf8CString)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        let zAddr = String(validatingUTF8: zaddrCStr)
+        
+        zcashlc_string_free(zaddrCStr)
+        
+        return zAddr
+    }
+    
+    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String? {
+        
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        
+        let tAddr = String(validatingUTF8: tAddrCStr)
+        
+        return tAddr
     }
     
     static func consensusBranchIdFor(height: Int32) throws -> Int32 {

@@ -688,7 +688,6 @@ class AdvancedReOrgTests: XCTestCase {
         
         sleep(1)
         let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
-        let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var p: PendingTransactionEntity? = nil

@@ -21,6 +21,7 @@ public enum SynchronizerError: Error {
     case networkTimeout
     case uncategorized(underlyingError: Error)
     case criticalError
+    case parameterMissing(underlyingError: Error)
 }
 
 /**
@@ -104,6 +105,21 @@ public protocol Synchronizer {
      */
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
     
+    /**
+        gets the latest downloaded height from the compact block cache
+     */
+    func latestDownloadedHeight() throws -> BlockHeight
+    
+    /**
+     Gets the latest block height from the provided Lightwallet endpoint
+     */
+    func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
+    
+    /**
+     Gets the latest block height from the provided Lightwallet endpoint
+     Blocking
+     */
+    func latestHeight() throws -> BlockHeight
 }
 
 /**

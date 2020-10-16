@@ -63,6 +63,7 @@ class TestCoordinator {
                                 cacheDbURL: databases.cacheDB,
                                 dataDbURL: databases.dataDB,
                                 pendingDbURL: databases.pendingDB,
+                                endpoint: LightWalletEndpointBuilder.default,
                                 service: self.service,
                                 repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
                                 downloader: downloader,
@@ -78,7 +79,7 @@ class TestCoordinator {
     }
     
     func stop() throws {
-        try synchronizer.stop()
+        synchronizer.stop()
         self.completionHandler = nil
         self.errorHandler = nil
         
@@ -216,6 +217,7 @@ class TestSynchronizerBuilder {
         cacheDbURL: URL,
         dataDbURL: URL,
         pendingDbURL: URL,
+        endpoint: LightWalletEndpoint,
         service: LightWalletService,
         repository: TransactionRepository,
         downloader: CompactBlockDownloader,
@@ -232,6 +234,7 @@ class TestSynchronizerBuilder {
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
+            endpoint: endpoint,
             service: service,
             repository: repository,
             downloader: downloader,
@@ -239,19 +242,10 @@ class TestSynchronizerBuilder {
             outputParamsURL: outputParamsURL,
             loggerProxy: loggerProxy
         )
-        let credentials =  try initializer.initialize(seedProvider: StubSeedProvider(bytes: seedBytes), walletBirthdayHeight: walletBirthday.height)
+        try initializer.initialize(viewingKeys: try DerivationTool().deriveViewingKeys(seed: seedBytes, numberOfAccounts: 1), walletBirthday: walletBirthday.height)
+        let credentials = try DerivationTool().deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1)
         return (credentials, try SDKSynchronizer(initializer: initializer)
         )
     }
 }
 
-class StubSeedProvider: SeedProvider {
-    
-    let bytes: [UInt8]
-    init(bytes: [UInt8]) {
-        self.bytes = bytes
-    }
-    func seed() -> [UInt8] {
-        self.bytes
-    }
-}

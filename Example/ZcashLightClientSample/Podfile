@@ -18,7 +18,6 @@ target 'ZcashLightClientSample' do
   end
 
   target 'ZcashLightClientSampleUITests' do
-    use_frameworks!
     inherit! :search_paths
     # Pods for testing
   end
