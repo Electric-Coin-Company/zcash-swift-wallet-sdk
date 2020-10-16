@@ -44,7 +44,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                    walletBirthday: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             
             var storage = SampleStorage.shared
-            storage!.seed = Data(try! DemoAppConfig().seed())
+            storage!.seed = Data(DemoAppConfig.seed)
             storage!.privateKey = try! DerivationTool.default.deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
             self.wallet = wallet
             return wallet

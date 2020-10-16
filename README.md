@@ -236,6 +236,11 @@ and https://z.cash/downloads/sapling-output.params and then move them to the cor
 
 ![how to fix missing params files](docs/images/output_params_error.png)
 
+### can't find crate for ...  target may not be installed
+This error could be a side effect of having more then one rust toolchain installed. 
+If you worked with ZcashLightClientKit 0.6.6 or below you might have had to set the compiler to 1.40.0 which can cause this compilation error to happen.
+make sure that the directory that you are working on has the correct rust environment.
+You can do so by calling `rustup show` in the working directory. 
 
 ## Versioning
 
