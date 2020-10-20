@@ -135,4 +135,6 @@ public extension ConfirmedTransactionEntity {
     var blockTimeInMilliseconds: Double {
         self.blockTimeInSeconds * 1000
     }
+    
 }
+

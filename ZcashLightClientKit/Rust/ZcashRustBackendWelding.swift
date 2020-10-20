@@ -57,7 +57,6 @@ public protocol ZcashRustBackendWelding {
  */
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]?
     
-    
     /**
     initialize the accounts table from a given seed and a number of accounts
      - Parameters:

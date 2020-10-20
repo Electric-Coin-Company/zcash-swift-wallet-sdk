@@ -92,7 +92,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
         let dbData = dbData.osStr()
-        let viewingKeys =  exfvks.map { UnsafePointer(strdup($0)) }
+        let viewingKeys = exfvks.map { UnsafePointer(strdup($0)) }
         
         guard exfvks.count > 0 else {
             throw RustWeldingError.malformedStringInput
@@ -100,7 +100,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         let res = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, viewingKeys, UInt(viewingKeys.count));
         
-        viewingKeys.compactMap({UnsafeMutablePointer(mutating: $0)}).forEach({ free($0) })
+        viewingKeys.compactMap({ UnsafeMutablePointer(mutating: $0) }).forEach({ free($0) })
         
         guard res else {
             if let error = lastError() {

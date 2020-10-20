@@ -63,7 +63,7 @@ public extension Notification.Name {
  Synchronizer implementation for UIKit and iOS 12+
  */
 public class SDKSynchronizer: Synchronizer {
-
+    
     public struct NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
@@ -465,6 +465,10 @@ public class SDKSynchronizer: Synchronizer {
     
     public func allSentTransactions() throws -> [ConfirmedTransactionEntity] {
         try transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    }
+    
+    public func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        try transactionRepository.findAll(from: transaction, limit: limit)
     }
     
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {

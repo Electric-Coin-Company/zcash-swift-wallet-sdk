@@ -10,6 +10,10 @@ import Foundation
 @testable import ZcashLightClientKit
 
 class MockTransactionRepository: TransactionRepository {
+    func findAll(from: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        nil
+    }
+    
     func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
         nil
     }
