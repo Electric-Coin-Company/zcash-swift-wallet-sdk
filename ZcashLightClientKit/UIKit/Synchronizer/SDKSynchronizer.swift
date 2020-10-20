@@ -48,10 +48,17 @@ public extension Notification.Name {
       */
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
     /**
-      Posted when the synchronizer finds a mined transaction
+      Posted when the synchronizer finds a pendingTransaction that hast been newly mined
      - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
       */
     static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
+    
+    /**
+      Posted when the synchronizer finds a mined transaction
+     - Note: query userInfo on NotificationKeys.foundTransactions for the [ConfirmedTransactionEntity]. This notification could arrive in a background thread.
+      */
+    static let synchronizerFoundTransactions = Notification.Name("synchronizerFoundTransactions")
+    
     /**
       Posted when the synchronizer presents an error
      - Note: query userInfo on NotificationKeys.error for an error
@@ -68,6 +75,7 @@ public class SDKSynchronizer: Synchronizer {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
         public static let minedTransaction = "SDKSynchronizer.minedTransaction"
+        public static let foundTransactions = "SDKSynchronizer.foundTransactions"
         public static let error = "SDKSynchronizer.error"
     }
     
@@ -267,9 +275,22 @@ public class SDKSynchronizer: Synchronizer {
                            name: Notification.Name.blockProcessorHandledReOrg,
                            object: processor)
         
+        center.addObserver(self,
+                           selector: #selector(transactionsFound(_:)),
+                           name: Notification.Name.blockProcessorFoundTransactions,
+                           object: processor)
+        
     }
     
     // MARK: Block Processor notifications
+    
+    @objc func transactionsFound(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ConfirmedTransactionEntity] else {
+            return
+        }
+        NotificationCenter.default.post(name: .synchronizerFoundTransactions, object: self, userInfo: [ NotificationKeys.foundTransactions : foundTransactions])
+    }
     
     @objc func reorgDetected(_ notification: Notification) {
         guard let userInfo = notification.userInfo,

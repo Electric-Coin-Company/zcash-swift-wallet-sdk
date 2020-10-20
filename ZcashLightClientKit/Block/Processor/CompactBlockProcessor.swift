@@ -91,7 +91,7 @@ public extension Notification.Name {
     
     /**
      Notification sent when the compact block processor enhanced a bunch of transactions
-    Query the user info object for CompactBlockProcessorNotificationKey.foundTransactions which will contain an [TransactionEntity] Array with the found transactions
+    Query the user info object for CompactBlockProcessorNotificationKey.foundTransactions which will contain an [ConfirmedTransactionEntity] Array with the found transactions
      */
     static let blockProcessorFoundTransactions = Notification.Name(rawValue: "CompactBlockProcessorFoundTransactions")
 }
@@ -532,7 +532,7 @@ public class CompactBlockProcessor {
                                                     CompactBlockProcessorNotificationKey.progressHeight : self.latestBlockHeight])
     }
     
-    func notifyTransactions(_ txs: [TransactionEntity]) {
+    func notifyTransactions(_ txs: [ConfirmedTransactionEntity]) {
         NotificationCenter.default.post(name: .blockProcessorFoundTransactions,
                                         object: self,
                                         userInfo: [ CompactBlockProcessorNotificationKey.foundTransactions : txs])
