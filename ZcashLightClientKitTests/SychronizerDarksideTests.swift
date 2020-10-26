@@ -64,6 +64,61 @@ class SychronizerDarksideTests: XCTestCase {
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
     
+    func testFoundManyTransactions() throws {
+        NotificationCenter.default.addObserver(self, selector: #selector(handleFoundTransactions(_:)), name: Notification.Name.synchronizerFoundTransactions, object: nil)
+        
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, length: 1000)
+        let receivedTxHeight: BlockHeight = 663229
+        
+    
+        try coordinator.applyStaged(blockheight: receivedTxHeight + 1)
+        
+        sleep(2)
+        let firsTxExpectation = XCTestExpectation(description: "first sync")
+        
+
+        try coordinator.sync(completion: { (synchronizer) in
+            
+            firsTxExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [firsTxExpectation], timeout: 10)
+        
+        XCTAssertEqual(self.foundTransactions.count, 5)
+        
+        self.foundTransactions.removeAll()
+        
+        try coordinator.applyStaged(blockheight: 663900)
+        sleep(2)
+        
+        let preTxExpectation = XCTestExpectation(description: "intermediate sync")
+        
+
+        try coordinator.sync(completion: { (synchronizer) in
+            
+            preTxExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [preTxExpectation], timeout: 10)
+        
+        XCTAssertTrue(self.foundTransactions.count == 0)
+        
+        let findManyTxExpectation = XCTestExpectation(description: "final sync")
+        
+        try coordinator.applyStaged(blockheight: 664010)
+        sleep(2)
+        
+        try coordinator.sync(completion: { (synchronizer) in
+            
+            findManyTxExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [findManyTxExpectation], timeout: 10)
+        
+        XCTAssertEqual(self.foundTransactions.count, 2)
+        
+    }
+    
     @objc func handleFoundTransactions(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
               let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ConfirmedTransactionEntity] else {

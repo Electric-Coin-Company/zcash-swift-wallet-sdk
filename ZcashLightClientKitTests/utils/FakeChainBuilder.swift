@@ -26,6 +26,22 @@ class FakeChainBuilder {
         
     }
     
+    static func buildChain(darksideWallet: DarksideWalletService, length: Int) throws {
+        try darksideWallet.reset(saplingActivation: 663150)
+        try darksideWallet.useDataset(from: txMainnetBlockUrl)
+        
+        try darksideWallet.stageBlocksCreate(from: 663151, count: length)
+        try darksideWallet.stageTransaction(from: txUrls[663174]!, at: 663174)
+        try darksideWallet.stageTransaction(from: txUrls[663188]!, at: 663188)
+        try darksideWallet.stageTransaction(from: txUrls[663202]!, at: 663202)
+        try darksideWallet.stageTransaction(from: txUrls[663218]!, at: 663218)
+        try darksideWallet.stageTransaction(from: txUrls[663229]!, at: 663229)
+        
+        try darksideWallet.stageTransaction(from: txUrls[663953]!, at: 663953)
+        try darksideWallet.stageTransaction(from: txUrls[663974]!, at: 663974)
+        
+    }
+    
     static func buildTxUrl(for id: String) -> String {
         "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/\(id).txt"
     }

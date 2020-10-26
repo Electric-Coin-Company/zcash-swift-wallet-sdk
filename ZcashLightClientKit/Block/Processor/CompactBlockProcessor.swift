@@ -289,6 +289,7 @@ public class CompactBlockProcessor {
         //        try validateConfiguration()
         if retry {
             self.retryAttempts = 0
+            self.processingError = nil
         }
         guard !queue.isSuspended else {
             queue.isSuspended = false
@@ -639,13 +640,22 @@ public class CompactBlockProcessor {
         queue.cancelAllOperations()
         // update retries
         self.retryAttempts = self.retryAttempts + 1
+        self.processingError = nil
         guard self.retryAttempts < config.retries else {
             self.notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.retryAttempts))
             self.stop()
             return
         }
         
-        processNewBlocks(range: range)
+        do {
+            try downloader.rewind(to: max(range.lowerBound, self.config.walletBirthday))
+            
+            // process next batch
+            processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
+        } catch {
+            self.fail(error)
+        }
+        
     }
     
     func fail(_ error: Error) {
@@ -690,6 +700,9 @@ public class CompactBlockProcessor {
     }
     // TODO: encapsulate service errors better
     func mapError(_ error: Error) -> CompactBlockProcessorError {
+        if let processorError = error as? CompactBlockProcessorError {
+            return processorError
+        }
         if let lwdError = error as? LightWalletServiceError {
             return lwdError.mapToProcessorError()
         } else if let rpcError = error as? GRPC.GRPCStatus {
