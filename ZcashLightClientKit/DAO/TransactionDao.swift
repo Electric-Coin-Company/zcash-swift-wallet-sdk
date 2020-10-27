@@ -303,8 +303,8 @@ class TransactionSQLDAO: TransactionRepository {
                            ON transactions.id_tx = sent_notes.tx
                     LEFT JOIN blocks
                            ON transactions.block = blocks.height
-              WHERE \(range.start.height) <= minedheight
-                AND minedheight <= \(range.end.height) AND
+              WHERE (\(range.start.height) <= minedheight
+                AND minedheight <= \(range.end.height)) AND
                     (sent_notes.address IS NULL AND received_notes.is_change != 1)
                               OR sent_notes.address IS NOT NULL
               ORDER  BY ( minedheight IS NOT NULL ),
