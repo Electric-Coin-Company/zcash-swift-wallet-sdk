@@ -18,7 +18,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     override var isAsynchronous: Bool { false }
     
     var rustBackend: ZcashRustBackendWelding.Type
-    var txFoundHandler: (([ConfirmedTransactionEntity]) -> Void)?
+    var txFoundHandler: (([ConfirmedTransactionEntity], BlockRange) -> Void)?
     var downloader: CompactBlockDownloading
     var repository: TransactionRepository
     var maxRetries: Int = 5
@@ -73,7 +73,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         }
         
         if let handler = self.txFoundHandler, let foundTxs = try? repository.findConfirmedTransactions(in: self.range, offset: 0, limit: Int.max) {
-            handler(foundTxs)
+            handler(foundTxs, self.range)
         }
     }
     

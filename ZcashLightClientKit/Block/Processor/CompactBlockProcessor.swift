@@ -35,6 +35,7 @@ public struct CompactBlockProcessorNotificationKey {
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
     public static let rewindHeight = "CompactBlockProcessorNotificationKey.rewindHeight"
     public static let foundTransactions = "CompactBlockProcessorNotificationKey.foundTransactions"
+    public static let foundTransactionsRange = "CompactBlockProcessorNotificationKey.foundTransactionsRange"
     public static let error = "error"
 }
 
@@ -91,7 +92,7 @@ public extension Notification.Name {
     
     /**
      Notification sent when the compact block processor enhanced a bunch of transactions
-    Query the user info object for CompactBlockProcessorNotificationKey.foundTransactions which will contain an [ConfirmedTransactionEntity] Array with the found transactions
+    Query the user info object for CompactBlockProcessorNotificationKey.foundTransactions which will contain an [ConfirmedTransactionEntity] Array with the found transactions and CompactBlockProcessorNotificationKey.foundTransactionsrange
      */
     static let blockProcessorFoundTransactions = Notification.Name(rawValue: "CompactBlockProcessorFoundTransactions")
 }
@@ -482,8 +483,8 @@ public class CompactBlockProcessor {
             LoggerProxy.debug("Started Enhancing range: \(range)")
         }
         
-        enhanceOperation.txFoundHandler = { [weak self] txs in
-            self?.notifyTransactions(txs)
+        enhanceOperation.txFoundHandler = { [weak self] (txs,range) in
+            self?.notifyTransactions(txs,in: range)
         }
         
         enhanceOperation.completionHandler  = { [weak self] (finished, cancelled) in
@@ -533,10 +534,12 @@ public class CompactBlockProcessor {
                                                     CompactBlockProcessorNotificationKey.progressHeight : self.latestBlockHeight])
     }
     
-    func notifyTransactions(_ txs: [ConfirmedTransactionEntity]) {
+    func notifyTransactions(_ txs: [ConfirmedTransactionEntity], in range: BlockRange) {
         NotificationCenter.default.post(name: .blockProcessorFoundTransactions,
                                         object: self,
-                                        userInfo: [ CompactBlockProcessorNotificationKey.foundTransactions : txs])
+                                        userInfo: [ CompactBlockProcessorNotificationKey.foundTransactions : txs,
+                                                    CompactBlockProcessorNotificationKey.foundTransactionsRange : ClosedRange(uncheckedBounds: (range.start.height,range.end.height))
+                                        ])
     }
     
     private func validationFailed(at height: BlockHeight) {
