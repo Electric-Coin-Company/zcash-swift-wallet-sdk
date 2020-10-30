@@ -42,6 +42,10 @@ class FakeChainBuilder {
         
     }
     
+    static func buildChain(darksideWallet: DarksideWalletService, networkActivationHeight: BlockHeight, length: Int) throws {
+        
+    }
+    
     static func buildTxUrl(for id: String) -> String {
         "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/\(id).txt"
     }
