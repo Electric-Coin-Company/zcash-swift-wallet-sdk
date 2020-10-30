@@ -106,6 +106,16 @@ public protocol Synchronizer {
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
     
     /**
+     Returns a list of confirmed transactions that preceed the given transaction with a limit count.
+     - Parameters:
+       - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
+       - limit: the maximum amount of items this should return if available
+     - Returns: an array with the given Transactions or nil
+     
+     */
+    func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
+    
+    /**
         gets the latest downloaded height from the compact block cache
      */
     func latestDownloadedHeight() throws -> BlockHeight

@@ -194,7 +194,6 @@ public class Initializer {
                                                                      transactionRepository: transactionRepository,
                                                                      backend: rustBackend)
         
-        
         guard try rustBackend.initAccountsTable(dbData: dataDbURL, exfvks: viewingKeys) else {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }

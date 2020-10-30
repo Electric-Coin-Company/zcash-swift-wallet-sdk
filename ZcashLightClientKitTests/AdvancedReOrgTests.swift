@@ -1125,6 +1125,34 @@ class AdvancedReOrgTests: XCTestCase {
         
     }
     
+    func testLongSync() throws {
+        
+        hookToReOrgNotification()
+        
+        /*
+         1. create fake chain
+         */
+        let fullSyncLength = 100_000
+    
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, length: fullSyncLength)
+        
+        try coordinator.applyStaged(blockheight: birthday + fullSyncLength)
+        
+        sleep(10)
+        
+        let firstSyncExpectation = XCTestExpectation(description: "first sync")
+        /*
+         sync to latest height
+         */
+        try coordinator.sync(completion: { (s) in
+            firstSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 300)
+        
+        XCTAssertEqual(try coordinator.synchronizer.latestDownloadedHeight(), birthday + fullSyncLength)
+    }
+    
     func handleError(_ error: Error?) {
         _ = try? coordinator.stop()
         guard let testError = error else {
@@ -1137,4 +1165,5 @@ class AdvancedReOrgTests: XCTestCase {
     func hookToReOrgNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(handleReorg(_:)), name: .blockProcessorHandledReOrg, object: nil)
     }
+    
 }

@@ -109,6 +109,66 @@ class TransactionRepositoryTests: XCTestCase {
             }
         }
     }
+    
+    func testFindAllFrom() throws {
+        guard let transactions = try self.transactionRepository.findAll(offset: 0, limit: Int.max),
+              let allFromNil = try self.transactionRepository.findAll(from: nil, limit: Int.max)
+        else {
+            return XCTFail("find all failed")
+        }
+        
+        XCTAssertEqual(transactions.count, allFromNil.count)
+        
+        for t in transactions {
+            guard allFromNil.first(where: { $0.rawTransactionId == t.rawTransactionId}) != nil else {
+                XCTFail("not equal")
+                return
+            }
+        }
+    }
+    
+    func testFindAllFromSlice() throws {
+        
+        let limit = 4
+        let start = 7
+        guard let transactions = try self.transactionRepository.findAll(offset: 0, limit: Int.max),
+              let allFromNil = try self.transactionRepository.findAll(from: transactions[start], limit: limit)
+        else {
+            return XCTFail("find all failed")
+        }
+        
+        XCTAssertEqual(limit, allFromNil.count)
+        
+        let slice = transactions[start + 1 ... start + limit]
+        XCTAssertEqual(slice.count, allFromNil.count)
+        for t in slice {
+            guard allFromNil.first(where: { $0.rawTransactionId == t.rawTransactionId}) != nil else {
+                XCTFail("not equal")
+                return
+            }
+        }
+    }
+    
+    
+    func testFindAllFromLastSlice() throws {
+        
+        let limit = 10
+        let start = 20
+        guard let transactions = try self.transactionRepository.findAll(offset: 0, limit: Int.max),
+              let allFromNil = try self.transactionRepository.findAll(from: transactions[start], limit: limit)
+        else {
+            return XCTFail("find all failed")
+        }
+        
+        let slice = transactions[start + 1 ..< transactions.count]
+        XCTAssertEqual(slice.count, allFromNil.count)
+        for t in slice {
+            guard allFromNil.first(where: { $0.rawTransactionId == t.rawTransactionId}) != nil else {
+                XCTFail("not equal")
+                return
+            }
+        }
+    }
 }
 
 extension Data {
