@@ -257,11 +257,88 @@ class NetworkUpgradeTests: XCTestCase {
     }
     
     /**
-     Given that a wallet sends funds some between (activation - expiry_height) and activation, those funds are available if  expired after expiration height.
+     Given that a wallet sends funds somewhere between (activation - expiry_height) and activation, those funds are available if  expired after expiration height.
      */
     
     func testExpiredSpendAfterActivation() throws {
-        XCTFail()
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        
+        let firstSyncExpectation = XCTestExpectation(description: "first sync")
+        let offset = 5
+        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.EXPIRY_OFFSET)
+        sleep(3)
+        
+        let verifiedBalancePreActivation = coordinator.synchronizer.initializer.getVerifiedBalance()
+        
+        try coordinator.sync(completion: { (synchronizer) in
+          
+            firstSyncExpectation.fulfill()
+            
+        }, error: self.handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 10)
+        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        XCTAssertTrue(verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI)
+        
+        
+        
+        let sendExpectation = XCTestExpectation(description: "send expectation")
+        var p: PendingTransactionEntity? = nil
+        let spendAmount: Int64 = 10000
+        /*
+         send transaction to recipient address
+         */
+        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
+            switch result {
+            case .failure(let e):
+                self.handleError(e)
+            case .success(let pendingTx):
+                p = pendingTx
+            }
+            sendExpectation.fulfill()
+        })
+        
+        wait(for: [sendExpectation], timeout: 11)
+        
+        guard let pendingTx = p else {
+            XCTFail("no pending transaction after sending")
+            try coordinator.stop()
+            return
+        }
+        
+        /*
+         getIncomingTransaction
+         */
+        guard let _ = try coordinator.getIncomingTransactions()?.first else {
+            XCTFail("no incoming transaction")
+            try coordinator.stop()
+            return
+        }
+            
+        /*
+         don't stage transaction
+         */
+    
+        
+        try coordinator.applyStaged(blockheight: activationHeight + offset)
+        sleep(2)
+        
+        let afterSendExpectation = XCTestExpectation(description: "aftersend")
+        
+        try coordinator.sync(completion: { (synchronizer) in
+          
+            afterSendExpectation.fulfill()
+            
+        }, error: self.handleError)
+        
+        wait(for: [afterSendExpectation], timeout: 10)
+        
+        guard try coordinator.synchronizer.allConfirmedTransactions(from: nil, limit: Int.max)?.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId }) == nil else {
+            XCTFail("the sent transaction should not be not listed as a confirmed transaction")
+            return
+        }
+        
+        XCTAssertEqual(verifiedBalancePreActivation, coordinator.synchronizer.initializer.getVerifiedBalance())
     }
     
     /**
