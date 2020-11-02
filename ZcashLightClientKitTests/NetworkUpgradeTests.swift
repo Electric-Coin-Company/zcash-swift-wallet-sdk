@@ -345,10 +345,64 @@ class NetworkUpgradeTests: XCTestCase {
      Given that a wallet has notes both received prior and after activation these can be combined to supply a larger amount spend.
      */
     func testCombinePreActivationNotesAndPostActivationNotesOnSpend() throws {
-        XCTFail()
+        try FakeChainBuilder.buildChainMixedFunds(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        
+        let firstSyncExpectation = XCTestExpectation(description: "first sync")
+        
+        try coordinator.applyStaged(blockheight: activationHeight + -1)
+        sleep(3)
+        
+        try coordinator.sync(completion: { (synchronizer) in
+          
+            firstSyncExpectation.fulfill()
+            
+        }, error: self.handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 10)
+        
+        let preActivationBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        
+        guard try coordinator.synchronizer.allReceivedTransactions().filter({$0.minedHeight > activationHeight}).count > 0 else {
+            XCTFail("this test requires funds received after activation height")
+            return
+        }
+        
+        try coordinator.applyStaged(blockheight: activationHeight + 20)
+        sleep(2)
+        
+        let postActivationBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        
+        XCTAssertTrue(preActivationBalance > postActivationBalance, "This test requires that funds post activation are greater that pre activation")
+        let sendExpectation = XCTestExpectation(description: "send expectation")
+        var p: PendingTransactionEntity? = nil
+        
+        // spend all the funds
+        let spendAmount: Int64 = postActivationBalance - Int64(ZcashSDK.MINERS_FEE_ZATOSHI)
+        
+        /*
+         send transaction to recipient address
+         */
+        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
+            switch result {
+            case .failure(let e):
+                self.handleError(e)
+            case .success(let pendingTx):
+                p = pendingTx
+            }
+            sendExpectation.fulfill()
+        })
+        
+        wait(for: [sendExpectation], timeout: 11)
+        
+        guard let _ = p else {
+            XCTFail("no pending transaction after sending")
+            try coordinator.stop()
+            return
+        }
+        
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), 0)
     }
-    
-    
+ 
     func handleError(_ error: Error?) {
         _ = try? coordinator.stop()
         guard let testError = error else {
