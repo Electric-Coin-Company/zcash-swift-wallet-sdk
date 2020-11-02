@@ -108,7 +108,65 @@ class NetworkUpgradeTests: XCTestCase {
      Given that a wallet receives funds after activation it can spend them when confirmed
      */
     func testSpendPostActivationFundsAfterConfirmation() throws {
-        XCTFail()
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        
+        let firstSyncExpectation = XCTestExpectation(description: "first sync")
+        
+        try coordinator.applyStaged(blockheight: activationHeight + 10)
+        sleep(3)
+        
+        try coordinator.sync(completion: { (synchronizer) in
+          
+            firstSyncExpectation.fulfill()
+            
+        }, error: self.handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 10)
+        guard try coordinator.synchronizer.allReceivedTransactions().filter({$0.minedHeight > activationHeight}).count > 0 else {
+            XCTFail("this test requires funds received after activation height")
+            return
+        }
+        
+        try coordinator.applyStaged(blockheight: activationHeight + 20)
+        sleep(2)
+        
+        
+        let sendExpectation = XCTestExpectation(description: "send expectation")
+        var p: PendingTransactionEntity? = nil
+        let spendAmount: Int64 = 10000
+        /*
+         send transaction to recipient address
+         */
+        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
+            switch result {
+            case .failure(let e):
+                self.handleError(e)
+            case .success(let pendingTx):
+                p = pendingTx
+            }
+            sendExpectation.fulfill()
+        })
+        
+        wait(for: [sendExpectation], timeout: 11)
+        
+        guard let _ = p else {
+            XCTFail("no pending transaction after sending")
+            try coordinator.stop()
+            return
+        }
+        
+        try coordinator.applyStaged(blockheight: activationHeight + 1 + 10)
+        
+        let afterSendExpectation = XCTestExpectation(description: "aftersend")
+        
+        try coordinator.sync(completion: { (synchronizer) in
+          
+            afterSendExpectation.fulfill()
+            
+        }, error: self.handleError)
+        
+        wait(for: [afterSendExpectation], timeout: 10)
+        
     }
     /**
      Given that a wallet sends funds some between (activation - expiry_height) and activation, those funds are shown as sent if mined.
