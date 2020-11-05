@@ -20,6 +20,7 @@ class TestCoordinator {
         case notDarksideWallet
         case notificationFromUnknownSynchronizer
         case notMockLightWalletService
+        case builderError
     }
     
     enum SyncThreshold {
@@ -35,7 +36,7 @@ class TestCoordinator {
     
     var completionHandler: ((SDKSynchronizer) -> Void)?
     var errorHandler: ((Error?) -> Void)?
-    var seed: String
+    var spendingKey: String
     var birthday: BlockHeight
     var channelProvider: ChannelProvider
     var synchronizer: SDKSynchronizer
@@ -43,10 +44,20 @@ class TestCoordinator {
     var spendingKeys: [String]?
     var databases: TemporaryTestDatabases
     
-    init(seed: String,
+     convenience init(seed: String,
          walletBirthday: BlockHeight,
          channelProvider: ChannelProvider) throws {
-        self.seed = seed
+        guard let spendingKey = try DerivationTool.default.deriveSpendingKeys(seed: TestSeed().seed(),// todo: fix this
+                                                                              numberOfAccounts: 1).first else {
+            throw CoordinatorError.builderError
+        }
+        try self.init(spendingKey: spendingKey, walletBirthday: walletBirthday, channelProvider: channelProvider)
+    }
+    
+    required init(spendingKey: String,
+         walletBirthday: BlockHeight,
+         channelProvider: ChannelProvider) throws {
+        self.spendingKey = spendingKey
         self.birthday = walletBirthday
         self.channelProvider = channelProvider
         self.databases = TemporaryDbBuilder.build()
@@ -69,7 +80,7 @@ class TestCoordinator {
                                 downloader: downloader,
                                 spendParamsURL: try __spendParamsURL(),
                                 outputParamsURL: try __outputParamsURL(),
-                                seedBytes: TestSeed().seed(),
+                                spendingKey: spendingKey,
                                 walletBirthday: WalletBirthday.birthday(with: birthday),
                                 loggerProxy: SampleLogger(logLevel: .debug))
         
@@ -210,7 +221,41 @@ class TemporaryDbBuilder {
 }
 
 class TestSynchronizerBuilder {
-    
+    static func build(
+        rustBackend: ZcashRustBackendWelding.Type,
+        lowerBoundHeight: BlockHeight,
+        cacheDbURL: URL,
+        dataDbURL: URL,
+        pendingDbURL: URL,
+        endpoint: LightWalletEndpoint,
+        service: LightWalletService,
+        repository: TransactionRepository,
+        downloader: CompactBlockDownloader,
+        spendParamsURL: URL,
+        outputParamsURL: URL,
+        spendingKey: String,
+        walletBirthday: WalletBirthday,
+        loggerProxy: Logger? = nil
+    ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer)  {
+        let initializer = Initializer(
+            rustBackend: rustBackend,
+            lowerBoundHeight: lowerBoundHeight,
+            cacheDbURL: cacheDbURL,
+            dataDbURL: dataDbURL,
+            pendingDbURL: pendingDbURL,
+            endpoint: endpoint,
+            service: service,
+            repository: repository,
+            downloader: downloader,
+            spendParamsURL: spendParamsURL,
+            outputParamsURL: outputParamsURL,
+            loggerProxy: loggerProxy
+        )
+        try initializer.initialize(viewingKeys: [try DerivationTool().deriveViewingKey(spendingKey: spendingKey)], walletBirthday: walletBirthday.height)
+        
+        return ([spendingKey], try SDKSynchronizer(initializer: initializer)
+        )
+    }
     static func build(
         rustBackend: ZcashRustBackendWelding.Type,
         lowerBoundHeight: BlockHeight,
@@ -227,9 +272,10 @@ class TestSynchronizerBuilder {
         walletBirthday: WalletBirthday,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
-        
-        let initializer = Initializer(
-            rustBackend: rustBackend,
+        guard let spendingKey = try DerivationTool().deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
+            throw TestCoordinator.CoordinatorError.builderError
+        }
+        return try build(rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
@@ -240,12 +286,9 @@ class TestSynchronizerBuilder {
             downloader: downloader,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
-            loggerProxy: loggerProxy
-        )
-        try initializer.initialize(viewingKeys: try DerivationTool().deriveViewingKeys(seed: seedBytes, numberOfAccounts: 1), walletBirthday: walletBirthday.height)
-        let credentials = try DerivationTool().deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1)
-        return (credentials, try SDKSynchronizer(initializer: initializer)
-        )
+            spendingKey: spendingKey,
+            walletBirthday: walletBirthday)
+        
     }
 }
 
