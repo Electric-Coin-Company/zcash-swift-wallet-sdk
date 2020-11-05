@@ -14,6 +14,14 @@ enum FakeChainBuilderError: Error {
 class FakeChainBuilder {
     static let someOtherTxUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/t-shielded-spend.txt"
     static let txMainnetBlockUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/663150.txt"
+    
+    static let testnetCanopyUpdateUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/1028400-1028600.txt"
+    
+    static let testnetCanopyStartBlock = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/1013250.txt"
+    static let testnetPreCanopyTx = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/pre-activation-txs/61088726aaa7c25b0568dd7bf19955f4a57f7173034e720c924107ff05cd3649.txt"
+    
+    static let testnetPostCanopyTx = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/post-activation-txs/ecaa6c03709d70aa25446a81690b18ddb11daac96a03fe4b5cfd0d89a49fb963.txt"
+    
     static func buildChain(darksideWallet: DarksideWalletService) throws {
         try darksideWallet.reset(saplingActivation: 663150)
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
@@ -42,11 +50,31 @@ class FakeChainBuilder {
         
     }
     
-    static func buildChain(darksideWallet: DarksideWalletService, networkActivationHeight: BlockHeight, length: Int) throws {
+    static func buildChain(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, length: Int) throws {
+        
+        try darksideWallet.reset(saplingActivation: birthday, branchID: "e9ff75a6" , chainName: "testnet")
+
+        try darksideWallet.useDataset(testnetCanopyStartBlock)
+        try darksideWallet.stageBlocksCreate(from: birthday + 1, count: length)
+        try darksideWallet.stageTransaction(from: testnetPreCanopyTx, at: networkActivationHeight - ZcashSDK.EXPIRY_OFFSET)
+        
         
     }
     
-    static func buildChainMixedFunds(darksideWallet: DarksideWalletService, networkActivationHeight: BlockHeight, length: Int) throws {
+    static func buildChainPostActivationFunds(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, length: Int) throws {
+        
+        try darksideWallet.reset(saplingActivation: birthday, branchID: "e9ff75a6" , chainName: "testnet")
+
+        try darksideWallet.useDataset(testnetCanopyStartBlock)
+        try darksideWallet.stageBlocksCreate(from: birthday + 1, count: length)
+        try darksideWallet.stageTransaction(from: testnetPostCanopyTx, at: networkActivationHeight + 1)
+        
+    }
+    
+    static func buildChainMixedFunds(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, length: Int) throws {
+        try buildChain(darksideWallet: darksideWallet, birthday: birthday, networkActivationHeight: networkActivationHeight, length: length)
+        
+        try darksideWallet.stageTransaction(from: testnetPostCanopyTx, at: networkActivationHeight + ZcashSDK.EXPIRY_OFFSET)
         
     }
     

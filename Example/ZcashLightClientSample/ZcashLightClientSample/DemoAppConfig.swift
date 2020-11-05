@@ -10,7 +10,7 @@ import Foundation
 import ZcashLightClientKit
 import MnemonicSwift
 struct DemoAppConfig {
-    static var host = ZcashSDK.isMainnet ? "localhost" : "localhost"
+    static var host = ZcashSDK.isMainnet ? "localhost" : "lightwalletd.testnet.electriccoin.co"
     static var port: Int = 9067
     static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 663174 : 620_000
     static var network = ZcashSDK.isMainnet ? ZcashNetwork.mainNet : ZcashNetwork.testNet

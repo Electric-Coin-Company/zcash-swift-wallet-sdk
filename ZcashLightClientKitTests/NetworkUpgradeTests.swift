@@ -9,24 +9,24 @@ import XCTest
 @testable import ZcashLightClientKit
 class NetworkUpgradeTests: XCTestCase {
     
-    let activationHeight: BlockHeight = 1_046_400
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
+    let activationHeight: BlockHeight = 1028500
+    var spendingKey = "secret-extended-key-test1qv2vf437qqqqpqpfc0arpv55ncq33p2p895hlcx0ra6d0g739v93luqdjpxun3kt050j9qnrqjyp8d7fdxgedfyxpjmuyha2ulxa6hmqvm2gnvuc3tvs3enpxwuz768qfkd286vr3jgyrgr5ddx2ukrdl95ak3tzqylzjeqw3pnmgtmwsvemrj3sk6vqgwxm9khlv46wccn33ayw52prr233ea069c9u8m3839dvw30sdf6k32xddhpte6p6qsuxval6usyh6lr55pgypkgtz"
     
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
+    let testRecipientAddress = "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc" //TODO: Parameterize this from environment
     
     let sendAmount: Int64 = 1000
-    var birthday: BlockHeight = 663150
-    let defaultLatestHeight: BlockHeight = 663175
+    var birthday: BlockHeight = 1013250
+
     var coordinator: TestCoordinator!
    
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
-            seed: seedPhrase,
+            spendingKey: spendingKey,
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: birthday)
     }
     
     override func tearDownWithError() throws {
@@ -42,12 +42,12 @@ class NetworkUpgradeTests: XCTestCase {
      Given that a wallet had funds prior to activation it can spend them after activation
      */
     func testSpendPriorFundsAfterActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
-        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.EXPIRY_OFFSET)
-        sleep(3)
+        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE)
+        sleep(5)
         
         try coordinator.sync(completion: { (synchronizer) in
           
@@ -55,15 +55,16 @@ class NetworkUpgradeTests: XCTestCase {
             
         }, error: self.handleError)
         
-        wait(for: [firstSyncExpectation], timeout: 10)
+        wait(for: [firstSyncExpectation], timeout: 120)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        XCTAssertTrue(verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI)
-        
-        
+        guard verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI else {
+            XCTFail("not enough balance to continue test")
+            return
+        }
+    
         try coordinator.applyStaged(blockheight: activationHeight + 1)
         sleep(2)
-        
-        
+       
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var p: PendingTransactionEntity? = nil
         let spendAmount: Int64 = 10000
@@ -87,9 +88,24 @@ class NetworkUpgradeTests: XCTestCase {
             try coordinator.stop()
             return
         }
+        /*
+         getIncomingTransaction
+         */
+        guard let incomingTx = try coordinator.getIncomingTransactions()?.first else {
+            XCTFail("no incoming transaction")
+            try coordinator.stop()
+            return
+        }
         
-        try coordinator.applyStaged(blockheight: activationHeight + 1 + 10)
-        
+        let sentTxHeight: BlockHeight = activationHeight + 2
+   
+        /*
+         stage transaction at sentTxHeight
+         */
+   
+        try coordinator.stageTransaction(incomingTx, at: sentTxHeight)
+        try coordinator.applyStaged(blockheight: activationHeight + 20)
+        sleep(1)
         let afterSendExpectation = XCTestExpectation(description: "aftersend")
         
         try coordinator.sync(completion: { (synchronizer) in
@@ -100,7 +116,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         wait(for: [afterSendExpectation], timeout: 10)
         
-        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), verifiedBalance - Int64(ZcashSDK.MINERS_FEE_ZATOSHI) - spendAmount)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), verifiedBalance - spendAmount)
         
     }
     
@@ -108,7 +124,7 @@ class NetworkUpgradeTests: XCTestCase {
      Given that a wallet receives funds after activation it can spend them when confirmed
      */
     func testSpendPostActivationFundsAfterConfirmation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        try FakeChainBuilder.buildChainPostActivationFunds(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
@@ -121,7 +137,7 @@ class NetworkUpgradeTests: XCTestCase {
             
         }, error: self.handleError)
         
-        wait(for: [firstSyncExpectation], timeout: 10)
+        wait(for: [firstSyncExpectation], timeout: 120)
         guard try coordinator.synchronizer.allReceivedTransactions().filter({$0.minedHeight > activationHeight}).count > 0 else {
             XCTFail("this test requires funds received after activation height")
             return
@@ -173,11 +189,11 @@ class NetworkUpgradeTests: XCTestCase {
 
      */
     func testSpendMinedSpendThatExpiresOnActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
-        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.EXPIRY_OFFSET)
+        try coordinator.applyStaged(blockheight: activationHeight - 10)
         sleep(3)
         
         try coordinator.sync(completion: { (synchronizer) in
@@ -186,7 +202,7 @@ class NetworkUpgradeTests: XCTestCase {
             
         }, error: self.handleError)
         
-        wait(for: [firstSyncExpectation], timeout: 10)
+        wait(for: [firstSyncExpectation], timeout: 120)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         XCTAssertTrue(verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI)
         
@@ -261,11 +277,11 @@ class NetworkUpgradeTests: XCTestCase {
      */
     
     func testExpiredSpendAfterActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         let offset = 5
-        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.EXPIRY_OFFSET)
+        try coordinator.applyStaged(blockheight: activationHeight - 10)
         sleep(3)
         
         let verifiedBalancePreActivation = coordinator.synchronizer.initializer.getVerifiedBalance()
@@ -276,11 +292,12 @@ class NetworkUpgradeTests: XCTestCase {
             
         }, error: self.handleError)
         
-        wait(for: [firstSyncExpectation], timeout: 10)
+        wait(for: [firstSyncExpectation], timeout: 120)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        XCTAssertTrue(verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI)
-        
-        
+        guard verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI else {
+            XCTFail("balance is not enough to continue with this test")
+            return
+        }
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var p: PendingTransactionEntity? = nil
@@ -345,11 +362,11 @@ class NetworkUpgradeTests: XCTestCase {
      Given that a wallet has notes both received prior and after activation these can be combined to supply a larger amount spend.
      */
     func testCombinePreActivationNotesAndPostActivationNotesOnSpend() throws {
-        try FakeChainBuilder.buildChainMixedFunds(darksideWallet: coordinator.service, networkActivationHeight: activationHeight, length: 100)
+        try FakeChainBuilder.buildChainMixedFunds(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
-        try coordinator.applyStaged(blockheight: activationHeight + -1)
+        try coordinator.applyStaged(blockheight: activationHeight - 1)
         sleep(3)
         
         try coordinator.sync(completion: { (synchronizer) in
@@ -358,21 +375,28 @@ class NetworkUpgradeTests: XCTestCase {
             
         }, error: self.handleError)
         
-        wait(for: [firstSyncExpectation], timeout: 10)
+        wait(for: [firstSyncExpectation], timeout: 120)
         
         let preActivationBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         
+        try coordinator.applyStaged(blockheight: activationHeight + 30)
+        sleep(2)
+        
+        let secondSyncExpectation = XCTestExpectation(description: "second sync")
+        try coordinator.sync(completion: { (synchronizer) in
+          
+            secondSyncExpectation.fulfill()
+            
+        }, error: self.handleError)
+        
+        wait(for: [secondSyncExpectation], timeout: 10)
         guard try coordinator.synchronizer.allReceivedTransactions().filter({$0.minedHeight > activationHeight}).count > 0 else {
             XCTFail("this test requires funds received after activation height")
             return
         }
-        
-        try coordinator.applyStaged(blockheight: activationHeight + 20)
-        sleep(2)
-        
         let postActivationBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         
-        XCTAssertTrue(preActivationBalance > postActivationBalance, "This test requires that funds post activation are greater that pre activation")
+        XCTAssertTrue(preActivationBalance < postActivationBalance, "This test requires that funds post activation are greater that pre activation")
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var p: PendingTransactionEntity? = nil
         
@@ -392,7 +416,7 @@ class NetworkUpgradeTests: XCTestCase {
             sendExpectation.fulfill()
         })
         
-        wait(for: [sendExpectation], timeout: 11)
+        wait(for: [sendExpectation], timeout: 15)
         
         guard let _ = p else {
             XCTFail("no pending transaction after sending")

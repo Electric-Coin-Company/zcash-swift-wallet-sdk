@@ -118,7 +118,7 @@ class DarksideWalletService: LightWalletService {
         }
     }
     
-    func reset(saplingActivation: BlockHeight) throws {
+    func reset(saplingActivation: BlockHeight, branchID: String = "d3adb33f", chainName: String = "test") throws {
         var metaState = DarksideMetaState()
         metaState.saplingActivation = Int32(saplingActivation)
         metaState.branchID = "d3adb33f"
