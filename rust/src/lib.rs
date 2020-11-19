@@ -7,49 +7,42 @@ use std::path::Path;
 use std::slice;
 use std::str::FromStr;
 use zcash_client_backend::{
+    address::RecipientAddress,
+    api::AccountId,
+    data_api::{
+        chain::{scan_cached_blocks, validate_chain},
+        error::Error,
+        wallet::{create_spend_to_address, decrypt_and_store_transaction},
+        WalletRead, WalletWrite,
+    },
     encoding::{
         decode_extended_full_viewing_key, decode_extended_spending_key,
         encode_extended_full_viewing_key, encode_extended_spending_key, encode_payment_address,
     },
     keys::spending_key,
+    wallet::OvkPolicy,
 };
 use zcash_client_sqlite::{
-    address::RecipientAddress,
-    chain::{rewind_to_height, validate_combined_chain},
-    error::ErrorKind,
-    init::{init_accounts_table, init_blocks_table, init_data_database},
-    query::{
-        get_address, get_balance, get_received_memo_as_utf8, get_sent_memo_as_utf8,
-        get_verified_balance,
-    },
-    scan::{decrypt_and_store_transaction, scan_cached_blocks},
-    transact::{create_to_address, OvkPolicy},
+    wallet::init::{init_accounts_table, init_blocks_table, init_data_database},
+    BlockDB, NoteId, WalletDB,
 };
 use zcash_primitives::{
     block::BlockHash,
-    consensus::BranchId,
+    consensus::{BlockHeight, BranchId, Parameters},
+    legacy::TransparentAddress,
     note_encryption::Memo,
     transaction::{components::Amount, Transaction},
     zip32::ExtendedFullViewingKey,
 };
 
 #[cfg(feature = "mainnet")]
-use zcash_primitives::consensus::MainNetwork as Network;
+use zcash_primitives::consensus::{MainNetwork, MAIN_NETWORK};
 #[cfg(not(feature = "mainnet"))]
-use zcash_primitives::consensus::TestNetwork as Network;
+use zcash_primitives::consensus::{TestNetwork, TEST_NETWORK};
 
 use zcash_proofs::prover::LocalTxProver;
 
-#[cfg(feature = "mainnet")]
-use zcash_client_backend::constants::mainnet::{
-    COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY,
-    HRP_SAPLING_PAYMENT_ADDRESS,
-};
-#[cfg(not(feature = "mainnet"))]
-use zcash_client_backend::constants::testnet::{
-    COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY,
-    HRP_SAPLING_PAYMENT_ADDRESS,
-};
+use zcash_primitives::consensus::{TestNetwork, TEST_NETWORK};
 
 use std::convert::TryFrom;
 
@@ -60,7 +53,7 @@ use sha2::{Digest, Sha256};
 // use zcash_primitives::legacy::TransparentAddress;
 use hdwallet::{ExtendedPrivKey, KeyIndex};
 use secp256k1::{PublicKey, Secp256k1};
-use zcash_client_backend::constants::mainnet::B58_PUBKEY_ADDRESS_PREFIX;
+
 
 // use crate::extended_key::{key_index::KeyIndex, ExtendedPrivKey, ExtendedPubKey, KeySeed};
 // /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +73,40 @@ where
     match exc {
         Ok(value) => value,
         Err(_) => ffi_helpers::Nullable::NULL,
+    }
+}
+
+fn wallet_db(db_data: *const u8,
+    db_data_len: usize) -> Result<WalletDB, failure::Error> {
+        
+    let res = catch_panic(|| {
+        Path::new(OsStr::from_bytes(unsafe {
+            slice::from_raw_parts(db_data, db_data_len)
+        }))
+
+    });
+
+    match res {
+        Ok(value) => WalletDB::for_path(value)
+        .map_err(|e| format_err!("Error opening wallet database connection: {}", e)),
+        Err(e) => e
+    }
+}
+
+fn block_db(cache_db: *const u8,
+    cache_db_len: usize) -> Result<BlockDB, failure::Error> {
+             
+    let res = catch_panic(|| {
+        Path::new(OsStr::from_bytes(unsafe {
+            slice::from_raw_parts(db_data, db_data_len)
+        }))
+
+    });
+
+    match res {
+        Ok(value) => BlockDB::for_path(value)
+        .map_err(|e| format_err!("Error opening block source database connection: {}", e)),
+        Err(e) => e
     }
 }
 
@@ -132,9 +159,7 @@ pub extern "C" fn zcashlc_init_accounts_table(
     capacity_ret: *mut usize,
 ) -> *mut *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let seed = unsafe { slice::from_raw_parts(seed, seed_len) };
         let accounts = if accounts >= 0 {
             accounts as u32
@@ -147,30 +172,25 @@ pub extern "C" fn zcashlc_init_accounts_table(
             .collect();
         let extfvks: Vec<_> = extsks.iter().map(ExtendedFullViewingKey::from).collect();
 
-        match init_accounts_table(&db_data, &extfvks) {
-            Ok(()) => (),
-            Err(e) => match e.kind() {
-                ErrorKind::TableNotEmpty => {
-                    // Ignore this error.
-                }
-                _ => return Err(format_err!("Error while initializing accounts: {}", e)),
-            },
-        }
-
-        // Return the ExtendedSpendingKeys for the created accounts.
-        let mut v: Vec<_> = extsks
-            .iter()
-            .map(|extsk| {
-                let encoded =
-                    encode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, extsk);
-                CString::new(encoded).unwrap().into_raw()
+        init_accounts_table(&db_data, &NETWORK, &extfvks)
+            .map(|_| {
+                 // Return the ExtendedSpendingKeys for the created accounts.
+                let mut v: Vec<_> = extsks
+                .iter()
+                .map(|extsk| {
+                    let encoded =
+                        encode_extended_spending_key(NETWORK.hrp_sapling_extended_spending_key(), extsk);
+                    CString::new(encoded).unwrap().into_raw()
+                })
+                .collect();
+                assert!(v.len() == accounts as usize);
+                unsafe { *capacity_ret.as_mut().unwrap() = v.capacity() };
+                let p = v.as_mut_ptr();
+                std::mem::forget(v);
+                return p;
             })
-            .collect();
-        assert!(v.len() == accounts as usize);
-        unsafe { *capacity_ret.as_mut().unwrap() = v.capacity() };
-        let p = v.as_mut_ptr();
-        std::mem::forget(v);
-        Ok(p)
+            .map_err(|e| format_err!("Error while initializing accounts: {}", e))
+
     });
     unwrap_exc_or_null(res)
 }
