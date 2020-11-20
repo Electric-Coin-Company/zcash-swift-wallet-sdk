@@ -362,7 +362,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
 ) -> *mut c_char {
     let res = catch_panic(|| {
         let extsk = CStr::from_ptr(extsk).to_str()?;
-        let extfvk = match decode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, &extsk) {
+        let extfvk = match decode_extended_spending_key(NETWORK.hrp_sapling_extended_spending_key(), &extsk) {
             Ok(Some(extsk)) => ExtendedFullViewingKey::from(&extsk),
             Ok(None) => {
                 return Err(format_err!("Deriving viewing key from spending key returned no results. Encoding was valid but type was incorrect."));
@@ -376,7 +376,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
         };
 
         let encoded =
-            encode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, &extfvk);
+            encode_extended_full_viewing_key(NETWORK.hrp_sapling_extended_full_viewing_key(), &extfvk);
 
         Ok(CString::new(encoded).unwrap().into_raw())
     });
