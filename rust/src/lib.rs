@@ -397,9 +397,7 @@ pub extern "C" fn zcashlc_init_blocks_table(
     sapling_tree_hex: *const c_char,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let hash = {
             let mut hash = hex::decode(unsafe { CStr::from_ptr(hash_hex) }.to_str()?).unwrap();
             hash.reverse();
@@ -408,7 +406,7 @@ pub extern "C" fn zcashlc_init_blocks_table(
         let sapling_tree =
             hex::decode(unsafe { CStr::from_ptr(sapling_tree_hex) }.to_str()?).unwrap();
 
-        match init_blocks_table(&db_data, height, hash, time, &sapling_tree) {
+        match init_blocks_table(&db_data, height.try_into()?, hash, time, &sapling_tree) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while initializing blocks table: {}", e)),
         }
