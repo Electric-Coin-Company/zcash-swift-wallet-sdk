@@ -314,11 +314,11 @@ pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
         } else {
             return Err(format_err!("accounts argument must be greater than zero"));
         };
-        let address = spending_key(&seed, COIN_TYPE, account_index)
+        let address = spending_key(&seed, NETWORK.coin_type(), account_index)
             .default_address()
             .unwrap()
             .1;
-        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        let address_str = encode_payment_address(NETWORK.hrp_sapling_payment_address(), &address);
         Ok(CString::new(address_str).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
