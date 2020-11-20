@@ -279,7 +279,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
         };
 
         let extsks: Vec<_> = (0..accounts)
-            .map(|account| ExtendedFullViewingKey::from(&spending_key(&seed, COIN_TYPE, account)))
+            .map(|account| ExtendedFullViewingKey::from(&spending_key(&seed, NETWORK.coin_type(), account)))
             .collect();
 
         // Return the ExtendedSpendingKeys for the created accounts.
@@ -287,7 +287,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
             .iter()
             .map(|extsk| {
                 let encoded =
-                    encode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, extsk);
+                    encode_extended_full_viewing_key(NETWORK.hrp_sapling_extended_full_viewing_key(), extsk);
                 CString::new(encoded).unwrap().into_raw()
             })
             .collect();
