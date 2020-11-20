@@ -87,7 +87,7 @@ fn wallet_db(db_data: *const u8,
     let db_data = Path::new(OsStr::from_bytes(unsafe {
             slice::from_raw_parts(db_data, db_data_len)
         }));
-    WalletDB::for_path(value)
+    WalletDB::for_path(db_data)
         .map_err(|e| format_err!("Error opening wallet database connection: {}", e))
 }
 
@@ -238,7 +238,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
         };
 
         let extsks: Vec<_> = (0..accounts)
-            .map(|account| spending_key(&seed, COIN_TYPE, account))
+            .map(|account| spending_key(&seed, NETWORK.coin_type(), account))
             .collect();
 
         // Return the ExtendedSpendingKeys for the created accounts.
@@ -246,7 +246,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
             .iter()
             .map(|extsk| {
                 let encoded =
-                    encode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, extsk);
+                    encode_extended_spending_key(NETWORK.hrp_sapling_extended_spending_key(), extsk);
                 CString::new(encoded).unwrap().into_raw()
             })
             .collect();
