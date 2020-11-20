@@ -333,7 +333,7 @@ pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_viewing_key(
     let res = catch_panic(|| {
         let extfvk_string = CStr::from_ptr(extfvk).to_str()?;
         let extfvk = match decode_extended_full_viewing_key(
-            HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY,
+            NETWORK.hrp_sapling_extended_full_viewing_key(),
             &extfvk_string,
         ) {
             Ok(Some(extfvk)) => extfvk,
@@ -348,7 +348,7 @@ pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_viewing_key(
             }
         };
         let address = extfvk.default_address().unwrap().1;
-        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        let address_str = encode_payment_address(NETWORK.hrp_sapling_payment_address(), &address);
         Ok(CString::new(address_str).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
