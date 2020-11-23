@@ -90,7 +90,6 @@ public class SDKSynchronizer: Synchronizer {
     
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
-    private var isFirstApplicationStart = true
     var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
     private var isBackgroundAllowed: Bool {
@@ -394,10 +393,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func applicationWillEnterForeground(_ notification: Notification) {
-        guard !self.isFirstApplicationStart else {
-            self.isFirstApplicationStart = false
-            return
-        }
+
         let status = self.status
         LoggerProxy.debug("applicationWillEnterForeground")
         invalidateBackgroundActivity()
