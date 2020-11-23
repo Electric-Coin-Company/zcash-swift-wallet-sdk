@@ -197,6 +197,7 @@ public class CompactBlockProcessor {
     private var config: Configuration = Configuration.standard
     private var queue: OperationQueue = {
         let q = OperationQueue()
+        q.name = "CompactBlockProcessorQueue"
         q.maxConcurrentOperationCount = 1
         return q
     } ()
