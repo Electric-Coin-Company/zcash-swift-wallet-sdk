@@ -406,7 +406,7 @@ pub extern "C" fn zcashlc_init_blocks_table(
         let sapling_tree =
             hex::decode(unsafe { CStr::from_ptr(sapling_tree_hex) }.to_str()?).unwrap();
 
-        match init_blocks_table(&db_data, height.try_into()?, hash, time, &sapling_tree) {
+        match init_blocks_table(&db_data, height, hash, time, &sapling_tree) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while initializing blocks table: {}", e)),
         }
@@ -431,7 +431,7 @@ pub extern "C" fn zcashlc_get_address(
             return Err(format_err!("accounts argument must be positive"));
         };
 
-        let account = AccountId(account.try_into()?);
+        let account = AccountId(account);
 
         match (&db_data).get_address(&NETWORK, account) {
             Ok(Some(addr)) => {
@@ -497,7 +497,7 @@ pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, ac
         } else {
             return Err(format_err!("account argument must be positive"));
         };
-        let account = AccountId(account.try_into()?);
+        let account = AccountId(account);
         match (&db_data).get_balance(account) {
             Ok(balance) => Ok(balance.into()),
             Err(e) => Err(format_err!("Error while fetching balance: {}", e)),
@@ -515,19 +515,27 @@ pub extern "C" fn zcashlc_get_verified_balance(
     account: i32,
 ) -> i64 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let account = if account >= 0 {
             account as u32
         } else {
             return Err(format_err!("account argument must be positive"));
         };
-
-        match get_verified_balance(&db_data, account) {
-            Ok(balance) => Ok(balance.into()),
-            Err(e) => Err(format_err!("Error while fetching verified balance: {}", e)),
-        }
+        let account = AccountId(account);
+        (&db_data)
+            .get_target_and_anchor_heights()
+            .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
+            .and_then(|opt_anchor| {
+                opt_anchor
+                    .map(|(_, a)| a)
+                    .ok_or(format_err!("Anchor height not available; scan required."))
+            })
+            .and_then(|anchor| {
+                (&db_data)
+                    .get_verified_balance(account, anchor)
+                    .map_err(|e| format_err!("Error while fetching verified balance: {}", e))
+            })
+            .map(|amount| amount.into())
     });
     unwrap_exc_or(res, -1)
 }
