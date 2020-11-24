@@ -406,7 +406,7 @@ pub extern "C" fn zcashlc_init_blocks_table(
         let sapling_tree =
             hex::decode(unsafe { CStr::from_ptr(sapling_tree_hex) }.to_str()?).unwrap();
 
-        match init_blocks_table(&db_data, height, hash, time, &sapling_tree) {
+        match init_blocks_table(&db_data, BlockHeight(height as u32), hash,time, &sapling_tree) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while initializing blocks table: {}", e)),
         }
@@ -578,14 +578,12 @@ pub extern "C" fn zcashlc_get_sent_memo_as_utf8(
     id_note: i64,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = match get_sent_memo_as_utf8(db_data, id_note) {
-            Ok(memo) => memo.unwrap_or_default(),
-            Err(e) => return Err(format_err!("Error while fetching memo: {}", e)),
-        };
+        let memo = (&db_data)
+            .get_sent_memo_as_utf8(NoteId(id_note))
+            .map(|memo| memo.unwrap_or_default())
+            .map_err(|e| format_err!("Error while fetching memo: {}", e))?;
 
         Ok(CString::new(memo).unwrap().into_raw())
     });
