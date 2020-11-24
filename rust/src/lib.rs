@@ -457,7 +457,7 @@ pub unsafe extern "C" fn zcashlc_is_valid_shielded_address(address: *const c_cha
     let res = catch_panic(|| {
         let addr = CStr::from_ptr(address).to_str()?;
 
-        match RecipientAddress::from_str(&addr) {
+        match RecipientAddress::decode(&NETWORK, &addr) {
             Some(addr) => match addr {
                 RecipientAddress::Shielded(_) => Ok(true),
                 RecipientAddress::Transparent(_) => Ok(false),
@@ -475,7 +475,7 @@ pub unsafe extern "C" fn zcashlc_is_valid_transparent_address(address: *const c_
     let res = catch_panic(|| {
         let addr = CStr::from_ptr(address).to_str()?;
 
-        match RecipientAddress::from_str(&addr) {
+        match RecipientAddress::decode(&NETWORK, &addr) {
             Some(addr) => match addr {
                 RecipientAddress::Shielded(_) => Ok(false),
                 RecipientAddress::Transparent(_) => Ok(true),
