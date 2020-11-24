@@ -490,16 +490,15 @@ pub unsafe extern "C" fn zcashlc_is_valid_transparent_address(address: *const c_
 #[no_mangle]
 pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, account: i32) -> i64 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
+
         let account = if account >= 0 {
             account as u32
         } else {
             return Err(format_err!("account argument must be positive"));
         };
-
-        match get_balance(&db_data, account) {
+        let account = AccountId(account.try_into()?);
+        match (&db_data).get_balance(account) {
             Ok(balance) => Ok(balance.into()),
             Err(e) => Err(format_err!("Error while fetching balance: {}", e)),
         }
