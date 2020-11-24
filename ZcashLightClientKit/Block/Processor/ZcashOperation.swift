@@ -39,6 +39,11 @@ class ZcashOperation: Operation {
     }
     
     override func start() {
+        guard !shouldCancel() else {
+            LoggerProxy.debug("\(self) cancelled")
+            cancel()
+            return
+        }
         LoggerProxy.debug("\(self) started")
         startedHandler?()
         super.start()
