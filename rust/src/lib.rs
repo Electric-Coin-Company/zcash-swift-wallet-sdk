@@ -614,16 +614,21 @@ pub extern "C" fn zcashlc_validate_combined_chain(
     db_data_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_cache = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_cache, db_cache_len)
-        }));
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let block_db = block_db(db_cache, db_cache_len)?;
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        if let Err(e) = validate_combined_chain(&db_cache, &db_data) {
-            match e.kind() {
-                ErrorKind::InvalidChain(upper_bound, _) => Ok(*upper_bound),
+        let validate_from = (&db_data)
+            .get_max_height_hash()
+            .map_err(|e| format_err!("Error while validating chain: {}", e))?;
+        
+        let val_res = validate_chain(&NETWORK, &block_db, validate_from);
+
+        if let Err(e) = val_res {
+            match e.0 {
+                Error::InvalidChain(upper_bound, _) => {
+                    let upper_bound_u32 = u32::from(upper_bound);
+                    Ok(upper_bound_u32 as i32)
+                }
                 _ => Err(format_err!("Error while validating chain: {}", e)),
             }
         } else {
