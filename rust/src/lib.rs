@@ -553,11 +553,9 @@ pub extern "C" fn zcashlc_get_received_memo_as_utf8(
     id_note: i64,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = match get_received_memo_as_utf8(db_data, id_note) {
+        let memo = match (&db_data).get_received_memo_as_utf8(NoteId(id_note)) {
             Ok(memo) => memo.unwrap_or_default(),
             Err(e) => return Err(format_err!("Error while fetching memo: {}", e)),
         };
