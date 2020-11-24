@@ -424,20 +424,25 @@ pub extern "C" fn zcashlc_get_address(
     account: i32,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let account = if account >= 0 {
             account as u32
         } else {
             return Err(format_err!("accounts argument must be positive"));
         };
 
-        match get_address(&db_data, account) {
-            Ok(addr) => {
-                let c_str_addr = CString::new(addr).unwrap();
+        let account = AccountId(account.try_into()?);
+
+        match (&db_data).get_address(&NETWORK, account) {
+            Ok(Some(addr)) => {
+                let addr_str = encode_payment_address(NETWORK.hrp_sapling_payment_address(), &addr);
+                let c_str_addr = CString::new(addr_str).unwrap();
                 Ok(c_str_addr.into_raw())
-            }
+            },
+            Ok(None) => Err(format_err!(
+                "No payment address was available for account {:?}",
+                account
+            )),
             Err(e) => Err(format_err!("Error while fetching address: {}", e)),
         }
     });
