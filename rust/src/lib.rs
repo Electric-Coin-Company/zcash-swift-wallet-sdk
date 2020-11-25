@@ -29,7 +29,6 @@ use zcash_client_sqlite::{
 use zcash_primitives::{
     block::BlockHash,
     consensus::{BlockHeight, BranchId, Parameters},
-    legacy::TransparentAddress,
     note_encryption::Memo,
     transaction::{components::Amount, Transaction},
     zip32::ExtendedFullViewingKey,
@@ -127,10 +126,11 @@ pub extern "C" fn zcashlc_init_data_database(db_data: *const u8, db_data_len: us
         let db_data = Path::new(OsStr::from_bytes(unsafe {
             slice::from_raw_parts(db_data, db_data_len)
         }));
-
-        init_data_database(&db_data)
-            .map(|()| 1)
-            .map_err(|e| format_err!("Error while initializing data DB: {}", e))
+     
+            WalletDB::for_path(db_data)
+                    .map(|db| init_data_database(&db))
+                    .map(|_| 1)
+                    .map_err(|e| format_err!("Error while initializing data DB: {}", e))
     });
     unwrap_exc_or_null(res)
 }
@@ -406,7 +406,7 @@ pub extern "C" fn zcashlc_init_blocks_table(
         let sapling_tree =
             hex::decode(unsafe { CStr::from_ptr(sapling_tree_hex) }.to_str()?).unwrap();
 
-        match init_blocks_table(&db_data, BlockHeight(height as u32), hash,time, &sapling_tree) {
+        match init_blocks_table(&db_data, BlockHeight::from_u32(height as u32), hash,time, &sapling_tree) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while initializing blocks table: {}", e)),
         }
