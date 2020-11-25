@@ -688,14 +688,10 @@ pub extern "C" fn zcashlc_scan_blocks(
     db_data_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_cache = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_cache, db_cache_len)
-        }));
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let block_db = block_db(db_cache, db_cache_len)?;
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        match scan_cached_blocks(&db_cache, &db_data, None) {
+        match scan_cached_blocks(&NETWORK, &block_db, &db_data, None) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while scanning blocks: {}", e)),
         }
