@@ -856,7 +856,9 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
         let address_sk = ext_t_key
             .derive_private_key(KeyIndex::hardened_from_normalize_index(44).unwrap())
             .unwrap()
-            .derive_private_key(KeyIndex::hardened_from_normalize_index(COIN_TYPE).unwrap())
+            .derive_private_key(
+                KeyIndex::hardened_from_normalize_index(NETWORK.coin_type()).unwrap(),
+            )
             .unwrap()
             .derive_private_key(KeyIndex::hardened_from_normalize_index(0).unwrap())
             .unwrap()
@@ -871,7 +873,7 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
         hash160.update(Sha256::digest(&pk.serialize()[..].to_vec()));
         let address_string = hash160
             .finalize()
-            .to_base58check(&B58_PUBKEY_ADDRESS_PREFIX, &[]);
+            .to_base58check(&NETWORK.b58_pubkey_address_prefix(), &[]);
 
         Ok(CString::new(address_string).unwrap().into_raw())
     });
