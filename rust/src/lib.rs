@@ -650,18 +650,18 @@ pub extern "C" fn zcashlc_rewind_to_height(
     height: i32,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        match rewind_to_height(&db_data, height) {
-            Ok(()) => Ok(1),
-            Err(e) => Err(format_err!(
-                "Error while rewinding data DB to height {}: {}",
-                height,
-                e
-            )),
-        }
+        let mut update_ops = (&db_data)
+            .get_update_ops()
+            .map_err(|e| format_err!("Could not obtain a writable database connection: {}", e))?;
+
+        let height = BlockHeight::try_from(height)?;
+        (&mut update_ops)
+            .transactionally(|ops| ops.rewind_to_height(&NETWORK, height))
+            .map(|_| 1)
+            .map_err(|e| format_err!("Error while rewinding data DB to height {}: {}", height, e))
+        
     });
     unwrap_exc_or_null(res)
 }
