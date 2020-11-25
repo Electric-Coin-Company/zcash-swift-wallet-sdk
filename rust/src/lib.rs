@@ -707,13 +707,11 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     tx_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
         let tx = Transaction::read(&tx_bytes[..])?;
 
-        match decrypt_and_store_transaction(&db_data, &tx) {
+        match decrypt_and_store_transaction(&NETWORK, &db_data, &tx) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while decrypting transaction: {}", e)),
         }
