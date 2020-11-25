@@ -748,7 +748,7 @@ pub extern "C" fn zcashlc_create_to_address(
     db_data_len: usize,
     account: i32,
     extsk: *const c_char,
-    consensus_branch_id: i32,
+    _: i32, // not used any more
     to: *const c_char,
     value: i64,
     memo: *const c_char,
@@ -758,16 +758,8 @@ pub extern "C" fn zcashlc_create_to_address(
     output_params_len: usize,
 ) -> i64 {
     let res = catch_panic(|| {
-        let branch_id = match BranchId::try_from(consensus_branch_id as u32) {
-            Ok(extsk) => extsk,
-            Err(e) => {
-                return Err(format_err!("Invalid consensus branch id: {}", e));
-            }
-        };
 
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let account = if account >= 0 {
             account as u32
         } else {
@@ -788,17 +780,19 @@ pub extern "C" fn zcashlc_create_to_address(
             slice::from_raw_parts(output_params, output_params_len)
         }));
 
-        let extsk = match decode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, &extsk) {
-            Ok(Some(extsk)) => extsk,
-            Ok(None) => {
-                return Err(format_err!("ExtendedSpendingKey is for the wrong network"));
-            }
-            Err(e) => {
-                return Err(format_err!("Invalid ExtendedSpendingKey: {}", e));
-            }
-        };
+        let extsk =
+            match decode_extended_spending_key(NETWORK.hrp_sapling_extended_spending_key(), &extsk)
+            {
+                Ok(Some(extsk)) => extsk,
+                Ok(None) => {
+                    return Err(format_err!("ExtendedSpendingKey is for the wrong network"));
+                }
+                Err(e) => {
+                    return Err(format_err!("Invalid ExtendedSpendingKey: {}", e));
+                }
+            };
 
-        let to = match RecipientAddress::from_str(&to) {
+        let to = match RecipientAddress::decode(&NETWORK, &to) {
             Some(to) => to,
             None => {
                 return Err(format_err!("PaymentAddress is for the wrong network"));
@@ -809,11 +803,12 @@ pub extern "C" fn zcashlc_create_to_address(
 
         let prover = LocalTxProver::new(spend_params, output_params);
 
-        create_to_address(
+        create_spend_to_address(
             &db_data,
-            branch_id,
+            &NETWORK,
             prover,
-            (account, &extsk),
+            AccountId(account),
+            &extsk,
             &to,
             value,
             Some(memo),
@@ -827,7 +822,7 @@ pub extern "C" fn zcashlc_create_to_address(
 #[no_mangle]
 pub extern "C" fn zcashlc_branch_id_for_height(height: i32) -> i32 {
     let res = catch_panic(|| {
-        let branch: BranchId = BranchId::for_height::<Network>(height as u32);
+        let branch: BranchId = BranchId::for_height(&NETWORK, BlockHeight::from(height as u32));
         let branch_id: u32 = u32::from(branch);
         Ok(branch_id as i32)
     });
