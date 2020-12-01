@@ -1,6 +1,6 @@
 language: swift
 os: osx
-osx_image: xcode12.2
+osx_image: xcode12
 xcode_workspace: ./Example/ZcashLightClientSample/ZcashLightClientSample.xcworkspace
 xcode_scheme: ZcashLightClientSample
 xcode_destination: platform=iOS Simulator,OS=14.2,name=iPhone 8
@@ -20,13 +20,4 @@ install:
 script:
   - swiftlint
   - travis_wait 60 xcodebuild -quiet -UseModernBuildSystem=NO -workspace ./Example/ZcashLightClientSample/ZcashLightClientSample.xcworkspace -scheme ZcashLightClientSample -destination platform\=iOS\ Simulator,OS\=14.2,name\=iPhone\ 8 build
-
-- stage: Release - If Tagged Commit
-  script:
-    - echo "Checking for release tag"
-  before_deploy:
-    - echo "Found tagged release"
-
-    - echo "Deploying CocoaPods"
-    - brew outdated cocoapods || brew upgrade cocoapods
-    - travis_wait 500 pod trunk push --skip-import-validation --skip-tests --allow-warnings
+  
