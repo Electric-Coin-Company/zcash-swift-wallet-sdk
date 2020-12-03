@@ -8,7 +8,7 @@ use std::slice;
 use std::str::FromStr;
 use zcash_client_backend::{
     address::RecipientAddress,
-    api::AccountId,
+    wallet::AccountId,
     data_api::{
         chain::{scan_cached_blocks, validate_chain},
         error::Error,
