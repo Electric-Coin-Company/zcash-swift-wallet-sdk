@@ -419,8 +419,9 @@ public class CompactBlockProcessor {
         }
         let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
-        let downloadValidateAdapterOperation = BlockOperation {
-            validateChainOperation.error = downloadBlockOperation.error
+        let downloadValidateAdapterOperation = BlockOperation { [weak validateChainOperation, weak downloadBlockOperation] in
+
+            validateChainOperation?.error = downloadBlockOperation?.error
         }
         
         validateChainOperation.completionHandler = { (finished, cancelled) in
@@ -455,8 +456,8 @@ public class CompactBlockProcessor {
         
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
-        let validateScanningAdapterOperation = BlockOperation {
-            scanBlocksOperation.error = validateChainOperation.error
+        let validateScanningAdapterOperation = BlockOperation { [weak scanBlocksOperation, weak validateChainOperation] in
+            scanBlocksOperation?.error = validateChainOperation?.error
         }
         scanBlocksOperation.startedHandler = { [weak self] in
             self?.state = .scanning
@@ -502,8 +503,8 @@ public class CompactBlockProcessor {
             self.fail(error)
         }
         
-        let scanEnhanceAdapterOperation = BlockOperation {
-            enhanceOperation.error = scanBlocksOperation.error
+        let scanEnhanceAdapterOperation = BlockOperation { [weak enhanceOperation, weak scanBlocksOperation] in
+            enhanceOperation?.error = scanBlocksOperation?.error
         }
         
         downloadValidateAdapterOperation.addDependency(downloadBlockOperation)
