@@ -117,7 +117,7 @@ class TestCoordinator {
         self.completionHandler = completion
         self.errorHandler = error
         
-        try synchronizer.start()
+        try synchronizer.start(retry: true)
     }
     
     
