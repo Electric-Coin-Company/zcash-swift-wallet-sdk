@@ -453,8 +453,6 @@ public class CompactBlockProcessor {
             
         }
         
-        validateChainOperation.addDependency(downloadBlockOperation)
-        
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
         let validateScanningAdapterOperation = BlockOperation {
@@ -504,16 +502,22 @@ public class CompactBlockProcessor {
             self.fail(error)
         }
         
-        enhanceOperation.addDependency(scanBlocksOperation)
+        let scanEnhanceAdapterOperation = BlockOperation {
+            enhanceOperation.error = scanBlocksOperation.error
+        }
+        
         downloadValidateAdapterOperation.addDependency(downloadBlockOperation)
         validateChainOperation.addDependency(downloadValidateAdapterOperation)
         scanBlocksOperation.addDependency(validateScanningAdapterOperation)
+        scanEnhanceAdapterOperation.addDependency(scanBlocksOperation)
+        enhanceOperation.addDependency(scanEnhanceAdapterOperation)
         
         queue.addOperations([downloadBlockOperation,
                              downloadValidateAdapterOperation,
                              validateChainOperation,
                              validateScanningAdapterOperation,
                              scanBlocksOperation,
+                             scanEnhanceAdapterOperation,
                              enhanceOperation], waitUntilFinished: false)
         
     }
@@ -547,7 +551,7 @@ public class CompactBlockProcessor {
         
         // cancel all Tasks
         queue.cancelAllOperations()
-        
+
         // register latest failure
         self.lastChainValidationFailure = height
         self.consecutiveChainValidationErrors = self.consecutiveChainValidationErrors + 1
