@@ -88,20 +88,9 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var blockProcessor: CompactBlockProcessor?
     public private(set) var initializer: Initializer
     
-    private var isSubscribedToAppDelegateEvents = false
-    
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
-    var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
-    private var isBackgroundAllowed: Bool {
-        switch UIApplication.shared.backgroundRefreshStatus {
-        case .available:
-            return true
-        default:
-            return false
-        }
-    }
     
     /**
      Creates an SDKSynchronizer instance
@@ -130,7 +119,7 @@ public class SDKSynchronizer: Synchronizer {
         NotificationCenter.default.removeObserver(self)
         self.blockProcessor?.stop()
         self.blockProcessor = nil
-        self.taskIdentifier = .invalid
+        
     }
     
     private func lazyInitialize() throws {
@@ -139,9 +128,6 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.generalError(message: "compact block processor initialization failed")
         }
         
-        if !isSubscribedToAppDelegateEvents {
-            subscribeToAppDelegateNotifications()
-        }
         subscribeToProcessorNotifications(processor)
         
         self.blockProcessor = processor
@@ -174,94 +160,12 @@ public class SDKSynchronizer: Synchronizer {
     Stops the synchronizer
     */
     public func stop() {
-        
-        defer {
-           
-            self.invalidateBackgroundActivity()
-        }
+     
         guard status != .stopped, status != .disconnected else { return }
         
         guard let processor = self.blockProcessor else { return }
         
         processor.stop(cancelTasks: true)
-    }
-    
-    // MARK: event subscription
-    
-    private func subscribeFromAppDelegateNotifications() {
-        self.isSubscribedToAppDelegateEvents = true
-        
-        let center = NotificationCenter.default
-        
-        center.removeObserver(self,
-                              name: UIApplication.didBecomeActiveNotification,
-                              object: nil)
-        
-        center.removeObserver(self,
-                              name: UIApplication.willTerminateNotification,
-                              object: nil)
-        
-        center.removeObserver(self,
-                              name: UIApplication.willResignActiveNotification,
-                              object: nil)
-        
-        center.removeObserver(self,
-                              name: UIApplication.didEnterBackgroundNotification,
-                              object: nil)
-        
-        center.removeObserver(self,
-                              name: UIApplication.willEnterForegroundNotification,
-                              object: nil)
-        
-    }
-    
-    private func subscribeToAppDelegateNotifications() {
-        // todo: iOS 13 platform specific
-        
-        self.isSubscribedToAppDelegateEvents = true
-        let center = NotificationCenter.default
-        
-        center.addObserver(self,
-                           selector: #selector(applicationDidBecomeActive(_:)),
-                           name: UIApplication.didBecomeActiveNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationWillTerminate(_:)),
-                           name: UIApplication.willTerminateNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationWillResignActive(_:)),
-                           name: UIApplication.willResignActiveNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationDidEnterBackground(_:)),
-                           name: UIApplication.didEnterBackgroundNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationWillEnterForeground(_:)),
-                           name: UIApplication.willEnterForegroundNotification,
-                           object: nil)
-        
-    }
-    
-    private func registerBackgroundActivity() {
-        if self.taskIdentifier == .invalid {
-            self.taskIdentifier = UIApplication.shared.beginBackgroundTask(withName: "ZcashLightClientKit.SDKSynchronizer", expirationHandler: {
-                self.invalidateBackgroundActivity()
-            })
-        }
-    }
-    
-    private func invalidateBackgroundActivity() {
-        guard self.taskIdentifier != .invalid else {
-            return
-        }
-        UIApplication.shared.endBackgroundTask(self.taskIdentifier)
-        self.taskIdentifier = .invalid
     }
     
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
@@ -421,41 +325,6 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func processorTransitionUnknown(_ notification: Notification) {
         self.status = .disconnected
-    }
-    
-    // MARK: application notifications
-    @objc func applicationDidBecomeActive(_ notification: Notification) {
-        
-    }
-    
-    @objc func applicationDidEnterBackground(_ notification: Notification) {
-        if !self.isBackgroundAllowed {
-                self.stop()
-        }
-    }
-    
-    @objc func applicationWillEnterForeground(_ notification: Notification) {
-
-        let status = self.status
-        LoggerProxy.debug("applicationWillEnterForeground")
-        invalidateBackgroundActivity()
-        if status == .stopped || status == .disconnected {
-            do {
-                try start(retry: true)
-            } catch {
-                self.status = .disconnected
-                self.notifyFailure(error)
-            }
-        }
-    }
-    
-    @objc func applicationWillResignActive(_ notification: Notification) {
-        registerBackgroundActivity()
-        LoggerProxy.debug("applicationWillResignActive")
-    }
-    
-    @objc func applicationWillTerminate(_ notification: Notification) {
-        stop()
     }
     
     // MARK: Synchronizer methods
