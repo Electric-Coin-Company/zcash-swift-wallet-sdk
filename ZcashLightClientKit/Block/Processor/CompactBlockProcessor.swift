@@ -197,6 +197,7 @@ public class CompactBlockProcessor {
     private var config: Configuration = Configuration.standard
     private var queue: OperationQueue = {
         let q = OperationQueue()
+        q.name = "CompactBlockProcessorQueue"
         q.maxConcurrentOperationCount = 1
         return q
     } ()
@@ -418,12 +419,14 @@ public class CompactBlockProcessor {
         }
         let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
-        let downloadValidateAdapterOperation = BlockOperation {
-            validateChainOperation.error = downloadBlockOperation.error
+        let downloadValidateAdapterOperation = BlockOperation { [weak validateChainOperation, weak downloadBlockOperation] in
+
+            validateChainOperation?.error = downloadBlockOperation?.error
         }
         
-        validateChainOperation.completionHandler = { (finished, cancelled) in
+        validateChainOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
+                self?.state = .stopped
                 LoggerProxy.debug("Warning: validateChainOperation operation cancelled")
                 return
             }
@@ -433,7 +436,7 @@ public class CompactBlockProcessor {
         
         validateChainOperation.errorHandler = { [weak self] (error) in
             guard let self = self else { return }
-            
+
             guard let validationError = error as? CompactBlockValidationError else {
                 LoggerProxy.debug("Warning: validateChain operation returning generic error: \(error)")
                 return
@@ -452,19 +455,18 @@ public class CompactBlockProcessor {
             
         }
         
-        validateChainOperation.addDependency(downloadBlockOperation)
-        
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
-        let validateScanningAdapterOperation = BlockOperation {
-            scanBlocksOperation.error = validateChainOperation.error
+        let validateScanningAdapterOperation = BlockOperation { [weak scanBlocksOperation, weak validateChainOperation] in
+            scanBlocksOperation?.error = validateChainOperation?.error
         }
         scanBlocksOperation.startedHandler = { [weak self] in
             self?.state = .scanning
         }
         
-        scanBlocksOperation.completionHandler = { (finished, cancelled) in
+        scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
+                self?.state = .stopped
                 LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
                 return
             }
@@ -488,12 +490,12 @@ public class CompactBlockProcessor {
         }
         
         enhanceOperation.completionHandler  = { [weak self] (finished, cancelled) in
-            guard let self = self else { return }
             guard !cancelled else {
+                self?.state = .stopped
                 LoggerProxy.debug("Warning: enhance operation on range \(range) cancelled")
                 return
             }
-            self.processBatchFinished(range: range)
+            self?.processBatchFinished(range: range)
         }
         
         enhanceOperation.errorHandler = { [weak self] (error) in
@@ -503,16 +505,22 @@ public class CompactBlockProcessor {
             self.fail(error)
         }
         
-        enhanceOperation.addDependency(scanBlocksOperation)
+        let scanEnhanceAdapterOperation = BlockOperation { [weak enhanceOperation, weak scanBlocksOperation] in
+            enhanceOperation?.error = scanBlocksOperation?.error
+        }
+        
         downloadValidateAdapterOperation.addDependency(downloadBlockOperation)
         validateChainOperation.addDependency(downloadValidateAdapterOperation)
         scanBlocksOperation.addDependency(validateScanningAdapterOperation)
+        scanEnhanceAdapterOperation.addDependency(scanBlocksOperation)
+        enhanceOperation.addDependency(scanEnhanceAdapterOperation)
         
         queue.addOperations([downloadBlockOperation,
                              downloadValidateAdapterOperation,
                              validateChainOperation,
                              validateScanningAdapterOperation,
                              scanBlocksOperation,
+                             scanEnhanceAdapterOperation,
                              enhanceOperation], waitUntilFinished: false)
         
     }
@@ -546,7 +554,7 @@ public class CompactBlockProcessor {
         
         // cancel all Tasks
         queue.cancelAllOperations()
-        
+
         // register latest failure
         self.lastChainValidationFailure = height
         self.consecutiveChainValidationErrors = self.consecutiveChainValidationErrors + 1
@@ -759,49 +767,14 @@ extension LightWalletServiceError {
 }
 extension CompactBlockProcessor.State: Equatable {
     public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
-        switch  lhs {
-        case .downloading:
-            switch  rhs {
-            case .downloading:
-                return true
-            default:
-                return false
-            }
-        case .synced:
-            switch rhs {
-            case .synced:
-                return true
-            default:
-                return false
-            }
-        case .scanning:
-            switch rhs {
-            case .scanning:
-                return true
-            default:
-                return false
-            }
-        case .stopped:
-            switch rhs {
-            case .stopped:
-                return true
-            default:
-                return false
-            }
-        case .error:
-            switch rhs {
-            case .error:
-                return true
-            default:
-                return false
-            }
-        case .validating:
-            switch rhs {
-            case .validating:
-                return true
-            default:
-                return false
-            }
+        switch  (lhs, rhs) {
+        case (.downloading, .downloading),
+             (.scanning, .scanning),
+             (.validating, .validating),
+             (.stopped, .stopped),
+             (.error, .error),
+             (.synced, .synced): return true
+        default: return false
         }
     }
 }
