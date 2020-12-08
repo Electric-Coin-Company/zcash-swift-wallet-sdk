@@ -201,7 +201,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                          dbData.1,
                                          account,
                                          extsk,
-                                         consensusBranchId,
                                          to,
                                          value,
                                          memoBytes,

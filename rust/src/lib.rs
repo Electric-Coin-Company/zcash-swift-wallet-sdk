@@ -733,7 +733,6 @@ pub extern "C" fn zcashlc_create_to_address(
     db_data_len: usize,
     account: i32,
     extsk: *const c_char,
-    _: i32, // not used any more
     to: *const c_char,
     value: i64,
     memo: *const c_char,
