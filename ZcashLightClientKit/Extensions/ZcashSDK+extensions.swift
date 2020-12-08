@@ -16,7 +16,7 @@ public extension ZcashSDK {
      Returns the default fee at the time of that blockheight.
      */
 
-    static func defaultFee(for height: BlockHeight = BlockHeight.max) -> Int64 {
+    func defaultFee(for height: BlockHeight) -> Int64 {
         guard  height >= feeChangeHeight else { return 10_000 }
         
         return 1_000
@@ -24,7 +24,7 @@ public extension ZcashSDK {
     /**
      Estimated height where wallets are supposed to change the fee
      */
-    private static var feeChangeHeight: BlockHeight {
-        ZcashSDK.isMainnet ? 1_077_550 : 1_028_500
+    private var feeChangeHeight: BlockHeight {
+        ZcashSDK.isMainnet ? 1_046_400 : 1_028_500
     }
 }
