@@ -53,11 +53,42 @@ internal protocol CompactTxStreamerClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> UnaryCall<RawTransaction, SendResponse>
 
-  func getAddressTxids(
+  func getTaddressTxids(
     _ request: TransparentAddressBlockFilter,
     callOptions: CallOptions?,
     handler: @escaping (RawTransaction) -> Void
   ) -> ServerStreamingCall<TransparentAddressBlockFilter, RawTransaction>
+
+  func getTaddressBalance(
+    _ request: AddressList,
+    callOptions: CallOptions?
+  ) -> UnaryCall<AddressList, Balance>
+
+  func getTaddressBalanceStream(
+    callOptions: CallOptions?
+  ) -> ClientStreamingCall<Address, Balance>
+
+  func getMempoolTx(
+    _ request: Exclude,
+    callOptions: CallOptions?,
+    handler: @escaping (CompactTx) -> Void
+  ) -> ServerStreamingCall<Exclude, CompactTx>
+
+  func getTreeState(
+    _ request: BlockID,
+    callOptions: CallOptions?
+  ) -> UnaryCall<BlockID, TreeState>
+
+  func getAddressUtxos(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions?
+  ) -> UnaryCall<GetAddressUtxosArg, GetAddressUtxosReplyList>
+
+  func getAddressUtxosStream(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions?,
+    handler: @escaping (GetAddressUtxosReply) -> Void
+  ) -> ServerStreamingCall<GetAddressUtxosArg, GetAddressUtxosReply>
 
   func getLightdInfo(
     _ request: Empty,
@@ -164,17 +195,136 @@ extension CompactTxStreamerClientProtocol {
   /// Return the txids corresponding to the given t-address within the given block range
   ///
   /// - Parameters:
-  ///   - request: Request to send to GetAddressTxids.
+  ///   - request: Request to send to GetTaddressTxids.
   ///   - callOptions: Call options.
   ///   - handler: A closure called when each response is received from the server.
   /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
-  internal func getAddressTxids(
+  internal func getTaddressTxids(
     _ request: TransparentAddressBlockFilter,
     callOptions: CallOptions? = nil,
     handler: @escaping (RawTransaction) -> Void
   ) -> ServerStreamingCall<TransparentAddressBlockFilter, RawTransaction> {
     return self.makeServerStreamingCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressTxids",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressTxids",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      handler: handler
+    )
+  }
+
+  /// Unary call to GetTaddressBalance
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetTaddressBalance.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func getTaddressBalance(
+    _ request: AddressList,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<AddressList, Balance> {
+    return self.makeUnaryCall(
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalance",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions
+    )
+  }
+
+  /// Client streaming call to GetTaddressBalanceStream
+  ///
+  /// Callers should use the `send` method on the returned object to send messages
+  /// to the server. The caller should send an `.end` after the final message has been sent.
+  ///
+  /// - Parameters:
+  ///   - callOptions: Call options.
+  /// - Returns: A `ClientStreamingCall` with futures for the metadata, status and response.
+  internal func getTaddressBalanceStream(
+    callOptions: CallOptions? = nil
+  ) -> ClientStreamingCall<Address, Balance> {
+    return self.makeClientStreamingCall(
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalanceStream",
+      callOptions: callOptions ?? self.defaultCallOptions
+    )
+  }
+
+  /// Return the compact transactions currently in the mempool; the results
+  /// can be a few seconds out of date. If the Exclude list is empty, return
+  /// all transactions; otherwise return all *except* those in the Exclude list
+  /// (if any); this allows the client to avoid receiving transactions that it
+  /// already has (from an earlier call to this rpc). The transaction IDs in the
+  /// Exclude list can be shortened to any number of bytes to make the request
+  /// more bandwidth-efficient; if two or more transactions in the mempool
+  /// match a shortened txid, they are all sent (none is excluded). Transactions
+  /// in the exclude list that don't exist in the mempool are ignored.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetMempoolTx.
+  ///   - callOptions: Call options.
+  ///   - handler: A closure called when each response is received from the server.
+  /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
+  internal func getMempoolTx(
+    _ request: Exclude,
+    callOptions: CallOptions? = nil,
+    handler: @escaping (CompactTx) -> Void
+  ) -> ServerStreamingCall<Exclude, CompactTx> {
+    return self.makeServerStreamingCall(
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetMempoolTx",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      handler: handler
+    )
+  }
+
+  /// GetTreeState returns the note commitment tree state corresponding to the given block.
+  /// See section 3.7 of the zcash protocol specification. It returns several other useful
+  /// values also (even though they can be obtained using GetBlock).
+  /// The block can be specified by either height or hash.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetTreeState.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func getTreeState(
+    _ request: BlockID,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<BlockID, TreeState> {
+    return self.makeUnaryCall(
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTreeState",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions
+    )
+  }
+
+  /// Unary call to GetAddressUtxos
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetAddressUtxos.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func getAddressUtxos(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<GetAddressUtxosArg, GetAddressUtxosReplyList> {
+    return self.makeUnaryCall(
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxos",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions
+    )
+  }
+
+  /// Server streaming call to GetAddressUtxosStream
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetAddressUtxosStream.
+  ///   - callOptions: Call options.
+  ///   - handler: A closure called when each response is received from the server.
+  /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
+  internal func getAddressUtxosStream(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions? = nil,
+    handler: @escaping (GetAddressUtxosReply) -> Void
+  ) -> ServerStreamingCall<GetAddressUtxosArg, GetAddressUtxosReply> {
+    return self.makeServerStreamingCall(
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxosStream",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       handler: handler
