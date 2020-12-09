@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0D1BE4512581585C00F78BE3 /* DerivationToolViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */; };
 		0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
 		0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
@@ -67,6 +68,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DerivationToolViewController.swift; sourceTree = "<group>"; };
 		0D49A18B241698A800CC0649 /* SampleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLogger.swift; sourceTree = "<group>"; };
 		0D4EBA302396CFD70041B507 /* SendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewController.swift; sourceTree = "<group>"; };
 		0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaplingParametersViewController.swift; sourceTree = "<group>"; };
@@ -145,6 +147,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0D1BE44F2581583D00F78BE3 /* Derivation Tool */ = {
+			isa = PBXGroup;
+			children = (
+				0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */,
+			);
+			path = "Derivation Tool";
+			sourceTree = "<group>";
+		};
 		0D4EBA2F2396CFBE0041B507 /* Send */ = {
 			isa = PBXGroup;
 			children = (
@@ -204,6 +214,7 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				0D1BE44F2581583D00F78BE3 /* Derivation Tool */,
 				0D6CE8BB252E3C1A0005D707 /* Sapling Parameters */,
 				0DBF8F9323A80F0E0010B85F /* Transaction Detail */,
 				0DF53E6523A438BA00D7249C /* Paginated Transactions */,
@@ -668,6 +679,7 @@
 				0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */,
 				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
 				0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */,
+				0D1BE4512581585C00F78BE3 /* DerivationToolViewController.swift in Sources */,
 				0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */,
 				0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */,
 				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
