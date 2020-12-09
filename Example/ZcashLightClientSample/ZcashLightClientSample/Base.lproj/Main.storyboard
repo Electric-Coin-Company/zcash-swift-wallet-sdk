@@ -280,6 +280,26 @@
                                             <segue destination="urD-um-X0E" kind="show" id="5XW-nP-b85"/>
                                         </connections>
                                     </tableViewCell>
+                                    <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" textLabel="qHq-xq-jFS" style="IBUITableViewCellStyleDefault" id="XHY-aU-r1N">
+                                        <rect key="frame" x="0.0" y="593.5" width="414" height="43.5"/>
+                                        <autoresizingMask key="autoresizingMask"/>
+                                        <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="XHY-aU-r1N" id="fbk-CU-wgr">
+                                            <rect key="frame" x="0.0" y="0.0" width="414" height="43.5"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                            <subviews>
+                                                <label opaque="NO" multipleTouchEnabled="YES" contentMode="left" insetsLayoutMarginsFromSafeArea="NO" text="Get UTXOs For transparent Address" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="qHq-xq-jFS">
+                                                    <rect key="frame" x="20" y="0.0" width="374" height="43.5"/>
+                                                    <autoresizingMask key="autoresizingMask"/>
+                                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                                    <nil key="textColor"/>
+                                                    <nil key="highlightedColor"/>
+                                                </label>
+                                            </subviews>
+                                        </tableViewCellContentView>
+                                        <connections>
+                                            <segue destination="Ugl-B2-O3O" kind="show" id="hk7-2x-BJl"/>
+                                        </connections>
+                                    </tableViewCell>
                                 </cells>
                             </tableViewSection>
                         </sections>
@@ -1351,6 +1371,100 @@
                 </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="-10.144927536231885" y="684.375"/>
+        </scene>
+        <!--Get UTXOs for tAddr-->
+        <scene sceneID="lqr-tV-bOy">
+            <objects>
+                <viewController title="Get UTXOs for tAddr" id="Ugl-B2-O3O" customClass="GetUTXOsViewController" customModule="ZcashLightClientSample" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="FUM-Ak-cpK">
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="center" spacing="40" translatesAutoresizingMaskIntoConstraints="NO" id="Dcv-Hc-vFg">
+                                <rect key="frame" x="0.0" y="88" width="414" height="774"/>
+                                <subviews>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Transparent Address" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="px8-fg-SSh">
+                                        <rect key="frame" x="70" y="0.0" width="274.5" height="37"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="31"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <textField opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" textAlignment="natural" minimumFontSize="17" clearButtonMode="always" translatesAutoresizingMaskIntoConstraints="NO" id="9yg-Sp-H2E">
+                                        <rect key="frame" x="16" y="77" width="382" height="48"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="48" id="FE1-89-7l2"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits" autocorrectionType="no" spellCheckingType="no" enablesReturnKeyAutomatically="YES" smartDashesType="no" smartInsertDeleteType="no" smartQuotesType="no"/>
+                                        <connections>
+                                            <outlet property="delegate" destination="Ugl-B2-O3O" id="Z8u-00-LZw"/>
+                                        </connections>
+                                    </textField>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="1NQ-co-Y8P">
+                                        <rect key="frame" x="186.5" y="165" width="41.5" height="20.5"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1h3-3y-iS9">
+                                        <rect key="frame" x="131.5" y="225.5" width="151" height="50"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="50" id="v9k-94-gxX"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="29"/>
+                                        <state key="normal" title="Get UTXOs!"/>
+                                        <connections>
+                                            <action selector="getButtonTapped:" destination="Ugl-B2-O3O" eventType="touchUpInside" id="Vlr-m4-asM"/>
+                                        </connections>
+                                    </button>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Mv9-ye-VIn">
+                                        <rect key="frame" x="16" y="315.5" width="382" height="0.0"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pcE-rS-DWU">
+                                        <rect key="frame" x="0.0" y="355.5" width="414" height="418.5"/>
+                                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                    </view>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="Mv9-ye-VIn" firstAttribute="leading" secondItem="Dcv-Hc-vFg" secondAttribute="leading" constant="16" id="8Og-mD-yax"/>
+                                    <constraint firstAttribute="trailing" secondItem="9yg-Sp-H2E" secondAttribute="trailing" constant="16" id="9WS-lo-XzQ"/>
+                                    <constraint firstAttribute="trailing" secondItem="Mv9-ye-VIn" secondAttribute="trailing" constant="16" id="XHM-Ae-k4o"/>
+                                    <constraint firstItem="9yg-Sp-H2E" firstAttribute="leading" secondItem="Dcv-Hc-vFg" secondAttribute="leading" constant="16" id="x6l-fj-8ez"/>
+                                </constraints>
+                            </stackView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="czx-ss-P3g"/>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <gestureRecognizers/>
+                        <constraints>
+                            <constraint firstItem="czx-ss-P3g" firstAttribute="trailing" secondItem="Dcv-Hc-vFg" secondAttribute="trailing" id="DBg-XE-bV2"/>
+                            <constraint firstItem="Dcv-Hc-vFg" firstAttribute="leading" secondItem="czx-ss-P3g" secondAttribute="leading" id="DHq-rU-Hbr"/>
+                            <constraint firstItem="Dcv-Hc-vFg" firstAttribute="top" secondItem="czx-ss-P3g" secondAttribute="top" id="RP3-vq-1iy"/>
+                            <constraint firstItem="czx-ss-P3g" firstAttribute="bottom" secondItem="Dcv-Hc-vFg" secondAttribute="bottom" id="w1s-e0-uM6"/>
+                        </constraints>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="M6L-Tn-cQW" appends="YES" id="m7S-Oz-Chg"/>
+                        </connections>
+                    </view>
+                    <navigationItem key="navigationItem" id="VUG-Af-cu9"/>
+                    <connections>
+                        <outlet property="getButton" destination="1h3-3y-iS9" id="pdY-q5-oIL"/>
+                        <outlet property="messageLabel" destination="Mv9-ye-VIn" id="c6d-Fe-mrx"/>
+                        <outlet property="tAddressField" destination="9yg-Sp-H2E" id="oQV-JY-09h"/>
+                        <outlet property="validAddressLabel" destination="1NQ-co-Y8P" id="mHT-cp-vnn"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="GFR-y5-3AF" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="M6L-Tn-cQW">
+                    <connections>
+                        <action selector="viewTapped:" destination="Ugl-B2-O3O" id="JYM-5t-nWJ"/>
+                    </connections>
+                </tapGestureRecognizer>
+            </objects>
+            <point key="canvasLocation" x="-370" y="1329"/>
         </scene>
     </scenes>
     <inferredMetricsTieBreakers>
