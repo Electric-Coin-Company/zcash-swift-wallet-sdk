@@ -62,6 +62,10 @@ message LightdInfo {
     uint64 saplingActivationHeight = 5; // depends on mainnet or testnet
     string consensusBranchId = 6;       // protocol identifier, see consensus/upgrades.cpp
     uint64 blockHeight = 7;             // latest block on the best chain
+    string gitCommit = 8;
+    string branch = 9;
+    string buildDate = 10;
+    string buildUser = 11;
 }
 
 // TransparentAddressBlockFilter restricts the results to the given address
@@ -86,6 +90,45 @@ message PingResponse {
     int64 exit = 2;
 }
 
+message Address {
+    string address = 1;
+}
+message AddressList {
+    repeated string addresses = 1;
+}
+message Balance {
+    int64 valueZat = 1;
+}
+
+message Exclude {
+    repeated bytes txid = 1;
+}
+
+// The TreeState is derived from the zcash z_gettreestate rpc.
+message TreeState {
+    string network = 1; // "main" or "test"
+    uint64 height = 2;
+    string hash = 3;    // block id
+    uint32 time = 4;    // Unix epoch time when the block was mined
+    string tree = 5;    // sapling commitment tree state
+}
+
+message GetAddressUtxosArg {
+    string address = 1;
+    uint64 startHeight = 2;
+    uint32 maxEntries = 3; // zero means unlimited
+}
+message GetAddressUtxosReply {
+    bytes txid = 1;
+    int32 index = 2;
+    bytes script = 3;
+    int64 valueZat = 4;
+    uint64 height = 5;
+}
+message GetAddressUtxosReplyList {
+    repeated GetAddressUtxosReply addressUtxos = 1;
+}
+
 service CompactTxStreamer {
     // Return the height of the tip of the best chain
     rpc GetLatestBlock(ChainSpec) returns (BlockID) {}
@@ -100,7 +143,29 @@ service CompactTxStreamer {
     rpc SendTransaction(RawTransaction) returns (SendResponse) {}
 
     // Return the txids corresponding to the given t-address within the given block range
-    rpc GetAddressTxids(TransparentAddressBlockFilter) returns (stream RawTransaction) {}
+    rpc GetTaddressTxids(TransparentAddressBlockFilter) returns (stream RawTransaction) {}
+    rpc GetTaddressBalance(AddressList) returns (Balance) {}
+    rpc GetTaddressBalanceStream(stream Address) returns (Balance) {}
+
+    // Return the compact transactions currently in the mempool; the results
+    // can be a few seconds out of date. If the Exclude list is empty, return
+    // all transactions; otherwise return all *except* those in the Exclude list
+    // (if any); this allows the client to avoid receiving transactions that it
+    // already has (from an earlier call to this rpc). The transaction IDs in the
+    // Exclude list can be shortened to any number of bytes to make the request
+    // more bandwidth-efficient; if two or more transactions in the mempool
+    // match a shortened txid, they are all sent (none is excluded). Transactions
+    // in the exclude list that don't exist in the mempool are ignored.
+    rpc GetMempoolTx(Exclude) returns (stream CompactTx) {}
+
+    // GetTreeState returns the note commitment tree state corresponding to the given block.
+    // See section 3.7 of the zcash protocol specification. It returns several other useful
+    // values also (even though they can be obtained using GetBlock).
+    // The block can be specified by either height or hash.
+    rpc GetTreeState(BlockID) returns (TreeState) {}
+
+    rpc GetAddressUtxos(GetAddressUtxosArg) returns (GetAddressUtxosReplyList) {}
+    rpc GetAddressUtxosStream(GetAddressUtxosArg) returns (stream GetAddressUtxosReply) {}
 
     // Return information about this lightwalletd instance and the blockchain
     rpc GetLightdInfo(Empty) returns (LightdInfo) {}

@@ -187,6 +187,14 @@ struct LightdInfo {
   /// latest block on the best chain
   var blockHeight: UInt64 = 0
 
+  var gitCommit: String = String()
+
+  var branch: String = String()
+
+  var buildDate: String = String()
+
+  var buildUser: String = String()
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -245,6 +253,128 @@ struct PingResponse {
   var entry: Int64 = 0
 
   var exit: Int64 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Address {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var address: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct AddressList {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var addresses: [String] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Balance {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var valueZat: Int64 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct Exclude {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var txid: [Data] = []
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// The TreeState is derived from the zcash z_gettreestate rpc.
+struct TreeState {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// "main" or "test"
+  var network: String = String()
+
+  var height: UInt64 = 0
+
+  /// block id
+  var hash: String = String()
+
+  /// Unix epoch time when the block was mined
+  var time: UInt32 = 0
+
+  /// sapling commitment tree state
+  var tree: String = String()
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct GetAddressUtxosArg {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var address: String = String()
+
+  var startHeight: UInt64 = 0
+
+  /// zero means unlimited
+  var maxEntries: UInt32 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct GetAddressUtxosReply {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var txid: Data = SwiftProtobuf.Internal.emptyData
+
+  var index: Int32 = 0
+
+  var script: Data = SwiftProtobuf.Internal.emptyData
+
+  var valueZat: Int64 = 0
+
+  var height: UInt64 = 0
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+struct GetAddressUtxosReplyList {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  var addressUtxos: [GetAddressUtxosReply] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -484,6 +614,10 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     5: .same(proto: "saplingActivationHeight"),
     6: .same(proto: "consensusBranchId"),
     7: .same(proto: "blockHeight"),
+    8: .same(proto: "gitCommit"),
+    9: .same(proto: "branch"),
+    10: .same(proto: "buildDate"),
+    11: .same(proto: "buildUser"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -496,6 +630,10 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
       case 5: try decoder.decodeSingularUInt64Field(value: &self.saplingActivationHeight)
       case 6: try decoder.decodeSingularStringField(value: &self.consensusBranchID)
       case 7: try decoder.decodeSingularUInt64Field(value: &self.blockHeight)
+      case 8: try decoder.decodeSingularStringField(value: &self.gitCommit)
+      case 9: try decoder.decodeSingularStringField(value: &self.branch)
+      case 10: try decoder.decodeSingularStringField(value: &self.buildDate)
+      case 11: try decoder.decodeSingularStringField(value: &self.buildUser)
       default: break
       }
     }
@@ -523,6 +661,18 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if self.blockHeight != 0 {
       try visitor.visitSingularUInt64Field(value: self.blockHeight, fieldNumber: 7)
     }
+    if !self.gitCommit.isEmpty {
+      try visitor.visitSingularStringField(value: self.gitCommit, fieldNumber: 8)
+    }
+    if !self.branch.isEmpty {
+      try visitor.visitSingularStringField(value: self.branch, fieldNumber: 9)
+    }
+    if !self.buildDate.isEmpty {
+      try visitor.visitSingularStringField(value: self.buildDate, fieldNumber: 10)
+    }
+    if !self.buildUser.isEmpty {
+      try visitor.visitSingularStringField(value: self.buildUser, fieldNumber: 11)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -534,6 +684,10 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if lhs.saplingActivationHeight != rhs.saplingActivationHeight {return false}
     if lhs.consensusBranchID != rhs.consensusBranchID {return false}
     if lhs.blockHeight != rhs.blockHeight {return false}
+    if lhs.gitCommit != rhs.gitCommit {return false}
+    if lhs.branch != rhs.branch {return false}
+    if lhs.buildDate != rhs.buildDate {return false}
+    if lhs.buildUser != rhs.buildUser {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
@@ -633,6 +787,298 @@ extension PingResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
   static func ==(lhs: PingResponse, rhs: PingResponse) -> Bool {
     if lhs.entry != rhs.entry {return false}
     if lhs.exit != rhs.exit {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Address: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Address"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "address"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularStringField(value: &self.address)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.address.isEmpty {
+      try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Address, rhs: Address) -> Bool {
+    if lhs.address != rhs.address {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension AddressList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".AddressList"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "addresses"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeRepeatedStringField(value: &self.addresses)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.addresses.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.addresses, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: AddressList, rhs: AddressList) -> Bool {
+    if lhs.addresses != rhs.addresses {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Balance: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Balance"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "valueZat"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularInt64Field(value: &self.valueZat)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if self.valueZat != 0 {
+      try visitor.visitSingularInt64Field(value: self.valueZat, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Balance, rhs: Balance) -> Bool {
+    if lhs.valueZat != rhs.valueZat {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension Exclude: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".Exclude"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "txid"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeRepeatedBytesField(value: &self.txid)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.txid.isEmpty {
+      try visitor.visitRepeatedBytesField(value: self.txid, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: Exclude, rhs: Exclude) -> Bool {
+    if lhs.txid != rhs.txid {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension TreeState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".TreeState"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "network"),
+    2: .same(proto: "height"),
+    3: .same(proto: "hash"),
+    4: .same(proto: "time"),
+    5: .same(proto: "tree"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularStringField(value: &self.network)
+      case 2: try decoder.decodeSingularUInt64Field(value: &self.height)
+      case 3: try decoder.decodeSingularStringField(value: &self.hash)
+      case 4: try decoder.decodeSingularUInt32Field(value: &self.time)
+      case 5: try decoder.decodeSingularStringField(value: &self.tree)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.network.isEmpty {
+      try visitor.visitSingularStringField(value: self.network, fieldNumber: 1)
+    }
+    if self.height != 0 {
+      try visitor.visitSingularUInt64Field(value: self.height, fieldNumber: 2)
+    }
+    if !self.hash.isEmpty {
+      try visitor.visitSingularStringField(value: self.hash, fieldNumber: 3)
+    }
+    if self.time != 0 {
+      try visitor.visitSingularUInt32Field(value: self.time, fieldNumber: 4)
+    }
+    if !self.tree.isEmpty {
+      try visitor.visitSingularStringField(value: self.tree, fieldNumber: 5)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: TreeState, rhs: TreeState) -> Bool {
+    if lhs.network != rhs.network {return false}
+    if lhs.height != rhs.height {return false}
+    if lhs.hash != rhs.hash {return false}
+    if lhs.time != rhs.time {return false}
+    if lhs.tree != rhs.tree {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".GetAddressUtxosArg"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "address"),
+    2: .same(proto: "startHeight"),
+    3: .same(proto: "maxEntries"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularStringField(value: &self.address)
+      case 2: try decoder.decodeSingularUInt64Field(value: &self.startHeight)
+      case 3: try decoder.decodeSingularUInt32Field(value: &self.maxEntries)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.address.isEmpty {
+      try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
+    }
+    if self.startHeight != 0 {
+      try visitor.visitSingularUInt64Field(value: self.startHeight, fieldNumber: 2)
+    }
+    if self.maxEntries != 0 {
+      try visitor.visitSingularUInt32Field(value: self.maxEntries, fieldNumber: 3)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: GetAddressUtxosArg, rhs: GetAddressUtxosArg) -> Bool {
+    if lhs.address != rhs.address {return false}
+    if lhs.startHeight != rhs.startHeight {return false}
+    if lhs.maxEntries != rhs.maxEntries {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension GetAddressUtxosReply: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".GetAddressUtxosReply"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "txid"),
+    2: .same(proto: "index"),
+    3: .same(proto: "script"),
+    4: .same(proto: "valueZat"),
+    5: .same(proto: "height"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularBytesField(value: &self.txid)
+      case 2: try decoder.decodeSingularInt32Field(value: &self.index)
+      case 3: try decoder.decodeSingularBytesField(value: &self.script)
+      case 4: try decoder.decodeSingularInt64Field(value: &self.valueZat)
+      case 5: try decoder.decodeSingularUInt64Field(value: &self.height)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.txid.isEmpty {
+      try visitor.visitSingularBytesField(value: self.txid, fieldNumber: 1)
+    }
+    if self.index != 0 {
+      try visitor.visitSingularInt32Field(value: self.index, fieldNumber: 2)
+    }
+    if !self.script.isEmpty {
+      try visitor.visitSingularBytesField(value: self.script, fieldNumber: 3)
+    }
+    if self.valueZat != 0 {
+      try visitor.visitSingularInt64Field(value: self.valueZat, fieldNumber: 4)
+    }
+    if self.height != 0 {
+      try visitor.visitSingularUInt64Field(value: self.height, fieldNumber: 5)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: GetAddressUtxosReply, rhs: GetAddressUtxosReply) -> Bool {
+    if lhs.txid != rhs.txid {return false}
+    if lhs.index != rhs.index {return false}
+    if lhs.script != rhs.script {return false}
+    if lhs.valueZat != rhs.valueZat {return false}
+    if lhs.height != rhs.height {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension GetAddressUtxosReplyList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".GetAddressUtxosReplyList"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "addressUtxos"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeRepeatedMessageField(value: &self.addressUtxos)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.addressUtxos.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.addressUtxos, fieldNumber: 1)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: GetAddressUtxosReplyList, rhs: GetAddressUtxosReplyList) -> Bool {
+    if lhs.addressUtxos != rhs.addressUtxos {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
