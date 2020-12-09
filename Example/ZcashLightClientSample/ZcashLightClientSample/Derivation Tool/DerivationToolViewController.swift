@@ -119,6 +119,7 @@ class DerivationToolViewController: UIViewController {
     
     func fail(_ error: Error) {
         let alert = UIAlertController(title: "Error", message: "\(error)", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
