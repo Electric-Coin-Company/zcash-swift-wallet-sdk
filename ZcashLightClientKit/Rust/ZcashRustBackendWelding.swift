@@ -242,6 +242,9 @@ public protocol ZcashRustBackendWelding {
      */
     static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String?
     
+    
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8]) throws -> String?
+    
     /**
      Gets the consensus branch id for the given height
      - Parameter height: the height you what to know the branch id for

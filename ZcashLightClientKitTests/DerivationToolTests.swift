@@ -73,4 +73,8 @@ class DerivationToolTests: XCTestCase {
         XCTAssertFalse(try DerivationTool.default.isValidExtendedViewingKey("zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"))
     }
     
+    func testDeriveSecretKeyFromSeed() throws {
+        XCTAss	ertEqual(try DerivationTool.default.deriveTransparentPrivateKey(seed: [UInt8](seedData)), "127ec31a3482e53940aaefbc41c9621a344c84e4e16cc2c9af380d81b8f7bb74")
+    }
+    
 }

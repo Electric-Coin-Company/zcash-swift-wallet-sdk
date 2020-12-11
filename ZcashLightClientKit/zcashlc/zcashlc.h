@@ -82,10 +82,17 @@ char *zcashlc_derive_shielded_address_from_seed(const uint8_t *seed,
 char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk);
 
 /**
- * TEST TEST 123 TEST
  * Derives a transparent address from the given seed
  */
 char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed, uintptr_t seed_len);
+
+/**
+ * TEST TEST 123 TEST
+ *
+ *
+ * Derives a transparent private key from seed
+ */
+char *zcashlc_derive_transparent_private_key_from_seed(const uint8_t *seed, uintptr_t seed_len);
 
 /**
  * Copies the last error message into the provided allocated buffer.

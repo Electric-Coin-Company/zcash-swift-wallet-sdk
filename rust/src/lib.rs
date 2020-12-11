@@ -854,6 +854,43 @@ pub extern "C" fn zcashlc_vec_string_free(v: *mut *mut c_char, len: usize, capac
 
 
 /// TEST TEST 123 TEST 
+/// 
+/// 
+
+/// Derives a transparent private key from seed
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_derive_transparent_private_key_from_seed(
+    seed: *const u8,
+    seed_len: usize,
+) -> *mut c_char {
+
+    let res = catch_panic(|| {
+        let seed = slice::from_raw_parts(seed, seed_len);
+        
+        // modified from: https://github.com/adityapk00/zecwallet-light-cli/blob/master/lib/src/lightwallet.rs
+
+        let ext_t_key = ExtendedPrivKey::with_seed(&seed).unwrap();
+        let address_sk = ext_t_key
+            .derive_private_key(KeyIndex::hardened_from_normalize_index(44).unwrap())
+            .unwrap()
+            .derive_private_key(
+                KeyIndex::hardened_from_normalize_index(NETWORK.coin_type()).unwrap(),
+            )
+            .unwrap()
+            .derive_private_key(KeyIndex::hardened_from_normalize_index(0).unwrap())
+            .unwrap()
+            .derive_private_key(KeyIndex::Normal(0))
+            .unwrap()
+            .derive_private_key(KeyIndex::Normal(0))
+            .unwrap()
+            .private_key;
+        
+
+        Ok(CString::new(address_sk.to_string()).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
+
 /// Derives a transparent address from the given seed 
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(

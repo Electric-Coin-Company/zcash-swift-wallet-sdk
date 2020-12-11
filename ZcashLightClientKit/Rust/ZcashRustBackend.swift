@@ -324,6 +324,18 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return tAddr
     }
     
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8]) throws -> String? {
+        guard let skCStr = zcashlc_derive_transparent_private_key_from_seed(seed, UInt(seed.count)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        let sk = String(validatingUTF8: skCStr)
+        
+        return sk
+    }
+    
     static func consensusBranchIdFor(height: Int32) throws -> Int32 {
         let branchId = zcashlc_branch_id_for_height(height)
         

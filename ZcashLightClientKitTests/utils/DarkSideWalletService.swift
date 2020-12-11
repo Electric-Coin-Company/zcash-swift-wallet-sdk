@@ -38,6 +38,10 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+    }
+    
 
     func fetchTransaction(txId: Data) throws -> TransactionEntity {
         try service.fetchTransaction(txId: txId)
