@@ -18,6 +18,10 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
 }
 
 class MockLightWalletService: LightWalletService {
+    func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+    }
+    
     
     
     private var service = LightWalletGRPCService(channel: ChannelProvider().channel())

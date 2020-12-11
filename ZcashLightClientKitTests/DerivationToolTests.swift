@@ -74,7 +74,7 @@ class DerivationToolTests: XCTestCase {
     }
     
     func testDeriveSecretKeyFromSeed() throws {
-        XCTAss	ertEqual(try DerivationTool.default.deriveTransparentPrivateKey(seed: [UInt8](seedData)), "127ec31a3482e53940aaefbc41c9621a344c84e4e16cc2c9af380d81b8f7bb74")
+        XCTAssertEqual(try DerivationTool.default.deriveTransparentPrivateKey(seed: [UInt8](seedData)), "127ec31a3482e53940aaefbc41c9621a344c84e4e16cc2c9af380d81b8f7bb74")
     }
     
 }
