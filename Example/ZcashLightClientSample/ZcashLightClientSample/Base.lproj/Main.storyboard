@@ -824,13 +824,19 @@
                                 <rect key="frame" x="20" y="88" width="374" height="774"/>
                                 <subviews>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="characterWrap" numberOfLines="0" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="X0E-Ba-xxX">
-                                        <rect key="frame" x="166.5" y="0.0" width="41.5" height="387"/>
+                                        <rect key="frame" x="166.5" y="0.0" width="41.5" height="258"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <nil key="textColor"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="characterWrap" numberOfLines="0" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ntO-Ig-rst">
+                                        <rect key="frame" x="166.5" y="258" width="41.5" height="258"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="characterWrap" numberOfLines="0" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hl0-9u-TsZ" userLabel="extended key">
-                                        <rect key="frame" x="0.0" y="387" width="374" height="387"/>
+                                        <rect key="frame" x="0.0" y="516" width="374" height="258"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
@@ -853,8 +859,9 @@
                     </view>
                     <navigationItem key="navigationItem" title="Get Address" largeTitleDisplayMode="always" id="Uvy-EM-bSo"/>
                     <connections>
-                        <outlet property="addressLabel" destination="X0E-Ba-xxX" id="9es-sw-gO5"/>
                         <outlet property="spendingKeyLabel" destination="hl0-9u-TsZ" id="afF-Yq-bty"/>
+                        <outlet property="tAddressLabel" destination="ntO-Ig-rst" id="6ER-bQ-FVH"/>
+                        <outlet property="zAddressLabel" destination="X0E-Ba-xxX" id="9es-sw-gO5"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="kr1-B6-akA" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
@@ -955,16 +962,16 @@
                                         </constraints>
                                     </view>
                                     <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="246" verticalCompressionResistancePriority="250" alignment="center" spacing="13" translatesAutoresizingMaskIntoConstraints="NO" id="IIl-kO-2M8">
-                                        <rect key="frame" x="0.0" y="152" width="398" height="112.5"/>
+                                        <rect key="frame" x="0.0" y="152" width="398" height="173"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" text="Status:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3t3-Tr-UlI">
-                                                <rect key="frame" x="0.0" y="37" width="95.5" height="38.5"/>
+                                                <rect key="frame" x="0.0" y="67.5" width="95.5" height="38.5"/>
                                                 <fontDescription key="fontDescription" type="system" pointSize="32"/>
                                                 <nil key="textColor"/>
                                                 <nil key="highlightedColor"/>
                                             </label>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Jj9-7r-s2Y">
-                                                <rect key="frame" x="108.5" y="42.5" width="289.5" height="27.5"/>
+                                                <rect key="frame" x="108.5" y="73" width="289.5" height="27.5"/>
                                                 <fontDescription key="fontDescription" type="italicSystem" pointSize="23"/>
                                                 <color key="textColor" systemColor="scrollViewTexturedBackgroundColor"/>
                                                 <nil key="highlightedColor"/>
@@ -975,22 +982,22 @@
                                         </constraints>
                                     </stackView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Progress" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JPx-ol-2nc">
-                                        <rect key="frame" x="0.0" y="288.5" width="390" height="43"/>
+                                        <rect key="frame" x="0.0" y="349" width="390" height="43"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="36"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progressViewStyle="bar" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="oKg-9s-8Ym">
-                                        <rect key="frame" x="0.0" y="355.5" width="390" height="2.5"/>
+                                        <rect key="frame" x="0.0" y="416" width="390" height="2.5"/>
                                     </progressView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0%" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kXE-5z-HN2">
-                                        <rect key="frame" x="0.0" y="381" width="398" height="39.5"/>
+                                        <rect key="frame" x="0.0" y="441.5" width="398" height="39.5"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="33"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="G5M-gm-1ux">
-                                        <rect key="frame" x="0.0" y="444.5" width="398" height="45"/>
+                                        <rect key="frame" x="0.0" y="505" width="398" height="45"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="27"/>
                                         <state key="normal" title="Start"/>
                                         <connections>
@@ -998,7 +1005,7 @@
                                         </connections>
                                     </button>
                                     <view contentMode="scaleToFill" verticalHuggingPriority="750" verticalCompressionResistancePriority="737" translatesAutoresizingMaskIntoConstraints="NO" id="fB9-xh-4fl" userLabel="Trailing View">
-                                        <rect key="frame" x="0.0" y="513.5" width="398" height="260.5"/>
+                                        <rect key="frame" x="0.0" y="574" width="398" height="200"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
                                             <constraint firstAttribute="height" relation="greaterThanOrEqual" priority="750" constant="200" id="Bpt-XM-IZA"/>
@@ -1406,25 +1413,41 @@
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1h3-3y-iS9">
-                                        <rect key="frame" x="131.5" y="225.5" width="151" height="50"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="50" id="v9k-94-gxX"/>
-                                        </constraints>
-                                        <fontDescription key="fontDescription" type="system" pointSize="29"/>
-                                        <state key="normal" title="Get UTXOs!"/>
-                                        <connections>
-                                            <action selector="getButtonTapped:" destination="Ugl-B2-O3O" eventType="touchUpInside" id="Vlr-m4-asM"/>
-                                        </connections>
-                                    </button>
+                                    <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="ZXk-2m-Kua">
+                                        <rect key="frame" x="65.5" y="225.5" width="283" height="100"/>
+                                        <subviews>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="1h3-3y-iS9">
+                                                <rect key="frame" x="0.0" y="0.0" width="283" height="50"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="50" id="v9k-94-gxX"/>
+                                                </constraints>
+                                                <fontDescription key="fontDescription" type="system" pointSize="29"/>
+                                                <state key="normal" title="Get UTXOs!"/>
+                                                <connections>
+                                                    <action selector="getButtonTapped:" destination="Ugl-B2-O3O" eventType="touchUpInside" id="Vlr-m4-asM"/>
+                                                </connections>
+                                            </button>
+                                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tX1-H6-Zs8">
+                                                <rect key="frame" x="0.0" y="50" width="283" height="50"/>
+                                                <constraints>
+                                                    <constraint firstAttribute="height" constant="50" id="JJc-9O-Kdl"/>
+                                                </constraints>
+                                                <fontDescription key="fontDescription" type="system" pointSize="29"/>
+                                                <state key="normal" title="Get UTXO from cache!"/>
+                                                <connections>
+                                                    <action selector="getFromCacheTapped:" destination="Ugl-B2-O3O" eventType="touchUpInside" id="3Pl-RP-4qg"/>
+                                                </connections>
+                                            </button>
+                                        </subviews>
+                                    </stackView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Mv9-ye-VIn">
-                                        <rect key="frame" x="16" y="315.5" width="382" height="0.0"/>
+                                        <rect key="frame" x="16" y="365.5" width="382" height="0.0"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
                                     <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="pcE-rS-DWU">
-                                        <rect key="frame" x="0.0" y="355.5" width="414" height="418.5"/>
+                                        <rect key="frame" x="0.0" y="405.5" width="414" height="368.5"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                     </view>
                                 </subviews>
@@ -1452,6 +1475,7 @@
                     <navigationItem key="navigationItem" id="VUG-Af-cu9"/>
                     <connections>
                         <outlet property="getButton" destination="1h3-3y-iS9" id="pdY-q5-oIL"/>
+                        <outlet property="getFromCache" destination="tX1-H6-Zs8" id="FQS-Hl-Hl9"/>
                         <outlet property="messageLabel" destination="Mv9-ye-VIn" id="c6d-Fe-mrx"/>
                         <outlet property="tAddressField" destination="9yg-Sp-H2E" id="oQV-JY-09h"/>
                         <outlet property="validAddressLabel" destination="1NQ-co-Y8P" id="mHT-cp-vnn"/>

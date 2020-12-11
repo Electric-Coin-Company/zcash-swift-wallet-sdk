@@ -227,12 +227,13 @@ extension LightWalletGRPCService: LightWalletService {
             var utxos = [UnspentTransactionOutputEntity]()
             let response = self.compactTxStreamer.getAddressUtxosStream(arg) { (reply) in
                 utxos.append(
-                    UTXO(address: tAddress,
+                    UTXO(id: nil,
+                         address: tAddress,
                          txid: reply.txid,
-                         index: reply.index,
+                         index: Int(reply.index),
                          script: reply.script,
-                         valueZat: reply.valueZat,
-                         height: UInt64(reply.valueZat)
+                         valueZat: Int(reply.valueZat),
+                         height: Int(reply.valueZat)
                     )
                 )
             }

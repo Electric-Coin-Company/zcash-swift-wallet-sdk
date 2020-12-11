@@ -90,6 +90,7 @@ public class SDKSynchronizer: Synchronizer {
     
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
+    private var utxoRepository: UnspentTransactionOutputRepository
     
     /**
      Creates an SDKSynchronizer instance
@@ -100,18 +101,21 @@ public class SDKSynchronizer: Synchronizer {
         self.init(status: .disconnected,
                   initializer: initializer,
                   transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
-                  transactionRepository: initializer.transactionRepository)
+                  transactionRepository: initializer.transactionRepository,
+                  utxoRepository: try UTXORepositoryBuilder.build(initializer: initializer))
         
     }
     
     init(status: Status,
          initializer: Initializer,
          transactionManager: OutboundTransactionManager,
-         transactionRepository: TransactionRepository) {
+         transactionRepository: TransactionRepository,
+         utxoRepository: UnspentTransactionOutputRepository) {
         self.status = status
         self.initializer = initializer
         self.transactionManager = transactionManager
         self.transactionRepository = transactionRepository
+        self.utxoRepository = utxoRepository
     }
     
     deinit {
@@ -413,6 +417,33 @@ public class SDKSynchronizer: Synchronizer {
     
     public func latestHeight() throws -> BlockHeight {
         try initializer.downloader.latestBlockHeight()
+    }
+    
+    public func latestUTXOs(address: String, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
+        guard initializer.isValidTransparentAddress(address) else {
+            result(.failure(SynchronizerError.generalError(message: "invalid t-address")))
+            return
+        }
+        
+        initializer.lightWalletService.fetchUTXOs(for: address, result: { [weak self] r in
+            guard let self = self else { return }
+            switch r {
+            case .success(let utxos):
+                do {
+                    try self.utxoRepository.clearAll(address: address)
+                    try self.utxoRepository.store(utxos: utxos)
+                    result(.success(utxos))
+                } catch {
+                    result(.failure(SynchronizerError.generalError(message: "\(error)")))
+                }
+            case .failure(let error):
+                result(.failure(SynchronizerError.connectionFailed(message: error)))
+            }
+        })
+    }
+    
+    public func cachedUTXOs(address: String) throws -> [UnspentTransactionOutputEntity] {
+        try utxoRepository.getAll(address: address)
     }
     
     // MARK: notify state

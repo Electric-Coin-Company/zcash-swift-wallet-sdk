@@ -130,6 +130,17 @@ public protocol Synchronizer {
      Blocking
      */
     func latestHeight() throws -> BlockHeight
+    
+    /**
+        Gets the latest UTXOs for the given t-address and caches the result
+     */
+    func latestUTXOs(address: String, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void)
+    
+    /**
+     gets the latest cached  UTXOs for the given t-address for the given address
+     */
+    func cachedUTXOs(address: String) throws -> [UnspentTransactionOutputEntity]
+    
 }
 
 /**

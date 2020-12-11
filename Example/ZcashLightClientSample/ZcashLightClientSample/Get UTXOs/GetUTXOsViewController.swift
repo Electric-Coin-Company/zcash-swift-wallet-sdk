@@ -12,10 +12,10 @@ import KRProgressHUD
 class GetUTXOsViewController: UIViewController {
     @IBOutlet weak var tAddressField: UITextField!
     @IBOutlet weak var getButton: UIButton!
+    @IBOutlet weak var getFromCache: UIButton!
     @IBOutlet weak var validAddressLabel: UILabel!
     @IBOutlet weak var messageLabel: UILabel!
     
-    var service: LightWalletGRPCService = LightWalletGRPCService(endpoint: DemoAppConfig.endpoint)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -31,15 +31,17 @@ class GetUTXOsViewController: UIViewController {
         self.validAddressLabel.textColor = valid ? UIColor.systemGreen : UIColor.systemRed
         
         self.getButton.isEnabled = valid
+        self.getFromCache.isEnabled = valid
     }
     
     @IBAction func getButtonTapped(_ sender: Any) {
         guard Initializer.shared.isValidTransparentAddress(tAddressField.text ?? ""),
               let tAddr = tAddressField.text else {
+            self.messageLabel.text = "Invalid t-Address"
             return
         }
         KRProgressHUD.showMessage("fetching")
-        service.fetchUTXOs(for: tAddr) { [weak self] (result) in
+        AppDelegate.shared.sharedSynchronizer.latestUTXOs(address: tAddr) { (result) in
             DispatchQueue.main.async { [weak self] in
                 KRProgressHUD.dismiss()
                 switch result {
@@ -52,6 +54,21 @@ class GetUTXOsViewController: UIViewController {
             }
         }
     }
+    
+    @IBAction func getFromCacheTapped(_ sender: Any) {
+        guard Initializer.shared.isValidTransparentAddress(tAddressField.text ?? ""),
+              let tAddr = tAddressField.text else {
+            self.messageLabel.text = "Invalid t-Address"
+            return
+        }
+        do {
+            let utxos = try AppDelegate.shared.sharedSynchronizer.cachedUTXOs(address: tAddr)
+            self.messageLabel.text = "found \(utxos.count) UTXOs for address \(tAddr) on cache"
+        } catch {
+            self.messageLabel.text = "Error \(error)"
+        }
+    }
+
     
     @IBAction func viewTapped(_ recognizer: UITapGestureRecognizer)  {
         self.tAddressField.resignFirstResponder()

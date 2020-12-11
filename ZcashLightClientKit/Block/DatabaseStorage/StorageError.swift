@@ -15,4 +15,5 @@ enum StorageError: Error {
     case operationFailed
     case updateFailed
     case malformedEntity(fields: [String]?)
+    case transactionFailed(underlyingError: Error)
 }

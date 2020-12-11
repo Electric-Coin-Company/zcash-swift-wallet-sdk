@@ -169,6 +169,5 @@ public protocol LightWalletService {
      */
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity,LightWalletServiceError>) -> Void)
     
-    
     func fetchUTXOs(for tAddress: String, result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void)
 }
