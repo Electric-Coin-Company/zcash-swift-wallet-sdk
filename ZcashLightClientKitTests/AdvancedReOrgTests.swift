@@ -354,7 +354,7 @@ class AdvancedReOrgTests: XCTestCase {
          8. stage sentTx and otherTx at sentTxheight
          */
         try coordinator.stageBlockCreate(height: sentTxHeight, count: 20, nonce: 5)
-        try coordinator.stageTransaction(url: FakeChainBuilder.someOtherTxUrl, at: receivedTxHeight)
+        try coordinator.stageTransaction(url: FakeChainBuilder.someOtherTxUrl, at: sentTxHeight)
         try coordinator.stageTransaction(sentTx, at: sentTxHeight)
         
         /*
@@ -370,7 +370,7 @@ class AdvancedReOrgTests: XCTestCase {
              */
             let pMinedHeight = s.pendingTransactions.first?.minedHeight
             XCTAssertEqual(pMinedHeight, sentTxHeight)
-            XCTAssertEqual(initialTotalBalance - sendAmount - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), s.initializer.getBalance())
+            XCTAssertEqual(initialTotalBalance - sendAmount - Int64(1000), s.initializer.getBalance()) // fee change on this branch
             afterReOrgExpectation.fulfill()
         }, error: self.handleError)
         
@@ -396,7 +396,7 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [lastSyncExpectation], timeout: 5)
         
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
-        XCTAssertEqual(initialTotalBalance - Int64(pendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(pendingTx.value) - Int64(1000), coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), coordinator.synchronizer.initializer.getVerifiedBalance())
     }
     
@@ -860,8 +860,8 @@ class AdvancedReOrgTests: XCTestCase {
             return txId == newlyPendingTx.rawTransactionId
         }), "Sent Tx is not on sent transactions")
         
-        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getBalance())
-        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(1000), coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(1000),  coordinator.synchronizer.initializer.getVerifiedBalance())
         
         
     }

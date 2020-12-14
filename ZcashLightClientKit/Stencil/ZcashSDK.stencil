@@ -11,7 +11,7 @@ import Foundation
 public class ZcashSDK {
     
     /**
-     Miner's fee in zatoshi.
+     DEPRECATED. Miner's fee in zatoshi.
      */
     public static let MINERS_FEE_ZATOSHI: BlockHeight = 10_000
     
