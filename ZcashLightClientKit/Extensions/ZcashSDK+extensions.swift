@@ -25,6 +25,6 @@ public extension ZcashSDK {
      Estimated height where wallets are supposed to change the fee
      */
     private static var feeChangeHeight: BlockHeight {
-        ZcashSDK.isMainnet ? 1_046_400 : 1_028_500
+        ZcashSDK.isMainnet ? 1_077_550 : 1_028_500
     }
 }
