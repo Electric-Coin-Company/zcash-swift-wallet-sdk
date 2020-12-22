@@ -125,7 +125,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
 
 class UTXORepositoryBuilder {
     static func build(initializer: Initializer) throws -> UnspentTransactionOutputRepository {
-        let dao = UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path))
+        let dao = UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.cacheDbURL.path))
         try dao.createTableIfNeeded()
         return dao
     }
