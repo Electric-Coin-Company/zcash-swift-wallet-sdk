@@ -225,6 +225,26 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                          UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
     }
     
+    
+    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+        let dbData = dbData.osStr()
+        let dbCache = dbCache.osStr()
+        let memoBytes = memo ?? ""
+        
+        return zcashlc_shield_funds(dbData.0,
+                                    dbData.1,
+                                    dbCache.0,
+                                    dbCache.1,
+                                    account,
+                                    tsk,
+                                    extsk,
+                                    memoBytes,
+                                    spendParamsPath,
+                                    UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
+                                    outputParamsPath,
+                                    UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
+    }
+    
     static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
         
         guard !spendingKey.containsCStringNullBytesBeforeStringEnding() else {

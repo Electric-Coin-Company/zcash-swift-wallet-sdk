@@ -182,7 +182,6 @@ public protocol ZcashRustBackendWelding {
         - dbData: URL for the Data DB
         - account: the account index that will originate the transaction
         - extsk: extended spending key string
-        - consensusBranchId: the current consensus ID
         - to: recipient address
         - value: transaction amount in Zatoshi
         - memo: the memo string for this transaction
@@ -190,6 +189,20 @@ public protocol ZcashRustBackendWelding {
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
     static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    
+    /**
+     Creates a transaction to shield all found UTXOs in cache db.
+     - Parameters:
+        - dbCache: URL for the Cache DB
+        - dbData: URL for the Data DB
+        - account: the account index that will originate the transaction
+        - tsk: transparent Secret Key for the shielded funds.
+        - extsk: extended spending key string
+        - memo: the memo string for this transaction
+        - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
+        - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
+     */
+    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
     
     /**
      Derives a full viewing key from a seed
