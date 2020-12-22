@@ -37,10 +37,9 @@ use zcash_primitives::{
             OutPoint, 
             TxOut
     },
-    legacy::Script,
     transaction::builder::Builder,
     transaction::Transaction,
-    zip32::{ExtendedFullViewingKey, ExtendedSpendingKey},
+    zip32::{ExtendedFullViewingKey},
 };
 
 #[cfg(feature = "mainnet")]
@@ -326,13 +325,13 @@ pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
         } else {
             return Err(format_err!("accounts argument must be greater than zero"));
         };
-        let address_str = deriveShieldedAddressFromSeed(&NETWORK, &seed, account_index);
+        let address_str = derive_shielded_address_from_seed(&NETWORK, &seed, account_index);
         Ok(CString::new(address_str).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
 }
 
-fn deriveShieldedAddressFromSeed<P: Parameters>(params: &P, seed: &[u8], account_index: u32) -> String {
+fn derive_shielded_address_from_seed<P: Parameters>(params: &P, seed: &[u8], account_index: u32) -> String {
     let address = spending_key(&seed, NETWORK.coin_type(), account_index)
             .default_address()
             .unwrap()
@@ -340,10 +339,10 @@ fn deriveShieldedAddressFromSeed<P: Parameters>(params: &P, seed: &[u8], account
     encode_payment_address(params.hrp_sapling_payment_address(), &address)
 }
 
-fn deriveShieldedAddressFromSpendingKey<P: Parameters>(params: &P, extsk: &ExtendedSpendingKey) -> String {
-    let address = extsk.default_address().unwrap().1;
-    encode_payment_address(params.hrp_sapling_payment_address(), &address)
-}
+// fn derive_shielded_address_from_spending_k<P: Parameters>(params: &P, extsk: &ExtendedSpendingKey) -> String {
+//     let address = extsk.default_address().unwrap().1;
+//     encode_payment_address(params.hrp_sapling_payment_address(), &address)
+// }
 
 /// derives a shielded address from the given viewing key. 
 /// call zcashlc_string_free with the returned pointer when done using it
@@ -945,8 +944,15 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
             .derive_private_key(KeyIndex::Normal(0))
             .unwrap()
             .private_key;
+        
+        let private_key = match secp256k1::SecretKey::from_slice(&address_sk[..]) {
+            Ok(pk) => pk,
+            Err(e) => {
+                return Err(format_err!("error converting secret key {}",e));
+            },
+        };
         let secp = Secp256k1::new();
-        let pk = PublicKey::from_secret_key(&secp, &address_sk);
+        let pk = PublicKey::from_secret_key(&secp, &private_key);
         let mut hash160 = ripemd160::Ripemd160::new();
         hash160.update(Sha256::digest(&pk.serialize()[..].to_vec()));
         let address_string = hash160
@@ -1014,7 +1020,7 @@ pub fn double_sha256(payload: &[u8]) -> Vec<u8> {
 /// Do not call this multiple times in parallel, or you will generate transactions that
 /// double-spend the same notes.
 #[no_mangle]
-pub extern "C" fn zcashlc_autoshield_funds(
+pub extern "C" fn zcashlc_shield_funds(
     db_data: *const u8,
     db_data_len: usize,
     db_cache: *const u8,
@@ -1049,6 +1055,9 @@ pub extern "C" fn zcashlc_autoshield_funds(
 
         let anchor_and_height = match (&db_data).get_target_and_anchor_heights() {
             Ok(Some(h)) => h,
+            Ok(None) => {
+                return Err(format_err!("No anchor and target heights found"));
+            },
             Err(e) => {
                 return Err(format_err!("Error fetching anchor and target heights: {}", e));
             },
@@ -1095,17 +1104,23 @@ pub extern "C" fn zcashlc_autoshield_funds(
 
         let memo = match Memo::from_str(&memo) {
             Ok(memo) => memo,
+            Err(_) => {
+                return Err(format_err!("Invalid memo input"));
+            }
         };
 
         // get UTXOs from DB
         let utxos = match get_utxos(&NETWORK, &db_cache) {
-            Ok(u) => u
+            Ok(u) => u,
+            Err(e) => {
+                return Err(format_err!("Error getting UTXOs {}",e));
+            },
         };
         
         // verify that the addresses of the UTXOs are correspond to the given t-address
-        let distinctAddresses: Vec<UnspentTransactionOutput> = utxos.into_iter().filter(|utxo| utxo.address != t_addr).collect();
+        let distinct_addresses: Vec<&UnspentTransactionOutput> = utxos.iter().filter(|utxo| utxo.address != t_addr).collect::<Vec<_>>();
         
-        if distinctAddresses.len() > 0 {
+        if distinct_addresses.len() > 0 {
             return Err(format_err!("one or more UTXOs correspond to other addresses that don't match the provided SecretKey"));
         }
         
@@ -1119,7 +1134,12 @@ pub extern "C" fn zcashlc_autoshield_funds(
             return Err(format_err!("one or more UTXOs are unconfirmed "));
         }
 
-        let total_amount = utxos.iter().map(|u| u.value).sum();
+        let total_amount = match Amount::from_i64(utxos.iter().map(|u| i64::from(u.value)).sum::<i64>()) {
+            Ok(a) => a,
+            _ => {
+                return Err(format_err!("error collecting total amount from UTXOs"));
+            },
+        };
         let fee = DEFAULT_FEE;
         let target_value = fee + total_amount;
         if fee >= total_amount {
@@ -1132,7 +1152,7 @@ pub extern "C" fn zcashlc_autoshield_funds(
 
         let mut builder = Builder::new(NETWORK, latest_scanned_height);
 
-        utxos.iter().map(|utxo| {
+        for utxo in utxos.iter() {
             let outpoint = OutPoint::new(
                 utxo.txid.0,
                 utxo.index as u32
@@ -1142,18 +1162,25 @@ pub extern "C" fn zcashlc_autoshield_funds(
                 value: utxo.value.clone(),
                 script_pubkey: utxo.script.clone(),
             };
-            builder.add_transparent_input(sk.clone(), outpoint.clone(), coin.clone())
-        })
-        .collect()
-        .map_err(|e| format_err!("Error adding transparent output {}",e));
+
+            match builder.add_transparent_input(sk.clone(), outpoint.clone(), coin.clone()) {
+                Ok(_) => (),
+                Err(e) => {
+                    return Err(format_err!("error adding transparent input {}",e));
+                },
+            }
+        }
 
         // there are no sapling notes so we set the change manually
-        builder.send_change_to(ovk, z_address);
-
-        let recipient = RecipientAddress::Shielded(z_address);
+        builder.send_change_to(ovk, z_address.clone());
         
         // add the sapling output to shield the funds
-        builder.add_sapling_output(Some(ovk), z_address.clone(), amount_to_shield, Some(memo));
+        match builder.add_sapling_output(Some(ovk), z_address.clone(), amount_to_shield, Some(memo.clone())) {
+            Ok(_) =>(),
+            Err(e) => {
+                return Err(format_err!("Failed to add sapling output {}", e));
+            }
+        };
         let consensus_branch_id = BranchId::for_height(&NETWORK, anchor_and_height.1);
 
        
@@ -1175,7 +1202,12 @@ pub extern "C" fn zcashlc_autoshield_funds(
         };
     
         // Update the database atomically, to ensure the result is internally consistent.
-        let mut db_update = (&db_data).get_update_ops().map_err(|e| e.into())?;
+        let mut db_update = match (&db_data).get_update_ops()  {
+            Ok(d) => d,
+            Err(e) => {
+                return Err(format_err!("error updating database with created tx {}",e));
+            },
+        };
         db_update
             .transactionally(|up| {
                 let created = time::OffsetDateTime::now_utc();
