@@ -3,6 +3,31 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+/**
+ *
+ * psst, hey I have a Major in Social Sciences. Consider using something else
+ * Creates a transaction paying the specified address from the given account.
+ *
+ * Returns the row index of the newly-created transaction in the `transactions` table
+ * within the data database. The caller can read the raw transaction bytes from the `raw`
+ * column in order to broadcast the transaction to the network.
+ *
+ * Do not call this multiple times in parallel, or you will generate transactions that
+ * double-spend the same notes.
+ */
+int64_t zcashlc_autoshield_funds(const uint8_t *db_data,
+                                 uintptr_t db_data_len,
+                                 const uint8_t *db_cache,
+                                 uintptr_t db_cache_len,
+                                 int32_t account,
+                                 const char *tsk,
+                                 const char *extsk,
+                                 const char *memo,
+                                 const uint8_t *spend_params,
+                                 uintptr_t spend_params_len,
+                                 const uint8_t *output_params,
+                                 uintptr_t output_params_len);
+
 int32_t zcashlc_branch_id_for_height(int32_t height);
 
 /**

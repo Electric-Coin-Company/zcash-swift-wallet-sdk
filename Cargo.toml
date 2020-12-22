@@ -13,7 +13,7 @@ ffi_helpers = "0.2"
 hex = "0.4"
 zcash_client_backend = "0.4"
 zcash_client_sqlite = "0.2.1"
-zcash_primitives = "0.4"
+zcash_primitives = { version = "0.4", features = ["transparent-inputs"] }
 
 #### Temporary additions: ####################################
 base58 = "0.1.0"
@@ -22,7 +22,9 @@ bs58 = { version = "0.3", features = ["check"] }
 hdwallet = "0.2.2"
 ripemd160 = "0.9"
 secp256k1 = "0.17.2"
+time = "0.2"
 ##############################################################
+
 
 [dependencies.zcash_proofs]
 version = "0.4"
@@ -41,10 +43,10 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
-zcash_client_sqlite = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
-zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
-zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
+zcash_client_backend = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+zcash_client_sqlite = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+zcash_primitives = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+zcash_proofs = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
