@@ -13,6 +13,7 @@ class GetUTXOsViewController: UIViewController {
     @IBOutlet weak var tAddressField: UITextField!
     @IBOutlet weak var getButton: UIButton!
     @IBOutlet weak var getFromCache: UIButton!
+    @IBOutlet weak var shieldFundsButton: UIButton!
     @IBOutlet weak var validAddressLabel: UILabel!
     @IBOutlet weak var messageLabel: UILabel!
     
@@ -72,6 +73,29 @@ class GetUTXOsViewController: UIViewController {
     
     @IBAction func viewTapped(_ recognizer: UITapGestureRecognizer)  {
         self.tAddressField.resignFirstResponder()
+    }
+    
+    @IBAction func shieldFunds(_ sender: Any) {
+        do {
+            let seed =  DemoAppConfig.seed
+            let sk = try DerivationTool.default.deriveSpendingKeys(seed: seed, numberOfAccounts: 1).first!
+            
+            let tsk = try DerivationTool.default.deriveTransparentPrivateKey(seed: seed)
+            KRProgressHUD.showMessage("🛡 Shielding 🛡")
+            AppDelegate.shared.sharedSynchronizer.shieldFunds(spendingKey: sk, transparentSecretKey: tsk, memo: "shielding is fun!", from: 0) { (result) in
+                DispatchQueue.main.async {
+                    KRProgressHUD.dismiss()
+                    switch result{
+                    case .success(let tx):
+                        self.messageLabel.text = "funds shielded \(tx)"
+                    case .failure(let error):
+                        self.messageLabel.text = "Shielding failed: \(error)"
+                    }
+                }
+            }
+        } catch {
+            self.messageLabel.text = "Error \(error)"
+        }
     }
 }
 
