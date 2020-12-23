@@ -11,6 +11,8 @@ protocol UnspentTransactionOutputRepository {
     
     func getAll(address: String?) throws -> [UnspentTransactionOutputEntity]
     
+    func balance(address: String) throws -> Int
+    
     func store(utxos: [UnspentTransactionOutputEntity]) throws
     
     func clearAll(address: String?) throws

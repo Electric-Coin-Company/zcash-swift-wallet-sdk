@@ -70,7 +70,7 @@ public extension Notification.Name {
  Synchronizer implementation for UIKit and iOS 12+
  */
 public class SDKSynchronizer: Synchronizer {
-    
+
     public struct NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
@@ -78,6 +78,8 @@ public class SDKSynchronizer: Synchronizer {
         public static let foundTransactions = "SDKSynchronizer.foundTransactions"
         public static let error = "SDKSynchronizer.error"
     }
+    
+    private static let shieldingThreshold: Int = 10000
     
     public private(set) var status: Status {
         didSet {
@@ -344,6 +346,52 @@ public class SDKSynchronizer: Synchronizer {
                 }
             }
         }
+    }
+    
+    public func shieldFunds(spendingKey: String, transparentSecretKey: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
+        
+        // let's see if there are funds to shield
+        let derivationTool = DerivationTool.default
+        
+        do {
+            let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
+            let tBalance = try utxoRepository.balance(address: tAddr)
+            
+            guard tBalance > Self.shieldingThreshold else {
+                resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
+                return
+            }
+            let vk = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
+            let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: vk)
+            
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance, toAddress: zAddr, memo: memo, from: 0)
+            
+            transactionManager.encodeShieldingTransaction(spendingKey: spendingKey, tsk: transparentSecretKey, pendingTransaction: shieldingSpend) {[weak self] (result) in
+                guard let self = self else { return }
+                switch result {
+                    
+                case .success(let tx):
+                    self.transactionManager.submit(pendingTransaction: tx) { (submitResult) in
+                        switch submitResult {
+                        case .success(let submittedTx):
+                            resultBlock(.success(submittedTx))
+                        case .failure(let submissionError):
+                            DispatchQueue.main.async {
+                                resultBlock(.failure(submissionError))
+                            }
+                        }
+                    }
+                    
+                case .failure(let error):
+                    resultBlock(.failure(error))
+                }
+            }
+            
+        } catch {
+            resultBlock(.failure(error))
+            return
+        }
+        
     }
     
     func createToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {

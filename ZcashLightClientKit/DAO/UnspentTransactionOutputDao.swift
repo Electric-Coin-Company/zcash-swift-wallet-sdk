@@ -121,6 +121,18 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             return allTxs
         }
     }
+    
+    func balance(address: String) throws -> Int {
+        
+        guard let sum = try dbProvider.connection().scalar(
+                table.select(TableColumns.valueZat.sum)
+                    .filter(TableColumns.address == address)
+        ) else {
+            throw StorageError.operationFailed
+        }
+        return sum
+        
+    }
 }
 
 class UTXORepositoryBuilder {

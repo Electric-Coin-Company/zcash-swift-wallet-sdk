@@ -255,8 +255,20 @@ public protocol ZcashRustBackendWelding {
      */
     static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String?
     
-    
+    /**
+        Derives a transparent secret key from Seed
+      - Parameter seed: an array of bytes containing the seed
+      - Returns: an optional String containing the transparent secret (private) key
+     */
     static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8]) throws -> String?
+    
+    /**
+        Derives a transparent address from a secret key
+     - Parameter tsk: a hex string containing the Secret Key
+     - Returns: an optional String containing the transparent address.
+     */
+    
+    static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String?
     
     /**
      Gets the consensus branch id for the given height

@@ -15,15 +15,18 @@ class WalletTransactionEncoder: TransactionEncoder {
     private var outputParamsURL: URL
     private var spendParamsURL: URL
     private var dataDbURL: URL
+    private var cacheDbURL: URL
     
     init(rust: ZcashRustBackendWelding.Type,
          dataDb: URL,
+         cacheDb: URL,
          repository: TransactionRepository,
          outputParams: URL,
          spendParams: URL) {
         
         self.rustBackend = rust
         self.dataDbURL = dataDb
+        self.cacheDbURL = cacheDb
         self.repository = repository
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
@@ -34,6 +37,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     convenience init(initializer: Initializer) {
         self.init(rust: initializer.rustBackend,
                   dataDb: initializer.dataDbURL,
+                  cacheDb: initializer.cacheDbURL,
                   repository: initializer.transactionRepository,
                   outputParams: initializer.outputParamsURL,
                   spendParams: initializer.spendParamsURL)
@@ -97,6 +101,51 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
         
         return Int(txId)
+    }
+    
+    func createShieldingTransaction(spendingKey: String, tSecretKey: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction {
+        let txId = try createShieldingSpend(spendingKey: spendingKey, tsk: tSecretKey, memo: memo, accountIndex: accountIndex)
+        
+        do {
+            let transaction = try repository.findBy(id: txId)
+            
+            guard let tx = transaction else {
+                throw TransactionEncoderError.notFound(transactionId: txId)
+            }
+            
+            LoggerProxy.debug("sentTransaction id: \(txId)")
+            return EncodedTransaction(transactionId: tx.transactionId , raw: tx.raw)
+        } catch {
+            throw TransactionEncoderError.notFound(transactionId: txId)
+        }
+    }
+    
+    func createShieldingTransaction(spendingKey: String, tSecretKey: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock) {
+        queue.async {
+            result(.failure(RustWeldingError.genericError(message: "not implemented")))
+        }
+    }
+    
+    func createShieldingSpend(spendingKey: String, tsk: String, memo: String?, accountIndex: Int) throws -> Int {
+        guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
+            throw TransactionEncoderError.missingParams
+        }
+        
+        let txId = rustBackend.shieldFunds(dbCache: self.cacheDbURL,
+                                           dbData: self.dataDbURL,
+                                           account: Int32(accountIndex),
+                                           tsk: tsk,
+                                           extsk: spendingKey,
+                                           memo: memo,
+                                           spendParamsPath: self.spendParamsURL.path,
+                                           outputParamsPath: self.outputParamsURL.path)
+        
+        guard txId > 0 else {
+            throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
+        }
+        
+        return Int(txId)
+        
     }
     
     func ensureParams(spend: URL, output: URL) -> Bool {

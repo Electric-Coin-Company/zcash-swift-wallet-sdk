@@ -225,7 +225,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                          UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
     }
     
-    
     static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
         let dbData = dbData.osStr()
         let dbCache = dbCache.osStr()
@@ -356,6 +355,22 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return sk
     }
     
+    static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String? {
+        
+        guard !tsk.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_secret_key([CChar](tsk.utf8CString)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        let tAddr = String(validatingUTF8: tAddrCStr)
+        
+        return tAddr
+    }
+    
     static func consensusBranchIdFor(height: Int32) throws -> Int32 {
         let branchId = zcashlc_branch_id_for_height(height)
         
@@ -365,6 +380,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         return branchId
     }
+    
 }
 
 private extension ZcashRustBackend {

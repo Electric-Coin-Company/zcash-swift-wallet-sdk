@@ -24,6 +24,12 @@ public enum SynchronizerError: Error {
     case parameterMissing(underlyingError: Error)
 }
 
+public enum ShieldFundsError: Error {
+    case noUTXOFound
+    case insuficientTransparentFunds
+    case shieldingFailed(underlyingError: Error)
+}
+
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
 implementations like SdkSynchronizer fulfill.
@@ -72,6 +78,16 @@ public protocol Synchronizer {
     - Parameter accountIndex: the optional account id to use. By default, the first account is used.
     */
     func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
+    
+    /**
+    Sends zatoshi.
+    - Parameter spendingKey: the key that allows spends to occur.
+    - Parameter transparentSecretKey: the key that allows to spend transaprent funds
+    - Parameter zatoshi: the amount of zatoshi to send.
+    - Parameter memo: the optional memo to include as part of the transaction.
+    - Parameter accountIndex: the optional account id to use. By default, the first account is used.
+    */
+    func shieldFunds(spendingKey: String, transparentSecretKey: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
     
     /**
        Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only

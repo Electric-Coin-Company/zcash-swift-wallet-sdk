@@ -68,25 +68,26 @@ public protocol KeyDeriving {
      */
     func deriveShieldedAddress(viewingKey: String) throws -> String
     
-    
-    
     /**
         Validates the given viewing key
      - Throws DerivationError when  it's invalid
      */
     func validateViewingKey(viewingKey: String) throws
     
-    
     // WIP probably shouldn't be used just yet. Why?
             //  - because we need the private key associated with this seed and this function doesn't return it.
             //  - the underlying implementation needs to be split out into a few lower-level calls
     func deriveTransparentAddress(seed: [UInt8]) throws -> String
     
-    
     /**
      Derives a SecretKey to spend transparent funds from the given seed
      */
     func deriveTransparentPrivateKey(seed: [UInt8]) throws -> String
+    
+    /**
+     Derives a transparent address from the given transparent Secret Key
+     */
+    func deriveTransparentAddressFromPrivateKey(_ tsk: String) throws -> String
     
 }
 
@@ -227,7 +228,7 @@ public class DerivationTool: KeyDeriving {
     
     public func validateViewingKey(viewingKey: String) throws {
                 // TODO
-        throw KeyDerivationErrors.unableToDerive
+//        throw KeyDerivationErrors.unableToDerive
     }
     
     /**
@@ -275,4 +276,14 @@ extension DerivationTool: KeyValidation {
     }
     
     
+    public func deriveTransparentAddressFromPrivateKey(_ tsk: String) throws -> String {
+        do {
+            guard let tAddr = try rustwelding.deriveTransparentAddressFromSecretKey(tsk) else {
+                throw KeyDerivationErrors.unableToDerive
+            }
+            return tAddr
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
 }
