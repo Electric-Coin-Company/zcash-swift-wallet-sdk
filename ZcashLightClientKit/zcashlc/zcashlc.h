@@ -84,6 +84,11 @@ char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk);
 /**
  * Derives a transparent address from the given seed
  */
+char *zcashlc_derive_transparent_address_from_secret_key(const char *tsk);
+
+/**
+ * Derives a transparent address from the given seed
+ */
 char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed, uintptr_t seed_len);
 
 /**

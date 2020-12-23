@@ -964,6 +964,29 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
     unwrap_exc_or_null(res)
 }
 
+/// Derives a transparent address from the given seed 
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_secret_key(
+    tsk: *const c_char,
+) -> *mut c_char {
+    let res = catch_panic(|| {
+
+        let tsk = CStr::from_ptr(tsk).to_str()?;
+
+         // grab secret private key for t-funds
+         let sk = match secp256k1::key::SecretKey::from_str(&tsk) {
+            Ok(sk) => sk,
+            Err(e) => {
+                return Err(format_err!("Invalid Transparent Secret key: {}", e));
+            },
+        };
+
+        // derive the corresponding t-address
+        
+        Ok(CString::new(derive_transparent_address_from_secret_key(sk)).unwrap().into_raw())
+    });
+    unwrap_exc_or_null(res)
+}
 
 fn derive_transparent_address_from_secret_key(secret_key: SecretKey) -> String {
     let secp = Secp256k1::new();
