@@ -13,7 +13,7 @@ struct UTXO: UnspentTransactionOutputEntity, Decodable, Encodable {
         case id
         case address
         case txid
-        case index
+        case index = "idx"
         case script
         case valueZat = "value_zat"
         case height
@@ -83,7 +83,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         static var id = Expression<Int>("id")
         static var address = Expression<String>("address")
         static var txid = Expression<Blob>("txid")
-        static var index = Expression<Int>("index")
+        static var index = Expression<Int>("idx")
         static var script = Expression<Blob>("script")
         static var valueZat = Expression<Int>("value_zat")
         static var height = Expression<Int>("height")
@@ -105,6 +105,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             t.column(TableColumns.valueZat)
             t.column(TableColumns.height)
         }
+        try performMigration()
         try dbProvider.connection().run(statement)
     }
     
@@ -140,5 +141,26 @@ class UTXORepositoryBuilder {
         let dao = UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.cacheDbURL.path))
         try dao.createTableIfNeeded()
         return dao
+    }
+}
+
+// TODO: place this in a more general component
+
+extension Connection {
+    func getUserVersion() throws -> Int32 {
+        guard let v = try scalar("PRAGMA user_version") as? Int64 else {
+            return -1
+        }
+        return Int32(v)
+    }
+    
+    func setUserVersion(_ version: Int32) throws {
+        try run("PRAGMA user_version = \(version)")
+    }
+}
+
+extension UnspentTransactionOutputSQLDAO {
+    static let latestMigrationVersion: Int32 = 0
+    func performMigration() throws {
     }
 }
