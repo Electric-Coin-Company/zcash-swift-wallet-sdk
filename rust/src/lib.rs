@@ -1042,6 +1042,206 @@ pub fn double_sha256(payload: &[u8]) -> Vec<u8> {
 ///
 /// Do not call this multiple times in parallel, or you will generate transactions that
 /// double-spend the same notes.
+/// 
+/// 
+
+fn shield_funds(
+    db_cache: &BlockDB,
+    db_data: &WalletDB,
+    account: u32,
+    tsk: &str,
+    extsk: &str,
+    memo: &str,
+    spend_params: &Path,
+    output_params: &Path, 
+) -> Result<i64,failure::Error> {
+    let anchor_and_height = match (&db_data).get_target_and_anchor_heights() {
+        Ok(Some(h)) => h,
+        Ok(None) => {
+            return Err(format_err!("No anchor and target heights found"));
+        },
+        Err(e) => {
+            return Err(format_err!("Error fetching anchor and target heights: {}", e));
+        },
+    };
+
+
+    // grab secret private key for t-funds
+    let sk = match secp256k1::key::SecretKey::from_str(&tsk) {
+        Ok(sk) => sk,
+        Err(e) => {
+            return Err(format_err!("Invalid Transparent Secret key: {}", e));
+        },
+    };
+
+    // derive the corresponding t-address
+    let t_addr_str = derive_transparent_address_from_secret_key(sk);
+
+    let t_addr = match RecipientAddress::decode(&NETWORK, &t_addr_str) {
+        Some(to) => to,
+        None => {
+            return Err(format_err!("PaymentAddress is for the wrong network"));
+        },
+    };
+
+
+    let extsk =
+        match decode_extended_spending_key(NETWORK.hrp_sapling_extended_spending_key(), &extsk)
+        {
+            Ok(Some(extsk)) => extsk,
+            Ok(None) => {
+                return Err(format_err!("ExtendedSpendingKey is for the wrong network"));
+            },
+            Err(e) => {
+                return Err(format_err!("Invalid ExtendedSpendingKey: {}", e));
+            },
+        };
+
+    // derive own shielded address from the provided extended spending key
+    let z_address = extsk.default_address().unwrap().1;
+
+    let exfvk = ExtendedFullViewingKey::from(&extsk);
+
+    let ovk = exfvk.fvk.ovk;
+
+    let memo = match Memo::from_str(&memo) {
+        Ok(memo) => memo,
+        Err(_) => {
+            return Err(format_err!("Invalid memo input"));
+        }
+    };
+
+    // get UTXOs from DB
+    let utxos = match get_utxos(&NETWORK, &db_cache) {
+        Ok(u) => u,
+        Err(e) => {
+            return Err(format_err!("Error getting UTXOs {}",e));
+        },
+    };
+    
+    // verify that the addresses of the UTXOs are correspond to the given t-address
+    let distinct_addresses: Vec<&UnspentTransactionOutput> = utxos.iter().filter(|utxo| utxo.address != t_addr).collect::<Vec<_>>();
+    
+    if distinct_addresses.len() > 0 {
+        return Err(format_err!("one or more UTXOs correspond to other addresses that don't match the provided SecretKey"));
+    }
+    
+    // check that the utxos are confirmed 
+
+    let latest_scanned_height = anchor_and_height.1;
+    let latest_anchor = anchor_and_height.0;
+    let unconfirmed_funds: Vec<BlockHeight> = utxos.iter().map(|u| u.height).filter(|h| h > &latest_anchor).collect();
+
+    if unconfirmed_funds.len() > 0 {
+        return Err(format_err!("one or more UTXOs are unconfirmed "));
+    }
+
+    let total_amount = match Amount::from_i64(utxos.iter().map(|u| i64::from(u.value)).sum::<i64>()) {
+        Ok(a) => a,
+        _ => {
+            return Err(format_err!("error collecting total amount from UTXOs"));
+        },
+    };
+    let fee = DEFAULT_FEE;
+    let target_value = fee + total_amount;
+    if fee >= total_amount {
+        return Err(format_err!("Insufficient verified funds (have {}, need {:?}). NOTE: funds need {} confirmations before they can be spent.",
+        u64::from(total_amount), target_value, anchor_and_height.0 + 1));
+    }
+    let amount_to_shield = total_amount - fee;
+
+    let prover = LocalTxProver::new(spend_params, output_params);
+
+    let mut builder = Builder::new(NETWORK, latest_scanned_height);
+
+    for utxo in utxos.iter() {
+        let outpoint = OutPoint::new(
+            utxo.txid.0,
+            utxo.index as u32
+        );
+    
+        let coin = TxOut {
+            value: utxo.value.clone(),
+            script_pubkey: utxo.script.clone(),
+        };
+
+        match builder.add_transparent_input(sk.clone(), outpoint.clone(), coin.clone()) {
+            Ok(_) => (),
+            Err(e) => {
+                return Err(format_err!("error adding transparent input {}",e));
+            },
+        }
+    }
+
+    // there are no sapling notes so we set the change manually
+    builder.send_change_to(ovk, z_address.clone());
+    
+    // add the sapling output to shield the funds
+    match builder.add_sapling_output(Some(ovk), z_address.clone(), amount_to_shield, Some(memo.clone())) {
+        Ok(_) =>(),
+        Err(e) => {
+            return Err(format_err!("Failed to add sapling output {}", e));
+        }
+    };
+    let consensus_branch_id = BranchId::for_height(&NETWORK, anchor_and_height.1);
+
+   
+    let (tx, tx_metadata) = match builder
+        .build(consensus_branch_id, &prover) {
+            Ok(t) => t,
+            Err(e) => {
+                return Err(format_err!("Error building transaction {}",e));
+            },
+        };
+        
+
+    // We only called add_sapling_output() once.
+    let output_index = match tx_metadata.output_index(0) {
+        Some(idx) => idx as i64,
+        None => { 
+            return Err(format_err!("Output 0 should exist in the transaction"));
+        },
+    };
+
+    // Update the database atomically, to ensure the result is internally consistent.
+    let mut db_update = match (&db_data).get_update_ops()  {
+        Ok(d) => d,
+        Err(e) => {
+            return Err(format_err!("error updating database with created tx {}",e));
+        },
+    };
+    db_update
+        .transactionally(|up| {
+            let created = time::OffsetDateTime::now_utc();
+            let tx_ref = up.put_tx_data(&tx, Some(created))?;
+
+            // Mark notes as spent.
+            //
+            // This locks the notes so they aren't selected again by a subsequent call to
+            // create_spend_to_address() before this transaction has been mined (at which point the notes
+            // get re-marked as spent).
+            //
+            // Assumes that create_spend_to_address() will never be called in parallel, which is a
+            // reasonable assumption for a light client such as a mobile phone.
+            for spend in &tx.shielded_spends {
+                up.mark_spent(tx_ref, &spend.nullifier)?;
+            }
+
+            up.insert_sent_note(
+                &NETWORK,
+                tx_ref,
+                output_index as usize,
+                AccountId(account),
+                &RecipientAddress::from(z_address),
+                amount_to_shield,
+                Some(memo),
+            )?;
+
+            // Return the row number of the transaction, so the caller can fetch it for sending.
+            Ok(tx_ref)
+        })
+        .map_err(|e| format_err!("error building updating data_db {}",e))
+}
 #[no_mangle]
 pub extern "C" fn zcashlc_shield_funds(
     db_data: *const u8,
@@ -1076,192 +1276,7 @@ pub extern "C" fn zcashlc_shield_funds(
             slice::from_raw_parts(output_params, output_params_len)
         }));
 
-        let anchor_and_height = match (&db_data).get_target_and_anchor_heights() {
-            Ok(Some(h)) => h,
-            Ok(None) => {
-                return Err(format_err!("No anchor and target heights found"));
-            },
-            Err(e) => {
-                return Err(format_err!("Error fetching anchor and target heights: {}", e));
-            },
-        };
-
-
-        // grab secret private key for t-funds
-        let sk = match secp256k1::key::SecretKey::from_str(&tsk) {
-            Ok(sk) => sk,
-            Err(e) => {
-                return Err(format_err!("Invalid Transparent Secret key: {}", e));
-            },
-        };
-
-        // derive the corresponding t-address
-        let t_addr_str = derive_transparent_address_from_secret_key(sk);
-
-        let t_addr = match RecipientAddress::decode(&NETWORK, &t_addr_str) {
-            Some(to) => to,
-            None => {
-                return Err(format_err!("PaymentAddress is for the wrong network"));
-            },
-        };
-
-
-        let extsk =
-            match decode_extended_spending_key(NETWORK.hrp_sapling_extended_spending_key(), &extsk)
-            {
-                Ok(Some(extsk)) => extsk,
-                Ok(None) => {
-                    return Err(format_err!("ExtendedSpendingKey is for the wrong network"));
-                },
-                Err(e) => {
-                    return Err(format_err!("Invalid ExtendedSpendingKey: {}", e));
-                },
-            };
-
-        // derive own shielded address from the provided extended spending key
-        let z_address = extsk.default_address().unwrap().1;
-
-        let exfvk = ExtendedFullViewingKey::from(&extsk);
-
-        let ovk = exfvk.fvk.ovk;
-
-        let memo = match Memo::from_str(&memo) {
-            Ok(memo) => memo,
-            Err(_) => {
-                return Err(format_err!("Invalid memo input"));
-            }
-        };
-
-        // get UTXOs from DB
-        let utxos = match get_utxos(&NETWORK, &db_cache) {
-            Ok(u) => u,
-            Err(e) => {
-                return Err(format_err!("Error getting UTXOs {}",e));
-            },
-        };
-        
-        // verify that the addresses of the UTXOs are correspond to the given t-address
-        let distinct_addresses: Vec<&UnspentTransactionOutput> = utxos.iter().filter(|utxo| utxo.address != t_addr).collect::<Vec<_>>();
-        
-        if distinct_addresses.len() > 0 {
-            return Err(format_err!("one or more UTXOs correspond to other addresses that don't match the provided SecretKey"));
-        }
-        
-        // check that the utxos are confirmed 
-
-        let latest_scanned_height = anchor_and_height.1;
-        let latest_anchor = anchor_and_height.0;
-        let unconfirmed_funds: Vec<BlockHeight> = utxos.iter().map(|u| u.height).filter(|h| h > &latest_anchor).collect();
-
-        if unconfirmed_funds.len() > 0 {
-            return Err(format_err!("one or more UTXOs are unconfirmed "));
-        }
-
-        let total_amount = match Amount::from_i64(utxos.iter().map(|u| i64::from(u.value)).sum::<i64>()) {
-            Ok(a) => a,
-            _ => {
-                return Err(format_err!("error collecting total amount from UTXOs"));
-            },
-        };
-        let fee = DEFAULT_FEE;
-        let target_value = fee + total_amount;
-        if fee >= total_amount {
-            return Err(format_err!("Insufficient verified funds (have {}, need {:?}). NOTE: funds need {} confirmations before they can be spent.",
-            u64::from(total_amount), target_value, anchor_and_height.0 + 1));
-        }
-        let amount_to_shield = total_amount - fee;
-
-        let prover = LocalTxProver::new(spend_params, output_params);
-
-        let mut builder = Builder::new(NETWORK, latest_scanned_height);
-
-        for utxo in utxos.iter() {
-            let outpoint = OutPoint::new(
-                utxo.txid.0,
-                utxo.index as u32
-            );
-        
-            let coin = TxOut {
-                value: utxo.value.clone(),
-                script_pubkey: utxo.script.clone(),
-            };
-
-            match builder.add_transparent_input(sk.clone(), outpoint.clone(), coin.clone()) {
-                Ok(_) => (),
-                Err(e) => {
-                    return Err(format_err!("error adding transparent input {}",e));
-                },
-            }
-        }
-
-        // there are no sapling notes so we set the change manually
-        builder.send_change_to(ovk, z_address.clone());
-        
-        // add the sapling output to shield the funds
-        match builder.add_sapling_output(Some(ovk), z_address.clone(), amount_to_shield, Some(memo.clone())) {
-            Ok(_) =>(),
-            Err(e) => {
-                return Err(format_err!("Failed to add sapling output {}", e));
-            }
-        };
-        let consensus_branch_id = BranchId::for_height(&NETWORK, anchor_and_height.1);
-
-       
-        let (tx, tx_metadata) = match builder
-            .build(consensus_branch_id, &prover) {
-                Ok(t) => t,
-                Err(e) => {
-                    return Err(format_err!("Error building transaction {}",e));
-                },
-            };
-            
-    
-        // We only called add_sapling_output() once.
-        let output_index = match tx_metadata.output_index(0) {
-            Some(idx) => idx as i64,
-            None => { 
-                return Err(format_err!("Output 0 should exist in the transaction"));
-            },
-        };
-    
-        // Update the database atomically, to ensure the result is internally consistent.
-        let mut db_update = match (&db_data).get_update_ops()  {
-            Ok(d) => d,
-            Err(e) => {
-                return Err(format_err!("error updating database with created tx {}",e));
-            },
-        };
-        db_update
-            .transactionally(|up| {
-                let created = time::OffsetDateTime::now_utc();
-                let tx_ref = up.put_tx_data(&tx, Some(created))?;
-    
-                // Mark notes as spent.
-                //
-                // This locks the notes so they aren't selected again by a subsequent call to
-                // create_spend_to_address() before this transaction has been mined (at which point the notes
-                // get re-marked as spent).
-                //
-                // Assumes that create_spend_to_address() will never be called in parallel, which is a
-                // reasonable assumption for a light client such as a mobile phone.
-                for spend in &tx.shielded_spends {
-                    up.mark_spent(tx_ref, &spend.nullifier)?;
-                }
-    
-                up.insert_sent_note(
-                    &NETWORK,
-                    tx_ref,
-                    output_index as usize,
-                    AccountId(account),
-                    &RecipientAddress::from(z_address),
-                    amount_to_shield,
-                    Some(memo),
-                )?;
-    
-                // Return the row number of the transaction, so the caller can fetch it for sending.
-                Ok(tx_ref)
-            })
-            .map_err(|e| format_err!("error building updating data_db {}",e))
+       shield_funds(&db_cache, &db_data, account, &tsk, &extsk, &memo, &spend_params, &output_params)
     });
     unwrap_exc_or(res, -1)
 }
