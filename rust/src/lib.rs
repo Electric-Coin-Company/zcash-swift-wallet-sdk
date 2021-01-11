@@ -37,6 +37,7 @@ use zcash_primitives::{
             OutPoint, 
             TxOut
     },
+    legacy::Script,
     transaction::builder::Builder,
     transaction::Transaction,
     zip32::{ExtendedFullViewingKey},
@@ -1162,7 +1163,7 @@ fn shield_funds(
     
         let coin = TxOut {
             value: utxo.value.clone(),
-            script_pubkey: utxo.script.clone(),
+            script_pubkey: Script { 0: utxo.script.clone() },
         };
 
         match builder.add_transparent_input(sk.clone(), outpoint.clone(), coin.clone()) {
