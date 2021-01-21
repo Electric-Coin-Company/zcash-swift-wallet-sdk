@@ -23,6 +23,7 @@ use zcash_client_backend::{
     wallet::OvkPolicy,
 };
 use zcash_client_sqlite::{
+    error::SqliteClientError,
     wallet::{
         init::{init_accounts_table, init_blocks_table, init_wallet_db},
         get_balance, 
@@ -544,7 +545,8 @@ pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, ac
             return Err(format_err!("account argument must be positive"));
         };
         let account = AccountId(account);
-        match (&db_data).get_balance(account) {
+
+        match db_data.get_balance(account) {
             Ok(balance) => Ok(balance.into()),
             Err(e) => Err(format_err!("Error while fetching balance: {}", e)),
         }
@@ -670,8 +672,8 @@ pub extern "C" fn zcashlc_validate_combined_chain(
         let val_res = validate_chain(&NETWORK, &block_db, validate_from);
 
         if let Err(e) = val_res {
-            match e.0 {
-                Error::InvalidChain(upper_bound, _) => {
+            match e {
+                SqliteClientError::BackendError(Error::InvalidChain(upper_bound, _)) => {
                     let upper_bound_u32 = u32::from(upper_bound);
                     Ok(upper_bound_u32 as i32)
                 }
@@ -735,9 +737,9 @@ pub extern "C" fn zcashlc_scan_blocks(
 ) -> i32 {
     let res = catch_panic(|| {
         let block_db = block_db(db_cache, db_cache_len)?;
-        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
+        let mut db_data = wallet_db(&NETWORK, db_data, db_data_len)?.get_update_ops()?;
 
-        match scan_cached_blocks(&NETWORK, &block_db, &db_data, None) {
+        match scan_cached_blocks(&NETWORK, &block_db, &mut db_data, None) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while scanning blocks: {}", e)),
         }
@@ -753,11 +755,11 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     tx_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
+        let mut db_data = wallet_db(&NETWORK, db_data, db_data_len)?.get_update_ops()?;
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
         let tx = Transaction::read(&tx_bytes[..])?;
 
-        match decrypt_and_store_transaction(&NETWORK, &db_data, &tx) {
+        match decrypt_and_store_transaction(&NETWORK, &mut db_data, &tx) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while decrypting transaction: {}", e)),
         }
@@ -789,7 +791,7 @@ pub extern "C" fn zcashlc_create_to_address(
 ) -> i64 {
     let res = catch_panic(|| {
 
-        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
+        let mut db_data = wallet_db(&NETWORK, db_data, db_data_len)?.get_update_ops()?;
         let account = if account >= 0 {
             account as u32
         } else {
@@ -834,7 +836,7 @@ pub extern "C" fn zcashlc_create_to_address(
         let prover = LocalTxProver::new(spend_params, output_params);
 
         create_spend_to_address(
-            &db_data,
+            &mut db_data,
             &NETWORK,
             prover,
             AccountId(account),
