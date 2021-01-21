@@ -599,7 +599,7 @@ pub extern "C" fn zcashlc_get_received_memo_as_utf8(
     id_note: i64,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = wallet_db(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
 
         let memo = match (&db_data).get_received_memo_as_utf8(NoteId(id_note)) {
             Ok(memo) => memo.unwrap_or_default(),
@@ -624,7 +624,7 @@ pub extern "C" fn zcashlc_get_sent_memo_as_utf8(
     id_note: i64,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = wallet_db(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
 
         let memo = (&db_data)
             .get_sent_memo_as_utf8(NoteId(id_note))
@@ -661,7 +661,7 @@ pub extern "C" fn zcashlc_validate_combined_chain(
 ) -> i32 {
     let res = catch_panic(|| {
         let block_db = block_db(db_cache, db_cache_len)?;
-        let db_data = wallet_db(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
 
         let validate_from = (&db_data)
             .get_max_height_hash()
@@ -696,7 +696,7 @@ pub extern "C" fn zcashlc_rewind_to_height(
     height: i32,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = wallet_db(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
 
         let mut update_ops = (&db_data)
             .get_update_ops()
@@ -704,7 +704,7 @@ pub extern "C" fn zcashlc_rewind_to_height(
 
         let height = BlockHeight::try_from(height)?;
         (&mut update_ops)
-            .transactionally(|ops| ops.rewind_to_height(&NETWORK, height))
+            .transactionally(|ops| ops.rewind_to_height(height))
             .map(|_| 1)
             .map_err(|e| format_err!("Error while rewinding data DB to height {}: {}", height, e))
         
@@ -735,7 +735,7 @@ pub extern "C" fn zcashlc_scan_blocks(
 ) -> i32 {
     let res = catch_panic(|| {
         let block_db = block_db(db_cache, db_cache_len)?;
-        let db_data = wallet_db(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
 
         match scan_cached_blocks(&NETWORK, &block_db, &db_data, None) {
             Ok(()) => Ok(1),
@@ -753,7 +753,7 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     tx_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = wallet_db(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
         let tx = Transaction::read(&tx_bytes[..])?;
 
@@ -789,7 +789,7 @@ pub extern "C" fn zcashlc_create_to_address(
 ) -> i64 {
     let res = catch_panic(|| {
 
-        let db_data = wallet_db(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
         let account = if account >= 0 {
             account as u32
         } else {
@@ -1249,7 +1249,7 @@ pub extern "C" fn zcashlc_shield_funds(
 ) -> i64 {
     let res = catch_panic(|| {
 
-        let db_data = wallet_db::<NETWORK>(db_data, db_data_len)?;
+        let db_data = wallet_db(&NETWORK, db_data, db_data_len)?;
         let db_cache = block_db(db_cache, db_cache_len)?;
         let account = if account >= 0 {
             account as u32
