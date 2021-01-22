@@ -355,16 +355,16 @@ public class SDKSynchronizer: Synchronizer {
         
         do {
             let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
-            let tBalance = try utxoRepository.balance(address: tAddr)
+            let tBalance = try utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
             
-            guard tBalance > Self.shieldingThreshold else {
+            guard tBalance.confirmed > Self.shieldingThreshold else {
                 resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
                 return
             }
             let vk = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
             let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: vk)
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance, toAddress: zAddr, memo: memo, from: 0)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: Int(tBalance.confirmed), toAddress: zAddr, memo: memo, from: 0)
             
             transactionManager.encodeShieldingTransaction(spendingKey: spendingKey, tsk: transparentSecretKey, pendingTransaction: shieldingSpend) {[weak self] (result) in
                 guard let self = self else { return }
@@ -492,6 +492,38 @@ public class SDKSynchronizer: Synchronizer {
     
     public func cachedUTXOs(address: String) throws -> [UnspentTransactionOutputEntity] {
         try utxoRepository.getAll(address: address)
+    }
+    
+    /**
+     gets the unshielded balance for the given address.
+     */
+    public func latestUnshieldedBalance(address: String, result: @escaping (Result<UnshieldedBalance,Error>) -> Void) {
+        latestUTXOs(address: address, result: { [weak self] (r) in
+            
+            guard let self = self else { return }
+            switch r {
+            case .success:
+                do {
+                    result(.success(try self.utxoRepository.balance(address: address, latestHeight: try self.latestDownloadedHeight())))
+                } catch {
+                    result(.failure(SynchronizerError.uncategorized(underlyingError: error)))
+                }
+            case .failure(let e):
+                result(.failure(SynchronizerError.generalError(message: "\(e)")))
+            }
+        })
+    }
+    
+    /**
+        gets the last stored unshielded balance
+     */
+    public func getUnshieldedBalance(address: String) throws -> UnshieldedBalance {
+        do {
+            let latestHeight = try self.latestDownloadedHeight()
+            return try utxoRepository.balance(address: address, latestHeight: latestHeight)
+        } catch {
+            throw SynchronizerError.uncategorized(underlyingError: error)
+        }
     }
     
     // MARK: notify state

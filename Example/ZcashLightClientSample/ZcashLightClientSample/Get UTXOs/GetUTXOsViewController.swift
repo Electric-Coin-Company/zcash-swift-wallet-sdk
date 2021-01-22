@@ -47,7 +47,16 @@ class GetUTXOsViewController: UIViewController {
                 KRProgressHUD.dismiss()
                 switch result {
                 case .success(let utxos):
-                    self?.messageLabel.text  = "found \(utxos.count) UTXOs for address \(tAddr)"
+                    do {
+                        let balance = try AppDelegate.shared.sharedSynchronizer.getUnshieldedBalance(address: tAddr)
+                    
+                        self?.messageLabel.text  = """
+                            found \(utxos.count) UTXOs for address \(tAddr)
+                            \(balance)
+                        """
+                    } catch {
+                        self?.messageLabel.text = "Error \(error)"
+                    }
                     
                 case .failure(let error):
                     self?.messageLabel.text = "Error \(error)"
@@ -109,4 +118,15 @@ extension GetUTXOsViewController: UITextFieldDelegate {
         updateUI()
     }
     
+}
+
+
+extension UnshieldedBalance {
+    var description: String {
+        """
+        UnshieldedBalance:
+            confirmed: \(self.confirmed)
+            unconfirmed:\(self.unconfirmed)
+        """
+    }
 }

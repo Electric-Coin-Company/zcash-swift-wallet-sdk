@@ -233,7 +233,7 @@ extension LightWalletGRPCService: LightWalletService {
                          index: Int(reply.index),
                          script: reply.script,
                          valueZat: Int(reply.valueZat),
-                         height: Int(reply.valueZat)
+                         height: Int(reply.height)
                     )
                 )
             }

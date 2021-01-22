@@ -30,25 +30,14 @@ public enum ShieldFundsError: Error {
     case shieldingFailed(underlyingError: Error)
 }
 
+
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
 implementations like SdkSynchronizer fulfill.
 */
 
 public protocol Synchronizer {
-    /**
-    Starts this synchronizer within the given scope.
     
-    Implementations should leverage structured concurrency and
-    cancel all jobs when this scope completes.
-    */
-    func start(retry: Bool) throws
-    
-    /**
-     Stop this synchronizer. Implementations should ensure that calling this method cancels all
-     jobs that were created by this instance.
-     */
-    func stop() throws
     
     /**
     Value representing the Status of this Synchronizer. As the status changes, a new
@@ -62,6 +51,22 @@ public protocol Synchronizer {
      a value of 1.0 signals that progress is complete and any progress indicators can be hidden. KVO Compliant
      */
     var progress: Float { get }
+    
+    
+    
+    /**
+    Starts this synchronizer within the given scope.
+    
+    Implementations should leverage structured concurrency and
+    cancel all jobs when this scope completes.
+    */
+    func start(retry: Bool) throws
+    
+    /**
+     Stop this synchronizer. Implementations should ensure that calling this method cancels all
+     jobs that were created by this instance.
+     */
+    func stop() throws
     
     /**
     Gets the address for the given account.
@@ -157,6 +162,15 @@ public protocol Synchronizer {
      */
     func cachedUTXOs(address: String) throws -> [UnspentTransactionOutputEntity]
     
+    /**
+     gets the unshielded balance for the given address.
+     */
+    func latestUnshieldedBalance(address: String, result: @escaping (Result<UnshieldedBalance,Error>) -> Void)
+    
+    /**
+        gets the last stored unshielded balance
+     */
+    func getUnshieldedBalance(address: String) throws -> UnshieldedBalance
 }
 
 /**

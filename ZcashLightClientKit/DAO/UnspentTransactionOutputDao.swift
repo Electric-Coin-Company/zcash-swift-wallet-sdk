@@ -123,17 +123,28 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         }
     }
     
-    func balance(address: String) throws -> Int {
+    func balance(address: String, latestHeight: BlockHeight) throws -> UnshieldedBalance {
         
-        guard let sum = try dbProvider.connection().scalar(
+        do {
+            let confirmed = try dbProvider.connection().scalar(
+                    table.select(TableColumns.valueZat.sum)
+                        .filter(TableColumns.address == address)
+                        .filter(TableColumns.height <= latestHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE)) ?? 0
+            let unconfirmed = try dbProvider.connection().scalar(
                 table.select(TableColumns.valueZat.sum)
-                    .filter(TableColumns.address == address)
-        ) else {
+                    .filter(TableColumns.address == address)) ?? 0
+            
+            return TransparentBalance(confirmed: Int64(confirmed), unconfirmed: Int64(unconfirmed), address: address)
+        } catch {
             throw StorageError.operationFailed
         }
-        return sum
-        
     }
+}
+
+struct TransparentBalance: UnshieldedBalance {
+    var confirmed: Int64
+    var unconfirmed: Int64
+    var address: String
 }
 
 class UTXORepositoryBuilder {
