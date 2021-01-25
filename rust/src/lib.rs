@@ -1078,7 +1078,7 @@ fn shield_funds<P: consensus::Parameters>(
     spend_params: &Path,
     output_params: &Path, 
 ) -> Result<i64,failure::Error> {
-    let anchor_and_height = match (&db_data).get_target_and_anchor_heights() {
+    let target_height_and_anchor = match (&db_data).get_target_and_anchor_heights() {
         Ok(Some(h)) => h,
         Ok(None) => {
             return Err(format_err!("No anchor and target heights found"));
@@ -1127,8 +1127,8 @@ fn shield_funds<P: consensus::Parameters>(
 
     // get latest height and anchor
 
-    let latest_scanned_height = anchor_and_height.1;
-    let latest_anchor = anchor_and_height.0;
+    let latest_scanned_height = target_height_and_anchor.0;
+    let latest_anchor = target_height_and_anchor.1;
 
     // get UTXOs from DB
     let utxos = match get_confirmed_utxos_for_address(&NETWORK, &db_cache, latest_anchor, &t_addr_str) {
@@ -1148,7 +1148,7 @@ fn shield_funds<P: consensus::Parameters>(
     let target_value = fee + total_amount;
     if fee >= total_amount {
         return Err(format_err!("Insufficient verified funds (have {}, need {:?}). NOTE: funds need {} confirmations before they can be spent.",
-        u64::from(total_amount), target_value, anchor_and_height.0 + 1));
+        u64::from(total_amount), target_value, target_height_and_anchor.0 + 1));
     }
     let amount_to_shield = total_amount - fee;
 
@@ -1185,7 +1185,7 @@ fn shield_funds<P: consensus::Parameters>(
             return Err(format_err!("Failed to add sapling output {}", e));
         }
     };
-    let consensus_branch_id = BranchId::for_height(&NETWORK, anchor_and_height.1);
+    let consensus_branch_id = BranchId::for_height(&NETWORK, target_height_and_anchor.1);
 
    
     let (tx, tx_metadata) = match builder
