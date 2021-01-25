@@ -29,7 +29,12 @@ class OutboundTransactionManagerTests: XCTestCase {
         
         try! pendingRespository.createrTableIfNeeded()
         
-        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb, dataDbURL: dataDbHandle.readWriteDb, pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(), endpoint: LightWalletEndpointBuilder.default, spendParamsURL: try! __spendParamsURL(), outputParamsURL: try! __outputParamsURL())
+        initializer = Initializer(cacheDbURL: cacheDbHandle.readWriteDb,
+                                  dataDbURL: dataDbHandle.readWriteDb,
+                                  pendingDbURL: try! TestDbBuilder.pendingTransactionsDbURL(),
+                                  endpoint: LightWalletEndpointBuilder.default,
+                                  spendParamsURL: try! __spendParamsURL(),
+                                  outputParamsURL: try! __outputParamsURL())
         
         encoder = WalletTransactionEncoder(initializer: initializer)
         transactionManager = PersistentTransactionManager(encoder: encoder, service: MockLightWalletService(latestBlockHeight: 620999), repository: pendingRespository)

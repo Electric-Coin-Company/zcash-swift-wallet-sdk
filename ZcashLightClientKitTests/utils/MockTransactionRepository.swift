@@ -10,14 +10,18 @@ import Foundation
 @testable import ZcashLightClientKit
 
 class MockTransactionRepository: TransactionRepository {
-    func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
+    func findConfirmedTransactions(in range: BlockRange, offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]? {
         nil
     }
     
-//    func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
-//        nil
-//    }
+    func findAll(from: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        nil
+    }
     
+    func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
+        nil
+    }
+
     
     var unminedCount: Int
     var receivedCount: Int

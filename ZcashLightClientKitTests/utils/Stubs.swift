@@ -77,6 +77,30 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+        false
+    }
+    
+    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String? {
+        nil
+    }
+    
+    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
+        nil
+    }
+    
+    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
+        nil
+    }
+    
+    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String? {
+        nil
+    }
+    
+    static func deriveShieldedAddressFromViewingKey(_ extfvk: String) throws -> String? {
+        nil
+    }
+    
     
     static func consensusBranchIdFor(height: Int32) throws -> Int32 {
         -1

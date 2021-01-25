@@ -22,19 +22,9 @@ ZcashLightClientKit uses a rust library called Librustzcash. In order to build i
 
 Install [Rust](https://www.rust-lang.org/learn/get-started), and then `cargo-lipo`:
 
-**WORKAROUND**: we are having issues with rustc 1.46.0 we recommend using rustc 1.40.0 until we push a fix for this problem: see issue https://github.com/zcash/ZcashLightClientKit/issues/177
-
-
-_regular workflow_
 ```
 $ cargo install cargo-lipo
 $ rustup target add aarch64-apple-ios x86_64-apple-ios
-```
-_workaround to force 1.40.0_
-```
-rustup override set 1.40.0
-rustup target remove aarch64-apple-ios x86_64-apple-ios
-rustup target add aarch64-apple-ios x86_64-apple-ios
 ```
 
 # Cocoapods Support
@@ -246,6 +236,11 @@ and https://z.cash/downloads/sapling-output.params and then move them to the cor
 
 ![how to fix missing params files](docs/images/output_params_error.png)
 
+### can't find crate for ...  target may not be installed
+This error could be a side effect of having more then one rust toolchain installed. 
+If you worked with ZcashLightClientKit 0.6.6 or below you might have had to set the compiler to 1.40.0 which can cause this compilation error to happen.
+make sure that the directory that you are working on has the correct rust environment.
+You can do so by calling `rustup show` in the working directory. 
 
 ## Versioning
 

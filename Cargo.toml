@@ -9,42 +9,28 @@ build = "rust/build.rs"
 
 [dependencies]
 failure = "0.1"
-ffi_helpers = "0.1"
-hex = "0.3"
+ffi_helpers = "0.2"
+hex = "0.4"
+zcash_client_backend = "0.4"
+zcash_client_sqlite = "0.2.1"
+zcash_primitives = "0.4"
 
-[dependencies.ff]
-git = "https://github.com/zcash/librustzcash.git"
-rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
-
-
-[dependencies.pairing]
-git = "https://github.com/zcash/librustzcash.git"
-rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
-
-
-[dependencies.zcash_client_backend]
-git = "https://github.com/zcash/librustzcash.git"
-rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
-
-
-[dependencies.zcash_client_sqlite]
-git = "https://github.com/zcash/librustzcash.git"
-rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
-
-[dependencies.zcash_primitives]
-git = "https://github.com/zcash/librustzcash.git"
-rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
-
+#### Temporary additions: ####################################
+base58 = "0.1.0"
+sha2 = "0.9"
+bs58 = { version = "0.3", features = ["check"] }
+hdwallet = "0.2.2"
+ripemd160 = "0.9"
+secp256k1 = "0.17.2"
+##############################################################
 
 [dependencies.zcash_proofs]
-git = "https://github.com/zcash/librustzcash.git"
-rev = "18b1ce7401184e86031e6d7ddefa7c8d36929296"
-
+version = "0.4"
 default-features = false
 features = ["local-prover"]
 
 [build-dependencies]
-cbindgen = "0.8"
+cbindgen = "0.14"
 
 [lib]
 name = "zcashlc"
@@ -56,3 +42,9 @@ lto = true
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
+
+[patch.crates-io]
+zcash_client_backend = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' } 
+zcash_client_sqlite = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' }
+zcash_primitives = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' }
+zcash_proofs = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' }

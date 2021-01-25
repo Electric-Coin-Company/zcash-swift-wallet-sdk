@@ -354,7 +354,7 @@ class AdvancedReOrgTests: XCTestCase {
          8. stage sentTx and otherTx at sentTxheight
          */
         try coordinator.stageBlockCreate(height: sentTxHeight, count: 20, nonce: 5)
-        try coordinator.stageTransaction(url: FakeChainBuilder.someOtherTxUrl, at: receivedTxHeight)
+        try coordinator.stageTransaction(url: FakeChainBuilder.someOtherTxUrl, at: sentTxHeight)
         try coordinator.stageTransaction(sentTx, at: sentTxHeight)
         
         /*
@@ -370,7 +370,7 @@ class AdvancedReOrgTests: XCTestCase {
              */
             let pMinedHeight = s.pendingTransactions.first?.minedHeight
             XCTAssertEqual(pMinedHeight, sentTxHeight)
-            XCTAssertEqual(initialTotalBalance - sendAmount - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), s.initializer.getBalance())
+            XCTAssertEqual(initialTotalBalance - sendAmount - Int64(1000), s.initializer.getBalance()) // fee change on this branch
             afterReOrgExpectation.fulfill()
         }, error: self.handleError)
         
@@ -396,7 +396,7 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [lastSyncExpectation], timeout: 5)
         
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
-        XCTAssertEqual(initialTotalBalance - Int64(pendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(pendingTx.value) - Int64(1000), coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), coordinator.synchronizer.initializer.getVerifiedBalance())
     }
     
@@ -688,7 +688,6 @@ class AdvancedReOrgTests: XCTestCase {
         
         sleep(1)
         let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
-        let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var p: PendingTransactionEntity? = nil
@@ -861,8 +860,8 @@ class AdvancedReOrgTests: XCTestCase {
             return txId == newlyPendingTx.rawTransactionId
         }), "Sent Tx is not on sent transactions")
         
-        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getBalance())
-        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(ZcashSDK.MINERS_FEE_ZATOSHI), coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(1000), coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(initialTotalBalance - Int64(newlyPendingTx.value) - Int64(1000),  coordinator.synchronizer.initializer.getVerifiedBalance())
         
         
     }
@@ -1126,6 +1125,34 @@ class AdvancedReOrgTests: XCTestCase {
         
     }
     
+    func testLongSync() throws {
+        
+        hookToReOrgNotification()
+        
+        /*
+         1. create fake chain
+         */
+        let fullSyncLength = 100_000
+    
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, length: fullSyncLength)
+        
+        try coordinator.applyStaged(blockheight: birthday + fullSyncLength)
+        
+        sleep(10)
+        
+        let firstSyncExpectation = XCTestExpectation(description: "first sync")
+        /*
+         sync to latest height
+         */
+        try coordinator.sync(completion: { (s) in
+            firstSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 300)
+        
+        XCTAssertEqual(try coordinator.synchronizer.latestDownloadedHeight(), birthday + fullSyncLength)
+    }
+    
     func handleError(_ error: Error?) {
         _ = try? coordinator.stop()
         guard let testError = error else {
@@ -1138,4 +1165,5 @@ class AdvancedReOrgTests: XCTestCase {
     func hookToReOrgNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(handleReorg(_:)), name: .blockProcessorHandledReOrg, object: nil)
     }
+    
 }
