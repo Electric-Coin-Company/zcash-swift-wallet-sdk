@@ -65,9 +65,7 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
             }
         case .all:
             transactions = (synchronizer.pendingTransactions.map { $0.transactionEntity } +
-                synchronizer.clearedTransactions.map { $0.transactionEntity } +
-                synchronizer.receivedTransactions.map { $0.transactionEntity } +
-                synchronizer.sentTransactions.map { $0.transactionEntity }).map { TransactionDetailModel(transaction: $0)}
+                synchronizer.clearedTransactions.map { $0.transactionEntity }).map { TransactionDetailModel(transaction: $0)}
         }        
     }
     

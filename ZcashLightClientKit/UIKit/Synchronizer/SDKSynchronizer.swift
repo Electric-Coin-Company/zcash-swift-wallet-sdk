@@ -48,10 +48,17 @@ public extension Notification.Name {
       */
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
     /**
-      Posted when the synchronizer finds a mined transaction
+      Posted when the synchronizer finds a pendingTransaction that hast been newly mined
      - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
       */
     static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
+    
+    /**
+      Posted when the synchronizer finds a mined transaction
+     - Note: query userInfo on NotificationKeys.foundTransactions for the [ConfirmedTransactionEntity]. This notification could arrive in a background thread.
+      */
+    static let synchronizerFoundTransactions = Notification.Name("synchronizerFoundTransactions")
+    
     /**
       Posted when the synchronizer presents an error
      - Note: query userInfo on NotificationKeys.error for an error
@@ -63,11 +70,12 @@ public extension Notification.Name {
  Synchronizer implementation for UIKit and iOS 12+
  */
 public class SDKSynchronizer: Synchronizer {
-
+    
     public struct NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
         public static let minedTransaction = "SDKSynchronizer.minedTransaction"
+        public static let foundTransactions = "SDKSynchronizer.foundTransactions"
         public static let error = "SDKSynchronizer.error"
     }
     
@@ -82,17 +90,7 @@ public class SDKSynchronizer: Synchronizer {
     
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
-    private var isFirstApplicationStart = true
-    var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
     
-    private var isBackgroundAllowed: Bool {
-        switch UIApplication.shared.backgroundRefreshStatus {
-        case .available:
-            return true
-        default:
-            return false
-        }
-    }
     
     /**
      Creates an SDKSynchronizer instance
@@ -105,7 +103,6 @@ public class SDKSynchronizer: Synchronizer {
                   transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
                   transactionRepository: initializer.transactionRepository)
         
-        self.subscribeToAppDelegateNotifications()
     }
     
     init(status: Status,
@@ -122,14 +119,11 @@ public class SDKSynchronizer: Synchronizer {
         NotificationCenter.default.removeObserver(self)
         self.blockProcessor?.stop()
         self.blockProcessor = nil
-        self.taskIdentifier = .invalid
-    }
-    /**
-     Starts the synchronizer
-     - Throws: CompactBlockProcessorError when failures occur
-     */
-    public func start(retry: Bool = false) throws {
         
+    }
+    
+    private func lazyInitialize() throws {
+        guard self.blockProcessor == nil else { return }
         guard let processor = initializer.blockProcessor() else {
             throw SynchronizerError.generalError(message: "compact block processor initialization failed")
         }
@@ -137,6 +131,19 @@ public class SDKSynchronizer: Synchronizer {
         subscribeToProcessorNotifications(processor)
         
         self.blockProcessor = processor
+    }
+    /**
+     Starts the synchronizer
+     - Throws: CompactBlockProcessorError when failures occur
+     */
+    public func start(retry: Bool = false) throws {
+        
+        try lazyInitialize()
+        
+        guard let processor = self.blockProcessor else {
+            throw SynchronizerError.generalError(message: "compact block processor initialization failed")
+        }
+        
         guard status == .stopped || status == .disconnected || status == .synced else {
             assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
             return
@@ -147,72 +154,18 @@ public class SDKSynchronizer: Synchronizer {
         } catch {
             throw mapError(error)
         }
-        
     }
     
     /**
     Stops the synchronizer
     */
     public func stop() {
-        
-        defer {
-           
-            self.invalidateBackgroundActivity()
-        }
+     
         guard status != .stopped, status != .disconnected else { return }
         
         guard let processor = self.blockProcessor else { return }
         
         processor.stop(cancelTasks: true)
-    }
-    
-    // MARK: event subscription
-    private func subscribeToAppDelegateNotifications() {
-        // todo: iOS 13 platform specific
-        
-        let center = NotificationCenter.default
-        
-        center.addObserver(self,
-                           selector: #selector(applicationDidBecomeActive(_:)),
-                           name: UIApplication.didBecomeActiveNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationWillTerminate(_:)),
-                           name: UIApplication.willTerminateNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationWillResignActive(_:)),
-                           name: UIApplication.willResignActiveNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationDidEnterBackground(_:)),
-                           name: UIApplication.didEnterBackgroundNotification,
-                           object: nil)
-        
-        center.addObserver(self,
-                           selector: #selector(applicationWillEnterForeground(_:)),
-                           name: UIApplication.willEnterForegroundNotification,
-                           object: nil)
-        
-    }
-    
-    private func registerBackgroundActivity() {
-        if self.taskIdentifier == .invalid {
-            self.taskIdentifier = UIApplication.shared.beginBackgroundTask(withName: "ZcashLightClientKit.SDKSynchronizer", expirationHandler: {
-                self.invalidateBackgroundActivity()
-            })
-        }
-    }
-    
-    private func invalidateBackgroundActivity() {
-        guard self.taskIdentifier != .invalid else {
-            return
-        }
-        UIApplication.shared.endBackgroundTask(self.taskIdentifier)
-        self.taskIdentifier = .invalid
     }
     
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
@@ -267,9 +220,22 @@ public class SDKSynchronizer: Synchronizer {
                            name: Notification.Name.blockProcessorHandledReOrg,
                            object: processor)
         
+        center.addObserver(self,
+                           selector: #selector(transactionsFound(_:)),
+                           name: Notification.Name.blockProcessorFoundTransactions,
+                           object: processor)
+        
     }
     
     // MARK: Block Processor notifications
+    
+    @objc func transactionsFound(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ConfirmedTransactionEntity] else {
+            return
+        }
+        NotificationCenter.default.post(name: .synchronizerFoundTransactions, object: self, userInfo: [ NotificationKeys.foundTransactions : foundTransactions])
+    }
     
     @objc func reorgDetected(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -361,56 +327,23 @@ public class SDKSynchronizer: Synchronizer {
         self.status = .disconnected
     }
     
-    // MARK: application notifications
-    @objc func applicationDidBecomeActive(_ notification: Notification) {
-        
-    }
-    
-    @objc func applicationDidEnterBackground(_ notification: Notification) {
-        if !self.isBackgroundAllowed {
-            do {
-                try self.stop()
-            } catch {
-                self.status = .disconnected
-            }
-        }
-    }
-    
-    @objc func applicationWillEnterForeground(_ notification: Notification) {
-        guard !self.isFirstApplicationStart else {
-            self.isFirstApplicationStart = false
-            return
-        }
-        let status = self.status
-        LoggerProxy.debug("applicationWillEnterForeground")
-        invalidateBackgroundActivity()
-        if status == .stopped || status == .disconnected {
-            do {
-                try start()
-            } catch {
-                self.status = .disconnected
-            }
-        }
-    }
-    
-    @objc func applicationWillResignActive(_ notification: Notification) {
-        registerBackgroundActivity()
-        LoggerProxy.debug("applicationWillResignActive")
-//        do {
-//
-//            try stop()
-//        } catch {
-//            LoggerProxy.debug("stop failed with error: \(error)")
-//        }
-    }
-    
-    @objc func applicationWillTerminate(_ notification: Notification) {
-        stop()
-    }
-    
     // MARK: Synchronizer methods
     
     public func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
+        
+        initializer.downloadParametersIfNeeded { (downloadResult) in
+            DispatchQueue.main.async { [weak self] in
+                switch downloadResult {
+                case .success:
+                    self?.createToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo, from: accountIndex, resultBlock: resultBlock)
+                case .failure(let error):
+                    resultBlock(.failure(SynchronizerError.parameterMissing(underlyingError: error)))
+                }
+            }
+        }
+    }
+    
+    func createToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         
         do {
             let spend = try transactionManager.initSpend(zatoshi: Int(zatoshi), toAddress: toAddress, memo: memo, from: accountIndex)
@@ -439,7 +372,6 @@ public class SDKSynchronizer: Synchronizer {
             resultBlock(.failure(error))
         }
     }
-    
     public func getAddress(accountIndex: Int) -> String {
         initializer.getAddress(index: accountIndex) ?? ""
     }
@@ -464,8 +396,24 @@ public class SDKSynchronizer: Synchronizer {
         try transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
     }
     
+    public func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
+        try transactionRepository.findAll(from: transaction, limit: limit)
+    }
+    
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
+    }
+    
+    public func latestDownloadedHeight() throws -> BlockHeight {
+        try initializer.downloader.lastDownloadedBlockHeight()
+    }
+    
+    public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
+        initializer.downloader.latestBlockHeight(result: result)
+    }
+    
+    public func latestHeight() throws -> BlockHeight {
+        try initializer.downloader.latestBlockHeight()
     }
     
     // MARK: notify state

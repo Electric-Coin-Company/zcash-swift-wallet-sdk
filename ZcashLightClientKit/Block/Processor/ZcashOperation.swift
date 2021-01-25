@@ -52,7 +52,7 @@ class ZcashOperation: Operation {
         self.dependencies.first { $0.isCancelled } != nil
     }
     
-    func fail() {
+    func fail(error: Error? = nil) {
         defer {
             self.cancel()
         }
@@ -63,7 +63,8 @@ class ZcashOperation: Operation {
         }
         
         self.handlerDispatchQueue.async { [weak self] in
-            errorHandler(self?.error ?? ZcashOperationError.unknown)
+            let e = error ?? (self?.error ?? ZcashOperationError.unknown)
+            errorHandler(e)
         }
         
     }

@@ -34,10 +34,18 @@ fi
 
 echo "Building Rust backend"
 echo ""
-echo "cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --release"
+echo "platform name"
+echo $PLATFORM_NAME
+if [ $PLATFORM_NAME = "iphonesimulator" ]; then
+    ZCASH_ACTIVE_ARCHITECTURE="x86_64-apple-ios"
+else 
+    ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios"
+fi
+
+echo "cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --targets $ZCASH_ACTIVE_ARCHITECTURE --release"
 
 if [ ! -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ]; then
-    cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --release
+    cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --targets $ZCASH_ACTIVE_ARCHITECTURE --release
     persist_environment
 fi
 

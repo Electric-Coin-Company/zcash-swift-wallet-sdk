@@ -204,14 +204,3 @@ internal final class DarksideStreamerClient: GRPCClient, DarksideStreamerClientP
 
 }
 
-
-// Provides conformance to `GRPCPayload` for request and response messages
-extension DarksideMetaState: GRPCProtobufPayload {}
-//extension Empty: GRPCProtobufPayload {}
-extension DarksideBlock: GRPCProtobufPayload {}
-extension DarksideBlocksURL: GRPCProtobufPayload {}
-extension DarksideEmptyBlocks: GRPCProtobufPayload {}
-//extension RawTransaction: GRPCProtobufPayload {}
-extension DarksideTransactionsURL: GRPCProtobufPayload {}
-extension DarksideHeight: GRPCProtobufPayload {}
-

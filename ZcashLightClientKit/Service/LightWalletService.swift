@@ -50,9 +50,9 @@ extension LightWalletServiceError: Equatable {
             default:
                 return false
             }
-        case .sentFailed(_):
+        case .sentFailed:
             switch rhs {
-            case .sentFailed(_):
+            case .sentFailed:
                 return true
             default:
                 return false

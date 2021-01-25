@@ -67,11 +67,11 @@ func __dataDbURL() throws -> URL {
 }
 
 func __spendParamsURL() throws -> URL {
-    URL(string: Bundle.testBundle.url(forResource: "sapling-spend", withExtension: "params")!.path)!
+    try __documentsDirectory().appendingPathComponent("sapling-spend.params")
 }
 
 func __outputParamsURL() throws -> URL {
-    URL(string: Bundle.testBundle.url(forResource: "sapling-output", withExtension: "params")!.path)!
+    try __documentsDirectory().appendingPathComponent("sapling-output.params")
 }
 
 func copyParametersToDocuments() throws -> (spend: URL, output: URL) {
@@ -112,7 +112,7 @@ extension Bundle {
 }
 
 
-class TestSeed: SeedProvider {
+class TestSeed {
     
     /**
      test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"

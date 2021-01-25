@@ -21,6 +21,7 @@ public enum SynchronizerError: Error {
     case networkTimeout
     case uncategorized(underlyingError: Error)
     case criticalError
+    case parameterMissing(underlyingError: Error)
 }
 
 /**
@@ -104,6 +105,31 @@ public protocol Synchronizer {
      */
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
     
+    /**
+     Returns a list of confirmed transactions that preceed the given transaction with a limit count.
+     - Parameters:
+       - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
+       - limit: the maximum amount of items this should return if available
+     - Returns: an array with the given Transactions or nil
+     
+     */
+    func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
+    
+    /**
+        gets the latest downloaded height from the compact block cache
+     */
+    func latestDownloadedHeight() throws -> BlockHeight
+    
+    /**
+     Gets the latest block height from the provided Lightwallet endpoint
+     */
+    func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
+    
+    /**
+     Gets the latest block height from the provided Lightwallet endpoint
+     Blocking
+     */
+    func latestHeight() throws -> BlockHeight
 }
 
 /**
