@@ -122,6 +122,7 @@ public class CompactBlockProcessor {
         public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
         public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
         public var walletBirthday: BlockHeight
+        public var network: Network
         private(set) var saplingActivation: BlockHeight
         
         init (
@@ -132,7 +133,8 @@ public class CompactBlockProcessor {
                maxBackoffInterval: TimeInterval,
                rewindDistance: Int,
                walletBirthday: BlockHeight,
-               saplingActivation: BlockHeight
+               saplingActivation: BlockHeight,
+               network: Network
            ) {
             self.cacheDb = cacheDb
             self.dataDb = dataDb
@@ -141,14 +143,16 @@ public class CompactBlockProcessor {
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
             self.walletBirthday = walletBirthday
+            self.network = network
             self.saplingActivation = saplingActivation
         }
         
-        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT){
+        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, network: Network){
             self.cacheDb = cacheDb
             self.dataDb = dataDb
             self.walletBirthday = walletBirthday
             self.saplingActivation = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+            self.network = network
         }
     }
     /**
@@ -319,7 +323,7 @@ public class CompactBlockProcessor {
             return
         }
         
-        let birthday = WalletBirthday.birthday(with: config.walletBirthday)
+        let birthday = WalletBirthday.birthday(with: config.walletBirthday, network: config.network)
         
         do {
             try rustBackend.initDataDb(dbData: config.dataDb)
@@ -737,7 +741,7 @@ public extension CompactBlockProcessor.Configuration {
      */
     static var standard: CompactBlockProcessor.Configuration {
         let pathProvider = DefaultResourceProvider()
-        return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL, dataDb: pathProvider.dataDbURL)
+        return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL, dataDb: pathProvider.dataDbURL, network: "ZEC")
     }
 }
 

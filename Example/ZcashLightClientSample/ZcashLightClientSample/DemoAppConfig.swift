@@ -10,9 +10,9 @@ import Foundation
 import ZcashLightClientKit
 import MnemonicSwift
 struct DemoAppConfig {
-    static var host = ZcashSDK.isMainnet ? "localhost" : "lightwalletd.testnet.electriccoin.co"
-    static var port: Int = 9067
-    static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 663174 : 620_000
+    static var host = "light.virtualsoundnw.com"
+    static var port: Int = 9077
+    static var birthdayHeight: BlockHeight = 0
     static var network = ZcashSDK.isMainnet ? ZcashNetwork.mainNet : ZcashNetwork.testNet
     static var seed = ZcashSDK.isMainnet ? try! Mnemonic.deterministicSeedBytes(from: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread") : Array("testreferencealicetestreferencealice".utf8)
     static var address: String {
@@ -20,7 +20,7 @@ struct DemoAppConfig {
     }
     
     static var processorConfig: CompactBlockProcessor.Configuration {
-        var config = CompactBlockProcessor.Configuration(cacheDb: try! __cacheDbURL(), dataDb: try! __dataDbURL())
+        var config = CompactBlockProcessor.Configuration(cacheDb: try! __cacheDbURL(), dataDb: try! __dataDbURL(), network: "VRSC")
         config.walletBirthday = self.birthdayHeight
         return config
     }

@@ -155,7 +155,7 @@ public class Initializer {
        - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
      */
     
-    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
+    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight, network: Network) throws {
         let derivationTool = DerivationTool()
         for vk in viewingKeys {
             do {
@@ -173,7 +173,7 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        let birthday = WalletBirthday.birthday(with: walletBirthday)
+        let birthday = WalletBirthday.birthday(with: walletBirthday, network: network)
         
         do {
             try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
@@ -189,7 +189,8 @@ public class Initializer {
         
         let config = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL,
                                                          dataDb: dataDbURL,
-                                                         walletBirthday: birthday.height)
+                                                         walletBirthday: birthday.height,
+                                                         network: network)
         
         self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: config,
                                                                      downloader: self.downloader,

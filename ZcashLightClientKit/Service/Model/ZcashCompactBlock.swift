@@ -9,6 +9,7 @@
 import Foundation
 
 public typealias BlockHeight = Int
+public typealias Network = String
 public typealias CompactBlockRange = ClosedRange<BlockHeight>
 
 enum ZcashCompactBlockError: Error {

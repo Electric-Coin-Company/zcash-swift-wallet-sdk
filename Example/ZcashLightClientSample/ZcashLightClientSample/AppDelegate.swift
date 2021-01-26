@@ -41,7 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                      outputParamsURL: try! __outputParamsURL(),
                                      loggerProxy: loggerProxy)
             try! wallet.initialize(viewingKeys: try DerivationTool.default.deriveViewingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1),
-                                   walletBirthday: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
+                                   walletBirthday: BlockHeight(DemoAppConfig.birthdayHeight), network: "VRSC") // Init or DIE
             
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig.seed)
