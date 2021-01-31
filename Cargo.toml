@@ -44,7 +44,7 @@ lto = true
 mainnet = ["zcash_client_sqlite/mainnet"]
 
 [patch.crates-io]
-zcash_client_backend = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' } 
-zcash_client_sqlite = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' }
-zcash_primitives = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' }
-zcash_proofs = { git = 'https://github.com/zcash/librustzcash', rev = 'c289cf9d4b46d330c265006e5f796543f2744fe5' }
+zcash_client_backend = { git = 'https://github.com/michaeltout/librustzcash.git', branch = 'mutable_chain_network' } 
+zcash_client_sqlite = { git = 'https://github.com/michaeltout/librustzcash', branch = 'mutable_chain_network' }
+zcash_primitives = { git = 'https://github.com/michaeltout/librustzcash', branch = 'mutable_chain_network' }
+zcash_proofs = { git = 'https://github.com/michaeltout/librustzcash', branch = 'mutable_chain_network' }

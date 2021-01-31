@@ -32,6 +32,7 @@ use zcash_primitives::{
     block::BlockHash,
     consensus::BranchId,
     consensus::BlockHeight,
+    constants::{ChainNetwork},
     note_encryption::Memo,
     transaction::{components::Amount, Transaction},
     zip32::ExtendedFullViewingKey,
@@ -69,6 +70,13 @@ use zcash_primitives::constants::mainnet::B58_PUBKEY_ADDRESS_PREFIX;
 // use crate::extended_key::{key_index::KeyIndex, ExtendedPrivKey, ExtendedPubKey, KeySeed};
 // /////////////////////////////////////////////////////////////////////////////////////////////////
 
+fn string_to_network(coin_network_string: String) -> Option<CoinNetwork> {
+    match &coin_network_string[..] {
+        "VRSC" => Some(ChainNetwork::VRSC),
+        "ZEC" => Some(ChainNetwork::ZEC),
+        _ => None,
+    }
+}
 
 fn unwrap_exc_or<T>(exc: Result<T, ()>, def: T) -> T {
     match exc {
@@ -606,6 +614,7 @@ pub extern "C" fn zcashlc_validate_combined_chain(
     db_cache_len: usize,
     db_data: *const u8,
     db_data_len: usize,
+    chain_network_string: String
 ) -> i32 {
     let res = catch_panic(|| {
         let db_cache = Path::new(OsStr::from_bytes(unsafe {
@@ -615,7 +624,7 @@ pub extern "C" fn zcashlc_validate_combined_chain(
             slice::from_raw_parts(db_data, db_data_len)
         }));
         
-        if let Err(e) = validate_combined_chain(Network, &db_cache, &db_data) {
+        if let Err(e) = validate_combined_chain(Network, &db_cache, &db_data, string_to_network(chain_network_string).unwrap()) {
             match e.kind() {
                 ErrorKind::InvalidChain(upper_bound, _) => Ok(u32::from(*upper_bound) as i32),
                 _ => Err(format_err!("Error while validating chain: {}", e)),
@@ -637,13 +646,14 @@ pub extern "C" fn zcashlc_rewind_to_height(
     db_data: *const u8,
     db_data_len: usize,
     height: i32,
+    chain_network_string: String
 ) -> i32 {
     let res = catch_panic(|| {
         let db_data = Path::new(OsStr::from_bytes(unsafe {
             slice::from_raw_parts(db_data, db_data_len)
         }));
 
-        match rewind_to_height(Network,&db_data, BlockHeight::from(height as u32)) {
+        match rewind_to_height(Network,&db_data, BlockHeight::from(height as u32), string_to_network(chain_network_string).unwrap()) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!(
                 "Error while rewinding data DB to height {}: {}",
@@ -675,6 +685,7 @@ pub extern "C" fn zcashlc_scan_blocks(
     db_cache_len: usize,
     db_data: *const u8,
     db_data_len: usize,
+    chain_network_string: String
 ) -> i32 {
     let res = catch_panic(|| {
         let db_cache = Path::new(OsStr::from_bytes(unsafe {
@@ -684,7 +695,7 @@ pub extern "C" fn zcashlc_scan_blocks(
             slice::from_raw_parts(db_data, db_data_len)
         }));
 
-        match scan_cached_blocks(&Network, &db_cache, &db_data, None) {
+        match scan_cached_blocks(&Network, &db_cache, &db_data, None, string_to_network(chain_network_string).unwrap()) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while scanning blocks: {}", e)),
         }
@@ -698,6 +709,7 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     db_data_len: usize,
     tx: *const u8,
     tx_len: usize,
+    chain_network_string: String
 ) -> i32 {
     let res = catch_panic(|| {
         let db_data = Path::new(OsStr::from_bytes(unsafe {
@@ -706,7 +718,7 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
         let tx = Transaction::read(&tx_bytes[..])?;
 
-        match decrypt_and_store_transaction(&db_data, &Network, &tx) {
+        match decrypt_and_store_transaction(&db_data, &Network, &tx, string_to_network(chain_network_string).unwrap()) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while decrypting transaction: {}", e)),
         }
@@ -736,6 +748,7 @@ pub extern "C" fn zcashlc_create_to_address(
     spend_params_len: usize,
     output_params: *const u8,
     output_params_len: usize,
+    chain_network_string: String
 ) -> i64 {
     let res = catch_panic(|| {
         let branch_id = match BranchId::try_from(consensus_branch_id as u32) {
@@ -799,6 +812,7 @@ pub extern "C" fn zcashlc_create_to_address(
             value,
             Some(memo),
             OvkPolicy::Sender,
+            string_to_network(chain_network_string).unwrap()
         )
         .map_err(|e| format_err!("Error while sending funds: {}", e))
     });
@@ -806,9 +820,9 @@ pub extern "C" fn zcashlc_create_to_address(
 }
 
 #[no_mangle]
-pub extern "C" fn zcashlc_branch_id_for_height(height: i32) -> i32 {
+pub extern "C" fn zcashlc_branch_id_for_height(height: i32, chain_network_string: String) -> i32 {
     let res = catch_panic(|| {
-        let branch: BranchId = BranchId::for_height(&Network, BlockHeight::from(height as u32));
+        let branch: BranchId = BranchId::for_height(&Network, BlockHeight::from(height as u32), string_to_network(chain_network_string).unwrap());
         let branch_id: u32 = u32::from(branch);
         Ok(branch_id as i32)
     });

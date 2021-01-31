@@ -36,16 +36,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let wallet = Initializer(cacheDbURL:try! __cacheDbURL(),
                                      dataDbURL: try! __dataDbURL(),
                                      pendingDbURL: try! __pendingDbURL(),
+                                     chainNetwork: "VRSC",
                                      endpoint: DemoAppConfig.endpoint,
                                      spendParamsURL: try! __spendParamsURL(),
                                      outputParamsURL: try! __outputParamsURL(),
                                      loggerProxy: loggerProxy)
             try! wallet.initialize(viewingKeys: try DerivationTool.default.deriveViewingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1),
-                                   walletBirthday: BlockHeight(DemoAppConfig.birthdayHeight), network: "VRSC") // Init or DIE
+                                   walletBirthday: BlockHeight(DemoAppConfig.birthdayHeight)) // Init or DIE
             
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig.seed)
             storage!.privateKey = try! DerivationTool.default.deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
+            
             self.wallet = wallet
             return wallet
         }

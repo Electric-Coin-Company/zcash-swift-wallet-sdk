@@ -59,6 +59,7 @@ public class Initializer {
     private var lowerBoundHeight: BlockHeight
     private(set) var cacheDbURL: URL
     private(set) var dataDbURL: URL
+    private(set) var chainNetwork: String
     private(set) var pendingDbURL: URL
     private(set) var spendParamsURL: URL
     private(set) var outputParamsURL: URL
@@ -80,6 +81,7 @@ public class Initializer {
     convenience public init (cacheDbURL: URL,
                  dataDbURL: URL,
                  pendingDbURL: URL,
+                 chainNetwork: String,
                  endpoint: LightWalletEndpoint,
                  spendParamsURL: URL,
                  outputParamsURL: URL,
@@ -95,6 +97,7 @@ public class Initializer {
                   lowerBoundHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT,
                   cacheDbURL: cacheDbURL,
                   dataDbURL: dataDbURL,
+                  chainNetwork: chainNetwork,
                   pendingDbURL: pendingDbURL,
                   endpoint: endpoint,
                   service: lwdService,
@@ -114,6 +117,7 @@ public class Initializer {
          lowerBoundHeight: BlockHeight,
          cacheDbURL: URL,
          dataDbURL: URL,
+         chainNetwork: String,
          pendingDbURL: URL,
          endpoint: LightWalletEndpoint,
          service: LightWalletService,
@@ -130,6 +134,7 @@ public class Initializer {
         self.lowerBoundHeight = lowerBoundHeight
         self.cacheDbURL = cacheDbURL
         self.dataDbURL = dataDbURL
+        self.chainNetwork = chainNetwork
         self.pendingDbURL = pendingDbURL
         self.endpoint = endpoint
         self.spendParamsURL = spendParamsURL
@@ -155,7 +160,7 @@ public class Initializer {
        - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
      */
     
-    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight, network: Network) throws {
+    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
         let derivationTool = DerivationTool()
         for vk in viewingKeys {
             do {
@@ -173,7 +178,7 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        let birthday = WalletBirthday.birthday(with: walletBirthday, network: network)
+        let birthday = WalletBirthday.birthday(with: walletBirthday, network: chainNetwork)
         
         do {
             try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
@@ -190,7 +195,7 @@ public class Initializer {
         let config = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL,
                                                          dataDb: dataDbURL,
                                                          walletBirthday: birthday.height,
-                                                         network: network)
+                                                         network: chainNetwork)
         
         self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: config,
                                                                      downloader: self.downloader,

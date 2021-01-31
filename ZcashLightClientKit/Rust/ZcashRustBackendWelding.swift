@@ -129,14 +129,14 @@ public protocol ZcashRustBackendWelding {
      * `0` if there was an error during validation unrelated to chain validity.
      - Important: This function does not mutate either of the databases.
     */
-    static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32
+    static func validateCombinedChain(dbCache: URL, dbData: URL, chainNetwork: String) -> Int32
     /**
      rewinds the compact block storage to the given height. clears up all derived data as well
       - Parameters:
         - dbData: location of the data db file
         - height: height to rewind to
      */
-    static func rewindToHeight(dbData: URL, height: Int32) -> Bool
+    static func rewindToHeight(dbData: URL, height: Int32, chainNetwork: String) -> Bool
     
     /**
      Scans new blocks added to the cache for any transactions received by the tracked
@@ -156,7 +156,7 @@ public protocol ZcashRustBackendWelding {
         - dbData:  location of the data db file
      returns false if fails to scan.
     */
-    static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
+    static func scanBlocks(dbCache: URL, dbData: URL, chainNetwork: String) -> Bool
 
     /**
      Scans a transaction for any information that can be decrypted by the accounts in the
@@ -167,7 +167,7 @@ public protocol ZcashRustBackendWelding {
         - tx:     the transaction to decrypt
      returns false if fails to decrypt.
      */
-    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], chainNetwork: String) -> Bool
     
     /**
      Creates a transaction to the given address from the given account
@@ -182,7 +182,7 @@ public protocol ZcashRustBackendWelding {
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String, chainNetwork: String) -> Int64
     
     /**
      Derives a full viewing key from a seed
@@ -239,5 +239,5 @@ public protocol ZcashRustBackendWelding {
      Gets the consensus branch id for the given height
      - Parameter height: the height you what to know the branch id for
      */
-    static func consensusBranchIdFor(height: Int32) throws -> Int32
+    static func consensusBranchIdFor(height: Int32, chainNetwork: String) throws -> Int32
 }

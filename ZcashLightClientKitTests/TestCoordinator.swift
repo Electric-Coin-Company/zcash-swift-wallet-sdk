@@ -242,6 +242,7 @@ class TestSynchronizerBuilder {
             lowerBoundHeight: lowerBoundHeight,
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
+            chainNetwork: "ZEC",
             pendingDbURL: pendingDbURL,
             endpoint: endpoint,
             service: service,

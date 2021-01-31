@@ -21,11 +21,13 @@ class CompactBlockValidationOperation: ZcashOperation {
     
     private var cacheDb: URL
     private var dataDb: URL
+    private var chainNetwork: String
     
-    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL) {
+    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL, chainNetwork: String) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
+        self.chainNetwork = chainNetwork
         super.init()
     }
     
@@ -35,7 +37,7 @@ class CompactBlockValidationOperation: ZcashOperation {
             return
         }
         
-        let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb)
+        let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb, chainNetwork: chainNetwork)
         if result != ZcashRustBackendWeldingConstants.validChain {
             
             let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))

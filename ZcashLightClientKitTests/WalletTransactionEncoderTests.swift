@@ -82,7 +82,7 @@ class WalletTransactionEncoderTests: XCTestCase {
     func testSpendGlobalQueue() throws {
         var txId: Int64 = -1
         let expectation = XCTestExpectation(description: self.description)
-        let branchId = try rustBackend.consensusBranchIdFor(height: Int32(exactly: try repository.lastScannedHeight())!)
+        let branchId = try rustBackend.consensusBranchIdFor(height: Int32(exactly: try repository.lastScannedHeight())!, chainNetwork: "ZEC")
         DispatchQueue.global().async {
             
             txId = self.rustBackend.createToAddress(dbData: self.dataDbHandle.readWriteDb,
@@ -92,7 +92,8 @@ class WalletTransactionEncoderTests: XCTestCase {
                                                 value: Int64(self.zpend),
                                                 memo: nil,
                                                 spendParamsPath:  try! __spendParamsURL().path,
-                                                outputParamsPath: try! __outputParamsURL().path)
+                                                outputParamsPath: try! __outputParamsURL().path,
+                                                chainNetwork: "ZEC")
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 240)

@@ -15,12 +15,14 @@ class WalletTransactionEncoder: TransactionEncoder {
     private var outputParamsURL: URL
     private var spendParamsURL: URL
     private var dataDbURL: URL
+    private var chainNetwork: String
     
     init(rust: ZcashRustBackendWelding.Type,
          dataDb: URL,
          repository: TransactionRepository,
          outputParams: URL,
-         spendParams: URL) {
+         spendParams: URL,
+         chainNetwork: String) {
         
         self.rustBackend = rust
         self.dataDbURL = dataDb
@@ -28,6 +30,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
         self.queue = DispatchQueue(label: "wallet.transaction.encoder.serial.queue")
+        self.chainNetwork = chainNetwork
         
     }
     
@@ -36,7 +39,8 @@ class WalletTransactionEncoder: TransactionEncoder {
                   dataDb: initializer.dataDbURL,
                   repository: initializer.transactionRepository,
                   outputParams: initializer.outputParamsURL,
-                  spendParams: initializer.spendParamsURL)
+                  spendParams: initializer.spendParamsURL,
+                  chainNetwork: initializer.chainNetwork)
         
     }
     
@@ -80,7 +84,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw RustWeldingError.genericError(message: "could not convert \(scannedHeight)")
         }
         
-        let consensusBranchId = try rustBackend.consensusBranchIdFor(height: latestHeight)
+        let consensusBranchId = try rustBackend.consensusBranchIdFor(height: latestHeight, chainNetwork: self.chainNetwork)
                 
         let txId = rustBackend.createToAddress(dbData: self.dataDbURL,
                                                account: Int32(accountIndex),
@@ -90,7 +94,8 @@ class WalletTransactionEncoder: TransactionEncoder {
                                                value: Int64(zatoshi),
                                                memo: memo,
                                                spendParamsPath: self.spendParamsURL.path,
-                                               outputParamsPath: self.outputParamsURL.path)
+                                               outputParamsPath: self.outputParamsURL.path,
+                                               chainNetwork: self.chainNetwork)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")

@@ -421,7 +421,7 @@ public class CompactBlockProcessor {
             self.fail(error)
             
         }
-        let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb, chainNetwork: cfg.network)
         
         let downloadValidateAdapterOperation = BlockOperation { [weak validateChainOperation, weak downloadBlockOperation] in
 
@@ -459,7 +459,7 @@ public class CompactBlockProcessor {
             
         }
         
-        let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb, chainNetwork: cfg.network)
         
         let validateScanningAdapterOperation = BlockOperation { [weak scanBlocksOperation, weak validateChainOperation] in
             scanBlocksOperation?.error = validateChainOperation?.error
@@ -483,7 +483,7 @@ public class CompactBlockProcessor {
             self.fail(error)
         }
         
-        let enhanceOperation = CompactBlockEnhancementOperation(rustWelding: rustBackend, dataDb: config.dataDb, downloader: downloader, repository: transactionRepository, range: range.blockRange())
+        let enhanceOperation = CompactBlockEnhancementOperation(rustWelding: rustBackend, dataDb: config.dataDb, downloader: downloader, repository: transactionRepository, range: range.blockRange(), chainNetwork: config.network)
         
         enhanceOperation.startedHandler = {
             LoggerProxy.debug("Started Enhancing range: \(range)")
@@ -566,7 +566,7 @@ public class CompactBlockProcessor {
         // rewind
         
         let rewindHeight = determineLowerBound(errorHeight: height, consecutiveErrors: consecutiveChainValidationErrors, walletBirthday: self.config.walletBirthday)
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight)) else {
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), chainNetwork: config.network) else {
             fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }

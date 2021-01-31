@@ -49,7 +49,7 @@ class BlockScanOperationTests: XCTestCase {
         let blockCount = 100
         let range = ZcashSDK.SAPLING_ACTIVATION_HEIGHT ... ZcashSDK.SAPLING_ACTIVATION_HEIGHT + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)
-        let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL)
+        let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL, chainNetwork: "ZEC")
         
         downloadOperation.startedHandler = {
             downloadStartedExpect.fulfill()

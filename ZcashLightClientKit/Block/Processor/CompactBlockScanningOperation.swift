@@ -18,10 +18,12 @@ class CompactBlockScanningOperation: ZcashOperation {
     
     private var cacheDb: URL
     private var dataDb: URL
-    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL) {
+    private var chainNetwork: String
+    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL, chainNetwork: String) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
+        self.chainNetwork = chainNetwork
         super.init()
     }
     
@@ -30,7 +32,7 @@ class CompactBlockScanningOperation: ZcashOperation {
             cancel()
             return
         }
-        guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb) else {
+        guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, chainNetwork: self.chainNetwork) else {
             self.error = self.rustBackend.lastError() ?? ZcashOperationError.unknown
             LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
             self.fail()
