@@ -43,10 +43,15 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
-zcash_client_sqlite = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
-zcash_primitives = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
-zcash_proofs = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+#zcash_client_backend = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+#zcash_client_sqlite = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+#zcash_primitives = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+#zcash_proofs = {git = "https://github.com/pacu/librustzcash", branch = "autoshield-poc" }
+
+zcash_client_backend = { path = "/Users/pacu/Repos/ECC/pacu-librustzcash/zcash_client_backend" }
+zcash_client_sqlite = { path = "/Users/pacu/Repos/ECC/pacu-librustzcash/zcash_client_sqlite" }
+zcash_primitives = { path = "/Users/pacu/Repos/ECC/pacu-librustzcash/zcash_primitives" }
+zcash_proofs = { path = "/Users/pacu/Repos/ECC/pacu-librustzcash/zcash_proofs" }
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]

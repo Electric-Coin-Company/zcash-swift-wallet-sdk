@@ -79,8 +79,6 @@ public class SDKSynchronizer: Synchronizer {
         public static let error = "SDKSynchronizer.error"
     }
     
-    private static let shieldingThreshold: Int = 10000
-    
     public private(set) var status: Status {
         didSet {
             notify(status: status)
@@ -357,7 +355,7 @@ public class SDKSynchronizer: Synchronizer {
             let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
             let tBalance = try utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
             
-            guard tBalance.confirmed > Self.shieldingThreshold else {
+            guard tBalance.confirmed >= ZcashSDK.shieldingThreshold else {
                 resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
                 return
             }
@@ -520,7 +518,14 @@ public class SDKSynchronizer: Synchronizer {
     public func getUnshieldedBalance(address: String) throws -> UnshieldedBalance {
         do {
             let latestHeight = try self.latestDownloadedHeight()
-            return try utxoRepository.balance(address: address, latestHeight: latestHeight)
+            let cachedBalance = try utxoRepository.balance(address: address, latestHeight: latestHeight)
+            let pendingShieldingTxValue = try self.allPendingTransactions().filter({ (p) -> Bool in
+                p.isPending(currentHeight: try self.latestDownloadedHeight()) && p.toAddress == address
+            }).reduce(0, { (r, p) -> Int in
+                r + p.value
+            })
+            
+            return TransparentBalance(confirmed: max(0,cachedBalance.confirmed - Int64(pendingShieldingTxValue)), unconfirmed: cachedBalance.unconfirmed, address: address)
         } catch {
             throw SynchronizerError.uncategorized(underlyingError: error)
         }

@@ -25,7 +25,7 @@ use zcash_client_backend::{
 use zcash_client_sqlite::{
     error::SqliteClientError,
     wallet::{
-        init::{init_accounts_table, init_blocks_table, init_wallet_db},
+        init::{init_accounts_table, init_blocks_table, init_wallet_db}
     },
     BlockDB, NoteId, WalletDB,
     chain::get_confirmed_utxos_for_address,
@@ -616,7 +616,7 @@ pub extern "C" fn zcashlc_get_received_memo_as_utf8(
     let res = catch_panic(|| {
         let db_data = wallet_db(NETWORK, db_data, db_data_len)?;
 
-        let memo = match (&db_data).get_received_memo_as_utf8(NoteId(id_note)) {
+        let memo = match (&db_data).get_memo_as_utf8(NoteId::ReceivedNoteId(id_note)) {
             Ok(memo) => memo.unwrap_or_default(),
             Err(e) => return Err(format_err!("Error while fetching memo: {}", e)),
         };
@@ -642,7 +642,7 @@ pub extern "C" fn zcashlc_get_sent_memo_as_utf8(
         let db_data = wallet_db(NETWORK, db_data, db_data_len)?;
 
         let memo = (&db_data)
-            .get_sent_memo_as_utf8(NoteId(id_note))
+            .get_memo_as_utf8(NoteId::SentNoteId(id_note))
             .map(|memo| memo.unwrap_or_default())
             .map_err(|e| format_err!("Error while fetching memo: {}", e))?;
 

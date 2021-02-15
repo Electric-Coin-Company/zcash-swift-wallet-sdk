@@ -30,6 +30,20 @@ public enum ShieldFundsError: Error {
     case shieldingFailed(underlyingError: Error)
 }
 
+extension ShieldFundsError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .noUTXOFound:
+            return "Could not find UTXOs for the given t-address"
+        case .insuficientTransparentFunds:
+            return "You don't have enough confirmed transparent funds to perform a shielding transaction."
+        case .shieldingFailed(let underlyingError):
+            return "Shielding transaction failed. Reason: \(underlyingError)"
+        }
+    }
+}
+
+
 
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
@@ -88,9 +102,8 @@ public protocol Synchronizer {
     Sends zatoshi.
     - Parameter spendingKey: the key that allows spends to occur.
     - Parameter transparentSecretKey: the key that allows to spend transaprent funds
-    - Parameter zatoshi: the amount of zatoshi to send.
     - Parameter memo: the optional memo to include as part of the transaction.
-    - Parameter accountIndex: the optional account id to use. By default, the first account is used.
+    - Parameter accountIndex: the optional account id that will be used to shield  your funds to. By default, the first account is used.
     */
     func shieldFunds(spendingKey: String, transparentSecretKey: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
     

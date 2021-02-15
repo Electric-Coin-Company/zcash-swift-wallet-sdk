@@ -130,9 +130,10 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
                     table.select(TableColumns.valueZat.sum)
                         .filter(TableColumns.address == address)
                         .filter(TableColumns.height <= latestHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE)) ?? 0
-            let unconfirmed = try dbProvider.connection().scalar(
+            let total = try dbProvider.connection().scalar(
                 table.select(TableColumns.valueZat.sum)
                     .filter(TableColumns.address == address)) ?? 0
+            let unconfirmed = max(total - confirmed, 0)
             
             return TransparentBalance(confirmed: Int64(confirmed), unconfirmed: Int64(unconfirmed), address: address)
         } catch {
