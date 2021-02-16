@@ -22,6 +22,15 @@ class FakeChainBuilder {
     
     static let testnetPostCanopyTx = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/post-activation-txs/ecaa6c03709d70aa25446a81690b18ddb11daac96a03fe4b5cfd0d89a49fb963.txt"
     
+    static func buildSingleNoteChain(darksideWallet: DarksideWalletService) throws {
+        try darksideWallet.reset(saplingActivation: 663150)
+        try darksideWallet.useDataset(from: txMainnetBlockUrl)
+       
+        try darksideWallet.stageBlocksCreate(from: 663151, count: 100)
+        
+        try darksideWallet.stageTransaction(from: txUrls[663174]!, at: 663174)
+        
+    }
     static func buildChain(darksideWallet: DarksideWalletService) throws {
         try darksideWallet.reset(saplingActivation: 663150)
         try darksideWallet.useDataset(from: txMainnetBlockUrl)

@@ -12,15 +12,7 @@ import Foundation
  */
 public extension Data {
     func asZcashTransactionMemo() -> String? {
-        
-        self.withUnsafeBytes { (rawPointer) -> String? in
-            let unsafeBufferPointer = rawPointer.bindMemory(to: CChar.self)
-            if let unsafePointer = unsafeBufferPointer.baseAddress, let utf8Memo = String(validatingUTF8: unsafePointer) {
-                return utf8Memo.isEmpty ? nil : utf8Memo
-            } else {
-                return nil
-            }
-        }
+        String(data: self, encoding: .utf8)
     }
 }
 
