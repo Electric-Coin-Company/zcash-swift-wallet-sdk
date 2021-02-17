@@ -495,7 +495,7 @@ public class SDKSynchronizer: Synchronizer {
     /**
      gets the unshielded balance for the given address.
      */
-    public func latestUnshieldedBalance(address: String, result: @escaping (Result<UnshieldedBalance,Error>) -> Void) {
+    public func latestUnshieldedBalance(address: String, result: @escaping (Result<WalletBalance,Error>) -> Void) {
         latestUTXOs(address: address, result: { [weak self] (r) in
             
             guard let self = self else { return }
@@ -515,7 +515,7 @@ public class SDKSynchronizer: Synchronizer {
     /**
         gets the last stored unshielded balance
      */
-    public func getUnshieldedBalance(address: String) throws -> UnshieldedBalance {
+    public func getTransparentBalance(address: String) throws -> WalletBalance {
         do {
             let latestHeight = try self.latestDownloadedHeight()
             let cachedBalance = try utxoRepository.balance(address: address, latestHeight: latestHeight)

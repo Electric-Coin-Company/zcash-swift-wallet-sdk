@@ -44,6 +44,10 @@ extension ShieldFundsError: LocalizedError {
 }
 
 
+public protocol WalletBalance {
+    var confirmed: Int64 { get set }
+    var unconfirmed: Int64 { get set }
+}
 
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
@@ -171,6 +175,11 @@ public protocol Synchronizer {
     func latestUTXOs(address: String, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void)
     
     /**
+     Gets the latests UTXOs for the given address from the specified height on
+     */
+    func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
+    
+    /**
      gets the latest cached  UTXOs for the given t-address for the given address
      */
     func cachedUTXOs(address: String) throws -> [UnspentTransactionOutputEntity]
@@ -178,12 +187,13 @@ public protocol Synchronizer {
     /**
      gets the unshielded balance for the given address.
      */
-    func latestUnshieldedBalance(address: String, result: @escaping (Result<UnshieldedBalance,Error>) -> Void)
+    func latestUnshieldedBalance(address: String, result: @escaping (Result<WalletBalance,Error>) -> Void)
     
     /**
         gets the last stored unshielded balance
      */
-    func getUnshieldedBalance(address: String) throws -> UnshieldedBalance
+    func getTransparentBalance(address: String) throws -> WalletBalance
+    
 }
 
 /**

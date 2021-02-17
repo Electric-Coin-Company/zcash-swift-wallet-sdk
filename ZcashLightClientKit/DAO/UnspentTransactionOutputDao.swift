@@ -123,7 +123,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         }
     }
     
-    func balance(address: String, latestHeight: BlockHeight) throws -> UnshieldedBalance {
+    func balance(address: String, latestHeight: BlockHeight) throws -> WalletBalance {
         
         do {
             let confirmed = try dbProvider.connection().scalar(
@@ -142,7 +142,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     }
 }
 
-struct TransparentBalance: UnshieldedBalance {
+struct TransparentBalance: WalletBalance {
     var confirmed: Int64
     var unconfirmed: Int64
     var address: String

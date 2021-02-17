@@ -9,6 +9,34 @@
 import Foundation
 
 class ZcashRustBackend: ZcashRustBackendWelding {
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool {
+        
+        let dbData = dbData.osStr()
+        
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard zcashlc_put_utxo(dbData.0,
+                                dbData.1,
+                                [CChar](address.utf8CString),
+                                txid,
+                                UInt(txid.count),
+                                Int32(index),
+                                script,
+                                UInt(script.count),
+                                value,
+                                Int32(height)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+            
+        }
+        
+        return true
+    }
+    
     
     static func lastError() -> RustWeldingError? {
         guard let message = getLastError() else { return nil }
@@ -207,7 +235,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count)) != 0
     }
 
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32,to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
         let dbData = dbData.osStr()
         let memoBytes = memo ?? ""
         
@@ -215,7 +243,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                          dbData.1,
                                          account,
                                          [CChar](extsk.utf8CString),
-                                         consensusBranchId,
                                          [CChar](to.utf8CString),
                                          value,
                                          [CChar](memoBytes.utf8CString),
@@ -227,17 +254,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
         let dbData = dbData.osStr()
-        let dbCache = dbCache.osStr()
         let memoBytes = memo ?? ""
         
         return zcashlc_shield_funds(dbData.0,
                                     dbData.1,
-                                    dbCache.0,
-                                    dbCache.1,
                                     account,
-                                    tsk,
-                                    extsk,
-                                    memoBytes,
+                                    [CChar](tsk.utf8CString),
+                                    [CChar](extsk.utf8CString),
+                                    [CChar](memoBytes.utf8CString),
                                     spendParamsPath,
                                     UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                                     outputParamsPath,
@@ -329,9 +353,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zAddr
     }
     
-    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String? {
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
         
-        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count)) else {
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count), Int32(account), Int32(index)) else {
             if let error = lastError() {
                 throw error
             }
@@ -343,8 +367,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return tAddr
     }
     
-    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8]) throws -> String? {
-        guard let skCStr = zcashlc_derive_transparent_private_key_from_seed(seed, UInt(seed.count)) else {
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
+        guard let skCStr = zcashlc_derive_transparent_private_key_from_seed(seed, UInt(seed.count), Int32(account), Int32(index)) else {
             if let error = lastError() {
                 throw error
             }

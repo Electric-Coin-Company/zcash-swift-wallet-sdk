@@ -166,6 +166,18 @@ public protocol ZcashRustBackendWelding {
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
 
     /**
+     puts a UTXO into the data db database
+     - Parameters:
+       - dbData: location of the data db file
+       - address: the address of the UTXO
+       - txid: the txid bytes for the UTXO
+       - index: the index of the UTXO
+       - value: the value of the UTXO
+       - height: the mined height for the UTXO
+     - Returns: true if the operation succeded or false otherwise
+     */
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool
+    /**
      Scans a transaction for any information that can be decrypted by the accounts in the
      wallet, and saves it to the wallet.
 
@@ -188,7 +200,7 @@ public protocol ZcashRustBackendWelding {
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
     
     /**
      Creates a transaction to shield all found UTXOs in cache db.
@@ -253,14 +265,14 @@ public protocol ZcashRustBackendWelding {
      - Returns: an optional String containing the transparent address
      - Throws: RustBackendError if fatal error occurs
      */
-    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String?
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String?
     
     /**
         Derives a transparent secret key from Seed
       - Parameter seed: an array of bytes containing the seed
       - Returns: an optional String containing the transparent secret (private) key
      */
-    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8]) throws -> String?
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String?
     
     /**
         Derives a transparent address from a secret key

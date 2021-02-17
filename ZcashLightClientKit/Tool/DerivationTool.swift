@@ -77,12 +77,12 @@ public protocol KeyDeriving {
     // WIP probably shouldn't be used just yet. Why?
             //  - because we need the private key associated with this seed and this function doesn't return it.
             //  - the underlying implementation needs to be split out into a few lower-level calls
-    func deriveTransparentAddress(seed: [UInt8]) throws -> String
+    func deriveTransparentAddress(seed: [UInt8], account: Int, index: Int) throws -> String
     
     /**
      Derives a SecretKey to spend transparent funds from the given seed
      */
-    func deriveTransparentPrivateKey(seed: [UInt8]) throws -> String
+    func deriveTransparentPrivateKey(seed: [UInt8], account: Int, index: Int) throws -> String
     
     /**
      Derives a transparent address from the given transparent Secret Key
@@ -215,9 +215,9 @@ public class DerivationTool: KeyDeriving {
     // WIP probably shouldn't be used just yet. Why?
             //  - because we need the private key associated with this seed and this function doesn't return it.
             //  - the underlying implementation needs to be split out into a few lower-level calls
-    public func deriveTransparentAddress(seed: [UInt8]) throws -> String {
+    public func deriveTransparentAddress(seed: [UInt8], account: Int = 0, index: Int = 0) throws -> String {
         do {
-            guard let zaddr = try rustwelding.deriveTransparentAddressFromSeed(seed: seed) else {
+            guard let zaddr = try rustwelding.deriveTransparentAddressFromSeed(seed: seed, account: account, index: index) else {
                 throw KeyDerivationErrors.unableToDerive
             }
             return zaddr
@@ -237,9 +237,9 @@ public class DerivationTool: KeyDeriving {
       -  KeyDerivationErrors.derivationError with the underlying error when it fails
       - KeyDerivationErrors.unableToDerive when there's an unknown error
      */
-    public func deriveTransparentPrivateKey(seed: [UInt8]) throws -> String {
+    public func deriveTransparentPrivateKey(seed: [UInt8], account: Int = 0, index: Int = 0) throws -> String {
         do {
-            guard let sk = try rustwelding.deriveTransparentPrivateKeyFromSeed(seed: seed) else {
+            guard let sk = try rustwelding.deriveTransparentPrivateKeyFromSeed(seed: seed, account: account, index: index) else {
                 throw KeyDerivationErrors.unableToDerive
             }
             return sk 
@@ -276,6 +276,12 @@ extension DerivationTool: KeyValidation {
     }
     
     
+    /**
+     Derives the transparent address from a WIF Private Key
+     - Throws:
+      -  KeyDerivationErrors.derivationError with the underlying error when it fails
+      - KeyDerivationErrors.unableToDerive when there's an unknown error
+     */
     public func deriveTransparentAddressFromPrivateKey(_ tsk: String) throws -> String {
         do {
             guard let tAddr = try rustwelding.deriveTransparentAddressFromSecretKey(tsk) else {
