@@ -49,6 +49,13 @@ public protocol ZcashRustBackendWelding {
     static func isValidTransparentAddress(_ address: String) throws -> Bool
     
     /**
+     - Returns: true when the address is valid and transparent. false in any other case
+     - Throws: Error when there's another problem not related to validity of the string in question
+    */
+    static func isValidExtendedFullViewingKey(_ key: String) throws -> Bool
+    
+    
+    /**
     initialize the accounts table from a given seed and a number of accounts
      - Parameters:
        - dbData: location of the data db
