@@ -539,7 +539,7 @@ public class CompactBlockProcessor {
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
                                         object: self,
                                         userInfo: [ CompactBlockProcessorNotificationKey.progress : progress,
-                                                    CompactBlockProcessorNotificationKey.progressHeight : self.latestBlockHeight])
+                                                    CompactBlockProcessorNotificationKey.progressHeight : completedRange.upperBound])
     }
     
     func notifyTransactions(_ txs: [ConfirmedTransactionEntity], in range: BlockRange) {
