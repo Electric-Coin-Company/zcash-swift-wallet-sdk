@@ -159,7 +159,9 @@ public class Initializer {
         let derivationTool = DerivationTool()
         for vk in viewingKeys {
             do {
-                try derivationTool.validateViewingKey(viewingKey: vk)
+                guard try derivationTool.isValidExtendedViewingKey(vk) else {
+                    throw InitializerError.invalidViewingKey(key: vk)
+                }
             } catch {
                 throw InitializerError.invalidViewingKey(key: vk)
             }

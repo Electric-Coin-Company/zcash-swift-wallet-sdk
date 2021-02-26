@@ -7,6 +7,16 @@
 
 import Foundation
 
+public protocol KeyValidation {
+    
+    func isValidExtendedViewingKey(_ extvk: String) throws -> Bool
+    
+    func isValidTransparentAddress(_ tAddress: String) throws -> Bool
+    
+    func isValidShieldedAddress(_ zAddress: String) throws -> Bool
+    
+}
+
 public protocol KeyDeriving {
     /**
      Given a seed and a number of accounts, return the associated viewing keys.
@@ -62,7 +72,6 @@ public protocol KeyDeriving {
             //  - the underlying implementation needs to be split out into a few lower-level calls
     func deriveTransparentAddress(seed: [UInt8]) throws -> String
     
-    func validateViewingKey(viewingKey: String) throws
 }
 
 public enum KeyDerivationErrors: Error {
@@ -200,8 +209,33 @@ public class DerivationTool: KeyDeriving {
         }
     }
     
-    public func validateViewingKey(viewingKey: String) throws {
-                // TODO
+}
+
+extension DerivationTool: KeyValidation {
+    
+    public func isValidExtendedViewingKey(_ extvk: String) throws -> Bool {
+        do {
+            return try rustwelding.isValidExtendedFullViewingKey(extvk)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
     }
+    
+    public func isValidTransparentAddress(_ tAddress: String) throws -> Bool {
+        do {
+            return try rustwelding.isValidTransparentAddress(tAddress)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+    
+    public func isValidShieldedAddress(_ zAddress: String) throws -> Bool {
+        do {
+            return try rustwelding.isValidShieldedAddress(zAddress)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+    
     
 }

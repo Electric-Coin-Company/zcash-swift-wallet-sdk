@@ -190,6 +190,8 @@ bool zcashlc_is_valid_shielded_address(const char *address);
  */
 bool zcashlc_is_valid_transparent_address(const char *address);
 
+bool zcashlc_is_valid_viewing_key(const char *key);
+
 /**
  * Returns the length of the last error message to be logged.
  */
