@@ -503,7 +503,7 @@ pub unsafe extern "C" fn zcashlc_is_valid_viewing_key(key: *const c_char) -> boo
     let res = catch_panic(|| {
         let vkstr = CStr::from_ptr(key).to_str()?;
         
-        match decode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, &vkstr) {
+        match decode_extended_full_viewing_key(&NETWORK.hrp_sapling_extended_full_viewing_key(), &vkstr) {
             Ok(s) => match s {
                 None => Ok(false),
                 _ => Ok(true),
@@ -844,15 +844,14 @@ pub extern "C" fn zcashlc_put_utxo(
         txid.copy_from_slice(&txid_bytes);
 
         let script_bytes = unsafe { slice::from_raw_parts(script_bytes, script_bytes_len) };
-        let mut script = [0u8; 32];
-        script.copy_from_slice(&script_bytes);
+        let script = script_bytes.to_vec();
         
         let address = TransparentAddress::decode(&NETWORK, &addr).unwrap();
 
         let output = WalletTransparentOutput {
             address: address,
             outpoint: OutPoint::new(txid, index as u32),
-            script: script.to_vec(),
+            script: script,
             value: Amount::from_i64(value).unwrap(),
             height: BlockHeight::from(height as u32),
         };
