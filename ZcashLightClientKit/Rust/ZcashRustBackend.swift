@@ -9,34 +9,6 @@
 import Foundation
 
 class ZcashRustBackend: ZcashRustBackendWelding {
-    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool {
-        
-        let dbData = dbData.osStr()
-        
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            throw RustWeldingError.malformedStringInput
-        }
-        
-        guard zcashlc_put_utxo(dbData.0,
-                                dbData.1,
-                                [CChar](address.utf8CString),
-                                txid,
-                                UInt(txid.count),
-                                Int32(index),
-                                script,
-                                UInt(script.count),
-                                value,
-                                Int32(height)) else {
-            if let error = lastError() {
-                throw error
-            }
-            return false
-            
-        }
-        
-        return true
-    }
-    
     
     static func lastError() -> RustWeldingError? {
         guard let message = getLastError() else { return nil }
@@ -191,6 +163,57 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func getVerifiedBalance(dbData: URL, account: Int32) -> Int64 {
         let dbData = dbData.osStr()
         return zcashlc_get_verified_balance(dbData.0, dbData.1, account)
+    }
+    
+    static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let dbData = dbData.osStr()
+        
+        return zcashlc_get_verified_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString))
+    }
+    
+    static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let dbData = dbData.osStr()
+        return zcashlc_get_total_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString))
+    }
+    
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool {
+        
+        let dbData = dbData.osStr()
+        
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard zcashlc_put_utxo(dbData.0,
+                                dbData.1,
+                                [CChar](address.utf8CString),
+                                txid,
+                                UInt(txid.count),
+                                Int32(index),
+                                script,
+                                UInt(script.count),
+                                value,
+                                Int32(height)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+        return true
+    }
+    
+    static func downloadedUtxoBalance(dbData: URL, address: String) throws -> WalletBalance {
+        let verified = try getVerifiedTransparentBalance(dbData: dbData, address: address)
+        let total = try getTransparentBalance(dbData: dbData, address: address)
+        return TransparentBalance(verified: verified, total: total, address: address)
     }
     
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {

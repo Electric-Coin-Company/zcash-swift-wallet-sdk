@@ -65,8 +65,7 @@ public class Initializer {
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
     private(set) var downloader: CompactBlockDownloader
-    private(set) var processor: CompactBlockProcessor?
-
+    private(set) public var walletBirthday: WalletBirthday?
     /**
      Constructs the Initializer
      - Parameters:
@@ -176,7 +175,7 @@ public class Initializer {
         }
         
         let birthday = WalletBirthday.birthday(with: walletBirthday)
-        
+        self.walletBirthday = birthday
         do {
             try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
         } catch RustWeldingError.dataDbNotEmpty {
@@ -188,16 +187,7 @@ public class Initializer {
         let lastDownloaded = (try? downloader.storage.latestHeight()) ?? birthday.height
         // resume from last downloaded block
         lowerBoundHeight = max(birthday.height, lastDownloaded)
-        
-        let config = CompactBlockProcessor.Configuration(cacheDb: cacheDbURL,
-                                                         dataDb: dataDbURL,
-                                                         walletBirthday: birthday.height)
-        
-        self.processor = CompactBlockProcessorBuilder.buildProcessor(configuration: config,
-                                                                     downloader: self.downloader,
-                                                                     transactionRepository: transactionRepository,
-                                                                     backend: rustBackend)
-        
+ 
         do {
             guard try rustBackend.initAccountsTable(dbData: dataDbURL, exfvks: viewingKeys) else {
                 throw rustBackend.lastError() ?? InitializerError.accountInitFailed
@@ -244,16 +234,6 @@ public class Initializer {
      */
     public func isValidTransparentAddress(_ address: String) -> Bool {
         (try? rustBackend.isValidTransparentAddress(address)) ?? false
-    }
-    
-    /**
-     underlying CompactBlockProcessor for this initializer
-     
-     Although it is recommended to always use the higher abstraction first, if you need a more fine grained control over synchronization, you can use a CompactBlockProcessor instead of a Synchronizer.
-     
-     */
-    public func blockProcessor() -> CompactBlockProcessor? {
-        self.processor
     }
     
     func isSpendParameterPresent() -> Bool {

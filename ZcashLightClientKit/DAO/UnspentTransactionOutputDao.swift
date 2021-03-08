@@ -126,16 +126,15 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     func balance(address: String, latestHeight: BlockHeight) throws -> WalletBalance {
         
         do {
-            let confirmed = try dbProvider.connection().scalar(
+            let verified = try dbProvider.connection().scalar(
                     table.select(TableColumns.valueZat.sum)
                         .filter(TableColumns.address == address)
                         .filter(TableColumns.height <= latestHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE)) ?? 0
             let total = try dbProvider.connection().scalar(
                 table.select(TableColumns.valueZat.sum)
                     .filter(TableColumns.address == address)) ?? 0
-            let unconfirmed = max(total - confirmed, 0)
             
-            return TransparentBalance(confirmed: Int64(confirmed), unconfirmed: Int64(unconfirmed), address: address)
+            return TransparentBalance(verified: Int64(verified), total: Int64(total), address: address)
         } catch {
             throw StorageError.operationFailed
         }
@@ -143,14 +142,14 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
 }
 
 struct TransparentBalance: WalletBalance {
-    var confirmed: Int64
-    var unconfirmed: Int64
+    var verified: Int64
+    var total: Int64
     var address: String
 }
 
 class UTXORepositoryBuilder {
     static func build(initializer: Initializer) throws -> UnspentTransactionOutputRepository {
-        let dao = UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.cacheDbURL.path))
+        let dao = UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path))
         try dao.createTableIfNeeded()
         return dao
     }

@@ -42,16 +42,17 @@ class GetUTXOsViewController: UIViewController {
             return
         }
         KRProgressHUD.showMessage("fetching")
-        AppDelegate.shared.sharedSynchronizer.latestUTXOs(address: tAddr) { (result) in
+        AppDelegate.shared.sharedSynchronizer.refreshUTXOs(address: tAddr) { (result) in
             DispatchQueue.main.async { [weak self] in
                 KRProgressHUD.dismiss()
                 switch result {
                 case .success(let utxos):
                     do {
-                        let balance = try AppDelegate.shared.sharedSynchronizer.getUnshieldedBalance(address: tAddr)
+                        let balance = try AppDelegate.shared.sharedSynchronizer.getTransparentBalance(address: tAddr)
                     
                         self?.messageLabel.text  = """
-                            found \(utxos.count) UTXOs for address \(tAddr)
+                            Stored \(utxos.inserted.count) UTXOs for address \(tAddr)
+                            \(utxos.skipped.count) Skipped
                             \(balance)
                         """
                     } catch {
@@ -121,12 +122,12 @@ extension GetUTXOsViewController: UITextFieldDelegate {
 }
 
 
-extension UnshieldedBalance {
+extension WalletBalance {
     var description: String {
         """
-        UnshieldedBalance:
-            confirmed: \(self.confirmed)
-            unconfirmed:\(self.unconfirmed)
+        WalletBalance:
+            verified: \(self.verified)
+            Total: \(self.total)
         """
     }
 }

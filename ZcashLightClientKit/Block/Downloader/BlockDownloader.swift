@@ -82,6 +82,8 @@ public protocol CompactBlockDownloading {
      - Parameter result: a handler for the result of the operation
      */
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void)
+    
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
 }
 
 /**
@@ -105,6 +107,16 @@ class CompactBlockDownloader {
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
+        lightwalletService.fetchUTXOs(for: tAddress, height: startHeight) { (r) in
+            switch r {
+            case .success(let utxos):
+                result(.success(utxos))
+            case .failure(let error):
+                result(.failure(error))
+            }
+        }
+    }
     
     func latestBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         lightwalletService.latestBlockHeight { (r) in

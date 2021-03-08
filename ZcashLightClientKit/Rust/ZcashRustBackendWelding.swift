@@ -106,6 +106,16 @@ public protocol ZcashRustBackendWelding {
         - account: index of the given account
      */
     static func getVerifiedBalance(dbData: URL, account: Int32) -> Int64
+    
+    /**
+     Get the verified cached transparent balance for the given address
+     */
+    static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64
+    
+    /**
+     Get the verified cached transparent balance for the given address
+     */
+    static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 
     /**
     get received memo from note
     - Parameters:
@@ -177,6 +187,17 @@ public protocol ZcashRustBackendWelding {
      - Returns: true if the operation succeded or false otherwise
      */
     static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool
+    
+    /**
+        Gets the balance of the previously downloaded UTXOs
+     - Parameters:
+       - dbData: location of the data db file
+       - address: the address of the UTXO
+     - Returns: the wallet balance containing verified and total balance.
+     - Throws: Rustwelding Error if something fails
+     */
+    static func downloadedUtxoBalance(dbData: URL, address: String) throws -> WalletBalance
+    
     /**
      Scans a transaction for any information that can be decrypted by the accounts in the
      wallet, and saves it to the wallet.

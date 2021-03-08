@@ -212,9 +212,6 @@ public class DerivationTool: KeyDeriving {
         }
     }
     
-    // WIP probably shouldn't be used just yet. Why?
-            //  - because we need the private key associated with this seed and this function doesn't return it.
-            //  - the underlying implementation needs to be split out into a few lower-level calls
     public func deriveTransparentAddress(seed: [UInt8], account: Int = 0, index: Int = 0) throws -> String {
         do {
             guard let zaddr = try rustwelding.deriveTransparentAddressFromSeed(seed: seed, account: account, index: index) else {

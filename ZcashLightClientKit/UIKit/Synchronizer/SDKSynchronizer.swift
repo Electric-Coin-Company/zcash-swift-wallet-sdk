@@ -70,7 +70,7 @@ public extension Notification.Name {
  Synchronizer implementation for UIKit and iOS 12+
  */
 public class SDKSynchronizer: Synchronizer {
-
+    
     public struct NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
@@ -85,7 +85,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     public private(set) var progress: Float = 0.0
-    public private(set) var blockProcessor: CompactBlockProcessor?
+    public private(set) var blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
     
     private var transactionManager: OutboundTransactionManager
@@ -98,11 +98,14 @@ public class SDKSynchronizer: Synchronizer {
      */
     public convenience init(initializer: Initializer) throws {
         
-        self.init(status: .disconnected,
+        var config = CompactBlockProcessor.Configuration(cacheDb: initializer.cacheDbURL, dataDb: initializer.dataDbURL)
+        
+        try self.init(status: .disconnected,
                   initializer: initializer,
                   transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
                   transactionRepository: initializer.transactionRepository,
-                  utxoRepository: try UTXORepositoryBuilder.build(initializer: initializer))
+                  utxoRepository: try UTXORepositoryBuilder.build(initializer: initializer),
+                  blockProcessor: CompactBlockProcessor(initializer: initializer))
         
     }
     
@@ -110,42 +113,34 @@ public class SDKSynchronizer: Synchronizer {
          initializer: Initializer,
          transactionManager: OutboundTransactionManager,
          transactionRepository: TransactionRepository,
-         utxoRepository: UnspentTransactionOutputRepository) {
+         utxoRepository: UnspentTransactionOutputRepository,
+         blockProcessor: CompactBlockProcessor) throws {
         self.status = status
         self.initializer = initializer
         self.transactionManager = transactionManager
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
+        self.blockProcessor = blockProcessor
+        self.subscribeToProcessorNotifications(self.blockProcessor)
+        
     }
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-        self.blockProcessor?.stop()
-        self.blockProcessor = nil
-        
+        self.blockProcessor.stop()
     }
     
-    private func lazyInitialize() throws {
-        guard self.blockProcessor == nil else { return }
-        guard let processor = initializer.blockProcessor() else {
-            throw SynchronizerError.generalError(message: "compact block processor initialization failed")
-        }
-        
-        subscribeToProcessorNotifications(processor)
-        
-        self.blockProcessor = processor
+    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
+        try self.initializer.initialize(viewingKeys: viewingKeys, walletBirthday: walletBirthday)
+        try self.blockProcessor.setStartHeight(WalletBirthday.birthday(with: walletBirthday).height)
     }
+    
     /**
      Starts the synchronizer
      - Throws: CompactBlockProcessorError when failures occur
      */
     public func start(retry: Bool = false) throws {
-        
-        try lazyInitialize()
-        
-        guard let processor = self.blockProcessor else {
-            throw SynchronizerError.generalError(message: "compact block processor initialization failed")
-        }
+
         
         guard status == .stopped || status == .disconnected || status == .synced else {
             assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
@@ -153,7 +148,7 @@ public class SDKSynchronizer: Synchronizer {
         }
         
         do {
-            try processor.start(retry: retry)
+            try blockProcessor.start(retry: retry)
         } catch {
             throw mapError(error)
         }
@@ -166,9 +161,7 @@ public class SDKSynchronizer: Synchronizer {
      
         guard status != .stopped, status != .disconnected else { return }
         
-        guard let processor = self.blockProcessor else { return }
-        
-        processor.stop(cancelTasks: true)
+        blockProcessor.stop(cancelTasks: true)
     }
     
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
@@ -355,14 +348,14 @@ public class SDKSynchronizer: Synchronizer {
             let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
             let tBalance = try utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
             
-            guard tBalance.confirmed >= ZcashSDK.shieldingThreshold else {
+            guard tBalance.verified >= ZcashSDK.shieldingThreshold else {
                 resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
                 return
             }
             let vk = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
             let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: vk)
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: Int(tBalance.confirmed), toAddress: zAddr, memo: memo, from: 0)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: Int(tBalance.verified), toAddress: zAddr, memo: memo, from: 0)
             
             transactionManager.encodeShieldingTransaction(spendingKey: spendingKey, tsk: transparentSecretKey, pendingTransaction: shieldingSpend) {[weak self] (result) in
                 guard let self = self else { return }
@@ -421,7 +414,7 @@ public class SDKSynchronizer: Synchronizer {
             resultBlock(.failure(error))
         }
     }
-    public func getAddress(accountIndex: Int) -> String {
+    public func getShieldedAddress(accountIndex: Int) -> String {
         initializer.getAddress(index: accountIndex) ?? ""
     }
     
@@ -471,7 +464,7 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        initializer.lightWalletService.fetchUTXOs(for: address, result: { [weak self] r in
+        initializer.lightWalletService.fetchUTXOs(for: address, height: ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: { [weak self] r in
             guard let self = self else { return }
             switch r {
             case .success(let utxos):
@@ -512,20 +505,25 @@ public class SDKSynchronizer: Synchronizer {
         })
     }
     
+    public func refreshUTXOs(address: String, from height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
+        
+        self.blockProcessor.downloadUTXOs(tAddress: address, startHeight: height, result: result)
+    }
+    
+    public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
+        initializer.getBalance(account: accountIndex)
+    }
+    
+    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Int64 {
+        initializer.getVerifiedBalance(account: accountIndex)
+    }
+    
     /**
         gets the last stored unshielded balance
      */
     public func getTransparentBalance(address: String) throws -> WalletBalance {
         do {
-            let latestHeight = try self.latestDownloadedHeight()
-            let cachedBalance = try utxoRepository.balance(address: address, latestHeight: latestHeight)
-            let pendingShieldingTxValue = try self.allPendingTransactions().filter({ (p) -> Bool in
-                p.isPending(currentHeight: try self.latestDownloadedHeight()) && p.toAddress == address
-            }).reduce(0, { (r, p) -> Int in
-                r + p.value
-            })
-            
-            return TransparentBalance(confirmed: max(0,cachedBalance.confirmed - Int64(pendingShieldingTxValue)), unconfirmed: cachedBalance.unconfirmed, address: address)
+            return try self.blockProcessor.utxoCacheBalance(tAddress: address)
         } catch {
             throw SynchronizerError.uncategorized(underlyingError: error)
         }

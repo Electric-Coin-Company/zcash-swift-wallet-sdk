@@ -29,7 +29,7 @@ class SyncBlocksViewController: UIViewController {
         
         let wallet = Initializer.shared
         
-        processor = wallet.blockProcessor()
+        processor = CompactBlockProcessor(initializer: wallet)
         
         statusLabel.text = textFor(state: processor?.state ?? .stopped)
         progressBar.progress = 0

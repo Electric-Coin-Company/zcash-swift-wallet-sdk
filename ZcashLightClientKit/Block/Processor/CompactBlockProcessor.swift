@@ -8,6 +8,8 @@
 
 import Foundation
 import GRPC
+
+public typealias RefreshedUTXOs = (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 /**
  
  Errors thrown by CompactBlock Processor
@@ -219,6 +221,22 @@ public class CompactBlockProcessor {
     }
     
     /**
+     changes the wallet birthday in configuration. Use this method when wallet birthday is not available and the processor can't be lazy initialized.
+     - Note: this does not rewind your chain state
+     - Parameter startHeight: the wallet birthday for this compact block processor
+     - Throws CompactBlockProcessorError.invalidConfiguration if block height is invalid or if processor is already started
+     */
+    func setStartHeight(_ startHeight: BlockHeight) throws {
+        guard self.state == .stopped, startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
+            throw CompactBlockProcessorError.invalidConfiguration
+        }
+        
+        var config = self.config
+        config.walletBirthday = startHeight
+        self.config = config
+    }
+    
+    /**
      Initializes a CompactBlockProcessor instance
      - Parameters:
      - downloader: an instance that complies to CompactBlockDownloading protocol
@@ -235,12 +253,12 @@ public class CompactBlockProcessor {
     Initializes a CompactBlockProcessor instance from an Initialized object
     - Parameters:
      - initializer: an instance that complies to CompactBlockDownloading protocol
-     - configuration: configuration for this compact block processor
     */
-    public convenience init(initializer: Initializer, configuration: Configuration = Configuration.standard) {
+    public convenience init(initializer: Initializer, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) {
+        
         self.init(downloader: initializer.downloader,
                   backend: initializer.rustBackend,
-                  config: configuration,
+                  config: Configuration(cacheDb: initializer.cacheDbURL, dataDb: initializer.dataDbURL, walletBirthday: walletBirthday),
                   repository: initializer.transactionRepository)
     }
     
@@ -669,6 +687,46 @@ public class CompactBlockProcessor {
         
     }
     
+    func downloadUTXOs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void) {
+        let dataDb = self.config.dataDb
+        self.downloader.fetchUnspentTransactionOutputs(tAddress: tAddress, startHeight: startHeight) { [weak self](r) in
+            
+            switch r {
+            case .success(let utxos):
+                DispatchQueue.main.async {
+                    self?.queue.addOperation {
+                    
+                        guard let self = self else { return }
+                        var refreshed = [UnspentTransactionOutputEntity]()
+                        var skipped = [UnspentTransactionOutputEntity]()
+                        for utxo in utxos {
+                            do {
+                                try self.rustBackend.putUnspentTransparentOutput(
+                                    dbData: dataDb,
+                                    address: utxo.address,
+                                    txid: utxo.txid.bytes,
+                                    index: utxo.index,
+                                    script: utxo.script.bytes,
+                                    value: Int64(utxo.valueZat),
+                                    height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
+                            } catch {
+                                LoggerProxy.error("failed to put utxo - error: \(error)")
+                                skipped.append(utxo)
+                            }
+                        }
+                        result(.success((inserted: refreshed, skipped: skipped)))
+                    }
+                    
+                }
+                
+                
+
+            case .failure(let error):
+                result(.failure(self?.mapError(error) ?? error))
+            }
+        }
+    }
+    
     func fail(_ error: Error) {
         // todo specify: failure
         LoggerProxy.error("\(error)")
@@ -776,5 +834,14 @@ extension CompactBlockProcessor.State: Equatable {
              (.synced, .synced): return true
         default: return false
         }
+    }
+}
+
+// Transparent stuff
+
+extension CompactBlockProcessor {
+    
+    public func utxoCacheBalance(tAddress: String) throws -> WalletBalance {
+        try rustBackend.downloadedUtxoBalance(dbData: config.dataDb, address: tAddress)
     }
 }

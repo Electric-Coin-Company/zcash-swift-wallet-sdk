@@ -45,8 +45,8 @@ extension ShieldFundsError: LocalizedError {
 
 
 public protocol WalletBalance {
-    var confirmed: Int64 { get set }
-    var unconfirmed: Int64 { get set }
+    var verified: Int64 { get set }
+    var total: Int64 { get set }
 }
 
 /**
@@ -70,7 +70,14 @@ public protocol Synchronizer {
      */
     var progress: Float { get }
     
-    
+    /**
+     Initialize the internal state with the given Extended Viewing Keys and a wallet birthday
+     - Parameter viewingKeys: an array containing the viewing keys to initialize the internal state
+     - Parameter walletBirthday: the eldest when the different keys differ in birthday
+     - Throws: Initializer Errors and RustWeldingError if fails
+     - Note: The subsequent initializations don't have any effect or failure
+     */
+    func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws
     
     /**
     Starts this synchronizer within the given scope.
@@ -90,7 +97,7 @@ public protocol Synchronizer {
     Gets the address for the given account.
     - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     */
-    func getAddress(accountIndex: Int) -> String
+    func getShieldedAddress(accountIndex: Int) -> String
     
     /**
     Sends zatoshi.
@@ -177,7 +184,7 @@ public protocol Synchronizer {
     /**
      Gets the latests UTXOs for the given address from the specified height on
      */
-    func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
+    func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void)
     
     /**
      gets the latest cached  UTXOs for the given t-address for the given address
@@ -193,6 +200,16 @@ public protocol Synchronizer {
         gets the last stored unshielded balance
      */
     func getTransparentBalance(address: String) throws -> WalletBalance
+    
+    /**
+     gets the shielded total balance (includes verified and unverified balance)
+     */
+    func getShieldedBalance(accountIndex: Int) -> Int64
+    
+    /**
+     gets the shielded verified balance (anchor is 10 blocks back)
+     */
+    func getShieldedVerifiedBalance(accountIndex: Int) -> Int64
     
 }
 

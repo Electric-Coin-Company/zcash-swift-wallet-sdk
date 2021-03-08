@@ -218,11 +218,12 @@ extension LightWalletGRPCService: LightWalletService {
         return height
     }
     
-    public func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+    public func fetchUTXOs(for tAddress: String, height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
         queue.async { [weak self] in
             guard let self = self else { return }
             let arg = GetAddressUtxosArg.with { (utxoArgs) in
                 utxoArgs.address = tAddress
+                utxoArgs.startHeight = UInt64(height)
             }
             var utxos = [UnspentTransactionOutputEntity]()
             let response = self.compactTxStreamer.getAddressUtxosStream(arg) { (reply) in
