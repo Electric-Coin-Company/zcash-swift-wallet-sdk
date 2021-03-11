@@ -16,12 +16,16 @@ zcash_client_sqlite = "0.2.1"
 zcash_primitives = "0.4"
 
 #### Temporary additions: ####################################
+bitvec = "0.18"
 base58 = "0.1.0"
 sha2 = "0.9"
 bs58 = { version = "0.3", features = ["check"] }
 hdwallet = "0.2.2"
 ripemd160 = "0.9"
 secp256k1 = "0.17.2"
+
+# Temporary workaround for https://github.com/myrrlyn/funty/issues/3
+funty = "=1.1.0"
 ##############################################################
 
 [dependencies.zcash_proofs]
@@ -41,10 +45,10 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
-zcash_client_sqlite = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
-zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
-zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", branch = "data_access_api"}
+zcash_client_backend = {git = "https://github.com/zcash/librustzcash", branch = "master"}
+zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash", branch = "master"}
+zcash_primitives = {git = "https://github.com/zcash/librustzcash", branch = "master"}
+zcash_proofs = {git = "https://github.com/zcash/librustzcash", branch = "master"}
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
