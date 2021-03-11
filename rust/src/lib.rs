@@ -516,6 +516,22 @@ pub unsafe extern "C" fn zcashlc_is_valid_transparent_address(address: *const c_
     });
     unwrap_exc_or(res, false)
 }
+/// returns whether the given viewing key is valid or not
+#[no_mangle]
+pub unsafe extern "C" fn zcashlc_is_valid_viewing_key(key: *const c_char) -> bool {
+    let res = catch_panic(|| {
+        let vkstr = CStr::from_ptr(key).to_str()?;
+        
+        match decode_extended_full_viewing_key(&NETWORK.hrp_sapling_extended_full_viewing_key(), &vkstr) {
+            Ok(s) => match s {
+                None => Ok(false),
+                _ => Ok(true),
+            },
+            Err(_) => Ok(false),
+        }
+    });
+    unwrap_exc_or(res, false)
+}
 
 /// Returns the balance for the account, including all unspent notes that we know about.
 #[no_mangle]
