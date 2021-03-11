@@ -74,6 +74,20 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return true
     }
     
+    static func isValidExtendedFullViewingKey(_ key: String) throws -> Bool {
+        guard !key.containsCStringNullBytesBeforeStringEnding() else {
+            return false
+        }
+        
+        guard zcashlc_is_valid_viewing_key([CChar](key.utf8CString)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+        return true
+    }
+    
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]? {
         let dbData = dbData.osStr()
         var capacity = UInt(0);
@@ -200,10 +214,11 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_create_to_address(dbData.0,
                                          dbData.1,
                                          account,
-                                         extsk,
-                                         to,
+                                         [CChar](extsk.utf8CString),
+                                         consensusBranchId,
+                                         [CChar](to.utf8CString),
                                          value,
-                                         memoBytes,
+                                         [CChar](memoBytes.utf8CString),
                                          spendParamsPath,
                                          UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                                          outputParamsPath,

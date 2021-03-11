@@ -77,6 +77,10 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func isValidExtendedFullViewingKey(_ key: String) throws -> Bool {
+        false
+    }
+    
     static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
         false
     }

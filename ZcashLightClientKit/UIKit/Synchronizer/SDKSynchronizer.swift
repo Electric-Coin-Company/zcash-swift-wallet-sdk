@@ -91,7 +91,6 @@ public class SDKSynchronizer: Synchronizer {
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     
-    
     /**
      Creates an SDKSynchronizer instance
      - Parameter initializer: a wallet Initializer object

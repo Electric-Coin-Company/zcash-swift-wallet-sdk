@@ -338,7 +338,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyChangeTransaction() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         let sendExpectation = XCTestExpectation(description: "send expectation")
@@ -369,19 +369,21 @@ class BalanceTests: XCTestCase {
         /*
          Send
          */
-        
+        let memo = "shielding is fun!"
         var pendingTx: PendingTransactionEntity?
-        coordinator.synchronizer.sendToAddress(spendingKey: spendingKeys, zatoshi: Int64(sendAmount), toAddress: testRecipientAddress, memo: "test memo \(self.description)", from: 0) { (sendResult) in
-            switch sendResult {
-            case .failure(let sendError):
-                XCTFail("error sending \(sendError)")
-            case .success(let tx):
-                pendingTx = tx
+        coordinator.synchronizer.sendToAddress(spendingKey: spendingKeys, zatoshi: Int64(sendAmount), toAddress: testRecipientAddress, memo: memo, from: 0) { (sendResult) in
+            DispatchQueue.main.async {
+                switch sendResult {
+                case .failure(let sendError):
+                    XCTFail("error sending \(sendError)")
+                case .success(let tx):
+                    pendingTx = tx
+                }
+                
+                sendExpectation.fulfill()
             }
-            
-            sendExpectation.fulfill()
         }
-        wait(for: [createToAddressExpectation], timeout: 11)
+        wait(for: [createToAddressExpectation], timeout: 30)
         
         let syncToMinedheightExpectation = XCTestExpectation(description: "sync to mined height + 1")
         
@@ -424,6 +426,8 @@ class BalanceTests: XCTestCase {
             XCTAssertEqual(Int64(confirmedTx.value), self.sendAmount)
             XCTAssertEqual(confirmedTx.toAddress, self.testRecipientAddress)
             
+            XCTAssertEqual(confirmedTx.memo?.asZcashTransactionMemo(), memo)
+            
             guard let transactionId = confirmedTx.rawTransactionId else {
                 XCTFail("no raw transaction id")
                 return
@@ -452,7 +456,7 @@ class BalanceTests: XCTestCase {
             /*
              There’s a change note of value (previous note value - sent amount)
              */
-            XCTAssertEqual(Int64(sentNote.value) - self.sendAmount, Int64(receivedNote.value))
+            XCTAssertEqual(previousVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(for: try! synchronizer.latestDownloadedHeight()), Int64(receivedNote.value))
             
             
             /*

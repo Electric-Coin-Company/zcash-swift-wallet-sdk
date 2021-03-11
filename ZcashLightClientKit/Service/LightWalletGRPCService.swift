@@ -76,8 +76,7 @@ public class LightWalletGRPCService {
                     requestIDHeader: nil,
                     cacheable: false)
     }
-    
-    
+
 }
 
 extension LightWalletGRPCService: LightWalletService {
@@ -250,4 +249,3 @@ extension LightWalletServiceError {
         }
     }
 }
-

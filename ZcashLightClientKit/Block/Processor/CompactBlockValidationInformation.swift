@@ -41,8 +41,7 @@ class CompactBlockValidationOperation: ZcashOperation {
             let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))
             self.error = error
             LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
-            self.cancel()
-            self.fail()
+            self.fail(error: error)
             return
         }
     }

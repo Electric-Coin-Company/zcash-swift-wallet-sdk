@@ -438,7 +438,7 @@ public class CompactBlockProcessor {
             guard let self = self else { return }
 
             guard let validationError = error as? CompactBlockValidationError else {
-                LoggerProxy.debug("Warning: validateChain operation returning generic error: \(error)")
+                LoggerProxy.error("Warning: validateChain operation returning generic error: \(error)")
                 return
             }
             
@@ -539,7 +539,7 @@ public class CompactBlockProcessor {
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
                                         object: self,
                                         userInfo: [ CompactBlockProcessorNotificationKey.progress : progress,
-                                                    CompactBlockProcessorNotificationKey.progressHeight : self.latestBlockHeight])
+                                                    CompactBlockProcessorNotificationKey.progressHeight : completedRange.upperBound])
     }
     
     func notifyTransactions(_ txs: [ConfirmedTransactionEntity], in range: BlockRange) {
