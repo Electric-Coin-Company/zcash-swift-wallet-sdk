@@ -6,54 +6,41 @@ use std::os::unix::ffi::OsStrExt;
 use std::path::Path;
 use std::slice;
 use std::str::FromStr;
-use std::convert::Into;
 use zcash_client_backend::{
     address::RecipientAddress,
+    data_api::{
+        chain::{scan_cached_blocks, validate_chain},
+        error::Error,
+        wallet::{create_spend_to_address, decrypt_and_store_transaction},
+        WalletRead, WalletWrite,
+    },
     encoding::{
         decode_extended_full_viewing_key, decode_extended_spending_key,
         encode_extended_full_viewing_key, encode_extended_spending_key, encode_payment_address,
     },
     keys::spending_key,
+    wallet::AccountId,
+    wallet::OvkPolicy,
 };
-
-
 use zcash_client_sqlite::{
-    chain::{rewind_to_height, validate_combined_chain},
-    error::ErrorKind,
-    init::{init_accounts_table, init_blocks_table, init_data_database},
-    query::{
-        get_address, get_balance, get_received_memo_as_utf8, get_sent_memo_as_utf8,
-        get_verified_balance,
-    },
-    scan::{decrypt_and_store_transaction, scan_cached_blocks},
-    transact::{create_to_address, OvkPolicy},
+    error::SqliteClientError,
+    wallet::init::{init_accounts_table, init_blocks_table, init_wallet_db},
+    BlockDB, NoteId, WalletDB,
 };
 use zcash_primitives::{
     block::BlockHash,
-    consensus::BranchId,
-    consensus::BlockHeight,
+    consensus::{BlockHeight, BranchId, Parameters},
     note_encryption::Memo,
     transaction::{components::Amount, Transaction},
     zip32::ExtendedFullViewingKey,
 };
 
 #[cfg(feature = "mainnet")]
-use zcash_primitives::consensus::MainNetwork as Network;
+use zcash_primitives::consensus::{MainNetwork, MAIN_NETWORK};
 #[cfg(not(feature = "mainnet"))]
-use zcash_primitives::consensus::TestNetwork as Network;
+use zcash_primitives::consensus::{TestNetwork, TEST_NETWORK};
 
 use zcash_proofs::prover::LocalTxProver;
-
-#[cfg(feature = "mainnet")]
-use zcash_primitives::constants::mainnet::{
-    COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY,
-    HRP_SAPLING_PAYMENT_ADDRESS,
-};
-#[cfg(not(feature = "mainnet"))]
-use zcash_primitives::constants::testnet::{
-    COIN_TYPE, HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, HRP_SAPLING_EXTENDED_SPENDING_KEY,
-    HRP_SAPLING_PAYMENT_ADDRESS,
-};
 
 use std::convert::TryFrom;
 
@@ -64,11 +51,9 @@ use sha2::{Digest, Sha256};
 // use zcash_primitives::legacy::TransparentAddress;
 use hdwallet::{ExtendedPrivKey, KeyIndex};
 use secp256k1::{PublicKey, Secp256k1};
-use zcash_primitives::constants::mainnet::B58_PUBKEY_ADDRESS_PREFIX;
 
 // use crate::extended_key::{key_index::KeyIndex, ExtendedPrivKey, ExtendedPubKey, KeySeed};
 // /////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 fn unwrap_exc_or<T>(exc: Result<T, ()>, def: T) -> T {
     match exc {
@@ -85,6 +70,44 @@ where
         Ok(value) => value,
         Err(_) => ffi_helpers::Nullable::NULL,
     }
+}
+
+#[cfg(feature = "mainnet")]
+pub const NETWORK: MainNetwork = MAIN_NETWORK;
+
+#[cfg(not(feature = "mainnet"))]
+pub const NETWORK: TestNetwork = TEST_NETWORK;
+
+#[cfg(feature = "mainnet")]
+fn wallet_db(
+    db_data: *const u8,
+    db_data_len: usize,
+) -> Result<WalletDB<MainNetwork>, failure::Error> {
+    let db_data = Path::new(OsStr::from_bytes(unsafe {
+        slice::from_raw_parts(db_data, db_data_len)
+    }));
+    WalletDB::for_path(db_data, NETWORK)
+        .map_err(|e| format_err!("Error opening wallet database connection: {}", e))
+}
+
+#[cfg(not(feature = "mainnet"))]
+fn wallet_db(
+    db_data: *const u8,
+    db_data_len: usize,
+) -> Result<WalletDB<TestNetwork>, failure::Error> {
+    let db_data = Path::new(OsStr::from_bytes(unsafe {
+        slice::from_raw_parts(db_data, db_data_len)
+    }));
+    WalletDB::for_path(db_data, NETWORK)
+        .map_err(|e| format_err!("Error opening wallet database connection: {}", e))
+}
+
+fn block_db(cache_db: *const u8, cache_db_len: usize) -> Result<BlockDB, failure::Error> {
+    let cache_db = Path::new(OsStr::from_bytes(unsafe {
+        slice::from_raw_parts(cache_db, cache_db_len)
+    }));
+    BlockDB::for_path(cache_db)
+        .map_err(|e| format_err!("Error opening block source database connection: {}", e))
 }
 
 /// Returns the length of the last error message to be logged.
@@ -113,8 +136,9 @@ pub extern "C" fn zcashlc_init_data_database(db_data: *const u8, db_data_len: us
             slice::from_raw_parts(db_data, db_data_len)
         }));
 
-        init_data_database(&db_data)
-            .map(|()| 1)
+        WalletDB::for_path(db_data, NETWORK)
+            .map(|db| init_wallet_db(&db))
+            .map(|_| 1)
             .map_err(|e| format_err!("Error while initializing data DB: {}", e))
     });
     unwrap_exc_or_null(res)
@@ -136,9 +160,7 @@ pub extern "C" fn zcashlc_init_accounts_table(
     capacity_ret: *mut usize,
 ) -> *mut *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let seed = unsafe { slice::from_raw_parts(seed, seed_len) };
         let accounts = if accounts >= 0 {
             accounts as u32
@@ -147,34 +169,30 @@ pub extern "C" fn zcashlc_init_accounts_table(
         };
 
         let extsks: Vec<_> = (0..accounts)
-            .map(|account| spending_key(&seed, COIN_TYPE, account))
+            .map(|account| spending_key(&seed, NETWORK.coin_type(), account))
             .collect();
         let extfvks: Vec<_> = extsks.iter().map(ExtendedFullViewingKey::from).collect();
 
-        match init_accounts_table(&db_data, &Network, &extfvks) {
-            Ok(()) => (),
-            Err(e) => match e.kind() {
-                ErrorKind::TableNotEmpty => {
-                    // Ignore this error.
-                }
-                _ => return Err(format_err!("Error while initializing accounts: {}", e)),
-            },
-        }
-
-        // Return the ExtendedSpendingKeys for the created accounts.
-        let mut v: Vec<_> = extsks
-            .iter()
-            .map(|extsk| {
-                let encoded =
-                    encode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, extsk);
-                CString::new(encoded).unwrap().into_raw()
+        init_accounts_table(&db_data, &extfvks)
+            .map(|_| {
+                // Return the ExtendedSpendingKeys for the created accounts.
+                let mut v: Vec<_> = extsks
+                    .iter()
+                    .map(|extsk| {
+                        let encoded = encode_extended_spending_key(
+                            NETWORK.hrp_sapling_extended_spending_key(),
+                            extsk,
+                        );
+                        CString::new(encoded).unwrap().into_raw()
+                    })
+                    .collect();
+                assert!(v.len() == accounts as usize);
+                unsafe { *capacity_ret.as_mut().unwrap() = v.capacity() };
+                let p = v.as_mut_ptr();
+                std::mem::forget(v);
+                return p;
             })
-            .collect();
-        assert!(v.len() == accounts as usize);
-        unsafe { *capacity_ret.as_mut().unwrap() = v.capacity() };
-        let p = v.as_mut_ptr();
-        std::mem::forget(v);
-        Ok(p)
+            .map_err(|e| format_err!("Error while initializing accounts: {}", e))
     });
     unwrap_exc_or_null(res)
 }
@@ -189,30 +207,27 @@ pub extern "C" fn zcashlc_init_accounts_table_with_keys(
     extfvks_len: usize,
 ) -> bool {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-    let extfvks = unsafe { std::slice::from_raw_parts(extfvks, extfvks_len)
-        .into_iter()
-        .map(|s| CStr::from_ptr(*s).to_str().unwrap())
-        .map( |vkstr|
-            decode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, &vkstr)
-                .unwrap()
-                .unwrap()
-        ).collect::<Vec<_>>() };
-        
-        match init_accounts_table(&db_data, &Network, &extfvks) {
+        let extfvks = unsafe {
+            std::slice::from_raw_parts(extfvks, extfvks_len)
+                .into_iter()
+                .map(|s| CStr::from_ptr(*s).to_str().unwrap())
+                .map(|vkstr| {
+                    decode_extended_full_viewing_key(
+                        NETWORK.hrp_sapling_extended_full_viewing_key(),
+                        &vkstr,
+                    )
+                    .unwrap()
+                    .unwrap()
+                })
+                .collect::<Vec<_>>()
+        };
+
+        match init_accounts_table(&db_data, &extfvks) {
             Ok(()) => Ok(true),
-            Err(e) => match e.kind() {
-                ErrorKind::TableNotEmpty => {
-                    // Ignore this error.
-                    Ok(true)
-                }
-                _ => return Err(format_err!("Error while initializing accounts: {}", e)),
-            },
+            Err(e) => Err(format_err!("Error while initializing accounts: {}", e)),
         }
-
     });
     unwrap_exc_or(res, false)
 }
@@ -238,15 +253,17 @@ pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
         };
 
         let extsks: Vec<_> = (0..accounts)
-            .map(|account| spending_key(&seed, COIN_TYPE, account))
+            .map(|account| spending_key(&seed, NETWORK.coin_type(), account))
             .collect();
 
         // Return the ExtendedSpendingKeys for the created accounts.
         let mut v: Vec<_> = extsks
             .iter()
             .map(|extsk| {
-                let encoded =
-                    encode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, extsk);
+                let encoded = encode_extended_spending_key(
+                    NETWORK.hrp_sapling_extended_spending_key(),
+                    extsk,
+                );
                 CString::new(encoded).unwrap().into_raw()
             })
             .collect();
@@ -279,15 +296,19 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
         };
 
         let extsks: Vec<_> = (0..accounts)
-            .map(|account| ExtendedFullViewingKey::from(&spending_key(&seed, COIN_TYPE, account)))
+            .map(|account| {
+                ExtendedFullViewingKey::from(&spending_key(&seed, NETWORK.coin_type(), account))
+            })
             .collect();
 
         // Return the ExtendedSpendingKeys for the created accounts.
         let mut v: Vec<_> = extsks
             .iter()
             .map(|extsk| {
-                let encoded =
-                    encode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, extsk);
+                let encoded = encode_extended_full_viewing_key(
+                    NETWORK.hrp_sapling_extended_full_viewing_key(),
+                    extsk,
+                );
                 CString::new(encoded).unwrap().into_raw()
             })
             .collect();
@@ -299,7 +320,7 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_keys(
     });
     unwrap_exc_or_null(res)
 }
-/// derives a shielded address from the given seed. 
+/// derives a shielded address from the given seed.
 /// call zcashlc_string_free with the returned pointer when done using it
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
@@ -314,26 +335,25 @@ pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
         } else {
             return Err(format_err!("accounts argument must be greater than zero"));
         };
-        let address = spending_key(&seed, COIN_TYPE, account_index)
+        let address = spending_key(&seed, NETWORK.coin_type(), account_index)
             .default_address()
             .unwrap()
             .1;
-        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        let address_str = encode_payment_address(NETWORK.hrp_sapling_payment_address(), &address);
         Ok(CString::new(address_str).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
 }
-/// derives a shielded address from the given viewing key. 
+/// derives a shielded address from the given viewing key.
 /// call zcashlc_string_free with the returned pointer when done using it
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_viewing_key(
     extfvk: *const c_char,
 ) -> *mut c_char {
-
     let res = catch_panic(|| {
         let extfvk_string = CStr::from_ptr(extfvk).to_str()?;
         let extfvk = match decode_extended_full_viewing_key(
-            HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY,
+            NETWORK.hrp_sapling_extended_full_viewing_key(),
             &extfvk_string,
         ) {
             Ok(Some(extfvk)) => extfvk,
@@ -348,13 +368,13 @@ pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_viewing_key(
             }
         };
         let address = extfvk.default_address().unwrap().1;
-        let address_str = encode_payment_address(HRP_SAPLING_PAYMENT_ADDRESS, &address);
+        let address_str = encode_payment_address(NETWORK.hrp_sapling_payment_address(), &address);
         Ok(CString::new(address_str).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
 }
 
-/// derives a shielded address from the given extended full viewing key. 
+/// derives a shielded address from the given extended full viewing key.
 /// call zcashlc_string_free with the returned pointer when done using it
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
@@ -362,7 +382,10 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
 ) -> *mut c_char {
     let res = catch_panic(|| {
         let extsk = CStr::from_ptr(extsk).to_str()?;
-        let extfvk = match decode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, &extsk) {
+        let extfvk = match decode_extended_spending_key(
+            NETWORK.hrp_sapling_extended_spending_key(),
+            &extsk,
+        ) {
             Ok(Some(extsk)) => ExtendedFullViewingKey::from(&extsk),
             Ok(None) => {
                 return Err(format_err!("Deriving viewing key from spending key returned no results. Encoding was valid but type was incorrect."));
@@ -375,8 +398,10 @@ pub unsafe extern "C" fn zcashlc_derive_extended_full_viewing_key(
             }
         };
 
-        let encoded =
-            encode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, &extfvk);
+        let encoded = encode_extended_full_viewing_key(
+            NETWORK.hrp_sapling_extended_full_viewing_key(),
+            &extfvk,
+        );
 
         Ok(CString::new(encoded).unwrap().into_raw())
     });
@@ -397,9 +422,7 @@ pub extern "C" fn zcashlc_init_blocks_table(
     sapling_tree_hex: *const c_char,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let hash = {
             let mut hash = hex::decode(unsafe { CStr::from_ptr(hash_hex) }.to_str()?).unwrap();
             hash.reverse();
@@ -408,7 +431,13 @@ pub extern "C" fn zcashlc_init_blocks_table(
         let sapling_tree =
             hex::decode(unsafe { CStr::from_ptr(sapling_tree_hex) }.to_str()?).unwrap();
 
-        match init_blocks_table(&db_data, height, hash, time, &sapling_tree) {
+        match init_blocks_table(
+            &db_data,
+            BlockHeight::from_u32(height as u32),
+            hash,
+            time,
+            &sapling_tree,
+        ) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while initializing blocks table: {}", e)),
         }
@@ -426,20 +455,25 @@ pub extern "C" fn zcashlc_get_address(
     account: i32,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
         let account = if account >= 0 {
             account as u32
         } else {
             return Err(format_err!("accounts argument must be positive"));
         };
 
-        match get_address(&db_data, account) {
-            Ok(addr) => {
-                let c_str_addr = CString::new(addr).unwrap();
+        let account = AccountId(account);
+
+        match (&db_data).get_address(account) {
+            Ok(Some(addr)) => {
+                let addr_str = encode_payment_address(NETWORK.hrp_sapling_payment_address(), &addr);
+                let c_str_addr = CString::new(addr_str).unwrap();
                 Ok(c_str_addr.into_raw())
             }
+            Ok(None) => Err(format_err!(
+                "No payment address was available for account {:?}",
+                account
+            )),
             Err(e) => Err(format_err!("Error while fetching address: {}", e)),
         }
     });
@@ -454,7 +488,7 @@ pub unsafe extern "C" fn zcashlc_is_valid_shielded_address(address: *const c_cha
     let res = catch_panic(|| {
         let addr = CStr::from_ptr(address).to_str()?;
 
-        match RecipientAddress::decode(&Network, &addr) {
+        match RecipientAddress::decode(&NETWORK, &addr) {
             Some(addr) => match addr {
                 RecipientAddress::Shielded(_) => Ok(true),
                 RecipientAddress::Transparent(_) => Ok(false),
@@ -472,7 +506,7 @@ pub unsafe extern "C" fn zcashlc_is_valid_transparent_address(address: *const c_
     let res = catch_panic(|| {
         let addr = CStr::from_ptr(address).to_str()?;
 
-        match RecipientAddress::decode(&Network, &addr) {
+        match RecipientAddress::decode(&NETWORK, &addr) {
             Some(addr) => match addr {
                 RecipientAddress::Shielded(_) => Ok(false),
                 RecipientAddress::Transparent(_) => Ok(true),
@@ -482,13 +516,13 @@ pub unsafe extern "C" fn zcashlc_is_valid_transparent_address(address: *const c_
     });
     unwrap_exc_or(res, false)
 }
-
+/// returns whether the given viewing key is valid or not
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_is_valid_viewing_key(key: *const c_char) -> bool {
     let res = catch_panic(|| {
         let vkstr = CStr::from_ptr(key).to_str()?;
         
-        match decode_extended_full_viewing_key(HRP_SAPLING_EXTENDED_FULL_VIEWING_KEY, &vkstr) {
+        match decode_extended_full_viewing_key(&NETWORK.hrp_sapling_extended_full_viewing_key(), &vkstr) {
             Ok(s) => match s {
                 None => Ok(false),
                 _ => Ok(true),
@@ -498,24 +532,32 @@ pub unsafe extern "C" fn zcashlc_is_valid_viewing_key(key: *const c_char) -> boo
     });
     unwrap_exc_or(res, false)
 }
+
 /// Returns the balance for the account, including all unspent notes that we know about.
 #[no_mangle]
 pub extern "C" fn zcashlc_get_balance(db_data: *const u8, db_data_len: usize, account: i32) -> i64 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
-        let account = if account >= 0 {
-            account as u32
-        } else {
-            return Err(format_err!("account argument must be positive"));
-        };
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        match get_balance(&db_data, account) {
-            Ok(balance) => Ok(balance.into()),
-            Err(e) => Err(format_err!("Error while fetching balance: {}", e)),
+        if account >= 0 {
+            let (_, max_height) = (&db_data)
+                .block_height_extrema()
+                .map_err(|e| format_err!("Error while fetching max block height: {}", e))
+                .and_then(|opt| {
+                    opt.ok_or(format_err!(
+                        "No blockchain information available; scan required."
+                    ))
+                })?;
+
+            (&db_data)
+                .get_balance_at(AccountId(account as u32), max_height)
+                .map(|b| b.into())
+                .map_err(|e| format_err!("Error while fetching balance: {}", e))
+        } else {
+            Err(format_err!("account argument must be positive"))
         }
     });
+
     unwrap_exc_or(res, -1)
 }
 
@@ -528,20 +570,27 @@ pub extern "C" fn zcashlc_get_verified_balance(
     account: i32,
 ) -> i64 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
-        let account = if account >= 0 {
-            account as u32
+        let db_data = wallet_db(db_data, db_data_len)?;
+        if account >= 0 {
+            (&db_data)
+                .get_target_and_anchor_heights()
+                .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
+                .and_then(|opt_anchor| {
+                    opt_anchor
+                        .map(|(_, a)| a)
+                        .ok_or(format_err!("Anchor height not available; scan required."))
+                })
+                .and_then(|anchor| {
+                    (&db_data)
+                        .get_balance_at(AccountId(account as u32), anchor)
+                        .map_err(|e| format_err!("Error while fetching verified balance: {}", e))
+                })
+                .map(|amount| amount.into())
         } else {
-            return Err(format_err!("account argument must be positive"));
-        };
-
-        match get_verified_balance(&db_data, account) {
-            Ok(balance) => Ok(balance.into()),
-            Err(e) => Err(format_err!("Error while fetching verified balance: {}", e)),
+            Err(format_err!("account argument must be positive"))
         }
     });
+
     unwrap_exc_or(res, -1)
 }
 
@@ -558,11 +607,9 @@ pub extern "C" fn zcashlc_get_received_memo_as_utf8(
     id_note: i64,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = match get_received_memo_as_utf8(db_data, id_note) {
+        let memo = match (&db_data).get_memo_as_utf8(NoteId::ReceivedNoteId(id_note)) {
             Ok(memo) => memo.unwrap_or_default(),
             Err(e) => return Err(format_err!("Error while fetching memo: {}", e)),
         };
@@ -585,14 +632,12 @@ pub extern "C" fn zcashlc_get_sent_memo_as_utf8(
     id_note: i64,
 ) -> *mut c_char {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = match get_sent_memo_as_utf8(db_data, id_note) {
-            Ok(memo) => memo.unwrap_or_default(),
-            Err(e) => return Err(format_err!("Error while fetching memo: {}", e)),
-        };
+        let memo = (&db_data)
+            .get_memo_as_utf8(NoteId::SentNoteId(id_note))
+            .map(|memo| memo.unwrap_or_default())
+            .map_err(|e| format_err!("Error while fetching memo: {}", e))?;
 
         Ok(CString::new(memo).unwrap().into_raw())
     });
@@ -623,16 +668,21 @@ pub extern "C" fn zcashlc_validate_combined_chain(
     db_data_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_cache = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_cache, db_cache_len)
-        }));
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
-        
-        if let Err(e) = validate_combined_chain(Network, &db_cache, &db_data) {
-            match e.kind() {
-                ErrorKind::InvalidChain(upper_bound, _) => Ok(u32::from(*upper_bound) as i32),
+        let block_db = block_db(db_cache, db_cache_len)?;
+        let db_data = wallet_db(db_data, db_data_len)?;
+
+        let validate_from = (&db_data)
+            .get_max_height_hash()
+            .map_err(|e| format_err!("Error while validating chain: {}", e))?;
+
+        let val_res = validate_chain(&NETWORK, &block_db, validate_from);
+
+        if let Err(e) = val_res {
+            match e {
+                SqliteClientError::BackendError(Error::InvalidChain(upper_bound, _)) => {
+                    let upper_bound_u32 = u32::from(upper_bound);
+                    Ok(upper_bound_u32 as i32)
+                }
                 _ => Err(format_err!("Error while validating chain: {}", e)),
             }
         } else {
@@ -654,18 +704,17 @@ pub extern "C" fn zcashlc_rewind_to_height(
     height: i32,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_data = wallet_db(db_data, db_data_len)?;
 
-        match rewind_to_height(Network,&db_data, BlockHeight::from(height as u32)) {
-            Ok(()) => Ok(1),
-            Err(e) => Err(format_err!(
-                "Error while rewinding data DB to height {}: {}",
-                height,
-                e
-            )),
-        }
+        let mut update_ops = (&db_data)
+            .get_update_ops()
+            .map_err(|e| format_err!("Could not obtain a writable database connection: {}", e))?;
+
+        let height = BlockHeight::try_from(height)?;
+        (&mut update_ops)
+            .transactionally(|ops| ops.rewind_to_height(height))
+            .map(|_| 1)
+            .map_err(|e| format_err!("Error while rewinding data DB to height {}: {}", height, e))
     });
     unwrap_exc_or_null(res)
 }
@@ -692,14 +741,11 @@ pub extern "C" fn zcashlc_scan_blocks(
     db_data_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_cache = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_cache, db_cache_len)
-        }));
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let block_db = block_db(db_cache, db_cache_len)?;
+        let db_read = wallet_db(db_data, db_data_len)?;
+        let mut db_data = db_read.get_update_ops()?;
 
-        match scan_cached_blocks(&Network, &db_cache, &db_data, None) {
+        match scan_cached_blocks(&NETWORK, &block_db, &mut db_data, None) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while scanning blocks: {}", e)),
         }
@@ -715,13 +761,12 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     tx_len: usize,
 ) -> i32 {
     let res = catch_panic(|| {
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_read = wallet_db(db_data, db_data_len)?;
+        let mut db_data = db_read.get_update_ops()?;
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
         let tx = Transaction::read(&tx_bytes[..])?;
 
-        match decrypt_and_store_transaction(&db_data, &Network, &tx) {
+        match decrypt_and_store_transaction(&NETWORK, &mut db_data, &tx) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while decrypting transaction: {}", e)),
         }
@@ -743,7 +788,6 @@ pub extern "C" fn zcashlc_create_to_address(
     db_data_len: usize,
     account: i32,
     extsk: *const c_char,
-    consensus_branch_id: i32,
     to: *const c_char,
     value: i64,
     memo: *const c_char,
@@ -753,16 +797,8 @@ pub extern "C" fn zcashlc_create_to_address(
     output_params_len: usize,
 ) -> i64 {
     let res = catch_panic(|| {
-        let branch_id = match BranchId::try_from(consensus_branch_id as u32) {
-            Ok(extsk) => extsk,
-            Err(e) => {
-                return Err(format_err!("Invalid consensus branch id: {}", e));
-            }
-        };
-
-        let db_data = Path::new(OsStr::from_bytes(unsafe {
-            slice::from_raw_parts(db_data, db_data_len)
-        }));
+        let db_read = wallet_db(db_data, db_data_len)?;
+        let mut db_data = db_read.get_update_ops()?;
         let account = if account >= 0 {
             account as u32
         } else {
@@ -783,17 +819,19 @@ pub extern "C" fn zcashlc_create_to_address(
             slice::from_raw_parts(output_params, output_params_len)
         }));
 
-        let extsk = match decode_extended_spending_key(HRP_SAPLING_EXTENDED_SPENDING_KEY, &extsk) {
-            Ok(Some(extsk)) => extsk,
-            Ok(None) => {
-                return Err(format_err!("ExtendedSpendingKey is for the wrong network"));
-            }
-            Err(e) => {
-                return Err(format_err!("Invalid ExtendedSpendingKey: {}", e));
-            }
-        };
+        let extsk =
+            match decode_extended_spending_key(NETWORK.hrp_sapling_extended_spending_key(), &extsk)
+            {
+                Ok(Some(extsk)) => extsk,
+                Ok(None) => {
+                    return Err(format_err!("ExtendedSpendingKey is for the wrong network"));
+                }
+                Err(e) => {
+                    return Err(format_err!("Invalid ExtendedSpendingKey: {}", e));
+                }
+            };
 
-        let to = match RecipientAddress::decode(&Network, &to) {
+        let to = match RecipientAddress::decode(&NETWORK, &to) {
             Some(to) => to,
             None => {
                 return Err(format_err!("PaymentAddress is for the wrong network"));
@@ -804,12 +842,12 @@ pub extern "C" fn zcashlc_create_to_address(
 
         let prover = LocalTxProver::new(spend_params, output_params);
 
-        create_to_address(
-            &db_data,
-            &Network,
-            branch_id,
+        create_spend_to_address(
+            &mut db_data,
+            &NETWORK,
             prover,
-            (account, &extsk),
+            AccountId(account),
+            &extsk,
             &to,
             value,
             Some(memo),
@@ -823,7 +861,7 @@ pub extern "C" fn zcashlc_create_to_address(
 #[no_mangle]
 pub extern "C" fn zcashlc_branch_id_for_height(height: i32) -> i32 {
     let res = catch_panic(|| {
-        let branch: BranchId = BranchId::for_height(&Network, BlockHeight::from(height as u32));
+        let branch: BranchId = BranchId::for_height(&NETWORK, BlockHeight::from(height as u32));
         let branch_id: u32 = u32::from(branch);
         Ok(branch_id as i32)
     });
@@ -854,25 +892,25 @@ pub extern "C" fn zcashlc_vec_string_free(v: *mut *mut c_char, len: usize, capac
     };
 }
 
-
-/// TEST TEST 123 TEST 
-/// Derives a transparent address from the given seed 
+/// TEST TEST 123 TEST
+/// Derives a transparent address from the given seed
 #[no_mangle]
 pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
     seed: *const u8,
     seed_len: usize,
 ) -> *mut c_char {
-
     let res = catch_panic(|| {
         let seed = slice::from_raw_parts(seed, seed_len);
-        
+
         // modified from: https://github.com/adityapk00/zecwallet-light-cli/blob/master/lib/src/lightwallet.rs
 
         let ext_t_key = ExtendedPrivKey::with_seed(&seed).unwrap();
         let address_sk = ext_t_key
             .derive_private_key(KeyIndex::hardened_from_normalize_index(44).unwrap())
             .unwrap()
-            .derive_private_key(KeyIndex::hardened_from_normalize_index(COIN_TYPE).unwrap())
+            .derive_private_key(
+                KeyIndex::hardened_from_normalize_index(NETWORK.coin_type()).unwrap(),
+            )
             .unwrap()
             .derive_private_key(KeyIndex::hardened_from_normalize_index(0).unwrap())
             .unwrap()
@@ -887,7 +925,7 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
         hash160.update(Sha256::digest(&pk.serialize()[..].to_vec()));
         let address_string = hash160
             .finalize()
-            .to_base58check(&B58_PUBKEY_ADDRESS_PREFIX, &[]);
+            .to_base58check(&NETWORK.b58_pubkey_address_prefix(), &[]);
 
         Ok(CString::new(address_string).unwrap().into_raw())
     });

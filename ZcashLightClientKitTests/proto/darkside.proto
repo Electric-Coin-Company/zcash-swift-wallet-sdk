@@ -53,12 +53,13 @@ service DarksideStreamer {
     // the same as the initial state. This occurs synchronously and instantaneously;
     // no reorg happens in lightwalletd. This is good to do before each independent
     // test so that no state leaks from one test to another.
-    // Also sets (some of) the values returned by GetLightdInfo().
+    // Also sets (some of) the values returned by GetLightdInfo(). The Sapling
+    // activation height specified here must be where the block range starts.
     rpc Reset(DarksideMetaState) returns (Empty) {}
 
     // StageBlocksStream accepts a list of blocks and saves them into the blocks
     // staging area until ApplyStaged() is called; there is no immediate effect on
-    // the mock zcashd. Blocks are hex-encoded.
+    // the mock zcashd. Blocks are hex-encoded. Order is important, see ApplyStaged.
     rpc StageBlocksStream(stream DarksideBlock) returns (Empty) {}
 
     // StageBlocks is the same as StageBlocksStream() except the blocks are fetched
@@ -68,29 +69,33 @@ service DarksideStreamer {
     // StageBlocksCreate is like the previous two, except it creates 'count'
     // empty blocks at consecutive heights starting at height 'height'. The
     // 'nonce' is part of the header, so it contributes to the block hash; this
-    // lets you create two fake blocks with the same transactions (or no
-    // transactions) and same height, with two different hashes.
+    // lets you create identical blocks (same transactions and height), but with
+    // different hashes.
     rpc StageBlocksCreate(DarksideEmptyBlocks) returns (Empty) {}
 
-    // StageTransactions stores the given transaction-height pairs in the
+    // StageTransactionsStream stores the given transaction-height pairs in the
     // staging area until ApplyStaged() is called. Note that these transactions
     // are not returned by the production GetTransaction() gRPC until they
     // appear in a "mined" block (contained in the active blockchain presented
     // by the mock zcashd).
     rpc StageTransactionsStream(stream RawTransaction) returns (Empty) {}
 
+    // StageTransactions is the same except the transactions are fetched from
+    // the given url. They are all staged into the block at the given height.
+    // Staging transactions to different heights requires multiple calls.
     rpc StageTransactions(DarksideTransactionsURL) returns (Empty) {}
-
 
     // ApplyStaged iterates the list of blocks that were staged by the
     // StageBlocks*() gRPCs, in the order they were staged, and "merges" each
     // into the active, working blocks list that the mock zcashd is presenting
-    // to lightwalletd. The resulting working block list can't have gaps; if the
-    // working block range is 1000-1006, and the staged block range is 1003-1004,
-    // the resulting range is 1000-1004, with 1000-1002 unchanged, blocks
-    // 1003-1004 from the new range, and 1005-1006 dropped. After merging all
-    // blocks, ApplyStaged() appends staged transactions (in the order received)
-    // into each one's corresponding block. The staging area is then cleared.
+    // to lightwalletd. Even as each block is applied, the active list can't
+    // have gaps; if the active block range is 1000-1006, and the staged block
+    // range is 1003-1004, the resulting range is 1000-1004, with 1000-1002
+    // unchanged, blocks 1003-1004 from the new range, and 1005-1006 dropped.
+    //
+    // After merging all blocks, ApplyStaged() appends staged transactions (in
+    // the order received) into each one's corresponding (by height) block
+    // The staging area is then cleared.
     //
     // The argument specifies the latest block height that mock zcashd reports
     // (i.e. what's returned by GetLatestBlock). Note that ApplyStaged() can

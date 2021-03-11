@@ -77,7 +77,7 @@ class AdvancedReOrgTests: XCTestCase {
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
         var initialVerifiedBalance: Int64 = -1
-        self.expectedReorgHeight = receivedTxHeight
+        self.expectedReorgHeight = receivedTxHeight + 1
         
         /*
          precondition:know balances before tx at received_Tx_height arrives
@@ -402,7 +402,7 @@ class AdvancedReOrgTests: XCTestCase {
     
     func testIncomingTransactionIndexChange() throws {
         hookToReOrgNotification()
-        self.expectedReorgHeight = 663195
+        self.expectedReorgHeight = 663196
         self.expectedRewindHeight = 663175
         try coordinator.reset(saplingActivation: birthday)
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txIndexChangeBefore))
@@ -779,7 +779,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
          9. sync to latest height
          */
-        self.expectedReorgHeight = sentTxHeight
+        self.expectedReorgHeight = sentTxHeight + 1
         let afterReorgExpectation = XCTestExpectation(description: "after reorg sync")
         
         try coordinator.sync(completion: { (s) in
@@ -1062,7 +1062,7 @@ class AdvancedReOrgTests: XCTestCase {
             return
         }
         
-        self.expectedReorgHeight = sentTxHeight
+        self.expectedReorgHeight = sentTxHeight + 1
         /*
          4. stage transaction at sentTxHeight
          */

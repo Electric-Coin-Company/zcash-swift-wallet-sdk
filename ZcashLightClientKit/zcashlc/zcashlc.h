@@ -24,7 +24,6 @@ int64_t zcashlc_create_to_address(const uint8_t *db_data,
                                   uintptr_t db_data_len,
                                   int32_t account,
                                   const char *extsk,
-                                  int32_t consensus_branch_id,
                                   const char *to,
                                   int64_t value,
                                   const char *memo,
@@ -190,6 +189,11 @@ bool zcashlc_is_valid_shielded_address(const char *address);
  */
 bool zcashlc_is_valid_transparent_address(const char *address);
 
+bool zcashlc_is_valid_viewing_key(const char *key);
+
+/**
+ * returns whether the given viewing key is valid or not
+ */
 bool zcashlc_is_valid_viewing_key(const char *key);
 
 /**
