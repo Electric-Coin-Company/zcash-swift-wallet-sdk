@@ -42,6 +42,9 @@ else
     ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios"
 fi
 
+echo "fix 'permission denied issue'"
+chmod -R +w ${PODS_TARGET_SRCROOT}
+
 echo "cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --targets $ZCASH_ACTIVE_ARCHITECTURE --release"
 if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
   # Assume we're in Xcode, which means we're probably cross-compiling.
