@@ -236,6 +236,4 @@ extension DerivationTool: KeyValidation {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
-    
-    
 }

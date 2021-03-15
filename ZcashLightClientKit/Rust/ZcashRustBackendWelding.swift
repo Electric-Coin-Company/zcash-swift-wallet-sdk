@@ -54,7 +54,6 @@ public protocol ZcashRustBackendWelding {
     */
     static func isValidExtendedFullViewingKey(_ key: String) throws -> Bool
     
-    
     /**
     initialize the accounts table from a given seed and a number of accounts
      - Parameters:
