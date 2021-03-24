@@ -12,7 +12,7 @@ use zcash_client_backend::{
         chain::{scan_cached_blocks, validate_chain},
         error::Error,
         wallet::{create_spend_to_address, decrypt_and_store_transaction},
-        WalletRead, WalletWrite,
+        WalletRead, 
     },
     encoding::{
         decode_extended_full_viewing_key, decode_extended_spending_key,
@@ -33,7 +33,7 @@ use zcash_client_sqlite::{
 use zcash_primitives::{
     block::BlockHash,
     consensus::{BlockHeight, BranchId, Parameters},
-    memo::{Memo, TextMemo, MemoBytes},
+    memo::{Memo, MemoBytes},
     transaction::{components::Amount, Transaction},
     zip32::ExtendedFullViewingKey,
 };
@@ -612,12 +612,15 @@ pub extern "C" fn zcashlc_get_received_memo_as_utf8(
     let res = catch_panic(|| {
         let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = match (&db_data).get_memo(NoteId::ReceivedNoteId(id_note)) {
-           
-            Text(memo)  =>  memo,
-            Err(e)      =>  Err(format_err!("Error while fetching memo: {}", e)),
-            _           =>  Err(format_err!("This memo does not contain UTF-8 text")),
-        };
+        let memo = (&db_data).get_memo(NoteId::ReceivedNoteId(id_note))
+            .map_err(|e| format_err!("An error occurred retrieving the memo, {}", e))
+            .and_then(|memo| {
+                match memo {
+                    Memo::Empty => Ok("".to_string()),
+                    Memo::Text(memo) => Ok(memo.into()),
+                    _ => Err(format_err!("This memo does not contain UTF-8 text")),
+                }
+            })?;
 
         Ok(CString::new(memo).unwrap().into_raw())
     });
@@ -639,11 +642,15 @@ pub extern "C" fn zcashlc_get_sent_memo_as_utf8(
     let res = catch_panic(|| {
         let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = match  (&db_data).get_memo(NoteId::SentNoteId(id_note)) {
-            Memo::Text(memo)  =>  Ok(memo),
-            Err(e)      =>  Err(format_err!("Error while fetching memo: {}", e)),
-            _           =>  Err(format_err!("This memo does not contain UTF-8 text")),
-        };
+        let memo = (&db_data).get_memo(NoteId::SentNoteId(id_note))
+            .map_err(|e| format_err!("An error occurred retrieving the memo, {}", e))
+            .and_then(|memo| {
+                match memo {
+                    Memo::Empty => Ok("".to_string()),
+                    Memo::Text(memo) => Ok(memo.into()),
+                    _ => Err(format_err!("This memo does not contain UTF-8 text")),
+                }
+            })?;
     
         Ok(CString::new(memo).unwrap().into_raw())
     });
