@@ -45,10 +45,10 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/zcash/librustzcash", branch = "master"}
-zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash", branch = "master"}
-zcash_primitives = {git = "https://github.com/zcash/librustzcash", branch = "master"}
-zcash_proofs = {git = "https://github.com/zcash/librustzcash", branch = "master"}
+zcash_client_backend = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
+zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
+zcash_primitives = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
+zcash_proofs = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
