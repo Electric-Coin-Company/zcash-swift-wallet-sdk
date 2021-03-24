@@ -242,6 +242,15 @@ If you worked with ZcashLightClientKit 0.6.6 or below you might have had to set 
 make sure that the directory that you are working on has the correct rust environment.
 You can do so by calling `rustup show` in the working directory. 
 
+### Building in Apple Silicon 
+So far we have come up with this set up (april 2021)
+
+* Clone a terminal and run it in rosetta mode
+* Clone your Xcode of choice and run it rosetta mode
+* Installing the right toolchain for cargo
+  * `rustup toolchain add stable-x86_64-apple-darwin`
+  * `rustup target add aarch64-apple-ios x86_64-apple-darwin x86_64-apple-ios`
+  
 ## Versioning
 
 This project follows [semantic versioning](https://semver.org/) with pre-release versions. An example of a valid version number is `1.0.4-alpha11` denoting the `11th` iteration of the `alpha` pre-release of version `1.0.4`. Stable releases, such as `1.0.4` will not contain any pre-release identifiers. Pre-releases include the following, in order of stability: `alpha`, `beta`, `rc`. Version codes offer a numeric representation of the build name that always increases. The first six significant digits represent the major, minor and patch number (two digits each) and the last 3 significant digits represent the pre-release identifier. The first digit of the identifier signals the build type. Lastly, each new build has a higher version code than all previous builds. The following table breaks this down:
