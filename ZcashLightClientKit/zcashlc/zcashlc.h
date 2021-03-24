@@ -189,8 +189,6 @@ bool zcashlc_is_valid_shielded_address(const char *address);
  */
 bool zcashlc_is_valid_transparent_address(const char *address);
 
-bool zcashlc_is_valid_viewing_key(const char *key);
-
 /**
  * returns whether the given viewing key is valid or not
  */
