@@ -78,7 +78,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     }
     
     func enhance(transaction: TransactionEntity) throws {
-        LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId()) Block: \(String(describing: transaction.minedHeight))")
+        LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId())")
         
         let tx = try downloader.fetchTransaction(txId: transaction.transactionId)
         
