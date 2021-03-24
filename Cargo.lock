@@ -710,7 +710,7 @@ dependencies = [
 
 [[package]]
 name = "libzcashlc"
-version = "0.0.6"
+version = "0.0.5"
 dependencies = [
  "base58",
  "bitvec 0.18.5",
