@@ -246,7 +246,7 @@ You can do so by calling `rustup show` in the working directory.
 So far we have come up with this set up (april 2021)
 
 * Clone a terminal and run it in rosetta mode
-* Clone your Xcode of choice and run it rosetta mode
+* Clone your Xcode of choice and run it in rosetta mode
 * Installing the right toolchain for cargo
   * `rustup toolchain add stable-x86_64-apple-darwin`
   * `rustup target add aarch64-apple-ios x86_64-apple-darwin x86_64-apple-ios`
