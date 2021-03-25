@@ -1,6 +1,6 @@
 [package]
 name = "libzcashlc"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Jack Grigg <jack@z.cash>",
             "Francisco Gindre <francisco@z.cash>",
 ]
@@ -45,10 +45,10 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
-zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
-zcash_primitives = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
-zcash_proofs = {git = "https://github.com/zcash/librustzcash", rev = "c724ed17968c4491e58d7bc5f6be6b07d292e7e4"}
+zcash_client_backend = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
+zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
+zcash_primitives = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
+zcash_proofs = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]

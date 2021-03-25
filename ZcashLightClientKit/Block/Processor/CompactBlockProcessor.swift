@@ -450,9 +450,7 @@ public class CompactBlockProcessor {
         }
         
         validateChainOperation.startedHandler = { [weak self] in
-            
             self?.state = .validating
-            
         }
         
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)

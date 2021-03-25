@@ -175,7 +175,7 @@ extension CompactTxStreamerClientProtocol {
     )
   }
 
-  /// Submit the given transaction to the zcash network
+  /// Submit the given transaction to the Zcash network
   ///
   /// - Parameters:
   ///   - request: Request to send to SendTransaction.
@@ -275,7 +275,7 @@ extension CompactTxStreamerClientProtocol {
   }
 
   /// GetTreeState returns the note commitment tree state corresponding to the given block.
-  /// See section 3.7 of the zcash protocol specification. It returns several other useful
+  /// See section 3.7 of the Zcash protocol specification. It returns several other useful
   /// values also (even though they can be obtained using GetBlock).
   /// The block can be specified by either height or hash.
   ///

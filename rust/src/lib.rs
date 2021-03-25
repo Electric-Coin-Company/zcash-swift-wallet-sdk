@@ -12,7 +12,7 @@ use zcash_client_backend::{
         chain::{scan_cached_blocks, validate_chain},
         error::Error,
         wallet::{create_spend_to_address, decrypt_and_store_transaction},
-        WalletRead, WalletWrite,
+        WalletRead, 
     },
     encoding::{
         decode_extended_full_viewing_key, decode_extended_spending_key,
@@ -24,13 +24,16 @@ use zcash_client_backend::{
 };
 use zcash_client_sqlite::{
     error::SqliteClientError,
-    wallet::init::{init_accounts_table, init_blocks_table, init_wallet_db},
+    wallet::{
+        rewind_to_height,
+        init::{init_accounts_table, init_blocks_table, init_wallet_db,},
+    },
     BlockDB, NoteId, WalletDB,
 };
 use zcash_primitives::{
     block::BlockHash,
     consensus::{BlockHeight, BranchId, Parameters},
-    note_encryption::Memo,
+    memo::{Memo, MemoBytes},
     transaction::{components::Amount, Transaction},
     zip32::ExtendedFullViewingKey,
 };
@@ -609,10 +612,15 @@ pub extern "C" fn zcashlc_get_received_memo_as_utf8(
     let res = catch_panic(|| {
         let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = match (&db_data).get_memo_as_utf8(NoteId::ReceivedNoteId(id_note)) {
-            Ok(memo) => memo.unwrap_or_default(),
-            Err(e) => return Err(format_err!("Error while fetching memo: {}", e)),
-        };
+        let memo = (&db_data).get_memo(NoteId::ReceivedNoteId(id_note))
+            .map_err(|e| format_err!("An error occurred retrieving the memo, {}", e))
+            .and_then(|memo| {
+                match memo {
+                    Memo::Empty => Ok("".to_string()),
+                    Memo::Text(memo) => Ok(memo.into()),
+                    _ => Err(format_err!("This memo does not contain UTF-8 text")),
+                }
+            })?;
 
         Ok(CString::new(memo).unwrap().into_raw())
     });
@@ -634,11 +642,16 @@ pub extern "C" fn zcashlc_get_sent_memo_as_utf8(
     let res = catch_panic(|| {
         let db_data = wallet_db(db_data, db_data_len)?;
 
-        let memo = (&db_data)
-            .get_memo_as_utf8(NoteId::SentNoteId(id_note))
-            .map(|memo| memo.unwrap_or_default())
-            .map_err(|e| format_err!("Error while fetching memo: {}", e))?;
-
+        let memo = (&db_data).get_memo(NoteId::SentNoteId(id_note))
+            .map_err(|e| format_err!("An error occurred retrieving the memo, {}", e))
+            .and_then(|memo| {
+                match memo {
+                    Memo::Empty => Ok("".to_string()),
+                    Memo::Text(memo) => Ok(memo.into()),
+                    _ => Err(format_err!("This memo does not contain UTF-8 text")),
+                }
+            })?;
+    
         Ok(CString::new(memo).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
@@ -706,13 +719,13 @@ pub extern "C" fn zcashlc_rewind_to_height(
     let res = catch_panic(|| {
         let db_data = wallet_db(db_data, db_data_len)?;
 
-        let mut update_ops = (&db_data)
-            .get_update_ops()
-            .map_err(|e| format_err!("Could not obtain a writable database connection: {}", e))?;
+        // let mut update_ops = (&db_data)
+        //     .get_update_ops()
+        //     .map_err(|e| format_err!("Could not obtain a writable database connection: {}", e))?;
+
 
         let height = BlockHeight::try_from(height)?;
-        (&mut update_ops)
-            .transactionally(|ops| ops.rewind_to_height(height))
+        rewind_to_height(&db_data, height)
             .map(|_| 1)
             .map_err(|e| format_err!("Error while rewinding data DB to height {}: {}", height, e))
     });
@@ -850,7 +863,7 @@ pub extern "C" fn zcashlc_create_to_address(
             &extsk,
             &to,
             value,
-            Some(memo),
+            Some(MemoBytes::from(memo)),
             OvkPolicy::Sender,
         )
         .map_err(|e| format_err!("Error while sending funds: {}", e))
