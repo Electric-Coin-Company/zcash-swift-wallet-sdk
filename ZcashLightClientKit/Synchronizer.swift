@@ -130,7 +130,14 @@ public protocol Synchronizer {
      Blocking
      */
     func latestHeight() throws -> BlockHeight
+    
+    /**
+     Stops the synchronizer, and rescans this
+     */
+    func rewind(_ policy: RewindPolicy) throws
 }
+
+
 
 /**
  The Status of the synchronizer
@@ -169,4 +176,15 @@ public enum TransactionKind {
     case sent
     case received
     case all
+}
+
+
+/**
+ Type of rescan
+ */
+
+public enum RewindPolicy {
+    case birthday
+    case height(blockheight: BlockHeight)
+    case transaction(_ transaction: TransactionEntity)
 }

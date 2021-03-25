@@ -415,6 +415,18 @@ public class SDKSynchronizer: Synchronizer {
         try initializer.downloader.latestBlockHeight()
     }
     
+    public func rewind(_ policy: RewindPolicy) throws {
+//        self.stop()
+//
+//        switch policy {
+//        case .birthday:
+//            
+//
+//        default:
+//            <#code#>
+//        }
+    }
+    
     // MARK: notify state
     private func notify(progress: Float, height: BlockHeight) {
         NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: [
