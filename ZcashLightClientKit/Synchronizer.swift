@@ -22,6 +22,8 @@ public enum SynchronizerError: Error {
     case uncategorized(underlyingError: Error)
     case criticalError
     case parameterMissing(underlyingError: Error)
+    case rewindError(underlyingError: Error)
+    case rewindErrorUnknownArchorHeight
 }
 
 /**
@@ -132,7 +134,7 @@ public protocol Synchronizer {
     func latestHeight() throws -> BlockHeight
     
     /**
-     Stops the synchronizer, and rescans this
+     Stops the synchronizer, and rescans the known blocks with the current keys
      */
     func rewind(_ policy: RewindPolicy) throws
 }

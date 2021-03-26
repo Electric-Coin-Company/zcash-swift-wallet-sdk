@@ -416,15 +416,37 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func rewind(_ policy: RewindPolicy) throws {
-//        self.stop()
-//
-//        switch policy {
-//        case .birthday:
-//            
-//
-//        default:
-//            <#code#>
-//        }
+        self.stop()
+        guard let processor = self.blockProcessor else {
+            throw SynchronizerError.rewindError(underlyingError: CompactBlockProcessorError.invalidConfiguration)
+        }
+        
+        var height: BlockHeight?
+        switch policy {
+        case .birthday:
+            let birthday = processor.config.walletBirthday
+            height = birthday
+            
+        case .height(let rewindHeight):
+            height = rewindHeight
+        
+        case .transaction(let tx):
+            guard let txHeight = tx.anchor else {
+                throw SynchronizerError.rewindErrorUnknownArchorHeight
+            }
+            height = txHeight
+            
+        }
+        
+        guard let height = height else {
+            throw SynchronizerError.rewindErrorUnknownArchorHeight
+        }
+        do {
+            try processor.rewindTo(height)
+            try self.transactionManager.handleReorg(at: height)
+        } catch {
+            throw SynchronizerError.rewindError(underlyingError: error)
+        }
     }
     
     // MARK: notify state
