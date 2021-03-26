@@ -134,7 +134,11 @@ public protocol Synchronizer {
     func latestHeight() throws -> BlockHeight
     
     /**
-     Stops the synchronizer, and rescans the known blocks with the current keys
+     Stops the synchronizer and rescans the known blocks with the current keys.
+     - Parameter policy: the rewind policy
+     - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
+     - Throws rewindError for other errors
+     - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
      */
     func rewind(_ policy: RewindPolicy) throws
 }
@@ -182,7 +186,10 @@ public enum TransactionKind {
 
 
 /**
- Type of rescan
+ Type of rewind available
+    birthday: rewinds the local state to this wallet's birthday
+    height: rewinds to an arbitrary blockheight
+    transaction: rewinds to the mined height of the provided transaction.
  */
 
 public enum RewindPolicy {
