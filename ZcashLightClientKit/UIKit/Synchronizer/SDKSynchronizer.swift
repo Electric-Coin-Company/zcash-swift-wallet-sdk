@@ -438,12 +438,12 @@ public class SDKSynchronizer: Synchronizer {
             
         }
         
-        guard let height = height else {
+        guard let h = height else {
             throw SynchronizerError.rewindErrorUnknownArchorHeight
         }
         do {
-            try processor.rewindTo(height)
-            try self.transactionManager.handleReorg(at: height)
+            try processor.rewindTo(h)
+            try self.transactionManager.handleReorg(at: h)
         } catch {
             throw SynchronizerError.rewindError(underlyingError: error)
         }
