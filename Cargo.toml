@@ -11,9 +11,9 @@ build = "rust/build.rs"
 failure = "0.1"
 ffi_helpers = "0.2"
 hex = "0.4"
-zcash_client_backend = "0.4"
-zcash_client_sqlite = "0.2.1"
-zcash_primitives = "0.4"
+zcash_client_backend = "0.5"
+zcash_client_sqlite = "0.3.0"
+zcash_primitives = "0.5"
 
 #### Temporary additions: ####################################
 bitvec = "0.18"
@@ -29,7 +29,7 @@ funty = "=1.1.0"
 ##############################################################
 
 [dependencies.zcash_proofs]
-version = "0.4"
+version = "0.5"
 default-features = false
 features = ["local-prover"]
 
@@ -43,12 +43,6 @@ crate-type = ["staticlib"]
 
 [profile.release]
 lto = true
-
-[patch.crates-io]
-zcash_client_backend = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
-zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
-zcash_primitives = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
-zcash_proofs = {git = "https://github.com/zcash/librustzcash.git", rev = "42f15a575e309b5a634450280d4cfb8d374addbf"}
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
