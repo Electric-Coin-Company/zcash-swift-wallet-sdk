@@ -415,6 +415,40 @@ public class SDKSynchronizer: Synchronizer {
         try initializer.downloader.latestBlockHeight()
     }
     
+    public func rewind(_ policy: RewindPolicy) throws {
+        self.stop()
+        guard let processor = self.blockProcessor else {
+            throw SynchronizerError.rewindError(underlyingError: CompactBlockProcessorError.invalidConfiguration)
+        }
+        
+        var height: BlockHeight?
+        switch policy {
+        case .birthday:
+            let birthday = processor.config.walletBirthday
+            height = birthday
+            
+        case .height(let rewindHeight):
+            height = rewindHeight
+        
+        case .transaction(let tx):
+            guard let txHeight = tx.anchor else {
+                throw SynchronizerError.rewindErrorUnknownArchorHeight
+            }
+            height = txHeight
+            
+        }
+        
+        guard let h = height else {
+            throw SynchronizerError.rewindErrorUnknownArchorHeight
+        }
+        do {
+            try processor.rewindTo(h)
+            try self.transactionManager.handleReorg(at: h)
+        } catch {
+            throw SynchronizerError.rewindError(underlyingError: error)
+        }
+    }
+    
     // MARK: notify state
     private func notify(progress: Float, height: BlockHeight) {
         NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: [
