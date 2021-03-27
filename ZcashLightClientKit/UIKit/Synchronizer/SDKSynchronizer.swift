@@ -417,6 +417,8 @@ public class SDKSynchronizer: Synchronizer {
     
     public func rewind(_ policy: RewindPolicy) throws {
         self.stop()
+        
+        try? self.lazyInitialize()
         guard let processor = self.blockProcessor else {
             throw SynchronizerError.rewindError(underlyingError: CompactBlockProcessorError.invalidConfiguration)
         }
