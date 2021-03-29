@@ -111,7 +111,7 @@ struct RawTransaction {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  /// exact data returned by zcash 'getrawtransaction'
+  /// exact data returned by Zcash 'getrawtransaction'
   var data: Data = SwiftProtobuf.Internal.emptyData
 
   /// height that the transaction was mined (or -1)
@@ -194,6 +194,15 @@ struct LightdInfo {
   var buildDate: String = String()
 
   var buildUser: String = String()
+
+  /// less than tip height if zcashd is syncing
+  var estimatedHeight: UInt64 = 0
+
+  /// example: "v4.1.1-877212414"
+  var zcashdBuild: String = String()
+
+  /// example: "/MagicBean:4.1.1/"
+  var zcashdSubversion: String = String()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -307,7 +316,7 @@ struct Exclude {
   init() {}
 }
 
-/// The TreeState is derived from the zcash z_gettreestate rpc.
+/// The TreeState is derived from the Zcash z_gettreestate rpc.
 struct TreeState {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
@@ -618,6 +627,9 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     9: .same(proto: "branch"),
     10: .same(proto: "buildDate"),
     11: .same(proto: "buildUser"),
+    12: .same(proto: "estimatedHeight"),
+    13: .same(proto: "zcashdBuild"),
+    14: .same(proto: "zcashdSubversion"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -634,6 +646,9 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
       case 9: try decoder.decodeSingularStringField(value: &self.branch)
       case 10: try decoder.decodeSingularStringField(value: &self.buildDate)
       case 11: try decoder.decodeSingularStringField(value: &self.buildUser)
+      case 12: try decoder.decodeSingularUInt64Field(value: &self.estimatedHeight)
+      case 13: try decoder.decodeSingularStringField(value: &self.zcashdBuild)
+      case 14: try decoder.decodeSingularStringField(value: &self.zcashdSubversion)
       default: break
       }
     }
@@ -673,6 +688,15 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if !self.buildUser.isEmpty {
       try visitor.visitSingularStringField(value: self.buildUser, fieldNumber: 11)
     }
+    if self.estimatedHeight != 0 {
+      try visitor.visitSingularUInt64Field(value: self.estimatedHeight, fieldNumber: 12)
+    }
+    if !self.zcashdBuild.isEmpty {
+      try visitor.visitSingularStringField(value: self.zcashdBuild, fieldNumber: 13)
+    }
+    if !self.zcashdSubversion.isEmpty {
+      try visitor.visitSingularStringField(value: self.zcashdSubversion, fieldNumber: 14)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -688,6 +712,9 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
     if lhs.branch != rhs.branch {return false}
     if lhs.buildDate != rhs.buildDate {return false}
     if lhs.buildUser != rhs.buildUser {return false}
+    if lhs.estimatedHeight != rhs.estimatedHeight {return false}
+    if lhs.zcashdBuild != rhs.zcashdBuild {return false}
+    if lhs.zcashdSubversion != rhs.zcashdSubversion {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

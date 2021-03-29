@@ -29,7 +29,7 @@ fi
 if is_mainnet; then
     FEATURE_FLAGS="--features=mainnet"
 else 
-    FEATURE_FLAGS=""
+    FEATURE_FLAGS="--features=testnet"
 fi
 
 echo "Building Rust backend"
@@ -42,8 +42,18 @@ else
     ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios"
 fi
 
-echo "cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --targets $ZCASH_ACTIVE_ARCHITECTURE --release"
+echo "fix 'permission denied issue'"
+chmod -R +w ${PODS_TARGET_SRCROOT}
 
+echo "cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --targets $ZCASH_ACTIVE_ARCHITECTURE --release"
+if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
+  # Assume we're in Xcode, which means we're probably cross-compiling.
+  # In this case, we need to add an extra library search path for build scripts and proc-macros,
+  # which run on the host instead of the target.
+  # (macOS Big Sur does not have linkable libraries in /usr/lib/.)
+  echo "export LIBRARY_PATH=\"${DEVELOPER_SDK_DIR}/MacOSX.sdk/usr/lib:${LIBRARY_PATH:-}\""
+  export LIBRARY_PATH="${DEVELOPER_SDK_DIR}/MacOSX.sdk/usr/lib:${LIBRARY_PATH:-}"
+fi
 if [ ! -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ]; then
     cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml $FEATURE_FLAGS --targets $ZCASH_ACTIVE_ARCHITECTURE --release
     persist_environment

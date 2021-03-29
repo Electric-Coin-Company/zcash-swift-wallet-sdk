@@ -22,6 +22,8 @@ public enum SynchronizerError: Error {
     case uncategorized(underlyingError: Error)
     case criticalError
     case parameterMissing(underlyingError: Error)
+    case rewindError(underlyingError: Error)
+    case rewindErrorUnknownArchorHeight
 }
 
 public enum ShieldFundsError: Error {
@@ -211,6 +213,15 @@ public protocol Synchronizer {
      */
     func getShieldedVerifiedBalance(accountIndex: Int) -> Int64
     
+    
+    /**
+     Stops the synchronizer and rescans the known blocks with the current keys.
+     - Parameter policy: the rewind policy
+     - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
+     - Throws rewindError for other errors
+     - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
+     */
+    func rewind(_ policy: RewindPolicy) throws
 }
 
 /**
@@ -250,4 +261,18 @@ public enum TransactionKind {
     case sent
     case received
     case all
+}
+
+
+/**
+ Type of rewind available
+    birthday: rewinds the local state to this wallet's birthday
+    height: rewinds to an arbitrary blockheight
+    transaction: rewinds to the mined height of the provided transaction.
+ */
+
+public enum RewindPolicy {
+    case birthday
+    case height(blockheight: BlockHeight)
+    case transaction(_ transaction: TransactionEntity)
 }

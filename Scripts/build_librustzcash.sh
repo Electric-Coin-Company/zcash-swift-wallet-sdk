@@ -3,7 +3,7 @@
 BASEPATH="${PWD}"
 TARGET_DIR="target"
 
-FEATURE_FLAGS=""
+FEATURE_FLAGS="--features=mainnet"
 NETWORK_TYPE="TESTNET"
 FLAVOR_FOLDER="Testnet"
 

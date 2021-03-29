@@ -1,3 +1,11 @@
+# 0.10.0
+* [critical] Fix #255 #261 outgoing no-change transactions not reported as mined
+* [NEW] Rewind API. Allow Wallet developers to rewind synchronizer and (eventually) rescan
+* [NEW] Rust Welding 0.0.6 - using rust crates 0.5 and Data Access API
+* [NEW] updated Logger API to use StaticString on line and function as many logging libraries do
+* [FIX] Mac OS BIG SUR build fixed
+
+
 # 0.9.4
 * New: added viewing key derivation to Derivation Tool 
 * Issue #252 - blockheight progress is latest height instead of upperbound of last scanned range

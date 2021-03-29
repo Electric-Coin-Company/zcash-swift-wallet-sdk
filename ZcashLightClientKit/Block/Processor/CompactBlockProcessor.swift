@@ -196,7 +196,7 @@ public class CompactBlockProcessor {
     private var downloader: CompactBlockDownloading
     private var transactionRepository: TransactionRepository
     private var rustBackend: ZcashRustBackendWelding.Type
-    private var config: Configuration = Configuration.standard
+    private(set) var config: Configuration = Configuration.standard
     private var queue: OperationQueue = {
         let q = OperationQueue()
         q.name = "CompactBlockProcessorQueue"
@@ -370,6 +370,19 @@ public class CompactBlockProcessor {
         self.state = .stopped
     }
     
+    public func rewindTo(_ height: BlockHeight) throws {
+        self.stop()
+        
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(height)) else {
+            fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
+            return
+        }
+        
+        // clear cache
+        try downloader.rewind(to: height)
+    }
+    
+    
     private func nextBatch() throws {
         // get latest block height
         
@@ -468,9 +481,7 @@ public class CompactBlockProcessor {
         }
         
         validateChainOperation.startedHandler = { [weak self] in
-            
             self?.state = .validating
-            
         }
         
         let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)

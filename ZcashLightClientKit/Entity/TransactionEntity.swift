@@ -56,6 +56,18 @@ public extension TransactionEntity {
         
         return true
     }
+    
+    var anchor: BlockHeight? {
+        if let minedHeight = self.minedHeight, minedHeight != -1 {
+            return max(minedHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE, ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
+        }
+        
+        if let expiryHeight = self.expiryHeight, expiryHeight != -1 {
+            return max(expiryHeight - ZcashSDK.EXPIRY_OFFSET - ZcashSDK.DEFAULT_STALE_TOLERANCE, ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
+        }
+        
+        return nil
+    }
 }
 /**
  Abstract representation of all transaction types
