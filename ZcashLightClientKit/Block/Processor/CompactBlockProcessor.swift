@@ -262,11 +262,13 @@ public class CompactBlockProcessor {
     - Parameters:
      - initializer: an instance that complies to CompactBlockDownloading protocol
     */
-    public convenience init(initializer: Initializer, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) {
+    public convenience init(initializer: Initializer) {
         
         self.init(downloader: initializer.downloader,
                   backend: initializer.rustBackend,
-                  config: Configuration(cacheDb: initializer.cacheDbURL, dataDb: initializer.dataDbURL, walletBirthday: walletBirthday),
+                  config: Configuration(cacheDb: initializer.cacheDbURL,
+                                        dataDb: initializer.dataDbURL,
+                                        walletBirthday: initializer.walletBirthday.height),
                   repository: initializer.transactionRepository)
     }
     
@@ -768,7 +770,7 @@ public class CompactBlockProcessor {
                     value: Int64(utxo.valueZat),
                     height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
             } catch {
-                LoggerProxy.error("failed to put utxo - error: \(error)")
+                LoggerProxy.info("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
             }
         }

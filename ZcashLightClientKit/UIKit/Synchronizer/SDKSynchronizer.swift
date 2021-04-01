@@ -98,7 +98,9 @@ public class SDKSynchronizer: Synchronizer {
      */
     public convenience init(initializer: Initializer) throws {
         
-        var config = CompactBlockProcessor.Configuration(cacheDb: initializer.cacheDbURL, dataDb: initializer.dataDbURL)
+        var config = CompactBlockProcessor.Configuration(cacheDb: initializer.cacheDbURL,
+                                                         dataDb: initializer.dataDbURL,
+                                                         walletBirthday: initializer.walletBirthday.height)
         
         try self.init(status: .disconnected,
                   initializer: initializer,

@@ -65,7 +65,7 @@ public class Initializer {
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
     private(set) var downloader: CompactBlockDownloader
-    private(set) public var walletBirthday: WalletBirthday?
+    private(set) public var walletBirthday: WalletBirthday
     /**
      Constructs the Initializer
      - Parameters:
@@ -82,6 +82,7 @@ public class Initializer {
                  endpoint: LightWalletEndpoint,
                  spendParamsURL: URL,
                  outputParamsURL: URL,
+                 walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT,
                  alias: String = "",
                  loggerProxy: Logger? = nil) {
         
@@ -91,7 +92,7 @@ public class Initializer {
         let lwdService = LightWalletGRPCService(endpoint: endpoint)
         
         self.init(rustBackend: ZcashRustBackend.self,
-                  lowerBoundHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT,
+                  lowerBoundHeight: walletBirthday,
                   cacheDbURL: cacheDbURL,
                   dataDbURL: dataDbURL,
                   pendingDbURL: pendingDbURL,
@@ -101,6 +102,7 @@ public class Initializer {
                   downloader: CompactBlockDownloader(service: lwdService, storage: storage),
                   spendParamsURL: spendParamsURL,
                   outputParamsURL: outputParamsURL,
+                  walletBirthday: walletBirthday,
                   alias: alias,
                   loggerProxy: loggerProxy
         )
@@ -120,6 +122,7 @@ public class Initializer {
          downloader: CompactBlockDownloader,
          spendParamsURL: URL,
          outputParamsURL: URL,
+         walletBirthday: BlockHeight,
          alias: String = "",
          loggerProxy: Logger? = nil
          
@@ -137,6 +140,7 @@ public class Initializer {
         self.lightWalletService = service
         self.transactionRepository = repository
         self.downloader = downloader
+        self.walletBirthday = WalletBirthday.birthday(with: walletBirthday)
     }
     
     /**
@@ -156,7 +160,7 @@ public class Initializer {
        - numberOfAccounts: the number of accounts to create from this seed.
      */
     
-    public func initialize(seedBytes: [UInt8], walletBirthdayHeight: BlockHeight, numberOfAccounts: Int = 1) throws -> [String]? {
+    public func initialize(seedBytes: [UInt8], numberOfAccounts: Int = 1) throws -> [String]? {
         
         do {
             try rustBackend.initDataDb(dbData: dataDbURL)
@@ -166,22 +170,17 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        self.walletBirthday = WalletBirthday.birthday(with: walletBirthdayHeight)
-        guard let birthday = self.walletBirthday else {
-            throw InitializerError.falseStart
-        }
-        
         do {
-            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
+            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthday.height), hash: walletBirthday.hash, time: walletBirthday.time, saplingTree: walletBirthday.tree)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
             throw InitializerError.dataDbInitFailed
         }
         
-        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? self.walletBirthday?.height ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? self.walletBirthday.height
         // resume from last downloaded block
-        lowerBoundHeight = max(birthday.height, lastDownloaded)
+        lowerBoundHeight = max(walletBirthday.height, lastDownloaded)
         
         var accounts: [String]? = nil
         do {
