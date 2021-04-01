@@ -7,34 +7,57 @@
 
 import Foundation
 
-struct UTXO: UnspentTransactionOutputEntity, Decodable, Encodable {
+struct UTXO: Decodable, Encodable {
     
     enum CodingKeys: String, CodingKey {
-        case id
+        case id = "id_utxo"
         case address
-        case txid
-        case index = "idx"
+        case prevoutTxId = "prevout_txid"
+        case prevoutIndex = "prevout_idx"
         case script
         case valueZat = "value_zat"
         case height
+        case spentInTx = "spent_in_tx"
     }
     
     var id: Int?
-    
     var address: String
-    
-    var txid: Data
-    
-    var index: Int
-    
+    var prevoutTxId: Data
+    var prevoutIndex: Int
     var script: Data
-    
     var valueZat: Int
-    
     var height: Int
-    
+    var spentInTx: Int?
 }
 
+extension UTXO: UnspentTransactionOutputEntity {
+    var txid: Data {
+        get {
+            prevoutTxId
+        }
+        set {
+            prevoutTxId = newValue
+        }
+    }
+    
+    var index: Int {
+        get {
+            prevoutIndex
+        }
+        set {
+            prevoutIndex = newValue
+        }
+    }
+}
+
+extension UnspentTransactionOutputEntity {
+    /**
+        As UTXO, with id and spentIntTx set to __nil__
+     */
+    func asUTXO() -> UTXO {
+        UTXO(id: nil, address: address, prevoutTxId: txid, prevoutIndex: index, script: script, valueZat: valueZat, height: height, spentInTx: nil)
+    }
+}
 import SQLite
 class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     
@@ -44,13 +67,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         let db = try dbProvider.connection()
         try dbProvider.connection().transaction {
             for utxo in utxos.map({ (u) -> UTXO in
-                u as? UTXO ?? UTXO(id: nil,
-                                   address: u.address,
-                                   txid: u.txid,
-                                   index: Int(u.index),
-                                   script: u.script,
-                                   valueZat: u.valueZat,
-                                   height: u.height)
+                u as? UTXO ?? u.asUTXO()
             }) {
                 try db.run(table.insert(utxo))
             }
@@ -80,13 +97,14 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     let table = Table("utxos")
     
     struct TableColumns  {
-        static var id = Expression<Int>("id")
+        static var id = Expression<Int>("id_utxo")
         static var address = Expression<String>("address")
-        static var txid = Expression<Blob>("txid")
-        static var index = Expression<Int>("idx")
+        static var txid = Expression<Blob>("prevout_txid")
+        static var index = Expression<Int>("prevout_idx")
         static var script = Expression<Blob>("script")
         static var valueZat = Expression<Int>("value_zat")
         static var height = Expression<Int>("height")
+        static var spentInTx = Expression<Int?>("spent_in_tx")
     }
     
     var dbProvider: ConnectionProvider
@@ -96,17 +114,23 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     }
     
     func createTableIfNeeded() throws {
-        let statement = table.create(ifNotExists: true) { t in
-            t.column(TableColumns.id, primaryKey: .autoincrement)
-            t.column(TableColumns.address)
-            t.column(TableColumns.txid)
-            t.column(TableColumns.index)
-            t.column(TableColumns.script)
-            t.column(TableColumns.valueZat)
-            t.column(TableColumns.height)
-        }
-        try performMigration()
-        try dbProvider.connection().run(statement)
+        
+        let stringStatement = """
+                   CREATE TABLE IF NOT EXISTS utxos (
+                       id_utxo INTEGER PRIMARY KEY,
+                       address TEXT NOT NULL,
+                       prevout_txid BLOB NOT NULL,
+                       prevout_idx INTEGER NOT NULL,
+                       script BLOB NOT NULL,
+                       value_zat INTEGER NOT NULL,
+                       height INTEGER NOT NULL,
+                       spent_in_tx INTEGER,
+                       FOREIGN KEY (spent_in_tx) REFERENCES transactions(id_tx),
+                       CONSTRAINT tx_outpoint UNIQUE (prevout_txid, prevout_idx)
+                   )
+                   """
+        
+        try dbProvider.connection().run(stringStatement)
     }
     
     func getAll(address: String?) throws -> [UnspentTransactionOutputEntity] {
@@ -152,26 +176,5 @@ class UTXORepositoryBuilder {
         let dao = UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path))
         try dao.createTableIfNeeded()
         return dao
-    }
-}
-
-// TODO: place this in a more general component
-
-extension Connection {
-    func getUserVersion() throws -> Int32 {
-        guard let v = try scalar("PRAGMA user_version") as? Int64 else {
-            return -1
-        }
-        return Int32(v)
-    }
-    
-    func setUserVersion(_ version: Int32) throws {
-        try run("PRAGMA user_version = \(version)")
-    }
-}
-
-extension UnspentTransactionOutputSQLDAO {
-    static let latestMigrationVersion: Int32 = 0
-    func performMigration() throws {
     }
 }

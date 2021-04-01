@@ -310,13 +310,11 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func processorFinished(_ notification: Notification) {
         // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories
-//        DispatchQueue.global().async {[ weak self ] in
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.refreshPendingTransactions()
                 self.status = .synced
             }
-//        }
     }
     
     @objc func processorTransitionUnknown(_ notification: Notification) {
@@ -480,31 +478,7 @@ public class SDKSynchronizer: Synchronizer {
             }
         })
     }
-    
-    public func cachedUTXOs(address: String) throws -> [UnspentTransactionOutputEntity] {
-        try utxoRepository.getAll(address: address)
-    }
-    
-    /**
-     gets the unshielded balance for the given address.
-     */
-    public func latestUnshieldedBalance(address: String, result: @escaping (Result<WalletBalance,Error>) -> Void) {
-        latestUTXOs(address: address, result: { [weak self] (r) in
-            
-            guard let self = self else { return }
-            switch r {
-            case .success:
-                do {
-                    result(.success(try self.utxoRepository.balance(address: address, latestHeight: try self.latestDownloadedHeight())))
-                } catch {
-                    result(.failure(SynchronizerError.uncategorized(underlyingError: error)))
-                }
-            case .failure(let e):
-                result(.failure(SynchronizerError.generalError(message: "\(e)")))
-            }
-        })
-    }
-    
+   
     public func refreshUTXOs(address: String, from height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
         
         self.blockProcessor.downloadUTXOs(tAddress: address, startHeight: height, result: result)

@@ -37,8 +37,10 @@ public struct CompactBlockProcessorNotificationKey {
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
     public static let rewindHeight = "CompactBlockProcessorNotificationKey.rewindHeight"
     public static let foundTransactions = "CompactBlockProcessorNotificationKey.foundTransactions"
+    public static let foundBlocks = "CompactBlockProcessorNotificationKey.foundBlocks"
     public static let foundTransactionsRange = "CompactBlockProcessorNotificationKey.foundTransactionsRange"
     public static let error = "error"
+    public static let refreshedUTXOs = "CompactBlockProcessorNotificationKey.refreshedUTXOs"
 }
 
 public extension Notification.Name {
@@ -97,6 +99,12 @@ public extension Notification.Name {
     Query the user info object for CompactBlockProcessorNotificationKey.foundTransactions which will contain an [ConfirmedTransactionEntity] Array with the found transactions and CompactBlockProcessorNotificationKey.foundTransactionsrange
      */
     static let blockProcessorFoundTransactions = Notification.Name(rawValue: "CompactBlockProcessorFoundTransactions")
+    
+    /**
+     Notification sent when the compact block processor fetched utxos from lightwalletd attempted to store them
+     Query the user info object for CompactBlockProcessorNotificationKey.blockProcessorStoredUTXOs which will contain a RefreshedUTXOs tuple with the collection of UTXOs stored or skipped
+     */
+    static let blockProcessorStoredUTXOs = Notification.Name(rawValue: "CompactBlockProcessorStoredUTXOs")
 }
 
 /**
@@ -211,7 +219,7 @@ public class CompactBlockProcessor {
     private var lastChainValidationFailure: BlockHeight?
     private var consecutiveChainValidationErrors: Int = 0
     private var processingError: Error?
-    
+    private var foundBlocks: Bool = false
     private var maxAttempts: Int {
         config.retries
     }
@@ -411,6 +419,7 @@ public class CompactBlockProcessor {
                             LoggerProxy.info("Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadedBlockHeight) while latest blockheight is reported at: \(blockHeight)")
                             self.processingFinished(height: latestDownloadedBlockHeight)
                         } else {
+                            
                             self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
                         }
                     }
@@ -428,8 +437,9 @@ public class CompactBlockProcessor {
      the way operations are queued is implemented based on the following good practice https://forums.developer.apple.com/thread/25761
      
      */
+    
     func processNewBlocks(range: CompactBlockRange) {
-        
+        self.foundBlocks = true
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         
@@ -640,7 +650,33 @@ public class CompactBlockProcessor {
     
     private func processingFinished(height: BlockHeight) {
         self.state = .synced
-        NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self, userInfo: [CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height])
+        NotificationCenter.default.post(
+            name: Notification.Name.blockProcessorFinished,
+            object: self,
+            userInfo: [
+             CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height,
+             CompactBlockProcessorNotificationKey.foundBlocks : self.foundBlocks
+            ])
+        // fetch
+        
+        if foundBlocks {
+            let dataDb = config.dataDb
+            self.queue.addOperation { [self] in
+                let accountDao = AccountSQDAO(dbProvider: SimpleConnectionProvider(path: dataDb.path,readonly: true))
+                
+                do {
+                    let utxos = try downloader.fetchUnspentTransactionOutputs(tAddresses: try accountDao.getAll().map({ $0.transparentAddress }), startHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
+                    
+                    let storedUTXOs = storeUTXOs(utxos, in: dataDb)
+                    
+                    
+                    NotificationCenter.default.post(name: .blockProcessorStoredUTXOs, object: self, userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs : storedUTXOs])
+                    
+                } catch {
+                    LoggerProxy.error("failed to refresh utxos")
+                }
+            }
+        }
         setTimer()
     }
     
@@ -708,34 +744,35 @@ public class CompactBlockProcessor {
                     self?.queue.addOperation {
                     
                         guard let self = self else { return }
-                        var refreshed = [UnspentTransactionOutputEntity]()
-                        var skipped = [UnspentTransactionOutputEntity]()
-                        for utxo in utxos {
-                            do {
-                                try self.rustBackend.putUnspentTransparentOutput(
-                                    dbData: dataDb,
-                                    address: utxo.address,
-                                    txid: utxo.txid.bytes,
-                                    index: utxo.index,
-                                    script: utxo.script.bytes,
-                                    value: Int64(utxo.valueZat),
-                                    height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
-                            } catch {
-                                LoggerProxy.error("failed to put utxo - error: \(error)")
-                                skipped.append(utxo)
-                            }
-                        }
-                        result(.success((inserted: refreshed, skipped: skipped)))
+                        
+                        result(.success(self.storeUTXOs(utxos, in: dataDb)))
                     }
-                    
                 }
-                
-                
-
             case .failure(let error):
                 result(.failure(self?.mapError(error) ?? error))
             }
         }
+    }
+    
+    private func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) -> RefreshedUTXOs {
+        var refreshed = [UnspentTransactionOutputEntity]()
+        var skipped = [UnspentTransactionOutputEntity]()
+        for utxo in utxos {
+            do {
+                try self.rustBackend.putUnspentTransparentOutput(
+                    dbData: dataDb,
+                    address: utxo.address,
+                    txid: utxo.txid.bytes,
+                    index: utxo.index,
+                    script: utxo.script.bytes,
+                    value: Int64(utxo.valueZat),
+                    height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
+            } catch {
+                LoggerProxy.error("failed to put utxo - error: \(error)")
+                skipped.append(utxo)
+            }
+        }
+        return (inserted: refreshed, skipped: skipped)
     }
     
     func fail(_ error: Error) {

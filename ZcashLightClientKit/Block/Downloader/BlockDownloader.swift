@@ -83,7 +83,14 @@ public protocol CompactBlockDownloading {
      */
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void)
     
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
+    
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
+    
 }
 
 /**
@@ -107,6 +114,26 @@ class CompactBlockDownloader {
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        try lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight)
+    }
+    
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
+        lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight) {
+            r in
+            switch r {
+            case .success(let utxos):
+                result(.success(utxos))
+            case .failure(let error):
+                result(.failure(error))
+            }
+        }
+    }
+    
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        try! lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
+    }
+    
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
         lightwalletService.fetchUTXOs(for: tAddress, height: startHeight) { (r) in
             switch r {

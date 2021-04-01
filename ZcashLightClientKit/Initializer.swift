@@ -151,10 +151,75 @@ public class Initializer {
      do not already exist). These files can be given a prefix for scenarios where multiple wallets
      operate in one app--for instance, when sweeping funds from another wallet seed.
      - Parameters:
+       - seedProvider:  the seed to use for initializing this wallet.
+       - walletBirthdayHeight: the height corresponding to when the wallet seed was created. If null, this signals that the wallet is being born.
+       - numberOfAccounts: the number of accounts to create from this seed.
+     */
+    
+    public func initialize(seedBytes: [UInt8], walletBirthdayHeight: BlockHeight, numberOfAccounts: Int = 1) throws -> [String]? {
+        
+        do {
+            try rustBackend.initDataDb(dbData: dataDbURL)
+        } catch RustWeldingError.dataDbNotEmpty {
+            // this is fine
+        } catch {
+            throw InitializerError.dataDbInitFailed
+        }
+        
+        self.walletBirthday = WalletBirthday.birthday(with: walletBirthdayHeight)
+        guard let birthday = self.walletBirthday else {
+            throw InitializerError.falseStart
+        }
+        
+        do {
+            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
+        } catch RustWeldingError.dataDbNotEmpty {
+            // this is fine
+        } catch {
+            throw InitializerError.dataDbInitFailed
+        }
+        
+        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? self.walletBirthday?.height ?? ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        // resume from last downloaded block
+        lowerBoundHeight = max(birthday.height, lastDownloaded)
+        
+        var accounts: [String]? = nil
+        do {
+            guard let a = rustBackend.initAccountsTable(dbData: dataDbURL, seed: seedBytes, accounts: Int32(numberOfAccounts)) else {
+                throw rustBackend.lastError() ?? InitializerError.accountInitFailed
+            }
+            accounts = a
+        } catch RustWeldingError.dataDbNotEmpty {
+            // this is fine
+        } catch {
+            throw InitializerError.dataDbInitFailed
+        }
+        let migrationManager = MigrationManager(cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
+                                                dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path), pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path))
+        
+        try migrationManager.performMigration(seedBytes: seedBytes)
+        return accounts
+    }
+    
+    
+    /**
+     
+     __TEMPORARILY UNAVAILABLE__
+     Initialize the wallet with the given seed and return the related private keys for each
+     account specified or null if the wallet was previously initialized and block data exists on
+     disk. When this method returns null, that signals that the wallet will need to retrieve the
+     private keys from its own secure storage. In other words, the private keys are only given out
+     once for each set of database files. Subsequent calls to [initialize] will only load the Rust
+     library and return null.
+     
+     'compactBlockCache.db' and 'transactionData.db' files are created by this function (if they
+     do not already exist). These files can be given a prefix for scenarios where multiple wallets
+     operate in one app--for instance, when sweeping funds from another wallet seed.
+     - Parameters:
        - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
      */
     
-    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
+    func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
         let derivationTool = DerivationTool()
         for vk in viewingKeys {
             do {

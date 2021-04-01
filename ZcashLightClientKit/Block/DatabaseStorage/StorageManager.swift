@@ -54,7 +54,7 @@ private extension Connection {
     }
 }
 
-struct SimpleConnectionProvider: ConnectionProvider {
+class SimpleConnectionProvider: ConnectionProvider {
     
     var path: String
     var readonly: Bool
@@ -64,8 +64,12 @@ struct SimpleConnectionProvider: ConnectionProvider {
         self.readonly = readonly
     }
     
+    var c: Connection!
     func connection() throws -> Connection {
-        try Connection(path, readonly: readonly)
+        if c == nil {
+            c = try Connection(path, readonly: readonly)
+        }
+        return c
     }
     
 }

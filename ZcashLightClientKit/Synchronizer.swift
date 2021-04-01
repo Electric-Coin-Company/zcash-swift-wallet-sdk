@@ -179,24 +179,9 @@ public protocol Synchronizer {
     func latestHeight() throws -> BlockHeight
     
     /**
-        Gets the latest UTXOs for the given t-address and caches the result
-     */
-    func latestUTXOs(address: String, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void)
-    
-    /**
      Gets the latests UTXOs for the given address from the specified height on
      */
     func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void)
-    
-    /**
-     gets the latest cached  UTXOs for the given t-address for the given address
-     */
-    func cachedUTXOs(address: String) throws -> [UnspentTransactionOutputEntity]
-    
-    /**
-     gets the unshielded balance for the given address.
-     */
-    func latestUnshieldedBalance(address: String, result: @escaping (Result<WalletBalance,Error>) -> Void)
     
     /**
         gets the last stored unshielded balance

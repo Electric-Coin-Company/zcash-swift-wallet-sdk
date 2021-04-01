@@ -79,6 +79,7 @@ public class LightWalletGRPCService {
 }
 
 extension LightWalletGRPCService: LightWalletService {
+    
     public func fetchTransaction(txId: Data) throws -> TransactionEntity {
         var txFilter = TxFilter()
         txFilter.hash = txId
@@ -218,6 +219,28 @@ extension LightWalletGRPCService: LightWalletService {
         return height
     }
     
+    public func fetchUTXOs(for tAddress: String, height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> [UnspentTransactionOutputEntity] {
+        let arg = GetAddressUtxosArg.with { (utxoArgs) in
+            utxoArgs.address = tAddress
+            utxoArgs.startHeight = UInt64(height)
+        }
+        do {
+            return try self.compactTxStreamer.getAddressUtxos(arg).response.wait().addressUtxos.map { reply in
+                UTXO(id: nil,
+                     address: tAddress,
+                     prevoutTxId: reply.txid,
+                     prevoutIndex: Int(reply.index),
+                     script: reply.script,
+                     valueZat: Int(reply.valueZat),
+                     height: Int(reply.height),
+                     spentInTx: nil
+                )
+            }
+        } catch {
+            throw error.mapToServiceError()
+        }
+    }
+    
     public func fetchUTXOs(for tAddress: String, height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
         queue.async { [weak self] in
             guard let self = self else { return }
@@ -230,11 +253,12 @@ extension LightWalletGRPCService: LightWalletService {
                 utxos.append(
                     UTXO(id: nil,
                          address: tAddress,
-                         txid: reply.txid,
-                         index: Int(reply.index),
+                         prevoutTxId: reply.txid,
+                         prevoutIndex: Int(reply.index),
                          script: reply.script,
                          valueZat: Int(reply.valueZat),
-                         height: Int(reply.height)
+                         height: Int(reply.height),
+                         spentInTx: nil
                     )
                 )
             }
@@ -250,6 +274,80 @@ extension LightWalletGRPCService: LightWalletService {
             } catch {
                 result(.failure(error.mapToServiceError()))
             }
+        }
+    }
+    
+    public func fetchUTXOs(for tAddresses: [String], height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> [UnspentTransactionOutputEntity] {
+        
+        guard tAddresses.count > 0 else {
+            return [] // FIXME: throw a real error
+        }
+        
+        var utxos = [UnspentTransactionOutputEntity]()
+        
+        for addr in tAddresses {
+            let arg = GetAddressUtxosArg.with { (utxoArgs) in
+                utxoArgs.address = addr
+                utxoArgs.startHeight = UInt64(height)
+            }
+            utxos.append(contentsOf:
+                try self.compactTxStreamer.getAddressUtxos(arg).response.wait().addressUtxos.map({ reply in
+                UTXO(id: nil,
+                     address: addr,
+                     prevoutTxId: reply.txid,
+                     prevoutIndex: Int(reply.index),
+                     script: reply.script,
+                     valueZat: Int(reply.valueZat),
+                     height: Int(reply.height),
+                     spentInTx: nil)
+                })
+            )
+        }
+       
+        return utxos
+        
+    }
+    
+    public func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+        guard tAddresses.count > 0 else {
+            return result(.success([])) // FIXME: throw a real error
+        }
+        
+        var utxos = [UnspentTransactionOutputEntity]()
+        self.queue.async { [weak self] in
+            guard let self = self else { return }
+            let calls = tAddresses.map({ address -> ServerStreamingCall<GetAddressUtxosArg, GetAddressUtxosReply> in
+                let args = GetAddressUtxosArg.with { (utxoArgs) in
+                    utxoArgs.address = address
+                    utxoArgs.startHeight = UInt64(height)
+                }
+                
+                return self.compactTxStreamer.getAddressUtxosStream(args) { reply in
+                    utxos.append(
+                        UTXO(id: nil,
+                             address: address,
+                             prevoutTxId: reply.txid,
+                             prevoutIndex: Int(reply.index),
+                             script: reply.script,
+                             valueZat: Int(reply.valueZat),
+                             height: Int(reply.height),
+                             spentInTx: nil)
+                    )
+                }
+            })
+            
+            var resultingCall = calls[0]
+            
+            do {
+                try calls.dropFirst().reduce(into: resultingCall) { r, c in
+                r.status.and(c.status) }.status.wait()
+                
+            } catch {
+                result(.failure(error.mapToServiceError()))
+            }
+            
+            result(.success(utxos))
         }
     }
 }
