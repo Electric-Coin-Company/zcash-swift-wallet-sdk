@@ -58,16 +58,18 @@ class SimpleConnectionProvider: ConnectionProvider {
     
     var path: String
     var readonly: Bool
+    var db: Connection?
     
     init(path: String, readonly: Bool = false) {
         self.path = path
         self.readonly = readonly
     }
-    
-    var c: Connection!
+
     func connection() throws -> Connection {
-        if c == nil {
-            c = try Connection(path, readonly: readonly)
+        guard let c = db else {
+            let c = try Connection(path, readonly: readonly)
+            self.db = c
+            return c
         }
         return c
     }

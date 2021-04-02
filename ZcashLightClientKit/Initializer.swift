@@ -200,7 +200,6 @@ public class Initializer {
         return accounts
     }
     
-    
     /**
      
      __TEMPORARILY UNAVAILABLE__
@@ -218,17 +217,7 @@ public class Initializer {
        - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
      */
     
-    func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
-        let derivationTool = DerivationTool()
-        for vk in viewingKeys {
-            do {
-                guard try derivationTool.isValidExtendedViewingKey(vk) else {
-                    throw InitializerError.invalidViewingKey(key: vk)
-                }
-            } catch {
-                throw InitializerError.invalidViewingKey(key: vk)
-            }
-        }
+    public func initialize(unifiedViewingKeys: [UnifiedViewingKey], walletBirthday: BlockHeight) throws {
         
         do {
             try rustBackend.initDataDb(dbData: dataDbURL)
@@ -253,7 +242,7 @@ public class Initializer {
         lowerBoundHeight = max(birthday.height, lastDownloaded)
  
         do {
-            guard try rustBackend.initAccountsTable(dbData: dataDbURL, exfvks: viewingKeys) else {
+            guard try rustBackend.initAccountsTable(dbData: dataDbURL, uvks: unifiedViewingKeys) else {
                 throw rustBackend.lastError() ?? InitializerError.accountInitFailed
             }
         } catch RustWeldingError.dataDbNotEmpty {

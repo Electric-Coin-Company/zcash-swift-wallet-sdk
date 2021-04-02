@@ -21,11 +21,12 @@ class NetworkUpgradeTests: XCTestCase {
    
     override func setUpWithError() throws {
         
-        coordinator = try TestCoordinator(
-            spendingKey: spendingKey,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider()
-        )
+//        coordinator = try TestCoordinator(
+//            spendingKey: spendingKey,
+//            unifiedViewingKey: <#UnifiedViewingKey#>,
+//            walletBirthday: birthday,
+//            channelProvider: ChannelProvider()
+//        )
         try coordinator.reset(saplingActivation: birthday)
     }
     

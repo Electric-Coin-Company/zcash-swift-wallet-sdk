@@ -45,7 +45,6 @@ extension ShieldFundsError: LocalizedError {
     }
 }
 
-
 public protocol WalletBalance {
     var verified: Int64 { get set }
     var total: Int64 { get set }
@@ -57,7 +56,6 @@ implementations like SdkSynchronizer fulfill.
 */
 
 public protocol Synchronizer {
-    
     
     /**
     Value representing the Status of this Synchronizer. As the status changes, a new
@@ -79,7 +77,7 @@ public protocol Synchronizer {
      - Throws: Initializer Errors and RustWeldingError if fails
      - Note: The subsequent initializations don't have any effect or failure
      */
-    func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws
+    func initialize(unifiedViewingKeys: [UnifiedViewingKey], walletBirthday: BlockHeight) throws
     
     /**
     Starts this synchronizer within the given scope.
@@ -198,7 +196,6 @@ public protocol Synchronizer {
      */
     func getShieldedVerifiedBalance(accountIndex: Int) -> Int64
     
-    
     /**
      Stops the synchronizer and rescans the known blocks with the current keys.
      - Parameter policy: the rewind policy
@@ -213,7 +210,6 @@ public protocol Synchronizer {
  The Status of the synchronizer
  */
 public enum Status {
-    
     /**
     Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
     */
@@ -247,7 +243,6 @@ public enum TransactionKind {
     case received
     case all
 }
-
 
 /**
  Type of rewind available

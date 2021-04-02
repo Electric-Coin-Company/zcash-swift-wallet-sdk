@@ -15,6 +15,7 @@ public enum RustWeldingError: Error {
     case saplingSpendParametersNotFound
     case malformedStringInput
     case noConsensusBranchId(height: Int32)
+    case unableToDeriveKeys
 }
 
 public struct ZcashRustBackendWeldingConstants {
@@ -64,13 +65,20 @@ public protocol ZcashRustBackendWelding {
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]?
     
     /**
-    initialize the accounts table from a given seed and a number of accounts
+     initialize the accounts table from a set of unified viewing keys
      - Parameters:
        - dbData: location of the data db
-       - exfvks: byte array of the zip32 seed
-     - Returns: a boolean indicating if the database was initialized or an error
- */
-    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool
+       - uvks: an array of UnifiedViewingKeys 
+     */
+    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool
+//    /**
+//    initialize the accounts table from a given seed and a number of accounts
+//     - Parameters:
+//       - dbData: location of the data db
+//       - exfvks: byte array of the zip32 seed
+//     - Returns: a boolean indicating if the database was initialized or an error
+// */
+//    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool
     
     /**
     initialize the blocks table from a given checkpoint (birthday)
@@ -302,6 +310,13 @@ public protocol ZcashRustBackendWelding {
     
     static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String?
     
+    /**
+     Derives a tranparent address from a public key
+      - Parameter pubkey: public key represented as a string
+     */
+    static func derivedTransparentAddressFromPublicKey(_ pubkey: String) throws -> String
+    
+    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey]
     /**
      Gets the consensus branch id for the given height
      - Parameter height: the height you what to know the branch id for

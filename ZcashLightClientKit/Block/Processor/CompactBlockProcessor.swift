@@ -391,8 +391,7 @@ public class CompactBlockProcessor {
         // clear cache
         try downloader.rewind(to: height)
     }
-    
-    
+        
     private func nextBatch() throws {
         // get latest block height
         
@@ -670,7 +669,6 @@ public class CompactBlockProcessor {
                     let utxos = try downloader.fetchUnspentTransactionOutputs(tAddresses: try accountDao.getAll().map({ $0.transparentAddress }), startHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
                     
                     let storedUTXOs = storeUTXOs(utxos, in: dataDb)
-                    
                     
                     NotificationCenter.default.post(name: .blockProcessorStoredUTXOs, object: self, userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs : storedUTXOs])
                     

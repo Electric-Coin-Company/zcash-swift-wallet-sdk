@@ -39,8 +39,6 @@ class MigrationManager {
     static let latestPendingDbMigrationVersion: Int32 = PendingDbMigration.none.rawValue
     
     func performMigration(seedBytes: [UInt8]) throws {
-        let currentPendingDbVersion = try pendingDb.connection().getUserVersion()
-        
         try migrateDataDb(seedBytes: seedBytes)
         try migrateCacheDb()
         try migratePendingDb()
@@ -134,10 +132,9 @@ class MigrationManager {
         LoggerProxy.debug("db.execute(\"\(migrationStatement)\")")
         try db.execute(migrationStatement)
             
-        
         LoggerProxy.debug("db.run() succeeded")
-        // derive transparent (shielding) addresses
         
+        // derive transparent (shielding) addresses
         let accountsDao = AccountSQDAO(dbProvider: self.dataDb)
         
         let accounts = try accountsDao.getAll()
@@ -154,7 +151,7 @@ class MigrationManager {
         }
         
 //         sanity check
-        guard try accountsDao.getAll().first(where: { $0.transparentAddress == placeholder}) == nil else {
+        guard try accountsDao.getAll().first(where: { $0.transparentAddress == placeholder }) == nil else {
             LoggerProxy.error("Accounts Migration performed but the transparent addresses were not derived")
             throw StorageError.migrationFailed(underlyingError: KeyDerivationErrors.unableToDerive)
         }

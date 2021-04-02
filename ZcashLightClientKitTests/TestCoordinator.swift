@@ -47,14 +47,22 @@ class TestCoordinator {
      convenience init(seed: String,
          walletBirthday: BlockHeight,
          channelProvider: ChannelProvider) throws {
-        guard let spendingKey = try DerivationTool.default.deriveSpendingKeys(seed: TestSeed().seed(),// todo: fix this
-                                                                              numberOfAccounts: 1).first else {
+        guard let spendingKey = try DerivationTool.default.deriveSpendingKeys(
+                seed: TestSeed().seed(),
+                numberOfAccounts: 1).first else {
             throw CoordinatorError.builderError
         }
-        try self.init(spendingKey: spendingKey, walletBirthday: walletBirthday, channelProvider: channelProvider)
+        
+        guard let uvk = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed(TestSeed().seed(), numberOfAccounts: 1).first else {
+            throw CoordinatorError.builderError
+        }
+        
+        try self.init(spendingKey: spendingKey, unifiedViewingKey: uvk, walletBirthday: walletBirthday, channelProvider: channelProvider)
     }
     
-    required init(spendingKey: String,
+    required init(
+        spendingKey: String,
+        unifiedViewingKey: UnifiedViewingKey,
          walletBirthday: BlockHeight,
          channelProvider: ChannelProvider) throws {
         self.spendingKey = spendingKey
@@ -80,7 +88,8 @@ class TestCoordinator {
                                 downloader: downloader,
                                 spendParamsURL: try __spendParamsURL(),
                                 outputParamsURL: try __outputParamsURL(),
-                                spendingKey: spendingKey,
+            spendingKey: spendingKey,
+            unifiedViewingKey: unifiedViewingKey,
                                 walletBirthday: WalletBirthday.birthday(with: birthday),
                                 loggerProxy: SampleLogger(logLevel: .debug))
         
@@ -234,6 +243,7 @@ class TestSynchronizerBuilder {
         spendParamsURL: URL,
         outputParamsURL: URL,
         spendingKey: String,
+        unifiedViewingKey: UnifiedViewingKey,
         walletBirthday: WalletBirthday,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer)  {
@@ -249,9 +259,10 @@ class TestSynchronizerBuilder {
             downloader: downloader,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
+            walletBirthday: walletBirthday.height,
             loggerProxy: loggerProxy
         )
-        try initializer.initialize(viewingKeys: [try DerivationTool().deriveViewingKey(spendingKey: spendingKey)], walletBirthday: walletBirthday.height)
+        try initializer.initialize(unifiedViewingKeys: [unifiedViewingKey], walletBirthday: walletBirthday.height)
         
         return ([spendingKey], try SDKSynchronizer(initializer: initializer)
         )
@@ -275,6 +286,10 @@ class TestSynchronizerBuilder {
         guard let spendingKey = try DerivationTool().deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw TestCoordinator.CoordinatorError.builderError
         }
+        
+        guard let uvk = try DerivationTool().deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: 1).first else {
+            throw TestCoordinator.CoordinatorError.builderError
+        }
         return try build(rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
             cacheDbURL: cacheDbURL,
@@ -287,6 +302,7 @@ class TestSynchronizerBuilder {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             spendingKey: spendingKey,
+            unifiedViewingKey: uvk,
             walletBirthday: walletBirthday)
         
     }

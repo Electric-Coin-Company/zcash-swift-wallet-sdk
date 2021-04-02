@@ -98,10 +98,6 @@ public class SDKSynchronizer: Synchronizer {
      */
     public convenience init(initializer: Initializer) throws {
         
-        var config = CompactBlockProcessor.Configuration(cacheDb: initializer.cacheDbURL,
-                                                         dataDb: initializer.dataDbURL,
-                                                         walletBirthday: initializer.walletBirthday.height)
-        
         try self.init(status: .disconnected,
                   initializer: initializer,
                   transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
@@ -132,8 +128,8 @@ public class SDKSynchronizer: Synchronizer {
         self.blockProcessor.stop()
     }
     
-    public func initialize(viewingKeys: [String], walletBirthday: BlockHeight) throws {
-        try self.initializer.initialize(viewingKeys: viewingKeys, walletBirthday: walletBirthday)
+    public func initialize(unifiedViewingKeys: [UnifiedViewingKey], walletBirthday: BlockHeight) throws {
+        try self.initializer.initialize(unifiedViewingKeys: unifiedViewingKeys, walletBirthday: walletBirthday)
         try self.blockProcessor.setStartHeight(WalletBirthday.birthday(with: walletBirthday).height)
     }
     
@@ -142,8 +138,7 @@ public class SDKSynchronizer: Synchronizer {
      - Throws: CompactBlockProcessorError when failures occur
      */
     public func start(retry: Bool = false) throws {
-
-        
+     
         guard status == .stopped || status == .disconnected || status == .synced else {
             assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
             return

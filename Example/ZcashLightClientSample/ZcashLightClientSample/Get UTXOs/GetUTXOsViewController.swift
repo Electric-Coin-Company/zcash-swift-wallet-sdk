@@ -10,12 +10,12 @@ import UIKit
 import ZcashLightClientKit
 import KRProgressHUD
 class GetUTXOsViewController: UIViewController {
-    @IBOutlet weak var tAddressField: UITextField!
-    @IBOutlet weak var getButton: UIButton!
-    @IBOutlet weak var getFromCache: UIButton!
-    @IBOutlet weak var shieldFundsButton: UIButton!
-    @IBOutlet weak var validAddressLabel: UILabel!
+    
+    @IBOutlet weak var transparentAddressLabel: UILabel!
+    @IBOutlet weak var verifiedBalanceLabel: UILabel!
+    @IBOutlet weak var totalBalanceLabel: UILabel!
     @IBOutlet weak var messageLabel: UILabel!
+    @IBOutlet weak var shieldFundsButton: UIButton!
     
     
     override func viewDidLoad() {
@@ -26,63 +26,13 @@ class GetUTXOsViewController: UIViewController {
     }
     
     func updateUI() {
-        let valid = Initializer.shared.isValidTransparentAddress(tAddressField.text ?? "")
+        let tAddress = try! DerivationTool.default.deriveTransparentAddress(seed: DemoAppConfig.seed)
+        self.transparentAddressLabel.text = tAddress
         
-        self.validAddressLabel.text = valid ? "Valid TransparentAddress" : "Invalid Transparent address"
-        self.validAddressLabel.textColor = valid ? UIColor.systemGreen : UIColor.systemRed
+        let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(address: tAddress)
         
-        self.getButton.isEnabled = valid
-        self.getFromCache.isEnabled = valid
-    }
-    
-    @IBAction func getButtonTapped(_ sender: Any) {
-        guard Initializer.shared.isValidTransparentAddress(tAddressField.text ?? ""),
-              let tAddr = tAddressField.text else {
-            self.messageLabel.text = "Invalid t-Address"
-            return
-        }
-        KRProgressHUD.showMessage("fetching")
-        AppDelegate.shared.sharedSynchronizer.refreshUTXOs(address: tAddr) { (result) in
-            DispatchQueue.main.async { [weak self] in
-                KRProgressHUD.dismiss()
-                switch result {
-                case .success(let utxos):
-                    do {
-                        let balance = try AppDelegate.shared.sharedSynchronizer.getTransparentBalance(address: tAddr)
-                    
-                        self?.messageLabel.text  = """
-                            Stored \(utxos.inserted.count) UTXOs for address \(tAddr)
-                            \(utxos.skipped.count) Skipped
-                            \(balance)
-                        """
-                    } catch {
-                        self?.messageLabel.text = "Error \(error)"
-                    }
-                    
-                case .failure(let error):
-                    self?.messageLabel.text = "Error \(error)"
-                }
-            }
-        }
-    }
-    
-    @IBAction func getFromCacheTapped(_ sender: Any) {
-        guard Initializer.shared.isValidTransparentAddress(tAddressField.text ?? ""),
-              let tAddr = tAddressField.text else {
-            self.messageLabel.text = "Invalid t-Address"
-            return
-        }
-        do {
-            let utxos = try AppDelegate.shared.sharedSynchronizer.cachedUTXOs(address: tAddr)
-            self.messageLabel.text = "found \(utxos.count) UTXOs for address \(tAddr) on cache"
-        } catch {
-            self.messageLabel.text = "Error \(error)"
-        }
-    }
-
-    
-    @IBAction func viewTapped(_ recognizer: UITapGestureRecognizer)  {
-        self.tAddressField.resignFirstResponder()
+        self.totalBalanceLabel.text = String(balance.total.asHumanReadableZecBalance())
+        self.verifiedBalanceLabel.text = String(balance.verified.asHumanReadableZecBalance())
     }
     
     @IBAction func shieldFunds(_ sender: Any) {
@@ -119,15 +69,4 @@ extension GetUTXOsViewController: UITextFieldDelegate {
         updateUI()
     }
     
-}
-
-
-extension WalletBalance {
-    var description: String {
-        """
-        WalletBalance:
-            verified: \(self.verified)
-            Total: \(self.total)
-        """
-    }
 }

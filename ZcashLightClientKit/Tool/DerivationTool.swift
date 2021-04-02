@@ -17,6 +17,8 @@ public protocol KeyValidation {
     
 }
 
+public typealias UnifiedViewingKey = (extfxk: String, extpub: String)
+
 public protocol KeyDeriving {
     /**
      Given a seed and a number of accounts, return the associated viewing keys.
@@ -69,18 +71,12 @@ public protocol KeyDeriving {
     func deriveShieldedAddress(viewingKey: String) throws -> String
     
     /**
-        Validates the given viewing key
-     - Throws DerivationError when  it's invalid
+     Derives a transparent address  from seedbytes, specifying account and index
      */
-    func validateViewingKey(viewingKey: String) throws
-    
-    // WIP probably shouldn't be used just yet. Why?
-            //  - because we need the private key associated with this seed and this function doesn't return it.
-            //  - the underlying implementation needs to be split out into a few lower-level calls
     func deriveTransparentAddress(seed: [UInt8], account: Int, index: Int) throws -> String
     
     /**
-     Derives a SecretKey to spend transparent funds from the given seed
+     Derives a SecretKey to spend transparent funds from a transparent secret key wif encoded
      */
     func deriveTransparentPrivateKey(seed: [UInt8], account: Int, index: Int) throws -> String
     
@@ -89,6 +85,13 @@ public protocol KeyDeriving {
      */
     func deriveTransparentAddressFromPrivateKey(_ tsk: String) throws -> String
     
+    func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String
+    
+    /**
+     derives unified viewing keys from seedbytes, specifying a number of accounts
+      - Returns an array of unified viewing key tuples.
+     */
+    func deriveUnifiedViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey]
 }
 
 public enum KeyDerivationErrors: Error {
@@ -98,7 +101,7 @@ public enum KeyDerivationErrors: Error {
 }
 
 public class DerivationTool: KeyDeriving {
-    
+        
     var rustwelding: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     
     public static let `default` = DerivationTool()
@@ -223,9 +226,27 @@ public class DerivationTool: KeyDeriving {
         }
     }
     
-    public func validateViewingKey(viewingKey: String) throws {
-                // TODO
-//        throw KeyDerivationErrors.unableToDerive
+    public func deriveUnifiedViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
+        guard numberOfAccounts > 0 else {
+            throw KeyDerivationErrors.invalidInput
+        }
+        do {
+            return try rustwelding.deriveUnifiedViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+    
+    public func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
+        guard !pubkey.isEmpty else {
+            throw KeyDerivationErrors.invalidInput
+        }
+        
+        do {
+            return try rustwelding.derivedTransparentAddressFromPublicKey(pubkey)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
     }
     
     /**
@@ -244,6 +265,7 @@ public class DerivationTool: KeyDeriving {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
+
 }
 
 extension DerivationTool: KeyValidation {
@@ -271,7 +293,6 @@ extension DerivationTool: KeyValidation {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
-    
     
     /**
      Derives the transparent address from a WIF Private Key

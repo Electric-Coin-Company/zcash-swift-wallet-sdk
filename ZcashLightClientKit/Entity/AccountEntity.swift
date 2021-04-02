@@ -14,8 +14,6 @@ protocol AccountEntity {
     var transparentAddress: String { get set }
 }
 
-
-
 struct Account: AccountEntity, Encodable, Decodable {
     
     enum CodingKeys: String, CodingKey {

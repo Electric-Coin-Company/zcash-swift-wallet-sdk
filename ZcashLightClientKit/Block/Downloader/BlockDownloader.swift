@@ -131,7 +131,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     }
     
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        try! lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
+        try lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
     }
     
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {

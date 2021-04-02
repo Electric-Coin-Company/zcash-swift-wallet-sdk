@@ -31,5 +31,5 @@ public extension ZcashSDK {
     /**
         minimum balance needed to do a shielding transaction
      */
-    public static let shieldingThreshold: Int64 = 10000
+    static let shieldingThreshold: Int64 = 10000
 }

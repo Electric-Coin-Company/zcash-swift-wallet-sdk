@@ -35,4 +35,3 @@ enum ZcashNetwork {
     case mainNet
     case testNet
 }
-

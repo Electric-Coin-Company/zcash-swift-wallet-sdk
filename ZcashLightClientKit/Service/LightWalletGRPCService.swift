@@ -337,11 +337,18 @@ extension LightWalletGRPCService: LightWalletService {
                 }
             })
             
-            var resultingCall = calls[0]
+            let resultingCall = calls[0]
             
             do {
-                try calls.dropFirst().reduce(into: resultingCall) { r, c in
-                r.status.and(c.status) }.status.wait()
+                let response = try calls.dropFirst().reduce(into: resultingCall) { r, c in
+                    _ = r.status.and(c.status)
+                }.status.wait()
+                switch response.code {
+                case .ok:
+                    result(.success(utxos))
+                default:
+                    result(.failure(.mapCode(response)))
+                }
                 
             } catch {
                 result(.failure(error.mapToServiceError()))

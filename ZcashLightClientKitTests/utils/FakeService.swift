@@ -18,6 +18,22 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
 }
 
 class MockLightWalletService: LightWalletService {
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
+    
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+    }
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+    }
+    
     func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
         
     }

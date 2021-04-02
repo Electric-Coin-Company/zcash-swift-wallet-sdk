@@ -3,6 +3,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+typedef struct {
+  char *extfvk;
+  char *extpub;
+} FFIUnifiedViewingKey;
+
+typedef struct {
+  FFIUnifiedViewingKey *ptr;
+  uintptr_t len;
+} FFIUVKBoxedSlice;
+
 int32_t zcashlc_branch_id_for_height(int32_t height);
 
 /**
@@ -82,6 +92,12 @@ char *zcashlc_derive_shielded_address_from_seed(const uint8_t *seed,
 char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk);
 
 /**
+ * derives a shielded address from the given viewing key.
+ * call zcashlc_string_free with the returned pointer when done using it
+ */
+char *zcashlc_derive_transparent_address_from_public_key(const char *pubkey);
+
+/**
  * Derives a transparent address from the given secret key enconded as a WIF string
  */
 char *zcashlc_derive_transparent_address_from_secret_key(const char *tsk);
@@ -105,10 +121,16 @@ char *zcashlc_derive_transparent_private_key_from_seed(const uint8_t *seed,
                                                        int32_t account,
                                                        int32_t index);
 
+FFIUVKBoxedSlice *zcashlc_derive_unified_viewing_keys_from_seed(const uint8_t *seed,
+                                                                uintptr_t seed_len,
+                                                                int32_t accounts);
+
 /**
  * Copies the last error message into the provided allocated buffer.
  */
 int32_t zcashlc_error_message_utf8(char *buf, int32_t length);
+
+void zcashlc_free_uvk_array(FFIUVKBoxedSlice *uvks);
 
 /**
  * Returns the address for the account.
@@ -190,7 +212,9 @@ char **zcashlc_init_accounts_table(const uint8_t *db_data,
 bool zcashlc_init_accounts_table_with_keys(const uint8_t *db_data,
                                            uintptr_t db_data_len,
                                            const char *const *extfvks,
-                                           uintptr_t extfvks_len);
+                                           uintptr_t extfvks_len,
+                                           const char *const *extpubs,
+                                           uintptr_t extpubs_len);
 
 /**
  * Initialises the data database with the given block.

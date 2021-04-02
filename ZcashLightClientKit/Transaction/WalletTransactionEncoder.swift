@@ -78,11 +78,6 @@ class WalletTransactionEncoder: TransactionEncoder {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
-        
-        let scannedHeight = try repository.lastScannedHeight()
-        guard let latestHeight = Int32(exactly: scannedHeight) else {
-            throw RustWeldingError.genericError(message: "could not convert \(scannedHeight)")
-        }
                 
         let txId = rustBackend.createToAddress(dbData: self.dataDbURL,
                                                account: Int32(accountIndex),

@@ -103,28 +103,33 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
         return extsks
     }
-    
-    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool {
         let dbData = dbData.osStr()
-        let viewingKeys = exfvks.map { UnsafePointer(strdup($0)) }
         
-        guard exfvks.count > 0 else {
-            throw RustWeldingError.malformedStringInput
-        }
         
-        let res = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, viewingKeys, UInt(viewingKeys.count));
-        
-        viewingKeys.compactMap({ UnsafeMutablePointer(mutating: $0) }).forEach({ free($0) })
-        
-        guard res else {
-            if let error = lastError() {
-                throw error
-            }
-            return false
-        }
-        return res
-        
+        false
     }
+//    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+//        let dbData = dbData.osStr()
+//        let viewingKeys = exfvks.map { UnsafePointer(strdup($0)) }
+//
+//        guard exfvks.count > 0 else {
+//            throw RustWeldingError.malformedStringInput
+//        }
+//
+//        let res = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, viewingKeys, UInt(viewingKeys.count));
+//
+//        viewingKeys.compactMap({ UnsafeMutablePointer(mutating: $0) }).forEach({ free($0) })
+//
+//        guard res else {
+//            if let error = lastError() {
+//                throw error
+//            }
+//            return false
+//        }
+//        return res
+//
+//    }
     
     static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
         let dbData = dbData.osStr()
@@ -344,6 +349,40 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
+    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
+        
+        guard let uvks_struct = zcashlc_derive_unified_viewing_keys_from_seed(seed, UInt(seed.count), Int32(numberOfAccounts)) else {
+            if let error = lastError() {
+                throw error
+            }
+            throw RustWeldingError.unableToDeriveKeys
+        }
+        
+        let uvks_size = uvks_struct.pointee.len
+        guard let uvks_array_pointer = uvks_struct.pointee.ptr, uvks_size > 0 else {
+            throw RustWeldingError.unableToDeriveKeys
+        }
+        var uvks = [UnifiedViewingKey]()
+        
+        for i: Int in 0 ..< Int(uvks_size) {
+            let itemPointer = uvks_array_pointer.advanced(by: i)
+            
+            guard let extfvk = String(validatingUTF8: itemPointer.pointee.extfvk) else {
+                throw RustWeldingError.unableToDeriveKeys
+            }
+            
+            guard let extpub = String(validatingUTF8: itemPointer.pointee.extpub) else {
+                throw RustWeldingError.unableToDeriveKeys
+            }
+            
+            uvks.append((extfvk,extpub))
+        }
+        
+        zcashlc_free_uvk_array(uvks_struct)
+        
+        return uvks
+    }
+    
     static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String? {
         guard let zaddrCStr = zcashlc_derive_shielded_address_from_seed(seed, UInt(seed.count), accountIndex) else {
             if let error = lastError() {
@@ -400,6 +439,20 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         let sk = String(validatingUTF8: skCStr)
         
         return sk
+    }
+    
+    static func derivedTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
+        guard !pubkey.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_public_key([CChar](pubkey.utf8CString)), let tAddr = String(validatingUTF8: tAddrCStr) else {
+            if let error = lastError() {
+                throw error
+            }
+            throw RustWeldingError.unableToDeriveKeys
+        }
+        return tAddr
     }
     
     static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String? {
