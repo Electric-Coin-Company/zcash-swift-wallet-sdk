@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 typedef struct {
-  char *extfvk;
-  char *extpub;
+  const char *extfvk;
+  const char *extpub;
 } FFIUnifiedViewingKey;
 
 typedef struct {
@@ -211,10 +211,7 @@ char **zcashlc_init_accounts_table(const uint8_t *db_data,
  */
 bool zcashlc_init_accounts_table_with_keys(const uint8_t *db_data,
                                            uintptr_t db_data_len,
-                                           const char *const *extfvks,
-                                           uintptr_t extfvks_len,
-                                           const char *const *extpubs,
-                                           uintptr_t extpubs_len);
+                                           FFIUVKBoxedSlice *uvks);
 
 /**
  * Initialises the data database with the given block.

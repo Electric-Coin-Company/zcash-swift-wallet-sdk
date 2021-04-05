@@ -297,8 +297,8 @@ pub unsafe extern "C" fn zcashlc_derive_extended_spending_keys(
 
 #[repr(C)]
 pub struct FFIUnifiedViewingKey {
-    extfvk: *mut c_char,
-    extpub: *mut c_char,
+    extfvk: *const c_char,
+    extpub: *const c_char,
 }
 
 #[repr(C)]

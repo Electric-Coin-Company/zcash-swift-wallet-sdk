@@ -103,11 +103,52 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
         return extsks
     }
+    
     static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool {
         let dbData = dbData.osStr()
         
+        var ffiUvks = [FFIUnifiedViewingKey]()
+        for uvk in uvks {
+            guard !uvk.extfxk.containsCStringNullBytesBeforeStringEnding() else {
+                throw RustWeldingError.malformedStringInput
+            }
+            guard !uvk.extpub.containsCStringNullBytesBeforeStringEnding() else {
+                throw RustWeldingError.malformedStringInput
+            }
+
+            let extfvkCStr = [CChar](String(uvk.extfxk).utf8CString)
+            
+            let extfvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extfvkCStr.count)
+            extfvkPtr.initialize(from: extfvkCStr, count: extfvkCStr.count)
+            
+            let extpubCStr = [CChar](String(uvk.extpub).utf8CString)
+            let extpubPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extpubCStr.count)
+            extpubPtr.initialize(from:extpubCStr, count: extpubCStr.count)
+            
+            
+            ffiUvks.append(FFIUnifiedViewingKey(extfvk: extfvkPtr, extpub: extpubPtr))
+        }
         
-        false
+        
+        var result = false
+        ffiUvks.withContiguousMutableStorageIfAvailable { p in
+            let slice = UnsafeMutablePointer<FFIUVKBoxedSlice>.allocate(capacity: 1)
+            slice.initialize(to: FFIUVKBoxedSlice(ptr: p.baseAddress, len: UInt(p.count)))
+            
+            result = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, slice)
+            slice.deinitialize(count: 1)
+//            slice.deallocate()
+        }
+        
+        defer {
+            for uvk in ffiUvks {
+                uvk.extfvk.deallocate()
+                uvk.extpub.deallocate()
+            }
+        }
+        
+        return result
+        
     }
 //    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
 //        let dbData = dbData.osStr()
