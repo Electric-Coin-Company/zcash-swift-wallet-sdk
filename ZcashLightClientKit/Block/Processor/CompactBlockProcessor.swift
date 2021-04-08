@@ -25,6 +25,7 @@ public enum CompactBlockProcessorError: Error {
     case maxAttemptsReached(attempts: Int)
     case unspecifiedError(underlyingError: Error)
     case criticalError
+    case invalidAccount
 }
 /**
  CompactBlockProcessor notification userInfo object keys.
@@ -203,6 +204,7 @@ public class CompactBlockProcessor {
     
     private var downloader: CompactBlockDownloading
     private var transactionRepository: TransactionRepository
+    private var accountRepository: AccountRepository
     private var rustBackend: ZcashRustBackendWelding.Type
     private(set) var config: Configuration = Configuration.standard
     private var queue: OperationQueue = {
@@ -254,7 +256,8 @@ public class CompactBlockProcessor {
         self.init(downloader: downloader,
                   backend: backend,
                   config: config,
-                  repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb))
+                  repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb),
+                  accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true))
     }
     
     /**
@@ -269,15 +272,21 @@ public class CompactBlockProcessor {
                   config: Configuration(cacheDb: initializer.cacheDbURL,
                                         dataDb: initializer.dataDbURL,
                                         walletBirthday: initializer.walletBirthday.height),
-                  repository: initializer.transactionRepository)
+                  repository: initializer.transactionRepository,
+                  accountRepository: initializer.accountRepository)
     }
     
-    internal init(downloader: CompactBlockDownloading, backend: ZcashRustBackendWelding.Type, config: Configuration, repository: TransactionRepository) {
+    internal init(downloader: CompactBlockDownloading,
+                  backend: ZcashRustBackendWelding.Type,
+                  config: Configuration,
+                  repository: TransactionRepository,
+                  accountRepository: AccountRepository) {
         self.downloader = downloader
         self.rustBackend = backend
         self.config = config
         self.transactionRepository = repository
         self.latestBlockHeight = config.walletBirthday
+        self.accountRepository = accountRepository
     }
     
     deinit {
@@ -650,34 +659,50 @@ public class CompactBlockProcessor {
     }
     
     private func processingFinished(height: BlockHeight) {
-        self.state = .synced
-        NotificationCenter.default.post(
-            name: Notification.Name.blockProcessorFinished,
-            object: self,
-            userInfo: [
-             CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height,
-             CompactBlockProcessorNotificationKey.foundBlocks : self.foundBlocks
-            ])
-        // fetch
-        
         if foundBlocks {
-            let dataDb = config.dataDb
-            self.queue.addOperation { [self] in
-                let accountDao = AccountSQDAO(dbProvider: SimpleConnectionProvider(path: dataDb.path,readonly: true))
+            
+            // fixme: support multiple accounts
+            guard let tAddress = self.getTransparentAddress(accountIndex: 0) else {
+                LoggerProxy.error("Unable to retrieve tAddress for account 0. this is a serious problem")
+                return
+            }
+            
+            refreshUTXOs(tAddress: tAddress, startHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT) { [weak self] r in
+                guard let self = self else {
+                    LoggerProxy.warn("code block called on unretained self")
+                    return
+                }
                 
-                do {
-                    let utxos = try downloader.fetchUnspentTransactionOutputs(tAddresses: try accountDao.getAll().map({ $0.transparentAddress }), startHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
-                    
-                    let storedUTXOs = storeUTXOs(utxos, in: dataDb)
-                    
-                    NotificationCenter.default.post(name: .blockProcessorStoredUTXOs, object: self, userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs : storedUTXOs])
-                    
-                } catch {
+                switch r {
+                case .success(let refreshedUtxos):
+                    NotificationCenter.default.post(name: .blockProcessorStoredUTXOs, object: self, userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs : refreshedUtxos])
+                   
+                    NotificationCenter.default.post(
+                        name: Notification.Name.blockProcessorFinished,
+                        object: self,
+                        userInfo: [
+                         CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height,
+                         CompactBlockProcessorNotificationKey.foundBlocks : self.foundBlocks
+                        ])
+                    self.state = .synced
+                    self.setTimer()
+
+                case .failure(let error):
                     LoggerProxy.error("failed to refresh utxos")
+                    self.fail(error)
                 }
             }
+        } else {
+            NotificationCenter.default.post(
+                name: Notification.Name.blockProcessorFinished,
+                object: self,
+                userInfo: [
+                 CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height,
+                 CompactBlockProcessorNotificationKey.foundBlocks : self.foundBlocks
+                ])
+            self.state = .synced
+            setTimer()
         }
-        setTimer()
     }
     
     private func setTimer() {
@@ -733,47 +758,7 @@ public class CompactBlockProcessor {
         }
         
     }
-    
-    func downloadUTXOs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void) {
-        let dataDb = self.config.dataDb
-        self.downloader.fetchUnspentTransactionOutputs(tAddress: tAddress, startHeight: startHeight) { [weak self](r) in
-            
-            switch r {
-            case .success(let utxos):
-                DispatchQueue.main.async {
-                    self?.queue.addOperation {
-                    
-                        guard let self = self else { return }
-                        
-                        result(.success(self.storeUTXOs(utxos, in: dataDb)))
-                    }
-                }
-            case .failure(let error):
-                result(.failure(self?.mapError(error) ?? error))
-            }
-        }
-    }
-    
-    private func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) -> RefreshedUTXOs {
-        var refreshed = [UnspentTransactionOutputEntity]()
-        var skipped = [UnspentTransactionOutputEntity]()
-        for utxo in utxos {
-            do {
-                try self.rustBackend.putUnspentTransparentOutput(
-                    dbData: dataDb,
-                    address: utxo.address,
-                    txid: utxo.txid.bytes,
-                    index: utxo.index,
-                    script: utxo.script.bytes,
-                    value: Int64(utxo.valueZat),
-                    height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
-            } catch {
-                LoggerProxy.info("failed to put utxo - error: \(error)")
-                skipped.append(utxo)
-            }
-        }
-        return (inserted: refreshed, skipped: skipped)
-    }
+
     
     func fail(_ error: Error) {
         // todo specify: failure
@@ -892,4 +877,101 @@ extension CompactBlockProcessor {
     public func utxoCacheBalance(tAddress: String) throws -> WalletBalance {
         try rustBackend.downloadedUtxoBalance(dbData: config.dataDb, address: tAddress)
     }
+}
+
+extension CompactBlockProcessor {
+    
+    public func getUnifiedAddres(accountIndex: Int) -> UnifiedAddress? {
+        guard let account = try? accountRepository.findBy(account: accountIndex) else {
+            return nil
+        }
+        return UnifiedAddressShim(__account: account)
+    }
+    
+    public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
+        try? accountRepository.findBy(account: accountIndex)?.address
+    }
+    
+    public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
+        try? accountRepository.findBy(account: accountIndex)?.transparentAddress
+    }
+    
+    public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
+        guard let tAddress = try? accountRepository.findBy(account: accountIndex)?.transparentAddress else {
+            throw CompactBlockProcessorError.invalidAccount
+        }
+        return try utxoCacheBalance(tAddress: tAddress)
+    }
+}
+
+fileprivate struct UnifiedAddressShim {
+    let __account: AccountEntity
+}
+
+extension UnifiedAddressShim: UnifiedAddress {
+    var tAddress: TransparentAddress {
+        get {
+            __account.transparentAddress
+        }
+    }
+    
+    var zAddress: SaplingShieldedAddress {
+        get {
+            __account.address
+        }
+    }
+}
+
+
+extension CompactBlockProcessor {
+    
+    func refreshUTXOs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void) {
+        let dataDb = self.config.dataDb
+        self.downloader.fetchUnspentTransactionOutputs(tAddress: tAddress, startHeight: startHeight) { [weak self](r) in
+            
+            switch r {
+            case .success(let utxos):
+                DispatchQueue.main.async {
+                    self?.queue.addOperation { [self] in
+                    
+                        guard let self = self else { return }
+                        do {
+                            guard try self.rustBackend.clearUtxos(dbData: dataDb, address: tAddress, sinceHeight: startHeight - 1) >= 0 else {
+                                result(.failure(CompactBlockProcessorError.generalError(message: "attempted to clear utxos but -1 was returned")))
+                                return
+                            }
+                        } catch {
+                            result(.failure(self.mapError(error)))
+                        }
+                        result(.success(self.storeUTXOs(utxos, in: dataDb)))
+                    }
+                }
+            case .failure(let error):
+                result(.failure(self?.mapError(error) ?? error))
+            }
+        }
+    }
+    
+    fileprivate func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) -> RefreshedUTXOs {
+        var refreshed = [UnspentTransactionOutputEntity]()
+        var skipped = [UnspentTransactionOutputEntity]()
+        for utxo in utxos {
+            do {
+                try self.rustBackend.putUnspentTransparentOutput(
+                    dbData: dataDb,
+                    address: utxo.address,
+                    txid: utxo.txid.bytes,
+                    index: utxo.index,
+                    script: utxo.script.bytes,
+                    value: Int64(utxo.valueZat),
+                    height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
+            } catch {
+                LoggerProxy.info("failed to put utxo - error: \(error)")
+                skipped.append(utxo)
+            }
+        }
+        return (inserted: refreshed, skipped: skipped)
+    }
+    
+//    func refreshUTXOs
 }

@@ -17,8 +17,6 @@ public protocol KeyValidation {
     
 }
 
-public typealias UnifiedViewingKey = (extfxk: String, extpub: String)
-
 public protocol KeyDeriving {
     /**
      Given a seed and a number of accounts, return the associated viewing keys.

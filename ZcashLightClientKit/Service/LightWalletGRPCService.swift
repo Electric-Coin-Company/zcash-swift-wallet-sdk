@@ -379,8 +379,7 @@ extension LightWalletServiceError {
         case .cancelled:
             return LightWalletServiceError.userCancelled
         case .unknown:
-            return LightWalletServiceError.unknown
-
+            return LightWalletServiceError.generalError(message: status.message ?? "GRPC unknown error contains no message")
         case .deadlineExceeded:
             return LightWalletServiceError.timeOut
         default:

@@ -96,7 +96,7 @@ class AdvancedReOrgTests: XCTestCase {
             shouldContinue = true
         }, error: self.handleError)
         
-        wait(for: [preTxExpectation], timeout: 5)
+        wait(for: [preTxExpectation], timeout: 10)
         
         guard shouldContinue else {
             XCTFail("pre receive sync failed")

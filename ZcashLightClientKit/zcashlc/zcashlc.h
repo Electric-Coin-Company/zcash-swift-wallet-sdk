@@ -20,6 +20,11 @@ int32_t zcashlc_branch_id_for_height(int32_t height);
  */
 void zcashlc_clear_last_error(void);
 
+int32_t zcashlc_clear_utxos(const uint8_t *db_data,
+                            uintptr_t db_data_len,
+                            const char *taddress,
+                            int32_t above_height);
+
 /**
  * Creates a transaction paying the specified address from the given account.
  *

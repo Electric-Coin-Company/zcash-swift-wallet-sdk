@@ -64,6 +64,7 @@ public class Initializer {
     private(set) var outputParamsURL: URL
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
+    private(set) var accountRepository: AccountRepository
     private(set) var downloader: CompactBlockDownloader
     private(set) public var walletBirthday: WalletBirthday
     /**
@@ -99,6 +100,7 @@ public class Initializer {
                   endpoint: endpoint,
                   service: lwdService,
                   repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
+                  accountRepository: AccountRepositoryBuilder.build(dataDbURL: dataDbURL, readOnly: true, caching: true),
                   downloader: CompactBlockDownloader(service: lwdService, storage: storage),
                   spendParamsURL: spendParamsURL,
                   outputParamsURL: outputParamsURL,
@@ -119,6 +121,7 @@ public class Initializer {
          endpoint: LightWalletEndpoint,
          service: LightWalletService,
          repository: TransactionRepository,
+         accountRepository: AccountRepository,
          downloader: CompactBlockDownloader,
          spendParamsURL: URL,
          outputParamsURL: URL,
@@ -139,6 +142,7 @@ public class Initializer {
         self.alias = alias
         self.lightWalletService = service
         self.transactionRepository = repository
+        self.accountRepository = accountRepository
         self.downloader = downloader
         self.walletBirthday = WalletBirthday.birthday(with: walletBirthday)
     }
@@ -250,7 +254,6 @@ public class Initializer {
         }catch {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
-        
     }
     
     /**
@@ -258,7 +261,7 @@ public class Initializer {
      - Parameter account:  the index of the account
      */
     public func getAddress(index account: Int = 0) -> String? {
-        rustBackend.getAddress(dbData: dataDbURL, account: Int32(account))
+        try? accountRepository.findBy(account: account)?.address
     }
     /**
      get (unverified) balance from the given account index
@@ -346,37 +349,14 @@ class CompactBlockProcessorBuilder {
     static func buildProcessor(configuration: CompactBlockProcessor.Configuration,
                                downloader: CompactBlockDownloader,
                                transactionRepository: TransactionRepository,
+                               accountRepository: AccountRepository,
                                backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
         return CompactBlockProcessor(downloader: downloader,
                                      backend: backend,
                                      config: configuration,
-                                     repository: transactionRepository)
+                                     repository: transactionRepository,
+                                     accountRepository: accountRepository)
     }
 }
 
-/**
- Represents the wallet's birthday which can be thought of as a checkpoint at the earliest moment in history where
- transactions related to this wallet could exist. Ideally, this would correspond to the latest block height at the
- time the wallet key was created. Worst case, the height of Sapling activation could be used (280000).
- 
- Knowing a wallet's birthday can significantly reduce the amount of data that it needs to download because none of
- the data before that height needs to be scanned for transactions. However, we do need the Sapling tree data in
- order to construct valid transactions from that point forward. This birthday contains that tree data, allowing us
- to avoid downloading all the compact blocks required in order to generate it.
- 
- New wallets can ignore any blocks created before their birthday.
- 
- - Parameters:
-    - height: the height at the time the wallet was born
-    -  hash: the block hash corresponding to the given height
-    -  time: the time the wallet was born, in seconds
-    -  tree: the sapling tree corresponding to the given height. This takes around 15 minutes of processing to
- generate from scratch because all blocks since activation need to be considered. So when it is calculated in
- advance it can save the user a lot of time.
- */
-public struct WalletBirthday {
-   public private(set) var height: BlockHeight = -1
-   public private(set) var hash: String = ""
-   public private(set) var time: UInt32 = 0
-   public private(set) var tree: String = ""
-}
+

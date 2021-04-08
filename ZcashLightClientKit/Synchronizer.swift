@@ -24,6 +24,7 @@ public enum SynchronizerError: Error {
     case parameterMissing(underlyingError: Error)
     case rewindError(underlyingError: Error)
     case rewindErrorUnknownArchorHeight
+    case invalidAccount
 }
 
 public enum ShieldFundsError: Error {
@@ -45,10 +46,6 @@ extension ShieldFundsError: LocalizedError {
     }
 }
 
-public protocol WalletBalance {
-    var verified: Int64 { get set }
-    var total: Int64 { get set }
-}
 
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
@@ -94,10 +91,25 @@ public protocol Synchronizer {
     func stop() throws
     
     /**
-    Gets the address for the given account.
+    Gets the sapling shielded address for the given account.
     - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    - Returns the address or nil if account index is incorrect
     */
-    func getShieldedAddress(accountIndex: Int) -> String
+    func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress?
+    
+    /**
+    Gets the unified address for the given account.
+    - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    - Returns the address or nil if account index is incorrect
+    */
+    func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress?
+    
+    /**
+    Gets the transparent address for the given account.
+    - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    - Returns the address or nil if account index is incorrect
+    */
+    func getTransparentAddress(accountIndex: Int) -> TransparentAddress?
     
     /**
     Sends zatoshi.
@@ -184,7 +196,7 @@ public protocol Synchronizer {
     /**
         gets the last stored unshielded balance
      */
-    func getTransparentBalance(address: String) throws -> WalletBalance
+    func getTransparentBalance(accountIndex: Int) throws -> WalletBalance
     
     /**
      gets the shielded total balance (includes verified and unverified balance)

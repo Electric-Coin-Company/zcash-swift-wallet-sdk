@@ -77,6 +77,10 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight) throws -> Int32 {
+        -1
+    }
+    
     static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool {
         false
     }

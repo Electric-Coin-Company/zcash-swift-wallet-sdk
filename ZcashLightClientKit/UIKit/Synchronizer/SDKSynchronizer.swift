@@ -409,9 +409,6 @@ public class SDKSynchronizer: Synchronizer {
             resultBlock(.failure(error))
         }
     }
-    public func getShieldedAddress(accountIndex: Int) -> String {
-        initializer.getAddress(index: accountIndex) ?? ""
-    }
     
     public func cancelSpend(transaction: PendingTransactionEntity) -> Bool {
         transactionManager.cancel(pendingTransaction: transaction)
@@ -478,7 +475,7 @@ public class SDKSynchronizer: Synchronizer {
    
     public func refreshUTXOs(address: String, from height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
         
-        self.blockProcessor.downloadUTXOs(tAddress: address, startHeight: height, result: result)
+        self.blockProcessor.refreshUTXOs(tAddress: address, startHeight: height, result: result)
     }
     
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
@@ -487,6 +484,22 @@ public class SDKSynchronizer: Synchronizer {
     
     public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Int64 {
         initializer.getVerifiedBalance(account: accountIndex)
+    }
+    
+    public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
+        blockProcessor.getShieldedAddress(accountIndex: accountIndex)
+    }
+    
+    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
+        blockProcessor.getUnifiedAddres(accountIndex: accountIndex)
+    }
+    
+    public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
+        blockProcessor.getTransparentAddress(accountIndex: accountIndex)
+    }
+    
+    public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
+        try blockProcessor.getTransparentBalance(accountIndex: accountIndex)
     }
     
     /**
@@ -619,6 +632,8 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.uncategorized(underlyingError: underlyingError)
             case .criticalError:
                 return SynchronizerError.criticalError
+            case .invalidAccount:
+                return SynchronizerError.invalidAccount
             }
         }
         return SynchronizerError.uncategorized(underlyingError: error)

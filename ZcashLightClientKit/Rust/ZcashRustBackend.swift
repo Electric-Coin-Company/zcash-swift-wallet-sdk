@@ -109,14 +109,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         var ffiUvks = [FFIUnifiedViewingKey]()
         for uvk in uvks {
-            guard !uvk.extfxk.containsCStringNullBytesBeforeStringEnding() else {
+            guard !uvk.extfvk.containsCStringNullBytesBeforeStringEnding() else {
                 throw RustWeldingError.malformedStringInput
             }
             guard !uvk.extpub.containsCStringNullBytesBeforeStringEnding() else {
                 throw RustWeldingError.malformedStringInput
             }
 
-            let extfvkCStr = [CChar](String(uvk.extfxk).utf8CString)
+            let extfvkCStr = [CChar](String(uvk.extfvk).utf8CString)
             
             let extfvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extfvkCStr.count)
             extfvkPtr.initialize(from: extfvkCStr, count: extfvkCStr.count)
@@ -228,6 +228,23 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         let dbData = dbData.osStr()
         return zcashlc_get_total_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString))
+    }
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> Int32 {
+        let dbData = dbData.osStr()
+        
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let result = zcashlc_clear_utxos(dbData.0, dbData.1, [CChar](address.utf8CString), Int32(sinceHeight))
+        
+        guard result > 0 else {
+            if let error = lastError() {
+                throw error
+            }
+            return result
+        }
+        return result
     }
     
     static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool {
@@ -416,7 +433,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 throw RustWeldingError.unableToDeriveKeys
             }
             
-            uvks.append((extfvk,extpub))
+            uvks.append(UVK(extfvk: extfvk, extpub: extpub))
         }
         
         zcashlc_free_uvk_array(uvks_struct)
@@ -522,6 +539,11 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return branchId
     }
     
+}
+
+private struct UVK: UnifiedViewingKey {
+    var extfvk: ExtendedFullViewingKey
+    var extpub: ExtendedPublicKey
 }
 
 private extension ZcashRustBackend {

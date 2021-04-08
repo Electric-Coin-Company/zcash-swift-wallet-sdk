@@ -81,7 +81,7 @@ class DerivationToolTests: XCTestCase {
         let unifiedKeys = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 1)
         XCTAssertEqual(unifiedKeys.count, 1)
         
-        XCTAssertEqual(unifiedKeys[0].extfxk, expectedViewingKey)
+        XCTAssertEqual(unifiedKeys[0].extfvk, expectedViewingKey)
         
         XCTAssertEqual(expectedTransparentAddress, try DerivationTool.default.deriveTransparentAddressFromPublicKey(unifiedKeys[0].extpub))
     }
@@ -90,7 +90,7 @@ class DerivationToolTests: XCTestCase {
         let unifiedKeys = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 10)
         XCTAssertEqual(unifiedKeys.count, 10)
         
-        XCTAssertEqual(unifiedKeys[0].extfxk, expectedViewingKey)
+        XCTAssertEqual(unifiedKeys[0].extfvk, expectedViewingKey)
         
         XCTAssertEqual(expectedTransparentAddress, try DerivationTool.default.deriveTransparentAddressFromPublicKey(unifiedKeys[0].extpub))
     }

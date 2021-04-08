@@ -35,7 +35,7 @@ use zcash_client_sqlite::{
     error::SqliteClientError,
     wallet::{
         rewind_to_height,
-        put_received_transparent_utxo,
+        put_received_transparent_utxo, delete_utxos_above,
         init::{init_accounts_table, init_blocks_table, init_wallet_db,}
     },
     BlockDB, NoteId, WalletDB,
@@ -977,7 +977,7 @@ pub extern "C" fn zcashlc_put_utxo(
         let db_data = wallet_db(db_data, db_data_len)?;
         let mut db_data = db_data.get_update_ops()?;
 
-        let addr = unsafe {CStr::from_ptr(address_str).to_str()? };
+        let addr = unsafe { CStr::from_ptr(address_str).to_str()? };
         let txid_bytes = unsafe { slice::from_raw_parts(txid_bytes, txid_bytes_len) };
         let mut txid = [0u8; 32];
         txid.copy_from_slice(&txid_bytes);
@@ -1003,6 +1003,27 @@ pub extern "C" fn zcashlc_put_utxo(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn zcashlc_clear_utxos(
+    db_data: *const u8,
+    db_data_len: usize,
+    taddress: *const c_char,
+    above_height: i32,
+) -> i32 {
+    let res = catch_panic(|| {
+        let db_data = wallet_db(db_data, db_data_len)?;
+        let mut db_data = db_data.get_update_ops()?;
+        let addr =  CStr::from_ptr(taddress).to_str()?;
+        let taddress = TransparentAddress::decode(&NETWORK, &addr).unwrap();
+        let height = BlockHeight::from(above_height as u32);
+        match delete_utxos_above(&mut db_data, &taddress, height) {
+            Ok(rows) => Ok(rows as i32),
+            Err(e) => Err(format_err!("Error while clearing UTXOs: {}", e)),
+        }
+    });
+    unwrap_exc_or(res, -1)
+}
+
+#[no_mangle]
 pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     db_data: *const u8,
     db_data_len: usize,
@@ -1020,7 +1041,7 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
             Err(e) => Err(format_err!("Error while decrypting transaction: {}", e)),
         }
     });
-    unwrap_exc_or_null(res)
+    unwrap_exc_or(res, -1)
 }
 
 /// Creates a transaction paying the specified address from the given account.
@@ -1087,7 +1108,14 @@ pub extern "C" fn zcashlc_create_to_address(
             }
         };
 
-        let memo = Memo::from_str(&memo).map_err(|_| format_err!("Invalid memo"))?;
+        // TODO: consider warning in this case somehow, rather than swallowing this error
+        let memo = match to {
+            RecipientAddress::Shielded(_) => {
+                let memo_value = Memo::from_str(&memo).map_err(|_| format_err!("Invalid memo"))?;
+                Some(MemoBytes::from(&memo_value))
+            },
+            RecipientAddress::Transparent(_) => None
+        };
 
         let prover = LocalTxProver::new(spend_params, output_params);
 
@@ -1099,7 +1127,7 @@ pub extern "C" fn zcashlc_create_to_address(
             &extsk,
             &to,
             value,
-            Some(MemoBytes::from(memo)),
+            memo,
             OvkPolicy::Sender,
         )
         .map_err(|e| format_err!("Error while sending funds: {}", e))

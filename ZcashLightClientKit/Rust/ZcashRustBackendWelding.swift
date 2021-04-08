@@ -71,14 +71,7 @@ public protocol ZcashRustBackendWelding {
        - uvks: an array of UnifiedViewingKeys 
      */
     static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool
-//    /**
-//    initialize the accounts table from a given seed and a number of accounts
-//     - Parameters:
-//       - dbData: location of the data db
-//       - exfvks: byte array of the zip32 seed
-//     - Returns: a boolean indicating if the database was initialized or an error
-// */
-//    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool
+
     
     /**
     initialize the blocks table from a given checkpoint (birthday)
@@ -195,6 +188,17 @@ public protocol ZcashRustBackendWelding {
      */
     static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool
     
+    
+    /**
+     clears the cached utxos for the given address from the specified height on
+     - Parameters:
+      - dbData: location of the data db file
+      - address: the address of the UTXO
+      - sinceheight: clear the UXTOs from that address on
+     - Returns: the amount of UTXOs cleared or -1 on error
+     
+     */
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight) throws -> Int32
     /**
         Gets the balance of the previously downloaded UTXOs
      - Parameters:
