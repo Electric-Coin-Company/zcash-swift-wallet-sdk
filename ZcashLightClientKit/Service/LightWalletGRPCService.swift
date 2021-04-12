@@ -221,7 +221,7 @@ extension LightWalletGRPCService: LightWalletService {
     
     public func fetchUTXOs(for tAddress: String, height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> [UnspentTransactionOutputEntity] {
         let arg = GetAddressUtxosArg.with { (utxoArgs) in
-            utxoArgs.address = tAddress
+            utxoArgs.addresses = [tAddress]
             utxoArgs.startHeight = UInt64(height)
         }
         do {
@@ -245,7 +245,7 @@ extension LightWalletGRPCService: LightWalletService {
         queue.async { [weak self] in
             guard let self = self else { return }
             let arg = GetAddressUtxosArg.with { (utxoArgs) in
-                utxoArgs.address = tAddress
+                utxoArgs.addresses = [tAddress]
                 utxoArgs.startHeight = UInt64(height)
             }
             var utxos = [UnspentTransactionOutputEntity]()
@@ -285,24 +285,22 @@ extension LightWalletGRPCService: LightWalletService {
         
         var utxos = [UnspentTransactionOutputEntity]()
         
-        for addr in tAddresses {
-            let arg = GetAddressUtxosArg.with { (utxoArgs) in
-                utxoArgs.address = addr
-                utxoArgs.startHeight = UInt64(height)
-            }
-            utxos.append(contentsOf:
-                try self.compactTxStreamer.getAddressUtxos(arg).response.wait().addressUtxos.map({ reply in
-                UTXO(id: nil,
-                     address: addr,
-                     prevoutTxId: reply.txid,
-                     prevoutIndex: Int(reply.index),
-                     script: reply.script,
-                     valueZat: Int(reply.valueZat),
-                     height: Int(reply.height),
-                     spentInTx: nil)
-                })
-            )
+        let arg = GetAddressUtxosArg.with { (utxoArgs) in
+            utxoArgs.addresses = tAddresses
+            utxoArgs.startHeight = UInt64(height)
         }
+        utxos.append(contentsOf:
+            try self.compactTxStreamer.getAddressUtxos(arg).response.wait().addressUtxos.map({ reply in
+            UTXO(id: nil,
+                 address: reply.address,
+                 prevoutTxId: reply.txid,
+                 prevoutIndex: Int(reply.index),
+                 script: reply.script,
+                 valueZat: Int(reply.valueZat),
+                 height: Int(reply.height),
+                 spentInTx: nil)
+            })
+        )
        
         return utxos
         
@@ -317,31 +315,22 @@ extension LightWalletGRPCService: LightWalletService {
         var utxos = [UnspentTransactionOutputEntity]()
         self.queue.async { [weak self] in
             guard let self = self else { return }
-            let calls = tAddresses.map({ address -> ServerStreamingCall<GetAddressUtxosArg, GetAddressUtxosReply> in
-                let args = GetAddressUtxosArg.with { (utxoArgs) in
-                    utxoArgs.address = address
-                    utxoArgs.startHeight = UInt64(height)
-                }
-                
-                return self.compactTxStreamer.getAddressUtxosStream(args) { reply in
-                    utxos.append(
-                        UTXO(id: nil,
-                             address: address,
-                             prevoutTxId: reply.txid,
-                             prevoutIndex: Int(reply.index),
-                             script: reply.script,
-                             valueZat: Int(reply.valueZat),
-                             height: Int(reply.height),
-                             spentInTx: nil)
-                    )
-                }
-            })
-            
-            let resultingCall = calls[0]
-            
+            let args = GetAddressUtxosArg.with { (utxoArgs) in
+                utxoArgs.addresses = tAddresses
+                utxoArgs.startHeight = UInt64(height)
+            }
             do {
-                let response = try calls.dropFirst().reduce(into: resultingCall) { r, c in
-                    _ = r.status.and(c.status)
+                let response = try self.compactTxStreamer.getAddressUtxosStream(args) { reply in
+                        utxos.append(
+                            UTXO(id: nil,
+                                 address: reply.address,
+                                 prevoutTxId: reply.txid,
+                                 prevoutIndex: Int(reply.index),
+                                 script: reply.script,
+                                 valueZat: Int(reply.valueZat),
+                                 height: Int(reply.height),
+                                 spentInTx: nil)
+                        )
                 }.status.wait()
                 switch response.code {
                 case .ok:
@@ -349,12 +338,9 @@ extension LightWalletGRPCService: LightWalletService {
                 default:
                     result(.failure(.mapCode(response)))
                 }
-                
             } catch {
                 result(.failure(error.mapToServiceError()))
             }
-            
-            result(.success(utxos))
         }
     }
 }

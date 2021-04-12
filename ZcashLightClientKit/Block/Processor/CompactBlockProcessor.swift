@@ -944,7 +944,6 @@ extension CompactBlockProcessor {
                             }
                         } catch {
                             result(.failure(self.mapError(error)))
-
                         }
                         result(.success(self.storeUTXOs(utxos, in: dataDb)))
                     }

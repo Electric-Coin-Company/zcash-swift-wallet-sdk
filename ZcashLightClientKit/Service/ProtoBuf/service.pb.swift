@@ -341,12 +341,14 @@ struct TreeState {
   init() {}
 }
 
+/// Results are sorted by height, which makes it easy to issue another
+/// request that picks up from where the previous left off.
 struct GetAddressUtxosArg {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var address: String = String()
+  var addresses: [String] = []
 
   var startHeight: UInt64 = 0
 
@@ -362,6 +364,8 @@ struct GetAddressUtxosReply {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
+
+  var address: String = String()
 
   var txid: Data = SwiftProtobuf.Internal.emptyData
 
@@ -991,7 +995,7 @@ extension TreeState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
 extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetAddressUtxosArg"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "address"),
+    1: .same(proto: "addresses"),
     2: .same(proto: "startHeight"),
     3: .same(proto: "maxEntries"),
   ]
@@ -999,7 +1003,7 @@ extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.address)
+      case 1: try decoder.decodeRepeatedStringField(value: &self.addresses)
       case 2: try decoder.decodeSingularUInt64Field(value: &self.startHeight)
       case 3: try decoder.decodeSingularUInt32Field(value: &self.maxEntries)
       default: break
@@ -1008,8 +1012,8 @@ extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.address.isEmpty {
-      try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
+    if !self.addresses.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.addresses, fieldNumber: 1)
     }
     if self.startHeight != 0 {
       try visitor.visitSingularUInt64Field(value: self.startHeight, fieldNumber: 2)
@@ -1021,7 +1025,7 @@ extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 
   static func ==(lhs: GetAddressUtxosArg, rhs: GetAddressUtxosArg) -> Bool {
-    if lhs.address != rhs.address {return false}
+    if lhs.addresses != rhs.addresses {return false}
     if lhs.startHeight != rhs.startHeight {return false}
     if lhs.maxEntries != rhs.maxEntries {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1032,6 +1036,7 @@ extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 extension GetAddressUtxosReply: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetAddressUtxosReply"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    6: .same(proto: "address"),
     1: .same(proto: "txid"),
     2: .same(proto: "index"),
     3: .same(proto: "script"),
@@ -1047,6 +1052,7 @@ extension GetAddressUtxosReply: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
       case 3: try decoder.decodeSingularBytesField(value: &self.script)
       case 4: try decoder.decodeSingularInt64Field(value: &self.valueZat)
       case 5: try decoder.decodeSingularUInt64Field(value: &self.height)
+      case 6: try decoder.decodeSingularStringField(value: &self.address)
       default: break
       }
     }
@@ -1068,10 +1074,14 @@ extension GetAddressUtxosReply: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if self.height != 0 {
       try visitor.visitSingularUInt64Field(value: self.height, fieldNumber: 5)
     }
+    if !self.address.isEmpty {
+      try visitor.visitSingularStringField(value: self.address, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: GetAddressUtxosReply, rhs: GetAddressUtxosReply) -> Bool {
+    if lhs.address != rhs.address {return false}
     if lhs.txid != rhs.txid {return false}
     if lhs.index != rhs.index {return false}
     if lhs.script != rhs.script {return false}
