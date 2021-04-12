@@ -399,6 +399,8 @@ public class CompactBlockProcessor {
         
         // clear cache
         try downloader.rewind(to: height)
+        self.lastChainValidationFailure = nil
+        self.lowerBoundHeight = try? downloader.lastDownloadedBlockHeight()
     }
         
     private func nextBatch() throws {
@@ -942,6 +944,7 @@ extension CompactBlockProcessor {
                             }
                         } catch {
                             result(.failure(self.mapError(error)))
+
                         }
                         result(.success(self.storeUTXOs(utxos, in: dataDb)))
                     }
