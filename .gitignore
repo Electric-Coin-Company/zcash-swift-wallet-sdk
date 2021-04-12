@@ -79,3 +79,5 @@ lib
 *.a
 *.generated.swift
 env-vars.sh
+
+.vscode/
