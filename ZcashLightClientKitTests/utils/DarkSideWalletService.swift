@@ -39,23 +39,29 @@ enum DarksideDataset: String {
 
 class DarksideWalletService: LightWalletService {
     func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        try service.fetchUTXOs(for: tAddress, height: height)
+        return []
     }
     
     func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
-        service.fetchUTXOs(for: tAddress, height: height, result: result)
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+            result(.success([]))
+        }
     }
     
     func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        try service.fetchUTXOs(for: tAddresses, height: height)
+        []
     }
     
     func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
-        service.fetchUTXOs(for: tAddresses, height: height, result: result)
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+            result(.success([]))
+        }
     }
     
     func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
-        service.fetchUTXOs(for: tAddress, height: ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: result)
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+            result(.success([]))
+        }
     }
 
     func fetchTransaction(txId: Data) throws -> TransactionEntity {
