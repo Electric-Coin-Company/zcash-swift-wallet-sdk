@@ -1,3 +1,7 @@
+# 0.10.2
+* Mainnet and Testnet Checkpoints 
+# 0.10.1
+* Mainnet Checkpoints
 # 0.10.0
 * [critical] Fix #255 #261 outgoing no-change transactions not reported as mined
 * [NEW] Rewind API. Allow Wallet developers to rewind synchronizer and (eventually) rescan
