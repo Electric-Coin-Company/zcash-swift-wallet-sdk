@@ -31,6 +31,150 @@ class BalanceTests: XCTestCase {
     }
     
     /**
+        verify that when sending the a no change transaction, the transactions are broadcasted properly
+     */
+    func testSingleNoteNoChangeTransactionGetsReorged() throws {
+        let notificationHandler = SDKSynchonizerListener()
+        let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
+        let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
+        
+        // 0 subscribe to updated transactions events
+        notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
+        // 1 sync and get spendable funds
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        
+        try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
+        
+        sleep(1)
+        let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
+        
+        try coordinator.sync(completion: { (synchronizer) in
+            firstSyncExpectation.fulfill()
+        }, error: handleError)
+        
+        wait(for: [firstSyncExpectation], timeout: 12)
+        // 2 check that there are no unconfirmed funds
+        
+        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let totalBalance = coordinator.synchronizer.initializer.getBalance()
+        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertEqual(verifiedBalance, totalBalance)
+        
+        let maxBalanceMinusOne = 100000 - ZcashSDK.defaultFee()
+        
+        // 3 create a transaction for the max amount possible
+        // 4 send the transaction
+        guard let spendingKey = coordinator.spendingKeys?.first else {
+            XCTFail("failed to create spending keys")
+            return
+        }
+        var pendingTx: PendingTransactionEntity?
+        coordinator.synchronizer.sendToAddress(spendingKey: spendingKey,
+                                               zatoshi: maxBalanceMinusOne,
+                                               toAddress: testRecipientAddress,
+                                               memo: "test send \(self.description) \(Date().description)",
+        from: 0) { result in
+            switch result {
+            case .failure(let error):
+                XCTFail("sendToAddress failed: \(error)")
+            case .success(let transaction):
+                pendingTx = transaction
+            }
+            self.sentTransactionExpectation.fulfill()
+        }
+        wait(for: [sentTransactionExpectation], timeout: 20)
+        guard let pendingTx = pendingTx else {
+            XCTFail("transaction creation failed")
+            return
+        }
+        
+        notificationHandler.synchronizerMinedTransaction = { tx in
+            XCTAssertNotNil(tx.rawTransactionId)
+            XCTAssertNotNil(pendingTx.rawTransactionId)
+            XCTAssertEqual(tx.rawTransactionId, pendingTx.rawTransactionId)
+            transactionMinedExpectation.fulfill()
+        }
+        
+        
+        // 5 apply to height
+        // 6 mine the block
+        guard let rawTx = try coordinator.getIncomingTransactions()?.first else {
+            XCTFail("no incoming transaction after")
+            return
+        }
+        
+        let latestHeight = try coordinator.latestHeight()
+        let sentTxHeight = latestHeight + 1
+        
+        notificationHandler.transactionsFound = { txs in
+            let foundTx = txs.first(where: { $0.rawTransactionId ==  pendingTx.rawTransactionId})
+            XCTAssertNotNil(foundTx)
+            XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
+            
+            foundTransactionsExpectation.fulfill()
+        }
+        try coordinator.stageBlockCreate(height: sentTxHeight, count: 100)
+        sleep(1)
+        try coordinator.stageTransaction(rawTx, at: sentTxHeight)
+        try coordinator.applyStaged(blockheight: sentTxHeight)
+        sleep(2) // add enhance breakpoint here
+        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
+        
+        try coordinator.sync(completion: { (synchronizer) in
+            let p = synchronizer.pendingTransactions.first(where: {$0.rawTransactionId == pendingTx.rawTransactionId})
+            XCTAssertNotNil(p, "pending transaction should have been mined by now")
+            XCTAssertTrue(p?.isMined ?? false)
+            XCTAssertEqual(p?.minedHeight, sentTxHeight)
+            mineExpectation.fulfill()
+            
+        }, error: { (error) in
+            guard let e = error else {
+                XCTFail("unknown error syncing after sending transaction")
+                return
+            }
+            
+            XCTFail("Error: \(e)")
+        })
+        
+        wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
+        
+        // 7 reorg the transaction
+        let reorgSize = 1
+        
+        notificationHandler.reorgFound = { height  in
+            XCTAssertEqual(sentTxHeight, height)
+        }
+        try coordinator.stageBlockCreate(height: sentTxHeight - reorgSize, count: 100, nonce: Int.random(in: Int.min ... Int.max))
+        
+        // 7 advance to confirmation
+        
+        try coordinator.applyStaged(blockheight: sentTxHeight + 11)
+        
+        sleep(2)
+        
+        let confirmExpectation = XCTestExpectation(description: "confirm expectation")
+        notificationHandler.transactionsFound = { txs in
+            XCTFail("We shouldn't find any transactions at this point but found \(txs)")
+        }
+        notificationHandler.synchronizerMinedTransaction = { tx in
+            XCTFail("We shouldn't find any mined transactions at this point but found \(tx)")
+        }
+        try coordinator.sync(completion: { synchronizer in
+            confirmExpectation.fulfill()
+        }, error: { e in
+            self.handleError(e)
+        })
+        
+        wait(for: [confirmExpectation], timeout: 5)
+        
+        let confirmedPending = try coordinator.synchronizer.allPendingTransactions().first(where: { $0.rawTransactionId == pendingTx.rawTransactionId})
+        
+        XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
+        
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), 100000)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), 100000)
+    }
+    /**
      
      Verify available balance is correct in all wallet states during a send
      
@@ -615,3 +759,57 @@ class BalanceTests: XCTestCase {
     }
     
 }
+
+
+class SDKSynchonizerListener {
+    var transactionsFound: (([ConfirmedTransactionEntity]) -> ())?
+    var synchronizerMinedTransaction: ((PendingTransactionEntity) -> ())?
+    var reorgFound: ((BlockHeight) -> ())?
+    func subscribeToSynchronizer(_ synchronizer: SDKSynchronizer) {
+        NotificationCenter.default.addObserver(self, selector: #selector(txFound(_:)), name: .synchronizerFoundTransactions, object: synchronizer)
+        NotificationCenter.default.addObserver(self, selector: #selector(txMined(_:)), name: .synchronizerMinedTransaction, object: synchronizer)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleReorg(_:)), name: .blockProcessorHandledReOrg, object: nil)
+    }
+    
+    func unsubscribe() {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc func txFound(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            guard let txs = notification.userInfo?[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ConfirmedTransactionEntity] else {
+                XCTFail("expected [ConfirmedTransactionEntity] array")
+                return
+            }
+            
+            self?.transactionsFound?(txs)
+        }
+    }
+    
+    @objc func txMined(_ notification: Notification) {
+        DispatchQueue.main.async { [weak self] in
+            guard let tx = notification.userInfo?[SDKSynchronizer.NotificationKeys.minedTransaction] as? PendingTransactionEntity else {
+                XCTFail("expected transaction")
+                return
+            }
+            
+            self?.synchronizerMinedTransaction?(tx)
+        }
+    }
+    
+    
+    @objc func handleReorg(_ notification: Notification) {
+        guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight
+            else {
+                XCTFail("empty reorg notification")
+                return
+        }
+        
+        guard let handleReorgFunction = self.reorgFound else {
+            XCTFail("a reorg happened but not action being taken, are you sure this is ok?")
+            return
+        }
+        handleReorgFunction(reorgHeight)
+    }
+}
+
