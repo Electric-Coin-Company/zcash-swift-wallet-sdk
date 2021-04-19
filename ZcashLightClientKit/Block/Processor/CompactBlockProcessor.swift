@@ -392,13 +392,26 @@ public class CompactBlockProcessor {
     public func rewindTo(_ height: BlockHeight) throws {
         self.stop()
         
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(height)) else {
-            fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
-            return
+        let height = Int32(height)
+        let nearestHeight = rustBackend.getNearestRewindHeight(dbData: config.dataDb, height: height)
+        
+        
+        guard nearestHeight > 0 else {
+            let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error getting nearest rewind height for height: \(height)")
+            fail(error)
+            throw error
+        }
+        
+        // FIXME: this should be done on the rust layer 
+        let rewindHeight = max(Int32(nearestHeight - 1) , Int32(config.walletBirthday))
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight) else {
+            let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
+            fail(error)
+            throw error
         }
         
         // clear cache
-        try downloader.rewind(to: height)
+        try downloader.rewind(to: BlockHeight(rewindHeight))
         self.lastChainValidationFailure = nil
         self.lowerBoundHeight = try? downloader.lastDownloadedBlockHeight()
     }

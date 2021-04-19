@@ -147,11 +147,21 @@ public protocol ZcashRustBackendWelding {
      - Important: This function does not mutate either of the databases.
     */
     static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32
+    
+    /**
+     Returns the nearest height where a rewind is possible. Currently prunning gets rid of sapling witnesses older
+     than 100 blocks. So in order to reconstruct the witness tree that allows to spend notes from the given wallet
+     the rewind can't be more than 100 block or back to the oldest unspent note that this wallet contains.
+     - Parameters:
+       - dbData: location of the data db file
+       - height: height you would like to rewind to.
+     */
+    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32
     /**
      rewinds the compact block storage to the given height. clears up all derived data as well
       - Parameters:
         - dbData: location of the data db file
-        - height: height to rewind to
+        - height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use getNearestRewindHeight when unsure
      */
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool
     

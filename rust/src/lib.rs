@@ -35,10 +35,11 @@ use zcash_client_sqlite::{
     error::SqliteClientError,
     wallet::{
         rewind_to_height,
+        get_rewind_height,
         put_received_transparent_utxo, delete_utxos_above,
         init::{init_accounts_table, init_blocks_table, init_wallet_db,}
     },
-    BlockDB, NoteId, WalletDB,
+    BlockDb, NoteId, WalletDb,
 };
 use zcash_primitives::{
     block::BlockHash,
@@ -87,11 +88,11 @@ pub const NETWORK: TestNetwork = TEST_NETWORK;
 fn wallet_db(
     db_data: *const u8,
     db_data_len: usize,
-) -> Result<WalletDB<MainNetwork>, failure::Error> {
+) -> Result<WalletDb<MainNetwork>, failure::Error> {
     let db_data = Path::new(OsStr::from_bytes(unsafe {
         slice::from_raw_parts(db_data, db_data_len)
     }));
-    WalletDB::for_path(db_data, NETWORK)
+    WalletDb::for_path(db_data, NETWORK)
         .map_err(|e| format_err!("Error opening wallet database connection: {}", e))
 }
 
@@ -99,19 +100,19 @@ fn wallet_db(
 fn wallet_db(
     db_data: *const u8,
     db_data_len: usize,
-) -> Result<WalletDB<TestNetwork>, failure::Error> {
+) -> Result<WalletDb<TestNetwork>, failure::Error> {
     let db_data = Path::new(OsStr::from_bytes(unsafe {
         slice::from_raw_parts(db_data, db_data_len)
     }));
-    WalletDB::for_path(db_data, NETWORK)
+    WalletDb::for_path(db_data, NETWORK)
         .map_err(|e| format_err!("Error opening wallet database connection: {}", e))
 }
 
-fn block_db(cache_db: *const u8, cache_db_len: usize) -> Result<BlockDB, failure::Error> {
+fn block_db(cache_db: *const u8, cache_db_len: usize) -> Result<BlockDb, failure::Error> {
     let cache_db = Path::new(OsStr::from_bytes(unsafe {
         slice::from_raw_parts(cache_db, cache_db_len)
     }));
-    BlockDB::for_path(cache_db)
+    BlockDb::for_path(cache_db)
         .map_err(|e| format_err!("Error opening block source database connection: {}", e))
 }
 
@@ -141,7 +142,7 @@ pub extern "C" fn zcashlc_init_data_database(db_data: *const u8, db_data_len: us
             slice::from_raw_parts(db_data, db_data_len)
         }));
 
-        WalletDB::for_path(db_data, NETWORK)
+        WalletDb::for_path(db_data, NETWORK)
             .map(|db| init_wallet_db(&db))
             .map(|_| 1)
             .map_err(|e| format_err!("Error while initializing data DB: {}", e))
@@ -899,7 +900,34 @@ pub extern "C" fn zcashlc_validate_combined_chain(
     });
     unwrap_exc_or_null(res)
 }
-
+#[no_mangle]
+pub extern "C" fn zcashlc_get_nearest_rewind_height(
+    db_data: *const u8,
+    db_data_len: usize,
+    height: i32,
+) -> i32 {
+    let res = catch_panic(|| {
+        if height < 100 {
+            Ok(height)
+        } else {
+            let db_data = wallet_db(db_data, db_data_len)?;
+            let height = BlockHeight::try_from(height)?;
+            match get_rewind_height(&db_data) {
+                Ok(Some(best_height)) => {
+                    let first_unspent_note_height = u32::from(best_height);
+                    let rewind_height = u32::from(height);
+                    Ok(std::cmp::min(first_unspent_note_height as i32, rewind_height as i32))
+                },
+                Ok(None) => {
+                    let rewind_height = u32::from(height);
+                    Ok(rewind_height as i32)
+                },
+                Err(e) => Err(format_err!("Error while getting nearest rewind height for {}: {}", height, e)),
+            }
+        }
+    });
+    unwrap_exc_or(res, -1)
+}
 /// Rewinds the data database to the given height.
 ///
 /// If the requested height is greater than or equal to the height of the last scanned
@@ -909,21 +937,16 @@ pub extern "C" fn zcashlc_rewind_to_height(
     db_data: *const u8,
     db_data_len: usize,
     height: i32,
-) -> i32 {
+) -> bool {
     let res = catch_panic(|| {
         let db_data = wallet_db(db_data, db_data_len)?;
-
-        // let mut update_ops = (&db_data)
-        //     .get_update_ops()
-        //     .map_err(|e| format_err!("Could not obtain a writable database connection: {}", e))?;
-
-
+        
         let height = BlockHeight::try_from(height)?;
         rewind_to_height(&db_data, height)
-            .map(|_| 1)
+            .map(|_| true)
             .map_err(|e| format_err!("Error while rewinding data DB to height {}: {}", height, e))
     });
-    unwrap_exc_or_null(res)
+    unwrap_exc_or(res, false)
 }
 
 /// Scans new blocks added to the cache for any transactions received by the tracked

@@ -259,8 +259,8 @@ public enum TransactionKind {
 /**
  Type of rewind available
     birthday: rewinds the local state to this wallet's birthday
-    height: rewinds to an arbitrary blockheight
-    transaction: rewinds to the mined height of the provided transaction.
+    height: rewinds to the nearest blockheight to the one given as argument.
+    transaction: rewinds to the nearest height based on the anchor of the provided transaction.
  */
 
 public enum RewindPolicy {

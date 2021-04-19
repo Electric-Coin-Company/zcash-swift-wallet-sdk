@@ -305,9 +305,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_validate_combined_chain(dbCache.0, dbCache.1, dbData.0, dbData.1)
     }
     
+    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32 {
+        let dbData = dbData.osStr()
+        return zcashlc_get_nearest_rewind_height(dbData.0, dbData.1, height)
+    }
+    
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool {
         let dbData = dbData.osStr()
-        return zcashlc_rewind_to_height(dbData.0, dbData.1, height) != 0
+        return zcashlc_rewind_to_height(dbData.0, dbData.1, height)
     }
     
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool {

@@ -149,6 +149,10 @@ char *zcashlc_get_address(const uint8_t *db_data, uintptr_t db_data_len, int32_t
  */
 int64_t zcashlc_get_balance(const uint8_t *db_data, uintptr_t db_data_len, int32_t account);
 
+int32_t zcashlc_get_nearest_rewind_height(const uint8_t *db_data,
+                                          uintptr_t db_data_len,
+                                          int32_t height);
+
 /**
  * Returns the memo for a received note, if it is known and a valid UTF-8 string.
  *
@@ -276,7 +280,7 @@ bool zcashlc_put_utxo(const uint8_t *db_data,
  * If the requested height is greater than or equal to the height of the last scanned
  * block, this function does nothing.
  */
-int32_t zcashlc_rewind_to_height(const uint8_t *db_data, uintptr_t db_data_len, int32_t height);
+bool zcashlc_rewind_to_height(const uint8_t *db_data, uintptr_t db_data_len, int32_t height);
 
 /**
  * Scans new blocks added to the cache for any transactions received by the tracked
