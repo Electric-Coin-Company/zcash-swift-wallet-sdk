@@ -77,6 +77,10 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32 {
+        -1
+    }
+    
     static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight) throws -> Int32 {
         -1
     }

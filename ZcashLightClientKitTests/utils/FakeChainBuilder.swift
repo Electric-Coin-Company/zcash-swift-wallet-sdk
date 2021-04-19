@@ -43,6 +43,19 @@ class FakeChainBuilder {
         
     }
     
+    static func buildChainWithTxsFarFromEachOther(darksideWallet: DarksideWalletService, length: Int) throws {
+        try darksideWallet.reset(saplingActivation: 663150)
+        try darksideWallet.useDataset(from: txMainnetBlockUrl)
+        
+        try darksideWallet.stageBlocksCreate(from: 663151, count: length)
+        
+        try darksideWallet.stageTransaction(from: txUrls[663188]!, at: 663188)
+        
+        try darksideWallet.stageTransaction(from: txUrls[663974]!, at: 663974)
+        
+    }
+    
+    
     static func buildChain(darksideWallet: DarksideWalletService, length: Int) throws {
         try darksideWallet.reset(saplingActivation: 663150)
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
