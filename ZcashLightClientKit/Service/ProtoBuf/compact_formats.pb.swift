@@ -40,16 +40,16 @@ struct CompactBlock {
   var height: UInt64 = 0
 
   /// the ID (hash) of this block, same as in block explorers
-  var hash: Data = SwiftProtobuf.Internal.emptyData
+  var hash: Data = Data()
 
   /// the ID (hash) of this block's predecessor
-  var prevHash: Data = SwiftProtobuf.Internal.emptyData
+  var prevHash: Data = Data()
 
   /// Unix epoch time when the block was mined
   var time: UInt32 = 0
 
   /// (hash, prevHash, and time) OR (full header)
-  var header: Data = SwiftProtobuf.Internal.emptyData
+  var header: Data = Data()
 
   /// zero or more compact transactions from this block
   var vtx: [CompactTx] = []
@@ -71,7 +71,7 @@ struct CompactTx {
   var index: UInt64 = 0
 
   /// the ID (hash) of this transaction, same as in block explorers
-  var hash: Data = SwiftProtobuf.Internal.emptyData
+  var hash: Data = Data()
 
   /// The transaction fee: present if server can provide. In the case of a
   /// stateless server and a transaction with transparent inputs, this will be
@@ -99,7 +99,7 @@ struct CompactSpend {
   // methods supported on all messages.
 
   /// nullifier (see the Zcash protocol specification)
-  var nf: Data = SwiftProtobuf.Internal.emptyData
+  var nf: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -114,13 +114,13 @@ struct CompactOutput {
   // methods supported on all messages.
 
   /// note commitment u-coordinate
-  var cmu: Data = SwiftProtobuf.Internal.emptyData
+  var cmu: Data = Data()
 
   /// ephemeral public key
-  var epk: Data = SwiftProtobuf.Internal.emptyData
+  var epk: Data = Data()
 
   /// ciphertext and zkproof
-  var ciphertext: Data = SwiftProtobuf.Internal.emptyData
+  var ciphertext: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -145,14 +145,17 @@ extension CompactBlock: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularUInt32Field(value: &self.protoVersion)
-      case 2: try decoder.decodeSingularUInt64Field(value: &self.height)
-      case 3: try decoder.decodeSingularBytesField(value: &self.hash)
-      case 4: try decoder.decodeSingularBytesField(value: &self.prevHash)
-      case 5: try decoder.decodeSingularUInt32Field(value: &self.time)
-      case 6: try decoder.decodeSingularBytesField(value: &self.header)
-      case 7: try decoder.decodeRepeatedMessageField(value: &self.vtx)
+      case 1: try { try decoder.decodeSingularUInt32Field(value: &self.protoVersion) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.height) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.hash) }()
+      case 4: try { try decoder.decodeSingularBytesField(value: &self.prevHash) }()
+      case 5: try { try decoder.decodeSingularUInt32Field(value: &self.time) }()
+      case 6: try { try decoder.decodeSingularBytesField(value: &self.header) }()
+      case 7: try { try decoder.decodeRepeatedMessageField(value: &self.vtx) }()
       default: break
       }
     }
@@ -208,12 +211,15 @@ extension CompactTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularUInt64Field(value: &self.index)
-      case 2: try decoder.decodeSingularBytesField(value: &self.hash)
-      case 3: try decoder.decodeSingularUInt32Field(value: &self.fee)
-      case 4: try decoder.decodeRepeatedMessageField(value: &self.spends)
-      case 5: try decoder.decodeRepeatedMessageField(value: &self.outputs)
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.index) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.hash) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.fee) }()
+      case 4: try { try decoder.decodeRepeatedMessageField(value: &self.spends) }()
+      case 5: try { try decoder.decodeRepeatedMessageField(value: &self.outputs) }()
       default: break
       }
     }
@@ -257,8 +263,11 @@ extension CompactSpend: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularBytesField(value: &self.nf)
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.nf) }()
       default: break
       }
     }
@@ -288,10 +297,13 @@ extension CompactOutput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularBytesField(value: &self.cmu)
-      case 2: try decoder.decodeSingularBytesField(value: &self.epk)
-      case 3: try decoder.decodeSingularBytesField(value: &self.ciphertext)
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.cmu) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.epk) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.ciphertext) }()
       default: break
       }
     }

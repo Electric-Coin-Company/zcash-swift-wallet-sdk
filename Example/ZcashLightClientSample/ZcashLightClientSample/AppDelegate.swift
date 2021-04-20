@@ -41,7 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                      outputParamsURL: try! __outputParamsURL(),
                                      loggerProxy: loggerProxy)
             
-            let unifiedViewingKeys =  try! DerivationTool.default.deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, accounts: 1)
+            let unifiedViewingKeys =  try! DerivationTool.default.deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
             try! wallet.initialize(unifiedViewingKeys: unifiedViewingKeys, walletBirthday: DemoAppConfig.birthdayHeight)
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig.seed)
