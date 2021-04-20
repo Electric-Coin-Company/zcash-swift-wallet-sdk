@@ -30,24 +30,35 @@ extension CallOptions {
  Swift GRPC implementation of Lightwalletd service */
 public class LightWalletGRPCService {
     
-    var queue = DispatchQueue.init(label: "LightWalletGRPCService")
+    var queue: DispatchQueue
     let channel: Channel
-    
+    let connectionDelegate: ConnectionStatusManager
     let compactTxStreamer: CompactTxStreamerClient
    
-    public init(channel: Channel, timeout: TimeInterval = 10) {
-        self.channel = channel
-        compactTxStreamer = CompactTxStreamerClient(channel: self.channel, defaultCallOptions: Self.defaultCallOptions(with: timeout))
-    }
+//    public init(channel: Channel, timeout: TimeInterval = 10) {
+//        self.channel = channel
+//        compactTxStreamer = CompactTxStreamerClient(channel: self.channel, defaultCallOptions: Self.defaultCallOptions(with: timeout))
+//    }
     
     public convenience init(endpoint: LightWalletEndpoint) {
         self.init(host: endpoint.host, port: endpoint.port, secure: endpoint.secure)
     }
     
-    public convenience init(host: String, port: Int = 9067, secure: Bool = true, timeout: TimeInterval = 10) {
-        let configuration = ClientConnection.Configuration(target: .hostAndPort(host, port), eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1), tls: secure ? .init() : nil)
+    public init(host: String, port: Int = 9067, secure: Bool = true, timeout: TimeInterval = 10) {
+        
+        self.connectionDelegate = ConnectionStatusManager()
+        self.queue = DispatchQueue.init(label: "LightWalletGRPCService")
+        
+        let configuration = ClientConnection.Configuration(
+            target: .hostAndPort(host, port),
+            eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1),
+            connectivityStateDelegate: connectionDelegate,
+            connectivityStateDelegateQueue: queue,
+            tls: secure ? .init() : nil
+        )
         let channel = ClientConnection(configuration: configuration)
-        self.init(channel: channel, timeout: timeout)
+        self.channel = channel
+        compactTxStreamer = CompactTxStreamerClient(channel: self.channel, defaultCallOptions: Self.defaultCallOptions(with: timeout))
     }
     
     func stop() {
@@ -371,5 +382,13 @@ extension LightWalletServiceError {
         default:
             return LightWalletServiceError.genericError(error: status)
         }
+    }
+}
+
+//
+class ConnectionStatusManager: ConnectivityStateDelegate {
+    func connectivityStateDidChange(from oldState: ConnectivityState, to newState: ConnectivityState) {
+        LoggerProxy.event("Connection Changed from \(oldState) to \(newState)")
+        
     }
 }
