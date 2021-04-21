@@ -385,6 +385,7 @@ public class CompactBlockProcessor {
         } else {
             self.queue.isSuspended = true
         }
+        
         self.retryAttempts = 0
         self.state = .stopped
     }
@@ -987,6 +988,4 @@ extension CompactBlockProcessor {
         }
         return (inserted: refreshed, skipped: skipped)
     }
-    
-//    func refreshUTXOs
 }

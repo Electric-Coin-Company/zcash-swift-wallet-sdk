@@ -91,6 +91,7 @@ public protocol CompactBlockDownloading {
     
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
     
+    func closeConnection()
 }
 
 /**
@@ -114,6 +115,10 @@ class CompactBlockDownloader {
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
+    func closeConnection() {
+        lightwalletService.closeConnection()
+    }
+    
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
         try lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight)
     }

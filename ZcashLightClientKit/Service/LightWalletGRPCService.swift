@@ -91,6 +91,10 @@ public class LightWalletGRPCService {
 
 extension LightWalletGRPCService: LightWalletService {
     
+    public func closeConnection() {
+        channel.close()
+    }
+    
     public func fetchTransaction(txId: Data) throws -> TransactionEntity {
         var txFilter = TxFilter()
         txFilter.hash = txId
@@ -175,7 +179,7 @@ extension LightWalletGRPCService: LightWalletService {
     public func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         let response = compactTxStreamer.getLatestBlock(ChainSpec()).response
         
-        response.whenSuccess { (blockID) in
+        response.whenSuccessBlocking(onto: queue) { blockID in
             guard let blockHeight = Int(exactly: blockID.height) else {
                 result(.failure(LightWalletServiceError.generalError(message: "error creating blockheight from BlockID \(blockID)")))
                 return
@@ -183,7 +187,7 @@ extension LightWalletGRPCService: LightWalletService {
             result(.success(blockHeight))
         }
         
-        response.whenFailure { (error) in
+        response.whenFailureBlocking(onto: queue) { error in
             result(.failure(error.mapToServiceError()))
         }
         
@@ -389,6 +393,5 @@ extension LightWalletServiceError {
 class ConnectionStatusManager: ConnectivityStateDelegate {
     func connectivityStateDidChange(from oldState: ConnectivityState, to newState: ConnectivityState) {
         LoggerProxy.event("Connection Changed from \(oldState) to \(newState)")
-        
     }
 }

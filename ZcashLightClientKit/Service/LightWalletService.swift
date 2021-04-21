@@ -176,4 +176,6 @@ public protocol LightWalletService {
     func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity]
     
     func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void)
+    
+    func closeConnection()
 }
