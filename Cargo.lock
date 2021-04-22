@@ -437,7 +437,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/nuttycom/librustzcash?branch=autoshield-poc-daa#3dcdc51b369d9470d69baecdd5e992f45a57cbcd"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -693,9 +693,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.92"
+version = "0.2.93"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56d855069fafbb9b344c0f962150cd2c1187975cb1c22c1522c240d8c4986714"
+checksum = "9385f66bf6105b241aa65a61cb923ef20efc665cb9f9bb50ac2f0c4b7f378d41"
 
 [[package]]
 name = "libsqlite3-sys"
@@ -1001,9 +1001,9 @@ checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
 
 [[package]]
 name = "redox_syscall"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94341e4e44e24f6b591b59e47a8a027df12e008d73fd5672dbea9cc22f4507d9"
+checksum = "8270314b5ccceb518e7e578952f0b72b88222d02e8f77f5ecf7abbb673539041"
 dependencies = [
  "bitflags",
 ]
@@ -1288,9 +1288,9 @@ checksum = "1e81da0851ada1f3e9d4312c704aa4f8806f0f9d69faaf8df2f3464b4a9437c2"
 
 [[package]]
 name = "syn"
-version = "1.0.68"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ce15dd3ed8aa2f8eeac4716d6ef5ab58b6b9256db41d7e1a0224c2788e8fd87"
+checksum = "48fe99c6bd8b1cc636890bcc071842de909d902c81ac7dab53ba33c421ab8ffb"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1324,7 +1324,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "rand 0.8.3",
- "redox_syscall 0.2.5",
+ "redox_syscall 0.2.6",
  "remove_dir_all",
  "winapi",
 ]
@@ -1540,7 +1540,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zcash_client_backend"
 version = "0.5.0"
-source = "git+https://github.com/nuttycom/librustzcash?branch=autoshield-poc-daa#3dcdc51b369d9470d69baecdd5e992f45a57cbcd"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
 dependencies = [
  "base64",
  "bech32",
@@ -1568,7 +1568,7 @@ dependencies = [
 [[package]]
 name = "zcash_client_sqlite"
 version = "0.3.0"
-source = "git+https://github.com/nuttycom/librustzcash?branch=autoshield-poc-daa#3dcdc51b369d9470d69baecdd5e992f45a57cbcd"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
 dependencies = [
  "bech32",
  "bs58 0.4.0",
@@ -1587,7 +1587,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.5.0"
-source = "git+https://github.com/nuttycom/librustzcash?branch=autoshield-poc-daa#3dcdc51b369d9470d69baecdd5e992f45a57cbcd"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
 dependencies = [
  "aes",
  "bitvec 0.18.5",
@@ -1616,7 +1616,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.5.0"
-source = "git+https://github.com/nuttycom/librustzcash?branch=autoshield-poc-daa#3dcdc51b369d9470d69baecdd5e992f45a57cbcd"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
 dependencies = [
  "bellman",
  "blake2b_simd",
