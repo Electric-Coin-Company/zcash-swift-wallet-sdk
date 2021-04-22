@@ -92,9 +92,9 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "backtrace"
-version = "0.3.56"
+version = "0.3.57"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d117600f438b1707d4e4ae15d3595657288f8235a0eb593e80ecc98ab34e1bc"
+checksum = "78ed203b9ba68b242c62b3fb7480f589dd49829be1edb3fe8fc8b4ffda2dcb8d"
 dependencies = [
  "addr2line",
  "cfg-if",
@@ -348,9 +348,9 @@ dependencies = [
 
 [[package]]
 name = "const_fn"
-version = "0.4.6"
+version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "076a6803b0dacd6a88cfe64deba628b01533ff5ef265687e6938280c1afd0a28"
+checksum = "402da840495de3f976eaefc3485b7f5eb5b0bf9761f9a47be27fe975b3b8c2ec"
 
 [[package]]
 name = "constant_time_eq"
@@ -437,7 +437,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -680,9 +680,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "lexical-core"
-version = "0.7.5"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21f866863575d0e1d654fbeeabdc927292fdf862873dc3c96c6f753357e13374"
+checksum = "6607c62aa161d23d17a9072cc5da0be67cdfc89d3afb1e8d9c842bebc2525ffe"
 dependencies = [
  "arrayvec",
  "bitflags",
@@ -1288,9 +1288,9 @@ checksum = "1e81da0851ada1f3e9d4312c704aa4f8806f0f9d69faaf8df2f3464b4a9437c2"
 
 [[package]]
 name = "syn"
-version = "1.0.69"
+version = "1.0.70"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48fe99c6bd8b1cc636890bcc071842de909d902c81ac7dab53ba33c421ab8ffb"
+checksum = "b9505f307c872bab8eb46f77ae357c8eba1fdacead58ee5a850116b1d7f82883"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1417,9 +1417,9 @@ checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
 name = "vcpkg"
-version = "0.2.11"
+version = "0.2.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b00bca6106a5e23f3eee943593759b7fcddb00554332e856d990c893966879fb"
+checksum = "cbdbff6266a24120518560b5dc983096efb98462e51d0d68169895b237be3e5d"
 
 [[package]]
 name = "vec_map"
@@ -1540,7 +1540,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zcash_client_backend"
 version = "0.5.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
 dependencies = [
  "base64",
  "bech32",
@@ -1562,13 +1562,14 @@ dependencies = [
  "sha2 0.9.3",
  "subtle",
  "time",
+ "zcash_note_encryption",
  "zcash_primitives",
 ]
 
 [[package]]
 name = "zcash_client_sqlite"
 version = "0.3.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
 dependencies = [
  "bech32",
  "bs58 0.4.0",
@@ -1585,9 +1586,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "zcash_note_encryption"
+version = "0.0.0"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
+dependencies = [
+ "blake2b_simd",
+ "byteorder",
+ "crypto_api_chachapoly",
+ "ff",
+ "group",
+ "rand_core 0.5.1",
+ "subtle",
+]
+
+[[package]]
 name = "zcash_primitives"
 version = "0.5.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
 dependencies = [
  "aes",
  "bitvec 0.18.5",
@@ -1611,12 +1626,13 @@ dependencies = [
  "secp256k1",
  "sha2 0.9.3",
  "subtle",
+ "zcash_note_encryption",
 ]
 
 [[package]]
 name = "zcash_proofs"
 version = "0.5.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#9620e45b94d0a285cb6c72f7cf46b4a1997dd806"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
 dependencies = [
  "bellman",
  "blake2b_simd",
