@@ -437,7 +437,7 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#74434f370cf474156b73bfb685cb62e8cd5bcd42"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -1540,7 +1540,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zcash_client_backend"
 version = "0.5.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#74434f370cf474156b73bfb685cb62e8cd5bcd42"
 dependencies = [
  "base64",
  "bech32",
@@ -1569,7 +1569,7 @@ dependencies = [
 [[package]]
 name = "zcash_client_sqlite"
 version = "0.3.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#74434f370cf474156b73bfb685cb62e8cd5bcd42"
 dependencies = [
  "bech32",
  "bs58 0.4.0",
@@ -1588,7 +1588,7 @@ dependencies = [
 [[package]]
 name = "zcash_note_encryption"
 version = "0.0.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#74434f370cf474156b73bfb685cb62e8cd5bcd42"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -1602,7 +1602,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.5.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#74434f370cf474156b73bfb685cb62e8cd5bcd42"
 dependencies = [
  "aes",
  "bitvec 0.18.5",
@@ -1632,7 +1632,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.5.0"
-source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#7fc2d9725c2ff0be6f5a63d0ec1cfeb72e2f1b65"
+source = "git+https://github.com/gmale/librustzcash?branch=autoshield-poc-daa-taddr3#74434f370cf474156b73bfb685cb62e8cd5bcd42"
 dependencies = [
  "bellman",
  "blake2b_simd",
