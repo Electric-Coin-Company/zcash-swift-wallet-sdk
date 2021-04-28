@@ -90,6 +90,11 @@ public protocol KeyDeriving {
       - Returns an array of unified viewing key tuples.
      */
     func deriveUnifiedViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey]
+    
+    /**
+     derives a Unified Address from a Unified Viewing Key
+     */
+    func deriveUnifiedAddressFromUnifiedViewingKey(_ uvk: UnifiedViewingKey) throws -> UnifiedAddress
 }
 
 public enum KeyDerivationErrors: Error {
@@ -235,6 +240,19 @@ public class DerivationTool: KeyDeriving {
         }
     }
     
+    /**
+     derives a Unified Address from a Unified Viewing Key
+     */
+    public func deriveUnifiedAddressFromUnifiedViewingKey(_ uvk: UnifiedViewingKey) throws -> UnifiedAddress {
+        do {
+            let tAddress = try deriveTransparentAddressFromPublicKey(uvk.extpub)
+            let zAddress = try deriveShieldedAddress(viewingKey: uvk.extfvk)
+            return ConcreteUnifiedAddress(tAddress: tAddress, zAddress: zAddress)
+        } catch {
+            throw KeyDerivationErrors.unableToDerive
+        }
+    }
+    
     public func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
         guard !pubkey.isEmpty else {
             throw KeyDerivationErrors.invalidInput
@@ -308,4 +326,11 @@ extension DerivationTool: KeyValidation {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
+    
+}
+
+
+fileprivate struct ConcreteUnifiedAddress: UnifiedAddress {
+    var tAddress: TransparentAddress
+    var zAddress: SaplingShieldedAddress
 }
