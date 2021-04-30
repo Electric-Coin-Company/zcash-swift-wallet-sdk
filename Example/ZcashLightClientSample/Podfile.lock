@@ -68,13 +68,13 @@ PODS:
     - SwiftNIOFoundationCompat (< 3, >= 2.19.0)
     - SwiftNIOTLS (< 3, >= 2.19.0)
   - SwiftProtobuf (1.16.0)
-  - ZcashLightClientKit (0.10.1):
+  - ZcashLightClientKit (0.11.0-alpha.1):
     - gRPC-Swift (= 1.0.0)
     - SQLite.swift (~> 0.12.2)
-  - ZcashLightClientKit/DerivationToolTests (0.10.1):
+  - ZcashLightClientKit/DerivationToolTests (0.11.0-alpha.1):
     - gRPC-Swift (= 1.0.0)
     - SQLite.swift (~> 0.12.2)
-  - ZcashLightClientKit/Tests (0.10.1):
+  - ZcashLightClientKit/Tests (0.11.0-alpha.1):
     - gRPC-Swift (= 1.0.0)
     - SQLite.swift (~> 0.12.2)
 
@@ -153,7 +153,7 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 4f8df225f03393f08e0b47b4d876ae38167f8a27
   SwiftNIOTransportServices: 896c9a4ac98698d32aa2feea7657ade219ae80bb
   SwiftProtobuf: 4e16842b83c6fda06b10fac50d73b3f1fce8ab7b
-  ZcashLightClientKit: 5f8f1ccae41a397401ff0a62f73a110943c10b06
+  ZcashLightClientKit: 1a0943fc5e226818e6b9177d4b13a5ce321d4367
 
 PODFILE CHECKSUM: f80c264274518f30ca62d2d474439fe257444aec
 
