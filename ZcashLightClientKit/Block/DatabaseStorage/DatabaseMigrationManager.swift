@@ -44,6 +44,10 @@ class MigrationManager {
         try migratePendingDb()
     }
     
+    func performMigration(uvks: [UnifiedViewingKey]) throws {
+        
+    }
+    
     fileprivate func migratePendingDb() throws {
         let currentPendingDbVersion = try pendingDb.connection().getUserVersion()
         
@@ -92,8 +96,8 @@ class MigrationManager {
         }
     }
     
-    func performVersion1Migration(_ seedBytes: [UInt8]) throws {
-        LoggerProxy.debug("Starting migration version 1")
+    func performVersion1Migration(viewingKeys: [UnifiedViewingKey]) throws {
+        LoggerProxy.debug("Starting migration version 1 from viewing Keys")
         let db = try self.dataDb.connection()
        
         let placeholder = "deriveMe"
@@ -143,11 +147,20 @@ class MigrationManager {
             LoggerProxy.debug("no existing accounts found while performing this migration")
             return
         }
+        
+        guard accounts.count == viewingKeys.count else {
+            let message = "Number of accounts found and viewing keys provided don't match. Found \(accounts.count) account(s) and there were \(viewingKeys.count) Viewing key(s) provided."
+            LoggerProxy.debug(message)
+            throw StorageError.migrationFailedWithMessage(message: message)
+        }
         let derivationTool = DerivationTool.default
-        for var a in accounts {
-            let tAddr = try derivationTool.deriveTransparentAddress(seed: seedBytes, account: a.account, index: 0)
-            a.transparentAddress = tAddr
-            try accountsDao.update(a)
+        
+        
+        for tuple in zip(accounts, viewingKeys) {
+            let tAddr = try derivationTool.deriveTransparentAddressFromPublicKey(tuple.1.extpub)
+            var account = tuple.0
+                account.transparentAddress = tAddr
+            try accountsDao.update(account)
         }
         
 //         sanity check
@@ -155,6 +168,23 @@ class MigrationManager {
             LoggerProxy.error("Accounts Migration performed but the transparent addresses were not derived")
             throw StorageError.migrationFailed(underlyingError: KeyDerivationErrors.unableToDerive)
         }
+    }
+    func performVersion1Migration(_ seedBytes: [UInt8]) throws {
+        LoggerProxy.debug("Starting migration version 1")
+        
+        // derive transparent (shielding) addresses
+        let accountsDao = AccountSQDAO(dbProvider: self.dataDb)
+        
+        let accounts = try accountsDao.getAll()
+        
+        guard !accounts.isEmpty else {
+            LoggerProxy.debug("no existing accounts found while performing this migration")
+            return
+        }
+        
+        let uvks = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)
+        
+        try performVersion1Migration(viewingKeys: uvks)
     }
 }
 

@@ -18,4 +18,5 @@ enum StorageError: Error {
     case transactionFailed(underlyingError: Error)
     case invalidMigrationVersion(version: Int32)
     case migrationFailed(underlyingError: Error)
+    case migrationFailedWithMessage(message: String)
 }

@@ -254,6 +254,11 @@ public class Initializer {
         }catch {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
+        
+        let migrationManager = MigrationManager(cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
+                                                dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path), pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path))
+        
+        try migrationManager.performMigration(uvks: unifiedViewingKeys)
     }
     
     /**
