@@ -329,6 +329,8 @@ public class CompactBlockProcessor {
         if retry {
             self.retryAttempts = 0
             self.processingError = nil
+            self.backoffTimer?.invalidate()
+            self.backoffTimer = nil
         }
         guard !queue.isSuspended else {
             queue.isSuspended = false
@@ -725,11 +727,17 @@ public class CompactBlockProcessor {
         let interval = self.config.blockPollInterval
         self.backoffTimer?.invalidate()
         let timer = Timer(timeInterval: interval, repeats: true, block: { [weak self] _ in
-            
-            DispatchQueue.global().async { [weak self] in
-                guard let self = self else { return }
+                            guard let self = self else { return }
+
                 do {
                     if self.shouldStart {
+                        LoggerProxy.debug("""
+                                          Timer triggered: Starting compact Block processor!.
+                                            Processor State: \(self.state)
+                                            latestHeight: \(self.latestBlockHeight)
+                                            attempts: \(self.retryAttempts)
+                                            lowerbound: \(self.lowerBoundHeight)
+                                          """)
                         try self.start()
                     } else if self.maxAttemptsReached {
                         self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
@@ -737,7 +745,6 @@ public class CompactBlockProcessor {
                 } catch {
                     self.fail(error)
                 }
-            }
         })
         RunLoop.main.add(timer, forMode: .default)
         
