@@ -13,6 +13,7 @@ Represents errors thrown by a Synchronizer
  */
 public enum SynchronizerError: Error {
     case initFailed(message: String)
+    case notPrepared
     case syncFailed
     case connectionFailed(message: Error)
     case generalError(message: String)
@@ -68,14 +69,9 @@ public protocol Synchronizer {
     var progress: Float { get }
     
     /**
-     Initialize the internal state with the given Extended Viewing Keys and a wallet birthday
-     - Parameter viewingKeys: an array containing the viewing keys to initialize the internal state
-     - Parameter walletBirthday: the eldest when the different keys differ in birthday
-     - Throws: Initializer Errors and RustWeldingError if fails
-     - Note: The subsequent initializations don't have any effect or failure
+     prepares this initializer to operate. Initializes the internal state with the given Extended Viewing Keys and a wallet birthday found in the initializer object
      */
-    func initialize(unifiedViewingKeys: [UnifiedViewingKey], walletBirthday: BlockHeight) throws
-    
+    func prepare() throws
     /**
     Starts this synchronizer within the given scope.
     
@@ -222,6 +218,10 @@ public protocol Synchronizer {
  The Status of the synchronizer
  */
 public enum Status {
+    /**
+     This synchronizer is not ready to start
+     */
+    case unprepared
     /**
     Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
     */

@@ -98,7 +98,7 @@ public class SDKSynchronizer: Synchronizer {
      */
     public convenience init(initializer: Initializer) throws {
         
-        try self.init(status: .disconnected,
+        try self.init(status: .unprepared,
                   initializer: initializer,
                   transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
                   transactionRepository: initializer.transactionRepository,
@@ -128,26 +128,36 @@ public class SDKSynchronizer: Synchronizer {
         self.blockProcessor.stop()
     }
     
-    public func initialize(unifiedViewingKeys: [UnifiedViewingKey], walletBirthday: BlockHeight) throws {
-        try self.initializer.initialize(unifiedViewingKeys: unifiedViewingKeys, walletBirthday: walletBirthday)
-        try self.blockProcessor.setStartHeight(WalletBirthday.birthday(with: walletBirthday).height)
+    public func initialize() throws {
+        try self.initializer.initialize()
+        try self.blockProcessor.setStartHeight(initializer.walletBirthday.height)
     }
     
+    public func prepare() throws {
+        try self.initializer.initialize()
+        try self.blockProcessor.setStartHeight(initializer.walletBirthday.height)
+        self.status = .disconnected
+    }
     /**
      Starts the synchronizer
      - Throws: CompactBlockProcessorError when failures occur
      */
     public func start(retry: Bool = false) throws {
-     
-        guard status == .stopped || status == .disconnected || status == .synced else {
-            assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
-            return
-        }
         
-        do {
-            try blockProcessor.start(retry: retry)
-        } catch {
-            throw mapError(error)
+        switch status {
+        case .unprepared:
+            throw SynchronizerError.notPrepared
+        case .syncing:
+            assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
+            LoggerProxy.debug("warning:  synchronizer started when already started")
+            return
+        default:
+            do {
+                try blockProcessor.start(retry: retry)
+            } catch {
+                throw mapError(error)
+            }
+            
         }
     }
     
@@ -156,7 +166,10 @@ public class SDKSynchronizer: Synchronizer {
     */
     public func stop() {
      
-        guard status != .stopped, status != .disconnected else { return }
+        guard status != .stopped, status != .disconnected else {
+            LoggerProxy.info("attempted to stop when status was: \(status)")
+            return
+        }
         
         blockProcessor.stop(cancelTasks: true)
     }
@@ -562,7 +575,8 @@ public class SDKSynchronizer: Synchronizer {
             NotificationCenter.default.post(name: Notification.Name.synchronizerSynced, object: self)
         case .syncing:
             NotificationCenter.default.post(name: Notification.Name.synchronizerSyncing, object: self)
-            
+        case .unprepared:
+            break
         }
     }
     // MARK: book keeping
