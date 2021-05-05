@@ -45,7 +45,9 @@ class MigrationManager {
     }
     
     func performMigration(uvks: [UnifiedViewingKey]) throws {
-        
+        try performVersion1Migration(viewingKeys: uvks)
+        try migrateCacheDb()
+        try migratePendingDb()
     }
     
     fileprivate func migratePendingDb() throws {
