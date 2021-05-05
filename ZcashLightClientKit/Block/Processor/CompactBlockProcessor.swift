@@ -333,6 +333,7 @@ public class CompactBlockProcessor {
             self.backoffTimer = nil
         }
         guard !queue.isSuspended else {
+            LoggerProxy.debug("restarting suspended queue")
             queue.isSuspended = false
             return
         }
@@ -809,7 +810,7 @@ public class CompactBlockProcessor {
         case .downloading:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
         case .synced:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorIdle, object: self)
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self)
         case .error(let err):
             notifyError(err)
         case .scanning:
