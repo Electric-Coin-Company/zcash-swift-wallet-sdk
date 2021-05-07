@@ -38,14 +38,8 @@ class MigrationManager {
     static let latestCacheDbMigrationVersion: Int32 = CacheDbMigration.none.rawValue
     static let latestPendingDbMigrationVersion: Int32 = PendingDbMigration.none.rawValue
     
-    func performMigration(seedBytes: [UInt8]) throws {
-        try migrateDataDb(seedBytes: seedBytes)
-        try migrateCacheDb()
-        try migratePendingDb()
-    }
-    
     func performMigration(uvks: [UnifiedViewingKey]) throws {
-        try performVersion1Migration(viewingKeys: uvks)
+        try migrateDataDb(uvks: uvks)
         try migrateCacheDb()
         try migratePendingDb()
     }
@@ -76,7 +70,7 @@ class MigrationManager {
         }
     }
     
-    fileprivate func migrateDataDb(seedBytes: [UInt8]) throws {
+    fileprivate func migrateDataDb(uvks: [UnifiedViewingKey]) throws {
         let currentDataDbVersion = try dataDb.connection().getUserVersion()
         LoggerProxy.debug("Attempting to perform migration for data Db - currentVersion: \(currentDataDbVersion). Latest version is: \(Self.latestDataDbMigrationVersion)")
         
@@ -88,7 +82,7 @@ class MigrationManager {
                 }
                 switch version {
                 case .version1:
-                    try performVersion1Migration(seedBytes)
+                    try performVersion1Migration(viewingKeys: uvks)
                 case .none:
                     break
                 }

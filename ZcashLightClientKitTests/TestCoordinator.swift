@@ -262,13 +262,16 @@ class TestSynchronizerBuilder {
             downloader: downloader,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
+            viewingKeys: [unifiedViewingKey],
             walletBirthday: walletBirthday.height,
             loggerProxy: loggerProxy
         )
-        try initializer.initialize(unifiedViewingKeys: [unifiedViewingKey], walletBirthday: walletBirthday.height)
         
-        return ([spendingKey], try SDKSynchronizer(initializer: initializer)
-        )
+        let synchronizer = try SDKSynchronizer(initializer: initializer)
+                                        
+        try synchronizer.prepare()
+        
+        return ([spendingKey], synchronizer)
     }
     static func build(
         rustBackend: ZcashRustBackendWelding.Type,

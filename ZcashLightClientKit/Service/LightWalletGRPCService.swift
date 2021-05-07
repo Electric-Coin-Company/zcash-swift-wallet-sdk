@@ -34,11 +34,6 @@ public class LightWalletGRPCService {
     let channel: Channel
     let connectionDelegate: ConnectionStatusManager
     let compactTxStreamer: CompactTxStreamerClient
-   
-//    public init(channel: Channel, timeout: TimeInterval = 10) {
-//        self.channel = channel
-//        compactTxStreamer = CompactTxStreamerClient(channel: self.channel, defaultCallOptions: Self.defaultCallOptions(with: timeout))
-//    }
     
     public convenience init(endpoint: LightWalletEndpoint) {
         self.init(host: endpoint.host, port: endpoint.port, secure: endpoint.secure)
@@ -92,7 +87,7 @@ public class LightWalletGRPCService {
 extension LightWalletGRPCService: LightWalletService {
     
     public func closeConnection() {
-        channel.close()
+        _ = channel.close()
     }
     
     public func fetchTransaction(txId: Data) throws -> TransactionEntity {

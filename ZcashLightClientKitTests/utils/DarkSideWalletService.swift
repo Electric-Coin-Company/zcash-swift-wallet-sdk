@@ -38,6 +38,10 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    func closeConnection() {
+        
+    }
+    
     func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
         return []
     }
@@ -73,15 +77,16 @@ class DarksideWalletService: LightWalletService {
     }
     
     var channel: Channel
-    init(channelProvider: ChannelProvider) {
+    init(endpoint: LightWalletEndpoint) {
         self.channel = ChannelProvider().channel()
-        self.service = LightWalletGRPCService(channel: channel)
+        self.service = LightWalletGRPCService(endpoint: endpoint)
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
     
     convenience init() {
-        self.init(channelProvider: ChannelProvider())
+        self.init(endpoint: LightWalletEndpointBuilder.default)
     }
+    
     var service: LightWalletGRPCService
     var darksideService: DarksideStreamerClient
     

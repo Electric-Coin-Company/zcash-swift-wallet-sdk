@@ -33,16 +33,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let wallet = wallet {
             return wallet
         } else {
+            let unifiedViewingKeys =  try! DerivationTool.default.deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
             let wallet = Initializer(cacheDbURL:try! __cacheDbURL(),
                                      dataDbURL: try! __dataDbURL(),
                                      pendingDbURL: try! __pendingDbURL(),
                                      endpoint: DemoAppConfig.endpoint,
                                      spendParamsURL: try! __spendParamsURL(),
                                      outputParamsURL: try! __outputParamsURL(),
+                                     viewingKeys: unifiedViewingKeys,
                                      loggerProxy: loggerProxy)
             
-            let unifiedViewingKeys =  try! DerivationTool.default.deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
-            try! wallet.initialize(unifiedViewingKeys: unifiedViewingKeys, walletBirthday: DemoAppConfig.birthdayHeight)
+            
+            try! wallet.initialize()
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig.seed)
             storage!.privateKey = try! DerivationTool.default.deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]

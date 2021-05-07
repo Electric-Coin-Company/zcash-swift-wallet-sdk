@@ -737,7 +737,7 @@ public class CompactBlockProcessor {
                                             Processor State: \(self.state)
                                             latestHeight: \(self.latestBlockHeight)
                                             attempts: \(self.retryAttempts)
-                                            lowerbound: \(self.lowerBoundHeight)
+                                            lowerbound: \(String(describing: self.lowerBoundHeight))
                                           """)
                         try self.start()
                     } else if self.maxAttemptsReached {

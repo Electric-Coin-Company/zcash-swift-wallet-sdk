@@ -45,7 +45,7 @@ class BlockScanOperationTests: XCTestCase {
         let scanStartedExpect = XCTestExpectation(description: self.description + "scan started")
         let scanExpect = XCTestExpectation(description: self.description + "scan")
         let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
-        let service = LightWalletGRPCService(channel: ChannelProvider().channel())
+        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         let blockCount = 100
         let range = ZcashSDK.SAPLING_ACTIVATION_HEIGHT ... ZcashSDK.SAPLING_ACTIVATION_HEIGHT + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)

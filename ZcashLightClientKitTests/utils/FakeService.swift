@@ -18,6 +18,10 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
 }
 
 class MockLightWalletService: LightWalletService {
+    func closeConnection() {
+        
+    }
+    
     func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
         []
     }
@@ -38,9 +42,8 @@ class MockLightWalletService: LightWalletService {
         
     }
     
+    private var service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
     
-    
-    private var service = LightWalletGRPCService(channel: ChannelProvider().channel())
     var latestHeight: BlockHeight
 
     init(latestBlockHeight: BlockHeight) {
