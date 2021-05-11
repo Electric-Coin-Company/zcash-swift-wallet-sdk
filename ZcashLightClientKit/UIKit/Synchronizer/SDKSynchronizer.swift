@@ -74,9 +74,11 @@ public class SDKSynchronizer: Synchronizer {
     public struct NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
+        public static let blockDate = "SDKSynchronizer.blockDate"
         public static let minedTransaction = "SDKSynchronizer.minedTransaction"
         public static let foundTransactions = "SDKSynchronizer.foundTransactions"
         public static let error = "SDKSynchronizer.error"
+        
     }
     
     public private(set) var status: Status {
@@ -265,9 +267,16 @@ public class SDKSynchronizer: Synchronizer {
             let height = userInfo[CompactBlockProcessorNotificationKey.progressHeight] as? BlockHeight else {
                 return
         }
+        var blockDate: Date? = nil
         
+        if let time = userInfo[CompactBlockProcessorNotificationKey.progressBlockTime] as? TimeInterval {
+            blockDate = Date(timeIntervalSince1970: time)
+        }
         self.progress = progress
-        self.notify(progress: progress, height: height)
+        
+        self.notify(progress: progress,
+                    height: height,
+                    time: blockDate)
     }
     
     @objc func processorStartedDownloading(_ notification: Notification) {
@@ -558,10 +567,15 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     // MARK: notify state
-    private func notify(progress: Float, height: BlockHeight) {
-        NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: [
-            NotificationKeys.progress : progress,
-            NotificationKeys.blockHeight : height])
+    private func notify(progress: Float, height: BlockHeight, time: Date?) {
+        
+        var userInfo = [AnyHashable : Any]()
+        userInfo[NotificationKeys.progress] = progress
+        userInfo[NotificationKeys.blockHeight] = height
+        if let blockDate = time {
+            userInfo[NotificationKeys.blockDate] = blockDate
+        }
+        NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: userInfo)
     }
     
     private func notify(status: Status) {

@@ -34,6 +34,7 @@ public enum CompactBlockProcessorError: Error {
 public struct CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
     public static let progressHeight = "CompactBlockProcessorNotificationKey.progressHeight"
+    public static let progressBlockTime = "CompactBlockProcessorNotificationKey.progressBlockTime"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
     public static let rewindHeight = "CompactBlockProcessorNotificationKey.rewindHeight"
@@ -603,11 +604,21 @@ public class CompactBlockProcessor {
     func notifyProgress(completedRange: CompactBlockRange) {
         let progress = calculateProgress(start: self.lowerBoundHeight ?? config.walletBirthday, current: completedRange.upperBound, latest: self.latestBlockHeight)
         
-        LoggerProxy.debug("\(self) progress: \(progress)")
+        var userInfo = [AnyHashable : Any]()
+        userInfo[CompactBlockProcessorNotificationKey.progress] = progress
+        userInfo[CompactBlockProcessorNotificationKey.progressHeight] = completedRange.upperBound
+        if let blockTime = try? transactionRepository.blockForHeight(completedRange.upperBound)?.time {
+            userInfo[CompactBlockProcessorNotificationKey.progressBlockTime] = TimeInterval(blockTime)
+        }
+        
+        LoggerProxy.debug("""
+                            progress: \(progress)
+                            height: \(completedRange.upperBound)
+                          """)
+        
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
                                         object: self,
-                                        userInfo: [ CompactBlockProcessorNotificationKey.progress : progress,
-                                                    CompactBlockProcessorNotificationKey.progressHeight : completedRange.upperBound])
+                                        userInfo: userInfo)
     }
     
     func notifyTransactions(_ txs: [ConfirmedTransactionEntity], in range: BlockRange) {
