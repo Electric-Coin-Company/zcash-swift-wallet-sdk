@@ -26,6 +26,7 @@ public enum SynchronizerError: Error {
     case rewindError(underlyingError: Error)
     case rewindErrorUnknownArchorHeight
     case invalidAccount
+    case lightwalletdValidationFailed(underlyingError: Error)
 }
 
 public enum ShieldFundsError: Error {

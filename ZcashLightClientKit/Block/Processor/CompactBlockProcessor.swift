@@ -26,6 +26,9 @@ public enum CompactBlockProcessorError: Error {
     case unspecifiedError(underlyingError: Error)
     case criticalError
     case invalidAccount
+    case wrongConsensusBranchId(expectedLocally: ConsensusBranchID, found: ConsensusBranchID)
+    case networkMismatch(expected: ZcashSDK.NetworkType, found: ZcashSDK.NetworkType)
+    case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
 }
 /**
  CompactBlockProcessor notification userInfo object keys.
@@ -360,19 +363,70 @@ public class CompactBlockProcessor {
             return
         }
         
-        let birthday = WalletBirthday.birthday(with: config.walletBirthday)
+        validateServer { [weak self] in
+            do {
+                try self?.nextBatch()
+            } catch {
+                self?.severeFailure(error)
+            }
+        }
+    }
+    
+    func validateServer(completionBlock: @escaping (() -> Void)) {
+        
+        guard let downloader = self.downloader as? CompactBlockDownloader else {
+            return
+        }
+        downloader.lightwalletService.getInfo(result: { [weak self] result in
+            guard let self = self else { return }
+            
+            switch result {
+            case .success(let info):
+                DispatchQueue.main.async { [weak self] in
+                    do {
+                        try self?.validateServerInfo(info)
+                        completionBlock()
+                    } catch {
+                        self?.severeFailure(error)
+                    }
+                }
+            case .failure(let error):
+                self.severeFailure(error.mapToProcessorError())
+            }
+        })
+    }
+    
+    func validateServerInfo(_ info: LightWalletdInfo) throws {
+        
         
         do {
-            try rustBackend.initDataDb(dbData: config.dataDb)
-            try rustBackend.initBlocksTable(dbData: config.dataDb, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
-        } catch RustWeldingError.dataDbNotEmpty {
-            // i'm ok
+            // check network types
+            guard let remoteNetworkType = ZcashSDK.NetworkType(info.chainName) else {
+                throw CompactBlockProcessorError.generalError(message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error")
+            }
+            
+            guard remoteNetworkType == ZcashSDK.networkType else {
+                throw CompactBlockProcessorError.networkMismatch(expected: ZcashSDK.networkType, found: remoteNetworkType)
+            }
+            
+            guard config.saplingActivation == info.saplingActivationHeight else {
+                throw CompactBlockProcessorError.saplingActivationMismatch(expected: config.saplingActivation, found: BlockHeight(info.saplingActivationHeight))
+            }
+            
+            // check branch id
+            let localBranch = try rustBackend.consensusBranchIdFor(height: try Int32(info.blockHeight))
+            
+            guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID)
+                  else {
+                throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
+            }
+            
+            guard remoteBranchID == localBranch else {
+                throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
+            }
         } catch {
-            throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
+            throw CompactBlockProcessorError.unspecifiedError(underlyingError: error)
         }
-        
-        try nextBatch()
-        
     }
     
     /**
@@ -794,6 +848,15 @@ public class CompactBlockProcessor {
         
     }
 
+    func severeFailure(_ error: Error) {
+        LoggerProxy.error("severe failure: \(error)")
+        self.backoffTimer?.invalidate()
+        self.retryAttempts = config.retries
+        self.processingError = error
+        self.state = .error(error)
+        self.notifyError(error)
+        
+    }
     
     func fail(_ error: Error) {
         // todo specify: failure
@@ -1006,5 +1069,56 @@ extension CompactBlockProcessor {
             }
         }
         return (inserted: refreshed, skipped: skipped)
+    }
+}
+
+extension CompactBlockProcessorError: LocalizedError {
+    /// A localized message describing what error occurred.
+    public var errorDescription: String? {
+        switch self {
+        case .dataDbInitFailed(let path):
+            return "Data Db file couldn't be initialized at path: \(path)"
+        case .connectionError(let underlyingError):
+            return "There's a problem with the Network Connection. Underlying error: \(underlyingError.localizedDescription)"
+        case .connectionTimeout:
+            return "Network connection timeout"
+        case .criticalError:
+            return "Critical Error"
+        case .generalError(let message):
+            return "Error Processing Blocks - \(message)"
+        case .grpcError(let statusCode, let message):
+            return "Error on gRPC - Status Code: \(statusCode) - Message: \(message)"
+        case .invalidAccount:
+            return "Invalid Account"
+        case .invalidConfiguration:
+            return "CompactBlockProcessor was started with an Invalid Configuration"
+        case .maxAttemptsReached(let attempts):
+            return "Compact Block failed \(attempts) times and reached the maximum amount of retries it was set up to do"
+        case .missingDbPath(let path):
+            return "CompactBlockProcessor was set up with path \(path) but thath location couldn't be reached"
+        case .networkMismatch(let expected, let found):
+            return "A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing to the right server"
+        case .saplingActivationMismatch(let expected, let found):
+            return "A server was reached, it's showing a different sapling activation. App expected sapling activation height to be \(expected) but instead it found \(found). Are you sure you are pointing to the right server?"
+        case .unspecifiedError(let underlyingError):
+            return "Unspecified error caused by this underlying error: \(underlyingError)"
+        case .wrongConsensusBranchId(let expectedLocally, let found):
+            return "The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade."
+        }
+    }
+
+    /// A localized message describing the reason for the failure.
+    public var failureReason: String? {
+        self.localizedDescription
+    }
+
+    /// A localized message describing how one might recover from the failure.
+    public var recoverySuggestion: String? {
+        self.localizedDescription
+    }
+
+    /// A localized message providing "help" text if the user requests help.
+    public var helpAnchor: String? {
+        self.localizedDescription
     }
 }

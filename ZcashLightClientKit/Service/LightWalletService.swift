@@ -102,6 +102,15 @@ extension SendResponse: LightWalletServiceResponse {}
 
 public protocol LightWalletService {
     /**
+     returns the info for this lightwalletd server (blocking)
+     */
+    func getInfo() throws -> LightWalletdInfo
+    
+    /**
+     returns the info for this lightwalletd server
+     */
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void)
+    /**
         Return the latest block height known to the service.
      
         - Parameter result: a result containing the height or an Error

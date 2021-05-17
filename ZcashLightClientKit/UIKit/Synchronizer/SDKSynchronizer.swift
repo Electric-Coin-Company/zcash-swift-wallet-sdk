@@ -154,6 +154,7 @@ public class SDKSynchronizer: Synchronizer {
             LoggerProxy.debug("warning:  synchronizer started when already started")
             return
         default:
+            
             do {
                 try blockProcessor.start(retry: retry)
             } catch {
@@ -662,6 +663,12 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.criticalError
             case .invalidAccount:
                 return SynchronizerError.invalidAccount
+            case .wrongConsensusBranchId(expectedLocally: let expectedLocally, found: let found):
+                return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
+            case .networkMismatch(expected: let expected, found: let found):
+                return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
+            case .saplingActivationMismatch(expected: let expected, found: let found):
+                return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             }
         }
         return SynchronizerError.uncategorized(underlyingError: error)

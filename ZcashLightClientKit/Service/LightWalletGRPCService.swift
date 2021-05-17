@@ -26,6 +26,45 @@ extension CallOptions {
                     cacheable: false)
     }
 }
+
+public protocol LightWalletdInfo {
+    var version: String { get }
+
+    var vendor: String { get }
+
+    /// true
+    var taddrSupport: Bool { get }
+
+    /// either "main" or "test"
+    var chainName: String { get }
+
+    /// depends on mainnet or testnet
+    var saplingActivationHeight: UInt64 { get }
+
+    /// protocol identifier, see consensus/upgrades.cpp
+    var consensusBranchID: String { get }
+
+    /// latest block on the best chain
+    var blockHeight: UInt64 { get }
+
+    var gitCommit: String { get }
+
+    var branch: String { get }
+
+    var buildDate: String { get }
+
+    var buildUser: String { get }
+
+    /// less than tip height if zcashd is syncing
+    var estimatedHeight: UInt64 { get }
+
+    /// example: "v4.1.1-877212414"
+    var zcashdBuild: String { get }
+
+    /// example: "/MagicBean:4.1.1/"
+    var zcashdSubversion: String { get }
+}
+extension LightdInfo: LightWalletdInfo {}
 /**
  Swift GRPC implementation of Lightwalletd service */
 public class LightWalletGRPCService {
@@ -85,6 +124,21 @@ public class LightWalletGRPCService {
 }
 
 extension LightWalletGRPCService: LightWalletService {
+    
+    public func getInfo() throws -> LightWalletdInfo {
+        try compactTxStreamer.getLightdInfo(Empty()).response.wait()
+    }
+    
+    public func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
+        compactTxStreamer.getLightdInfo(Empty()).response.whenComplete { r in
+            switch r {
+            case .success(let info):
+                result(.success(info))
+            case .failure(let error):
+                result(.failure(error.mapToServiceError()))
+            }
+        }
+    }
     
     public func closeConnection() {
         _ = channel.close()
