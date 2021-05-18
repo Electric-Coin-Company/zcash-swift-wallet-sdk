@@ -71,6 +71,16 @@ internal protocol DarksideStreamerClientProtocol: GRPCClient {
     callOptions: CallOptions?
   ) -> UnaryCall<Empty, Empty>
 
+  func addAddressUtxo(
+    _ request: GetAddressUtxosReply,
+    callOptions: CallOptions?
+  ) -> UnaryCall<GetAddressUtxosReply, Empty>
+
+  func clearAddressUtxo(
+    _ request: Empty,
+    callOptions: CallOptions?
+  ) -> UnaryCall<Empty, Empty>
+
 }
 
 extension DarksideStreamerClientProtocol {
@@ -266,6 +276,41 @@ extension DarksideStreamerClientProtocol {
   ) -> UnaryCall<Empty, Empty> {
     return self.makeUnaryCall(
       path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ClearIncomingTransactions",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions
+    )
+  }
+
+  /// Add a GetAddressUtxosReply entry to be returned by GetAddressUtxos().
+  /// There is no staging or applying for these, very simple.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to AddAddressUtxo.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func addAddressUtxo(
+    _ request: GetAddressUtxosReply,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<GetAddressUtxosReply, Empty> {
+    return self.makeUnaryCall(
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/AddAddressUtxo",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions
+    )
+  }
+
+  /// Clear the list of GetAddressUtxos entries (can't fail)
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to ClearAddressUtxo.
+  ///   - callOptions: Call options.
+  /// - Returns: A `UnaryCall` with futures for the metadata, status and response.
+  internal func clearAddressUtxo(
+    _ request: Empty,
+    callOptions: CallOptions? = nil
+  ) -> UnaryCall<Empty, Empty> {
+    return self.makeUnaryCall(
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ClearAddressUtxo",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions
     )
