@@ -414,7 +414,7 @@ public class CompactBlockProcessor {
             }
             
             // check branch id
-            let localBranch = try rustBackend.consensusBranchIdFor(height: try Int32(info.blockHeight))
+            let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
             
             guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID)
                   else {
