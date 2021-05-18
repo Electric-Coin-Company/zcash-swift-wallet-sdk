@@ -38,6 +38,14 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    func getInfo() throws -> LightWalletdInfo {
+        try service.getInfo()
+    }
+    
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
+        service.getInfo(result: result)
+    }
+    
     func closeConnection() {
         
     }

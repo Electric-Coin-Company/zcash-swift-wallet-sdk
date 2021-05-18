@@ -18,6 +18,14 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
 }
 
 class MockLightWalletService: LightWalletService {
+    func getInfo() throws -> LightWalletdInfo {
+        throw LightWalletServiceError.generalError(message: "Not Implemented")
+    }
+    
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
+        return result(.failure(LightWalletServiceError.generalError(message: "Not Implemented")))
+    }
+    
     func closeConnection() {
         
     }
