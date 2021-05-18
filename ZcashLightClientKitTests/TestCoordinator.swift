@@ -103,7 +103,6 @@ class TestCoordinator {
         synchronizer.stop()
         self.completionHandler = nil
         self.errorHandler = nil
-        
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
@@ -203,8 +202,20 @@ extension TestCoordinator {
         try service.latestBlockHeight()
     }
     
-    func reset(saplingActivation: BlockHeight) throws {
-        try service.reset(saplingActivation: saplingActivation)
+    func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {
+        let config = self.synchronizer.blockProcessor.config
+        
+        
+        self.synchronizer.blockProcessor.config = CompactBlockProcessor.Configuration(
+                                                    cacheDb: config.cacheDb,
+                                                    dataDb: config.dataDb,
+                                                    downloadBatchSize: config.downloadBatchSize,
+                                                    retries: config.retries,
+                                                    maxBackoffInterval: config.maxBackoffInterval,
+                                                    rewindDistance: config.rewindDistance,
+                                                    walletBirthday: config.walletBirthday,
+                                                    saplingActivation: config.saplingActivation)
+        try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)
     }
     
     func getIncomingTransactions() throws -> [RawTransaction]? {
@@ -266,8 +277,30 @@ class TestSynchronizerBuilder {
             walletBirthday: walletBirthday.height,
             loggerProxy: loggerProxy
         )
+        let config = CompactBlockProcessor.Configuration(
+                                                cacheDb: initializer.cacheDbURL,
+                                                dataDb: initializer.dataDbURL,
+                                                downloadBatchSize: 100,
+                                                retries: 5,
+                                                maxBackoffInterval: ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL,
+                                                rewindDistance: ZcashSDK.DEFAULT_REWIND_DISTANCE,
+                                                walletBirthday: walletBirthday.height,
+                                                saplingActivation: lowerBoundHeight)
         
-        let synchronizer = try SDKSynchronizer(initializer: initializer)
+        let processor = CompactBlockProcessor(downloader: downloader,
+                                              backend: rustBackend,
+                                              config: config,
+                                              repository: repository,
+                                              accountRepository: accountRepository)
+        
+        
+        let synchronizer = try SDKSynchronizer(status: .unprepared,
+                                               initializer: initializer,
+                                               transactionManager: OutboundTransactionManagerBuilder.build(initializer: initializer),
+                                               transactionRepository: repository,
+                                               utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
+                                               blockProcessor: processor
+                                               )
                                         
         try synchronizer.prepare()
         

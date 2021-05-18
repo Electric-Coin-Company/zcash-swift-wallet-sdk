@@ -21,7 +21,8 @@ class SychronizerDarksideTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
-    
+    let branchID = "2bb40e60"
+    let chainName = "main"
     var foundTransactions = [ConfirmedTransactionEntity]()
     override func setUpWithError() throws {
         
@@ -30,7 +31,7 @@ class SychronizerDarksideTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     
     override func tearDownWithError() throws {
@@ -44,7 +45,7 @@ class SychronizerDarksideTests: XCTestCase {
     func testFoundTransactions() throws {
         NotificationCenter.default.addObserver(self, selector: #selector(handleFoundTransactions(_:)), name: Notification.Name.synchronizerFoundTransactions, object: nil)
         
-        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
         
     
@@ -67,7 +68,7 @@ class SychronizerDarksideTests: XCTestCase {
     func testFoundManyTransactions() throws {
         NotificationCenter.default.addObserver(self, selector: #selector(handleFoundTransactions(_:)), name: Notification.Name.synchronizerFoundTransactions, object: nil)
         
-        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, length: 1000)
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName,length: 1000)
         let receivedTxHeight: BlockHeight = 663229
         
     

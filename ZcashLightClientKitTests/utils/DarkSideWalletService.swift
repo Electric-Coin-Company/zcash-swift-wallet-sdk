@@ -38,6 +38,14 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    func getInfo() throws -> LightWalletdInfo {
+        try service.getInfo()
+    }
+    
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
+        service.getInfo(result: result)
+    }
+    
     func closeConnection() {
         
     }
@@ -151,8 +159,8 @@ class DarksideWalletService: LightWalletService {
     func reset(saplingActivation: BlockHeight, branchID: String = "d3adb33f", chainName: String = "test") throws {
         var metaState = DarksideMetaState()
         metaState.saplingActivation = Int32(saplingActivation)
-        metaState.branchID = "d3adb33f"
-        metaState.chainName = "test"
+        metaState.branchID = branchID
+        metaState.chainName = chainName
         // TODO: complete meta state correctly
         _ = try darksideService.reset(metaState).response.wait()
     }

@@ -210,7 +210,11 @@ public class CompactBlockProcessor {
     private var transactionRepository: TransactionRepository
     private var accountRepository: AccountRepository
     private var rustBackend: ZcashRustBackendWelding.Type
-    private(set) var config: Configuration = Configuration.standard
+    var config: Configuration = Configuration.standard {
+        willSet {
+            self.stop()
+        }
+    }
     private var queue: OperationQueue = {
         let q = OperationQueue()
         q.name = "CompactBlockProcessorQueue"
@@ -414,7 +418,7 @@ public class CompactBlockProcessor {
             }
             
             // check branch id
-            let localBranch = try rustBackend.consensusBranchIdFor(height: try Int32(info.blockHeight))
+            let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
             
             guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID)
                   else {

@@ -663,11 +663,11 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.criticalError
             case .invalidAccount:
                 return SynchronizerError.invalidAccount
-            case .wrongConsensusBranchId(expectedLocally: let expectedLocally, found: let found):
+            case .wrongConsensusBranchId:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
-            case .networkMismatch(expected: let expected, found: let found):
+            case .networkMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
-            case .saplingActivationMismatch(expected: let expected, found: let found):
+            case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             }
         }
