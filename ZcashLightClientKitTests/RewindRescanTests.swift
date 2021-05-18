@@ -21,6 +21,8 @@ class RewindRescanTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
+    let branchID = "2bb40e60"
+    let chainName = "main"
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
@@ -28,7 +30,7 @@ class RewindRescanTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     
     override func tearDownWithError() throws {
@@ -50,7 +52,7 @@ class RewindRescanTests: XCTestCase {
     
     func testBirthdayRescan() throws {
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
         let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
@@ -95,7 +97,7 @@ class RewindRescanTests: XCTestCase {
     
     func testRescanToHeight() throws {
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChainWithTxsFarFromEachOther(darksideWallet: coordinator.service, length: 10000)
+        try FakeChainBuilder.buildChainWithTxsFarFromEachOther(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: 10000)
         let newChaintTip = defaultLatestHeight + 10000
         try coordinator.applyStaged(blockheight: newChaintTip)
         sleep(3)
@@ -162,7 +164,7 @@ class RewindRescanTests: XCTestCase {
 
     func testRescanToTransaction() throws {
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
       
@@ -214,7 +216,7 @@ class RewindRescanTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         

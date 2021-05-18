@@ -16,7 +16,8 @@ class NetworkUpgradeTests: XCTestCase {
     
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 1013250
-
+    let branchID = "2bb40e60"
+    let chainName = "main"
     var coordinator: TestCoordinator!
    
     override func setUpWithError() throws {
@@ -27,7 +28,7 @@ class NetworkUpgradeTests: XCTestCase {
 //            walletBirthday: birthday,
 //            channelProvider: ChannelProvider()
 //        )
-        try coordinator.reset(saplingActivation: birthday)
+        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
     }
     
     override func tearDownWithError() throws {
@@ -43,7 +44,7 @@ class NetworkUpgradeTests: XCTestCase {
      Given that a wallet had funds prior to activation it can spend them after activation
      */
     func testSpendPriorFundsAfterActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
@@ -190,7 +191,7 @@ class NetworkUpgradeTests: XCTestCase {
 
      */
     func testSpendMinedSpendThatExpiresOnActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
@@ -278,7 +279,7 @@ class NetworkUpgradeTests: XCTestCase {
      */
     
     func testExpiredSpendAfterActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         let offset = 5
@@ -363,7 +364,7 @@ class NetworkUpgradeTests: XCTestCase {
      Given that a wallet has notes both received prior and after activation these can be combined to supply a larger amount spend.
      */
     func testCombinePreActivationNotesAndPostActivationNotesOnSpend() throws {
-        try FakeChainBuilder.buildChainMixedFunds(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
+        try FakeChainBuilder.buildChainMixedFunds(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         

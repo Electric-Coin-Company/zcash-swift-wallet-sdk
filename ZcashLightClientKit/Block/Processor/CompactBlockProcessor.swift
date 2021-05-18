@@ -210,7 +210,11 @@ public class CompactBlockProcessor {
     private var transactionRepository: TransactionRepository
     private var accountRepository: AccountRepository
     private var rustBackend: ZcashRustBackendWelding.Type
-    private(set) var config: Configuration = Configuration.standard
+    var config: Configuration = Configuration.standard {
+        willSet {
+            self.stop()
+        }
+    }
     private var queue: OperationQueue = {
         let q = OperationQueue()
         q.name = "CompactBlockProcessorQueue"

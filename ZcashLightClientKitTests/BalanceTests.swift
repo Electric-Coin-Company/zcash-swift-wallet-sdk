@@ -16,7 +16,8 @@ class BalanceTests: XCTestCase {
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663188
     var coordinator: TestCoordinator!
-    
+    let branchID = "2bb40e60"
+    let chainName = "main"
     var syncedExpectation = XCTestExpectation(description: "synced")
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
     override func setUpWithError() throws {
@@ -26,7 +27,7 @@ class BalanceTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
         
     }
     
@@ -41,7 +42,7 @@ class BalanceTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         
@@ -179,7 +180,7 @@ class BalanceTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         
@@ -316,7 +317,7 @@ class BalanceTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         
@@ -460,7 +461,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyAvailableBalanceDuringSend() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         
@@ -611,7 +612,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyTotalBalanceDuringSend() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         
@@ -715,7 +716,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyIncomingTransaction() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         try coordinator.sync(completion: { (syncronizer) in
             self.syncedExpectation.fulfill()
@@ -750,7 +751,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyChangeTransaction() throws {
-        try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         let sendExpectation = XCTestExpectation(description: "send expectation")
@@ -919,7 +920,7 @@ class BalanceTests: XCTestCase {
      */
     func testVerifyBalanceAfterExpiredTransaction() throws {
         
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: self.defaultLatestHeight)
         sleep(2)
