@@ -104,27 +104,73 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
-    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool {
         let dbData = dbData.osStr()
-        let viewingKeys = exfvks.map { UnsafePointer(strdup($0)) }
         
-        guard exfvks.count > 0 else {
-            throw RustWeldingError.malformedStringInput
-        }
-        
-        let res = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, viewingKeys, UInt(viewingKeys.count));
-        
-        viewingKeys.compactMap({ UnsafeMutablePointer(mutating: $0) }).forEach({ free($0) })
-        
-        guard res else {
-            if let error = lastError() {
-                throw error
+        var ffiUvks = [FFIUnifiedViewingKey]()
+        for uvk in uvks {
+            guard !uvk.extfvk.containsCStringNullBytesBeforeStringEnding() else {
+                throw RustWeldingError.malformedStringInput
             }
-            return false
+            guard !uvk.extpub.containsCStringNullBytesBeforeStringEnding() else {
+                throw RustWeldingError.malformedStringInput
+            }
+
+            let extfvkCStr = [CChar](String(uvk.extfvk).utf8CString)
+            
+            let extfvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extfvkCStr.count)
+            extfvkPtr.initialize(from: extfvkCStr, count: extfvkCStr.count)
+            
+            let extpubCStr = [CChar](String(uvk.extpub).utf8CString)
+            let extpubPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extpubCStr.count)
+            extpubPtr.initialize(from:extpubCStr, count: extpubCStr.count)
+            
+            
+            ffiUvks.append(FFIUnifiedViewingKey(extfvk: extfvkPtr, extpub: extpubPtr))
         }
-        return res
+        
+        
+        var result = false
+        ffiUvks.withContiguousMutableStorageIfAvailable { p in
+            let slice = UnsafeMutablePointer<FFIUVKBoxedSlice>.allocate(capacity: 1)
+            slice.initialize(to: FFIUVKBoxedSlice(ptr: p.baseAddress, len: UInt(p.count)))
+            
+            result = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, slice)
+            slice.deinitialize(count: 1)
+//            slice.deallocate()
+        }
+        
+        defer {
+            for uvk in ffiUvks {
+                uvk.extfvk.deallocate()
+                uvk.extpub.deallocate()
+            }
+        }
+        
+        return result
         
     }
+//    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+//        let dbData = dbData.osStr()
+//        let viewingKeys = exfvks.map { UnsafePointer(strdup($0)) }
+//
+//        guard exfvks.count > 0 else {
+//            throw RustWeldingError.malformedStringInput
+//        }
+//
+//        let res = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, viewingKeys, UInt(viewingKeys.count));
+//
+//        viewingKeys.compactMap({ UnsafeMutablePointer(mutating: $0) }).forEach({ free($0) })
+//
+//        guard res else {
+//            if let error = lastError() {
+//                throw error
+//            }
+//            return false
+//        }
+//        return res
+//
+//    }
     
     static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
         let dbData = dbData.osStr()
@@ -165,6 +211,74 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_get_verified_balance(dbData.0, dbData.1, account)
     }
     
+    static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let dbData = dbData.osStr()
+        
+        return zcashlc_get_verified_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString))
+    }
+    
+    static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let dbData = dbData.osStr()
+        return zcashlc_get_total_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString))
+    }
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> Int32 {
+        let dbData = dbData.osStr()
+        
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        let result = zcashlc_clear_utxos(dbData.0, dbData.1, [CChar](address.utf8CString), Int32(sinceHeight))
+        
+        guard result > 0 else {
+            if let error = lastError() {
+                throw error
+            }
+            return result
+        }
+        return result
+    }
+    
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool {
+        
+        let dbData = dbData.osStr()
+        
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard zcashlc_put_utxo(dbData.0,
+                                dbData.1,
+                                [CChar](address.utf8CString),
+                                txid,
+                                UInt(txid.count),
+                                Int32(index),
+                                script,
+                                UInt(script.count),
+                                value,
+                                Int32(height)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+        return true
+    }
+    
+    static func downloadedUtxoBalance(dbData: URL, address: String) throws -> WalletBalance {
+        let verified = try getVerifiedTransparentBalance(dbData: dbData, address: address)
+        let total = try getTransparentBalance(dbData: dbData, address: address)
+        return TransparentBalance(verified: verified, total: total, address: address)
+    }
+    
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {
         let dbData = dbData.osStr()
         
@@ -191,9 +305,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_validate_combined_chain(dbCache.0, dbCache.1, dbData.0, dbData.1)
     }
     
+    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32 {
+        let dbData = dbData.osStr()
+        return zcashlc_get_nearest_rewind_height(dbData.0, dbData.1, height)
+    }
+    
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool {
         let dbData = dbData.osStr()
-        return zcashlc_rewind_to_height(dbData.0, dbData.1, height) != 0
+        return zcashlc_rewind_to_height(dbData.0, dbData.1, height)
     }
     
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool {
@@ -207,7 +326,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count)) != 0
     }
 
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32,to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
         let dbData = dbData.osStr()
         let memoBytes = memo ?? ""
         
@@ -222,6 +341,22 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                          UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                                          outputParamsPath,
                                          UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
+    }
+    
+    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+        let dbData = dbData.osStr()
+        let memoBytes = memo ?? ""
+        
+        return zcashlc_shield_funds(dbData.0,
+                                    dbData.1,
+                                    account,
+                                    [CChar](tsk.utf8CString),
+                                    [CChar](extsk.utf8CString),
+                                    [CChar](memoBytes.utf8CString),
+                                    spendParamsPath,
+                                    UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
+                                    outputParamsPath,
+                                    UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
     }
     
     static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
@@ -277,6 +412,40 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
+    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
+        
+        guard let uvks_struct = zcashlc_derive_unified_viewing_keys_from_seed(seed, UInt(seed.count), Int32(numberOfAccounts)) else {
+            if let error = lastError() {
+                throw error
+            }
+            throw RustWeldingError.unableToDeriveKeys
+        }
+        
+        let uvks_size = uvks_struct.pointee.len
+        guard let uvks_array_pointer = uvks_struct.pointee.ptr, uvks_size > 0 else {
+            throw RustWeldingError.unableToDeriveKeys
+        }
+        var uvks = [UnifiedViewingKey]()
+        
+        for i: Int in 0 ..< Int(uvks_size) {
+            let itemPointer = uvks_array_pointer.advanced(by: i)
+            
+            guard let extfvk = String(validatingUTF8: itemPointer.pointee.extfvk) else {
+                throw RustWeldingError.unableToDeriveKeys
+            }
+            
+            guard let extpub = String(validatingUTF8: itemPointer.pointee.extpub) else {
+                throw RustWeldingError.unableToDeriveKeys
+            }
+            
+            uvks.append(UVK(extfvk: extfvk, extpub: extpub))
+        }
+        
+        zcashlc_free_uvk_array(uvks_struct)
+        
+        return uvks
+    }
+    
     static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String? {
         guard let zaddrCStr = zcashlc_derive_shielded_address_from_seed(seed, UInt(seed.count), accountIndex) else {
             if let error = lastError() {
@@ -309,15 +478,57 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zAddr
     }
     
-    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String? {
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
         
-        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count)) else {
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count), Int32(account), Int32(index)) else {
             if let error = lastError() {
                 throw error
             }
             return nil
         }
         
+        let tAddr = String(validatingUTF8: tAddrCStr)
+        
+        return tAddr
+    }
+    
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
+        guard let skCStr = zcashlc_derive_transparent_private_key_from_seed(seed, UInt(seed.count), Int32(account), Int32(index)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
+        let sk = String(validatingUTF8: skCStr)
+        
+        return sk
+    }
+    
+    static func derivedTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
+        guard !pubkey.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_public_key([CChar](pubkey.utf8CString)), let tAddr = String(validatingUTF8: tAddrCStr) else {
+            if let error = lastError() {
+                throw error
+            }
+            throw RustWeldingError.unableToDeriveKeys
+        }
+        return tAddr
+    }
+    
+    static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String? {
+        
+        guard !tsk.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_secret_key([CChar](tsk.utf8CString)) else {
+            if let error = lastError() {
+                throw error
+            }
+            return nil
+        }
         let tAddr = String(validatingUTF8: tAddrCStr)
         
         return tAddr
@@ -332,6 +543,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         return branchId
     }
+    
+}
+
+private struct UVK: UnifiedViewingKey {
+    var extfvk: ExtendedFullViewingKey
+    var extpub: ExtendedPublicKey
 }
 
 private extension ZcashRustBackend {

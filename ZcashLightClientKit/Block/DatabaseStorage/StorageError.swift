@@ -15,4 +15,8 @@ enum StorageError: Error {
     case operationFailed
     case updateFailed
     case malformedEntity(fields: [String]?)
+    case transactionFailed(underlyingError: Error)
+    case invalidMigrationVersion(version: Int32)
+    case migrationFailed(underlyingError: Error)
+    case migrationFailedWithMessage(message: String)
 }

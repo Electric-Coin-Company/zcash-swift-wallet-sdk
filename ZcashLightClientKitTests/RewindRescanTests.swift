@@ -21,6 +21,8 @@ class RewindRescanTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
+    let branchID = "2bb40e60"
+    let chainName = "main"
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
@@ -28,7 +30,7 @@ class RewindRescanTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     
     override func tearDownWithError() throws {
@@ -50,7 +52,7 @@ class RewindRescanTests: XCTestCase {
     
     func testBirthdayRescan() throws {
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
         let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
@@ -95,19 +97,20 @@ class RewindRescanTests: XCTestCase {
     
     func testRescanToHeight() throws {
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
-        
-        try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
+        try FakeChainBuilder.buildChainWithTxsFarFromEachOther(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: 10000)
+        let newChaintTip = defaultLatestHeight + 10000
+        try coordinator.applyStaged(blockheight: newChaintTip)
+        sleep(3)
         let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
-        sleep(1)
+//        let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
+        
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
         try coordinator.sync(completion: { (synchronizer) in
             firstSyncExpectation.fulfill()
         }, error: handleError)
         
-        wait(for: [firstSyncExpectation], timeout: 12)
+        wait(for: [firstSyncExpectation], timeout: 20)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
         // 2 check that there are no unconfirmed funds
@@ -115,32 +118,53 @@ class RewindRescanTests: XCTestCase {
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to birthday
-        let targetHeight: BlockHeight = 663160
+        let targetHeight: BlockHeight = newChaintTip - 8000
+        let rewindHeight = ZcashRustBackend.getNearestRewindHeight(dbData: coordinator.databases.dataDB, height: Int32(targetHeight))
         try coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
         
+        
+        guard rewindHeight > 0 else {
+            XCTFail("get nearest height failed error: \(ZcashRustBackend.getLastError() ?? "null")")
+            return
+        }
         // assert that after the new height is
-        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),targetHeight)
+//        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), BlockHeight(rewindHeight))
         
         // check that the balance is cleared
         XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
+
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         
         try coordinator.sync(completion: { (synchronizer) in
             secondScanExpectation.fulfill()
         }, error: handleError)
         
-        wait(for: [secondScanExpectation], timeout: 12)
+        wait(for: [secondScanExpectation], timeout: 20)
         
         // verify that the balance still adds up
         XCTAssertEqual(verifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(totalBalance, coordinator.synchronizer.initializer.getBalance())
         
+        // try to spend the funds
+        let sendExpectation = XCTestExpectation(description: "after rewind expectation")
+        coordinator.synchronizer.sendToAddress(spendingKey: coordinator.spendingKey, zatoshi: 1000, toAddress: testRecipientAddress, memo: nil, from: 0) { result in
+            sendExpectation.fulfill()
+            switch result {
+            case .success(let pendingTx):
+                XCTAssertEqual(1000, pendingTx.value)
+            case .failure(let error):
+                XCTFail("sending fail: \(error)")
+            }
+        }
+        wait(for: [sendExpectation], timeout: 15)
+        
+        
+        
     }
 
     func testRescanToTransaction() throws {
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
       
@@ -192,7 +216,7 @@ class RewindRescanTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         

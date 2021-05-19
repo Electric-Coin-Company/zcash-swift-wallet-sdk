@@ -22,8 +22,8 @@ class FakeChainBuilder {
     
     static let testnetPostCanopyTx = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/testnet-canopy/post-activation-txs/ecaa6c03709d70aa25446a81690b18ddb11daac96a03fe4b5cfd0d89a49fb963.txt"
     
-    static func buildSingleNoteChain(darksideWallet: DarksideWalletService) throws {
-        try darksideWallet.reset(saplingActivation: 663150)
+    static func buildSingleNoteChain(darksideWallet: DarksideWalletService, branchID: String, chainName: String) throws {
+        try darksideWallet.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
        
         try darksideWallet.stageBlocksCreate(from: 663151, count: 100)
@@ -31,8 +31,9 @@ class FakeChainBuilder {
         try darksideWallet.stageTransaction(from: txUrls[663174]!, at: 663174)
         
     }
-    static func buildChain(darksideWallet: DarksideWalletService) throws {
-        try darksideWallet.reset(saplingActivation: 663150)
+    
+    static func buildChain(darksideWallet: DarksideWalletService, branchID: String, chainName: String) throws {
+        try darksideWallet.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
        
         try darksideWallet.stageBlocksCreate(from: 663151, count: 100)
@@ -43,8 +44,21 @@ class FakeChainBuilder {
         
     }
     
-    static func buildChain(darksideWallet: DarksideWalletService, length: Int) throws {
-        try darksideWallet.reset(saplingActivation: 663150)
+    static func buildChainWithTxsFarFromEachOther(darksideWallet: DarksideWalletService, branchID: String, chainName: String, length: Int) throws {
+        try darksideWallet.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
+        try darksideWallet.useDataset(from: txMainnetBlockUrl)
+        
+        try darksideWallet.stageBlocksCreate(from: 663151, count: length)
+        
+        try darksideWallet.stageTransaction(from: txUrls[663188]!, at: 663188)
+        
+        try darksideWallet.stageTransaction(from: txUrls[663974]!, at: 663974)
+        
+    }
+    
+    
+    static func buildChain(darksideWallet: DarksideWalletService, branchID: String, chainName: String, length: Int) throws {
+        try darksideWallet.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         try darksideWallet.useDataset(from: txMainnetBlockUrl)
         
         try darksideWallet.stageBlocksCreate(from: 663151, count: length)
@@ -59,14 +73,13 @@ class FakeChainBuilder {
         
     }
     
-    static func buildChain(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, length: Int) throws {
+    static func buildChain(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, branchID: String, chainName: String, length: Int) throws {
         
-        try darksideWallet.reset(saplingActivation: birthday, branchID: "e9ff75a6" , chainName: "testnet")
+        try darksideWallet.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
 
         try darksideWallet.useDataset(testnetCanopyStartBlock)
         try darksideWallet.stageBlocksCreate(from: birthday + 1, count: length)
         try darksideWallet.stageTransaction(from: testnetPreCanopyTx, at: networkActivationHeight - ZcashSDK.EXPIRY_OFFSET)
-        
         
     }
     
@@ -80,8 +93,8 @@ class FakeChainBuilder {
         
     }
     
-    static func buildChainMixedFunds(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, length: Int) throws {
-        try buildChain(darksideWallet: darksideWallet, birthday: birthday, networkActivationHeight: networkActivationHeight, length: length)
+    static func buildChainMixedFunds(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, branchID: String, chainName: String, length: Int) throws {
+        try buildChain(darksideWallet: darksideWallet, birthday: birthday, networkActivationHeight: networkActivationHeight, branchID: branchID, chainName: chainName, length: length)
         
         try darksideWallet.stageTransaction(from: testnetPostCanopyTx, at: networkActivationHeight + ZcashSDK.EXPIRY_OFFSET)
         

@@ -5,12 +5,12 @@ target 'ZcashLightClientSample' do
   use_frameworks!
   pod "KRProgressHUD"
   # Pods for ZcashLightClientSample
-  pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']
-  pod 'gRPC-Swift', '= 1.0.0-alpha.19'
+  pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests', 'DerivationToolTests']
+  pod 'gRPC-Swift', '= 1.0.0'
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'
   pod 'MnemonicSwift', '~> 2.0.0'
-      pod 'gRPC-Swift-Plugins', '= 1.0.0-alpha.19'
+  pod 'gRPC-Swift-Plugins', '= 1.0.0'
   target 'ZcashLightClientSampleTests' do
     use_frameworks!
     inherit! :search_paths

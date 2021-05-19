@@ -15,6 +15,7 @@ enum TransactionManagerError: Error {
     case cancelled(tx: PendingTransactionEntity)
     case internalInconsistency(tx: PendingTransactionEntity)
     case submitFailed(tx: PendingTransactionEntity, errorCode: Int)
+    case shieldingEncodingFailed(tx: PendingTransactionEntity, reason: String)
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
@@ -39,6 +40,45 @@ class PersistentTransactionManager: OutboundTransactionManager {
         return insertedTx
     }
     
+    func encodeShieldingTransaction(spendingKey: String, tsk: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
+        queue.async { [weak self] in
+            guard let self = self else { return }
+                
+            let derivationTool = DerivationTool()
+            guard let vk = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
+                  let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: vk) else {
+                result(.failure(TransactionManagerError.shieldingEncodingFailed(tx: pendingTransaction, reason: "There was an error Deriving your keys")))
+                return 
+            }
+            
+            guard pendingTransaction.toAddress == zAddr else {
+                result(.failure(TransactionManagerError.shieldingEncodingFailed(tx: pendingTransaction, reason: "the recipient address does not match your derived shielded address. Shielding transactions addresses must match the ones derived from your keys. This is a serious error. We are not letting you encode this shielding transaction because it can lead to loss of funds")))
+                return
+            }
+            do {
+                let encodedTransaction = try self.encoder.createShieldingTransaction(spendingKey: spendingKey, tSecretKey: tsk, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: pendingTransaction.accountIndex)
+                let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
+                
+                var pending = pendingTransaction
+                pending.encodeAttempts = pending.encodeAttempts + 1
+                pending.raw = encodedTransaction.raw
+                pending.rawTransactionId = encodedTransaction.transactionId
+                pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
+                pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
+                try self.repository.update(pending)
+                result(.success(pending))
+            } catch StorageError.updateFailed {
+                DispatchQueue.main.async {
+                    result(.failure(TransactionManagerError.updateFailed(tx: pendingTransaction)))
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    result(.failure(error))
+                }
+            }
+        }
+    }
+    
     func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         
         queue.async { [weak self] in
@@ -60,6 +100,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
                     result(.failure(TransactionManagerError.updateFailed(tx: pendingTransaction)))
                 }
             } catch {
+                do {
+                    try self.updateOnFailure(tx: pendingTransaction, error: error)
+                } catch {
+                    DispatchQueue.main.async {
+                        result(.failure(TransactionManagerError.updateFailed(tx: pendingTransaction)))
+                    }
+                }
                 DispatchQueue.main.async {
                     result(.failure(error))
                 }

@@ -37,18 +37,6 @@ class ZcashRustBackendTests: XCTestCase {
  
     }
     
-    func testInitWithViewingKeys() throws {
-        let viewingKey = "zxviews1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkysswfhjk79n8l99f2grd26dqg6dy3jcmxsaypxfsu6ara6vsk3x8l544uaksstx9zre879mdg7s9a7zurrx6pf5qg2n323js2s3zlu8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszcq7kwxy"
-        
-        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
-        
-        let _ = try ZcashRustBackend.initAccountsTable(dbData: dbData!, exfvks: [viewingKey])
-        XCTAssertNil(ZcashRustBackend.getLastError())
-        
-        XCTAssertEqual(ZcashRustBackend.getAddress(dbData: dbData!, account: 0),"zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0")
- 
-    }
-    
     func testDeriveExtendedSpendingKeys() {
         let seed = Array("testreferencealicetestreferencealice".utf8)
         
@@ -110,13 +98,6 @@ class ZcashRustBackendTests: XCTestCase {
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData))
         
-    }
-    
-    func testSendToAddress() {
-        
-        let tx = try! ZcashRustBackend.createToAddress(dbData: dataDbHandle.readWriteDb, account: 0, extsk: spendingKey, consensusBranchId: ZcashRustBackend.consensusBranchIdFor(height: 663150), to: recipientAddress, value: Int64(zpend), memo: nil, spendParamsPath: __spendParamsURL().path, outputParamsPath: __outputParamsURL().path)
-        XCTAssert(tx > 0)
-        XCTAssertNil(ZcashRustBackend.lastError())
     }
     
     func testIsValidTransparentAddressFalse() {

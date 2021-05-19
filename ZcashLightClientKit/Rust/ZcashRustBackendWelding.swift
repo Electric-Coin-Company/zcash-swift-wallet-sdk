@@ -15,6 +15,7 @@ public enum RustWeldingError: Error {
     case saplingSpendParametersNotFound
     case malformedStringInput
     case noConsensusBranchId(height: Int32)
+    case unableToDeriveKeys
 }
 
 public struct ZcashRustBackendWeldingConstants {
@@ -64,13 +65,13 @@ public protocol ZcashRustBackendWelding {
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]?
     
     /**
-    initialize the accounts table from a given seed and a number of accounts
+     initialize the accounts table from a set of unified viewing keys
      - Parameters:
        - dbData: location of the data db
-       - exfvks: byte array of the zip32 seed
-     - Returns: a boolean indicating if the database was initialized or an error
- */
-    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool
+       - uvks: an array of UnifiedViewingKeys 
+     */
+    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool
+
     
     /**
     initialize the blocks table from a given checkpoint (birthday)
@@ -105,6 +106,16 @@ public protocol ZcashRustBackendWelding {
         - account: index of the given account
      */
     static func getVerifiedBalance(dbData: URL, account: Int32) -> Int64
+    
+    /**
+     Get the verified cached transparent balance for the given address
+     */
+    static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64
+    
+    /**
+     Get the verified cached transparent balance for the given address
+     */
+    static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 
     /**
     get received memo from note
     - Parameters:
@@ -136,11 +147,21 @@ public protocol ZcashRustBackendWelding {
      - Important: This function does not mutate either of the databases.
     */
     static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32
+    
+    /**
+     Returns the nearest height where a rewind is possible. Currently prunning gets rid of sapling witnesses older
+     than 100 blocks. So in order to reconstruct the witness tree that allows to spend notes from the given wallet
+     the rewind can't be more than 100 block or back to the oldest unspent note that this wallet contains.
+     - Parameters:
+       - dbData: location of the data db file
+       - height: height you would like to rewind to.
+     */
+    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32
     /**
      rewinds the compact block storage to the given height. clears up all derived data as well
       - Parameters:
         - dbData: location of the data db file
-        - height: height to rewind to
+        - height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use getNearestRewindHeight when unsure
      */
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool
     
@@ -165,6 +186,40 @@ public protocol ZcashRustBackendWelding {
     static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
 
     /**
+     puts a UTXO into the data db database
+     - Parameters:
+       - dbData: location of the data db file
+       - address: the address of the UTXO
+       - txid: the txid bytes for the UTXO
+       - index: the index of the UTXO
+       - value: the value of the UTXO
+       - height: the mined height for the UTXO
+     - Returns: true if the operation succeded or false otherwise
+     */
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool
+    
+    
+    /**
+     clears the cached utxos for the given address from the specified height on
+     - Parameters:
+      - dbData: location of the data db file
+      - address: the address of the UTXO
+      - sinceheight: clear the UXTOs from that address on
+     - Returns: the amount of UTXOs cleared or -1 on error
+     
+     */
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight) throws -> Int32
+    /**
+        Gets the balance of the previously downloaded UTXOs
+     - Parameters:
+       - dbData: location of the data db file
+       - address: the address of the UTXO
+     - Returns: the wallet balance containing verified and total balance.
+     - Throws: Rustwelding Error if something fails
+     */
+    static func downloadedUtxoBalance(dbData: URL, address: String) throws -> WalletBalance
+    
+    /**
      Scans a transaction for any information that can be decrypted by the accounts in the
      wallet, and saves it to the wallet.
 
@@ -181,14 +236,27 @@ public protocol ZcashRustBackendWelding {
         - dbData: URL for the Data DB
         - account: the account index that will originate the transaction
         - extsk: extended spending key string
-        - consensusBranchId: the current consensus ID
         - to: recipient address
         - value: transaction amount in Zatoshi
         - memo: the memo string for this transaction
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    
+    /**
+     Creates a transaction to shield all found UTXOs in cache db.
+     - Parameters:
+        - dbCache: URL for the Cache DB
+        - dbData: URL for the Data DB
+        - account: the account index that will originate the transaction
+        - tsk: transparent Secret Key for the shielded funds.
+        - extsk: extended spending key string
+        - memo: the memo string for this transaction
+        - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
+        - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
+     */
+    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
     
     /**
      Derives a full viewing key from a seed
@@ -239,8 +307,30 @@ public protocol ZcashRustBackendWelding {
      - Returns: an optional String containing the transparent address
      - Throws: RustBackendError if fatal error occurs
      */
-    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String?
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String?
     
+    /**
+        Derives a transparent secret key from Seed
+      - Parameter seed: an array of bytes containing the seed
+      - Returns: an optional String containing the transparent secret (private) key
+     */
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String?
+    
+    /**
+        Derives a transparent address from a secret key
+     - Parameter tsk: a hex string containing the Secret Key
+     - Returns: an optional String containing the transparent address.
+     */
+    
+    static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String?
+    
+    /**
+     Derives a tranparent address from a public key
+      - Parameter pubkey: public key represented as a string
+     */
+    static func derivedTransparentAddressFromPublicKey(_ pubkey: String) throws -> String
+    
+    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey]
     /**
      Gets the consensus branch id for the given height
      - Parameter height: the height you what to know the branch id for

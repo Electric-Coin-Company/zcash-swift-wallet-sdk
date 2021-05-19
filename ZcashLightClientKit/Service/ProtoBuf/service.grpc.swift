@@ -348,7 +348,7 @@ extension CompactTxStreamerClientProtocol {
     )
   }
 
-  /// Testing-only
+  /// Testing-only, requires lightwalletd --ping-very-insecure (do not enable in production)
   ///
   /// - Parameters:
   ///   - request: Request to send to Ping.

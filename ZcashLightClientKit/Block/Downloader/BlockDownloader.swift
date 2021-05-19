@@ -82,6 +82,16 @@ public protocol CompactBlockDownloading {
      - Parameter result: a handler for the result of the operation
      */
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void)
+    
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
+    
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity],Error>) -> Void)
+    
+    func closeConnection()
 }
 
 /**
@@ -94,7 +104,7 @@ public protocol CompactBlockDownloading {
 */
 class CompactBlockDownloader {
     
-    fileprivate var lightwalletService: LightWalletService
+    var lightwalletService: LightWalletService
     private(set) var storage: CompactBlockRepository
     
     init(service: LightWalletService, storage: CompactBlockRepository) {
@@ -105,6 +115,40 @@ class CompactBlockDownloader {
 }
 
 extension CompactBlockDownloader: CompactBlockDownloading {
+    func closeConnection() {
+        lightwalletService.closeConnection()
+    }
+    
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        try lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight)
+    }
+    
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
+        lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight) {
+            r in
+            switch r {
+            case .success(let utxos):
+                result(.success(utxos))
+            case .failure(let error):
+                result(.failure(error))
+            }
+        }
+    }
+    
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        try lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
+    }
+    
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
+        lightwalletService.fetchUTXOs(for: tAddress, height: startHeight) { (r) in
+            switch r {
+            case .success(let utxos):
+                result(.success(utxos))
+            case .failure(let error):
+                result(.failure(error))
+            }
+        }
+    }
     
     func latestBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         lightwalletService.latestBlockHeight { (r) in

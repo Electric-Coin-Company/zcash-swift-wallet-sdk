@@ -77,8 +77,68 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32 {
+        -1
+    }
+    
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight) throws -> Int32 {
+        -1
+    }
+    
+    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool {
+        false
+    }
+    
+    static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+        -1
+    }
+    
+    static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+        -1
+    }
+    
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool {
+        false
+    }
+    
+    static func downloadedUtxoBalance(dbData: URL, address: String) throws -> WalletBalance {
+        throw RustWeldingError.genericError(message: "unimplemented")
+    }
+    
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+        -1
+    }
+    
+    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+        -1
+    }
+    
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
+        throw KeyDerivationErrors.unableToDerive
+    }
+    
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
+        throw KeyDerivationErrors.unableToDerive
+    }
+    
+    static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String? {
+        throw KeyDerivationErrors.unableToDerive
+    }
+    
+    static func derivedTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
+        throw KeyDerivationErrors.unableToDerive
+    }
+    
+    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
+        throw KeyDerivationErrors.unableToDerive
+    }
+    
     static func isValidExtendedFullViewingKey(_ key: String) throws -> Bool {
         false
+    }
+    
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8]) throws -> String? {
+        nil
     }
     
     static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
@@ -232,7 +292,8 @@ class MockRustBackend: ZcashRustBackendWelding {
     }
     
      static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
-        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, consensusBranchId: consensusBranchId, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
+//        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, consensusBranchId: consensusBranchId, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
+        -1
     }
     
     static func shouldSucceed(successRate: Float) -> Bool {

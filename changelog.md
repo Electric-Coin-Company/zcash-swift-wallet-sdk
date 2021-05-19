@@ -1,3 +1,15 @@
+# 0.11.0
+* [New] Shield Funds Feature
+* [New] Get Transparent Balance for account
+* [New] Z -> T Restore: transactions to transparent addresses are now restored when the user restores from seed or re-scans the wallet
+* [New] [Preview] Unified Viewing Key Structure
+* [New] Abstractions over Transparent Address and ShieldedAddress
+* [FIX] `CompactBlockProcessor` validates LightdInfo from Lightwalletd
+* [Enhancement] Add BlockTime to SDKSynchronizer updates
+* [New] Db Migration for UVKs
+* [FIX] Rewind API breaks on quick re-scan
+* [Update] 37f2232: Update to gRPC-Swift 1.0.0
+
 # 0.10.2
 * Mainnet and Testnet Checkpoints 
 # 0.10.1

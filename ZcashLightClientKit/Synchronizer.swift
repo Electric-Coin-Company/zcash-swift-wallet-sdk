@@ -13,6 +13,7 @@ Represents errors thrown by a Synchronizer
  */
 public enum SynchronizerError: Error {
     case initFailed(message: String)
+    case notPrepared
     case syncFailed
     case connectionFailed(message: Error)
     case generalError(message: String)
@@ -24,7 +25,29 @@ public enum SynchronizerError: Error {
     case parameterMissing(underlyingError: Error)
     case rewindError(underlyingError: Error)
     case rewindErrorUnknownArchorHeight
+    case invalidAccount
+    case lightwalletdValidationFailed(underlyingError: Error)
 }
+
+public enum ShieldFundsError: Error {
+    case noUTXOFound
+    case insuficientTransparentFunds
+    case shieldingFailed(underlyingError: Error)
+}
+
+extension ShieldFundsError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .noUTXOFound:
+            return "Could not find UTXOs for the given t-address"
+        case .insuficientTransparentFunds:
+            return "You don't have enough confirmed transparent funds to perform a shielding transaction."
+        case .shieldingFailed(let underlyingError):
+            return "Shielding transaction failed. Reason: \(underlyingError)"
+        }
+    }
+}
+
 
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
@@ -32,19 +55,6 @@ implementations like SdkSynchronizer fulfill.
 */
 
 public protocol Synchronizer {
-    /**
-    Starts this synchronizer within the given scope.
-    
-    Implementations should leverage structured concurrency and
-    cancel all jobs when this scope completes.
-    */
-    func start(retry: Bool) throws
-    
-    /**
-     Stop this synchronizer. Implementations should ensure that calling this method cancels all
-     jobs that were created by this instance.
-     */
-    func stop() throws
     
     /**
     Value representing the Status of this Synchronizer. As the status changes, a new
@@ -60,10 +70,43 @@ public protocol Synchronizer {
     var progress: Float { get }
     
     /**
-    Gets the address for the given account.
-    - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+     prepares this initializer to operate. Initializes the internal state with the given Extended Viewing Keys and a wallet birthday found in the initializer object
+     */
+    func prepare() throws
+    /**
+    Starts this synchronizer within the given scope.
+    
+    Implementations should leverage structured concurrency and
+    cancel all jobs when this scope completes.
     */
-    func getAddress(accountIndex: Int) -> String
+    func start(retry: Bool) throws
+    
+    /**
+     Stop this synchronizer. Implementations should ensure that calling this method cancels all
+     jobs that were created by this instance.
+     */
+    func stop() throws
+    
+    /**
+    Gets the sapling shielded address for the given account.
+    - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    - Returns the address or nil if account index is incorrect
+    */
+    func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress?
+    
+    /**
+    Gets the unified address for the given account.
+    - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    - Returns the address or nil if account index is incorrect
+    */
+    func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress?
+    
+    /**
+    Gets the transparent address for the given account.
+    - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
+    - Returns the address or nil if account index is incorrect
+    */
+    func getTransparentAddress(accountIndex: Int) -> TransparentAddress?
     
     /**
     Sends zatoshi.
@@ -74,6 +117,15 @@ public protocol Synchronizer {
     - Parameter accountIndex: the optional account id to use. By default, the first account is used.
     */
     func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
+    
+    /**
+    Sends zatoshi.
+    - Parameter spendingKey: the key that allows spends to occur.
+    - Parameter transparentSecretKey: the key that allows to spend transaprent funds
+    - Parameter memo: the optional memo to include as part of the transaction.
+    - Parameter accountIndex: the optional account id that will be used to shield  your funds to. By default, the first account is used.
+    */
+    func shieldFunds(spendingKey: String, transparentSecretKey: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void)
     
     /**
        Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
@@ -134,6 +186,26 @@ public protocol Synchronizer {
     func latestHeight() throws -> BlockHeight
     
     /**
+     Gets the latests UTXOs for the given address from the specified height on
+     */
+    func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void)
+    
+    /**
+        gets the last stored unshielded balance
+     */
+    func getTransparentBalance(accountIndex: Int) throws -> WalletBalance
+    
+    /**
+     gets the shielded total balance (includes verified and unverified balance)
+     */
+    func getShieldedBalance(accountIndex: Int) -> Int64
+    
+    /**
+     gets the shielded verified balance (anchor is 10 blocks back)
+     */
+    func getShieldedVerifiedBalance(accountIndex: Int) -> Int64
+    
+    /**
      Stops the synchronizer and rescans the known blocks with the current keys.
      - Parameter policy: the rewind policy
      - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
@@ -143,13 +215,14 @@ public protocol Synchronizer {
     func rewind(_ policy: RewindPolicy) throws
 }
 
-
-
 /**
  The Status of the synchronizer
  */
 public enum Status {
-    
+    /**
+     This synchronizer is not ready to start
+     */
+    case unprepared
     /**
     Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
     */
@@ -184,12 +257,11 @@ public enum TransactionKind {
     case all
 }
 
-
 /**
  Type of rewind available
     birthday: rewinds the local state to this wallet's birthday
-    height: rewinds to an arbitrary blockheight
-    transaction: rewinds to the mined height of the provided transaction.
+    height: rewinds to the nearest blockheight to the one given as argument.
+    transaction: rewinds to the nearest height based on the anchor of the provided transaction.
  */
 
 public enum RewindPolicy {

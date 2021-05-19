@@ -3,12 +3,27 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+typedef struct {
+  const char *extfvk;
+  const char *extpub;
+} FFIUnifiedViewingKey;
+
+typedef struct {
+  FFIUnifiedViewingKey *ptr;
+  uintptr_t len;
+} FFIUVKBoxedSlice;
+
 int32_t zcashlc_branch_id_for_height(int32_t height);
 
 /**
  * Clears the record of the last error message.
  */
 void zcashlc_clear_last_error(void);
+
+int32_t zcashlc_clear_utxos(const uint8_t *db_data,
+                            uintptr_t db_data_len,
+                            const char *taddress,
+                            int32_t above_height);
 
 /**
  * Creates a transaction paying the specified address from the given account.
@@ -82,15 +97,45 @@ char *zcashlc_derive_shielded_address_from_seed(const uint8_t *seed,
 char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk);
 
 /**
- * TEST TEST 123 TEST
+ * derives a shielded address from the given viewing key.
+ * call zcashlc_string_free with the returned pointer when done using it
+ */
+char *zcashlc_derive_transparent_address_from_public_key(const char *pubkey);
+
+/**
+ * Derives a transparent address from the given secret key enconded as a WIF string
+ */
+char *zcashlc_derive_transparent_address_from_secret_key(const char *tsk);
+
+/**
  * Derives a transparent address from the given seed
  */
-char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed, uintptr_t seed_len);
+char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed,
+                                                   uintptr_t seed_len,
+                                                   int32_t account,
+                                                   int32_t index);
+
+/**
+ * TEST TEST 123 TEST
+ *
+ *
+ * Derives a transparent private key from seed
+ */
+char *zcashlc_derive_transparent_private_key_from_seed(const uint8_t *seed,
+                                                       uintptr_t seed_len,
+                                                       int32_t account,
+                                                       int32_t index);
+
+FFIUVKBoxedSlice *zcashlc_derive_unified_viewing_keys_from_seed(const uint8_t *seed,
+                                                                uintptr_t seed_len,
+                                                                int32_t accounts);
 
 /**
  * Copies the last error message into the provided allocated buffer.
  */
 int32_t zcashlc_error_message_utf8(char *buf, int32_t length);
+
+void zcashlc_free_uvk_array(FFIUVKBoxedSlice *uvks);
 
 /**
  * Returns the address for the account.
@@ -103,6 +148,10 @@ char *zcashlc_get_address(const uint8_t *db_data, uintptr_t db_data_len, int32_t
  * Returns the balance for the account, including all unspent notes that we know about.
  */
 int64_t zcashlc_get_balance(const uint8_t *db_data, uintptr_t db_data_len, int32_t account);
+
+int32_t zcashlc_get_nearest_rewind_height(const uint8_t *db_data,
+                                          uintptr_t db_data_len,
+                                          int32_t height);
 
 /**
  * Returns the memo for a received note, if it is known and a valid UTF-8 string.
@@ -127,12 +176,28 @@ char *zcashlc_get_received_memo_as_utf8(const uint8_t *db_data,
 char *zcashlc_get_sent_memo_as_utf8(const uint8_t *db_data, uintptr_t db_data_len, int64_t id_note);
 
 /**
+ * Returns the verified transparent balance for the address, which ignores utxos that have been
+ * received too recently and are not yet deemed spendable.
+ */
+int64_t zcashlc_get_total_transparent_balance(const uint8_t *db_data,
+                                              uintptr_t db_data_len,
+                                              const char *address);
+
+/**
  * Returns the verified balance for the account, which ignores notes that have been
  * received too recently and are not yet deemed spendable.
  */
 int64_t zcashlc_get_verified_balance(const uint8_t *db_data,
                                      uintptr_t db_data_len,
                                      int32_t account);
+
+/**
+ * Returns the verified transparent balance for the address, which ignores utxos that have been
+ * received too recently and are not yet deemed spendable.
+ */
+int64_t zcashlc_get_verified_transparent_balance(const uint8_t *db_data,
+                                                 uintptr_t db_data_len,
+                                                 const char *address);
 
 /**
  * Initialises the data database with the given number of accounts using the given seed.
@@ -155,8 +220,7 @@ char **zcashlc_init_accounts_table(const uint8_t *db_data,
  */
 bool zcashlc_init_accounts_table_with_keys(const uint8_t *db_data,
                                            uintptr_t db_data_len,
-                                           const char *const *extfvks,
-                                           uintptr_t extfvks_len);
+                                           FFIUVKBoxedSlice *uvks);
 
 /**
  * Initialises the data database with the given block.
@@ -199,13 +263,24 @@ bool zcashlc_is_valid_viewing_key(const char *key);
  */
 int32_t zcashlc_last_error_length(void);
 
+bool zcashlc_put_utxo(const uint8_t *db_data,
+                      uintptr_t db_data_len,
+                      const char *address_str,
+                      const uint8_t *txid_bytes,
+                      uintptr_t txid_bytes_len,
+                      int32_t index,
+                      const uint8_t *script_bytes,
+                      uintptr_t script_bytes_len,
+                      int64_t value,
+                      int32_t height);
+
 /**
  * Rewinds the data database to the given height.
  *
  * If the requested height is greater than or equal to the height of the last scanned
  * block, this function does nothing.
  */
-int32_t zcashlc_rewind_to_height(const uint8_t *db_data, uintptr_t db_data_len, int32_t height);
+bool zcashlc_rewind_to_height(const uint8_t *db_data, uintptr_t db_data_len, int32_t height);
 
 /**
  * Scans new blocks added to the cache for any transactions received by the tracked
@@ -227,6 +302,17 @@ int32_t zcashlc_scan_blocks(const uint8_t *db_cache,
                             uintptr_t db_cache_len,
                             const uint8_t *db_data,
                             uintptr_t db_data_len);
+
+int64_t zcashlc_shield_funds(const uint8_t *db_data,
+                             uintptr_t db_data_len,
+                             int32_t account,
+                             const char *tsk,
+                             const char *extsk,
+                             const char *memo,
+                             const uint8_t *spend_params,
+                             uintptr_t spend_params_len,
+                             const uint8_t *output_params,
+                             uintptr_t output_params_len);
 
 /**
  * Frees strings returned by other zcashlc functions.

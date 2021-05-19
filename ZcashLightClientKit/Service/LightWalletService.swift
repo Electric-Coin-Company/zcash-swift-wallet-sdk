@@ -102,6 +102,15 @@ extension SendResponse: LightWalletServiceResponse {}
 
 public protocol LightWalletService {
     /**
+     returns the info for this lightwalletd server (blocking)
+     */
+    func getInfo() throws -> LightWalletdInfo
+    
+    /**
+     returns the info for this lightwalletd server
+     */
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void)
+    /**
         Return the latest block height known to the service.
      
         - Parameter result: a result containing the height or an Error
@@ -168,4 +177,14 @@ public protocol LightWalletService {
      - Returns: LightWalletServiceResponse
      */
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity,LightWalletServiceError>) -> Void)
+    
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void)
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void)
+    
+    func closeConnection()
 }

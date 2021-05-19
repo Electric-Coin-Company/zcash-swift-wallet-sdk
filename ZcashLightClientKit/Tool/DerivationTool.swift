@@ -67,11 +67,34 @@ public protocol KeyDeriving {
      - Returns: the address that corresponds to the viewing key.
      */
     func deriveShieldedAddress(viewingKey: String) throws -> String
-    // WIP probably shouldn't be used just yet. Why?
-            //  - because we need the private key associated with this seed and this function doesn't return it.
-            //  - the underlying implementation needs to be split out into a few lower-level calls
-    func deriveTransparentAddress(seed: [UInt8]) throws -> String
     
+    /**
+     Derives a transparent address  from seedbytes, specifying account and index
+     */
+    func deriveTransparentAddress(seed: [UInt8], account: Int, index: Int) throws -> String
+    
+    /**
+     Derives a SecretKey to spend transparent funds from a transparent secret key wif encoded
+     */
+    func deriveTransparentPrivateKey(seed: [UInt8], account: Int, index: Int) throws -> String
+    
+    /**
+     Derives a transparent address from the given transparent Secret Key
+     */
+    func deriveTransparentAddressFromPrivateKey(_ tsk: String) throws -> String
+    
+    func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String
+    
+    /**
+     derives unified viewing keys from seedbytes, specifying a number of accounts
+      - Returns an array of unified viewing key tuples.
+     */
+    func deriveUnifiedViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey]
+    
+    /**
+     derives a Unified Address from a Unified Viewing Key
+     */
+    func deriveUnifiedAddressFromUnifiedViewingKey(_ uvk: UnifiedViewingKey) throws -> UnifiedAddress
 }
 
 public enum KeyDerivationErrors: Error {
@@ -81,7 +104,7 @@ public enum KeyDerivationErrors: Error {
 }
 
 public class DerivationTool: KeyDeriving {
-    
+        
     var rustwelding: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     
     public static let `default` = DerivationTool()
@@ -195,12 +218,9 @@ public class DerivationTool: KeyDeriving {
         }
     }
     
-    // WIP probably shouldn't be used just yet. Why?
-            //  - because we need the private key associated with this seed and this function doesn't return it.
-            //  - the underlying implementation needs to be split out into a few lower-level calls
-    public func deriveTransparentAddress(seed: [UInt8]) throws -> String {
+    public func deriveTransparentAddress(seed: [UInt8], account: Int = 0, index: Int = 0) throws -> String {
         do {
-            guard let zaddr = try rustwelding.deriveTransparentAddressFromSeed(seed: seed) else {
+            guard let zaddr = try rustwelding.deriveTransparentAddressFromSeed(seed: seed, account: account, index: index) else {
                 throw KeyDerivationErrors.unableToDerive
             }
             return zaddr
@@ -209,6 +229,59 @@ public class DerivationTool: KeyDeriving {
         }
     }
     
+    public func deriveUnifiedViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
+        guard numberOfAccounts > 0 else {
+            throw KeyDerivationErrors.invalidInput
+        }
+        do {
+            return try rustwelding.deriveUnifiedViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+    
+    /**
+     derives a Unified Address from a Unified Viewing Key
+     */
+    public func deriveUnifiedAddressFromUnifiedViewingKey(_ uvk: UnifiedViewingKey) throws -> UnifiedAddress {
+        do {
+            let tAddress = try deriveTransparentAddressFromPublicKey(uvk.extpub)
+            let zAddress = try deriveShieldedAddress(viewingKey: uvk.extfvk)
+            return ConcreteUnifiedAddress(tAddress: tAddress, zAddress: zAddress)
+        } catch {
+            throw KeyDerivationErrors.unableToDerive
+        }
+    }
+    
+    public func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
+        guard !pubkey.isEmpty else {
+            throw KeyDerivationErrors.invalidInput
+        }
+        
+        do {
+            return try rustwelding.derivedTransparentAddressFromPublicKey(pubkey)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+    
+    /**
+     Derives the transparent funds private key from the given seed
+     - Throws:
+      -  KeyDerivationErrors.derivationError with the underlying error when it fails
+      - KeyDerivationErrors.unableToDerive when there's an unknown error
+     */
+    public func deriveTransparentPrivateKey(seed: [UInt8], account: Int = 0, index: Int = 0) throws -> String {
+        do {
+            guard let sk = try rustwelding.deriveTransparentPrivateKeyFromSeed(seed: seed, account: account, index: index) else {
+                throw KeyDerivationErrors.unableToDerive
+            }
+            return sk 
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+
 }
 
 extension DerivationTool: KeyValidation {
@@ -236,4 +309,28 @@ extension DerivationTool: KeyValidation {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
+    
+    /**
+     Derives the transparent address from a WIF Private Key
+     - Throws:
+      -  KeyDerivationErrors.derivationError with the underlying error when it fails
+      - KeyDerivationErrors.unableToDerive when there's an unknown error
+     */
+    public func deriveTransparentAddressFromPrivateKey(_ tsk: String) throws -> String {
+        do {
+            guard let tAddr = try rustwelding.deriveTransparentAddressFromSecretKey(tsk) else {
+                throw KeyDerivationErrors.unableToDerive
+            }
+            return tAddr
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+    
+}
+
+
+fileprivate struct ConcreteUnifiedAddress: UnifiedAddress {
+    var tAddress: TransparentAddress
+    var zAddress: SaplingShieldedAddress
 }

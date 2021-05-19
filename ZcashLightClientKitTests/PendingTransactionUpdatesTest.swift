@@ -21,6 +21,8 @@ class PendingTransactionUpdatesTest: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
+    let branchID = "2bb40e60"
+    let chainName = "main"
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
@@ -28,7 +30,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     
     override func tearDownWithError() throws {
@@ -59,7 +61,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
          */
         LoggerProxy.info("1. create fake chain")
         
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: 663188)
         sleep(2)

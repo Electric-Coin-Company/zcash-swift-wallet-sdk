@@ -47,14 +47,22 @@ class TestCoordinator {
      convenience init(seed: String,
          walletBirthday: BlockHeight,
          channelProvider: ChannelProvider) throws {
-        guard let spendingKey = try DerivationTool.default.deriveSpendingKeys(seed: TestSeed().seed(),// todo: fix this
-                                                                              numberOfAccounts: 1).first else {
+        guard let spendingKey = try DerivationTool.default.deriveSpendingKeys(
+                seed: TestSeed().seed(),
+                numberOfAccounts: 1).first else {
             throw CoordinatorError.builderError
         }
-        try self.init(spendingKey: spendingKey, walletBirthday: walletBirthday, channelProvider: channelProvider)
+        
+        guard let uvk = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed(TestSeed().seed(), numberOfAccounts: 1).first else {
+            throw CoordinatorError.builderError
+        }
+        
+        try self.init(spendingKey: spendingKey, unifiedViewingKey: uvk, walletBirthday: walletBirthday, channelProvider: channelProvider)
     }
     
-    required init(spendingKey: String,
+    required init(
+        spendingKey: String,
+        unifiedViewingKey: UnifiedViewingKey,
          walletBirthday: BlockHeight,
          channelProvider: ChannelProvider) throws {
         self.spendingKey = spendingKey
@@ -77,10 +85,12 @@ class TestCoordinator {
                                 endpoint: LightWalletEndpointBuilder.default,
                                 service: self.service,
                                 repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
+                                accountRepository: AccountRepositoryBuilder.build(dataDbURL: databases.dataDB, readOnly: true),
                                 downloader: downloader,
                                 spendParamsURL: try __spendParamsURL(),
                                 outputParamsURL: try __outputParamsURL(),
                                 spendingKey: spendingKey,
+                                unifiedViewingKey: unifiedViewingKey,
                                 walletBirthday: WalletBirthday.birthday(with: birthday),
                                 loggerProxy: SampleLogger(logLevel: .debug))
         
@@ -93,7 +103,6 @@ class TestCoordinator {
         synchronizer.stop()
         self.completionHandler = nil
         self.errorHandler = nil
-        
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
@@ -193,8 +202,20 @@ extension TestCoordinator {
         try service.latestBlockHeight()
     }
     
-    func reset(saplingActivation: BlockHeight) throws {
-        try service.reset(saplingActivation: saplingActivation)
+    func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {
+        let config = self.synchronizer.blockProcessor.config
+        
+        
+        self.synchronizer.blockProcessor.config = CompactBlockProcessor.Configuration(
+                                                    cacheDb: config.cacheDb,
+                                                    dataDb: config.dataDb,
+                                                    downloadBatchSize: config.downloadBatchSize,
+                                                    retries: config.retries,
+                                                    maxBackoffInterval: config.maxBackoffInterval,
+                                                    rewindDistance: config.rewindDistance,
+                                                    walletBirthday: config.walletBirthday,
+                                                    saplingActivation: config.saplingActivation)
+        try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)
     }
     
     func getIncomingTransactions() throws -> [RawTransaction]? {
@@ -230,10 +251,12 @@ class TestSynchronizerBuilder {
         endpoint: LightWalletEndpoint,
         service: LightWalletService,
         repository: TransactionRepository,
+        accountRepository: AccountRepository,
         downloader: CompactBlockDownloader,
         spendParamsURL: URL,
         outputParamsURL: URL,
         spendingKey: String,
+        unifiedViewingKey: UnifiedViewingKey,
         walletBirthday: WalletBirthday,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer)  {
@@ -246,15 +269,42 @@ class TestSynchronizerBuilder {
             endpoint: endpoint,
             service: service,
             repository: repository,
+            accountRepository: accountRepository,
             downloader: downloader,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
+            viewingKeys: [unifiedViewingKey],
+            walletBirthday: walletBirthday.height,
             loggerProxy: loggerProxy
         )
-        try initializer.initialize(viewingKeys: [try DerivationTool().deriveViewingKey(spendingKey: spendingKey)], walletBirthday: walletBirthday.height)
+        let config = CompactBlockProcessor.Configuration(
+                                                cacheDb: initializer.cacheDbURL,
+                                                dataDb: initializer.dataDbURL,
+                                                downloadBatchSize: 100,
+                                                retries: 5,
+                                                maxBackoffInterval: ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL,
+                                                rewindDistance: ZcashSDK.DEFAULT_REWIND_DISTANCE,
+                                                walletBirthday: walletBirthday.height,
+                                                saplingActivation: lowerBoundHeight)
         
-        return ([spendingKey], try SDKSynchronizer(initializer: initializer)
-        )
+        let processor = CompactBlockProcessor(downloader: downloader,
+                                              backend: rustBackend,
+                                              config: config,
+                                              repository: repository,
+                                              accountRepository: accountRepository)
+        
+        
+        let synchronizer = try SDKSynchronizer(status: .unprepared,
+                                               initializer: initializer,
+                                               transactionManager: OutboundTransactionManagerBuilder.build(initializer: initializer),
+                                               transactionRepository: repository,
+                                               utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
+                                               blockProcessor: processor
+                                               )
+                                        
+        try synchronizer.prepare()
+        
+        return ([spendingKey], synchronizer)
     }
     static func build(
         rustBackend: ZcashRustBackendWelding.Type,
@@ -265,6 +315,7 @@ class TestSynchronizerBuilder {
         endpoint: LightWalletEndpoint,
         service: LightWalletService,
         repository: TransactionRepository,
+        accountRepository: AccountRepository,
         downloader: CompactBlockDownloader,
         spendParamsURL: URL,
         outputParamsURL: URL,
@@ -275,6 +326,10 @@ class TestSynchronizerBuilder {
         guard let spendingKey = try DerivationTool().deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw TestCoordinator.CoordinatorError.builderError
         }
+        
+        guard let uvk = try DerivationTool().deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: 1).first else {
+            throw TestCoordinator.CoordinatorError.builderError
+        }
         return try build(rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
             cacheDbURL: cacheDbURL,
@@ -283,10 +338,12 @@ class TestSynchronizerBuilder {
             endpoint: endpoint,
             service: service,
             repository: repository,
+            accountRepository: accountRepository,
             downloader: downloader,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             spendingKey: spendingKey,
+            unifiedViewingKey: uvk,
             walletBirthday: walletBirthday)
         
     }

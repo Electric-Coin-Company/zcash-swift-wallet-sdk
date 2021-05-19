@@ -1,0 +1,4 @@
+export ZCASH_NETWORK_ENVIRONMENT=MAINNET
+#export ZCASH_NETWORK_ENVIRONMENT=TESTNET
+
+export PATH=$PATH:/Users/pacu/Repos/ECC/zcash/src

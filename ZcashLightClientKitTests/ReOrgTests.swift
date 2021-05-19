@@ -40,7 +40,7 @@ class ReOrgTests: XCTestCase {
                walletBirthday: birthday,
                channelProvider: ChannelProvider()
            )
-           try coordinator.reset(saplingActivation: birthday)
+        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
            try coordinator.resetBlocks(dataset: .default)
            
        }
@@ -107,7 +107,7 @@ class ReOrgTests: XCTestCase {
                         targetHeight: BlockHeight) throws {
      
         do {
-            try coordinator.reset(saplingActivation: 663150)
+            try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
             try coordinator.resetBlocks(dataset: .predefined(dataset: .beforeReOrg))
             try coordinator.applyStaged(blockheight: firstLatestHeight)
         } catch  {

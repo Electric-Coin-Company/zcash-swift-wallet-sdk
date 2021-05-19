@@ -18,7 +18,7 @@ class ZcashLightClientKitTests: XCTestCase {
     var service: LightWalletGRPCService!
     override func setUp() {
         super.setUp()
-        service = LightWalletGRPCService(channel: ChannelProvider().channel())
+        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         
         latestBlockHeight = try! service.latestBlock().compactBlockHeight()!
     }

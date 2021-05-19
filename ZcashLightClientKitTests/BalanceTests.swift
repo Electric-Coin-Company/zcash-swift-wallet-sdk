@@ -16,7 +16,8 @@ class BalanceTests: XCTestCase {
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663188
     var coordinator: TestCoordinator!
-    
+    let branchID = "2bb40e60"
+    let chainName = "main"
     var syncedExpectation = XCTestExpectation(description: "synced")
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
     override func setUpWithError() throws {
@@ -26,7 +27,7 @@ class BalanceTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
         
     }
     
@@ -41,7 +42,7 @@ class BalanceTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         
@@ -179,7 +180,7 @@ class BalanceTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         
@@ -316,7 +317,7 @@ class BalanceTests: XCTestCase {
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
         
@@ -460,7 +461,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyAvailableBalanceDuringSend() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         
@@ -477,12 +478,12 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let presendBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let presendVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         /*
          there's more zatoshi to send than network fee
          */
-        XCTAssertTrue(presendBalance >= (Int64(ZcashSDK.MINERS_FEE_ZATOSHI) + sendAmount))
+        XCTAssertTrue(presendVerifiedBalance >= (Int64(ZcashSDK.MINERS_FEE_ZATOSHI) + sendAmount))
         
         var pendingTx: PendingTransactionEntity?
         coordinator.synchronizer.sendToAddress(spendingKey: spendingKey,
@@ -495,7 +496,7 @@ class BalanceTests: XCTestCase {
                 /*
                  balance should be the same as before sending if transaction failed
                  */
-                XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), presendBalance)
+                XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), presendVerifiedBalance)
                 XCTFail("sendToAddress failed: \(error)")
             case .success(let transaction):
                 
@@ -539,8 +540,8 @@ class BalanceTests: XCTestCase {
         
         wait(for: [mineExpectation], timeout: 5)
         
-        XCTAssertEqual(presendBalance - self.sendAmount,coordinator.synchronizer.initializer.getBalance())
-        XCTAssertEqual(presendBalance - self.sendAmount,coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(presendVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(),coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(presendVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(),coordinator.synchronizer.initializer.getVerifiedBalance())
         
         guard let transaction = pendingTx else {
             XCTFail("pending transaction nil")
@@ -586,7 +587,7 @@ class BalanceTests: XCTestCase {
         }
         //  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
         
-        self.verifiedBalanceValidation(previousBalance: presendBalance,
+        self.verifiedBalanceValidation(previousBalance: presendVerifiedBalance,
                                        spentNoteValue:  Int64(sentNote.value),
                                        changeValue: Int64(receivedNote.value),
                                        sentAmount: Int64(self.sendAmount),
@@ -611,7 +612,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyTotalBalanceDuringSend() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         
@@ -628,7 +629,7 @@ class BalanceTests: XCTestCase {
         }
         
         let presendBalance = coordinator.synchronizer.initializer.getBalance()
-        XCTAssertTrue(presendBalance >= (Int64(ZcashSDK.MINERS_FEE_ZATOSHI) + sendAmount))  // there's more zatoshi to send than network fee
+        XCTAssertTrue(presendBalance >= (Int64(ZcashSDK.defaultFee()) + sendAmount))  // there's more zatoshi to send than network fee
         
         var pendingTx: PendingTransactionEntity?
         
@@ -666,7 +667,7 @@ class BalanceTests: XCTestCase {
         
         XCTAssertEqual(Int64(transaction.value), self.sendAmount)
         
-        XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), presendBalance - Int64(self.sendAmount))
+        XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), presendBalance - Int64(self.sendAmount) - ZcashSDK.defaultFee())
         
         XCTAssertNil(transaction.errorCode)
         
@@ -696,7 +697,7 @@ class BalanceTests: XCTestCase {
         
         wait(for: [mineExpectation], timeout: 5)
         
-        XCTAssertEqual(presendBalance - self.sendAmount - Int64(ZcashSDK.MINERS_FEE_ZATOSHI),coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(presendBalance - self.sendAmount - Int64(ZcashSDK.defaultFee()),coordinator.synchronizer.initializer.getBalance())
     }
     
     /**
@@ -715,7 +716,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyIncomingTransaction() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         try coordinator.sync(completion: { (syncronizer) in
             self.syncedExpectation.fulfill()
@@ -750,7 +751,7 @@ class BalanceTests: XCTestCase {
      
      */
     func testVerifyChangeTransaction() throws {
-        try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         let sendExpectation = XCTestExpectation(description: "send expectation")
@@ -868,7 +869,7 @@ class BalanceTests: XCTestCase {
             /*
              There’s a change note of value (previous note value - sent amount)
              */
-            XCTAssertEqual(previousVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(for: try! synchronizer.latestDownloadedHeight()), Int64(receivedNote.value))
+            XCTAssertEqual(previousVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(), Int64(receivedNote.value))
             
             
             /*
@@ -919,7 +920,7 @@ class BalanceTests: XCTestCase {
      */
     func testVerifyBalanceAfterExpiredTransaction() throws {
         
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: self.defaultLatestHeight)
         sleep(2)

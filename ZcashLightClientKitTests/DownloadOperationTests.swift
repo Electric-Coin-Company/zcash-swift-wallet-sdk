@@ -21,7 +21,7 @@ class DownloadOperationTests: XCTestCase {
     func testSingleOperation() {
         let expect = XCTestExpectation(description: self.description)
         
-        let service = LightWalletGRPCService(channel: ChannelProvider().channel())
+        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
         let blockCount = 100

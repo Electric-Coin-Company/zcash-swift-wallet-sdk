@@ -18,9 +18,40 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
 }
 
 class MockLightWalletService: LightWalletService {
+    func getInfo() throws -> LightWalletdInfo {
+        throw LightWalletServiceError.generalError(message: "Not Implemented")
+    }
     
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
+        return result(.failure(LightWalletServiceError.generalError(message: "Not Implemented")))
+    }
     
-    private var service = LightWalletGRPCService(channel: ChannelProvider().channel())
+    func closeConnection() {
+        
+    }
+    
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
+    
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+    }
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+    }
+    
+    func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        
+    }
+    
+    private var service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+    
     var latestHeight: BlockHeight
 
     init(latestBlockHeight: BlockHeight) {

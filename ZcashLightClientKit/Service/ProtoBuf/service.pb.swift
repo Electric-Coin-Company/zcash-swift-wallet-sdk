@@ -33,7 +33,7 @@ struct BlockID {
 
   var height: UInt64 = 0
 
-  var hash: Data = SwiftProtobuf.Internal.emptyData
+  var hash: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -95,7 +95,7 @@ struct TxFilter {
   var index: UInt64 = 0
 
   /// transaction ID (hash, txid)
-  var hash: Data = SwiftProtobuf.Internal.emptyData
+  var hash: Data = Data()
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
@@ -112,7 +112,7 @@ struct RawTransaction {
   // methods supported on all messages.
 
   /// exact data returned by Zcash 'getrawtransaction'
-  var data: Data = SwiftProtobuf.Internal.emptyData
+  var data: Data = Data()
 
   /// height that the transaction was mined (or -1)
   var height: UInt64 = 0
@@ -341,12 +341,14 @@ struct TreeState {
   init() {}
 }
 
+/// Results are sorted by height, which makes it easy to issue another
+/// request that picks up from where the previous left off.
 struct GetAddressUtxosArg {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var address: String = String()
+  var addresses: [String] = []
 
   var startHeight: UInt64 = 0
 
@@ -363,11 +365,13 @@ struct GetAddressUtxosReply {
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
 
-  var txid: Data = SwiftProtobuf.Internal.emptyData
+  var address: String = String()
+
+  var txid: Data = Data()
 
   var index: Int32 = 0
 
-  var script: Data = SwiftProtobuf.Internal.emptyData
+  var script: Data = Data()
 
   var valueZat: Int64 = 0
 
@@ -403,9 +407,12 @@ extension BlockID: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBa
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularUInt64Field(value: &self.height)
-      case 2: try decoder.decodeSingularBytesField(value: &self.hash)
+      case 1: try { try decoder.decodeSingularUInt64Field(value: &self.height) }()
+      case 2: try { try decoder.decodeSingularBytesField(value: &self.hash) }()
       default: break
       }
     }
@@ -438,9 +445,12 @@ extension BlockRange: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularMessageField(value: &self._start)
-      case 2: try decoder.decodeSingularMessageField(value: &self._end)
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._start) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._end) }()
       default: break
       }
     }
@@ -474,10 +484,13 @@ extension TxFilter: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationB
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularMessageField(value: &self._block)
-      case 2: try decoder.decodeSingularUInt64Field(value: &self.index)
-      case 3: try decoder.decodeSingularBytesField(value: &self.hash)
+      case 1: try { try decoder.decodeSingularMessageField(value: &self._block) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.index) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.hash) }()
       default: break
       }
     }
@@ -514,9 +527,12 @@ extension RawTransaction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplement
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularBytesField(value: &self.data)
-      case 2: try decoder.decodeSingularUInt64Field(value: &self.height)
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.data) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.height) }()
       default: break
       }
     }
@@ -549,9 +565,12 @@ extension SendResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularInt32Field(value: &self.errorCode)
-      case 2: try decoder.decodeSingularStringField(value: &self.errorMessage)
+      case 1: try { try decoder.decodeSingularInt32Field(value: &self.errorCode) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.errorMessage) }()
       default: break
       }
     }
@@ -634,21 +653,24 @@ extension LightdInfo: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementatio
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.version)
-      case 2: try decoder.decodeSingularStringField(value: &self.vendor)
-      case 3: try decoder.decodeSingularBoolField(value: &self.taddrSupport)
-      case 4: try decoder.decodeSingularStringField(value: &self.chainName)
-      case 5: try decoder.decodeSingularUInt64Field(value: &self.saplingActivationHeight)
-      case 6: try decoder.decodeSingularStringField(value: &self.consensusBranchID)
-      case 7: try decoder.decodeSingularUInt64Field(value: &self.blockHeight)
-      case 8: try decoder.decodeSingularStringField(value: &self.gitCommit)
-      case 9: try decoder.decodeSingularStringField(value: &self.branch)
-      case 10: try decoder.decodeSingularStringField(value: &self.buildDate)
-      case 11: try decoder.decodeSingularStringField(value: &self.buildUser)
-      case 12: try decoder.decodeSingularUInt64Field(value: &self.estimatedHeight)
-      case 13: try decoder.decodeSingularStringField(value: &self.zcashdBuild)
-      case 14: try decoder.decodeSingularStringField(value: &self.zcashdSubversion)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.version) }()
+      case 2: try { try decoder.decodeSingularStringField(value: &self.vendor) }()
+      case 3: try { try decoder.decodeSingularBoolField(value: &self.taddrSupport) }()
+      case 4: try { try decoder.decodeSingularStringField(value: &self.chainName) }()
+      case 5: try { try decoder.decodeSingularUInt64Field(value: &self.saplingActivationHeight) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self.consensusBranchID) }()
+      case 7: try { try decoder.decodeSingularUInt64Field(value: &self.blockHeight) }()
+      case 8: try { try decoder.decodeSingularStringField(value: &self.gitCommit) }()
+      case 9: try { try decoder.decodeSingularStringField(value: &self.branch) }()
+      case 10: try { try decoder.decodeSingularStringField(value: &self.buildDate) }()
+      case 11: try { try decoder.decodeSingularStringField(value: &self.buildUser) }()
+      case 12: try { try decoder.decodeSingularUInt64Field(value: &self.estimatedHeight) }()
+      case 13: try { try decoder.decodeSingularStringField(value: &self.zcashdBuild) }()
+      case 14: try { try decoder.decodeSingularStringField(value: &self.zcashdSubversion) }()
       default: break
       }
     }
@@ -729,9 +751,12 @@ extension TransparentAddressBlockFilter: SwiftProtobuf.Message, SwiftProtobuf._M
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.address)
-      case 2: try decoder.decodeSingularMessageField(value: &self._range)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.address) }()
+      case 2: try { try decoder.decodeSingularMessageField(value: &self._range) }()
       default: break
       }
     }
@@ -763,8 +788,11 @@ extension Duration: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationB
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularInt64Field(value: &self.intervalUs)
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.intervalUs) }()
       default: break
       }
     }
@@ -793,9 +821,12 @@ extension PingResponse: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularInt64Field(value: &self.entry)
-      case 2: try decoder.decodeSingularInt64Field(value: &self.exit)
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.entry) }()
+      case 2: try { try decoder.decodeSingularInt64Field(value: &self.exit) }()
       default: break
       }
     }
@@ -827,8 +858,11 @@ extension Address: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBa
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.address)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.address) }()
       default: break
       }
     }
@@ -856,8 +890,11 @@ extension AddressList: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementati
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeRepeatedStringField(value: &self.addresses)
+      case 1: try { try decoder.decodeRepeatedStringField(value: &self.addresses) }()
       default: break
       }
     }
@@ -885,8 +922,11 @@ extension Balance: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBa
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularInt64Field(value: &self.valueZat)
+      case 1: try { try decoder.decodeSingularInt64Field(value: &self.valueZat) }()
       default: break
       }
     }
@@ -914,8 +954,11 @@ extension Exclude: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBa
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeRepeatedBytesField(value: &self.txid)
+      case 1: try { try decoder.decodeRepeatedBytesField(value: &self.txid) }()
       default: break
       }
     }
@@ -947,12 +990,15 @@ extension TreeState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.network)
-      case 2: try decoder.decodeSingularUInt64Field(value: &self.height)
-      case 3: try decoder.decodeSingularStringField(value: &self.hash)
-      case 4: try decoder.decodeSingularUInt32Field(value: &self.time)
-      case 5: try decoder.decodeSingularStringField(value: &self.tree)
+      case 1: try { try decoder.decodeSingularStringField(value: &self.network) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.height) }()
+      case 3: try { try decoder.decodeSingularStringField(value: &self.hash) }()
+      case 4: try { try decoder.decodeSingularUInt32Field(value: &self.time) }()
+      case 5: try { try decoder.decodeSingularStringField(value: &self.tree) }()
       default: break
       }
     }
@@ -991,25 +1037,28 @@ extension TreeState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
 extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetAddressUtxosArg"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
-    1: .same(proto: "address"),
+    1: .same(proto: "addresses"),
     2: .same(proto: "startHeight"),
     3: .same(proto: "maxEntries"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularStringField(value: &self.address)
-      case 2: try decoder.decodeSingularUInt64Field(value: &self.startHeight)
-      case 3: try decoder.decodeSingularUInt32Field(value: &self.maxEntries)
+      case 1: try { try decoder.decodeRepeatedStringField(value: &self.addresses) }()
+      case 2: try { try decoder.decodeSingularUInt64Field(value: &self.startHeight) }()
+      case 3: try { try decoder.decodeSingularUInt32Field(value: &self.maxEntries) }()
       default: break
       }
     }
   }
 
   func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-    if !self.address.isEmpty {
-      try visitor.visitSingularStringField(value: self.address, fieldNumber: 1)
+    if !self.addresses.isEmpty {
+      try visitor.visitRepeatedStringField(value: self.addresses, fieldNumber: 1)
     }
     if self.startHeight != 0 {
       try visitor.visitSingularUInt64Field(value: self.startHeight, fieldNumber: 2)
@@ -1021,7 +1070,7 @@ extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
   }
 
   static func ==(lhs: GetAddressUtxosArg, rhs: GetAddressUtxosArg) -> Bool {
-    if lhs.address != rhs.address {return false}
+    if lhs.addresses != rhs.addresses {return false}
     if lhs.startHeight != rhs.startHeight {return false}
     if lhs.maxEntries != rhs.maxEntries {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
@@ -1032,6 +1081,7 @@ extension GetAddressUtxosArg: SwiftProtobuf.Message, SwiftProtobuf._MessageImple
 extension GetAddressUtxosReply: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
   static let protoMessageName: String = _protobuf_package + ".GetAddressUtxosReply"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    6: .same(proto: "address"),
     1: .same(proto: "txid"),
     2: .same(proto: "index"),
     3: .same(proto: "script"),
@@ -1041,12 +1091,16 @@ extension GetAddressUtxosReply: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeSingularBytesField(value: &self.txid)
-      case 2: try decoder.decodeSingularInt32Field(value: &self.index)
-      case 3: try decoder.decodeSingularBytesField(value: &self.script)
-      case 4: try decoder.decodeSingularInt64Field(value: &self.valueZat)
-      case 5: try decoder.decodeSingularUInt64Field(value: &self.height)
+      case 1: try { try decoder.decodeSingularBytesField(value: &self.txid) }()
+      case 2: try { try decoder.decodeSingularInt32Field(value: &self.index) }()
+      case 3: try { try decoder.decodeSingularBytesField(value: &self.script) }()
+      case 4: try { try decoder.decodeSingularInt64Field(value: &self.valueZat) }()
+      case 5: try { try decoder.decodeSingularUInt64Field(value: &self.height) }()
+      case 6: try { try decoder.decodeSingularStringField(value: &self.address) }()
       default: break
       }
     }
@@ -1068,10 +1122,14 @@ extension GetAddressUtxosReply: SwiftProtobuf.Message, SwiftProtobuf._MessageImp
     if self.height != 0 {
       try visitor.visitSingularUInt64Field(value: self.height, fieldNumber: 5)
     }
+    if !self.address.isEmpty {
+      try visitor.visitSingularStringField(value: self.address, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
   static func ==(lhs: GetAddressUtxosReply, rhs: GetAddressUtxosReply) -> Bool {
+    if lhs.address != rhs.address {return false}
     if lhs.txid != rhs.txid {return false}
     if lhs.index != rhs.index {return false}
     if lhs.script != rhs.script {return false}
@@ -1090,8 +1148,11 @@ extension GetAddressUtxosReplyList: SwiftProtobuf.Message, SwiftProtobuf._Messag
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
     while let fieldNumber = try decoder.nextFieldNumber() {
+      // The use of inline closures is to circumvent an issue where the compiler
+      // allocates stack space for every case branch when no optimizations are
+      // enabled. https://github.com/apple/swift-protobuf/issues/1034
       switch fieldNumber {
-      case 1: try decoder.decodeRepeatedMessageField(value: &self.addressUtxos)
+      case 1: try { try decoder.decodeRepeatedMessageField(value: &self.addressUtxos) }()
       default: break
       }
     }

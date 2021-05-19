@@ -22,6 +22,8 @@ class AdvancedReOrgTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
+    let branchID = "2bb40e60"
+    let chainName = "main"
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
@@ -29,7 +31,7 @@ class AdvancedReOrgTests: XCTestCase {
             walletBirthday: birthday,
             channelProvider: ChannelProvider()
         )
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
     
     override func tearDownWithError() throws {
@@ -72,7 +74,7 @@ class AdvancedReOrgTests: XCTestCase {
      */
     func testReOrgChangesInboundTxMinedHeight() throws {
         hookToReOrgNotification()
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service )
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         var shouldContinue =  false
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
@@ -96,7 +98,7 @@ class AdvancedReOrgTests: XCTestCase {
             shouldContinue = true
         }, error: self.handleError)
         
-        wait(for: [preTxExpectation], timeout: 5)
+        wait(for: [preTxExpectation], timeout: 10)
         
         guard shouldContinue else {
             XCTFail("pre receive sync failed")
@@ -108,7 +110,7 @@ class AdvancedReOrgTests: XCTestCase {
          */
         
         try coordinator.applyStaged(blockheight: receivedTxHeight)
-        sleep(1)
+        sleep(2)
         
         /*
          3. sync up to received_Tx_height
@@ -262,7 +264,7 @@ class AdvancedReOrgTests: XCTestCase {
      13. verify that there's no more pending transaction
      */
     func testReorgChangesOutboundTxIndex() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
         var initialVerifiedBalance: Int64 = -1
@@ -404,7 +406,7 @@ class AdvancedReOrgTests: XCTestCase {
         hookToReOrgNotification()
         self.expectedReorgHeight = 663196
         self.expectedRewindHeight = 663175
-        try coordinator.reset(saplingActivation: birthday)
+        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txIndexChangeBefore))
         try coordinator.applyStaged(blockheight: 663195)
         sleep(1)
@@ -448,7 +450,7 @@ class AdvancedReOrgTests: XCTestCase {
     }
     
     func testReOrgExpiresInboundTransaction() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight = BlockHeight(663188)
         try coordinator.applyStaged(blockheight: receivedTxHeight - 1)
         sleep(2)
@@ -520,7 +522,7 @@ class AdvancedReOrgTests: XCTestCase {
      7. check that balances still match
      */
     func testReOrgChangesInboundTxIndexInBlock() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         let incomingTxHeight = BlockHeight(663188)
         
@@ -670,7 +672,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
          1. create fake chain
          */
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: 663188)
         sleep(2)
@@ -881,7 +883,7 @@ class AdvancedReOrgTests: XCTestCase {
      9. verify that the balance is equal to the one before the reorg
      */
     func testReOrgChangesInboundMinedHeight() throws {
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
         sleep(2)
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txHeightReOrgBefore))
         sleep(2)
@@ -940,7 +942,7 @@ class AdvancedReOrgTests: XCTestCase {
      */
     func testReOrgRemovesIncomingTxForever() throws {
         hookToReOrgNotification()
-        try coordinator.reset(saplingActivation: 663150)
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
         
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txReOrgRemovesInboundTxBefore))
         
@@ -1009,7 +1011,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
          1. create fake chain
          */
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         let sentTxHeight: BlockHeight = 663195
         try coordinator.applyStaged(blockheight: sentTxHeight - 1)
         
@@ -1134,7 +1136,7 @@ class AdvancedReOrgTests: XCTestCase {
          */
         let fullSyncLength = 100_000
     
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, length: fullSyncLength)
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID , chainName: chainName, length: fullSyncLength)
         
         try coordinator.applyStaged(blockheight: birthday + fullSyncLength)
         

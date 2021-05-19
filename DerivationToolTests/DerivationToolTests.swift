@@ -73,4 +73,26 @@ class DerivationToolTests: XCTestCase {
         XCTAssertFalse(try DerivationTool.default.isValidExtendedViewingKey("zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"))
     }
     
+    func testDeriveSecretKeyFromSeed() throws {
+        XCTAssertEqual(try DerivationTool.default.deriveTransparentPrivateKey(seed: [UInt8](seedData)), "KwqfQoTCuQdCLvzpAEtkt1o8J62WJuZXD3cGRAf1bgmPWuLamHLo")
+    }
+    
+    func testDeriveUnifiedKeysFromSeed() throws {
+        let unifiedKeys = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 1)
+        XCTAssertEqual(unifiedKeys.count, 1)
+        
+        XCTAssertEqual(unifiedKeys[0].extfvk, expectedViewingKey)
+        
+        XCTAssertEqual(expectedTransparentAddress, try DerivationTool.default.deriveTransparentAddressFromPublicKey(unifiedKeys[0].extpub))
+    }
+    
+    func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
+        let unifiedKeys = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 10)
+        XCTAssertEqual(unifiedKeys.count, 10)
+        
+        XCTAssertEqual(unifiedKeys[0].extfvk, expectedViewingKey)
+        
+        XCTAssertEqual(expectedTransparentAddress, try DerivationTool.default.deriveTransparentAddressFromPublicKey(unifiedKeys[0].extpub))
+    }
+    
 }

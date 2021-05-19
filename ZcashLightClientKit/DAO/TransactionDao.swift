@@ -46,6 +46,10 @@ class TransactionSQLDAO: TransactionRepository {
     
     private var blockDao: BlockSQLDAO
     
+    func blockForHeight(_ height: BlockHeight) throws -> Block? {
+        try blockDao.block(at: height)
+    }
+    
     func lastScannedHeight() throws -> BlockHeight {
         try blockDao.latestBlockHeight()
     }

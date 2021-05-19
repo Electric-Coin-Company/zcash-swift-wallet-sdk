@@ -38,6 +38,43 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    func getInfo() throws -> LightWalletdInfo {
+        try service.getInfo()
+    }
+    
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
+        service.getInfo(result: result)
+    }
+    
+    func closeConnection() {
+        
+    }
+    
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        return []
+    }
+    
+    func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+            result(.success([]))
+        }
+    }
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+            result(.success([]))
+        }
+    }
+    
+    func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+            result(.success([]))
+        }
+    }
 
     func fetchTransaction(txId: Data) throws -> TransactionEntity {
         try service.fetchTransaction(txId: txId)
@@ -48,15 +85,16 @@ class DarksideWalletService: LightWalletService {
     }
     
     var channel: Channel
-    init(channelProvider: ChannelProvider) {
+    init(endpoint: LightWalletEndpoint) {
         self.channel = ChannelProvider().channel()
-        self.service = LightWalletGRPCService(channel: channel)
+        self.service = LightWalletGRPCService(endpoint: endpoint)
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
     
     convenience init() {
-        self.init(channelProvider: ChannelProvider())
+        self.init(endpoint: LightWalletEndpointBuilder.default)
     }
+    
     var service: LightWalletGRPCService
     var darksideService: DarksideStreamerClient
     
@@ -121,8 +159,8 @@ class DarksideWalletService: LightWalletService {
     func reset(saplingActivation: BlockHeight, branchID: String = "d3adb33f", chainName: String = "test") throws {
         var metaState = DarksideMetaState()
         metaState.saplingActivation = Int32(saplingActivation)
-        metaState.branchID = "d3adb33f"
-        metaState.chainName = "test"
+        metaState.branchID = branchID
+        metaState.chainName = chainName
         // TODO: complete meta state correctly
         _ = try darksideService.reset(metaState).response.wait()
     }
