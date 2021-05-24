@@ -540,7 +540,11 @@ public class SDKSynchronizer: Synchronizer {
         self.stop()
         
         var height: BlockHeight?
+        
+        
         switch policy {
+        case .quick:
+            break
         case .birthday:
             let birthday = self.blockProcessor.config.walletBirthday
             height = birthday
@@ -555,13 +559,9 @@ public class SDKSynchronizer: Synchronizer {
             height = txHeight
         }
         
-        guard let h = height else {
-            throw SynchronizerError.rewindErrorUnknownArchorHeight
-        }
-        
         do {
-            try self.blockProcessor.rewindTo(h)
-            try self.transactionManager.handleReorg(at: h)
+            let rewindHeight = try self.blockProcessor.rewindTo(height)
+            try self.transactionManager.handleReorg(at: rewindHeight)
         } catch {
             throw SynchronizerError.rewindError(underlyingError: error)
         }

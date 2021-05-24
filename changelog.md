@@ -1,3 +1,5 @@
+# 0.11.1
+* [Enhancement] Rewind API has a `.quick` option
 # 0.11.0
 * [New] Shield Funds Feature
 * [New] Get Transparent Balance for account
