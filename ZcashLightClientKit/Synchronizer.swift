@@ -268,4 +268,5 @@ public enum RewindPolicy {
     case birthday
     case height(blockheight: BlockHeight)
     case transaction(_ transaction: TransactionEntity)
+    case quick
 }
