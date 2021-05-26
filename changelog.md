@@ -1,3 +1,5 @@
+# 0.11.2 
+* [FIX] Fix build for Apple Silicon (M1) #285 by @ealymbaev 
 # 0.11.1
 * [Enhancement] Rewind API has a `.quick` option
 # 0.11.0
