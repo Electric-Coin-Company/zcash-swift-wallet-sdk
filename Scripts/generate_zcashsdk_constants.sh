@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [[ "$(uname -m)" == "arm64" ]]; then
+  export PATH="/opt/homebrew/bin:${PATH}"
+fi
+
 SCRIPT_COMMONS="${PODS_TARGET_SRCROOT}/Scripts/script_commons.sh"
 if [ -f $SCRIPT_COMMONS ]; then
     source $SCRIPT_COMMONS
