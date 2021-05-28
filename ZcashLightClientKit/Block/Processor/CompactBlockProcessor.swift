@@ -581,7 +581,15 @@ public class CompactBlockProcessor {
             case .validationFailed(let height):
                 LoggerProxy.debug("chain validation at height: \(height)")
                 self.validationFailed(at: height)
-            }            
+            case .failedWithError(let e):
+                guard let validationFailure = e else {
+                    LoggerProxy.error("validation failed without a specific error")
+                    self.fail(CompactBlockProcessorError.generalError(message: "validation failed without a specific error"))
+                    return
+                }
+                
+                self.fail(validationFailure)
+            }
         }
         
         validateChainOperation.startedHandler = { [weak self] in

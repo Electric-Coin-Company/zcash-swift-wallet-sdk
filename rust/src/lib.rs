@@ -969,13 +969,18 @@ pub extern "C" fn zcashlc_scan_blocks(
     db_cache_len: usize,
     db_data: *const u8,
     db_data_len: usize,
+    scan_limit: u32,
 ) -> i32 {
     let res = catch_panic(|| {
         let block_db = block_db(db_cache, db_cache_len)?;
         let db_read = wallet_db(db_data, db_data_len)?;
         let mut db_data = db_read.get_update_ops()?;
-
-        match scan_cached_blocks(&NETWORK, &block_db, &mut db_data, None) {
+        let limit = if scan_limit <= 0 {
+            None
+        } else {
+            Some(scan_limit)
+        };
+        match scan_cached_blocks(&NETWORK, &block_db, &mut db_data, limit) {
             Ok(()) => Ok(1),
             Err(e) => Err(format_err!("Error while scanning blocks: {}", e)),
         }

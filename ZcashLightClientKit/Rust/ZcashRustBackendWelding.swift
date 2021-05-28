@@ -181,9 +181,10 @@ public protocol ZcashRustBackendWelding {
      - Parameters:
         - dbCache: location of the compact block cache db
         - dbData:  location of the data db file
+        - limit: scan up to limit blocks. pass 0 to set no limit.
      returns false if fails to scan.
     */
-    static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
+    static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32) -> Bool
 
     /**
      puts a UTXO into the data db database

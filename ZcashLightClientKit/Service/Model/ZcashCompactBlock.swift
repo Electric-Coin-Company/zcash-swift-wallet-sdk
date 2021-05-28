@@ -24,9 +24,8 @@ extension BlockHeight {
 extension ZcashCompactBlock {
     init?(compactBlock: CompactBlock) {
         do {
-            // Safe to try: 32-bit systems will nil 
-            guard let h = Int(exactly: compactBlock.height) else { return nil }
-            self.height = h
+            
+            self.height = Int(compactBlock.height)
             self.data = try compactBlock.serializedData()
         } catch {
             return nil

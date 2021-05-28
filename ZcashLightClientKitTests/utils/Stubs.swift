@@ -77,6 +77,7 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    
     static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32 {
         -1
     }
@@ -279,7 +280,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         mockDataDb ? true : rustBackend.rewindToHeight(dbData: dbData, height: height)
     }
     
-    static func scanBlocks(dbCache: URL, dbData: URL) -> Bool {
+    static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32) -> Bool {
         if let rate = mockScanblocksSuccessRate {
             
             if shouldSucceed(successRate: rate) {

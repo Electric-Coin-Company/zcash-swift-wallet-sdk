@@ -27,7 +27,6 @@ public struct LightWalletEndpoint {
     public var host: String
     public var port: Int
     public var secure: Bool
-    public var timeout: TimeInterval
     
 /**
      initializes a LightWalletEndpoint
@@ -36,11 +35,10 @@ public struct LightWalletEndpoint {
         - port: string with the port of the host address
         - secure: true if connecting through TLS. Default value is true
      */
-    public init(address: String, port: Int, secure: Bool = true, timeout: TimeInterval = 10) {
+    public init(address: String, port: Int, secure: Bool = true) {
         self.host = address
         self.port = port
         self.secure = secure
-        self.timeout = timeout
     }
 }
 

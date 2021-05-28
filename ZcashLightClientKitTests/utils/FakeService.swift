@@ -16,8 +16,15 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
     var unknownFields: UnknownStorage
     
 }
-
+struct MockCancellable: CancellableCall {
+    func cancel() {}
+}
 class MockLightWalletService: LightWalletService {
+    
+    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockStreamProgressReporting) -> Void) -> CancellableCall {
+        return MockCancellable()
+    }
+    
     func getInfo() throws -> LightWalletdInfo {
         throw LightWalletServiceError.generalError(message: "Not Implemented")
     }

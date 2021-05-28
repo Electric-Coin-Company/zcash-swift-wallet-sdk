@@ -315,10 +315,10 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_rewind_to_height(dbData.0, dbData.1, height)
     }
     
-    static func scanBlocks(dbCache: URL, dbData: URL) -> Bool {
+    static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32 = 0) -> Bool {
         let dbCache = dbCache.osStr()
         let dbData = dbData.osStr()
-        return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1) != 0
+        return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1, limit) != 0
     }
 
     static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool {

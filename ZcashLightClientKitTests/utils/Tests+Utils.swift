@@ -13,7 +13,7 @@ import XCTest
 import NIO
 class LightWalletEndpointBuilder {
     static var `default`: LightWalletEndpoint {
-        LightWalletEndpoint(address: Constants.address, port: 9067, secure: false)
+        LightWalletEndpoint(address: Constants.address, port: 9067, secure: true)
     }
 }
 

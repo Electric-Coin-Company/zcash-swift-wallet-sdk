@@ -301,7 +301,8 @@ bool zcashlc_rewind_to_height(const uint8_t *db_data, uintptr_t db_data_len, int
 int32_t zcashlc_scan_blocks(const uint8_t *db_cache,
                             uintptr_t db_cache_len,
                             const uint8_t *db_data,
-                            uintptr_t db_data_len);
+                            uintptr_t db_data_len,
+                            uint32_t scan_limit);
 
 int64_t zcashlc_shield_funds(const uint8_t *db_data,
                              uintptr_t db_data_len,
