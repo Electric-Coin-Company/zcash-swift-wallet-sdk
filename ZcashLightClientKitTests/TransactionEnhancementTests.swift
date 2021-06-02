@@ -49,7 +49,8 @@ class TransactionEnhancementTests: XCTestCase {
         try! storage.createTable()
         
         downloader = CompactBlockDownloader(service: service, storage: storage)
-        processor = CompactBlockProcessor(downloader: downloader,
+        processor = CompactBlockProcessor(service: service,
+                                          storage: storage,
                                           backend: rustBackend,
                                           config: processorConfig)
         

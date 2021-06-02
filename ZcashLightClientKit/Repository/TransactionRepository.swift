@@ -26,4 +26,5 @@ protocol TransactionRepository {
     func findEncodedTransactionBy(txId: Int) -> EncodedTransaction?
     func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]?
     func findConfirmedTransactions(in range: BlockRange, offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
+    func findConfirmedTransactionBy(rawId: Data) throws -> ConfirmedTransactionEntity?
 }

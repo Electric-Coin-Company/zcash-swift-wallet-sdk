@@ -25,7 +25,6 @@ public enum LightWalletServiceError: Error {
     case unknown
 }
 
-
 public protocol BlockStreamProgressReporting {
     var startHeight: BlockHeight { get }
     var targetHeight: BlockHeight { get }

@@ -36,6 +36,8 @@ public enum CompactBlockProcessorError: Error {
  */
 public struct CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
+    public static let progressStartHeight = "CompactBlockProcessorNotificationKey.progressStartHeight"
+    public static let progressTargetHeight = "CompactBlockProcessorNotificationKey.progressTargetHeight"
     public static let progressHeight = "CompactBlockProcessorNotificationKey.progressHeight"
     public static let progressBlockTime = "CompactBlockProcessorNotificationKey.progressBlockTime"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
@@ -46,6 +48,7 @@ public struct CompactBlockProcessorNotificationKey {
     public static let foundTransactionsRange = "CompactBlockProcessorNotificationKey.foundTransactionsRange"
     public static let error = "error"
     public static let refreshedUTXOs = "CompactBlockProcessorNotificationKey.refreshedUTXOs"
+    public static let enhancementProgress = "CompactBlockProcessorNotificationKey.enhancementProgress"
 }
 
 public extension Notification.Name {
@@ -110,12 +113,17 @@ public extension Notification.Name {
      Query the user info object for CompactBlockProcessorNotificationKey.blockProcessorStoredUTXOs which will contain a RefreshedUTXOs tuple with the collection of UTXOs stored or skipped
      */
     static let blockProcessorStoredUTXOs = Notification.Name(rawValue: "CompactBlockProcessorStoredUTXOs")
+    
+    static let blockProcessorStartedEnhancing = Notification.Name(rawValue: "CompactBlockProcessorStartedEnhancing")
+    
+    static let blockProcessorEnhancementProgress = Notification.Name("CompactBlockProcessorEnhancementProgress")
+    
+    static let blockProcessorStartedFetching = Notification.Name(rawValue: "CompactBlockProcessorStartedFetching")
 }
 
 /**
  The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
  when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
- 
  */
 public class CompactBlockProcessor {
     /**
@@ -188,6 +196,17 @@ public class CompactBlockProcessor {
          processor is scanning
          */
         case scanning
+        
+        /**
+            Processor is Enhancing transactions
+         */
+        case enhancing
+        
+        /**
+         fetching utxos
+         */
+        
+        case fetching
         /**
          was processing but erred
          */
@@ -205,8 +224,9 @@ public class CompactBlockProcessor {
             transitionState(from: oldValue, to: self.state)
         }
     }
-    
+    private var service: LightWalletService
     private var downloader: CompactBlockDownloading
+    private var storage: CompactBlockStorage
     private var transactionRepository: TransactionRepository
     private var accountRepository: AccountRepository
     private var rustBackend: ZcashRustBackendWelding.Type
@@ -260,8 +280,12 @@ public class CompactBlockProcessor {
      - downloader: an instance that complies to CompactBlockDownloading protocol
      - backend: a class that complies to ZcashRustBackendWelding
      */
-    public convenience init(downloader: CompactBlockDownloading, backend: ZcashRustBackendWelding.Type, config: Configuration) {
-        self.init(downloader: downloader,
+    convenience init(service: LightWalletService,
+                            storage: CompactBlockStorage,
+                            backend: ZcashRustBackendWelding.Type,
+                            config: Configuration) {
+        self.init(service: service,
+                  storage: storage,
                   backend: backend,
                   config: config,
                   repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb),
@@ -275,7 +299,8 @@ public class CompactBlockProcessor {
     */
     public convenience init(initializer: Initializer) {
         
-        self.init(downloader: initializer.downloader,
+        self.init(service: initializer.lightWalletService,
+                  storage: initializer.storage,
                   backend: initializer.rustBackend,
                   config: Configuration(cacheDb: initializer.cacheDbURL,
                                         dataDb: initializer.dataDbURL,
@@ -284,13 +309,16 @@ public class CompactBlockProcessor {
                   accountRepository: initializer.accountRepository)
     }
     
-    internal init(downloader: CompactBlockDownloading,
+    internal init(service: LightWalletService,
+                  storage: CompactBlockStorage,
                   backend: ZcashRustBackendWelding.Type,
                   config: Configuration,
                   repository: TransactionRepository,
                   accountRepository: AccountRepository) {
-        self.downloader = downloader
+        self.service = service
+        self.downloader = CompactBlockDownloader(service: service, storage: storage)
         self.rustBackend = backend
+        self.storage = storage
         self.config = config
         self.transactionRepository = repository
         self.latestBlockHeight = config.walletBirthday
@@ -377,11 +405,8 @@ public class CompactBlockProcessor {
     }
     
     func validateServer(completionBlock: @escaping (() -> Void)) {
-        
-        guard let downloader = self.downloader as? CompactBlockDownloader else {
-            return
-        }
-        downloader.lightwalletService.getInfo(result: { [weak self] result in
+
+        self.service.getInfo(result: { [weak self] result in
             guard let self = self else { return }
             
             switch result {
@@ -539,7 +564,11 @@ public class CompactBlockProcessor {
         
         let cfg = self.config
         
-        let downloadBlockOperation = CompactBlockDownloadOperation(downloader: self.downloader, range: range)
+        let downloadBlockOperation = CompactBlockBatchDownloadOperation(service: self.service,
+                                                                         storage: self.storage,
+                                                                         startHeight: range.lowerBound,
+                                                                         targetHeight: range.upperBound,
+                                                                         progressDelegate: self)
         
         downloadBlockOperation.startedHandler = { [weak self] in
             self?.state = .downloading
@@ -596,7 +625,7 @@ public class CompactBlockProcessor {
             self?.state = .validating
         }
         
-        let scanBlocksOperation = CompactBlockScanningOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        let scanBlocksOperation = CompactBlockBatchScanningOperation(rustWelding: rustBackend, cacheDb: config.cacheDb, dataDb: config.dataDb, transactionRepository: transactionRepository, range: range, batchSize: 1000, progressDelegate: self)
         
         let validateScanningAdapterOperation = BlockOperation { [weak scanBlocksOperation, weak validateChainOperation] in
             scanBlocksOperation?.error = validateChainOperation?.error
@@ -673,19 +702,18 @@ public class CompactBlockProcessor {
         return progress
     }
     
-    func notifyProgress(completedRange: CompactBlockRange) {
-        let progress = calculateProgress(start: self.lowerBoundHeight ?? config.walletBirthday, current: completedRange.upperBound, latest: self.latestBlockHeight)
+    func notifyProgress(completedRange: BlockStreamProgressReporting) {
+        let progress = completedRange.progress
         
         var userInfo = [AnyHashable : Any]()
-        userInfo[CompactBlockProcessorNotificationKey.progress] = progress
-        userInfo[CompactBlockProcessorNotificationKey.progressHeight] = completedRange.upperBound
-        if let blockTime = try? transactionRepository.blockForHeight(completedRange.upperBound)?.time {
-            userInfo[CompactBlockProcessorNotificationKey.progressBlockTime] = TimeInterval(blockTime)
-        }
+        userInfo[CompactBlockProcessorNotificationKey.progress] = completedRange
+//        if let blockTime = try? transactionRepository.blockForHeight(completedRange.upperBound)?.time {
+//            userInfo[CompactBlockProcessorNotificationKey.progressBlockTime] = TimeInterval(blockTime)
+//        }
         
         LoggerProxy.debug("""
                             progress: \(progress)
-                            height: \(completedRange.upperBound)
+                            \(completedRange)
                           """)
         
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
@@ -746,7 +774,7 @@ public class CompactBlockProcessor {
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
         
-        notifyProgress(completedRange: range)
+//        notifyProgress(completedRange: range)
         
         guard !range.isEmpty else {
             processingFinished(height: range.upperBound)
@@ -839,7 +867,7 @@ public class CompactBlockProcessor {
         
         let lowerBound = latestDownloadedHeight <= config.walletBirthday ? config.walletBirthday : latestDownloadedHeight + 1
         
-        let upperBound = BlockHeight(min(lowerBound + BlockHeight(config.downloadBatchSize - 1), latestHeight))
+        let upperBound = latestHeight
         return lowerBound ... upperBound
     }
     
@@ -867,6 +895,7 @@ public class CompactBlockProcessor {
     }
 
     func severeFailure(_ error: Error) {
+        queue.cancelAllOperations()
         LoggerProxy.error("severe failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
@@ -911,6 +940,10 @@ public class CompactBlockProcessor {
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStopped, object: self)
         case .validating:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedValidating, object: self)
+        case .enhancing:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
+        case .fetching:
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
         }
     }
     private func notifyError(_ err: Error) {
@@ -1038,7 +1071,6 @@ extension UnifiedAddressShim: UnifiedAddress {
     }
 }
 
-
 extension CompactBlockProcessor {
     
     func refreshUTXOs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void) {
@@ -1139,4 +1171,33 @@ extension CompactBlockProcessorError: LocalizedError {
     public var helpAnchor: String? {
         self.localizedDescription
     }
+}
+
+extension CompactBlockProcessor: BlockStreamProgressDelegate {
+    func progressUpdated(_ progress: BlockStreamProgressReporting) {
+        notifyProgress(completedRange: progress)
+    }
+}
+
+
+extension CompactBlockProcessor: EnhancementStreamDelegate {
+    func transactionEnhancementProgressUpdated(_ progress: EnhancementStreamProgress) {
+        NotificationCenter.default.post(name: .blockProcessorEnhancementProgress, object: self, userInfo: [ CompactBlockProcessorNotificationKey.enhancementProgress : progress])
+    }
+}
+extension BlockStreamProgressReporting {
+    var progress: Double {
+        Double((self.progressHeight - self.startHeight)) / Double((self.targetHeight - self.startHeight + 1)) * 100.0
+    }
+}
+
+protocol EnhancementStreamDelegate: AnyObject {
+    func transactionEnhancementProgressUpdated(_ progress: EnhancementStreamProgress)
+}
+
+public struct EnhancementStreamProgress {
+    var totalTransactions: Int
+    var enhancedTransactions: Int
+    var lastFoundTransaction: ConfirmedTransactionEntity
+    var range: CompactBlockRange
 }

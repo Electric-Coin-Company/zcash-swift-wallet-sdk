@@ -22,14 +22,9 @@ extension BlockHeight {
 }
 
 extension ZcashCompactBlock {
-    init?(compactBlock: CompactBlock) {
-        do {
-            
-            self.height = Int(compactBlock.height)
-            self.data = try compactBlock.serializedData()
-        } catch {
-            return nil
-        }
+    init(compactBlock: CompactBlock) {
+        self.height = Int(compactBlock.height)
+        self.data = (try? compactBlock.serializedData()) ?? Data()
     }
 }
 

@@ -26,11 +26,12 @@ class CompactBlockProcessorTests: XCTestCase {
         let service = MockLightWalletService(latestBlockHeight: mockLatestHeight)
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
-        let downloader = CompactBlockDownloader(service: service, storage: storage)
         
-        processor = CompactBlockProcessor(downloader: downloader,
-                                            backend: ZcashRustBackend.self,
-                                            config: processorConfig)
+        
+        processor = CompactBlockProcessor(service: service,
+                                          storage: storage,
+                                          backend: ZcashRustBackend.self,
+                                          config: processorConfig)
         
         downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")

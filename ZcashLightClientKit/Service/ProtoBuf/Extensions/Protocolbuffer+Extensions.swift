@@ -56,19 +56,15 @@ extension BlockRange {
         return blockRange
     }
     
+    var compactBlockRange: CompactBlockRange {
+        return Int(self.start.height) ... Int(self.end.height)
+    }
+    
 }
 
 extension Array where Element == CompactBlock {
-    func asZcashCompactBlocks() throws -> [ZcashCompactBlock] {
-        var result = [ZcashCompactBlock]()
-        
-        for i in 0 ..< self.count {
-            guard let zBlock = ZcashCompactBlock(compactBlock: self[i]) else {
-                throw ZcashCompactBlockError.unreadableBlock(compactBlock: self[i])
-            }
-            result.append(zBlock)
-        }
-        return result
+    func asZcashCompactBlocks() -> [ZcashCompactBlock] {
+        self.map { ZcashCompactBlock(compactBlock: $0) }
     }
     
 }

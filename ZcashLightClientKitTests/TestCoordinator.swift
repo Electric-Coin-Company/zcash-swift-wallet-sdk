@@ -69,12 +69,9 @@ class TestCoordinator {
         self.birthday = walletBirthday
         self.channelProvider = channelProvider
         self.databases = TemporaryDbBuilder.build()
-        self.service = DarksideWalletService()
+        self.service = DarksideWalletService(service: LightWalletGRPCService(host: Constants.address, port: 9067, secure: false, singleCallTimeout: 10000, streamingCallTimeout: 1000000))
         let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
         try storage.createTable()
-        
-        let downloader = CompactBlockDownloader(service: self.service, storage: storage)
-        
         
         let buildResult = try TestSynchronizerBuilder.build(
                                 rustBackend: ZcashRustBackend.self,
@@ -85,8 +82,9 @@ class TestCoordinator {
                                 endpoint: LightWalletEndpointBuilder.default,
                                 service: self.service,
                                 repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
-                                accountRepository: AccountRepositoryBuilder.build(dataDbURL: databases.dataDB, readOnly: true),
-                                downloader: downloader,
+                                accountRepository: AccountRepositoryBuilder.build(dataDbURL: databases.dataDB,
+                                                                                  readOnly: true),
+                                storage: storage,
                                 spendParamsURL: try __spendParamsURL(),
                                 outputParamsURL: try __outputParamsURL(),
                                 spendingKey: spendingKey,
@@ -106,7 +104,6 @@ class TestCoordinator {
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
-       
         switch state {
         case .default:
             try service.useDataset(DarksideDataset.beforeReOrg.rawValue)
@@ -115,7 +112,6 @@ class TestCoordinator {
         case .url(let urlString,_):
             try service.useDataset(from: urlString)
         }
-        
     }
     
     func setLatestHeight(height: BlockHeight) throws {
@@ -252,7 +248,7 @@ class TestSynchronizerBuilder {
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        downloader: CompactBlockDownloader,
+        storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
         spendingKey: String,
@@ -270,7 +266,7 @@ class TestSynchronizerBuilder {
             service: service,
             repository: repository,
             accountRepository: accountRepository,
-            downloader: downloader,
+            storage: CompactBlockStorage(url: cacheDbURL, readonly: false),
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             viewingKeys: [unifiedViewingKey],
@@ -287,7 +283,8 @@ class TestSynchronizerBuilder {
                                                 walletBirthday: walletBirthday.height,
                                                 saplingActivation: lowerBoundHeight)
         
-        let processor = CompactBlockProcessor(downloader: downloader,
+        let processor = CompactBlockProcessor(service: service,
+                                              storage: storage,
                                               backend: rustBackend,
                                               config: config,
                                               repository: repository,
@@ -316,7 +313,7 @@ class TestSynchronizerBuilder {
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        downloader: CompactBlockDownloader,
+        storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
         seedBytes: [UInt8],
@@ -339,7 +336,7 @@ class TestSynchronizerBuilder {
             service: service,
             repository: repository,
             accountRepository: accountRepository,
-            downloader: downloader,
+            storage: storage,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             spendingKey: spendingKey,

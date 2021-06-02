@@ -28,16 +28,16 @@ class CompactBlockReorgTests: XCTestCase {
         let service = MockLightWalletService(latestBlockHeight: mockLatestHeight)
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
-        let downloader = CompactBlockDownloader(service: service, storage: storage)
         
         let mockBackend = MockRustBackend.self
         mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
         mockBackend.mockValidateCombinedChainKeepFailing = false
         mockBackend.mockValidateCombinedChainFailureHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 320
         
-        processor = CompactBlockProcessor(downloader: downloader,
-                                            backend: mockBackend,
-                                            config: processorConfig)
+        processor = CompactBlockProcessor(service: service,
+                                          storage: storage,
+                                          backend: mockBackend,
+                                          config: processorConfig)
         
         downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")

@@ -172,10 +172,10 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     
                     scannedNewBlocks = previousScannedHeight != lastScannedHeight
                     if scannedNewBlocks {
-                        let progress = BlockProgress(startHeight: previousScannedHeight, targetHeight: lastScannedHeight, progressHeight: lastScannedHeight)
+                        let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
                         progressDelegate?.progressUpdated(progress)
                         NotificationCenter.default.post(SDKMetrics.progressReportNotification(progress: progress, start: scanStartTime, end: scanFinishTime, task: .scanBlocks))
-                        LoggerProxy.debug("Scanned \(blockRange.count) blocks in \(scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate) seconds")
+                        LoggerProxy.debug("Scanned \(lastScannedHeight - previousScannedHeight) blocks in \(scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate) seconds")
                     }
                     
                 } while !self.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight

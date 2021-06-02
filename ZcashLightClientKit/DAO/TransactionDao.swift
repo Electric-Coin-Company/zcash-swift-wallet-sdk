@@ -323,6 +323,48 @@ class TransactionSQLDAO: TransactionRepository {
                 return tx
             })
     }
+ 
+    func findConfirmedTransactionBy(rawId: Data) throws -> ConfirmedTransactionEntity? {
+        try dbProvider.connection().run("""
+             SELECT transactions.id_tx          AS id,
+                    transactions.block           AS minedHeight,
+                    transactions.tx_index        AS transactionIndex,
+                    transactions.txid            AS rawTransactionId,
+                    transactions.expiry_height   AS expiryHeight,
+                    transactions.raw             AS raw,
+                    sent_notes.address           AS toAddress,
+                    CASE
+                      WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
+                      ELSE received_notes.value
+                    end                          AS value,
+                    CASE
+                      WHEN sent_notes.memo IS NOT NULL THEN sent_notes.memo
+                      ELSE received_notes.memo
+                    end                          AS memo,
+                    CASE
+                      WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
+                      ELSE received_notes.id_note
+                    end                          AS noteId,
+                    blocks.time                  AS blockTimeInSeconds
+              FROM   transactions
+                    LEFT JOIN received_notes
+                           ON transactions.id_tx = received_notes.tx
+                    LEFT JOIN sent_notes
+                           ON transactions.id_tx = sent_notes.tx
+                    LEFT JOIN blocks
+                           ON transactions.block = blocks.height
+              WHERE minedheight >= 0
+                AND rawTransactionId == \(Blob(bytes: rawId.bytes)) AND
+                    (sent_notes.address IS NULL AND received_notes.is_change != 1)
+                              OR sent_notes.address IS NOT NULL
+              LIMIT 1
+            """).compactMap({ (bindings) -> ConfirmedTransactionEntity? in
+                guard let tx = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
+                   return nil
+                }
+                return tx
+            }).first
+    }
 }
 
 extension Data {

@@ -56,6 +56,10 @@ class ZcashOperation: Operation {
         defer {
             self.cancel()
         }
+        
+        if let e = error {
+            self.error = e
+        }
         LoggerProxy.debug("\(self) failed")
         
         guard let errorHandler = self.errorHandler else {

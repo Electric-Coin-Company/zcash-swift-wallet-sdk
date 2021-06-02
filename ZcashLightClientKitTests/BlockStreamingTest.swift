@@ -15,10 +15,12 @@ class BlockStreamingTest: XCTestCase {
     }()
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
+        logger = SampleLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
+        try? FileManager.default.removeItem(at: __dataDbURL())
     }
 
     func testExample() throws {
@@ -92,8 +94,8 @@ class BlockStreamingTest: XCTestCase {
         let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
                                              port: 9067,
                                              secure: true,
-                                             singleCallTimeout: 1000,
-                                             streamingCallTimeout: 1000)
+                                             singleCallTimeout: 10000,
+                                             streamingCallTimeout: 10000)
         let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
         
         let startHeight = try service.latestBlockHeight() - 100_000
@@ -170,7 +172,72 @@ class BlockStreamingTest: XCTestCase {
             // Put the code you want to measure the time of here.
         }
     }
+    
+    func testBatchOperation() throws {
+        let expectation = XCTestExpectation(description: "blockbatch expectation")
+        
+        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+                                             port: 9067,
+                                             secure: true,
+                                             singleCallTimeout: 300000,
+                                             streamingCallTimeout: 10000)
+        let storage = try TestDbBuilder.diskCompactBlockStorage(at: __dataDbURL() )
+        let targetHeight = try service.latestBlockHeight()
+        let startHeight =  targetHeight - 100_000
+        let operation = CompactBlockBatchDownloadOperation(service: service,
+                                                           storage: storage,
+                                                           startHeight: startHeight, targetHeight: targetHeight,
+                                                           progressDelegate: self)
+        
+        operation.completionHandler = { (finished, cancelled) in
+            if cancelled {
+                XCTFail("operation cancelled")
+            }
+            expectation.fulfill()
+        }
+        
+        operation.errorHandler = { error in
+            XCTFail("failed with error: \(error)")
+            expectation.fulfill()
+        }
+        
+        queue.addOperation(operation)
+        
+        wait(for: [expectation], timeout: 300)
+    }
 
+    func testBatchOperationCancellation() throws {
+        let expectation = XCTestExpectation(description: "blockbatch expectation")
+        
+        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+                                             port: 9067,
+                                             secure: true,
+                                             singleCallTimeout: 300000,
+                                             streamingCallTimeout: 10000)
+        let storage = try TestDbBuilder.diskCompactBlockStorage(at: __dataDbURL() )
+        let targetHeight = try service.latestBlockHeight()
+        let startHeight =  targetHeight - 100_000
+        let operation = CompactBlockBatchDownloadOperation(service: service,
+                                                           storage: storage,
+                                                           startHeight: startHeight, targetHeight: targetHeight,
+                                                           progressDelegate: self)
+        
+        operation.completionHandler = { (finished, cancelled) in
+            XCTAssert(cancelled)
+            expectation.fulfill()
+        }
+        
+        operation.errorHandler = { error in
+            XCTFail("failed with error: \(error)")
+            expectation.fulfill()
+        }
+        
+        queue.addOperation(operation)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: {
+            self.queue.cancelAllOperations()
+        })
+        wait(for: [expectation], timeout: 1000)
+    }
 }
 
 extension BlockStreamingTest: BlockStreamProgressDelegate {

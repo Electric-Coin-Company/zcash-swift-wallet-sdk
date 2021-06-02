@@ -124,6 +124,10 @@ class SyncBlocksViewController: UIViewController {
             return "Retry"
         case .synced:
             return "Chill!"
+        case .enhancing:
+            return "Enhance"
+        case .fetching:
+            return "fetch"
         }
     }
     
@@ -141,6 +145,10 @@ class SyncBlocksViewController: UIViewController {
             return "Validating chain 🕵️‍♀️"
         case .synced:
             return "Synced 😎"
+        case .enhancing:
+            return "Enhancing 🤖"
+        case .fetching:
+            return "Fetching UTXOs"
         }
     }
 }

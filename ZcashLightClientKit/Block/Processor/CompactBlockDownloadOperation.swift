@@ -101,12 +101,10 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                         self?.done = true
                         return
                     case .error(let e):
-                        self?.error = e
-                        self?.fail()
+                        self?.fail(error: e)
                     }
                 case .failure(let e):
-                    self?.error = e
-                    self?.fail()
+                    self?.fail(error: e)
                 }
                
             } handler: {[weak self] block in
@@ -114,8 +112,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                 do {
                     try self.storage.insert(block)
                 } catch {
-                    self.error = error
-                    self.fail()
+                    self.fail(error: error)
                 }
             } progress: { progress in
                 self.progressDelegate?.progressUpdated(progress)
@@ -125,8 +122,112 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                 sleep(1)
             }
         } catch {
-            self.error = error
-            self.fail()
+            self.fail(error: error)
         }
+    }
+    override func fail(error: Error? = nil) {
+        self.cancelable?.cancel()
+        super.fail(error: error)
+    }
+    
+    override func cancel() {
+        self.cancelable?.cancel()
+        super.cancel()
+    }
+}
+
+
+class CompactBlockBatchDownloadOperation: ZcashOperation {
+    enum CompactBlockBatchDownloadOperationError: Error {
+        case startHeightMissing
+        case batchDownloadFailed(range: CompactBlockRange, error: Error?)
+    }
+    override var isConcurrent: Bool { false }
+    
+    override var isAsynchronous: Bool { false }
+    
+    private var batch: Int
+    private var maxRetries: Int
+    private var storage: CompactBlockStorage
+    private var service: LightWalletService
+    private var done = false
+    private var cancelable: CancellableCall?
+    private var startHeight: BlockHeight
+    private var targetHeight: BlockHeight
+    private weak var progressDelegate: BlockStreamProgressDelegate?
+    required init(service: LightWalletService,
+                  storage: CompactBlockStorage,
+                  startHeight: BlockHeight,
+                  targetHeight: BlockHeight,
+                  batchSize: Int = 100,
+                  maxRetries: Int = 5,
+                  progressDelegate: BlockStreamProgressDelegate? = nil) {
+        
+        self.storage = storage
+        self.service = service
+        self.startHeight = startHeight
+        self.targetHeight = targetHeight
+        self.progressDelegate = progressDelegate
+        self.batch = batchSize
+        self.maxRetries = maxRetries
+        super.init()
+        self.name = "Download Stream Operation"
+    }
+    
+    override func main() {
+        guard !shouldCancel() else {
+            cancel()
+            return
+        }
+        do {
+            
+            guard startHeight > ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
+                throw CompactBlockBatchDownloadOperationError.startHeightMissing
+            }
+            var currentHeight = startHeight
+            self.progressDelegate?.progressUpdated(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: currentHeight))
+            
+            while !isCancelled && currentHeight <= targetHeight {
+                var retries = 0
+                var success = true
+                var localError: Error? = nil
+            
+                let range = nextRange(currentHeight: currentHeight, targetHeight: targetHeight)
+                
+                repeat {
+                    do {
+                        let blocks = try service.blockRange(range)
+                        try storage.insert(blocks)
+                        success = true
+                       
+                    } catch {
+                        success = false
+                        localError = error
+                        retries = retries + 1
+                    }
+                } while !success && retries < maxRetries
+                if retries >= maxRetries {
+                    throw CompactBlockBatchDownloadOperationError.batchDownloadFailed(range: range, error: localError)
+                }
+                
+                self.progressDelegate?.progressUpdated(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: range.upperBound))
+                currentHeight = range.upperBound + 1
+            }
+        } catch {
+            self.fail(error: error)
+        }
+    }
+    
+    func nextRange(currentHeight: BlockHeight, targetHeight: BlockHeight) -> CompactBlockRange {
+        CompactBlockRange(uncheckedBounds: (lower: currentHeight, upper: min(currentHeight + batch, targetHeight)))
+    }
+    override func fail(error: Error? = nil) {
+        self.cancelable?.cancel()
+        super.fail(error: error)
+    }
+    
+    override func cancel() {
+        self.cancelable?.cancel()
+        super.cancel()
     }
 }

@@ -63,6 +63,7 @@ public class Initializer {
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
     private(set) var accountRepository: AccountRepository
+    private(set) var storage: CompactBlockStorage
     private(set) var downloader: CompactBlockDownloader
     private(set) public var viewingKeys: [UnifiedViewingKey]
     private(set) public var walletBirthday: WalletBirthday
@@ -87,9 +88,6 @@ public class Initializer {
                  alias: String = "",
                  loggerProxy: Logger? = nil) {
         
-        let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
-        try? storage.createTable()
-        
         let lwdService = LightWalletGRPCService(endpoint: endpoint)
         
         self.init(rustBackend: ZcashRustBackend.self,
@@ -101,7 +99,7 @@ public class Initializer {
                   service: lwdService,
                   repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
                   accountRepository: AccountRepositoryBuilder.build(dataDbURL: dataDbURL, readOnly: true, caching: true),
-                  downloader: CompactBlockDownloader(service: lwdService, storage: storage),
+                  storage: CompactBlockStorage(url: cacheDbURL, readonly: false),
                   spendParamsURL: spendParamsURL,
                   outputParamsURL: outputParamsURL,
                   viewingKeys: viewingKeys,
@@ -123,7 +121,7 @@ public class Initializer {
          service: LightWalletService,
          repository: TransactionRepository,
          accountRepository: AccountRepository,
-         downloader: CompactBlockDownloader,
+         storage: CompactBlockStorage,
          spendParamsURL: URL,
          outputParamsURL: URL,
          viewingKeys: [UnifiedViewingKey],
@@ -145,7 +143,8 @@ public class Initializer {
         self.lightWalletService = service
         self.transactionRepository = repository
         self.accountRepository = accountRepository
-        self.downloader = downloader
+        self.storage = storage
+        self.downloader = CompactBlockDownloader(service: service, storage: storage)
         self.viewingKeys = viewingKeys
         self.walletBirthday = WalletBirthday.birthday(with: walletBirthday)
     }
@@ -168,6 +167,11 @@ public class Initializer {
      */
     
     public func initialize() throws {
+        do {
+            try storage.createTable()
+        } catch {
+            throw InitializerError.cacheDbInitFailed
+        }
         
         do {
             try rustBackend.initDataDb(dbData: dataDbURL)
@@ -296,16 +300,16 @@ public class Initializer {
 
 class CompactBlockProcessorBuilder {
     static func buildProcessor(configuration: CompactBlockProcessor.Configuration,
-                               downloader: CompactBlockDownloader,
+                               service: LightWalletService,
+                               storage: CompactBlockStorage,
                                transactionRepository: TransactionRepository,
                                accountRepository: AccountRepository,
                                backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
-        return CompactBlockProcessor(downloader: downloader,
+        return CompactBlockProcessor(service: service,
+                                     storage: storage,
                                      backend: backend,
                                      config: configuration,
                                      repository: transactionRepository,
                                      accountRepository: accountRepository)
     }
 }
-
-

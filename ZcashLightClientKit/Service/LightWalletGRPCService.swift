@@ -103,7 +103,7 @@ public class LightWalletGRPCService {
         self.init(host: endpoint.host, port: endpoint.port, secure: endpoint.secure)
     }
     
-    public init(host: String, port: Int = 9067, secure: Bool = true, singleCallTimeout: Int64 = 10, streamingCallTimeout: Int64 = 10) {
+    public init(host: String, port: Int = 9067, secure: Bool = true, singleCallTimeout: Int64 = 10000, streamingCallTimeout: Int64 = 10000) {
         
         self.connectionDelegate = ConnectionStatusManager()
         self.queue = DispatchQueue.init(label: "LightWalletGRPCService")
@@ -155,10 +155,9 @@ extension LightWalletGRPCService: LightWalletService {
     
     @discardableResult public func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping  (BlockStreamProgressReporting) -> Void) -> CancellableCall {
         
-        
         let future = compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight), callOptions: Self.callOptions(timeLimit: self.streamingCallTimeout), handler: { compactBlock in
             
-            handler(ZcashCompactBlock(compactBlock: compactBlock)!)
+            handler(ZcashCompactBlock(compactBlock: compactBlock))
             progress(BlockProgress(startHeight: startHeight, targetHeight: endHeight, progressHeight: BlockHeight(compactBlock.height)))
             }
         )

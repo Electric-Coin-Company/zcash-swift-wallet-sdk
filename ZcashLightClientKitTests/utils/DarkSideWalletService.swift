@@ -95,6 +95,14 @@ class DarksideWalletService: LightWalletService {
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
     
+    init(service: LightWalletGRPCService) {
+        self.channel = ChannelProvider().channel()
+        self.darksideService = DarksideStreamerClient(channel: channel)
+        self.service = service
+    }
+    
+    
+    
     convenience init() {
         self.init(endpoint: LightWalletEndpointBuilder.default)
     }
