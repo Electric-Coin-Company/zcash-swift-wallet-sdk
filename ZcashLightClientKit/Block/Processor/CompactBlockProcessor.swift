@@ -659,13 +659,11 @@ public class CompactBlockProcessor {
             self?.notifyTransactions(txs,in: range)
         }
         
-        enhanceOperation.completionHandler  = { [weak self] (finished, cancelled) in
+        enhanceOperation.completionHandler  = { (finished, cancelled) in
             guard !cancelled else {
-                self?.state = .stopped
                 LoggerProxy.debug("Warning: enhance operation on range \(range) cancelled")
                 return
             }
-            self?.processBatchFinished(range: range)
         }
         
         enhanceOperation.errorHandler = { [weak self] (error) in
@@ -679,11 +677,41 @@ public class CompactBlockProcessor {
             enhanceOperation?.error = scanBlocksOperation?.error
         }
         
+        let fetchOperation = FetchUnspentTxOutputsOperation(accountRepository: accountRepository, downloader: self.downloader, rustbackend: rustBackend, dataDb: config.dataDb, startHeight: config.walletBirthday)
+        
+        fetchOperation.startedHandler = { [weak self] in
+            self?.state = .fetching
+        }
+        
+        fetchOperation.completionHandler = {  [weak self] (finished, cancelled) in
+            guard !cancelled else {
+                LoggerProxy.debug("Warning: fetch operation on range \(range) cancelled")
+                return
+            }
+            
+            self?.processBatchFinished(range: range)
+        }
+        fetchOperation.errorHandler = { [weak self] (error) in
+            guard let self = self else { return }
+            
+            self.processingError = error
+            self.fail(error)
+        }
+        fetchOperation.fetchedUTXOsHandler = { result in
+            NotificationCenter.default.post(name: .blockProcessorStoredUTXOs, object: self, userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs : result])
+        }
+        
+        let enhanceFetchAdapterOperation = BlockOperation { [weak fetchOperation, weak enhanceOperation] in
+            fetchOperation?.error = enhanceOperation?.error
+        }
+        
         downloadValidateAdapterOperation.addDependency(downloadBlockOperation)
         validateChainOperation.addDependency(downloadValidateAdapterOperation)
         scanBlocksOperation.addDependency(validateScanningAdapterOperation)
         scanEnhanceAdapterOperation.addDependency(scanBlocksOperation)
         enhanceOperation.addDependency(scanEnhanceAdapterOperation)
+        enhanceFetchAdapterOperation.addDependency(enhanceOperation)
+        
         
         queue.addOperations([downloadBlockOperation,
                              downloadValidateAdapterOperation,
@@ -691,7 +719,9 @@ public class CompactBlockProcessor {
                              validateScanningAdapterOperation,
                              scanBlocksOperation,
                              scanEnhanceAdapterOperation,
-                             enhanceOperation], waitUntilFinished: false)
+                             enhanceOperation,
+                             enhanceFetchAdapterOperation,
+                             fetchOperation], waitUntilFinished: false)
         
     }
     
@@ -789,40 +819,6 @@ public class CompactBlockProcessor {
     }
     
     private func processingFinished(height: BlockHeight) {
-        if foundBlocks {
-            
-            // fixme: support multiple accounts
-            guard let tAddress = self.getTransparentAddress(accountIndex: 0) else {
-                LoggerProxy.error("Unable to retrieve tAddress for account 0. this is a serious problem")
-                return
-            }
-            
-            refreshUTXOs(tAddress: tAddress, startHeight: ZcashSDK.SAPLING_ACTIVATION_HEIGHT) { [weak self] r in
-                guard let self = self else {
-                    LoggerProxy.warn("code block called on unretained self")
-                    return
-                }
-                
-                switch r {
-                case .success(let refreshedUtxos):
-                    NotificationCenter.default.post(name: .blockProcessorStoredUTXOs, object: self, userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs : refreshedUtxos])
-                   
-                    NotificationCenter.default.post(
-                        name: Notification.Name.blockProcessorFinished,
-                        object: self,
-                        userInfo: [
-                         CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height,
-                         CompactBlockProcessorNotificationKey.foundBlocks : self.foundBlocks
-                        ])
-                    self.state = .synced
-                    self.setTimer()
-
-                case .failure(let error):
-                    LoggerProxy.error("failed to refresh utxos")
-                    self.fail(error)
-                }
-            }
-        } else {
             NotificationCenter.default.post(
                 name: Notification.Name.blockProcessorFinished,
                 object: self,
@@ -832,7 +828,6 @@ public class CompactBlockProcessor {
                 ])
             self.state = .synced
             setTimer()
-        }
     }
     
     private func setTimer() {
@@ -1187,7 +1182,7 @@ extension CompactBlockProcessor: EnhancementStreamDelegate {
 }
 extension BlockStreamProgressReporting {
     var progress: Double {
-        Double((self.progressHeight - self.startHeight)) / Double((self.targetHeight - self.startHeight + 1)) * 100.0
+        Double((self.progressHeight - self.startHeight)) / Double((self.targetHeight - self.startHeight)) * 100.0
     }
 }
 

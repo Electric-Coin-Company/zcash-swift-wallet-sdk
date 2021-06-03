@@ -103,6 +103,10 @@ public class LightWalletGRPCService {
         self.init(host: endpoint.host, port: endpoint.port, secure: endpoint.secure)
     }
     
+    deinit {
+        _ = channel.close()
+        _ = compactTxStreamer.channel.close()
+    }
     public init(host: String, port: Int = 9067, secure: Bool = true, singleCallTimeout: Int64 = 10000, streamingCallTimeout: Int64 = 10000) {
         
         self.connectionDelegate = ConnectionStatusManager()
@@ -265,16 +269,11 @@ extension LightWalletGRPCService: LightWalletService {
         
         let status = try response.status.wait()
         switch status.code {
-        
-        case .ok:
-            do {
-                return try blocks.asZcashCompactBlocks()
-            } catch {
-                LoggerProxy.error("invalid block in range: \(range) - Error: \(error)")
-                throw LightWalletServiceError.genericError(error: error)
-            }
-        default:
-            throw LightWalletServiceError.mapCode(status)
+            case .ok:
+                return blocks.asZcashCompactBlocks()
+                
+            default:
+                throw LightWalletServiceError.mapCode(status)
         }
     }
     
@@ -309,12 +308,8 @@ extension LightWalletGRPCService: LightWalletService {
                 let status = try response.status.wait()
                 switch status.code {
                 case .ok:
-                    do {
-                        result(.success(try blocks.asZcashCompactBlocks()))
-                    } catch {
-                        LoggerProxy.error("Error parsing compact blocks \(error)")
-                        result(.failure(LightWalletServiceError.invalidBlock))
-                    }
+                    result(.success(blocks.asZcashCompactBlocks()))
+                    
 
                 default:
                     result(.failure(.mapCode(status)))

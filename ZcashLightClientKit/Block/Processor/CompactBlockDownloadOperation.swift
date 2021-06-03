@@ -150,7 +150,6 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
     private var maxRetries: Int
     private var storage: CompactBlockStorage
     private var service: LightWalletService
-    private var done = false
     private var cancelable: CancellableCall?
     private var startHeight: BlockHeight
     private var targetHeight: BlockHeight
