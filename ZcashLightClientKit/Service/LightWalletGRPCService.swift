@@ -84,7 +84,7 @@ extension ServerStreamingCall: CancellableCall {
     }
 }
 
-struct BlockProgress: BlockStreamProgressReporting {
+struct BlockProgress: BlockProgressReporting {
     var startHeight: BlockHeight
     var targetHeight: BlockHeight
     var progressHeight: BlockHeight
@@ -157,7 +157,7 @@ public class LightWalletGRPCService {
 
 extension LightWalletGRPCService: LightWalletService {
     
-    @discardableResult public func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping  (BlockStreamProgressReporting) -> Void) -> CancellableCall {
+    @discardableResult public func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping  (BlockProgressReporting) -> Void) -> CancellableCall {
         
         let future = compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight), callOptions: Self.callOptions(timeLimit: self.streamingCallTimeout), handler: { compactBlock in
             

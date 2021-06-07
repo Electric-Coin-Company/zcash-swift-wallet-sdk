@@ -219,8 +219,11 @@ public protocol Synchronizer {
  The Status of the synchronizer
  */
 public enum Status {
+
     /**
-     This synchronizer is not ready to start
+    Indicates that this Synchronizer is actively preparing to start, which usually involves
+    setting up database tables, migrations or taking other maintenance steps that need to
+    occur after an upgrade.
      */
     case unprepared
     /**
@@ -235,17 +238,48 @@ public enum Status {
     case disconnected
     
     /**
-    Indicates that this Synchronizer is not yet synced and therefore should not broadcast
-    transactions because it does not have the latest data. When set, a UI element may want
-    to turn yellow.
+     Indicates that this Synchronizer is actively downloading new blocks from the server.
+     */
+    case downloading
+    
+    /**
+      Indicates that this Synchronizer is actively validating new blocks that were downloaded
+      from the server. Blocks need to be verified before they are scanned. This confirms that
+      each block is chain-sequential, thereby detecting missing blocks and reorgs.
     */
-    case syncing
+    case validating
+    
+    /**
+     Indicates that this Synchronizer is actively scanning new valid blocks that were downloaded
+     from the server.
+     */
+    case scanning
+    
+    /**
+     Indicates that this Synchronizer is actively enhancing newly scanned blocks with
+     additional transaction details, fetched from the server.
+     */
+    case enhancing
+    
+    /**
+     fetches the transparent balance and stores it locally
+     */
+    case fetching
     
     /**
     Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     When set, a UI element may want to turn green.
     */
     case synced
+    
+    public var isSyncing: Bool {
+        switch self {
+        case .disconnected, .synced, .synced, .unprepared:
+            return false
+        default:
+            return true
+        }
+    }
 }
 
 /**

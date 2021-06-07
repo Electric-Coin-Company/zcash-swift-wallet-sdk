@@ -38,7 +38,6 @@ public struct CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
     public static let progressStartHeight = "CompactBlockProcessorNotificationKey.progressStartHeight"
     public static let progressTargetHeight = "CompactBlockProcessorNotificationKey.progressTargetHeight"
-    public static let progressHeight = "CompactBlockProcessorNotificationKey.progressHeight"
     public static let progressBlockTime = "CompactBlockProcessorNotificationKey.progressBlockTime"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
@@ -49,16 +48,86 @@ public struct CompactBlockProcessorNotificationKey {
     public static let error = "error"
     public static let refreshedUTXOs = "CompactBlockProcessorNotificationKey.refreshedUTXOs"
     public static let enhancementProgress = "CompactBlockProcessorNotificationKey.enhancementProgress"
+    public static let previousStatus = "CompactBlockProcessorNotificationKey.previousStatus"
+    public static let newStatus = "CompactBlockProcessorNotificationKey.newStatus"
+    
 }
+
+public enum CompactBlockProgress {
+    case download(_ progress: BlockProgressReporting)
+    case validate
+    case scan(_ progress: BlockProgressReporting)
+    case enhance(_ progress: EnhancementStreamProgress)
+    case fetch
+    
+    public var progress: Float {
+        switch self {
+        case .download(let p),
+             .scan(let p):
+            return p.progress
+        case .enhance(let p):
+            return p.progress
+        default:
+            return 0
+        }
+    }
+    
+    public var progressHeight: BlockHeight? {
+        switch self {
+        case .download(let p),
+             .scan(let p):
+            return p.progressHeight
+        case .enhance(let p):
+            return p.lastFoundTransaction?.minedHeight
+        default:
+            return 0
+        }
+    }
+    
+    public var blockDate: Date? {
+        if case .enhance(let p ) = self, let time = p.lastFoundTransaction?.blockTimeInSeconds {
+            return Date(timeIntervalSince1970: time)
+        }
+        return nil
+    }
+}
+
+
+protocol EnhancementStreamDelegate: AnyObject {
+    func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress)
+}
+
+public protocol EnhancementProgress {
+    var totalTransactions: Int { get }
+    var enhancedTransactions: Int { get }
+    var lastFoundTransaction: ConfirmedTransactionEntity? { get }
+    var range: CompactBlockRange { get }
+}
+public struct EnhancementStreamProgress: EnhancementProgress {
+    public var totalTransactions: Int
+    public var enhancedTransactions: Int
+    public var lastFoundTransaction: ConfirmedTransactionEntity?
+    public var range: CompactBlockRange
+    
+    public var progress: Float {
+        totalTransactions > 0 ? Float(enhancedTransactions) / Float(totalTransactions) : 0
+    }
+    
+}
+
 
 public extension Notification.Name {
     /**
      Processing progress update
      
-     Query the userInfo object for the key CompactBlockProcessorNotificationKey.progress and CompactBlockProcessorNotificationKey.progressheight for more information on progress % and height
+     Query the userInfo object for the key CompactBlockProcessorNotificationKey.progress for a CompactBlockProgress struct
      */
     static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
     
+    /**
+     notification sent when processor status changed
+     */
+    static let blockProcessorStatusChanged = Notification.Name(rawValue: "CompactBlockProcessorStatusChanged")
     /**
      Notification sent when a compact block processor starts downloading
      */
@@ -732,18 +801,13 @@ public class CompactBlockProcessor {
         return progress
     }
     
-    func notifyProgress(completedRange: BlockStreamProgressReporting) {
-        let progress = completedRange.progress
+    func notifyProgress(_ progress: CompactBlockProgress) {
         
         var userInfo = [AnyHashable : Any]()
-        userInfo[CompactBlockProcessorNotificationKey.progress] = completedRange
-//        if let blockTime = try? transactionRepository.blockForHeight(completedRange.upperBound)?.time {
-//            userInfo[CompactBlockProcessorNotificationKey.progressBlockTime] = TimeInterval(blockTime)
-//        }
-        
+        userInfo[CompactBlockProcessorNotificationKey.progress] = progress
+
         LoggerProxy.debug("""
                             progress: \(progress)
-                            \(completedRange)
                           """)
         
         NotificationCenter.default.post(name: Notification.Name.blockProcessorUpdated,
@@ -803,8 +867,6 @@ public class CompactBlockProcessor {
         
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
-        
-//        notifyProgress(completedRange: range)
         
         guard !range.isEmpty else {
             processingFinished(height: range.upperBound)
@@ -921,6 +983,10 @@ public class CompactBlockProcessor {
         guard oldValue != newValue else {
             return
         }
+        NotificationCenter.default.post(name: .blockProcessorStatusChanged,
+                                        object: self,
+                                        userInfo: [ CompactBlockProcessorNotificationKey.previousStatus : oldValue,
+                                            CompactBlockProcessorNotificationKey.newStatus : newValue])
         
         switch newValue {
         case .downloading:
@@ -938,7 +1004,7 @@ public class CompactBlockProcessor {
         case .enhancing:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
         case .fetching:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
+            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedFetching, object: self)
         }
     }
     private func notifyError(_ err: Error) {
@@ -1008,7 +1074,9 @@ extension CompactBlockProcessor.State: Equatable {
              (.validating, .validating),
              (.stopped, .stopped),
              (.error, .error),
-             (.synced, .synced): return true
+             (.synced, .synced),
+             (.enhancing, enhancing),
+             (.fetching, .fetching): return true
         default: return false
         }
     }
@@ -1017,7 +1085,6 @@ extension CompactBlockProcessor.State: Equatable {
 // Transparent stuff
 
 extension CompactBlockProcessor {
-    
     public func utxoCacheBalance(tAddress: String) throws -> WalletBalance {
         try rustBackend.downloadedUtxoBalance(dbData: config.dataDb, address: tAddress)
     }
@@ -1168,31 +1235,20 @@ extension CompactBlockProcessorError: LocalizedError {
     }
 }
 
-extension CompactBlockProcessor: BlockStreamProgressDelegate {
-    func progressUpdated(_ progress: BlockStreamProgressReporting) {
-        notifyProgress(completedRange: progress)
+extension CompactBlockProcessor: CompactBlockProgressDelegate {
+    func progressUpdated(_ progress: CompactBlockProgress) {
+        notifyProgress(progress)
     }
 }
 
 
 extension CompactBlockProcessor: EnhancementStreamDelegate {
-    func transactionEnhancementProgressUpdated(_ progress: EnhancementStreamProgress) {
+    func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress) {
         NotificationCenter.default.post(name: .blockProcessorEnhancementProgress, object: self, userInfo: [ CompactBlockProcessorNotificationKey.enhancementProgress : progress])
     }
 }
-extension BlockStreamProgressReporting {
-    var progress: Double {
-        Double((self.progressHeight - self.startHeight)) / Double((self.targetHeight - self.startHeight)) * 100.0
+public extension BlockProgressReporting {
+    var progress: Float {
+        Float((self.progressHeight - self.startHeight)) / Float((self.targetHeight - self.startHeight)) * 100.0
     }
-}
-
-protocol EnhancementStreamDelegate: AnyObject {
-    func transactionEnhancementProgressUpdated(_ progress: EnhancementStreamProgress)
-}
-
-public struct EnhancementStreamProgress {
-    var totalTransactions: Int
-    var enhancedTransactions: Int
-    var lastFoundTransaction: ConfirmedTransactionEntity
-    var range: CompactBlockRange
 }

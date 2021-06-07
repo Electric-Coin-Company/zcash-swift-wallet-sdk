@@ -76,7 +76,7 @@ public class SDKMetrics {
         return BlockMetricReport(startHeight: startHeight, targetHeight: targetHeight, duration: abs(startDate.timeIntervalSinceReferenceDate - endDate.timeIntervalSinceReferenceDate), task: task)
     }
     
-    static func progressReportNotification(progress: BlockStreamProgressReporting, start: Date, end: Date, task: SDKMetrics.TaskReported) -> Notification {
+    static func progressReportNotification(progress: BlockProgressReporting, start: Date, end: Date, task: SDKMetrics.TaskReported) -> Notification {
         var notification = Notification(name: notificationName)
         notification.userInfo = [
             startBlockHeightKey : progress.startHeight,
@@ -105,7 +105,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
     override var isAsynchronous: Bool { false }
     
     var rustBackend: ZcashRustBackendWelding.Type
-    private weak var progressDelegate: BlockStreamProgressDelegate?
+    private weak var progressDelegate: CompactBlockProgressDelegate?
     private var cacheDb: URL
     private var dataDb: URL
     private var batchSize: UInt32
@@ -118,7 +118,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
          transactionRepository: TransactionRepository,
          range: CompactBlockRange,
          batchSize: UInt32 = 100,
-         progressDelegate: BlockStreamProgressDelegate? = nil) {
+         progressDelegate: CompactBlockProgressDelegate? = nil) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
@@ -173,7 +173,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     scannedNewBlocks = previousScannedHeight != lastScannedHeight
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
-                        progressDelegate?.progressUpdated(progress)
+                        progressDelegate?.progressUpdated(.scan(progress))
                         NotificationCenter.default.post(SDKMetrics.progressReportNotification(progress: progress, start: scanStartTime, end: scanFinishTime, task: .scanBlocks))
                         LoggerProxy.debug("Scanned \(lastScannedHeight - previousScannedHeight) blocks in \(scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate) seconds")
                     }

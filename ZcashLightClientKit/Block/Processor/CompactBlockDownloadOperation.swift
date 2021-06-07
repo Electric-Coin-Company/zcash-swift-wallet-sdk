@@ -39,8 +39,8 @@ class CompactBlockDownloadOperation: ZcashOperation {
     }
 }
 
-protocol BlockStreamProgressDelegate: AnyObject {
-    func progressUpdated(_ progress: BlockStreamProgressReporting)
+protocol CompactBlockProgressDelegate: AnyObject {
+    func progressUpdated(_ progress: CompactBlockProgress)
 }
 
 class CompactBlockStreamDownloadOperation: ZcashOperation {
@@ -57,12 +57,12 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     private var cancelable: CancellableCall?
     private var startHeight: BlockHeight?
     private var targetHeight: BlockHeight?
-    private weak var progressDelegate: BlockStreamProgressDelegate?
+    private weak var progressDelegate: CompactBlockProgressDelegate?
     required init(service: LightWalletService,
                   storage: CompactBlockStorage,
                   startHeight: BlockHeight? = nil,
                   targetHeight: BlockHeight? = nil,
-                  progressDelegate: BlockStreamProgressDelegate? = nil) {
+                  progressDelegate: CompactBlockProgressDelegate? = nil) {
         
         self.storage = storage
         self.service = service
@@ -115,7 +115,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                     self.fail(error: error)
                 }
             } progress: { progress in
-                self.progressDelegate?.progressUpdated(progress)
+                self.progressDelegate?.progressUpdated(.download(progress))
             }
             
             while !done && !isCancelled {
@@ -153,14 +153,14 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
     private var cancelable: CancellableCall?
     private var startHeight: BlockHeight
     private var targetHeight: BlockHeight
-    private weak var progressDelegate: BlockStreamProgressDelegate?
+    private weak var progressDelegate: CompactBlockProgressDelegate?
     required init(service: LightWalletService,
                   storage: CompactBlockStorage,
                   startHeight: BlockHeight,
                   targetHeight: BlockHeight,
                   batchSize: Int = 100,
                   maxRetries: Int = 5,
-                  progressDelegate: BlockStreamProgressDelegate? = nil) {
+                  progressDelegate: CompactBlockProgressDelegate? = nil) {
         
         self.storage = storage
         self.service = service
@@ -184,7 +184,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
                 throw CompactBlockBatchDownloadOperationError.startHeightMissing
             }
             var currentHeight = startHeight
-            self.progressDelegate?.progressUpdated(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: currentHeight))
+            self.progressDelegate?.progressUpdated(.download(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: currentHeight)))
             
             while !isCancelled && currentHeight <= targetHeight {
                 var retries = 0
@@ -209,7 +209,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
                     throw CompactBlockBatchDownloadOperationError.batchDownloadFailed(range: range, error: localError)
                 }
                 
-                self.progressDelegate?.progressUpdated(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: range.upperBound))
+                self.progressDelegate?.progressUpdated(.download(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: range.upperBound)))
                 currentHeight = range.upperBound + 1
             }
         } catch {
