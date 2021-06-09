@@ -694,7 +694,7 @@ public class CompactBlockProcessor {
             self?.state = .validating
         }
         
-        let scanBlocksOperation = CompactBlockBatchScanningOperation(rustWelding: rustBackend, cacheDb: config.cacheDb, dataDb: config.dataDb, transactionRepository: transactionRepository, range: range, batchSize: 1000, progressDelegate: self)
+        let scanBlocksOperation = CompactBlockBatchScanningOperation(rustWelding: rustBackend, cacheDb: config.cacheDb, dataDb: config.dataDb, transactionRepository: transactionRepository, range: range, progressDelegate: self)
         
         let validateScanningAdapterOperation = BlockOperation { [weak scanBlocksOperation, weak validateChainOperation] in
             scanBlocksOperation?.error = validateChainOperation?.error
@@ -1249,6 +1249,8 @@ extension CompactBlockProcessor: EnhancementStreamDelegate {
 }
 public extension BlockProgressReporting {
     var progress: Float {
-        Float((self.progressHeight - self.startHeight)) / Float((self.targetHeight - self.startHeight)) * 100.0
+        let overall = self.targetHeight - self.startHeight
+        
+        return overall > 0 ? Float((self.progressHeight - self.startHeight)) / Float(overall) : 0
     }
 }
