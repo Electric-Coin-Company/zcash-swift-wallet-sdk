@@ -38,7 +38,7 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
-    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockStreamProgressReporting) -> Void) -> CancellableCall {
+    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockProgressReporting) -> Void) -> CancellableCall {
         return service.blockStream(startHeight: startHeight, endHeight: endHeight, result: result, handler: handler, progress: progress)
     }
     

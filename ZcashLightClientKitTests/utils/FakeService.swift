@@ -21,7 +21,7 @@ struct MockCancellable: CancellableCall {
 }
 class MockLightWalletService: LightWalletService {
     
-    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockStreamProgressReporting) -> Void) -> CancellableCall {
+    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockProgressReporting) -> Void) -> CancellableCall {
         return MockCancellable()
     }
     

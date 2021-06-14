@@ -187,9 +187,9 @@ class BlockScanOperationTests: XCTestCase {
     }
 }
 
-extension BlockScanOperationTests: BlockStreamProgressDelegate {
-    func progressUpdated(_ progress: BlockStreamProgressReporting) {
-        print("progressHeight: \(progress.progressHeight) startHeight: \(progress.startHeight), targetHeight: \(progress.targetHeight)")
+extension BlockScanOperationTests: CompactBlockProgressDelegate {
+    func progressUpdated(_ progress: CompactBlockProgress) {
+//        print("progressHeight: \(progress.progressHeight) startHeight: \(progress.startHeight), targetHeight: \(progress.targetHeight)")
     }
 }
 
