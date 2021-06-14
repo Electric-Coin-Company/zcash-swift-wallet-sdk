@@ -40,8 +40,9 @@ class ZcashOperation: Operation {
     
     override func start() {
         LoggerProxy.debug("\(self) started")
-        startedHandler?()
         super.start()
+        guard !shouldCancel() else { return }
+        startedHandler?()
     }
     
     func shouldCancel() -> Bool {
