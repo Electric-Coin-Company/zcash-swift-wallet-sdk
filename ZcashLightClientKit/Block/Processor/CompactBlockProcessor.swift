@@ -50,7 +50,8 @@ public struct CompactBlockProcessorNotificationKey {
     public static let enhancementProgress = "CompactBlockProcessorNotificationKey.enhancementProgress"
     public static let previousStatus = "CompactBlockProcessorNotificationKey.previousStatus"
     public static let newStatus = "CompactBlockProcessorNotificationKey.newStatus"
-    
+    public static let currentConnectivityStatus = "CompactBlockProcessorNotificationKey.currentConnectivityStatus"
+    public static let previousConnectivityStatus = "CompactBlockProcessorNotificationKey.previousConnectivityStatus"
 }
 
 public enum CompactBlockProgress {
@@ -103,6 +104,7 @@ public protocol EnhancementProgress {
     var lastFoundTransaction: ConfirmedTransactionEntity? { get }
     var range: CompactBlockRange { get }
 }
+
 public struct EnhancementStreamProgress: EnhancementProgress {
     public var totalTransactions: Int
     public var enhancedTransactions: Int
@@ -112,7 +114,6 @@ public struct EnhancementStreamProgress: EnhancementProgress {
     public var progress: Float {
         totalTransactions > 0 ? Float(enhancedTransactions) / Float(totalTransactions) : 0
     }
-    
 }
 
 
@@ -188,6 +189,12 @@ public extension Notification.Name {
     static let blockProcessorEnhancementProgress = Notification.Name("CompactBlockProcessorEnhancementProgress")
     
     static let blockProcessorStartedFetching = Notification.Name(rawValue: "CompactBlockProcessorStartedFetching")
+    
+    /**
+     Notification sent when the grpc service connection detects a change. Query the user info object  for status change details `currentConnectivityStatus` for current and previous with `previousConnectivityStatus`
+     */
+    static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
+    
 }
 
 /**
@@ -780,7 +787,7 @@ public class CompactBlockProcessor {
         scanEnhanceAdapterOperation.addDependency(scanBlocksOperation)
         enhanceOperation.addDependency(scanEnhanceAdapterOperation)
         enhanceFetchAdapterOperation.addDependency(enhanceOperation)
-        
+        fetchOperation.addDependency(enhanceFetchAdapterOperation)
         
         queue.addOperations([downloadBlockOperation,
                              downloadValidateAdapterOperation,
