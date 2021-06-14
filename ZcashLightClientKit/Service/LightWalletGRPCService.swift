@@ -90,8 +90,12 @@ struct BlockProgress: BlockProgressReporting {
     var progressHeight: BlockHeight
 }
 
+extension Notification.Name {
+    static let connectionStatusChanged = Notification.Name("LightWalletServiceConnectivityStatusChanged")
+}
+
 public class LightWalletGRPCService {
-    
+     
     var queue: DispatchQueue
     let channel: Channel
     let connectionDelegate: ConnectionStatusManager
@@ -488,5 +492,12 @@ extension LightWalletServiceError {
 class ConnectionStatusManager: ConnectivityStateDelegate {
     func connectivityStateDidChange(from oldState: ConnectivityState, to newState: ConnectivityState) {
         LoggerProxy.event("Connection Changed from \(oldState) to \(newState)")
+        NotificationCenter.default.post(
+            name: .blockProcessorConnectivityStateChanged,
+            object: self,
+            userInfo: [
+                CompactBlockProcessorNotificationKey.currentConnectivityStatus : newState,
+                CompactBlockProcessorNotificationKey.previousConnectivityStatus : oldState
+        ])
     }
 }

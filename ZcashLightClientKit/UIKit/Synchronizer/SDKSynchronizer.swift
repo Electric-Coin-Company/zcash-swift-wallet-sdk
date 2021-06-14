@@ -91,6 +91,8 @@ public extension Notification.Name {
      - Note: query userInfo on NotificationKeys.error for an error
       */
     static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
+    
+    static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
 }
 
 /**
@@ -107,9 +109,11 @@ public class SDKSynchronizer: Synchronizer {
         public static let error = "SDKSynchronizer.error"
         public static let currentStatus = "SDKSynchronizer.currentStatus"
         public static let nextStatus = "SDKSynchronizer.nextStatus"
+        public static let currentConnectionState = "SDKSynchronizer.currentConnectionState"
+        public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
     }
     
-    public private(set) var status: Status {
+    public private(set) var status: SyncStatus {
         didSet {
             notify(status: status)
         }
@@ -140,7 +144,7 @@ public class SDKSynchronizer: Synchronizer {
         
     }
     
-    init(status: Status,
+    init(status: SyncStatus,
          initializer: Initializer,
          transactionManager: OutboundTransactionManager,
          transactionRepository: TransactionRepository,
@@ -187,7 +191,7 @@ public class SDKSynchronizer: Synchronizer {
             assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
             LoggerProxy.debug("warning:  synchronizer started when already started")
             return
-        case .stopped, .synced,.disconnected:
+        case .stopped, .synced,.disconnected, .error:
             do {
                 try blockProcessor.start(retry: retry)
             } catch {
@@ -269,9 +273,30 @@ public class SDKSynchronizer: Synchronizer {
                            name: Notification.Name.blockProcessorFoundTransactions,
                            object: processor)
         
+        center.addObserver(self,
+                           selector: #selector(connectivityStateChanged(_:)),
+                           name: Notification.Name.blockProcessorConnectivityStateChanged,
+                           object: processor)
     }
     
     // MARK: Block Processor notifications
+    @objc func connectivityStateChanged(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let previous = userInfo[CompactBlockProcessorNotificationKey.previousConnectivityStatus] as? ConnectivityState,
+              let current = userInfo[CompactBlockProcessorNotificationKey.currentConnectivityStatus] as? ConnectivityState else {
+            LoggerProxy.error("found \(Notification.Name.blockProcessorConnectivityStateChanged) but lacks dictionary information. this is probably a programming error")
+            return
+        }
+        
+        NotificationCenter.default.post(
+            name: .synchronizerConnectionStateChanged,
+            object: self,
+            userInfo: [
+                NotificationKeys.previousConnectionState : ConnectionState(previous),
+                NotificationKeys.currentConnectionState : ConnectionState(current)
+        ])
+        
+    }
     
     @objc func transactionsFound(_ notification: Notification) {
         guard let userInfo = notification.userInfo,
@@ -310,41 +335,41 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func processorStartedDownloading(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.status = .downloading
+            guard let self = self, self.status != .downloading(NullProgress()) else { return }
+            self.status = .downloading(NullProgress())
         }
     }
     
     @objc func processorStartedValidating(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, self.status != .validating else { return }
             self.status = .validating
         }
     }
     
     @objc func processorStartedScanning(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.status = .scanning
+            guard let self = self, self.status != .scanning(NullProgress()) else { return }
+            self.status = .scanning(NullProgress())
         }
     }
     @objc func processorStartedEnhancing(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.status = .enhancing
+            guard let self = self, self.status != .enhancing(NullEnhancementProgress()) else { return }
+            self.status = .enhancing(NullEnhancementProgress())
         }
     }
     
     @objc func processorStartedFetching(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+            guard let self = self, self.status != .fetching else { return }
             self.status = .fetching
         }
     }
     
     @objc func processorStopped(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-        guard let self = self else { return }
+            guard let self = self, self.status != .stopped else { return }
             self.status = .stopped
         }
     }
@@ -355,10 +380,11 @@ public class SDKSynchronizer: Synchronizer {
             guard let self = self else { return }
             if let error = notification.userInfo?[CompactBlockProcessorNotificationKey.error] as? Error {
                 self.notifyFailure(error)
+                self.status = .error(self.mapError(error))
             } else {
                 self.notifyFailure(CompactBlockProcessorError.generalError(message: "This is strange. processorFailed Call received no error message"))
+                self.status = .error(SynchronizerError.generalError(message: "This is strange. processorFailed Call received no error message"))
             }
-            self.status = .disconnected
         }
     }
     
@@ -619,7 +645,7 @@ public class SDKSynchronizer: Synchronizer {
         NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: userInfo)
     }
     
-    private func notifyStatusChange(newValue: Status, oldValue: Status) {
+    private func notifyStatusChange(newValue: SyncStatus, oldValue: SyncStatus) {
         NotificationCenter.default.post(name: .synchronizerStatusWillUpdate,
                                         object: self,
                                         userInfo:
@@ -627,7 +653,7 @@ public class SDKSynchronizer: Synchronizer {
                                               NotificationKeys.nextStatus : newValue ])
     }
     
-    private func notify(status: Status) {
+    private func notify(status: SyncStatus) {
         
         switch status {
         case .disconnected:
@@ -649,6 +675,8 @@ public class SDKSynchronizer: Synchronizer {
             NotificationCenter.default.post(name: Notification.Name.synchronizerEnhancing, object: self)
         case .fetching:
             NotificationCenter.default.post(name: Notification.Name.synchronizerFetching, object: self)
+        case .error(let e):
+            self.notifyFailure(e)
         }
     }
     // MARK: book keeping
@@ -758,5 +786,46 @@ extension SDKSynchronizer {
     
     public var receivedTransactions: [ConfirmedTransactionEntity] {
         (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
+    }
+}
+
+import GRPC
+extension ConnectionState {
+    init(_ connectivityState: ConnectivityState) {
+        switch connectivityState {
+        case .connecting:
+            self = .connecting
+        case .idle:
+            self = .idle
+        case .ready:
+            self = .online
+        case .shutdown:
+            self = .shutdown
+        case .transientFailure:
+            self = .reconnecting
+        }
+    }
+}
+
+
+
+fileprivate struct NullEnhancementProgress: EnhancementProgress {
+    var totalTransactions: Int { 0 }
+    var enhancedTransactions: Int { 0 }
+    var lastFoundTransaction: ConfirmedTransactionEntity? { nil }
+    var range: CompactBlockRange { 0 ... 0 }
+}
+
+fileprivate struct NullProgress: BlockProgressReporting {
+    var startHeight: BlockHeight {
+        0
+    }
+    
+    var targetHeight: BlockHeight {
+        0
+    }
+    
+    var progressHeight: BlockHeight {
+        0
     }
 }
