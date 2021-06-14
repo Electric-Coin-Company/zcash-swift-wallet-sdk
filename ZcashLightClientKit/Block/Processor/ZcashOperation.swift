@@ -38,12 +38,7 @@ class ZcashOperation: Operation {
         self.handlerDispatchQueue = completionDispatchQueue
     }
     
-    override func start() {
-        LoggerProxy.debug("\(self) started")
-        super.start()
-        guard !shouldCancel() else { return }
-        startedHandler?()
-    }
+    
     
     func shouldCancel() -> Bool {
         self.error != nil || isCancelled || dependencyCancelled()

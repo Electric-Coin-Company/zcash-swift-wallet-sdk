@@ -41,8 +41,7 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
             cancel()
             return
         }
-        
-      
+        self.startedHandler?()
         do {
             let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
             do {

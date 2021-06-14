@@ -30,6 +30,7 @@ class CompactBlockDownloadOperation: ZcashOperation {
             cancel()
             return
         }
+        self.startedHandler?()
         do {
             try downloader.downloadBlockRange(range)
         } catch {
@@ -78,6 +79,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             cancel()
             return
         }
+        self.startedHandler?()
         do {
             
             if self.targetHeight == nil {
@@ -178,6 +180,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
             cancel()
             return
         }
+        self.startedHandler?()
         do {
             
             guard startHeight > ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {

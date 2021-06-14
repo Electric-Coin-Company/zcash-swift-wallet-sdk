@@ -49,7 +49,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             cancel()
             return
         }
-        
+        self.startedHandler?()
         // fetch transactions
         
         do {

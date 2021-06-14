@@ -35,6 +35,7 @@ class CompactBlockValidationOperation: ZcashOperation {
             cancel()
             return
         }
+        self.startedHandler?()
         let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb)
         switch result {
         case 0:

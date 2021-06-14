@@ -32,6 +32,7 @@ class CompactBlockScanningOperation: ZcashOperation {
             cancel()
             return
         }
+        self.startedHandler?()
         guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: limit) else {
             self.error = self.rustBackend.lastError() ?? ZcashOperationError.unknown
             LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
@@ -134,6 +135,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
             cancel()
             return
         }
+        self.startedHandler?()
         do {
             if batchSize == 0 {
                 let scanStartTime = Date()
