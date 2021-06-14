@@ -32,6 +32,7 @@ class SendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
+        try! synchronizer.prepare()
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
@@ -41,9 +42,9 @@ class SendViewController: UIViewController {
         super.viewDidAppear(animated)
         do {
             try synchronizer.start(retry: false)
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: .syncing)
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
         } catch {
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: .stopped)
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
             fail(error)
         }
     }
@@ -281,18 +282,28 @@ extension SendViewController: UITextViewDelegate {
 }
 
 extension SDKSynchronizer {
-    static func textFor(state: Status) -> String {
+    static func textFor(state: SyncStatus) -> String {
         switch state {
+        case .downloading(let progress):
+            return "Downloading \(progress.progressHeight)/\(progress.targetHeight)"
+        case .enhancing(let enhanceProgress):
+            return "Enhancing tx \(enhanceProgress.enhancedTransactions) of \(enhanceProgress.totalTransactions)"
+        case .fetching:
+            return "fetching UTXOs"
+        case .scanning(let scanProgress):
+            return "Scanning: \(scanProgress.progressHeight)/\(scanProgress.targetHeight)"
         case .disconnected:
             return "disconnected 💔"
-        case .syncing:
-            return "Syncing Blocks 🤖"
         case .stopped:
             return "Stopped 🚫"
         case .synced:
             return "Synced 😎"
         case .unprepared:
             return "Unprepared 😅"
+        case .validating:
+            return "Validating"
+        case .error(let e):
+            return "Error: \(e.localizedDescription)"
         }
     }
 }

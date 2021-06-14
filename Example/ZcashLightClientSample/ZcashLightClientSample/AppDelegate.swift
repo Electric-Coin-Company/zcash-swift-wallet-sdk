@@ -41,6 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                                      spendParamsURL: try! __spendParamsURL(),
                                      outputParamsURL: try! __outputParamsURL(),
                                      viewingKeys: unifiedViewingKeys,
+                                     walletBirthday: DemoAppConfig.birthdayHeight,
                                      loggerProxy: loggerProxy)
             
             
