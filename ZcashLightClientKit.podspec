@@ -43,7 +43,6 @@ Pod::Spec.new do |s|
       }
       test_spec.dependency 'gRPC-Swift', '= 1.0.0'
       test_spec.dependency 'SQLite.swift', '~> 0.12.2'
-      test_spec.dependency 'MnemonicSwift', '~> 2.0.0'
    end
 
    s.test_spec 'DerivationToolTests' do | test_spec |
