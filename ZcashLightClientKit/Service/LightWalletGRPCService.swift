@@ -104,7 +104,11 @@ public class LightWalletGRPCService {
     let streamingCallTimeout: TimeLimit
     
     public convenience init(endpoint: LightWalletEndpoint) {
-        self.init(host: endpoint.host, port: endpoint.port, secure: endpoint.secure)
+        self.init(host: endpoint.host,
+                  port: endpoint.port,
+                  secure: endpoint.secure,
+                  singleCallTimeout: endpoint.singleCallTimeoutInMillis,
+                  streamingCallTimeout: endpoint.streamingCallTimeoutInMillis)
     }
     
     deinit {
@@ -191,7 +195,7 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
     public func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
-        compactTxStreamer.getLightdInfo(Empty()).response.whenComplete { r in
+        compactTxStreamer.getLightdInfo(Empty(), callOptions: Self.callOptions(timeLimit: .timeout(.seconds(3)))).response.whenComplete { r in
             switch r {
             case .success(let info):
                 result(.success(info))

@@ -87,7 +87,12 @@ public protocol Synchronizer {
     var status: SyncStatus { get }
     
     /**
-     prepares this initializer to operate. Initializes the internal state with the given Extended Viewing Keys and a wallet birthday found in the initializer object
+     reflects current connection state to LightwalletEndpoint
+     */
+    var connectionState: ConnectionState { get }
+    
+    /**
+    prepares this initializer to operate. Initializes the internal state with the given Extended Viewing Keys and a wallet birthday found in the initializer object
      */
     func prepare() throws
     /**
@@ -283,6 +288,15 @@ public enum SyncStatus: Equatable {
     public var isSyncing: Bool {
         switch self {
         case .downloading, .validating, .scanning, .enhancing, .fetching:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    public var isSynced: Bool {
+        switch self {
+        case .synced:
             return true
         default:
             return false

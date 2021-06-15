@@ -956,7 +956,7 @@ public class CompactBlockProcessor {
 
     func severeFailure(_ error: Error) {
         queue.cancelAllOperations()
-        LoggerProxy.error("severe failure: \(error)")
+        LoggerProxy.error("show stoppper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error

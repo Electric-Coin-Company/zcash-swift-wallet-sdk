@@ -125,6 +125,7 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
     
+    public private(set) var connectionState: ConnectionState
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
@@ -150,6 +151,7 @@ public class SDKSynchronizer: Synchronizer {
          transactionRepository: TransactionRepository,
          utxoRepository: UnspentTransactionOutputRepository,
          blockProcessor: CompactBlockProcessor) throws {
+        self.connectionState = .idle
         self.status = status
         self.initializer = initializer
         self.transactionManager = transactionManager
@@ -276,7 +278,7 @@ public class SDKSynchronizer: Synchronizer {
         center.addObserver(self,
                            selector: #selector(connectivityStateChanged(_:)),
                            name: Notification.Name.blockProcessorConnectivityStateChanged,
-                           object: processor)
+                           object: nil)
     }
     
     // MARK: Block Processor notifications
@@ -287,15 +289,18 @@ public class SDKSynchronizer: Synchronizer {
             LoggerProxy.error("found \(Notification.Name.blockProcessorConnectivityStateChanged) but lacks dictionary information. this is probably a programming error")
             return
         }
-        
+        let currentState = ConnectionState(current)
         NotificationCenter.default.post(
             name: .synchronizerConnectionStateChanged,
             object: self,
             userInfo: [
                 NotificationKeys.previousConnectionState : ConnectionState(previous),
-                NotificationKeys.currentConnectionState : ConnectionState(current)
+                NotificationKeys.currentConnectionState : currentState
         ])
         
+        DispatchQueue.main.async { [weak self] in
+            self?.connectionState = currentState
+        }
     }
     
     @objc func transactionsFound(_ notification: Notification) {
