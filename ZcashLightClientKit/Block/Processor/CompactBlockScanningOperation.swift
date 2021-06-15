@@ -65,7 +65,7 @@ public class SDKMetrics {
     static func blockReportFromNotification(_ notification: Notification) -> BlockMetricReport? {
         
         guard notification.name == notificationName,
-              let info  = notification.userInfo,
+              let info = notification.userInfo,
               let startHeight = info[startBlockHeightKey] as? BlockHeight,
               let targetHeight = info[targetBlockHeightKey] as? BlockHeight,
               let task = info[taskReportedKey] as? TaskReported,

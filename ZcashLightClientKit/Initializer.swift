@@ -149,9 +149,7 @@ public class Initializer {
         self.walletBirthday = WalletBirthday.birthday(with: walletBirthday)
     }
     
-    
     /**
-
      Initialize the wallet with the given seed and return the related private keys for each
      account specified or null if the wallet was previously initialized and block data exists on
      disk. When this method returns null, that signals that the wallet will need to retrieve the

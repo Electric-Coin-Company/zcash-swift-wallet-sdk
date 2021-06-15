@@ -314,7 +314,6 @@ extension LightWalletGRPCService: LightWalletService {
                 case .ok:
                     result(.success(blocks.asZcashCompactBlocks()))
                     
-
                 default:
                     result(.failure(.mapCode(status)))
                 }

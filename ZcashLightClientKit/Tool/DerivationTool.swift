@@ -326,9 +326,7 @@ extension DerivationTool: KeyValidation {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
-    
 }
-
 
 fileprivate struct ConcreteUnifiedAddress: UnifiedAddress {
     var tAddress: TransparentAddress

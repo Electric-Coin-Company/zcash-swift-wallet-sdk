@@ -4,7 +4,7 @@
 //
 //  Created by Francisco Gindre on 10/9/20.
 //
-
+//swiftlint:disable force_unwrapping
 import XCTest
 import ZcashLightClientKit
 

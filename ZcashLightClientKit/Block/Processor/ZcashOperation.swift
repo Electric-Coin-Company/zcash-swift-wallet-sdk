@@ -37,9 +37,7 @@ class ZcashOperation: Operation {
         self.init()
         self.handlerDispatchQueue = completionDispatchQueue
     }
-    
-    
-    
+
     func shouldCancel() -> Bool {
         self.error != nil || isCancelled || dependencyCancelled()
     }

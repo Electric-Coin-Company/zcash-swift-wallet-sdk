@@ -74,7 +74,6 @@ public enum ConnectionState {
     case shutdown
 }
 
-
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
 implementations like SdkSynchronizer fulfill.
@@ -291,7 +290,6 @@ public enum SyncStatus: Equatable {
     }
 }
 
-
 /**
  Kind of transactions handled by a Synchronizer
  */
@@ -314,9 +312,6 @@ public enum RewindPolicy {
     case transaction(_ transaction: TransactionEntity)
     case quick
 }
-
-
-
 
 extension SyncStatus  {
     public static func == (lhs: SyncStatus, rhs: SyncStatus) -> Bool {

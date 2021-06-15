@@ -327,9 +327,7 @@ public class SDKSynchronizer: Synchronizer {
               let progress = userInfo[CompactBlockProcessorNotificationKey.progress] as? CompactBlockProgress else {
                 return
         }
-        var blockDate: Date? = nil
     
-        
         self.notify(progress: progress)
     }
     
@@ -608,7 +606,6 @@ public class SDKSynchronizer: Synchronizer {
         
         var height: BlockHeight?
         
-        
         switch policy {
         case .quick:
             break
@@ -637,7 +634,7 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: notify state
     private func notify(progress: CompactBlockProgress) {
         
-        var userInfo = [AnyHashable : Any]()
+        var userInfo = [AnyHashable: Any]()
         userInfo[NotificationKeys.progress] = progress
         userInfo[NotificationKeys.blockHeight] = progress.progressHeight
         userInfo[NotificationKeys.blockDate] = progress.progressHeight
@@ -806,8 +803,6 @@ extension ConnectionState {
         }
     }
 }
-
-
 
 fileprivate struct NullEnhancementProgress: EnhancementProgress {
     var totalTransactions: Int { 0 }

@@ -138,7 +138,6 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     }
 }
 
-
 class CompactBlockBatchDownloadOperation: ZcashOperation {
     enum CompactBlockBatchDownloadOperationError: Error {
         case startHeightMissing

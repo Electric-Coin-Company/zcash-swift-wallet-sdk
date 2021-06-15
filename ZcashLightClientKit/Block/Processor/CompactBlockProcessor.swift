@@ -93,7 +93,6 @@ public enum CompactBlockProgress {
     }
 }
 
-
 protocol EnhancementStreamDelegate: AnyObject {
     func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress)
 }
@@ -115,7 +114,6 @@ public struct EnhancementStreamProgress: EnhancementProgress {
         totalTransactions > 0 ? Float(enhancedTransactions) / Float(totalTransactions) : 0
     }
 }
-
 
 public extension Notification.Name {
     /**
@@ -503,7 +501,6 @@ public class CompactBlockProcessor {
     
     func validateServerInfo(_ info: LightWalletdInfo) throws {
         
-        
         do {
             // check network types
             guard let remoteNetworkType = ZcashSDK.NetworkType(info.chainName) else {
@@ -559,7 +556,6 @@ public class CompactBlockProcessor {
      */
     public func rewindTo(_ height: BlockHeight?) throws -> BlockHeight  {
         self.stop()
-        
         
         let lastDownloaded = try downloader.lastDownloadedBlockHeight()
         let height = Int32(height ?? lastDownloaded)
@@ -810,7 +806,7 @@ public class CompactBlockProcessor {
     
     func notifyProgress(_ progress: CompactBlockProgress) {
         
-        var userInfo = [AnyHashable : Any]()
+        var userInfo = [AnyHashable: Any]()
         userInfo[CompactBlockProcessorNotificationKey.progress] = progress
 
         LoggerProxy.debug("""
@@ -1247,7 +1243,6 @@ extension CompactBlockProcessor: CompactBlockProgressDelegate {
         notifyProgress(progress)
     }
 }
-
 
 extension CompactBlockProcessor: EnhancementStreamDelegate {
     func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress) {

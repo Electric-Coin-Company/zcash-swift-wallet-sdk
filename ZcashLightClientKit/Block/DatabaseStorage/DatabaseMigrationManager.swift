@@ -151,7 +151,6 @@ class MigrationManager {
         }
         let derivationTool = DerivationTool.default
         
-        
         for tuple in zip(accounts, viewingKeys) {
             let tAddr = try derivationTool.deriveTransparentAddressFromPublicKey(tuple.1.extpub)
             var account = tuple.0

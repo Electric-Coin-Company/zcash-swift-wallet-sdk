@@ -125,10 +125,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             let extpubPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extpubCStr.count)
             extpubPtr.initialize(from:extpubCStr, count: extpubCStr.count)
             
-            
             ffiUvks.append(FFIUnifiedViewingKey(extfvk: extfvkPtr, extpub: extpubPtr))
         }
-        
         
         var result = false
         ffiUvks.withContiguousMutableStorageIfAvailable { p in
@@ -137,7 +135,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             
             result = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, slice)
             slice.deinitialize(count: 1)
-//            slice.deallocate()
         }
         
         defer {

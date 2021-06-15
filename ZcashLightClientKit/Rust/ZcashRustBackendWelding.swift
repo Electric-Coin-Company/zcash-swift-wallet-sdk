@@ -72,7 +72,6 @@ public protocol ZcashRustBackendWelding {
      */
     static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool
 
-    
     /**
     initialize the blocks table from a given checkpoint (birthday)
      - Parameters:
@@ -198,7 +197,6 @@ public protocol ZcashRustBackendWelding {
      - Returns: true if the operation succeded or false otherwise
      */
     static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool
-    
     
     /**
      clears the cached utxos for the given address from the specified height on
