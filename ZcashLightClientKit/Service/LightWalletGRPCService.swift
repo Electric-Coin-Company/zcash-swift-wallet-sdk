@@ -195,7 +195,7 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
     public func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
-        compactTxStreamer.getLightdInfo(Empty(), callOptions: Self.callOptions(timeLimit: .timeout(.seconds(3)))).response.whenComplete { r in
+        compactTxStreamer.getLightdInfo(Empty(), callOptions: Self.callOptions(timeLimit: .timeout(.seconds(5)))).response.whenComplete { r in
             switch r {
             case .success(let info):
                 result(.success(info))
