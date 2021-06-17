@@ -367,70 +367,19 @@ public class CompactBlockProcessor {
             return
         }
         
-        validateServer { [weak self] in
-            do {
-                try self?.nextBatch()
-            } catch {
-                self?.severeFailure(error)
-            }
-        }
-    }
-    
-    func validateServer(completionBlock: @escaping (() -> Void)) {
-        
-        guard let downloader = self.downloader as? CompactBlockDownloader else {
-            return
-        }
-        downloader.lightwalletService.getInfo(result: { [weak self] result in
-            guard let self = self else { return }
-            
-            switch result {
-            case .success(let info):
-                DispatchQueue.main.async { [weak self] in
-                    do {
-                        try self?.validateServerInfo(info)
-                        completionBlock()
-                    } catch {
-                        self?.severeFailure(error)
-                    }
-                }
-            case .failure(let error):
-                self.severeFailure(error.mapToProcessorError())
-            }
-        })
-    }
-    
-    func validateServerInfo(_ info: LightWalletdInfo) throws {
-        
+        let birthday = WalletBirthday.birthday(with: config.walletBirthday)
         
         do {
-            // check network types
-            guard let remoteNetworkType = ZcashSDK.NetworkType(info.chainName) else {
-                throw CompactBlockProcessorError.generalError(message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error")
-            }
-            
-            guard remoteNetworkType == ZcashSDK.networkType else {
-                throw CompactBlockProcessorError.networkMismatch(expected: ZcashSDK.networkType, found: remoteNetworkType)
-            }
-            
-            guard config.saplingActivation == info.saplingActivationHeight else {
-                throw CompactBlockProcessorError.saplingActivationMismatch(expected: config.saplingActivation, found: BlockHeight(info.saplingActivationHeight))
-            }
-            
-            // check branch id
-            let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
-            
-            guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID)
-                  else {
-                throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
-            }
-            
-            guard remoteBranchID == localBranch else {
-                throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
-            }
+            try rustBackend.initDataDb(dbData: config.dataDb)
+            try rustBackend.initBlocksTable(dbData: config.dataDb, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree)
+        } catch RustWeldingError.dataDbNotEmpty {
+            // i'm ok
         } catch {
-            throw CompactBlockProcessorError.unspecifiedError(underlyingError: error)
+            throw CompactBlockProcessorError.dataDbInitFailed(path: config.dataDb.absoluteString)
         }
+        
+        try nextBatch()
+        
     }
     
     /**
