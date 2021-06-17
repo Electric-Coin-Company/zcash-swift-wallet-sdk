@@ -506,34 +506,32 @@ public class CompactBlockProcessor {
                                    saplingActivation: BlockHeight,
                                    rustBackend: ZcashRustBackendWelding.Type) throws {
         
-        do {
-            // check network types
-            guard let remoteNetworkType = ZcashSDK.NetworkType(info.chainName) else {
-                throw CompactBlockProcessorError.generalError(message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error")
-            }
-            
-            guard remoteNetworkType == ZcashSDK.networkType else {
-                throw CompactBlockProcessorError.networkMismatch(expected: ZcashSDK.networkType, found: remoteNetworkType)
-            }
-            
-            guard saplingActivation == info.saplingActivationHeight else {
-                throw CompactBlockProcessorError.saplingActivationMismatch(expected: saplingActivation, found: BlockHeight(info.saplingActivationHeight))
-            }
-            
-            // check branch id
-            let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
-            
-            guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID)
-                  else {
-                throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
-            }
-            
-            guard remoteBranchID == localBranch else {
-                throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
-            }
-        } catch {
-            throw CompactBlockProcessorError.unspecifiedError(underlyingError: error)
+  
+        // check network types
+        guard let remoteNetworkType = ZcashSDK.NetworkType(info.chainName) else {
+            throw CompactBlockProcessorError.generalError(message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error")
         }
+        
+        guard remoteNetworkType == ZcashSDK.networkType else {
+            throw CompactBlockProcessorError.networkMismatch(expected: ZcashSDK.networkType, found: remoteNetworkType)
+        }
+        
+        guard saplingActivation == info.saplingActivationHeight else {
+            throw CompactBlockProcessorError.saplingActivationMismatch(expected: saplingActivation, found: BlockHeight(info.saplingActivationHeight))
+        }
+        
+        // check branch id
+        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
+        
+        guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID)
+              else {
+            throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
+        }
+        
+        guard remoteBranchID == localBranch else {
+            throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
+        }
+        
     }
     
     /**

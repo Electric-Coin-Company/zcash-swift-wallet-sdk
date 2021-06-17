@@ -168,7 +168,10 @@ class MockRustBackend: ZcashRustBackendWelding {
     
     
     static func consensusBranchIdFor(height: Int32) throws -> Int32 {
-        -1
+        guard let c = consensusBranchID else {
+            return try rustBackend.consensusBranchIdFor(height: height)
+        }
+        return c
     }
     
     
@@ -189,7 +192,7 @@ class MockRustBackend: ZcashRustBackendWelding {
     static var mockScanblocksSuccessRate: Float?
     static var mockCreateToAddress: Int64?
     static var rustBackend = ZcashRustBackend.self
-    
+    static var consensusBranchID: Int32?
     
     static func lastError() -> RustWeldingError? {
         mockError ?? rustBackend.lastError()

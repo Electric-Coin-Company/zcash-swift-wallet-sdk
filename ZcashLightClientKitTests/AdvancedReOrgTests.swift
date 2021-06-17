@@ -267,7 +267,6 @@ class AdvancedReOrgTests: XCTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
-        var initialVerifiedBalance: Int64 = -1
         
         /*
          2. applyStaged(received_Tx_height)
@@ -281,7 +280,6 @@ class AdvancedReOrgTests: XCTestCase {
          3. sync up to received_Tx_height
          */
         try coordinator.sync(completion: { (synchronizer) in
-            initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
             initialTotalBalance = synchronizer.initializer.getBalance()
             preTxExpectation.fulfill()
         }, error: self.handleError)
