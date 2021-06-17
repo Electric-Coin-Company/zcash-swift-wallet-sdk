@@ -111,17 +111,17 @@ class CompactBlockProcessorTests: XCTestCase {
         var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
         var latestBlockchainHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 1000)
         
-        var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestDownloadedHeight + processorConfig.downloadBatchSize - 1))
+        var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestBlockchainHeight))
         
-        XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
+        XCTAssertEqual(expectedBatchRange, CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight, walletBirthday: processorConfig.walletBirthday))
         
         // Test mid-range
         latestDownloadedHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + ZcashSDK.DEFAULT_BATCH_SIZE)
         latestBlockchainHeight = BlockHeight(ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 1000)
         
-        expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper:latestDownloadedHeight + processorConfig.downloadBatchSize))
+        expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
         
-        XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
+        XCTAssertEqual(expectedBatchRange, CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight, walletBirthday: processorConfig.walletBirthday))
         
         // Test last batch range
         
@@ -130,7 +130,7 @@ class CompactBlockProcessorTests: XCTestCase {
         
         expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
         
-        XCTAssertEqual(expectedBatchRange, processor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight))
+        XCTAssertEqual(expectedBatchRange, CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight, walletBirthday: processorConfig.walletBirthday))
     }
     
     func testDetermineLowerBoundPastBirthday() {

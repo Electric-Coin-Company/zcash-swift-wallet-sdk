@@ -486,11 +486,14 @@ public class CompactBlockProcessor {
             switch result {
             case .success(let info):
                 DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
                     do {
-                        try self?.validateServerInfo(info)
+                        try Self.validateServerInfo(info,
+                                                    saplingActivation: self.config.saplingActivation,
+                                                    rustBackend: self.rustBackend)
                         completionBlock()
                     } catch {
-                        self?.severeFailure(error)
+                        self.severeFailure(error)
                     }
                 }
             case .failure(let error):
@@ -499,7 +502,9 @@ public class CompactBlockProcessor {
         })
     }
     
-    func validateServerInfo(_ info: LightWalletdInfo) throws {
+    static func validateServerInfo(_ info: LightWalletdInfo,
+                                   saplingActivation: BlockHeight,
+                                   rustBackend: ZcashRustBackendWelding.Type) throws {
         
         do {
             // check network types
@@ -511,8 +516,8 @@ public class CompactBlockProcessor {
                 throw CompactBlockProcessorError.networkMismatch(expected: ZcashSDK.networkType, found: remoteNetworkType)
             }
             
-            guard config.saplingActivation == info.saplingActivationHeight else {
-                throw CompactBlockProcessorError.saplingActivationMismatch(expected: config.saplingActivation, found: BlockHeight(info.saplingActivationHeight))
+            guard saplingActivation == info.saplingActivationHeight else {
+                throw CompactBlockProcessorError.saplingActivationMismatch(expected: saplingActivation, found: BlockHeight(info.saplingActivationHeight))
             }
             
             // check branch id
@@ -593,7 +598,7 @@ public class CompactBlockProcessor {
         // get latest block height from lightwalletd
         
         if self.latestBlockHeight > latestDownloadedBlockHeight {
-            self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+            self.processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight, walletBirthday: config.walletBirthday))
         } else {
             self.downloader.latestBlockHeight { [weak self] (result) in
                 guard let self = self else { return }
@@ -611,7 +616,7 @@ public class CompactBlockProcessor {
                             self.processingFinished(height: latestDownloadedBlockHeight)
                         } else {
                             
-                            self.processNewBlocks(range: self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight))
+                            self.processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight, walletBirthday: self.config.walletBirthday))
                         }
                     }
                 case .failure(let e):
@@ -850,7 +855,7 @@ public class CompactBlockProcessor {
             NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height, CompactBlockProcessorNotificationKey.rewindHeight : rewindHeight])
             
             // process next batch
-            processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
+            processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
         } catch {
             self.fail(error)
         }
@@ -923,9 +928,9 @@ public class CompactBlockProcessor {
         self.backoffTimer = timer
     }
     
-    func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight) -> CompactBlockRange {
+    static func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight, walletBirthday: BlockHeight) -> CompactBlockRange {
         
-        let lowerBound = latestDownloadedHeight <= config.walletBirthday ? config.walletBirthday : latestDownloadedHeight + 1
+        let lowerBound = latestDownloadedHeight <= walletBirthday ? walletBirthday : latestDownloadedHeight + 1
         
         let upperBound = latestHeight
         return lowerBound ... upperBound
@@ -947,7 +952,7 @@ public class CompactBlockProcessor {
             try downloader.rewind(to: max(range.lowerBound, self.config.walletBirthday))
             
             // process next batch
-            processNewBlocks(range: self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight()))
+            processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
         } catch {
             self.fail(error)
         }
