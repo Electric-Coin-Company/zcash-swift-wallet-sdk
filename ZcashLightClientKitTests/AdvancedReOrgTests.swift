@@ -44,13 +44,13 @@ class AdvancedReOrgTests: XCTestCase {
     
     @objc func handleReorg(_ notification: Notification) {
         
-        guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight
-//            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
+        guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
+            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
             else {
                 XCTFail("empty reorg notification")
                 return
         }
-        logger!.debug("--- REORG DETECTED \(reorgHeight)---", file: #file, function: #function, line: #line)
+        logger!.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
 //        XCTAssertEqual(rewindHeight, expectedRewindHeight)
         XCTAssertEqual(reorgHeight, expectedReorgHeight)
         reorgExpectation.fulfill()
@@ -679,8 +679,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
          1a. sync to latest height
          */
-        try coordinator.sync(completion: { (s) in
-            
+        try coordinator.sync(completion: { (s) in   
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
         
@@ -953,6 +952,9 @@ class AdvancedReOrgTests: XCTestCase {
         sleep(2)
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
+        /**
+         1. sync prior to incomingTxHeight - 1 to get balances there
+         */
         try coordinator.sync(completion: { (s) in
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
@@ -966,12 +968,18 @@ class AdvancedReOrgTests: XCTestCase {
         
         let secondSyncExpectation = XCTestExpectation(description: "second sync expectation")
         
+        /**
+         2. sync to latest height
+         */
         try coordinator.sync(completion: { (s) in
             secondSyncExpectation.fulfill()
         }, error: self.handleError)
         
         wait(for: [secondSyncExpectation], timeout: 10)
         
+        /**
+         3. cause reorg
+         */
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txReOrgRemovesInboundTxAfter))
         
         try coordinator.applyStaged(blockheight: 663200)
