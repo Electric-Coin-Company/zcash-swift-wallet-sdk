@@ -206,7 +206,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
                         localError = error
                         retries = retries + 1
                     }
-                } while !success && retries < maxRetries
+                } while !isCancelled && !success && retries < maxRetries
                 if retries >= maxRetries {
                     throw CompactBlockBatchDownloadOperationError.batchDownloadFailed(range: range, error: localError)
                 }
