@@ -469,13 +469,7 @@ public class CompactBlockProcessor {
             return
         }
         
-        validateServer { [weak self] in
-            do {
-                try self?.nextBatch()
-            } catch {
-                self?.severeFailure(error)
-            }
-        }
+        self.nextBatch()
     }
     
     func validateServer(completionBlock: @escaping (() -> Void)) {
@@ -585,43 +579,31 @@ public class CompactBlockProcessor {
         return BlockHeight(rewindHeight)
     }
         
-    private func nextBatch() throws {
-        // get latest block height
-        
-        let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.lastDownloadedBlockHeight())
-        
-        if self.lowerBoundHeight == nil {
-            self.lowerBoundHeight = latestDownloadedBlockHeight
-        }
-        // get latest block height from lightwalletd
-        
-        if self.latestBlockHeight > latestDownloadedBlockHeight {
-            self.processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight, walletBirthday: config.walletBirthday))
-        } else {
-            self.downloader.latestBlockHeight { [weak self] (result) in
+    private func nextBatch() {
+        self.state = .downloading
+        NextStateHelper.nextState(service: self.service, downloader: self.downloader, config: self.config, rustBackend: self.rustBackend, queue: nil) { result in
+            
+            DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 switch result {
-                case .success(let blockHeight):
-                    DispatchQueue.main.async { [weak self] in
-                        guard let self = self else { return }
-                        self.latestBlockHeight = blockHeight
-                        
-                        if self.latestBlockHeight == latestDownloadedBlockHeight  {
-                            self.processingFinished(height: blockHeight)
-                        } else if self.latestBlockHeight < latestDownloadedBlockHeight {
-                            // Lightwalletd might be syncing
-                            LoggerProxy.info("Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadedBlockHeight) while latest blockheight is reported at: \(blockHeight)")
-                            self.processingFinished(height: latestDownloadedBlockHeight)
-                        } else {
-                            
-                            self.processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: self.latestBlockHeight, latestDownloadedHeight: latestDownloadedBlockHeight, walletBirthday: self.config.walletBirthday))
-                        }
+                case .success(let nextState):
+                    switch nextState {
+                    case .finishProcessing(let height):
+                        self.latestBlockHeight = height
+                        self.processingFinished(height: height)
+                    case .processNewBlocks(let range):
+                        self.latestBlockHeight = range.upperBound
+                        self.lowerBoundHeight = range.lowerBound
+                        self.processNewBlocks(range: range)
+                    case .wait(let latestHeight, let latestDownloadHeight):
+                        // Lightwalletd might be syncing
+                        self.lowerBoundHeight = latestDownloadHeight
+                        self.latestBlockHeight = latestHeight
+                        LoggerProxy.info("Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight) while latest blockheight is reported at: \(latestHeight)")
+                        self.processingFinished(height: latestDownloadHeight)
                     }
-                case .failure(let e):
-                    DispatchQueue.main.async { [weak self] in
-                        guard let self = self else { return }
-                        self.fail(e)
-                    }
+                case .failure(let error):
+                    self.severeFailure(error)
                 }
             }
         }
@@ -782,6 +764,7 @@ public class CompactBlockProcessor {
         
         downloadValidateAdapterOperation.addDependency(downloadBlockOperation)
         validateChainOperation.addDependency(downloadValidateAdapterOperation)
+        validateScanningAdapterOperation.addDependency(validateChainOperation)
         scanBlocksOperation.addDependency(validateScanningAdapterOperation)
         scanEnhanceAdapterOperation.addDependency(scanBlocksOperation)
         enhanceOperation.addDependency(scanEnhanceAdapterOperation)
@@ -853,7 +836,7 @@ public class CompactBlockProcessor {
             NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height, CompactBlockProcessorNotificationKey.rewindHeight : rewindHeight])
             
             // process next batch
-            processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
+            self.nextBatch()
         } catch {
             self.fail(error)
         }
@@ -879,11 +862,7 @@ public class CompactBlockProcessor {
             return
         }
         
-        do {
-            try nextBatch()
-        } catch {
-            fail(error)
-        }
+        nextBatch()
     }
     
     private func processingFinished(height: BlockHeight) {
@@ -950,7 +929,8 @@ public class CompactBlockProcessor {
             try downloader.rewind(to: max(range.lowerBound, self.config.walletBirthday))
             
             // process next batch
-            processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
+//            processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
+            nextBatch()
         } catch {
             self.fail(error)
         }
@@ -1252,10 +1232,65 @@ extension CompactBlockProcessor: EnhancementStreamDelegate {
         NotificationCenter.default.post(name: .blockProcessorEnhancementProgress, object: self, userInfo: [ CompactBlockProcessorNotificationKey.enhancementProgress : progress])
     }
 }
+
 public extension BlockProgressReporting {
     var progress: Float {
         let overall = self.targetHeight - self.startHeight
         
         return overall > 0 ? Float((self.progressHeight - self.startHeight)) / Float(overall) : 0
+    }
+}
+
+
+extension CompactBlockProcessor {
+    
+    class NextStateHelper {
+        
+        static func nextState(service: LightWalletService,
+                              downloader: CompactBlockDownloading,
+                              config: Configuration,
+                              rustBackend: ZcashRustBackendWelding.Type,
+                              queue: DispatchQueue?,
+                              result: @escaping (Result<FigureNextBatchOperation.NextState, Error>) -> Void) {
+            
+            let dispatchQueue = queue ?? DispatchQueue.global(qos: .userInitiated)
+            
+            dispatchQueue.async {
+                do {
+                    let r = try self.nextState(service: service,
+                                               downloader: downloader,
+                                               config: config,
+                                               rustBackend: rustBackend)
+                    result(.success(r))
+                } catch {
+                    result(.failure(error))
+                }
+            }
+        }
+        
+        static func nextState(service: LightWalletService,
+                              downloader: CompactBlockDownloading,
+                              config: Configuration,
+                              rustBackend: ZcashRustBackendWelding.Type) throws -> FigureNextBatchOperation.NextState {
+            
+           
+            let info = try service.getInfo()
+            
+            try CompactBlockProcessor.validateServerInfo(info, saplingActivation: config.saplingActivation, rustBackend: rustBackend)
+            
+            // get latest block height
+            let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.lastDownloadedBlockHeight())
+            
+            let latestBlockheight = try service.latestBlockHeight()
+            
+            if latestDownloadedBlockHeight < latestBlockheight {
+                return .processNewBlocks(range: CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockheight, latestDownloadedHeight: latestDownloadedBlockHeight, walletBirthday: config.walletBirthday))
+            } else if latestBlockheight == latestDownloadedBlockHeight {
+                return .finishProcessing(height: latestBlockheight)
+            }
+                
+            return .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestBlockheight)
+                
+        }
     }
 }

@@ -40,21 +40,10 @@ class FigureNextBatchOperation: ZcashOperation {
         self.startedHandler?()
         
         do {
-            let info = try service.getInfo()
-            
-            try CompactBlockProcessor.validateServerInfo(info, saplingActivation: config.saplingActivation, rustBackend: self.rustBackend)
-            
-            // get latest block height
-            let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.lastDownloadedBlockHeight())
-            let latestBlockheight = BlockHeight(info.blockHeight)
-            
-            if latestDownloadedBlockHeight < latestBlockheight {
-                result = .processNewBlocks(range: CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockheight, latestDownloadedHeight: latestDownloadedBlockHeight, walletBirthday: config.walletBirthday))
-            } else if latestBlockheight == latestDownloadedBlockHeight {
-                result = .finishProcessing(height: latestBlockheight)
-            } else {
-                result = .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestBlockheight)
-            }
+            result = try CompactBlockProcessor.NextStateHelper.nextState(service: self.service,
+                                                                         downloader: self.downloader,
+                                                                         config: self.config,
+                                                                         rustBackend: self.rustBackend)
         } catch {
             self.fail(error: error)
         }
