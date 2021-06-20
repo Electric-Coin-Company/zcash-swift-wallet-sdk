@@ -31,8 +31,12 @@ Pod::Spec.new do |s|
     s.script_phase = {
       :name => 'Build generate constants and build librustzcash',
       :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_zcashsdk_constants.sh && sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
-      :execution_position => :before_compile
+      :execution_position => :before_compile,
+      :output_files => [
+         '${PODS_TARGET_SRCROOT}/ZcashLightClientKit/Generated/WalletBirthday+saplingtree.generated.swift',
+         '${PODS_TARGET_SRCROOT}/ZcashLightClientKit/Generated/ZcashSDK.generated.swift']
    }
+
    s.test_spec 'Tests' do | test_spec |
       test_spec.source_files = 'ZcashLightClientKitTests/**/*.{swift}'
       test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
