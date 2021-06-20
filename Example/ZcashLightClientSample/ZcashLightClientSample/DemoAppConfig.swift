@@ -12,9 +12,9 @@ import MnemonicSwift
 struct DemoAppConfig {
     static var host = ZcashSDK.isMainnet ? "lightwalletd.electriccoin.co" : "lightwalletd.testnet.electriccoin.co"
     static var port: Int = 9067
-    static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 935000 : 620_000
+    static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 935000 : 1386000
     static var network = ZcashSDK.isMainnet ? ZcashNetwork.mainNet : ZcashNetwork.testNet
-    static var seed = ZcashSDK.isMainnet ? try! Mnemonic.deterministicSeedBytes(from: "old wise letter cigar ready miracle settle crystal bag amateur dial index slot dune crisp ready chest advice camera always drive dentist sport smoke") : Array("testreferencealicetestreferencealice".utf8)
+    static var seed = try! Mnemonic.deterministicSeedBytes(from: "live combine flight accident slow soda mind bright absent bid hen shy decade biology amazing mix enlist ensure biology rhythm snap duty soap armor")
     static var address: String {
         "\(host):\(port)"
     }

@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 class FigureNextBatchOperation: ZcashOperation {
     enum NextState {
         case finishProcessing(height: BlockHeight)

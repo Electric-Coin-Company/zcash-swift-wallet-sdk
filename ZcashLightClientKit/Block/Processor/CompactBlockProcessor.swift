@@ -500,7 +500,6 @@ public class CompactBlockProcessor {
                                    saplingActivation: BlockHeight,
                                    rustBackend: ZcashRustBackendWelding.Type) throws {
         
-  
         // check network types
         guard let remoteNetworkType = ZcashSDK.NetworkType(info.chainName) else {
             throw CompactBlockProcessorError.generalError(message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error")
@@ -1241,7 +1240,6 @@ public extension BlockProgressReporting {
     }
 }
 
-
 extension CompactBlockProcessor {
     
     class NextStateHelper {
@@ -1272,8 +1270,7 @@ extension CompactBlockProcessor {
                               downloader: CompactBlockDownloading,
                               config: Configuration,
                               rustBackend: ZcashRustBackendWelding.Type) throws -> FigureNextBatchOperation.NextState {
-            
-           
+                       
             let info = try service.getInfo()
             
             try CompactBlockProcessor.validateServerInfo(info, saplingActivation: config.saplingActivation, rustBackend: rustBackend)
