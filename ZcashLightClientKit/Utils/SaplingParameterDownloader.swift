@@ -109,11 +109,11 @@ public class SaplingParameterDownloader {
         (try? FileManager.default.attributesOfItem(atPath: url.path)) != nil
     }
     
-    static var spendParamsURLString: String {
+    public static var spendParamsURLString: String {
         return ZcashSDK.CLOUD_PARAM_DIR_URL + ZcashSDK.SPEND_PARAM_FILE_NAME
     }
     
-    static var outputParamsURLString: String {
+    public static var outputParamsURLString: String {
         return ZcashSDK.CLOUD_PARAM_DIR_URL + ZcashSDK.OUTPUT_PARAM_FILE_NAME
     }
 }
