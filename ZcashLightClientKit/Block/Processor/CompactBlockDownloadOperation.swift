@@ -90,7 +90,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             }
             let latestDownloaded = try storage.latestHeight()
             let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
-            guard startHeight > ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
+            guard startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
                 throw CompactBlockStreamDownloadOperationError.startHeightMissing
             }
             
@@ -182,7 +182,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
         self.startedHandler?()
         do {
             
-            guard startHeight > ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
+            guard startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
                 throw CompactBlockBatchDownloadOperationError.startHeightMissing
             }
             var currentHeight = startHeight
