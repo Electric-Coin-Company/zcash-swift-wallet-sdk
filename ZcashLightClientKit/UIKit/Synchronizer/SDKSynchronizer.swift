@@ -643,7 +643,7 @@ public class SDKSynchronizer: Synchronizer {
         userInfo[NotificationKeys.progress] = progress
         userInfo[NotificationKeys.blockHeight] = progress.progressHeight
         userInfo[NotificationKeys.blockDate] = progress.progressHeight
-        
+        self.status = SyncStatus(progress)
         NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: userInfo)
     }
     

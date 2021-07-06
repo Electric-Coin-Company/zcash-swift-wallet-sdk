@@ -393,3 +393,23 @@ extension SyncStatus  {
         }
     }
 }
+
+
+extension SyncStatus {
+    init(_ blockProcessorProgress: CompactBlockProgress) {
+        switch blockProcessorProgress {
+            
+            case .download(let progressReport):
+                self = SyncStatus.downloading(progressReport)
+            case .validate:
+                self = .validating
+            case .scan(let progressReport):
+                self = .scanning(progressReport)
+            case .enhance(let enhancingReport):
+                self = .enhancing(enhancingReport)
+            case .fetch:
+                self = .fetching
+            
+        }
+    }
+}
