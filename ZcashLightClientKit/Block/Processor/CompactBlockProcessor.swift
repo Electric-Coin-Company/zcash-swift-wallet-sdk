@@ -36,8 +36,8 @@ public enum CompactBlockProcessorError: Error {
  */
 public struct CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
-    public static let progressStartHeight = "CompactBlockProcessorNotificationKey.progressStartHeight"
-    public static let progressTargetHeight = "CompactBlockProcessorNotificationKey.progressTargetHeight"
+//    public static let progressStartHeight = "CompactBlockProcessorNotificationKey.progressStartHeight"
+//    public static let progressTargetHeight = "CompactBlockProcessorNotificationKey.progressTargetHeight"
     public static let progressBlockTime = "CompactBlockProcessorNotificationKey.progressBlockTime"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
@@ -90,6 +90,15 @@ public enum CompactBlockProgress {
             return Date(timeIntervalSince1970: time)
         }
         return nil
+    }
+    
+    public var targetHeight: BlockHeight? {
+        switch self {
+        case .download(let p), .scan(let p):
+            return p.targetHeight
+        default:
+            return nil
+        }
     }
 }
 
