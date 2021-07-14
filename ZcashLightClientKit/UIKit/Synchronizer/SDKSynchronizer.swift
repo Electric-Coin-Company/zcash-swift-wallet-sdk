@@ -237,10 +237,17 @@ public class SDKSynchronizer: Synchronizer {
                            selector: #selector(processorStartedScanning(_:)),
                            name: Notification.Name.blockProcessorStartedScanning,
                            object: processor)
+        
         center.addObserver(self,
-                           selector: #selector(processorStartedScanning(_:)),
-                           name: Notification.Name.blockProcessorStartedScanning,
+                           selector: #selector(processorStartedEnhancing(_:)),
+                           name: Notification.Name.blockProcessorStartedEnhancing,
                            object: processor)
+        
+        center.addObserver(self,
+                           selector: #selector(processorStartedFetching(_:)),
+                           name: Notification.Name.blockProcessorStartedFetching,
+                           object: processor)
+        
         center.addObserver(self,
                            selector: #selector(processorStopped(_:)),
                            name: Notification.Name.blockProcessorStopped,
@@ -739,7 +746,7 @@ public class SDKSynchronizer: Synchronizer {
             case .generalError(let message):
                 return SynchronizerError.generalError(message: message)
             case .maxAttemptsReached(attempts: let attempts):
-                return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)    
+                return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)
             case .grpcError(let statusCode, let message):
                 return SynchronizerError.connectionError(status: statusCode, message: message)
             case .connectionTimeout:
@@ -829,3 +836,4 @@ fileprivate struct NullProgress: BlockProgressReporting {
         0
     }
 }
+

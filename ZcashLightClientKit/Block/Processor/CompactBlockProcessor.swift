@@ -636,27 +636,31 @@ public class CompactBlockProcessor {
                                                                          progressDelegate: self)
         
         downloadBlockOperation.startedHandler = { [weak self] in
-            self?.state = .downloading
+            DispatchQueue.main.async {
+                self?.state = .downloading
+            }
         }
         
         downloadBlockOperation.errorHandler = { [weak self] (error) in
-            guard let self = self else { return }
-            
-            self.processingError = error
-            self.fail(error)
-            
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.processingError = error
+                self.fail(error)
+            }
         }
+        
         let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
         
         let downloadValidateAdapterOperation = BlockOperation { [weak validateChainOperation, weak downloadBlockOperation] in
-
             validateChainOperation?.error = downloadBlockOperation?.error
         }
         
         validateChainOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
-                self?.state = .stopped
-                LoggerProxy.debug("Warning: validateChainOperation operation cancelled")
+                DispatchQueue.main.async {
+                    self?.state = .stopped
+                    LoggerProxy.debug("Warning: validateChainOperation operation cancelled")
+                }
                 return
             }
             
@@ -664,30 +668,34 @@ public class CompactBlockProcessor {
         }
         
         validateChainOperation.errorHandler = { [weak self] (error) in
-            guard let self = self else { return }
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
 
-            guard let validationError = error as? CompactBlockValidationError else {
-                LoggerProxy.error("Warning: validateChain operation returning generic error: \(error)")
-                return
-            }
-            
-            switch validationError {
-            case .validationFailed(let height):
-                LoggerProxy.debug("chain validation at height: \(height)")
-                self.validationFailed(at: height)
-            case .failedWithError(let e):
-                guard let validationFailure = e else {
-                    LoggerProxy.error("validation failed without a specific error")
-                    self.fail(CompactBlockProcessorError.generalError(message: "validation failed without a specific error"))
+                guard let validationError = error as? CompactBlockValidationError else {
+                    LoggerProxy.error("Warning: validateChain operation returning generic error: \(error)")
                     return
                 }
                 
-                self.fail(validationFailure)
+                switch validationError {
+                case .validationFailed(let height):
+                    LoggerProxy.debug("chain validation at height: \(height)")
+                    self.validationFailed(at: height)
+                case .failedWithError(let e):
+                    guard let validationFailure = e else {
+                        LoggerProxy.error("validation failed without a specific error")
+                        self.fail(CompactBlockProcessorError.generalError(message: "validation failed without a specific error"))
+                        return
+                    }
+                    
+                    self.fail(validationFailure)
+                }
             }
         }
         
         validateChainOperation.startedHandler = { [weak self] in
-            self?.state = .validating
+            DispatchQueue.main.async { [weak self] in
+                self?.state = .validating
+            }
         }
         
         let scanBlocksOperation = CompactBlockBatchScanningOperation(rustWelding: rustBackend, cacheDb: config.cacheDb, dataDb: config.dataDb, transactionRepository: transactionRepository, range: range, progressDelegate: self)
@@ -696,28 +704,36 @@ public class CompactBlockProcessor {
             scanBlocksOperation?.error = validateChainOperation?.error
         }
         scanBlocksOperation.startedHandler = { [weak self] in
-            self?.state = .scanning
+            DispatchQueue.main.async { [weak self] in
+                self?.state = .scanning
+            }
         }
         
         scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
             guard !cancelled else {
-                self?.state = .stopped
-                LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
+                DispatchQueue.main.async { [weak self] in
+                    self?.state = .stopped
+                    LoggerProxy.debug("Warning: scanBlocksOperation operation cancelled")
+                }
                 return
             }
         }
         
         scanBlocksOperation.errorHandler = { [weak self] (error) in
-            guard let self = self else { return }
-            
-            self.processingError = error
-            self.fail(error)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.processingError = error
+                self.fail(error)
+            }
         }
         
         let enhanceOperation = CompactBlockEnhancementOperation(rustWelding: rustBackend, dataDb: config.dataDb, downloader: downloader, repository: transactionRepository, range: range.blockRange())
         
         enhanceOperation.startedHandler = {
             LoggerProxy.debug("Started Enhancing range: \(range)")
+            DispatchQueue.main.async { [weak self] in
+                self?.state = .enhancing
+            }
         }
         
         enhanceOperation.txFoundHandler = { [weak self] (txs,range) in
@@ -732,10 +748,12 @@ public class CompactBlockProcessor {
         }
         
         enhanceOperation.errorHandler = { [weak self] (error) in
-            guard let self = self else { return }
-            
-            self.processingError = error
-            self.fail(error)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                self.processingError = error
+                self.fail(error)
+            }
         }
         
         let scanEnhanceAdapterOperation = BlockOperation { [weak enhanceOperation, weak scanBlocksOperation] in
@@ -745,7 +763,9 @@ public class CompactBlockProcessor {
         let fetchOperation = FetchUnspentTxOutputsOperation(accountRepository: accountRepository, downloader: self.downloader, rustbackend: rustBackend, dataDb: config.dataDb, startHeight: config.walletBirthday)
         
         fetchOperation.startedHandler = { [weak self] in
-            self?.state = .fetching
+            DispatchQueue.main.async { [weak self] in
+                self?.state = .fetching
+            }
         }
         
         fetchOperation.completionHandler = {  [weak self] (finished, cancelled) in
@@ -753,14 +773,17 @@ public class CompactBlockProcessor {
                 LoggerProxy.debug("Warning: fetch operation on range \(range) cancelled")
                 return
             }
-            
-            self?.processBatchFinished(range: range)
+            DispatchQueue.main.async { [weak self] in
+                self?.processBatchFinished(range: range)
+            }
         }
         fetchOperation.errorHandler = { [weak self] (error) in
-            guard let self = self else { return }
-            
-            self.processingError = error
-            self.fail(error)
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                self.processingError = error
+                self.fail(error)
+            }
         }
         fetchOperation.fetchedUTXOsHandler = { result in
             NotificationCenter.default.post(name: .blockProcessorStoredUTXOs, object: self, userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs : result])
@@ -1300,3 +1323,4 @@ extension CompactBlockProcessor {
         }
     }
 }
+
