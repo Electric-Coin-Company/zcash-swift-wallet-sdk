@@ -171,7 +171,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
         self.batch = batchSize
         self.maxRetries = maxRetries
         super.init()
-        self.name = "Download Stream Operation"
+        self.name = "Download Batch Operation"
     }
     
     override func main() {
@@ -185,8 +185,14 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
             guard startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
                 throw CompactBlockBatchDownloadOperationError.startHeightMissing
             }
+            
+            var localDownloadedHeight = try self.storage.latestHeight()
+            if localDownloadedHeight != startHeight {
+                LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
+                startHeight = localDownloadedHeight + 1
+            }
             var currentHeight = startHeight
-            self.progressDelegate?.progressUpdated(.download(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: currentHeight)))
+            self.progressDelegate?.progressUpdated(.download(BlockProgress(startHeight: currentHeight, targetHeight: targetHeight, progressHeight: currentHeight)))
             
             while !isCancelled && currentHeight <= targetHeight {
                 var retries = 0
