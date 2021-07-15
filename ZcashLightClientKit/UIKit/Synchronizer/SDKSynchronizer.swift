@@ -190,8 +190,8 @@ public class SDKSynchronizer: Synchronizer {
              .scanning,
              .enhancing,
              .fetching:
-            assert(true,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
-            LoggerProxy.debug("warning:  synchronizer started when already started")
+//            assert(false,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
+            LoggerProxy.warn("warning: synchronizer started when already started")
             return
         case .stopped, .synced,.disconnected, .error:
             do {
@@ -213,6 +213,7 @@ public class SDKSynchronizer: Synchronizer {
         }
         
         blockProcessor.stop(cancelTasks: true)
+        self.status = .stopped
     }
     
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
