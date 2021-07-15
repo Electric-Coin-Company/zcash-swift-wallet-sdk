@@ -124,12 +124,12 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var progress: Float = 0.0
     public private(set) var blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
-    
+    public private(set)var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState
+    
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
-    
     /**
      Creates an SDKSynchronizer instance
      - Parameter initializer: a wallet Initializer object
@@ -158,6 +158,7 @@ public class SDKSynchronizer: Synchronizer {
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
+        self.latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday.height
         self.subscribeToProcessorNotifications(self.blockProcessor)
     }
     
@@ -408,8 +409,12 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func processorFinished(_ notification: Notification) {
         // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories
+            
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
+                if let blockHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.latestScannedBlockHeight] as? BlockHeight {
+                    self.latestScannedHeight = blockHeight
+                }
                 self.refreshPendingTransactions()
                 self.status = .synced
             }
@@ -671,8 +676,12 @@ public class SDKSynchronizer: Synchronizer {
         case .stopped:
             NotificationCenter.default.post(name: Notification.Name.synchronizerStopped, object: self)
         case .synced:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerSynced, object: self)
-     
+            NotificationCenter.default.post(
+                name: Notification.Name.synchronizerSynced,
+                object: self,
+                userInfo: [
+                    SDKSynchronizer.NotificationKeys.blockHeight : self.latestScannedHeight,
+                ])
         case .unprepared:
             break
         case .downloading:
