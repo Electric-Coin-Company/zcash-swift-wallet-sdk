@@ -1,6 +1,6 @@
 [package]
 name = "libzcashlc"
-version = "0.0.6"
+version = "0.0.7"
 authors = ["Jack Grigg <jack@z.cash>",
             "Francisco Gindre <francisco@z.cash>",
 ]
@@ -50,5 +50,5 @@ zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", branch = "
 zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa" }
 
 [features]
-mainnet = ["zcash_client_sqlite/mainnet", "zcash_client_backend/transparent-inputs", "zcash_primitives/transparent-inputs"]
-testnet = ["zcash_client_backend/transparent-inputs", "zcash_primitives/transparent-inputs"]
+mainnet = ["zcash_client_sqlite/mainnet"]
+testnet = []
