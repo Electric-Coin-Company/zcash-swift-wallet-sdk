@@ -9,6 +9,9 @@
 import Foundation
 
 class ZcashRustBackend: ZcashRustBackendWelding {
+    static var networkId: UInt32 {
+        ZcashSDK.isMainnet ? 1 : 0
+    }
     
     static func lastError() -> RustWeldingError? {
         guard let message = getLastError() else { return nil }
@@ -38,7 +41,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
      */
     static func initDataDb(dbData: URL) throws {
         let dbData = dbData.osStr()
-        guard zcashlc_init_data_database(dbData.0, dbData.1) != 0 else {
+        guard zcashlc_init_data_database(dbData.0, dbData.1, networkId) != 0 else {
             if let error = lastError() {
                 throw throwDataDbError(error)
             }
@@ -51,7 +54,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return false
         }
         
-        guard zcashlc_is_valid_shielded_address([CChar](address.utf8CString)) else {
+        guard zcashlc_is_valid_shielded_address([CChar](address.utf8CString), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -65,7 +68,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                    return false
         }
         
-        guard zcashlc_is_valid_transparent_address([CChar](address.utf8CString)) else {
+        guard zcashlc_is_valid_transparent_address([CChar](address.utf8CString), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -79,7 +82,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return false
         }
         
-        guard zcashlc_is_valid_viewing_key([CChar](key.utf8CString)) else {
+        guard zcashlc_is_valid_viewing_key([CChar](key.utf8CString), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -91,7 +94,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]? {
         let dbData = dbData.osStr()
         var capacity = UInt(0);
-        let extsksCStr = zcashlc_init_accounts_table(dbData.0, dbData.1, seed, UInt(seed.count), accounts, &capacity)
+        let extsksCStr = zcashlc_init_accounts_table(dbData.0, dbData.1, seed, UInt(seed.count), accounts, &capacity, networkId)
         if extsksCStr == nil {
             return nil
         }
@@ -133,7 +136,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             let slice = UnsafeMutablePointer<FFIUVKBoxedSlice>.allocate(capacity: 1)
             slice.initialize(to: FFIUVKBoxedSlice(ptr: p.baseAddress, len: UInt(p.count)))
             
-            result = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, slice)
+            result = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, slice, networkId)
             slice.deinitialize(count: 1)
         }
         
@@ -180,7 +183,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.malformedStringInput
         }
         
-        guard zcashlc_init_blocks_table(dbData.0, dbData.1, height, [CChar](hash.utf8CString), time, [CChar](saplingTree.utf8CString)) != 0 else {
+        guard zcashlc_init_blocks_table(dbData.0, dbData.1, height, [CChar](hash.utf8CString), time, [CChar](saplingTree.utf8CString), networkId) != 0 else {
             if let error = lastError() {
                 throw error
             }
@@ -191,7 +194,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func getAddress(dbData: URL, account: Int32) -> String? {
         let dbData = dbData.osStr()
         
-        guard let addressCStr = zcashlc_get_address(dbData.0, dbData.1, account) else { return nil }
+        guard let addressCStr = zcashlc_get_address(dbData.0, dbData.1, account, networkId) else { return nil }
         
         let address = String(validatingUTF8: addressCStr)
         zcashlc_string_free(addressCStr)
@@ -200,12 +203,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func getBalance(dbData: URL, account: Int32) -> Int64 {
         let dbData = dbData.osStr()
-        return zcashlc_get_balance(dbData.0, dbData.1, account)
+        return zcashlc_get_balance(dbData.0, dbData.1, account, networkId)
     }
     
     static func getVerifiedBalance(dbData: URL, account: Int32) -> Int64 {
         let dbData = dbData.osStr()
-        return zcashlc_get_verified_balance(dbData.0, dbData.1, account)
+        return zcashlc_get_verified_balance(dbData.0, dbData.1, account, networkId)
     }
     
     static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64 {
@@ -215,7 +218,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         let dbData = dbData.osStr()
         
-        return zcashlc_get_verified_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString))
+        return zcashlc_get_verified_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString), networkId)
     }
     
     static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 {
@@ -224,7 +227,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         }
         
         let dbData = dbData.osStr()
-        return zcashlc_get_total_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString))
+        return zcashlc_get_total_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString), networkId)
     }
     static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> Int32 {
         let dbData = dbData.osStr()
@@ -233,7 +236,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.malformedStringInput
         }
         
-        let result = zcashlc_clear_utxos(dbData.0, dbData.1, [CChar](address.utf8CString), Int32(sinceHeight))
+        let result = zcashlc_clear_utxos(dbData.0, dbData.1, [CChar](address.utf8CString), Int32(sinceHeight), networkId)
         
         guard result > 0 else {
             if let error = lastError() {
@@ -261,7 +264,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                 script,
                                 UInt(script.count),
                                 value,
-                                Int32(height)) else {
+                                Int32(height),
+                                networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -279,7 +283,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {
         let dbData = dbData.osStr()
         
-        guard let memoCStr = zcashlc_get_received_memo_as_utf8(dbData.0, dbData.1, idNote) else { return  nil }
+        guard let memoCStr = zcashlc_get_received_memo_as_utf8(dbData.0, dbData.1, idNote, networkId) else { return  nil }
         
         let memo = String(validatingUTF8: memoCStr)
         zcashlc_string_free(memoCStr)
@@ -289,7 +293,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func getSentMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {
         let dbData = dbData.osStr()
         
-        guard let memoCStr = zcashlc_get_sent_memo_as_utf8(dbData.0, dbData.1, idNote) else { return nil }
+        guard let memoCStr = zcashlc_get_sent_memo_as_utf8(dbData.0, dbData.1, idNote, networkId) else { return nil }
         
         let memo = String(validatingUTF8: memoCStr)
         zcashlc_string_free(memoCStr)
@@ -299,28 +303,28 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32 {
         let dbCache = dbCache.osStr()
         let dbData = dbData.osStr()
-        return zcashlc_validate_combined_chain(dbCache.0, dbCache.1, dbData.0, dbData.1)
+        return zcashlc_validate_combined_chain(dbCache.0, dbCache.1, dbData.0, dbData.1, networkId)
     }
     
     static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32 {
         let dbData = dbData.osStr()
-        return zcashlc_get_nearest_rewind_height(dbData.0, dbData.1, height)
+        return zcashlc_get_nearest_rewind_height(dbData.0, dbData.1, height, networkId)
     }
     
     static func rewindToHeight(dbData: URL, height: Int32) -> Bool {
         let dbData = dbData.osStr()
-        return zcashlc_rewind_to_height(dbData.0, dbData.1, height)
+        return zcashlc_rewind_to_height(dbData.0, dbData.1, height, networkId)
     }
     
     static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32 = 0) -> Bool {
         let dbCache = dbCache.osStr()
         let dbData = dbData.osStr()
-        return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1, limit) != 0
+        return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1, limit, networkId) != 0
     }
 
     static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool {
         let dbData = dbData.osStr()
-        return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count)) != 0
+        return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count), networkId) != 0
     }
 
     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
@@ -337,7 +341,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                          spendParamsPath,
                                          UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                                          outputParamsPath,
-                                         UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
+                                         UInt(outputParamsPath.lengthOfBytes(using: .utf8)),
+                                         networkId)
     }
     
     static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
@@ -353,7 +358,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                                     spendParamsPath,
                                     UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                                     outputParamsPath,
-                                    UInt(outputParamsPath.lengthOfBytes(using: .utf8)))
+                                    UInt(outputParamsPath.lengthOfBytes(using: .utf8)),
+                                    networkId)
     }
     
     static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
@@ -362,7 +368,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.malformedStringInput
         }
         
-        guard let extsk = zcashlc_derive_extended_full_viewing_key([CChar](spendingKey.utf8CString)) else {
+        guard let extsk = zcashlc_derive_extended_full_viewing_key([CChar](spendingKey.utf8CString),
+                                                                   networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -377,7 +384,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
         var capacity = UInt(0);
-        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.count), accounts, &capacity) else {
+        guard let extsksCStr = zcashlc_derive_extended_full_viewing_keys(seed, UInt(seed.count), accounts, &capacity, networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -394,7 +401,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
         var capacity = UInt(0);
-        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.count), accounts, &capacity) else {
+        guard let extsksCStr = zcashlc_derive_extended_spending_keys(seed, UInt(seed.count), accounts, &capacity, networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -411,7 +418,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
         
-        guard let uvks_struct = zcashlc_derive_unified_viewing_keys_from_seed(seed, UInt(seed.count), Int32(numberOfAccounts)) else {
+        guard let uvks_struct = zcashlc_derive_unified_viewing_keys_from_seed(seed, UInt(seed.count), Int32(numberOfAccounts), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -444,7 +451,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String? {
-        guard let zaddrCStr = zcashlc_derive_shielded_address_from_seed(seed, UInt(seed.count), accountIndex) else {
+        guard let zaddrCStr = zcashlc_derive_shielded_address_from_seed(seed, UInt(seed.count), accountIndex, networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -462,7 +469,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.malformedStringInput
         }
         
-        guard let zaddrCStr = zcashlc_derive_shielded_address_from_viewing_key([CChar](extfvk.utf8CString)) else {
+        guard let zaddrCStr = zcashlc_derive_shielded_address_from_viewing_key([CChar](extfvk.utf8CString), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -477,7 +484,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
         
-        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count), Int32(account), Int32(index)) else {
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_seed(seed, UInt(seed.count), Int32(account), Int32(index), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -490,7 +497,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
-        guard let skCStr = zcashlc_derive_transparent_private_key_from_seed(seed, UInt(seed.count), Int32(account), Int32(index)) else {
+        guard let skCStr = zcashlc_derive_transparent_private_key_from_seed(seed, UInt(seed.count), Int32(account), Int32(index), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -506,7 +513,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.malformedStringInput
         }
         
-        guard let tAddrCStr = zcashlc_derive_transparent_address_from_public_key([CChar](pubkey.utf8CString)), let tAddr = String(validatingUTF8: tAddrCStr) else {
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_public_key([CChar](pubkey.utf8CString), networkId), let tAddr = String(validatingUTF8: tAddrCStr) else {
             if let error = lastError() {
                 throw error
             }
@@ -520,7 +527,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         guard !tsk.containsCStringNullBytesBeforeStringEnding() else {
             throw RustWeldingError.malformedStringInput
         }
-        guard let tAddrCStr = zcashlc_derive_transparent_address_from_secret_key([CChar](tsk.utf8CString)) else {
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_secret_key([CChar](tsk.utf8CString), networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -532,7 +539,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func consensusBranchIdFor(height: Int32) throws -> Int32 {
-        let branchId = zcashlc_branch_id_for_height(height)
+        let branchId = zcashlc_branch_id_for_height(height, networkId)
         
         guard branchId != -1 else {
             throw RustWeldingError.noConsensusBranchId(height: height)
