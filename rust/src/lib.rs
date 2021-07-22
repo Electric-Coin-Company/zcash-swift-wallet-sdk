@@ -366,7 +366,7 @@ pub unsafe extern "C" fn zcashlc_derive_unified_viewing_keys_from_seed(
             .map(|account| {
                 let extfvk = ExtendedFullViewingKey::from(&spending_key(&seed, network.coin_type(), AccountId(account)));
                 let extpub = derive_public_key_from_seed(&network, &seed, AccountId(account), 0).unwrap();
-                unified_viewing_key_new(&extfvk, &extpub)
+                unified_viewing_key_new(&extfvk, &extpub, network)
             })
             .collect();
         Ok(uvk_vec_to_ffi(uvks))
@@ -629,7 +629,7 @@ pub unsafe extern "C" fn zcashlc_is_valid_shielded_address(address: *const c_cha
 
 fn is_valid_shielded_address(address: &str,
                              network: &Network) -> bool {
-    match RecipientAddress::decode(&network, &address) {
+    match RecipientAddress::decode(network, &address) {
         Some(addr) => match addr {
             RecipientAddress::Shielded(_) => true,
             RecipientAddress::Transparent(_) => false,
@@ -671,7 +671,7 @@ pub unsafe extern "C" fn zcashlc_is_valid_viewing_key(key: *const c_char,
 
 fn is_valid_transparent_address(address: &str,
                                 network: &Network) -> bool {
-    match RecipientAddress::decode(&network, &address) {
+    match RecipientAddress::decode(network, &address) {
         Some(addr) => match addr {
             RecipientAddress::Shielded(_) => false,
             RecipientAddress::Transparent(_) => true,
@@ -906,7 +906,7 @@ pub extern "C" fn zcashlc_validate_combined_chain(
     db_cache_len: usize,
     db_data: *const u8,
     db_data_len: usize,
-    network_id, u32,
+    network_id: u32,
 ) -> i32 {
     let res = catch_panic(|| {
         let network = parse_network(network_id)?;
@@ -1337,36 +1337,6 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_secret_key(
     });
     unwrap_exc_or_null(res)
 }
-  
-//
-// Helper code from: https://github.com/adityapk00/zecwallet-light-cli/blob/master/lib/src/lightwallet.rs
-//
-
-/// A trait for converting a [u8] to base58 encoded string.
-pub trait ToBase58Check {
-    /// Converts a value of `self` to a base58 value, returning the owned string.
-    /// The version is a coin-specific prefix that is added.
-    /// The suffix is any bytes that we want to add at the end (like the "iscompressed" flag for
-    /// Secret key encoding)
-    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String;
-}
-impl ToBase58Check for [u8] {
-    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String {
-        let mut payload: Vec<u8> = Vec::new();
-        payload.extend_from_slice(version);
-        payload.extend_from_slice(self);
-        payload.extend_from_slice(suffix);
-
-        let checksum = double_sha256(&payload);
-        payload.append(&mut checksum[..4].to_vec());
-        payload.to_base58()
-    }
-}
-pub fn double_sha256(payload: &[u8]) -> Vec<u8> {
-    let h1 = Sha256::digest(&payload);
-    let h2 = Sha256::digest(&h1);
-    h2.to_vec()
-}
 
 #[no_mangle]
 pub extern "C" fn zcashlc_shield_funds(
@@ -1433,4 +1403,46 @@ pub extern "C" fn zcashlc_shield_funds(
             .map_err(|e| format_err!("Error while shielding transaction: {}", e))
     });
     unwrap_exc_or(res, -1)
+}
+
+//
+// Utility functions
+//
+
+fn parse_network(value: u32) -> Result<Network, failure::Error> {
+    match value {
+        0 => Ok(TestNetwork),
+        1 => Ok(MainNetwork),
+        _ => Err(format_err!("Invalid network type: {}. Expected either 0 or 1 for Testnet or Mainnet, respectively.", value))
+    }
+}
+
+//
+// Helper code from: https://github.com/adityapk00/zecwallet-light-cli/blob/master/lib/src/lightwallet.rs
+//
+
+/// A trait for converting a [u8] to base58 encoded string.
+pub trait ToBase58Check {
+    /// Converts a value of `self` to a base58 value, returning the owned string.
+    /// The version is a coin-specific prefix that is added.
+    /// The suffix is any bytes that we want to add at the end (like the "iscompressed" flag for
+    /// Secret key encoding)
+    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String;
+}
+impl ToBase58Check for [u8] {
+    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String {
+        let mut payload: Vec<u8> = Vec::new();
+        payload.extend_from_slice(version);
+        payload.extend_from_slice(self);
+        payload.extend_from_slice(suffix);
+
+        let checksum = double_sha256(&payload);
+        payload.append(&mut checksum[..4].to_vec());
+        payload.to_base58()
+    }
+}
+pub fn double_sha256(payload: &[u8]) -> Vec<u8> {
+    let h1 = Sha256::digest(&payload);
+    let h2 = Sha256::digest(&h1);
+    h2.to_vec()
 }
