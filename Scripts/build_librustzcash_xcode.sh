@@ -26,11 +26,11 @@ if [ existing_build_mismatch = true ]; then
     exit 1
 fi
 
-if is_mainnet; then
-    FEATURE_FLAGS="--features=mainnet"
-else 
-    FEATURE_FLAGS="--features=testnet"
-fi
+# if is_mainnet; then
+#     FEATURE_FLAGS="--features=mainnet"
+# else 
+#     FEATURE_FLAGS="--features=testnet"
+# fi
 
 echo "Building Rust backend"
 echo ""

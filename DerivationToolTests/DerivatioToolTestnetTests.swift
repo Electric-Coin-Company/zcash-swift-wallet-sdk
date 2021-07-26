@@ -1,24 +1,24 @@
 //
-//  DerivationToolTests.swift
-//  ZcashLightClientKit-Unit-Tests
+//  DerivatioToolTestnetTests.swift
+//  ZcashLightClientKit-Unit-DerivationToolTests
 //
-//  Created by Francisco Gindre on 10/9/20.
+//  Created by Francisco Gindre on 7/26/21.
 //
-//swiftlint:disable force_unwrapping
-import XCTest
-import ZcashLightClientKit
 
-class DerivationToolTests: XCTestCase {
+import XCTest
+@testable import ZcashLightClientKit
+
+class DerivatioToolTestnetTests: XCTestCase {
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
     var seedData: Data = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
-    let testRecipientAddress = "zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0" //TODO: Parameterize this from environment
+    let testRecipientAddress = "ztestsapling1475xtm56czrzmleqzzlu4cxvjjfsy2p6rv78q07232cpsx5ee52k0mn5jyndq09mampkgvrxnwg" //TODO: Parameterize this from environment
     
-    let expectedSpendingKey = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv"
+    let expectedSpendingKey = "secret-extended-key-test1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6lk8xce3d4jw7s8ln5yjp6fqv2g0nzue2hc0kv5t004vklvlenncscq9flwh5vf5qnv0hnync72n7gjn70u47765v3kyrxytx50g730svvmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqe49swv"
     
-    let expectedViewingKey = "zxviews1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkysswfhjk79n8l99f2grd26dqg6dy3jcmxsaypxfsu6ara6vsk3x8l544uaksstx9zre879mdg7s9a7zurrx6pf5qg2n323js2s3zlu8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszcq7kwxy"
+    let expectedViewingKey = "zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htfavqk72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqgegsaj"
     
-    let derivationTool = DerivationTool(networkType: NetworkType.mainnet)
-    let expectedTransparentAddress = "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
+    let derivationTool = DerivationTool(networkType: NetworkType.testnet)
+    let expectedTransparentAddress = "tmXuTnE11JojToagTqxXUn6KvdxDE3iLKbp"
     func testDeriveViewingKeysFromSeed() throws {
         let accounts: Int = 1
         let seedBytes = [UInt8](seedData)
@@ -69,13 +69,13 @@ class DerivationToolTests: XCTestCase {
     }
     
     func testIsValidViewingKey() throws {
-        XCTAssertTrue(try derivationTool.isValidExtendedViewingKey("zxviews1q0dm7hkzqqqqpqplzv3f50rl4vay8uy5zg9e92f62lqg6gzu63rljety32xy5tcyenzuu3n386ws772nm6tp4sads8n37gff6nxmyz8dn9keehmapk0spc6pzx5uxepgu52xnwzxxnuja5tv465t9asppnj3eqncu3s7g3gzg5x8ss4ypkw08xwwyj7ky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"))
+        XCTAssertTrue(try derivationTool.isValidExtendedViewingKey(self.expectedViewingKey))
         
-        XCTAssertFalse(try derivationTool.isValidExtendedViewingKey("zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"))
+        XCTAssertFalse(try derivationTool.isValidExtendedViewingKey("zxviews1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkysswfhjk79n8l99f2grd26dqg6dy3jcmxsaypxfsu6ara6vsk3x8l544uaksstx9zre879mdg7s9a7zurrx6pf5qg2n323js2s3zlu8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszcq7kwxy"))
     }
     
     func testDeriveSecretKeyFromSeed() throws {
-        XCTAssertEqual(try derivationTool.deriveTransparentPrivateKey(seed: [UInt8](seedData)), "KwqfQoTCuQdCLvzpAEtkt1o8J62WJuZXD3cGRAf1bgmPWuLamHLo")
+        XCTAssertEqual(try derivationTool.deriveTransparentPrivateKey(seed: [UInt8](seedData)), "L2BCTxmSDiBRb33kGFd4pwGhp9r3FZqG3LZihgTkkg1J14vwtDbq")
     }
     
     func testDeriveUnifiedKeysFromSeed() throws {
@@ -95,5 +95,4 @@ class DerivationToolTests: XCTestCase {
         
         XCTAssertEqual(expectedTransparentAddress, try derivationTool.deriveTransparentAddressFromPublicKey(unifiedKeys[0].extpub))
     }
-    
 }
