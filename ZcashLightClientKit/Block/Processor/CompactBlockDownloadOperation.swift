@@ -90,9 +90,6 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             }
             let latestDownloaded = try storage.latestHeight()
             let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
-            guard startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
-                throw CompactBlockStreamDownloadOperationError.startHeightMissing
-            }
             
             self.cancelable = self.service.blockStream(startHeight: startHeight, endHeight: latestHeight) { [weak self] result in
                 switch result {
@@ -181,12 +178,8 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
         }
         self.startedHandler?()
         do {
-            
-            guard startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
-                throw CompactBlockBatchDownloadOperationError.startHeightMissing
-            }
-            
-            var localDownloadedHeight = try self.storage.latestHeight()
+           
+            let localDownloadedHeight = try self.storage.latestHeight()
             if localDownloadedHeight != startHeight {
                 LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
                 startHeight = localDownloadedHeight + 1

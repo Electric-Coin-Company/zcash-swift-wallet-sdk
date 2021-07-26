@@ -336,7 +336,7 @@ extension LightWalletGRPCService: LightWalletService {
         return height
     }
     
-    public func fetchUTXOs(for tAddress: String, height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> [UnspentTransactionOutputEntity] {
+    public func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
         let arg = GetAddressUtxosArg.with { (utxoArgs) in
             utxoArgs.addresses = [tAddress]
             utxoArgs.startHeight = UInt64(height)
@@ -358,7 +358,7 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    public func fetchUTXOs(for tAddress: String, height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
+    public func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
         queue.async { [weak self] in
             guard let self = self else { return }
             let arg = GetAddressUtxosArg.with { (utxoArgs) in
@@ -394,7 +394,7 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    public func fetchUTXOs(for tAddresses: [String], height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT) throws -> [UnspentTransactionOutputEntity] {
+    public func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
         
         guard tAddresses.count > 0 else {
             return [] // FIXME: throw a real error

@@ -22,11 +22,16 @@ class CompactBlockValidationOperation: ZcashOperation {
     
     private var cacheDb: URL
     private var dataDb: URL
+    private var network: NetworkType
     
-    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL) {
+    init(rustWelding: ZcashRustBackendWelding.Type,
+         cacheDb: URL,
+         dataDb: URL,
+         networkType: NetworkType) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
+        self.network = networkType
         super.init()
     }
     
@@ -36,7 +41,7 @@ class CompactBlockValidationOperation: ZcashOperation {
             return
         }
         self.startedHandler?()
-        let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb)
+        let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb, networkType: self.network)
         switch result {
         case 0:
             let error = CompactBlockValidationError.failedWithError(rustBackend.lastError())

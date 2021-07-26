@@ -16,15 +16,9 @@ extension CompactBlockRange {
 
 extension BlockID {
     
-    static let saplingActivationHeight: UInt64 = UInt64(ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
-    
     init(height: UInt64) {
         self = BlockID()
         self.height = height
-    }
-    
-    static var saplingActivation: BlockID {
-        BlockID(height: saplingActivationHeight)
     }
     
     init(height: BlockHeight) {
@@ -44,16 +38,6 @@ extension BlockRange {
         if let endHeight = endHeight {
             self.end = BlockID(height: UInt64(endHeight))
         }
-    }
-    
-    static func sinceSaplingActivation(to height: UInt64? = nil) -> BlockRange {
-       var blockRange = BlockRange()
-        
-        blockRange.start = BlockID.saplingActivation
-        if let height = height {
-            blockRange.end = BlockID.init(height: height)
-        }
-        return blockRange
     }
     
     var compactBlockRange: CompactBlockRange {

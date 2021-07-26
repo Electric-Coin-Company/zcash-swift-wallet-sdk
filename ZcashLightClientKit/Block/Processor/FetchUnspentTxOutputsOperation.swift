@@ -22,18 +22,21 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
     private var downloader: CompactBlockDownloading
     private var rustbackend: ZcashRustBackendWelding.Type
     private var startHeight: BlockHeight
+    private var network: NetworkType
     private var dataDb: URL
     
     init(accountRepository: AccountRepository,  
          downloader: CompactBlockDownloading,
          rustbackend: ZcashRustBackendWelding.Type,
          dataDb: URL,
-         startHeight: BlockHeight) {
+         startHeight: BlockHeight,
+         networkType: NetworkType) {
         self.dataDb = dataDb
         self.accountRepository = accountRepository
         self.downloader = downloader
         self.rustbackend = rustbackend
         self.startHeight = startHeight
+        self.network = networkType
     }
     
     override func main() {
@@ -46,7 +49,10 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
             let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
             do {
                 for tAddress in tAddresses {
-                    guard try self.rustbackend.clearUtxos(dbData: dataDb, address: tAddress, sinceHeight: startHeight - 1) >= 0 else {
+                    guard try self.rustbackend.clearUtxos(dbData: dataDb,
+                                                          address: tAddress,
+                                                          sinceHeight: startHeight - 1,
+                                                          networkType: network) >= 0 else {
                         let rustError = rustbackend.lastError() ?? RustWeldingError.genericError(message: "attempted to clear utxos but -1 was returned")
                         
                         throw rustError
@@ -80,7 +86,8 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
                     index: utxo.index,
                     script: utxo.script.bytes,
                     value: Int64(utxo.valueZat),
-                    height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
+                    height: utxo.height,
+                    networkType: network) ? refreshed.append(utxo) : skipped.append(utxo)
             } catch {
                 LoggerProxy.error("failed to put utxo - error: \(error)")
                 skipped.append(utxo)

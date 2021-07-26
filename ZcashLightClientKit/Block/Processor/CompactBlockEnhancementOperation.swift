@@ -24,6 +24,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     var repository: TransactionRepository
     var maxRetries: Int = 5
     var retries: Int = 0
+    private(set) var network: NetworkType
     weak var progressDelegate: CompactBlockProgressDelegate?
     private var dataDb: URL
     
@@ -34,6 +35,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
          downloader: CompactBlockDownloading,
          repository: TransactionRepository,
          range: BlockRange,
+         networkType: NetworkType,
          progressDelegate: CompactBlockProgressDelegate? = nil) {
         rustBackend = rustWelding
         self.dataDb = dataDb
@@ -41,6 +43,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         self.repository = repository
         self.range = range
         self.progressDelegate = progressDelegate
+        self.network = networkType
         super.init()
     }
     
@@ -112,7 +115,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             throw error
         }
         
-        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, tx: rawBytes) else {
+        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, tx: rawBytes, networkType: network) else {
             if let rustError = rustBackend.lastError() {
                 throw EnhancementError.decryptError(error: rustError)
             }

@@ -27,7 +27,7 @@ public enum CompactBlockProcessorError: Error {
     case criticalError
     case invalidAccount
     case wrongConsensusBranchId(expectedLocally: ConsensusBranchID, found: ConsensusBranchID)
-    case networkMismatch(expected: ZcashSDK.NetworkType, found: ZcashSDK.NetworkType)
+    case networkMismatch(expected: NetworkType, found: NetworkType)
     case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
 }
 /**
@@ -228,20 +228,23 @@ public class CompactBlockProcessor {
         public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
         public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
         public var walletBirthday: BlockHeight
+        private(set) var network: NetworkType
         private(set) var saplingActivation: BlockHeight
         
         init (
-               cacheDb: URL,
-               dataDb: URL,
-               downloadBatchSize: Int,
-               retries: Int,
-               maxBackoffInterval: TimeInterval,
-               rewindDistance: Int,
-               walletBirthday: BlockHeight,
-               saplingActivation: BlockHeight
+            cacheDb: URL,
+            dataDb: URL,
+            downloadBatchSize: Int,
+            retries: Int,
+            maxBackoffInterval: TimeInterval,
+            rewindDistance: Int,
+            walletBirthday: BlockHeight,
+            saplingActivation: BlockHeight,
+            network: NetworkType
            ) {
             self.cacheDb = cacheDb
             self.dataDb = dataDb
+            self.network = network
             self.downloadBatchSize = downloadBatchSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
@@ -250,11 +253,12 @@ public class CompactBlockProcessor {
             self.saplingActivation = saplingActivation
         }
         
-        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT){
+        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight, networkType: NetworkType){
             self.cacheDb = cacheDb
             self.dataDb = dataDb
             self.walletBirthday = walletBirthday
-            self.saplingActivation = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+            self.saplingActivation = networkType.constants.SAPLING_ACTIVATION_HEIGHT
+            self.network = networkType
         }
     }
     /**
@@ -313,7 +317,7 @@ public class CompactBlockProcessor {
     private var transactionRepository: TransactionRepository
     private var accountRepository: AccountRepository
     private var rustBackend: ZcashRustBackendWelding.Type
-    var config: Configuration = Configuration.standard {
+    var config: Configuration {
         willSet {
             self.stop()
         }
@@ -348,7 +352,7 @@ public class CompactBlockProcessor {
      - Throws CompactBlockProcessorError.invalidConfiguration if block height is invalid or if processor is already started
      */
     func setStartHeight(_ startHeight: BlockHeight) throws {
-        guard self.state == .stopped, startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
+        guard self.state == .stopped, startHeight >= config.network.constants.SAPLING_ACTIVATION_HEIGHT else {
             throw CompactBlockProcessorError.invalidConfiguration
         }
         
@@ -387,7 +391,8 @@ public class CompactBlockProcessor {
                   backend: initializer.rustBackend,
                   config: Configuration(cacheDb: initializer.cacheDbURL,
                                         dataDb: initializer.dataDbURL,
-                                        walletBirthday: initializer.walletBirthday.height),
+                                        walletBirthday: initializer.walletBirthday.height,
+                                        networkType: initializer.network),
                   repository: initializer.transactionRepository,
                   accountRepository: initializer.accountRepository)
     }
@@ -493,6 +498,7 @@ public class CompactBlockProcessor {
                     do {
                         try Self.validateServerInfo(info,
                                                     saplingActivation: self.config.saplingActivation,
+                                                    localNetwork: self.config.network,
                                                     rustBackend: self.rustBackend)
                         completionBlock()
                     } catch {
@@ -507,15 +513,16 @@ public class CompactBlockProcessor {
     
     static func validateServerInfo(_ info: LightWalletdInfo,
                                    saplingActivation: BlockHeight,
+                                   localNetwork: NetworkType,
                                    rustBackend: ZcashRustBackendWelding.Type) throws {
         
         // check network types
-        guard let remoteNetworkType = ZcashSDK.NetworkType(info.chainName) else {
+        guard let remoteNetworkType = NetworkType.forChainName(info.chainName) else {
             throw CompactBlockProcessorError.generalError(message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error")
         }
         
-        guard remoteNetworkType == ZcashSDK.networkType else {
-            throw CompactBlockProcessorError.networkMismatch(expected: ZcashSDK.networkType, found: remoteNetworkType)
+        guard remoteNetworkType == localNetwork else {
+            throw CompactBlockProcessorError.networkMismatch(expected: localNetwork, found: remoteNetworkType)
         }
         
         guard saplingActivation == info.saplingActivationHeight else {
@@ -523,7 +530,7 @@ public class CompactBlockProcessor {
         }
         
         // check branch id
-        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
+        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight), networkType: localNetwork)
         
         guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID)
               else {
@@ -564,7 +571,7 @@ public class CompactBlockProcessor {
         
         let lastDownloaded = try downloader.lastDownloadedBlockHeight()
         let height = Int32(height ?? lastDownloaded)
-        let nearestHeight = rustBackend.getNearestRewindHeight(dbData: config.dataDb, height: height)
+        let nearestHeight = rustBackend.getNearestRewindHeight(dbData: config.dataDb, height: height, networkType: self.config.network)
         
         guard nearestHeight > 0 else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error getting nearest rewind height for height: \(height)")
@@ -574,7 +581,7 @@ public class CompactBlockProcessor {
         
         // FIXME: this should be done on the rust layer
         let rewindHeight = max(Int32(nearestHeight - 1) , Int32(config.walletBirthday))
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight) else {
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network) else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
             fail(error)
             throw error
@@ -649,7 +656,7 @@ public class CompactBlockProcessor {
             }
         }
         
-        let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb)
+        let validateChainOperation = CompactBlockValidationOperation(rustWelding: self.rustBackend, cacheDb: cfg.cacheDb, dataDb: cfg.dataDb, networkType: self.config.network)
         
         let downloadValidateAdapterOperation = BlockOperation { [weak validateChainOperation, weak downloadBlockOperation] in
             validateChainOperation?.error = downloadBlockOperation?.error
@@ -698,7 +705,7 @@ public class CompactBlockProcessor {
             }
         }
         
-        let scanBlocksOperation = CompactBlockBatchScanningOperation(rustWelding: rustBackend, cacheDb: config.cacheDb, dataDb: config.dataDb, transactionRepository: transactionRepository, range: range, progressDelegate: self)
+        let scanBlocksOperation = CompactBlockBatchScanningOperation(rustWelding: rustBackend, cacheDb: config.cacheDb, dataDb: config.dataDb, transactionRepository: transactionRepository, range: range, networkType: self.config.network, progressDelegate: self)
         
         let validateScanningAdapterOperation = BlockOperation { [weak scanBlocksOperation, weak validateChainOperation] in
             scanBlocksOperation?.error = validateChainOperation?.error
@@ -727,7 +734,7 @@ public class CompactBlockProcessor {
             }
         }
         
-        let enhanceOperation = CompactBlockEnhancementOperation(rustWelding: rustBackend, dataDb: config.dataDb, downloader: downloader, repository: transactionRepository, range: range.blockRange())
+        let enhanceOperation = CompactBlockEnhancementOperation(rustWelding: rustBackend, dataDb: config.dataDb, downloader: downloader, repository: transactionRepository, range: range.blockRange(), networkType: self.config.network)
         
         enhanceOperation.startedHandler = {
             LoggerProxy.debug("Started Enhancing range: \(range)")
@@ -760,7 +767,7 @@ public class CompactBlockProcessor {
             enhanceOperation?.error = scanBlocksOperation?.error
         }
         
-        let fetchOperation = FetchUnspentTxOutputsOperation(accountRepository: accountRepository, downloader: self.downloader, rustbackend: rustBackend, dataDb: config.dataDb, startHeight: config.walletBirthday)
+        let fetchOperation = FetchUnspentTxOutputsOperation(accountRepository: accountRepository, downloader: self.downloader, rustbackend: rustBackend, dataDb: config.dataDb, startHeight: config.walletBirthday, networkType: self.config.network)
         
         fetchOperation.startedHandler = { [weak self] in
             DispatchQueue.main.async { [weak self] in
@@ -855,7 +862,7 @@ public class CompactBlockProcessor {
         // rewind
         
         let rewindHeight = determineLowerBound(errorHeight: height, consecutiveErrors: consecutiveChainValidationErrors, walletBirthday: self.config.walletBirthday)
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight)) else {
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network) else {
             fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }
@@ -1053,9 +1060,12 @@ public extension CompactBlockProcessor.Configuration {
     /**
      Standard configuration for most compact block processors
      */
-    static var standard: CompactBlockProcessor.Configuration {
-        let pathProvider = DefaultResourceProvider()
-        return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL, dataDb: pathProvider.dataDbURL)
+    static func standard(for networkType: NetworkType, walletBirthday: BlockHeight) -> CompactBlockProcessor.Configuration {
+        let pathProvider = DefaultResourceProvider(networkType: networkType)
+        return CompactBlockProcessor.Configuration(cacheDb: pathProvider.cacheDbURL,
+                                                   dataDb: pathProvider.dataDbURL,
+                                                   walletBirthday: walletBirthday,
+                                                   networkType: networkType)
     }
 }
 
@@ -1103,7 +1113,7 @@ extension CompactBlockProcessor.State: Equatable {
 
 extension CompactBlockProcessor {
     public func utxoCacheBalance(tAddress: String) throws -> WalletBalance {
-        try rustBackend.downloadedUtxoBalance(dbData: config.dataDb, address: tAddress)
+        try rustBackend.downloadedUtxoBalance(dbData: config.dataDb, address: tAddress, networkType: config.network)
     }
 }
 
@@ -1163,7 +1173,7 @@ extension CompactBlockProcessor {
                     
                         guard let self = self else { return }
                         do {
-                            guard try self.rustBackend.clearUtxos(dbData: dataDb, address: tAddress, sinceHeight: startHeight - 1) >= 0 else {
+                            guard try self.rustBackend.clearUtxos(dbData: dataDb, address: tAddress, sinceHeight: startHeight - 1, networkType: self.config.network) >= 0 else {
                                 result(.failure(CompactBlockProcessorError.generalError(message: "attempted to clear utxos but -1 was returned")))
                                 return
                             }
@@ -1191,7 +1201,8 @@ extension CompactBlockProcessor {
                     index: utxo.index,
                     script: utxo.script.bytes,
                     value: Int64(utxo.valueZat),
-                    height: utxo.height) ? refreshed.append(utxo) : skipped.append(utxo)
+                    height: utxo.height,
+                    networkType: self.config.network) ? refreshed.append(utxo) : skipped.append(utxo)
             } catch {
                 LoggerProxy.info("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
@@ -1305,7 +1316,7 @@ extension CompactBlockProcessor {
                        
             let info = try service.getInfo()
             
-            try CompactBlockProcessor.validateServerInfo(info, saplingActivation: config.saplingActivation, rustBackend: rustBackend)
+            try CompactBlockProcessor.validateServerInfo(info, saplingActivation: config.saplingActivation, localNetwork: config.network, rustBackend: rustBackend)
             
             // get latest block height
             let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.lastDownloadedBlockHeight())
