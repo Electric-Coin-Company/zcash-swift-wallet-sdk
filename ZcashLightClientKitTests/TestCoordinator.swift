@@ -93,7 +93,7 @@ class TestCoordinator {
                                 outputParamsURL: try __outputParamsURL(),
                                 spendingKey: spendingKey,
                                 unifiedViewingKey: unifiedViewingKey,
-                                walletBirthday: WalletBirthday.birthday(with: birthday),
+                                walletBirthday: WalletBirthday.birthday(with: birthday, network: network),
                                 network: network,
                                 loggerProxy: SampleLogger(logLevel: .debug))
         

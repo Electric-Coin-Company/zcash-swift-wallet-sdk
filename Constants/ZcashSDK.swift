@@ -39,7 +39,7 @@ extension NetworkType {
 }
 
 public class ZcashNetworkBuilder {
-    static func network(for networkType: NetworkType) -> ZcashNetwork {
+    public static func network(for networkType: NetworkType) -> ZcashNetwork {
         switch networkType {
         case .mainnet:
             return ZcashMainnet()

@@ -160,7 +160,7 @@ public class Initializer {
         self.storage = storage
         self.downloader = CompactBlockDownloader(service: service, storage: storage)
         self.viewingKeys = viewingKeys
-        self.walletBirthday = WalletBirthday.birthday(with: walletBirthday)
+        self.walletBirthday = WalletBirthday.birthday(with: walletBirthday, network: network)
         self.network = network
     }
     

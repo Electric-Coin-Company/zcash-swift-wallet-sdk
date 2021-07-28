@@ -33,11 +33,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let wallet = wallet {
             return wallet
         } else {
-            let unifiedViewingKeys =  try! DerivationTool.default.deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
+            let unifiedViewingKeys =  try! DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
             let wallet = Initializer(cacheDbURL:try! __cacheDbURL(),
                                      dataDbURL: try! __dataDbURL(),
                                      pendingDbURL: try! __pendingDbURL(),
                                      endpoint: DemoAppConfig.endpoint,
+                                     network: ZCASH_NETWORK,
                                      spendParamsURL: try! __spendParamsURL(),
                                      outputParamsURL: try! __outputParamsURL(),
                                      viewingKeys: unifiedViewingKeys,
@@ -48,7 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             try! wallet.initialize()
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig.seed)
-            storage!.privateKey = try! DerivationTool.default.deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
+            storage!.privateKey = try! DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
             self.wallet = wallet
             return wallet
         }
@@ -152,15 +153,15 @@ func __documentsDirectory() throws -> URL {
 }
 
 func __cacheDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent(ZcashSDK.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_CACHES_DB_NAME, isDirectory: false)
+    try __documentsDirectory().appendingPathComponent(ZCASH_NETWORK.constants.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_CACHES_DB_NAME, isDirectory: false)
 }
 
 func __dataDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent(ZcashSDK.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_DATA_DB_NAME, isDirectory: false)
+    try __documentsDirectory().appendingPathComponent(ZCASH_NETWORK.constants.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_DATA_DB_NAME, isDirectory: false)
 }
 
 func __pendingDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent(ZcashSDK.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_PENDING_DB_NAME)
+    try __documentsDirectory().appendingPathComponent(ZCASH_NETWORK.constants.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_PENDING_DB_NAME)
 }
 
 func __spendParamsURL() throws -> URL {

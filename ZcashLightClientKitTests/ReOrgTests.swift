@@ -77,7 +77,7 @@ class ReOrgTests: XCTestCase {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663202)
         let reOrgHeight = BlockHeight(663195)
-        let walletBirthday = WalletBirthday.birthday(with: 663150).height
+        let walletBirthday = WalletBirthday.birthday(with: 663150, network: network).height
         
         try basicReOrgTest(baseDataset: .beforeReOrg,
                             reorgDataset: .afterSmallReorg,
@@ -91,7 +91,7 @@ class ReOrgTests: XCTestCase {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663250)
         let reOrgHeight = BlockHeight(663180)
-        let walletBirthday = WalletBirthday.birthday(with: BlockHeight(663150)).height
+        let walletBirthday = WalletBirthday.birthday(with: BlockHeight(663150), network: network).height
         
         try basicReOrgTest(baseDataset: .beforeReOrg,
                            reorgDataset: .afterLargeReorg,

@@ -44,7 +44,7 @@ class TransactionEnhancementTests: XCTestCase {
         
         waitExpectation = XCTestExpectation(description: self.description + "waitExpectation")
         
-        let birthday = WalletBirthday.birthday(with: walletBirthday)
+        let birthday = WalletBirthday.birthday(with: walletBirthday, network: network)
         
         let config = CompactBlockProcessor.Configuration.standard(for: self.network, walletBirthday: birthday.height)
         let rustBackend = ZcashRustBackend.self
@@ -106,7 +106,7 @@ class TransactionEnhancementTests: XCTestCase {
     func testBasicEnhacement() throws {
         
         let targetLatestHeight = BlockHeight(663250)
-        let walletBirthday = WalletBirthday.birthday(with: 663151).height
+        let walletBirthday = WalletBirthday.birthday(with: 663151, network: network).height
         
         try basicEnhancementTest(latestHeight: targetLatestHeight, walletBirthday: walletBirthday)
     }
