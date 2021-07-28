@@ -17,7 +17,7 @@ class LightWalletServiceTests: XCTestCase {
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         channel = ChannelProvider().channel()
-        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
     }
 
     override func tearDown() {

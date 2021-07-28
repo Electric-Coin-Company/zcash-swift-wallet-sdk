@@ -33,6 +33,8 @@ class ReOrgTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     let network = DarksideWalletDNetwork()
+    let branchID = "2bb40e60"
+    let chainName = "main"
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
     override func setUpWithError() throws {
             NotificationCenter.default.addObserver(self, selector: #selector(handleReOrgNotification(_:)), name: Notification.Name.blockProcessorHandledReOrg, object: nil)
@@ -42,7 +44,7 @@ class ReOrgTests: XCTestCase {
                channelProvider: ChannelProvider(),
                network: network
            )
-        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
+        try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
            try coordinator.resetBlocks(dataset: .default)
            
        }
@@ -109,7 +111,7 @@ class ReOrgTests: XCTestCase {
                         targetHeight: BlockHeight) throws {
      
         do {
-            try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
+            try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
             try coordinator.resetBlocks(dataset: .predefined(dataset: .beforeReOrg))
             try coordinator.applyStaged(blockheight: firstLatestHeight)
         } catch  {

@@ -53,7 +53,7 @@ class BlockScanOperationTests: XCTestCase {
         let scanStartedExpect = XCTestExpectation(description: self.description + "scan started")
         let scanExpect = XCTestExpectation(description: self.description + "scan")
         let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
-        let service = LightWalletGRPCService(endpoint: LightWalletEndpoint(address: "lightwalletd.electriccoin.co", port: 9067))
+        let service = LightWalletGRPCService(endpoint: LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067))
         let blockCount = 100
         let range = network.constants.SAPLING_ACTIVATION_HEIGHT ...  network.constants.SAPLING_ACTIVATION_HEIGHT + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)
@@ -127,7 +127,7 @@ class BlockScanOperationTests: XCTestCase {
         
         try self.rustWelding.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthDay.height), hash: walletBirthDay.hash, time: walletBirthDay.time, saplingTree: walletBirthDay.tree, networkType: network.networkType)
         
-        let service = LightWalletGRPCService(host: Constants.address, port: 9067, secure: true, singleCallTimeout: 100000, streamingCallTimeout: 1000000000)
+        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
         let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
         try storage.createTable()
         

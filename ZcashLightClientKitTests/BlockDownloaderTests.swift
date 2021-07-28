@@ -94,7 +94,7 @@ class BlockDownloaderTests: XCTestCase {
     }
     
     func testFailure() {
-        let awfulDownloader = CompactBlockDownloader(service: AwfulLightWalletService(latestBlockHeight: self.network.constants.SAPLING_ACTIVATION_HEIGHT + 1000), storage: ZcashConsoleFakeStorage())
+        let awfulDownloader = CompactBlockDownloader(service: AwfulLightWalletService(latestBlockHeight: self.network.constants.SAPLING_ACTIVATION_HEIGHT + 1000, service: darksideWalletService), storage: ZcashConsoleFakeStorage())
         
         let expect = XCTestExpectation(description: self.description)
         expect.expectedFulfillmentCount = 1

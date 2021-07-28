@@ -29,7 +29,7 @@ class NetworkUpgradeTests: XCTestCase {
 //            walletBirthday: birthday,
 //            channelProvider: ChannelProvider()
 //        )
-        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
+        try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
     }
     
     override func tearDownWithError() throws {

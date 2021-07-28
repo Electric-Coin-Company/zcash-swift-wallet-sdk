@@ -19,6 +19,10 @@ class LightWalletEndpointBuilder {
     static var publicTestnet: LightWalletEndpoint {
         LightWalletEndpoint(address: "testnet.lightwalletd.com", port: 9067, secure: true)
     }
+    
+    static var eccTestnet: LightWalletEndpoint {
+        LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067, secure: true)
+    }
 }
 
 class ChannelProvider {

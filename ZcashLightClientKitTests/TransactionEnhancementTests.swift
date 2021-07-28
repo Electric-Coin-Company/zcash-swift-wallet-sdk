@@ -127,12 +127,12 @@ class TransactionEnhancementTests: XCTestCase {
          connect to dLWD
          request latest height -> receive firstLatestHeight
          */
-//        do {
-//             print("first latest height:  \(try darksideWalletService.latestBlockHeight())")
-//        } catch {
-//            XCTFail("Error: \(error)")
-//            return
-//        }
+        do {
+             print("first latest height:  \(try darksideWalletService.latestBlockHeight())")
+        } catch {
+            XCTFail("Error: \(error)")
+            return
+        }
 
         
         /**

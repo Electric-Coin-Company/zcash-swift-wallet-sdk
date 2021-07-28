@@ -103,7 +103,11 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                         self?.fail(error: e)
                     }
                 case .failure(let e):
-                    self?.fail(error: e)
+                    if case .userCancelled = e {
+                        self?.done = true
+                    } else {
+                        self?.fail(error: e)
+                    }
                 }
                
             } handler: {[weak self] block in

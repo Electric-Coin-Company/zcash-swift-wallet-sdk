@@ -23,10 +23,26 @@ class CompactBlockReorgTests: XCTestCase {
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.SAPLING_ACTIVATION_HEIGHT + 2000
     
-    override func setUp() {
+    override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         
-        let service = MockLightWalletService(latestBlockHeight: mockLatestHeight)
+        logger = SampleLogger(logLevel: .debug)
+        
+        let service = MockLightWalletService(latestBlockHeight: mockLatestHeight, service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet))
+        let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
+        service.mockLightDInfo = LightdInfo.with({ info in
+            info.blockHeight = UInt64(mockLatestHeight)
+            info.branch = "asdf"
+            info.buildDate = "today"
+            info.buildUser = "testUser"
+            info.chainName = "test"
+            info.consensusBranchID = branchID.toString()
+            info.estimatedHeight = UInt64(mockLatestHeight)
+            info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+        })
+        
+        try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: .testnet)
+        
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
         
@@ -99,7 +115,7 @@ class CompactBlockReorgTests: XCTestCase {
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
-        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
+        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
         reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
         
         XCTAssertNoThrow(try processor.start())

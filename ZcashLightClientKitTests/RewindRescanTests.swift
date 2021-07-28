@@ -23,7 +23,7 @@ class RewindRescanTests: XCTestCase {
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
     let branchID = "2bb40e60"
     let chainName = "main"
-    var network = ZcashNetworkBuilder.network(for: .testnet)
+    var network = ZcashNetworkBuilder.network(for: .mainnet)
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
