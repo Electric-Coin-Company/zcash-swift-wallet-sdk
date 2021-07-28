@@ -3,16 +3,6 @@
 BASEPATH="${PWD}"
 TARGET_DIR="target"
 
-FEATURE_FLAGS="--features=mainnet"
-NETWORK_TYPE="TESTNET"
-FLAVOR_FOLDER="Testnet"
-
-
-if [ $1 = "--mainnet" ]; then
-    FEATURE_FLAGS="--features=mainnet"
-    NETWORK_TYPE="MAINNET"
-    FLAVOR_FOLDER="Mainnet"
-fi
 
 LIB_PATH="ZcashLightClientKit/$FLAVOR_FOLDER/zcashlc"
 echo "++++ Building librustzcash $NETWORK_TYPE library ++++"
@@ -22,7 +12,7 @@ if [ -f $TARGET_DIR ]; then
     rm -rf $TARGET_DIR
 fi
 
-cargo build --release $FEATURE_FLAGS && cargo lipo --release
+cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --release
 
 
 if [ -f $LIB_PATH ]; then

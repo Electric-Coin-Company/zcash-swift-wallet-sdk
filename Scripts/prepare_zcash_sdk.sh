@@ -26,22 +26,3 @@ echo "**************************************************************************
 echo "   touch ${ZCASH_POD_ROOT}/zcashlc/zcashlc.h" 
 echo "***************************************************************************"
 touch ${ZCASH_POD_SRCROOT}/zcashlc/zcashlc.h
-
-echo "make ${ZCASH_SDK_GENERATED_SOURCES_FOLDER} folder"
-mkdir -p ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}
-
-echo "**********************************************"
-echo "* create empty ZcashSDK.generated.swift file *"
-echo "**********************************************"
-echo ""
-
-echo "touch ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}/ZcashSDK.generated.swift"
-touch ${ZCASH_SDK_GENERATED_SOURCES_FOLDER}/ZcashSDK.generated.swift
-
-echo "****************************************************************"
-echo "* create empty WalletBirthday+saplingtree.generated.swift file *"
-echo "****************************************************************"
-echo ""
-
-echo "touch $ZCASH_SDK_GENERATED_SOURCES_FOLDER/WalletBirthday+saplingtree.generated.swift"
-touch $ZCASH_SDK_GENERATED_SOURCES_FOLDER/WalletBirthday+saplingtree.generated.swift

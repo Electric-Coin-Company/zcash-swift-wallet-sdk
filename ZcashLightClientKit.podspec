@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = 'ZcashLightClientKit'
-    s.version          = '0.12.0-alpha.10'
+    s.version          = '0.12.0-alpha.11'
     s.summary          = 'Zcash Light Client wallet SDK for iOS'
   
     s.description      = <<-DESC
@@ -30,11 +30,9 @@ Pod::Spec.new do |s|
 
     s.script_phase = {
       :name => 'Build generate constants and build librustzcash',
-      :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_zcashsdk_constants.sh && sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
+      :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
       :execution_position => :before_compile,
-      :output_files => [
-         '${PODS_TARGET_SRCROOT}/ZcashLightClientKit/Generated/WalletBirthday+saplingtree.generated.swift',
-         '${PODS_TARGET_SRCROOT}/ZcashLightClientKit/Generated/ZcashSDK.generated.swift']
+
    }
 
    s.test_spec 'Tests' do | test_spec |
@@ -42,7 +40,7 @@ Pod::Spec.new do |s|
       test_spec.ios.resources = 'ZcashLightClientKitTests/**/*.{db,params}'
       test_spec.script_phase = {
          :name => 'Build generate constants and build librustzcash',
-         :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh --testing',
+         :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
          :execution_position => :before_compile
       }
       test_spec.dependency 'gRPC-Swift', '= 1.0.0'
@@ -53,7 +51,7 @@ Pod::Spec.new do |s|
       test_spec.source_files = 'DerivationToolTests/**/*.{swift}'
       test_spec.script_phase = {
          :name => 'Build generate constants and build librustzcash',
-         :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh --testing',
+         :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_test_constants.sh && ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
          :execution_position => :before_compile
       }
       test_spec.dependency 'gRPC-Swift', '= 1.0.0'

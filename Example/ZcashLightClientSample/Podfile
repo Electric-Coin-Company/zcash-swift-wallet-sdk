@@ -26,6 +26,7 @@ end
 target 'ZcashLightClientSample-Mainnet' do
   inherit! :search_paths
   use_frameworks!
+  pod 'MnemonicSwift', '~> 2.0.0'
   pod "KRProgressHUD"
   pod 'PaginatedTableView'
   pod 'NotificationBubbles'

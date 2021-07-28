@@ -15,6 +15,7 @@
 		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
 		0D76121726B1D5F5001CA417 /* Mainnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121526B1D5ED001CA417 /* Mainnet.swift */; };
 		0D76121926B1D66D001CA417 /* Testnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121826B1D66D001CA417 /* Testnet.swift */; };
+		0D76121A26B1E8F6001CA417 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
 		0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7C85E423AD5A9B006878FC /* SampleStorage.swift */; };
 		0D8BB45223B1DA0700D5E2A1 /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
@@ -687,6 +688,7 @@
 				0D8BB45C23B1DA0700D5E2A1 /* SampleStorage.swift in Sources */,
 				0D8BB45D23B1DA0700D5E2A1 /* TransactionsDataSource.swift in Sources */,
 				0D8BB45E23B1DA0700D5E2A1 /* PaginatedTransactionsViewController.swift in Sources */,
+				0D76121A26B1E8F6001CA417 /* SampleLogger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
