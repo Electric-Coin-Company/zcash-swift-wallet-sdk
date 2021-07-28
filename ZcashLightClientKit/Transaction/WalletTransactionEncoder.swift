@@ -16,7 +16,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     private var spendParamsURL: URL
     private var dataDbURL: URL
     private var cacheDbURL: URL
-    private var network: NetworkType
+    private var networkType: NetworkType
     
     init(rust: ZcashRustBackendWelding.Type,
          dataDb: URL,
@@ -32,7 +32,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.repository = repository
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
-        self.network = networkType
+        self.networkType = networkType
         self.queue = DispatchQueue(label: "wallet.transaction.encoder.serial.queue")
         
     }
@@ -44,7 +44,7 @@ class WalletTransactionEncoder: TransactionEncoder {
                   repository: initializer.transactionRepository,
                   outputParams: initializer.outputParamsURL,
                   spendParams: initializer.spendParamsURL,
-                  networkType: initializer.network)
+                  networkType: initializer.network.networkType)
         
     }
     
@@ -91,7 +91,7 @@ class WalletTransactionEncoder: TransactionEncoder {
                                                memo: memo,
                                                spendParamsPath: self.spendParamsURL.path,
                                                outputParamsPath: self.outputParamsURL.path,
-                                               networkType: network)
+                                               networkType: networkType)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
@@ -136,7 +136,7 @@ class WalletTransactionEncoder: TransactionEncoder {
                                            memo: memo,
                                            spendParamsPath: self.spendParamsURL.path,
                                            outputParamsPath: self.outputParamsURL.path,
-                                           networkType: network)
+                                           networkType: networkType)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")

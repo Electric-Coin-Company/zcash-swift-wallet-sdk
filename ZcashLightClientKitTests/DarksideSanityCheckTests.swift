@@ -22,13 +22,15 @@ class DarksideSanityCheckTests: XCTestCase {
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
+    var network = DarksideWalletDNetwork()
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
-            channelProvider: ChannelProvider()
+            channelProvider: ChannelProvider(),
+            network: network
         )
         try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
         try coordinator.resetBlocks(dataset: .default)

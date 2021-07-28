@@ -6,17 +6,21 @@
 //
 
 import Foundation
+public protocol ZcashNetwork {
+    var networkType: NetworkType { get }
+    var constants: NetworkConstants.Type { get }
+}
 
 public enum NetworkType {
     case mainnet
     case testnet
     
-    var constants: NetworkConstants.Type {
+    var networkId: UInt32 {
         switch self {
         case .mainnet:
-            return ZcashSDKMainnet.self
+            return 1
         case .testnet:
-            return ZcashSDKTestnet.self
+            return 0
         }
     }
 }
@@ -32,15 +36,27 @@ extension NetworkType {
             return nil
         }
     }
-    
-    var networkId: UInt32 {
-        switch self {
+}
+
+public class ZcashNetworkBuilder {
+    static func network(for networkType: NetworkType) -> ZcashNetwork {
+        switch networkType {
         case .mainnet:
-            return 1
+            return ZcashMainnet()
         case .testnet:
-            return 0
+            return ZcashTestnet()
         }
     }
+}
+
+class ZcashTestnet: ZcashNetwork {
+    var networkType: NetworkType = .testnet
+    var constants: NetworkConstants.Type = ZcashSDKTestnetConstants.self
+}
+
+class ZcashMainnet: ZcashNetwork {
+    var networkType: NetworkType = .mainnet
+    var constants: NetworkConstants.Type = ZcashSDKMainnetConstants.self
 }
 
 /**
@@ -167,7 +183,7 @@ public extension NetworkConstants {
     }
 }
 
-public class ZcashSDKMainnet: NetworkConstants {
+public class ZcashSDKMainnetConstants: NetworkConstants {
     
     private init() {}
     
@@ -189,28 +205,14 @@ public class ZcashSDKMainnet: NetworkConstants {
      Default name for pending transactions db
      */
     public static var DEFAULT_PENDING_DB_NAME = "pending.db"
-    public static var DEFAULT_DB_NAME_PREFIX = "ZcashSdk_mainnet_"
-    /**
-     File name for the sapling spend params
-     */
-    public static var SPEND_PARAM_FILE_NAME = "sapling-spend.params"
-    /**
-     File name for the sapling output params
-     */
-    public static var OUTPUT_PARAM_FILE_NAME = "sapling-output.params"
-    /**
-     The Url that is used by default in zcashd.
-     We'll want to make this externally configurable, rather than baking it into the SDK but
-     this will do for now, since we're using a cloudfront URL that already redirects.
-     */
-    public static var CLOUD_PARAM_DIR_URL = "https://z.cash/downloads/"
     
-    public static var isMainnet = true
+    public static var DEFAULT_DB_NAME_PREFIX = "ZcashSdk_mainnet_"
+    
     
     public static var FEE_CHANGE_HEIGHT: BlockHeight = 1_077_550
 }
 
-public class ZcashSDKTestnet: NetworkConstants {
+public class ZcashSDKTestnetConstants: NetworkConstants {
     private init() {}
    
     /**

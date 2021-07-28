@@ -22,23 +22,25 @@ import XCTest
 class ReOrgTests: XCTestCase {
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
        
-       let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
-       
-       let sendAmount: Int64 = 1000
-       var birthday: BlockHeight = 663150
-       let defaultLatestHeight: BlockHeight = 663175
-       var coordinator: TestCoordinator!
-       var syncedExpectation = XCTestExpectation(description: "synced")
-       var sentTransactionExpectation = XCTestExpectation(description: "sent")
-       var expectedReorgHeight: BlockHeight = 665188
-       var expectedRewindHeight: BlockHeight = 665188
-       var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
-       override func setUpWithError() throws {
+    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
+
+    let sendAmount: Int64 = 1000
+    var birthday: BlockHeight = 663150
+    let defaultLatestHeight: BlockHeight = 663175
+    var coordinator: TestCoordinator!
+    var syncedExpectation = XCTestExpectation(description: "synced")
+    var sentTransactionExpectation = XCTestExpectation(description: "sent")
+    var expectedReorgHeight: BlockHeight = 665188
+    var expectedRewindHeight: BlockHeight = 665188
+    let network = DarksideWalletDNetwork()
+    var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
+    override func setUpWithError() throws {
             NotificationCenter.default.addObserver(self, selector: #selector(handleReOrgNotification(_:)), name: Notification.Name.blockProcessorHandledReOrg, object: nil)
            coordinator = try TestCoordinator(
                seed: seedPhrase,
                walletBirthday: birthday,
-               channelProvider: ChannelProvider()
+               channelProvider: ChannelProvider(),
+               network: network
            )
         try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
            try coordinator.resetBlocks(dataset: .default)

@@ -199,3 +199,38 @@ class DarksideWalletService: LightWalletService {
     }
  
 }
+
+
+class DarksideWalletDConstants: NetworkConstants {
+    static var SAPLING_ACTIVATION_HEIGHT: BlockHeight {
+        663150
+    }
+    
+    static var DEFAULT_DATA_DB_NAME: String {
+        ZcashSDKMainnetConstants.DEFAULT_DATA_DB_NAME
+    }
+    
+    static var DEFAULT_CACHES_DB_NAME: String {
+        ZcashSDKMainnetConstants.DEFAULT_CACHES_DB_NAME
+    }
+    
+    static var DEFAULT_PENDING_DB_NAME: String {
+        ZcashSDKMainnetConstants.DEFAULT_PENDING_DB_NAME
+    }
+    
+    static var DEFAULT_DB_NAME_PREFIX: String {
+        ZcashSDKMainnetConstants.DEFAULT_DB_NAME_PREFIX
+    }
+    
+    static var FEE_CHANGE_HEIGHT: BlockHeight {
+        ZcashSDKMainnetConstants.FEE_CHANGE_HEIGHT
+    }
+    
+    
+}
+class DarksideWalletDNetwork: ZcashNetwork {
+    var constants: NetworkConstants.Type = DarksideWalletDConstants.self
+    
+    var networkType = NetworkType.mainnet
+
+}

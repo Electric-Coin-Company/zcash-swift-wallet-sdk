@@ -126,7 +126,7 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var initializer: Initializer
     public private(set) var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState
-    public private(set) var network: NetworkType
+    public private(set) var network: ZcashNetwork
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
@@ -444,7 +444,7 @@ public class SDKSynchronizer: Synchronizer {
     public func shieldFunds(spendingKey: String, transparentSecretKey: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         
         // let's see if there are funds to shield
-        let derivationTool = DerivationTool(networkType: self.network)
+        let derivationTool = DerivationTool(networkType: self.network.networkType)
         
         do {
             let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)

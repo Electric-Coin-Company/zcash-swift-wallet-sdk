@@ -12,7 +12,7 @@ import SQLite
 class DownloadOperationTests: XCTestCase {
     
     var operationQueue = OperationQueue()
-
+    var network = ZcashNetworkBuilder.network(for: .testnet)
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         operationQueue.cancelAllOperations()
@@ -25,7 +25,8 @@ class DownloadOperationTests: XCTestCase {
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
         let blockCount = 100
-        let range = ZcashSDK.SAPLING_ACTIVATION_HEIGHT ... ZcashSDK.SAPLING_ACTIVATION_HEIGHT + blockCount
+        let activationHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
+        let range = activationHeight ... activationHeight + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: downloader, range: range)
         
         downloadOperation.completionHandler = { (finished, cancelled) in

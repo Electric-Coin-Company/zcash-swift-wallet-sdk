@@ -26,7 +26,7 @@ class BlockStreamingTest: XCTestCase {
     func testExample() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: Constants.address,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: Int64.max,
@@ -58,7 +58,7 @@ class BlockStreamingTest: XCTestCase {
     func testStreamOperation() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: Constants.address,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 1000,
@@ -91,7 +91,7 @@ class BlockStreamingTest: XCTestCase {
     func testStreamOperationCancellation() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: Constants.address,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 10000,
@@ -124,7 +124,7 @@ class BlockStreamingTest: XCTestCase {
     func testStreamOperationTimeout() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         let errorExpectation = XCTestExpectation(description: "blockstream error expectation")
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: Constants.address,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 1000,
@@ -176,7 +176,7 @@ class BlockStreamingTest: XCTestCase {
     func testBatchOperation() throws {
         let expectation = XCTestExpectation(description: "blockbatch expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: Constants.address,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 300000,
@@ -209,7 +209,7 @@ class BlockStreamingTest: XCTestCase {
     func testBatchOperationCancellation() throws {
         let expectation = XCTestExpectation(description: "blockbatch expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: Constants.address,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 300000,

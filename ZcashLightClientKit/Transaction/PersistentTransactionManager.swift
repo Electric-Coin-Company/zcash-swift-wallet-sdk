@@ -249,7 +249,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
 class OutboundTransactionManagerBuilder {
     
     static func build(initializer: Initializer) throws -> OutboundTransactionManager {
-        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: initializer.lightWalletService, repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer), networkType: initializer.network)
+        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: initializer.lightWalletService, repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer), networkType: initializer.network.networkType)
         
     }
 }

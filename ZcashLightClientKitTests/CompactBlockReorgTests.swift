@@ -11,7 +11,7 @@ import XCTest
 @testable import ZcashLightClientKit
 class CompactBlockReorgTests: XCTestCase {
     
-    let processorConfig = CompactBlockProcessor.Configuration.standard
+    let processorConfig = CompactBlockProcessor.Configuration.standard(for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.SAPLING_ACTIVATION_HEIGHT)
     var processor: CompactBlockProcessor!
     var downloadStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -20,7 +20,8 @@ class CompactBlockReorgTests: XCTestCase {
     var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
-    let mockLatestHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 2000
+    let network = ZcashNetworkBuilder.network(for: .testnet)
+    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.SAPLING_ACTIVATION_HEIGHT + 2000
     
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -32,7 +33,7 @@ class CompactBlockReorgTests: XCTestCase {
         let mockBackend = MockRustBackend.self
         mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
         mockBackend.mockValidateCombinedChainKeepFailing = false
-        mockBackend.mockValidateCombinedChainFailureHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 320
+        mockBackend.mockValidateCombinedChainFailureHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT + 320
         
         processor = CompactBlockProcessor(service: service,
                                           storage: storage,
@@ -69,8 +70,8 @@ class CompactBlockReorgTests: XCTestCase {
             XCTAssertNotNil(notification.userInfo)
             if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
                 let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
-                XCTAssertTrue( reorg == 0 || reorg > ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
-                XCTAssertTrue( rewind == 0 || rewind > ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue( reorg == 0 || reorg > self.network.constants.SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue( rewind == 0 || rewind > self.network.constants.SAPLING_ACTIVATION_HEIGHT)
                 XCTAssertTrue( rewind <= reorg )
                 reorgNotificationExpectation.fulfill()
             } else {

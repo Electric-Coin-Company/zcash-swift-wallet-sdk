@@ -75,7 +75,7 @@ public class Initializer {
     private(set) var accountRepository: AccountRepository
     private(set) var storage: CompactBlockStorage
     private(set) var downloader: CompactBlockDownloader
-    private(set) var network: NetworkType
+    private(set) var network: ZcashNetwork
     private(set) public var viewingKeys: [UnifiedViewingKey]
     private(set) public var walletBirthday: WalletBirthday
     /**
@@ -92,7 +92,7 @@ public class Initializer {
                  dataDbURL: URL,
                  pendingDbURL: URL,
                  endpoint: LightWalletEndpoint,
-                 network: NetworkType,
+                 network: ZcashNetwork,
                  spendParamsURL: URL,
                  outputParamsURL: URL,
                  viewingKeys: [UnifiedViewingKey],
@@ -127,7 +127,7 @@ public class Initializer {
      */
     init(rustBackend: ZcashRustBackendWelding.Type,
          lowerBoundHeight: BlockHeight,
-         network: NetworkType,
+         network: ZcashNetwork,
          cacheDbURL: URL,
          dataDbURL: URL,
          pendingDbURL: URL,
@@ -187,7 +187,7 @@ public class Initializer {
         }
         
         do {
-            try rustBackend.initDataDb(dbData: dataDbURL, networkType: network)
+            try rustBackend.initDataDb(dbData: dataDbURL, networkType: network.networkType)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
@@ -195,7 +195,7 @@ public class Initializer {
         }
     
         do {
-            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthday.height), hash: walletBirthday.hash, time: walletBirthday.time, saplingTree: walletBirthday.tree, networkType: network)
+            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthday.height), hash: walletBirthday.hash, time: walletBirthday.time, saplingTree: walletBirthday.tree, networkType: network.networkType)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
@@ -207,7 +207,7 @@ public class Initializer {
         lowerBoundHeight = max(walletBirthday.height, lastDownloaded)
  
         do {
-            guard try rustBackend.initAccountsTable(dbData: dataDbURL, uvks: viewingKeys, networkType: network) else {
+            guard try rustBackend.initAccountsTable(dbData: dataDbURL, uvks: viewingKeys, networkType: network.networkType) else {
                 throw rustBackend.lastError() ?? InitializerError.accountInitFailed
             }
         } catch RustWeldingError.dataDbNotEmpty {
@@ -219,7 +219,7 @@ public class Initializer {
         let migrationManager = MigrationManager(cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
                                                 dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path),
                                                 pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
-                                                networkType: self.network)
+                                                networkType: self.network.networkType)
         
         try migrationManager.performMigration(uvks: viewingKeys)
     }
@@ -236,7 +236,7 @@ public class Initializer {
      - Parameter account: the index of the account
      */
     public func getBalance(account index: Int = 0) -> Int64 {
-        rustBackend.getBalance(dbData: dataDbURL, account: Int32(index), networkType: network)
+        rustBackend.getBalance(dbData: dataDbURL, account: Int32(index), networkType: network.networkType)
     }
     
     /**
@@ -244,20 +244,20 @@ public class Initializer {
     - Parameter account: the index of the account
     */
     public func getVerifiedBalance(account index: Int = 0) -> Int64 {
-        rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index), networkType: network)
+        rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index), networkType: network.networkType)
     }
     
     /**
      checks if the provided address is a valid shielded zAddress
      */
     public func isValidShieldedAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidShieldedAddress(address, networkType: network)) ?? false
+        (try? rustBackend.isValidShieldedAddress(address, networkType: network.networkType)) ?? false
     }
     /**
      checks if the provided address is a transparent zAddress
      */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidTransparentAddress(address,networkType: network)) ?? false
+        (try? rustBackend.isValidTransparentAddress(address,networkType: network.networkType)) ?? false
     }
     
     func isSpendParameterPresent() -> Bool {

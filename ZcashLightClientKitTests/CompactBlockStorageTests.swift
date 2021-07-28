@@ -13,13 +13,14 @@ class CompactBlockStorageTests: XCTestCase {
     
     var compactBlockDao: CompactBlockRepository = try! TestDbBuilder.inMemoryCompactBlockStorage()
     
+    let network = ZcashNetworkBuilder.network(for: .testnet)
     func testEmptyStorage() {
         XCTAssertEqual(try! compactBlockDao.latestHeight(), BlockHeight.empty())
     }
     
     func testStoreThousandBlocks() {
         let initialHeight = try! compactBlockDao.latestHeight()
-        let startHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let startHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         
@@ -62,7 +63,7 @@ class CompactBlockStorageTests: XCTestCase {
     
     func testRewindTo() {
         
-        let startHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
+        let startHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         

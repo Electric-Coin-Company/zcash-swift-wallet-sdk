@@ -21,10 +21,10 @@ public protocol ResourceProvider {
  Convenience provider for a data db and cache db resources. 
  */
 public struct DefaultResourceProvider: ResourceProvider {
-    init(networkType: NetworkType) {
-        self.network = networkType
+    init(network: ZcashNetwork) {
+        self.network = network
     }
-    var network: NetworkType
+    var network: ZcashNetwork
      public var dataDbURL: URL {
         let constants = network.constants
         do {
