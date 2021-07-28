@@ -43,16 +43,13 @@ use_frameworks!
 pod 'ZcashLightClientKit'
 ````
 
-### Set Testnet or Mainnet environment
-Before building, make sure that your environment has the variable `ZCASH_NETWORK_ENVIRONMENT` set to `MAINNET` or `TESTNET`.
-
 ### Custom build phases warning
 When running `pod install` you will see this warning upon success:
 ```` bash
 [!] ZcashLightClientKit has added 2 script phases. Please inspect before executing a build. 
 See `https://guides.cocoapods.org/syntax/podspec.html#script_phases` for more information.
 ````
-Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We've taken the lead to get that burden off your shoulders as much as possible by leveraging the `prepare_command` and `script_phases` features from Cocoapods to carefully generate the `TESTNET` and `MAINNET` builds as simple and less error prone as we could think it could be. Which started as some simple vanilla scripts, ended up being some kind of "Build System" on its own. Nothing is written on stone, and we accept collaborations and improvements in this matter too.
+Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We've taken the lead to get that burden off your shoulders as much as possible by leveraging the `prepare_command` and `script_phases` features from Cocoapods to carefully generate a build for the Rust layer.
 
 ## Build system
 
@@ -68,8 +65,7 @@ ZcashLightClientKit needs files to be present at pod installation time, but that
 
 - `${ZCASH_POD_SRCROOT}/zcashlc/libzcashlc.a` this is the librustzcash build .a file itself
 - `lib/libzcashlc.a` (as vendored library that will be added as an asset by xcodeproj)
-- `ZcashSDK.generated.swift` which contains sensitive values for the SDK that change depending on the network environment we are building for
-- `WalletBirthday+saplingtree.generated.swift` helper functions to import existing wallets
+
 
 **2. Build Phase**
 
@@ -78,36 +74,16 @@ The build Phase scripts executes within the Xcode Build Step and has all the kno
 ```` ruby
 s.script_phase = {
       :name => 'Build generate constants and build librustzcash',
-      :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/generate_zcashsdk_constants.sh && sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
+      :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
       :execution_position => :before_compile
    }
 ````
 
 This step will generate files needed on the next steps and build the librustzcash with Xcode but *not using cargo's built-in Xcode integration*
 
-**a. Generating ZcashSDK constants**
-
-To run this you need `Sourcery`. We use `Stencil` templates to create these files based on the `ZCASH_NETWORK_ENVIRONMENT` value of your choice. You can either integrate sourcery with cocoapods or as part of your environment.
-
-All generated files will be located in the Pods source root within the `Generated` folder. `ZCASH_SDK_GENERATED_SOURCES_FOLDER` represents that path in the build system.
-
-**b. Building librustzcash and integrating it to the pod structure**
+** Building librustzcash and integrating it to the pod structure**
 
 Where the magic happens. Here we will make sure that everything is set up properly to start building librustzcash. When on mainnet, the build will append a parameter to include mainnet features.
-
-
-**Safeguards points**:
-if it appears that you are about to build something smelly, we will let you know. Combining testnet and mainnet values and artifacts and viceversa leads to unstable builds and may cause loss of funds if ran on production.
-```
-if [ existing_build_mismatch = true ]; then 
-        # clean
-        echo "build mismatch. You previously build a Different network environment. It appears that your build could be inconsistent if proceeding. Please clean your Pods/ folder and clean your build before running your next build."
-        exit 1
-fi
-```
-**3. Xcode clean integration**
-
-When performing a clean, we will clean the rust build folders.
 
 ### Scripts
 
@@ -118,12 +94,11 @@ On the Scripts folder you will find the following files:
  |-/generate_test_constants.sh
  |-/build_librustzcash_xcode.sh
  |-/build_librustzcash.sh
- |-/generate_zcashsdk_constants.sh
  |-/script_commons.sh
  ````
 
 #### prepare_zcash_sdk.sh
-This script is run by the Cocoapods 'preapare_command'.
+This script is run by the Cocoapods 'prepare_command'.
 
 ```` Ruby
 s.prepare_command = <<-CMD
@@ -194,22 +169,7 @@ We don't like reinventing the wheel, so we gently borrowed swift lint rules from
 
 ## Troubleshooting
 
-### No network environment....
-if you see this message when building:
-```No network environment. Set ZCASH_NETWORK_ENVIRONMENT to MAINNET or TESTNET```
-make sure your dev environment has this variable set before the build starts. *DO NOT CHANGE IT DURING THE BUILD PROCESS*.
-
-If the variable was properly set *after* you've seen this message, you will need to either a) set it manually on the pod's target or b) doing a clean pod install and subsequent build.
-
-#### a) setting the flag manually
-1. on your workspace, select the Pods project
-2. on the Targets pane, select ZcashLightClientKit
-3. go to build settings
-4. scroll down to see ZCASH_NETWORK_ENVIRONMENT and complete with TESTNET or MAINNET
-
-![how to complete network environment manually](docs/images/complete_environment_manually.png)
-
-#### b) clean pod install
+#### clean pod install
 it's not necessary to delete the whole Pods/ directory and download all of your dependencies again
 1. on your project root, locate the `Pods/` directory
 2. remove ZcashLightClientKit from it
@@ -227,14 +187,6 @@ if you get a build error similar to ```_function_name  referenced from...```
 2. delete derived data and clean
 3. run `pod install`
 4. build
-
-### ZcashLightClientKitSample missing .params
-ZcashLightClientKit has an external dependency on 2 files containing Sapling parameters. Although you can provide those files as you seem fit, the sample app requires them on the main bundle.
-
-You can download these files from https://z.cash/downloads/sapling-spend.params
-and https://z.cash/downloads/sapling-output.params and then move them to the correct folder, which is specified on the error itself.
-
-![how to fix missing params files](docs/images/output_params_error.png)
 
 ### can't find crate for ...  target may not be installed
 This error could be a side effect of having more then one rust toolchain installed. 
