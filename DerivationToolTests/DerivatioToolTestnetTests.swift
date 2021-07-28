@@ -4,6 +4,7 @@
 //
 //  Created by Francisco Gindre on 7/26/21.
 //
+// swift-format-ignore-file
 
 import XCTest
 @testable import ZcashLightClientKit

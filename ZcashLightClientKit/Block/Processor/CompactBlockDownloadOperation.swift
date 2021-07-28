@@ -181,7 +181,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
            
             let localDownloadedHeight = try self.storage.latestHeight()
             
-            if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight >  startHeight {
+            if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight > startHeight {
                 LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
                 startHeight = localDownloadedHeight + 1
             }

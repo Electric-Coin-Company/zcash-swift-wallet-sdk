@@ -179,7 +179,6 @@ class MigrationManager {
             return
         }
         
-        
         let derivationTool = DerivationTool(networkType: self.network)
         
         let uvks = try derivationTool.deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)

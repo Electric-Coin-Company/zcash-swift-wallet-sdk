@@ -848,4 +848,3 @@ fileprivate struct NullProgress: BlockProgressReporting {
         0
     }
 }
-

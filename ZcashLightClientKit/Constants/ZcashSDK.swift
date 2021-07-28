@@ -110,7 +110,6 @@ public class ZcashSDK {
      */
     public static var DEFAULT_STALE_TOLERANCE: Int = 10
     
-    
     /**
      Default Name for LibRustZcash data.db
      */
@@ -168,7 +167,6 @@ public protocol NetworkConstants {
      for librustzcash not figuring out the tx fee from the tx itself.
      */
     static var FEE_CHANGE_HEIGHT: BlockHeight { get }
-
     
     static func defaultFee(for height: BlockHeight) -> Int64
     
@@ -207,7 +205,6 @@ public class ZcashSDKMainnetConstants: NetworkConstants {
     public static var DEFAULT_PENDING_DB_NAME = "pending.db"
     
     public static var DEFAULT_DB_NAME_PREFIX = "ZcashSdk_mainnet_"
-    
     
     public static var FEE_CHANGE_HEIGHT: BlockHeight = 1_077_550
 }

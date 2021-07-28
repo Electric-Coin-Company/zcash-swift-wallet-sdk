@@ -394,7 +394,6 @@ extension SyncStatus  {
     }
 }
 
-
 extension SyncStatus {
     init(_ blockProcessorProgress: CompactBlockProgress) {
         switch blockProcessorProgress {

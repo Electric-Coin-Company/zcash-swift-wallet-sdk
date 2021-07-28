@@ -7,9 +7,6 @@
 
 import Foundation
 
-
-
-
 public typealias ConsensusBranchID = Int32
 
 public extension ConsensusBranchID {
@@ -22,7 +19,6 @@ public extension ConsensusBranchID {
         return Int32(bitPattern: bitpattern)
     }
 }
-
 
 extension NetworkType {
     init?(_ string: String) {
