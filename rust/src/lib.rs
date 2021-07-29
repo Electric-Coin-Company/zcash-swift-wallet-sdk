@@ -11,7 +11,7 @@ use zcash_client_backend::{
     data_api::{
         chain::{scan_cached_blocks, validate_chain},
         error::Error,
-        wallet::{create_spend_to_address, decrypt_and_store_transaction, shield_funds, ANCHOR_OFFSET},
+        wallet::{create_spend_to_address, decrypt_and_store_transaction, shield_funds},
         WalletRead,
     },
     encoding::{
@@ -1399,7 +1399,7 @@ pub extern "C" fn zcashlc_shield_funds(
             &sk,
             &extsk, 
             &memo_bytes, 
-            ANCHOR_OFFSET)
+            0) // fix off-by-one error. 10 confs already added in this function
             .map_err(|e| format_err!("Error while shielding transaction: {}", e))
     });
     unwrap_exc_or(res, -1)
