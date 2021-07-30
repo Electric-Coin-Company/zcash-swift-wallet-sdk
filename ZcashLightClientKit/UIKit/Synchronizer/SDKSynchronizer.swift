@@ -124,9 +124,9 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var progress: Float = 0.0
     public private(set) var blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
-    public private(set)var latestScannedHeight: BlockHeight
+    public private(set) var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState
-    
+    public private(set) var network: ZcashNetwork
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
@@ -159,7 +159,8 @@ public class SDKSynchronizer: Synchronizer {
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
         self.latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday.height
-        self.subscribeToProcessorNotifications(self.blockProcessor)
+        self.network = initializer.network
+        self.subscribeToProcessorNotifications(blockProcessor)
     }
     
     deinit {
@@ -443,13 +444,14 @@ public class SDKSynchronizer: Synchronizer {
     public func shieldFunds(spendingKey: String, transparentSecretKey: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         
         // let's see if there are funds to shield
-        let derivationTool = DerivationTool.default
+        let derivationTool = DerivationTool(networkType: self.network.networkType)
         
         do {
             let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
             let tBalance = try utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
             
-            guard tBalance.verified >= ZcashSDK.shieldingThreshold else {
+            // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
+            guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
                 resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
                 return
             }
@@ -562,7 +564,7 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        initializer.lightWalletService.fetchUTXOs(for: address, height: ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: { [weak self] r in
+        initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.SAPLING_ACTIVATION_HEIGHT, result: { [weak self] r in
             guard let self = self else { return }
             switch r {
             case .success(let utxos):
@@ -579,7 +581,7 @@ public class SDKSynchronizer: Synchronizer {
         })
     }
    
-    public func refreshUTXOs(address: String, from height: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
+    public func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
         
         self.blockProcessor.refreshUTXOs(tAddress: address, startHeight: height, result: result)
     }
@@ -635,7 +637,7 @@ public class SDKSynchronizer: Synchronizer {
             height = rewindHeight
         
         case .transaction(let tx):
-            guard let txHeight = tx.anchor else {
+            guard let txHeight = tx.anchor(network: self.network) else {
                 throw SynchronizerError.rewindErrorUnknownArchorHeight
             }
             height = txHeight
@@ -846,4 +848,3 @@ fileprivate struct NullProgress: BlockProgressReporting {
         0
     }
 }
-

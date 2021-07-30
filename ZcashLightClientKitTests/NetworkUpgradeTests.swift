@@ -19,7 +19,8 @@ class NetworkUpgradeTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     var coordinator: TestCoordinator!
-   
+    var network = ZcashNetworkBuilder.network(for: .testnet)
+    
     override func setUpWithError() throws {
         
 //        coordinator = try TestCoordinator(
@@ -28,7 +29,7 @@ class NetworkUpgradeTests: XCTestCase {
 //            walletBirthday: birthday,
 //            channelProvider: ChannelProvider()
 //        )
-        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
+        try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
     }
     
     override func tearDownWithError() throws {
@@ -59,7 +60,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         wait(for: [firstSyncExpectation], timeout: 120)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        guard verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI else {
+        guard verifiedBalance > network.constants.defaultFee(for: activationHeight) else {
             XCTFail("not enough balance to continue test")
             return
         }
@@ -206,7 +207,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         wait(for: [firstSyncExpectation], timeout: 120)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        XCTAssertTrue(verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI)
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: activationHeight))
         
         
         
@@ -296,7 +297,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         wait(for: [firstSyncExpectation], timeout: 120)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        guard verifiedBalance > ZcashSDK.MINERS_FEE_ZATOSHI else {
+        guard verifiedBalance > network.constants.defaultFee(for: activationHeight) else {
             XCTFail("balance is not enough to continue with this test")
             return
         }
@@ -403,7 +404,7 @@ class NetworkUpgradeTests: XCTestCase {
         var p: PendingTransactionEntity? = nil
         
         // spend all the funds
-        let spendAmount: Int64 = postActivationBalance - Int64(ZcashSDK.MINERS_FEE_ZATOSHI)
+        let spendAmount: Int64 = postActivationBalance - Int64(network.constants.defaultFee(for: activationHeight))
         
         /*
          send transaction to recipient address

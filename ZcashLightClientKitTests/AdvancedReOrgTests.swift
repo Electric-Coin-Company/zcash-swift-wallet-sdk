@@ -24,12 +24,15 @@ class AdvancedReOrgTests: XCTestCase {
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
     let branchID = "2bb40e60"
     let chainName = "main"
+    let network = DarksideWalletDNetwork()
+    
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
-            channelProvider: ChannelProvider()
+            channelProvider: ChannelProvider(),
+            network: network
         )
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }

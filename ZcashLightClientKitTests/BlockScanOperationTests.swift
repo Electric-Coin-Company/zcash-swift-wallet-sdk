@@ -20,9 +20,9 @@ class BlockScanOperationTests: XCTestCase {
                         extpub: "02075a7f5f7507d64022dad5954849f216b0f1b09b2d588be663d8e7faeb5aaf61")
 
     
-    var walletBirthDay = WalletBirthday.birthday(with: 1386000)
+    var walletBirthDay = WalletBirthday.birthday(with: 1386000, network: ZcashNetworkBuilder.network(for: .testnet))
     
-    
+    var network = ZcashNetworkBuilder.network(for: .testnet)
     var blockRepository: BlockRepository!
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -47,17 +47,17 @@ class BlockScanOperationTests: XCTestCase {
     
     func testSingleDownloadAndScanOperation() {
         logger = SampleLogger(logLevel: .debug)
-        XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL))
+        XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, networkType: network.networkType))
         let downloadStartedExpect = XCTestExpectation(description: self.description + "download started")
         let downloadExpect = XCTestExpectation(description: self.description + "download")
         let scanStartedExpect = XCTestExpectation(description: self.description + "scan started")
         let scanExpect = XCTestExpectation(description: self.description + "scan")
         let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
-        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+        let service = LightWalletGRPCService(endpoint: LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067))
         let blockCount = 100
-        let range = ZcashSDK.SAPLING_ACTIVATION_HEIGHT ... ZcashSDK.SAPLING_ACTIVATION_HEIGHT + blockCount
+        let range = network.constants.SAPLING_ACTIVATION_HEIGHT ...  network.constants.SAPLING_ACTIVATION_HEIGHT + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)
-        let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL)
+        let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL, networkType: network.networkType)
         
         downloadOperation.startedHandler = {
             downloadStartedExpect.fulfill()
@@ -119,15 +119,15 @@ class BlockScanOperationTests: XCTestCase {
         
         NotificationCenter.default.addObserver(self, selector: #selector(observeBenchmark(_:)), name: SDKMetrics.notificationName, object: nil)
          
-        try self.rustWelding.initDataDb(dbData: dataDbURL)
-        guard try self.rustWelding.initAccountsTable(dbData: self.dataDbURL, uvks: [uvk]) else {
+        try self.rustWelding.initDataDb(dbData: dataDbURL, networkType: network.networkType)
+        guard try self.rustWelding.initAccountsTable(dbData: self.dataDbURL, uvks: [uvk], networkType: network.networkType) else {
             XCTFail("failed to init account table")
             return
         }
         
-        try self.rustWelding.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthDay.height), hash: walletBirthDay.hash, time: walletBirthDay.time, saplingTree: walletBirthDay.tree)
+        try self.rustWelding.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthDay.height), hash: walletBirthDay.hash, time: walletBirthDay.time, saplingTree: walletBirthDay.tree, networkType: network.networkType)
         
-        let service = LightWalletGRPCService(host: Constants.address, port: 9067, secure: true, singleCallTimeout: 100000, streamingCallTimeout: 1000000000)
+        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
         let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
         try storage.createTable()
         
@@ -161,7 +161,7 @@ class BlockScanOperationTests: XCTestCase {
         }
         
         
-        let validationOperation = CompactBlockValidationOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL)
+        let validationOperation = CompactBlockValidationOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL, networkType: network.networkType)
         validationOperation.errorHandler = { error in
             self.operationQueue.cancelAllOperations()
             XCTFail("failed with error \(error)")
@@ -174,7 +174,7 @@ class BlockScanOperationTests: XCTestCase {
         }
         
         let transactionRepository = TransactionRepositoryBuilder.build(dataDbURL: dataDbURL)
-        let scanningOperation = CompactBlockBatchScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL, transactionRepository: transactionRepository, range: CompactBlockRange(uncheckedBounds: (walletBirthDay.height, walletBirthDay.height + 10000)), batchSize: 1000, progressDelegate: self)
+        let scanningOperation = CompactBlockBatchScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL, transactionRepository: transactionRepository, range: CompactBlockRange(uncheckedBounds: (walletBirthDay.height, walletBirthDay.height + 10000)), batchSize: 1000, networkType: network.networkType, progressDelegate: self)
         
         scanningOperation.completionHandler =  { (finished,cancelled) in
             XCTAssert(finished)

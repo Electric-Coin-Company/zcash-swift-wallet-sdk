@@ -68,13 +68,15 @@ class MockLightWalletService: LightWalletService {
         
     }
     
-    private var service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+    private var service: LightWalletService
     
     var latestHeight: BlockHeight
 
-    init(latestBlockHeight: BlockHeight) {
+    init(latestBlockHeight: BlockHeight, service: LightWalletService) {
         self.latestHeight = latestBlockHeight
+        self.service = service
     }
+    
     func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
             result(.success(self.latestHeight))

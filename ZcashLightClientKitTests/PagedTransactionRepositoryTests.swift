@@ -13,7 +13,7 @@ class PagedTransactionRepositoryTests: XCTestCase {
     var transactionRepository: TransactionRepository!
     
     override func setUp() {
-        transactionRepository = MockTransactionRepository(unminedCount: 5, receivedCount: 150, sentCount: 100)
+        transactionRepository = MockTransactionRepository(unminedCount: 5, receivedCount: 150, sentCount: 100, network: ZcashNetworkBuilder.network(for: .testnet))
         pagedTransactionRepository = PagedTransactionDAO(repository: transactionRepository)
     }
 

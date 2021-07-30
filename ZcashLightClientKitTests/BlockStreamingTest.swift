@@ -23,14 +23,14 @@ class BlockStreamingTest: XCTestCase {
         try? FileManager.default.removeItem(at: __dataDbURL())
     }
 
-    func testExample() throws {
+    func testStreamOperation() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: LightWalletEndpointBuilder.eccTestnet.host,
                                              port: 9067,
                                              secure: true,
-                                             singleCallTimeout: Int64.max,
-                                             streamingCallTimeout: 1000)
+                                             singleCallTimeout: 1000,
+                                             streamingCallTimeout: 100000)
         
         
         let latestHeight = try service.latestBlockHeight()
@@ -55,43 +55,10 @@ class BlockStreamingTest: XCTestCase {
     }
     
     
-    func testStreamOperation() throws {
-        let expectation = XCTestExpectation(description: "blockstream expectation")
-        
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
-                                             port: 9067,
-                                             secure: true,
-                                             singleCallTimeout: 1000,
-                                             streamingCallTimeout: 1000)
-        let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
-        
-        let startHeight = try service.latestBlockHeight() - 100_000
-        let operation = CompactBlockStreamDownloadOperation(service: service,
-                                                            storage: storage,
-                                                            startHeight: startHeight,
-                                                            progressDelegate: self)
-        
-        operation.completionHandler = { (finished, cancelled) in
-            if cancelled {
-                XCTFail("operation cancelled")
-            }
-            expectation.fulfill()
-        }
-        
-        operation.errorHandler = { error in
-            XCTFail("failed with error: \(error)")
-            expectation.fulfill()
-        }
-        
-        queue.addOperation(operation)
-        
-        wait(for: [expectation], timeout: 1000)
-    }
-    
     func testStreamOperationCancellation() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: LightWalletEndpointBuilder.eccTestnet.host,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 10000,
@@ -124,7 +91,7 @@ class BlockStreamingTest: XCTestCase {
     func testStreamOperationTimeout() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         let errorExpectation = XCTestExpectation(description: "blockstream error expectation")
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: LightWalletEndpointBuilder.eccTestnet.host,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 1000,
@@ -165,25 +132,18 @@ class BlockStreamingTest: XCTestCase {
         let elapsed = now.distance(to: date)
         print("took \(elapsed) seconds")
     }
-
-    func testPerformanceExample() throws {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
-    }
     
     func testBatchOperation() throws {
         let expectation = XCTestExpectation(description: "blockbatch expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: LightWalletEndpointBuilder.eccTestnet.host,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 300000,
                                              streamingCallTimeout: 10000)
         let storage = try TestDbBuilder.diskCompactBlockStorage(at: __dataDbURL() )
         let targetHeight = try service.latestBlockHeight()
-        let startHeight =  targetHeight - 100_000
+        let startHeight =  targetHeight - 10_000
         let operation = CompactBlockBatchDownloadOperation(service: service,
                                                            storage: storage,
                                                            startHeight: startHeight, targetHeight: targetHeight,
@@ -203,13 +163,13 @@ class BlockStreamingTest: XCTestCase {
         
         queue.addOperation(operation)
         
-        wait(for: [expectation], timeout: 300)
+        wait(for: [expectation], timeout: 120)
     }
 
     func testBatchOperationCancellation() throws {
         let expectation = XCTestExpectation(description: "blockbatch expectation")
         
-        let service = LightWalletGRPCService(host: "lightwalletd.testnet.electriccoin.co",
+        let service = LightWalletGRPCService(host: LightWalletEndpointBuilder.eccTestnet.host,
                                              port: 9067,
                                              secure: true,
                                              singleCallTimeout: 300000,
@@ -243,6 +203,6 @@ class BlockStreamingTest: XCTestCase {
 extension BlockStreamingTest: CompactBlockProgressDelegate {
     
     func progressUpdated(_ progress: CompactBlockProgress) {
-//        print("progressHeight: \(progress.progressHeight) startHeight: \(progress.startHeight), targetHeight: \(progress.targetHeight)")
+        print("progressHeight: \(String(describing: progress.progressHeight)) startHeight: \(progress.progress), targetHeight: \(String(describing: progress.targetHeight))")
     }
 }

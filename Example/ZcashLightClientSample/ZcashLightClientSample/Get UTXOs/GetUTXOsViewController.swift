@@ -26,10 +26,10 @@ class GetUTXOsViewController: UIViewController {
     }
     
     func updateUI() {
-        let tAddress = try! DerivationTool.default.deriveTransparentAddress(seed: DemoAppConfig.seed)
+        let tAddress = try! DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveTransparentAddress(seed: DemoAppConfig.seed)
         self.transparentAddressLabel.text = tAddress
         
-        let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(address: tAddress)
+        let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
         
         self.totalBalanceLabel.text = String(balance.total.asHumanReadableZecBalance())
         self.verifiedBalanceLabel.text = String(balance.verified.asHumanReadableZecBalance())
@@ -38,9 +38,10 @@ class GetUTXOsViewController: UIViewController {
     @IBAction func shieldFunds(_ sender: Any) {
         do {
             let seed =  DemoAppConfig.seed
-            let sk = try DerivationTool.default.deriveSpendingKeys(seed: seed, numberOfAccounts: 1).first!
+            let derivationTool = DerivationTool(networkType: ZCASH_NETWORK.networkType)
+            let sk = try derivationTool.deriveSpendingKeys(seed: seed, numberOfAccounts: 1).first!
             
-            let tsk = try DerivationTool.default.deriveTransparentPrivateKey(seed: seed)
+            let tsk = try derivationTool.deriveTransparentPrivateKey(seed: seed)
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
             AppDelegate.shared.sharedSynchronizer.shieldFunds(spendingKey: sk, transparentSecretKey: tsk, memo: "shielding is fun!", from: 0) { (result) in
                 DispatchQueue.main.async {

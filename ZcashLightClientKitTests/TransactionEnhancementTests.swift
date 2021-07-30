@@ -26,33 +26,11 @@ class TransactionEnhancementTests: XCTestCase {
     let mockLatestHeight = BlockHeight(663250)
     let targetLatestHeight = BlockHeight(663251)
     let walletBirthday = BlockHeight(663150)
-    
+    let network = DarksideWalletDNetwork()
+    let branchID = "2bb40e60"
+    let chainName = "main"
     override func setUpWithError() throws {
         logger = SampleLogger(logLevel: .debug)
-        
-
-        var config = CompactBlockProcessor.Configuration.standard
-        let rustBackend = ZcashRustBackend.self
-        
-        
-        let birthday = WalletBirthday.birthday(with: walletBirthday)
-        config.walletBirthday = birthday.height
-        processorConfig = config
-        
-        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
-        try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        
-        _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1)
-        let service = DarksideWalletService()
-        darksideWalletService = service
-        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
-        try! storage.createTable()
-        
-        downloader = CompactBlockDownloader(service: service, storage: storage)
-        processor = CompactBlockProcessor(service: service,
-                                          storage: storage,
-                                          backend: rustBackend,
-                                          config: processorConfig)
         
         downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
@@ -66,11 +44,39 @@ class TransactionEnhancementTests: XCTestCase {
         
         waitExpectation = XCTestExpectation(description: self.description + "waitExpectation")
         
+        let birthday = WalletBirthday.birthday(with: walletBirthday, network: network)
+        
+        let config = CompactBlockProcessor.Configuration.standard(for: self.network, walletBirthday: birthday.height)
+        let rustBackend = ZcashRustBackend.self
+        processorConfig = config
+        
+        
+        
+        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? FileManager.default.removeItem(at: processorConfig.dataDb)
+        
+        _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1,networkType: network.networkType)
+        _ = try rustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: network.networkType)
+        _ = try rustBackend.initBlocksTable(dbData: processorConfig.dataDb, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree, networkType: network.networkType)
+        
+        let service = DarksideWalletService()
+        darksideWalletService = service
+        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
+        try! storage.createTable()
+        
+        downloader = CompactBlockDownloader(service: service, storage: storage)
+        processor = CompactBlockProcessor(service: service,
+                                          storage: storage,
+                                          backend: rustBackend,
+                                          config: processorConfig)
+        
+        
+        
         NotificationCenter.default.addObserver(self, selector: #selector(processorFailed(_:)), name: Notification.Name.blockProcessorFailed, object: processor)
     }
     
     override func tearDownWithError() throws {
-        try! FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         downloadStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()
@@ -100,7 +106,7 @@ class TransactionEnhancementTests: XCTestCase {
     func testBasicEnhacement() throws {
         
         let targetLatestHeight = BlockHeight(663250)
-        let walletBirthday = WalletBirthday.birthday(with: 663151).height
+        let walletBirthday = WalletBirthday.birthday(with: 663151, network: network).height
         
         try basicEnhancementTest(latestHeight: targetLatestHeight, walletBirthday: walletBirthday)
     }
@@ -108,12 +114,15 @@ class TransactionEnhancementTests: XCTestCase {
     func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) throws {
      
         do {
+            try darksideWalletService.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
             try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue)
+            try darksideWalletService.applyStaged(nextLatestHeight: 663200)
         } catch  {
             XCTFail("Error: \(error)")
             return
         }
       
+        sleep(3)
         /**
          connect to dLWD
          request latest height -> receive firstLatestHeight
@@ -124,12 +133,13 @@ class TransactionEnhancementTests: XCTestCase {
             XCTFail("Error: \(error)")
             return
         }
-        
+
         
         /**
          download and sync blocks from walletBirthday to firstLatestHeight
          */
         do {
+            
             try startProcessing()
              
         } catch {
@@ -155,3 +165,4 @@ class TransactionEnhancementTests: XCTestCase {
     }
 
 }
+

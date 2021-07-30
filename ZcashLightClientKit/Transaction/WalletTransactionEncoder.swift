@@ -16,13 +16,15 @@ class WalletTransactionEncoder: TransactionEncoder {
     private var spendParamsURL: URL
     private var dataDbURL: URL
     private var cacheDbURL: URL
+    private var networkType: NetworkType
     
     init(rust: ZcashRustBackendWelding.Type,
          dataDb: URL,
          cacheDb: URL,
          repository: TransactionRepository,
          outputParams: URL,
-         spendParams: URL) {
+         spendParams: URL,
+         networkType: NetworkType) {
         
         self.rustBackend = rust
         self.dataDbURL = dataDb
@@ -30,6 +32,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.repository = repository
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
+        self.networkType = networkType
         self.queue = DispatchQueue(label: "wallet.transaction.encoder.serial.queue")
         
     }
@@ -40,7 +43,8 @@ class WalletTransactionEncoder: TransactionEncoder {
                   cacheDb: initializer.cacheDbURL,
                   repository: initializer.transactionRepository,
                   outputParams: initializer.outputParamsURL,
-                  spendParams: initializer.spendParamsURL)
+                  spendParams: initializer.spendParamsURL,
+                  networkType: initializer.network.networkType)
         
     }
     
@@ -86,7 +90,8 @@ class WalletTransactionEncoder: TransactionEncoder {
                                                value: Int64(zatoshi),
                                                memo: memo,
                                                spendParamsPath: self.spendParamsURL.path,
-                                               outputParamsPath: self.outputParamsURL.path)
+                                               outputParamsPath: self.outputParamsURL.path,
+                                               networkType: networkType)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
@@ -130,7 +135,8 @@ class WalletTransactionEncoder: TransactionEncoder {
                                            extsk: spendingKey,
                                            memo: memo,
                                            spendParamsPath: self.spendParamsURL.path,
-                                           outputParamsPath: self.outputParamsURL.path)
+                                           outputParamsPath: self.outputParamsURL.path,
+                                           networkType: networkType)
         
         guard txId > 0 else {
             throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")

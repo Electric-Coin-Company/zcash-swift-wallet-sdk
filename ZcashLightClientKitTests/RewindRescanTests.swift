@@ -23,12 +23,14 @@ class RewindRescanTests: XCTestCase {
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
     let branchID = "2bb40e60"
     let chainName = "main"
+    var network = ZcashNetworkBuilder.network(for: .mainnet)
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
-            channelProvider: ChannelProvider()
+            channelProvider: ChannelProvider(),
+            network: network
         )
         try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
@@ -68,7 +70,7 @@ class RewindRescanTests: XCTestCase {
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
         // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to birthday
@@ -114,12 +116,12 @@ class RewindRescanTests: XCTestCase {
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
         // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to birthday
         let targetHeight: BlockHeight = newChaintTip - 8000
-        let rewindHeight = ZcashRustBackend.getNearestRewindHeight(dbData: coordinator.databases.dataDB, height: Int32(targetHeight))
+        let rewindHeight = ZcashRustBackend.getNearestRewindHeight(dbData: coordinator.databases.dataDB, height: Int32(targetHeight), networkType: network.networkType)
         try coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
         
         
@@ -179,7 +181,7 @@ class RewindRescanTests: XCTestCase {
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
         // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to transaction
@@ -192,7 +194,7 @@ class RewindRescanTests: XCTestCase {
 
         
         // assert that after the new height is
-        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),transaction.transactionEntity.anchor)
+        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),transaction.transactionEntity.anchor(network: network))
         
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         
@@ -232,10 +234,10 @@ class RewindRescanTests: XCTestCase {
         
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
-        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalance = verifiedBalance - Int64(ZcashSDK.defaultFee())
+        let maxBalance = verifiedBalance - Int64(network.constants.defaultFee(for: defaultLatestHeight))
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction

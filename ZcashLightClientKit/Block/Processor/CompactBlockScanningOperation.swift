@@ -19,11 +19,13 @@ class CompactBlockScanningOperation: ZcashOperation {
     private var cacheDb: URL
     private var dataDb: URL
     private var limit: UInt32
-    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL, limit: UInt32 = 0) {
+    private var network: NetworkType
+    init(rustWelding: ZcashRustBackendWelding.Type, cacheDb: URL, dataDb: URL, limit: UInt32 = 0, networkType: NetworkType) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
         self.limit = limit
+        self.network = networkType
         super.init()
     }
     
@@ -33,7 +35,7 @@ class CompactBlockScanningOperation: ZcashOperation {
             return
         }
         self.startedHandler?()
-        guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: limit) else {
+        guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: limit, networkType: network) else {
             self.error = self.rustBackend.lastError() ?? ZcashOperationError.unknown
             LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
             self.fail()
@@ -112,6 +114,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
     private var batchSize: UInt32
     private var blockRange: CompactBlockRange
     private var transactionRepository: TransactionRepository
+    private var network: NetworkType
     
     init(rustWelding: ZcashRustBackendWelding.Type,
          cacheDb: URL,
@@ -119,6 +122,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
          transactionRepository: TransactionRepository,
          range: CompactBlockRange,
          batchSize: UInt32 = 100,
+         networkType: NetworkType,
          progressDelegate: CompactBlockProgressDelegate? = nil) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
@@ -127,6 +131,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
         self.blockRange = range
         self.batchSize = batchSize
         self.progressDelegate = progressDelegate
+        self.network = networkType
         super.init()
     }
     
@@ -139,7 +144,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
         do {
             if batchSize == 0 {
                 let scanStartTime = Date()
-                guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: batchSize) else {
+                guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: batchSize, networkType: network) else {
                     self.scanFailed(self.rustBackend.lastError() ?? ZcashOperationError.unknown)
                     return
                 }
@@ -164,7 +169,10 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     }
                     let previousScannedHeight = lastScannedHeight
                     let scanStartTime = Date()
-                    guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: batchSize) else {
+                    guard self.rustBackend.scanBlocks(dbCache: self.cacheDb,
+                                                      dbData: self.dataDb,
+                                                      limit: batchSize,
+                                                      networkType: network) else {
                         self.scanFailed(self.rustBackend.lastError() ?? ZcashOperationError.unknown)
                         return
                     }

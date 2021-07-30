@@ -13,10 +13,11 @@ class LightWalletServiceTests: XCTestCase {
     
     var service: LightWalletService!
     var channel: Channel!
+    let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         channel = ChannelProvider().channel()
-        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
     }
 
     override func tearDown() {
@@ -39,8 +40,8 @@ class LightWalletServiceTests: XCTestCase {
     func testHundredBlocks() {
         let expect = XCTestExpectation(description: self.description)
         let count = 99
-        let lowerRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + count
+        let lowerRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
+        let upperRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT + count
         let blockRange = lowerRange ... upperRange
         
         service.blockRange(blockRange) { (result) in
@@ -60,8 +61,8 @@ class LightWalletServiceTests: XCTestCase {
     }
     
     func testSyncBlockRange() {
-        let lowerRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
+        let upperRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT + 99
         let blockRange = lowerRange ... upperRange
         
         do {
@@ -80,7 +81,7 @@ class LightWalletServiceTests: XCTestCase {
             case .failure(let e):
                 XCTFail("error: \(e)")
             case .success(let height):
-                XCTAssertTrue(height > ZcashSDK.SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue(height > self.network.constants.SAPLING_ACTIVATION_HEIGHT)
             }
         }
         

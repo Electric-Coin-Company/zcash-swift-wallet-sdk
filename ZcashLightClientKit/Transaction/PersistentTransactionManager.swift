@@ -24,10 +24,16 @@ class PersistentTransactionManager: OutboundTransactionManager {
     var encoder: TransactionEncoder
     var service: LightWalletService
     var queue: DispatchQueue
-    init(encoder: TransactionEncoder, service: LightWalletService, repository: PendingTransactionRepository) {
+    var network: NetworkType
+    
+    init(encoder: TransactionEncoder,
+         service: LightWalletService,
+         repository: PendingTransactionRepository,
+         networkType: NetworkType) {
         self.repository = repository
         self.encoder = encoder
         self.service = service
+        self.network = networkType
         self.queue = DispatchQueue.init(label: "PersistentTransactionManager.serial.queue", qos: .userInitiated)
     }
     
@@ -44,7 +50,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         queue.async { [weak self] in
             guard let self = self else { return }
                 
-            let derivationTool = DerivationTool()
+            let derivationTool = DerivationTool(networkType: self.network)
             guard let vk = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
                   let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: vk) else {
                 result(.failure(TransactionManagerError.shieldingEncodingFailed(tx: pendingTransaction, reason: "There was an error Deriving your keys")))
@@ -243,7 +249,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
 class OutboundTransactionManagerBuilder {
     
     static func build(initializer: Initializer) throws -> OutboundTransactionManager {
-        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: initializer.lightWalletService, repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer))
+        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: initializer.lightWalletService, repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer), networkType: initializer.network.networkType)
         
     }
 }

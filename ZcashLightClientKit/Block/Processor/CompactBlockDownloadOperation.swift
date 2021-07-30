@@ -90,9 +90,6 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             }
             let latestDownloaded = try storage.latestHeight()
             let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
-            guard startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
-                throw CompactBlockStreamDownloadOperationError.startHeightMissing
-            }
             
             self.cancelable = self.service.blockStream(startHeight: startHeight, endHeight: latestHeight) { [weak self] result in
                 switch result {
@@ -106,7 +103,11 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                         self?.fail(error: e)
                     }
                 case .failure(let e):
-                    self?.fail(error: e)
+                    if case .userCancelled = e {
+                        self?.done = true
+                    } else {
+                        self?.fail(error: e)
+                    }
                 }
                
             } handler: {[weak self] block in
@@ -181,16 +182,14 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
         }
         self.startedHandler?()
         do {
+           
+            let localDownloadedHeight = try self.storage.latestHeight()
             
-            guard startHeight >= ZcashSDK.SAPLING_ACTIVATION_HEIGHT else {
-                throw CompactBlockBatchDownloadOperationError.startHeightMissing
-            }
-            
-            var localDownloadedHeight = try self.storage.latestHeight()
-            if localDownloadedHeight != startHeight {
+            if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight > startHeight {
                 LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
                 startHeight = localDownloadedHeight + 1
             }
+            
             var currentHeight = startHeight
             self.progressDelegate?.progressUpdated(.download(BlockProgress(startHeight: currentHeight, targetHeight: targetHeight, progressHeight: currentHeight)))
             

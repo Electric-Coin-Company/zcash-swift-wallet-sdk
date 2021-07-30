@@ -13,6 +13,9 @@
 		0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
 		0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
 		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
+		0D76121726B1D5F5001CA417 /* Mainnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121526B1D5ED001CA417 /* Mainnet.swift */; };
+		0D76121926B1D66D001CA417 /* Testnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121826B1D66D001CA417 /* Testnet.swift */; };
+		0D76121A26B1E8F6001CA417 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
 		0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7C85E423AD5A9B006878FC /* SampleStorage.swift */; };
 		0D8BB45223B1DA0700D5E2A1 /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
@@ -75,6 +78,8 @@
 		0D4EBA302396CFD70041B507 /* SendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewController.swift; sourceTree = "<group>"; };
 		0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaplingParametersViewController.swift; sourceTree = "<group>"; };
 		0D756A93236C761E009B041B /* GetAddressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetAddressViewController.swift; sourceTree = "<group>"; };
+		0D76121526B1D5ED001CA417 /* Mainnet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mainnet.swift; sourceTree = "<group>"; };
+		0D76121826B1D66D001CA417 /* Testnet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Testnet.swift; sourceTree = "<group>"; };
 		0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBlocksViewController.swift; sourceTree = "<group>"; };
 		0D7C85E423AD5A9B006878FC /* SampleStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleStorage.swift; sourceTree = "<group>"; };
 		0D8BB46C23B1DA0700D5E2A1 /* ZcashLightClientSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZcashLightClientSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -189,6 +194,15 @@
 			path = "Get Address";
 			sourceTree = "<group>";
 		};
+		0D76121426B1D5D7001CA417 /* Constants */ = {
+			isa = PBXGroup;
+			children = (
+				0D76121526B1D5ED001CA417 /* Mainnet.swift */,
+				0D76121826B1D66D001CA417 /* Testnet.swift */,
+			);
+			path = Constants;
+			sourceTree = "<group>";
+		};
 		0D7A4A81236CCCDB001F4DD8 /* Sync Blocks */ = {
 			isa = PBXGroup;
 			children = (
@@ -224,6 +238,7 @@
 		0D907F142322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXGroup;
 			children = (
+				0D76121426B1D5D7001CA417 /* Constants */,
 				0D1BE47D2581933C00F78BE3 /* Get UTXOs */,
 				0D1BE44F2581583D00F78BE3 /* Derivation Tool */,
 				0D6CE8BB252E3C1A0005D707 /* Sapling Parameters */,
@@ -659,6 +674,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0D76121726B1D5F5001CA417 /* Mainnet.swift in Sources */,
 				0D8BB45223B1DA0700D5E2A1 /* GetBalanceViewController.swift in Sources */,
 				0D8BB45323B1DA0700D5E2A1 /* GetAddressViewController.swift in Sources */,
 				0D8BB45423B1DA0700D5E2A1 /* ViewController.swift in Sources */,
@@ -672,6 +688,7 @@
 				0D8BB45C23B1DA0700D5E2A1 /* SampleStorage.swift in Sources */,
 				0D8BB45D23B1DA0700D5E2A1 /* TransactionsDataSource.swift in Sources */,
 				0D8BB45E23B1DA0700D5E2A1 /* PaginatedTransactionsViewController.swift in Sources */,
+				0D76121A26B1E8F6001CA417 /* SampleLogger.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -684,6 +701,7 @@
 				0D907F182322CC5900D641FE /* ViewController.swift in Sources */,
 				0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */,
 				0DBF8F9523A80F5A0010B85F /* TransactionDetailViewController.swift in Sources */,
+				0D76121926B1D66D001CA417 /* Testnet.swift in Sources */,
 				0DA58B942397DDD9004596EA /* TransactionsTableViewController.swift in Sources */,
 				0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */,
 				0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */,
