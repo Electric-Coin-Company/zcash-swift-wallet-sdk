@@ -96,4 +96,8 @@ class DerivationToolMainnetTests: XCTestCase {
         XCTAssertEqual(expectedTransparentAddress, try derivationTool.deriveTransparentAddressFromPublicKey(unifiedKeys[0].extpub))
     }
     
+    func testShouldFailOnInvalidChecksumAddresses() throws {
+        let testAddress = "t14oHp2v54vfmdgQ3v3SNuQga8JKHTNi2a1"
+        XCTAssertFalse(try derivationTool.isValidTransparentAddress(testAddress))
+    }
 }
