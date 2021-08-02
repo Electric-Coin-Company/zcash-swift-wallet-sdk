@@ -418,12 +418,12 @@ public class CompactBlockProcessor {
     }
     
     var maxAttemptsReached: Bool {
-        self.retryAttempts < self.config.retries
+        self.retryAttempts >= self.config.retries
     }
     var shouldStart: Bool {
         switch self.state {
         case .stopped, .synced, .error:
-            return maxAttemptsReached
+            return !maxAttemptsReached
         default:
             return false
         }
@@ -999,6 +999,8 @@ public class CompactBlockProcessor {
             break
         }
         self.state = .error(error)
+        guard self.maxAttemptsReached else { return }
+        // don't set a new timer if there are no more attempts.
         self.setTimer()
         
     }
