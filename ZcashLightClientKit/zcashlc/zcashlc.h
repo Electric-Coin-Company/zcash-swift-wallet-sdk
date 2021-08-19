@@ -13,7 +13,7 @@ typedef struct {
   uintptr_t len;
 } FFIUVKBoxedSlice;
 
-int32_t zcashlc_branch_id_for_height(int32_t height);
+int32_t zcashlc_branch_id_for_height(int32_t height, uint32_t network_id);
 
 /**
  * Clears the record of the last error message.
@@ -23,7 +23,8 @@ void zcashlc_clear_last_error(void);
 int32_t zcashlc_clear_utxos(const uint8_t *db_data,
                             uintptr_t db_data_len,
                             const char *taddress,
-                            int32_t above_height);
+                            int32_t above_height,
+                            uint32_t network_id);
 
 /**
  * Creates a transaction paying the specified address from the given account.
@@ -45,18 +46,20 @@ int64_t zcashlc_create_to_address(const uint8_t *db_data,
                                   const uint8_t *spend_params,
                                   uintptr_t spend_params_len,
                                   const uint8_t *output_params,
-                                  uintptr_t output_params_len);
+                                  uintptr_t output_params_len,
+                                  uint32_t network_id);
 
 int32_t zcashlc_decrypt_and_store_transaction(const uint8_t *db_data,
                                               uintptr_t db_data_len,
                                               const uint8_t *tx,
-                                              uintptr_t tx_len);
+                                              uintptr_t tx_len,
+                                              uint32_t network_id);
 
 /**
  * derives a shielded address from the given extended full viewing key.
  * call zcashlc_string_free with the returned pointer when done using it
  */
-char *zcashlc_derive_extended_full_viewing_key(const char *extsk);
+char *zcashlc_derive_extended_full_viewing_key(const char *extsk, uint32_t network_id);
 
 /**
  * Derives Extended Full Viewing Keys from the given seed into 'accounts' number of accounts.
@@ -68,7 +71,8 @@ char *zcashlc_derive_extended_full_viewing_key(const char *extsk);
 char **zcashlc_derive_extended_full_viewing_keys(const uint8_t *seed,
                                                  uintptr_t seed_len,
                                                  int32_t accounts,
-                                                 uintptr_t *capacity_ret);
+                                                 uintptr_t *capacity_ret,
+                                                 uint32_t network_id);
 
 /**
  * Derives Extended Spending Keys from the given seed into 'accounts' number of accounts.
@@ -80,7 +84,8 @@ char **zcashlc_derive_extended_full_viewing_keys(const uint8_t *seed,
 char **zcashlc_derive_extended_spending_keys(const uint8_t *seed,
                                              uintptr_t seed_len,
                                              int32_t accounts,
-                                             uintptr_t *capacity_ret);
+                                             uintptr_t *capacity_ret,
+                                             uint32_t network_id);
 
 /**
  * derives a shielded address from the given seed.
@@ -88,24 +93,25 @@ char **zcashlc_derive_extended_spending_keys(const uint8_t *seed,
  */
 char *zcashlc_derive_shielded_address_from_seed(const uint8_t *seed,
                                                 uintptr_t seed_len,
-                                                int32_t account_index);
+                                                int32_t account_index,
+                                                uint32_t network_id);
 
 /**
  * derives a shielded address from the given viewing key.
  * call zcashlc_string_free with the returned pointer when done using it
  */
-char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk);
+char *zcashlc_derive_shielded_address_from_viewing_key(const char *extfvk, uint32_t network_id);
 
 /**
  * derives a shielded address from the given viewing key.
  * call zcashlc_string_free with the returned pointer when done using it
  */
-char *zcashlc_derive_transparent_address_from_public_key(const char *pubkey);
+char *zcashlc_derive_transparent_address_from_public_key(const char *pubkey, uint32_t network_id);
 
 /**
  * Derives a transparent address from the given secret key enconded as a WIF string
  */
-char *zcashlc_derive_transparent_address_from_secret_key(const char *tsk);
+char *zcashlc_derive_transparent_address_from_secret_key(const char *tsk, uint32_t network_id);
 
 /**
  * Derives a transparent address from the given seed
@@ -113,7 +119,8 @@ char *zcashlc_derive_transparent_address_from_secret_key(const char *tsk);
 char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed,
                                                    uintptr_t seed_len,
                                                    int32_t account,
-                                                   int32_t index);
+                                                   int32_t index,
+                                                   uint32_t network_id);
 
 /**
  * TEST TEST 123 TEST
@@ -124,11 +131,13 @@ char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed,
 char *zcashlc_derive_transparent_private_key_from_seed(const uint8_t *seed,
                                                        uintptr_t seed_len,
                                                        int32_t account,
-                                                       int32_t index);
+                                                       int32_t index,
+                                                       uint32_t network_id);
 
 FFIUVKBoxedSlice *zcashlc_derive_unified_viewing_keys_from_seed(const uint8_t *seed,
                                                                 uintptr_t seed_len,
-                                                                int32_t accounts);
+                                                                int32_t accounts,
+                                                                uint32_t network_id);
 
 /**
  * Copies the last error message into the provided allocated buffer.
@@ -142,16 +151,23 @@ void zcashlc_free_uvk_array(FFIUVKBoxedSlice *uvks);
  *
  * Call `zcashlc_string_free` on the returned pointer when you are finished with it.
  */
-char *zcashlc_get_address(const uint8_t *db_data, uintptr_t db_data_len, int32_t account);
+char *zcashlc_get_address(const uint8_t *db_data,
+                          uintptr_t db_data_len,
+                          int32_t account,
+                          uint32_t network_id);
 
 /**
  * Returns the balance for the account, including all unspent notes that we know about.
  */
-int64_t zcashlc_get_balance(const uint8_t *db_data, uintptr_t db_data_len, int32_t account);
+int64_t zcashlc_get_balance(const uint8_t *db_data,
+                            uintptr_t db_data_len,
+                            int32_t account,
+                            uint32_t network_id);
 
 int32_t zcashlc_get_nearest_rewind_height(const uint8_t *db_data,
                                           uintptr_t db_data_len,
-                                          int32_t height);
+                                          int32_t height,
+                                          uint32_t network_id);
 
 /**
  * Returns the memo for a received note, if it is known and a valid UTF-8 string.
@@ -163,7 +179,8 @@ int32_t zcashlc_get_nearest_rewind_height(const uint8_t *db_data,
  */
 char *zcashlc_get_received_memo_as_utf8(const uint8_t *db_data,
                                         uintptr_t db_data_len,
-                                        int64_t id_note);
+                                        int64_t id_note,
+                                        uint32_t network_id);
 
 /**
  * Returns the memo for a sent note, if it is known and a valid UTF-8 string.
@@ -173,7 +190,10 @@ char *zcashlc_get_received_memo_as_utf8(const uint8_t *db_data,
  *
  * Call `zcashlc_string_free` on the returned pointer when you are finished with it.
  */
-char *zcashlc_get_sent_memo_as_utf8(const uint8_t *db_data, uintptr_t db_data_len, int64_t id_note);
+char *zcashlc_get_sent_memo_as_utf8(const uint8_t *db_data,
+                                    uintptr_t db_data_len,
+                                    int64_t id_note,
+                                    uint32_t network_id);
 
 /**
  * Returns the verified transparent balance for the address, which ignores utxos that have been
@@ -181,7 +201,8 @@ char *zcashlc_get_sent_memo_as_utf8(const uint8_t *db_data, uintptr_t db_data_le
  */
 int64_t zcashlc_get_total_transparent_balance(const uint8_t *db_data,
                                               uintptr_t db_data_len,
-                                              const char *address);
+                                              const char *address,
+                                              uint32_t network_id);
 
 /**
  * Returns the verified balance for the account, which ignores notes that have been
@@ -189,7 +210,8 @@ int64_t zcashlc_get_total_transparent_balance(const uint8_t *db_data,
  */
 int64_t zcashlc_get_verified_balance(const uint8_t *db_data,
                                      uintptr_t db_data_len,
-                                     int32_t account);
+                                     int32_t account,
+                                     uint32_t network_id);
 
 /**
  * Returns the verified transparent balance for the address, which ignores utxos that have been
@@ -197,7 +219,8 @@ int64_t zcashlc_get_verified_balance(const uint8_t *db_data,
  */
 int64_t zcashlc_get_verified_transparent_balance(const uint8_t *db_data,
                                                  uintptr_t db_data_len,
-                                                 const char *address);
+                                                 const char *address,
+                                                 uint32_t network_id);
 
 /**
  * Initialises the data database with the given number of accounts using the given seed.
@@ -212,7 +235,8 @@ char **zcashlc_init_accounts_table(const uint8_t *db_data,
                                    const uint8_t *seed,
                                    uintptr_t seed_len,
                                    int32_t accounts,
-                                   uintptr_t *capacity_ret);
+                                   uintptr_t *capacity_ret,
+                                   uint32_t network_id);
 
 /**
  * Initialises the data database with the given extended full viewing keys
@@ -220,7 +244,8 @@ char **zcashlc_init_accounts_table(const uint8_t *db_data,
  */
 bool zcashlc_init_accounts_table_with_keys(const uint8_t *db_data,
                                            uintptr_t db_data_len,
-                                           FFIUVKBoxedSlice *uvks);
+                                           FFIUVKBoxedSlice *uvks,
+                                           uint32_t network_id);
 
 /**
  * Initialises the data database with the given block.
@@ -233,30 +258,33 @@ int32_t zcashlc_init_blocks_table(const uint8_t *db_data,
                                   int32_t height,
                                   const char *hash_hex,
                                   uint32_t time,
-                                  const char *sapling_tree_hex);
+                                  const char *sapling_tree_hex,
+                                  uint32_t network_id);
 
 /**
  * Sets up the internal structure of the data database.
  */
-int32_t zcashlc_init_data_database(const uint8_t *db_data, uintptr_t db_data_len);
+int32_t zcashlc_init_data_database(const uint8_t *db_data,
+                                   uintptr_t db_data_len,
+                                   uint32_t network_id);
 
 /**
  * Returns true when the address is valid and shielded.
  * Returns false in any other case
  * Errors when the provided address belongs to another network
  */
-bool zcashlc_is_valid_shielded_address(const char *address);
+bool zcashlc_is_valid_shielded_address(const char *address, uint32_t network_id);
 
 /**
  * Returns true when the address is valid and transparent.
  * Returns false in any other case
  */
-bool zcashlc_is_valid_transparent_address(const char *address);
+bool zcashlc_is_valid_transparent_address(const char *address, uint32_t network_id);
 
 /**
  * returns whether the given viewing key is valid or not
  */
-bool zcashlc_is_valid_viewing_key(const char *key);
+bool zcashlc_is_valid_viewing_key(const char *key, uint32_t network_id);
 
 /**
  * Returns the length of the last error message to be logged.
@@ -272,7 +300,8 @@ bool zcashlc_put_utxo(const uint8_t *db_data,
                       const uint8_t *script_bytes,
                       uintptr_t script_bytes_len,
                       int64_t value,
-                      int32_t height);
+                      int32_t height,
+                      uint32_t network_id);
 
 /**
  * Rewinds the data database to the given height.
@@ -280,7 +309,10 @@ bool zcashlc_put_utxo(const uint8_t *db_data,
  * If the requested height is greater than or equal to the height of the last scanned
  * block, this function does nothing.
  */
-bool zcashlc_rewind_to_height(const uint8_t *db_data, uintptr_t db_data_len, int32_t height);
+bool zcashlc_rewind_to_height(const uint8_t *db_data,
+                              uintptr_t db_data_len,
+                              int32_t height,
+                              uint32_t network_id);
 
 /**
  * Scans new blocks added to the cache for any transactions received by the tracked
@@ -301,7 +333,9 @@ bool zcashlc_rewind_to_height(const uint8_t *db_data, uintptr_t db_data_len, int
 int32_t zcashlc_scan_blocks(const uint8_t *db_cache,
                             uintptr_t db_cache_len,
                             const uint8_t *db_data,
-                            uintptr_t db_data_len);
+                            uintptr_t db_data_len,
+                            uint32_t scan_limit,
+                            uint32_t network_id);
 
 int64_t zcashlc_shield_funds(const uint8_t *db_data,
                              uintptr_t db_data_len,
@@ -312,7 +346,8 @@ int64_t zcashlc_shield_funds(const uint8_t *db_data,
                              const uint8_t *spend_params,
                              uintptr_t spend_params_len,
                              const uint8_t *output_params,
-                             uintptr_t output_params_len);
+                             uintptr_t output_params_len,
+                             uint32_t network_id);
 
 /**
  * Frees strings returned by other zcashlc functions.
@@ -340,7 +375,8 @@ void zcashlc_string_free(char *s);
 int32_t zcashlc_validate_combined_chain(const uint8_t *db_cache,
                                         uintptr_t db_cache_len,
                                         const uint8_t *db_data,
-                                        uintptr_t db_data_len);
+                                        uintptr_t db_data_len,
+                                        uint32_t network_id);
 
 /**
  * Frees vectors of strings returned by other zcashlc functions.

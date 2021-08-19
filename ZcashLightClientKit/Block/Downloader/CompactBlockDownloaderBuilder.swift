@@ -22,7 +22,7 @@ extension CompactBlockDownloader {
 
 extension CompactBlockStorage {
     
-    init(url: URL, readonly: Bool) {
+    convenience init(url: URL, readonly: Bool) {
         self.init(connectionProvider: SimpleConnectionProvider(path: url.absoluteString, readonly: readonly))
     }
 }

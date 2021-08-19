@@ -48,6 +48,31 @@ extension ShieldFundsError: LocalizedError {
     }
 }
 
+/**
+ Represent the connection state to the lightwalletd server
+ */
+public enum ConnectionState {
+    /**
+     not in use
+     */
+    case idle
+    /**
+     there's a connection being attempted from a non error state
+     */
+    case connecting
+    /**
+     connection is established, ready to use or in use
+     */
+    case online
+    /**
+     the connection is being re-established after losing it temporarily
+     */
+    case reconnecting
+    /**
+     the connection has been closed
+     */
+    case shutdown
+}
 
 /**
 Primary interface for interacting with the SDK. Defines the contract that specific
@@ -57,20 +82,17 @@ implementations like SdkSynchronizer fulfill.
 public protocol Synchronizer {
     
     /**
-    Value representing the Status of this Synchronizer. As the status changes, a new
-    value will be emitted by KVO
+    Value representing the Status of this Synchronizer. As the status changes, it will be also notified
     */
-    var status: Status { get }
+    var status: SyncStatus { get }
     
     /**
-     A flow of progress values, typically corresponding to this Synchronizer downloading blocks.
-     Typically, any non-zero value below 1.0 indicates that progress indicators can be shown and
-     a value of 1.0 signals that progress is complete and any progress indicators can be hidden. KVO Compliant
+     reflects current connection state to LightwalletEndpoint
      */
-    var progress: Float { get }
+    var connectionState: ConnectionState { get }
     
     /**
-     prepares this initializer to operate. Initializes the internal state with the given Extended Viewing Keys and a wallet birthday found in the initializer object
+    prepares this initializer to operate. Initializes the internal state with the given Extended Viewing Keys and a wallet birthday found in the initializer object
      */
     func prepare() throws
     /**
@@ -215,37 +237,71 @@ public protocol Synchronizer {
     func rewind(_ policy: RewindPolicy) throws
 }
 
-/**
- The Status of the synchronizer
- */
-public enum Status {
+public enum SyncStatus: Equatable {
+    
     /**
-     This synchronizer is not ready to start
+    Indicates that this Synchronizer is actively preparing to start, which usually involves
+    setting up database tables, migrations or taking other maintenance steps that need to
+    occur after an upgrade.
      */
     case unprepared
     /**
-    Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
-    */
-    case stopped
-    
+     Indicates that this Synchronizer is actively downloading new blocks from the server.
+     */
+    case downloading(_ status: BlockProgressReporting)
     /**
-    Indicates that this Synchronizer is disconnected from its lightwalletd server.
-    When set, a UI element may want to turn red.
+      Indicates that this Synchronizer is actively validating new blocks that were downloaded
+      from the server. Blocks need to be verified before they are scanned. This confirms that
+      each block is chain-sequential, thereby detecting missing blocks and reorgs.
     */
-    case disconnected
-    
+    case validating
     /**
-    Indicates that this Synchronizer is not yet synced and therefore should not broadcast
-    transactions because it does not have the latest data. When set, a UI element may want
-    to turn yellow.
-    */
-    case syncing
-    
+     Indicates that this Synchronizer is actively scanning new valid blocks that were downloaded
+     from the server.
+     */
+    case scanning(_ progress: BlockProgressReporting)
+    /**
+     Indicates that this Synchronizer is actively enhancing newly scanned blocks with
+     additional transaction details, fetched from the server.
+     */
+    case enhancing(_ progress: EnhancementProgress)
+    /**
+     fetches the transparent balance and stores it locally
+     */
+    case fetching
     /**
     Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     When set, a UI element may want to turn green.
     */
     case synced
+    /**
+    Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
+    */
+    case stopped
+    /**
+    Indicates that this Synchronizer is disconnected from its lightwalletd server.
+    When set, a UI element may want to turn red.
+    */
+    case disconnected
+    case error(_ error: Error)
+    
+    public var isSyncing: Bool {
+        switch self {
+        case .downloading, .validating, .scanning, .enhancing, .fetching:
+            return true
+        default:
+            return false
+        }
+    }
+    
+    public var isSynced: Bool {
+        switch self {
+        case .synced:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 /**
@@ -269,4 +325,90 @@ public enum RewindPolicy {
     case height(blockheight: BlockHeight)
     case transaction(_ transaction: TransactionEntity)
     case quick
+}
+
+extension SyncStatus  {
+    public static func == (lhs: SyncStatus, rhs: SyncStatus) -> Bool {
+        switch lhs {
+        case .unprepared:
+            if case .unprepared = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .disconnected:
+            if case .disconnected = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .downloading:
+            if case .downloading = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .validating:
+            if case .validating = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .scanning:
+            if case .scanning = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .enhancing:
+            if case .enhancing = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .fetching:
+            if case .fetching = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .synced:
+            if case .synced = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .stopped:
+            if case .stopped = rhs {
+                return true
+            } else {
+                return false
+            }
+        case .error:
+            if case .error = rhs {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
+}
+
+extension SyncStatus {
+    init(_ blockProcessorProgress: CompactBlockProgress) {
+        switch blockProcessorProgress {
+            
+            case .download(let progressReport):
+                self = SyncStatus.downloading(progressReport)
+            case .validate:
+                self = .validating
+            case .scan(let progressReport):
+                self = .scanning(progressReport)
+            case .enhance(let enhancingReport):
+                self = .enhancing(enhancingReport)
+            case .fetch:
+                self = .fetching
+            
+        }
+    }
 }

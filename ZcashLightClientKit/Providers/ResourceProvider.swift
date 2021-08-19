@@ -21,23 +21,28 @@ public protocol ResourceProvider {
  Convenience provider for a data db and cache db resources. 
  */
 public struct DefaultResourceProvider: ResourceProvider {
-     
+    init(network: ZcashNetwork) {
+        self.network = network
+    }
+    var network: ZcashNetwork
      public var dataDbURL: URL {
+        let constants = network.constants
         do {
             let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return url.appendingPathComponent(ZcashSDK.DEFAULT_DATA_DB_NAME)
+            return url.appendingPathComponent(constants.DEFAULT_DATA_DB_NAME)
         } catch {
-            return URL(fileURLWithPath: "file://\(ZcashSDK.DEFAULT_DATA_DB_NAME)")
+            return URL(fileURLWithPath: "file://\(constants.DEFAULT_DATA_DB_NAME)")
         }
         
     }
     
     public var cacheDbURL: URL {
+        let constants = network.constants
         do {
             let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return path.appendingPathComponent(ZcashSDK.DEFAULT_CACHES_DB_NAME)
+            return path.appendingPathComponent(constants.DEFAULT_CACHES_DB_NAME)
         } catch {
-            return URL(fileURLWithPath: "file://\(ZcashSDK.DEFAULT_CACHES_DB_NAME)")
+            return URL(fileURLWithPath: "file://\(constants.DEFAULT_CACHES_DB_NAME)")
         }
     }
     

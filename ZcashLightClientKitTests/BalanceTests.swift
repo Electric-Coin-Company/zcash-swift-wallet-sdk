@@ -20,12 +20,14 @@ class BalanceTests: XCTestCase {
     let chainName = "main"
     var syncedExpectation = XCTestExpectation(description: "synced")
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
+    let network: ZcashNetwork = DarksideWalletDNetwork()
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
-            channelProvider: ChannelProvider()
+            channelProvider: ChannelProvider(),
+            network: network
         )
         try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
         
@@ -58,10 +60,10 @@ class BalanceTests: XCTestCase {
         
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
-        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalance = verifiedBalance - Int64(ZcashSDK.defaultFee())
+        let maxBalance = verifiedBalance - Int64(network.constants.defaultFee(for: defaultLatestHeight))
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -196,10 +198,10 @@ class BalanceTests: XCTestCase {
         
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
-        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalanceMinusOne = verifiedBalance - Int64(ZcashSDK.defaultFee()) - 1
+        let maxBalanceMinusOne = verifiedBalance - Int64(network.constants.defaultFee(for: defaultLatestHeight)) - 1
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -333,10 +335,10 @@ class BalanceTests: XCTestCase {
         
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance = coordinator.synchronizer.initializer.getBalance()
-        XCTAssertTrue(verifiedBalance > ZcashSDK.defaultFee())
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalanceMinusOne = 100000 - ZcashSDK.defaultFee()
+        let maxBalanceMinusOne = 100000 - network.constants.defaultFee(for: defaultLatestHeight)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -483,7 +485,7 @@ class BalanceTests: XCTestCase {
         /*
          there's more zatoshi to send than network fee
          */
-        XCTAssertTrue(presendVerifiedBalance >= (Int64(ZcashSDK.MINERS_FEE_ZATOSHI) + sendAmount))
+        XCTAssertTrue(presendVerifiedBalance >= (Int64(network.constants.defaultFee(for: defaultLatestHeight)) + sendAmount))
         
         var pendingTx: PendingTransactionEntity?
         coordinator.synchronizer.sendToAddress(spendingKey: spendingKey,
@@ -540,8 +542,8 @@ class BalanceTests: XCTestCase {
         
         wait(for: [mineExpectation], timeout: 5)
         
-        XCTAssertEqual(presendVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(),coordinator.synchronizer.initializer.getBalance())
-        XCTAssertEqual(presendVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(),coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(presendVerifiedBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight),coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(presendVerifiedBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight),coordinator.synchronizer.initializer.getVerifiedBalance())
         
         guard let transaction = pendingTx else {
             XCTFail("pending transaction nil")
@@ -629,7 +631,7 @@ class BalanceTests: XCTestCase {
         }
         
         let presendBalance = coordinator.synchronizer.initializer.getBalance()
-        XCTAssertTrue(presendBalance >= (Int64(ZcashSDK.defaultFee()) + sendAmount))  // there's more zatoshi to send than network fee
+        XCTAssertTrue(presendBalance >= (Int64(network.constants.defaultFee(for: defaultLatestHeight)) + sendAmount))  // there's more zatoshi to send than network fee
         
         var pendingTx: PendingTransactionEntity?
         
@@ -667,7 +669,7 @@ class BalanceTests: XCTestCase {
         
         XCTAssertEqual(Int64(transaction.value), self.sendAmount)
         
-        XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), presendBalance - Int64(self.sendAmount) - ZcashSDK.defaultFee())
+        XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), presendBalance - Int64(self.sendAmount) - network.constants.defaultFee(for: defaultLatestHeight))
         
         XCTAssertNil(transaction.errorCode)
         
@@ -697,7 +699,7 @@ class BalanceTests: XCTestCase {
         
         wait(for: [mineExpectation], timeout: 5)
         
-        XCTAssertEqual(presendBalance - self.sendAmount - Int64(ZcashSDK.defaultFee()),coordinator.synchronizer.initializer.getBalance())
+        XCTAssertEqual(presendBalance - self.sendAmount - Int64(network.constants.defaultFee(for: defaultLatestHeight)),coordinator.synchronizer.initializer.getBalance())
     }
     
     /**
@@ -869,7 +871,7 @@ class BalanceTests: XCTestCase {
             /*
              There’s a change note of value (previous note value - sent amount)
              */
-            XCTAssertEqual(previousVerifiedBalance - self.sendAmount - ZcashSDK.defaultFee(), Int64(receivedNote.value))
+            XCTAssertEqual(previousVerifiedBalance - self.sendAmount - self.network.constants.defaultFee(for: self.defaultLatestHeight), Int64(receivedNote.value))
             
             
             /*
@@ -1024,7 +1026,7 @@ class BalanceTests: XCTestCase {
     func totalBalanceValidation(totalBalance: Int64,
                                 previousTotalbalance: Int64,
                                 sentAmount: Int64)  {
-        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - Int64(ZcashSDK.MINERS_FEE_ZATOSHI))
+        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - Int64(network.constants.defaultFee(for: defaultLatestHeight)))
     }
     
 }

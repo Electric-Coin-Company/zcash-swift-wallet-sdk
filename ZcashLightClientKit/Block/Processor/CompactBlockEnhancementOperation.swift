@@ -12,6 +12,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         case noRawData(message: String)
         case unknownError
         case decryptError(error: Error)
+        case txIdNotFound(txId: Data)
     }
     override var isConcurrent: Bool { false }
     
@@ -23,16 +24,26 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     var repository: TransactionRepository
     var maxRetries: Int = 5
     var retries: Int = 0
+    private(set) var network: NetworkType
+    weak var progressDelegate: CompactBlockProgressDelegate?
     private var dataDb: URL
     
     var range: BlockRange
     
-    init(rustWelding: ZcashRustBackendWelding.Type, dataDb: URL, downloader: CompactBlockDownloading, repository: TransactionRepository, range: BlockRange) {
+    init(rustWelding: ZcashRustBackendWelding.Type,
+         dataDb: URL,
+         downloader: CompactBlockDownloading,
+         repository: TransactionRepository,
+         range: BlockRange,
+         networkType: NetworkType,
+         progressDelegate: CompactBlockProgressDelegate? = nil) {
         rustBackend = rustWelding
         self.dataDb = dataDb
         self.downloader = downloader
         self.repository = repository
         self.range = range
+        self.progressDelegate = progressDelegate
+        self.network = networkType
         super.init()
     }
     
@@ -41,7 +52,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             cancel()
             return
         }
-        
+        self.startedHandler?()
         // fetch transactions
         
         do {
@@ -50,12 +61,17 @@ class CompactBlockEnhancementOperation: ZcashOperation {
                 return
             }
             
-            for tx in transactions {
+            for index in 0 ..< transactions.count {
+                let tx = transactions[index]
+                
                 var retry = true
                 while retry && self.retries < maxRetries {
                     do {
-                        try enhance(transaction: tx)
+                        let confirmedTx = try enhance(transaction: tx)
                         retry = false
+                        self.reportProgress(totalTransactions: transactions.count,
+                                            enhanced: index + 1,
+                                            txEnhanced: confirmedTx)
                     } catch {
                         self.retries = self.retries + 1
                         LoggerProxy.error("could not enhance txId \(tx.transactionId.toHexStringTxId()) - Error: \(error)")
@@ -77,7 +93,16 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         }
     }
     
-    func enhance(transaction: TransactionEntity) throws {
+    func reportProgress(totalTransactions: Int, enhanced: Int, txEnhanced: ConfirmedTransactionEntity) {
+        self.progressDelegate?.progressUpdated(.enhance(
+                                                EnhancementStreamProgress(
+                                                    totalTransactions: totalTransactions,
+                                                    enhancedTransactions: enhanced,
+                                                    lastFoundTransaction: txEnhanced,
+                                                    range: self.range.compactBlockRange)))
+    }
+    
+    func enhance(transaction: TransactionEntity) throws -> ConfirmedTransactionEntity {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId())")
         
         let tx = try downloader.fetchTransaction(txId: transaction.transactionId)
@@ -90,12 +115,16 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             throw error
         }
         
-        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, tx: rawBytes) else {
+        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, tx: rawBytes, networkType: network) else {
             if let rustError = rustBackend.lastError() {
                 throw EnhancementError.decryptError(error: rustError)
             }
             throw EnhancementError.unknownError
         }
+        guard let confirmedTx = try self.repository.findConfirmedTransactionBy(rawId: transaction.transactionId) else {
+            throw EnhancementError.txIdNotFound(txId: transaction.transactionId)
+        }
+        return confirmedTx
     }
 }
 

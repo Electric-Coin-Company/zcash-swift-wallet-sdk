@@ -35,25 +35,25 @@ public protocol ZcashRustBackendWelding {
      initializes the data db
      - Parameter dbData: location of the data db sql file
      */
-    static func initDataDb(dbData: URL) throws
+    static func initDataDb(dbData: URL, networkType: NetworkType) throws
     
     /**
     - Returns: true when the address is valid and shielded. Returns false in any other case
     - Throws: Error when the provided address belongs to another network
     */
-    static func isValidShieldedAddress(_ address: String) throws -> Bool
+    static func isValidShieldedAddress(_ address: String, networkType: NetworkType) throws -> Bool
     
     /**
      - Returns: true when the address is valid and transparent. false in any other case
      - Throws: Error when the provided address belongs to another network
     */
-    static func isValidTransparentAddress(_ address: String) throws -> Bool
+    static func isValidTransparentAddress(_ address: String, networkType: NetworkType) throws -> Bool
     
     /**
      - Returns: true when the address is valid and transparent. false in any other case
      - Throws: Error when there's another problem not related to validity of the string in question
     */
-    static func isValidExtendedFullViewingKey(_ key: String) throws -> Bool
+    static func isValidExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool
     
     /**
     initialize the accounts table from a given seed and a number of accounts
@@ -62,7 +62,7 @@ public protocol ZcashRustBackendWelding {
        - seed: byte array of the zip32 seed
        - accounts: how many accounts you want to have
  */
-    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]?
+    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [String]?
     
     /**
      initialize the accounts table from a set of unified viewing keys
@@ -70,9 +70,8 @@ public protocol ZcashRustBackendWelding {
        - dbData: location of the data db
        - uvks: an array of UnifiedViewingKeys 
      */
-    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool
+    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey], networkType: NetworkType) throws -> Bool
 
-    
     /**
     initialize the blocks table from a given checkpoint (birthday)
      - Parameters:
@@ -82,7 +81,7 @@ public protocol ZcashRustBackendWelding {
        - time: in milliseconds from reference
        - saplingTree: hash of the sapling tree
      */
-    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws
+    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String, networkType: NetworkType) throws
 
     /**
      gets the address from data db from the given account
@@ -91,38 +90,38 @@ public protocol ZcashRustBackendWelding {
        - account: index of the given account
      - Returns: an optional string with the address if found
      */
-    static func getAddress(dbData: URL, account: Int32) -> String?
+    static func getAddress(dbData: URL, account: Int32, networkType: NetworkType) -> String?
     /**
     get the (unverified) balance from the given account
     - Parameters:
        - dbData: location of the data db
        - account: index of the given account
     */
-    static func getBalance(dbData: URL, account: Int32) -> Int64
+    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64
     /**
      get the verified balance from the given account
      - Parameters:
         - dbData: location of the data db
         - account: index of the given account
      */
-    static func getVerifiedBalance(dbData: URL, account: Int32) -> Int64
+    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64
     
     /**
      Get the verified cached transparent balance for the given address
      */
-    static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64
+    static func getVerifiedTransparentBalance(dbData: URL, address: String, networkType: NetworkType) throws -> Int64
     
     /**
      Get the verified cached transparent balance for the given address
      */
-    static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 
+    static func getTransparentBalance(dbData: URL, address: String, networkType: NetworkType) throws -> Int64
     /**
     get received memo from note
     - Parameters:
        - dbData: location of the data db file
        - idNote: note_id of note where the memo is located
     */
-    static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64) -> String?
+    static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String?
     
     /**
      get sent memo from note
@@ -130,7 +129,7 @@ public protocol ZcashRustBackendWelding {
         - dbData: location of the data db file
         - idNote: note_id of note where the memo is located
      */
-    static func getSentMemoAsUTF8(dbData: URL, idNote: Int64) -> String?
+    static func getSentMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String?
     
     /**
      Checks that the scanned blocks in the data database, when combined with the recent
@@ -146,7 +145,7 @@ public protocol ZcashRustBackendWelding {
      * `0` if there was an error during validation unrelated to chain validity.
      - Important: This function does not mutate either of the databases.
     */
-    static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32
+    static func validateCombinedChain(dbCache: URL, dbData: URL, networkType: NetworkType) -> Int32
     
     /**
      Returns the nearest height where a rewind is possible. Currently prunning gets rid of sapling witnesses older
@@ -156,14 +155,14 @@ public protocol ZcashRustBackendWelding {
        - dbData: location of the data db file
        - height: height you would like to rewind to.
      */
-    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32
+    static func getNearestRewindHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Int32
     /**
      rewinds the compact block storage to the given height. clears up all derived data as well
       - Parameters:
         - dbData: location of the data db file
         - height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use getNearestRewindHeight when unsure
      */
-    static func rewindToHeight(dbData: URL, height: Int32) -> Bool
+    static func rewindToHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Bool
     
     /**
      Scans new blocks added to the cache for any transactions received by the tracked
@@ -181,9 +180,10 @@ public protocol ZcashRustBackendWelding {
      - Parameters:
         - dbCache: location of the compact block cache db
         - dbData:  location of the data db file
+        - limit: scan up to limit blocks. pass 0 to set no limit.
      returns false if fails to scan.
     */
-    static func scanBlocks(dbCache: URL, dbData: URL) -> Bool
+    static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32, networkType: NetworkType) -> Bool
 
     /**
      puts a UTXO into the data db database
@@ -196,8 +196,7 @@ public protocol ZcashRustBackendWelding {
        - height: the mined height for the UTXO
      - Returns: true if the operation succeded or false otherwise
      */
-    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool
-    
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight, networkType: NetworkType) throws -> Bool
     
     /**
      clears the cached utxos for the given address from the specified height on
@@ -208,7 +207,7 @@ public protocol ZcashRustBackendWelding {
      - Returns: the amount of UTXOs cleared or -1 on error
      
      */
-    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight) throws -> Int32
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32
     /**
         Gets the balance of the previously downloaded UTXOs
      - Parameters:
@@ -217,7 +216,7 @@ public protocol ZcashRustBackendWelding {
      - Returns: the wallet balance containing verified and total balance.
      - Throws: Rustwelding Error if something fails
      */
-    static func downloadedUtxoBalance(dbData: URL, address: String) throws -> WalletBalance
+    static func downloadedUtxoBalance(dbData: URL, address: String, networkType: NetworkType) throws -> WalletBalance
     
     /**
      Scans a transaction for any information that can be decrypted by the accounts in the
@@ -228,7 +227,7 @@ public protocol ZcashRustBackendWelding {
         - tx:     the transaction to decrypt
      returns false if fails to decrypt.
      */
-    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], networkType: NetworkType) -> Bool
     
     /**
      Creates a transaction to the given address from the given account
@@ -242,7 +241,7 @@ public protocol ZcashRustBackendWelding {
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64
     
     /**
      Creates a transaction to shield all found UTXOs in cache db.
@@ -256,7 +255,7 @@ public protocol ZcashRustBackendWelding {
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64
+    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64
     
     /**
      Derives a full viewing key from a seed
@@ -264,7 +263,7 @@ public protocol ZcashRustBackendWelding {
      - Returns: the derived key
      - Throws: RustBackendError if fatal error occurs
      */
-    static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String?
+    static func deriveExtendedFullViewingKey(_ spendingKey: String, networkType: NetworkType) throws -> String?
     
     /**
     Derives a set of full viewing keys from a seed
@@ -273,7 +272,7 @@ public protocol ZcashRustBackendWelding {
     - Returns: an array containing the derived keys
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32) throws -> [String]?
+    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]?
     
     /**
     Derives a set of full viewing keys from a seed
@@ -282,7 +281,7 @@ public protocol ZcashRustBackendWelding {
     - Returns: an array containing the spending keys
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32) throws -> [String]?
+    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]?
     
     /**
      Derives a shielded address from a seed
@@ -291,7 +290,7 @@ public protocol ZcashRustBackendWelding {
      - Returns: an optional String containing the Shielded address
      - Throws: RustBackendError if fatal error occurs
      */
-    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String?
+    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32, networkType: NetworkType) throws -> String?
     
     /**
      Derives a shielded address from an Extended Full Viewing Key
@@ -299,7 +298,7 @@ public protocol ZcashRustBackendWelding {
      - Returns: an optional String containing the Shielded address
      - Throws: RustBackendError if fatal error occurs
      */
-    static func deriveShieldedAddressFromViewingKey(_  extfvk: String) throws -> String?
+    static func deriveShieldedAddressFromViewingKey(_  extfvk: String, networkType: NetworkType) throws -> String?
     
     /**
      Derives a shielded address from an Extended Full Viewing Key
@@ -307,14 +306,14 @@ public protocol ZcashRustBackendWelding {
      - Returns: an optional String containing the transparent address
      - Throws: RustBackendError if fatal error occurs
      */
-    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String?
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String?
     
     /**
         Derives a transparent secret key from Seed
       - Parameter seed: an array of bytes containing the seed
       - Returns: an optional String containing the transparent secret (private) key
      */
-    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String?
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String?
     
     /**
         Derives a transparent address from a secret key
@@ -322,18 +321,18 @@ public protocol ZcashRustBackendWelding {
      - Returns: an optional String containing the transparent address.
      */
     
-    static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String?
+    static func deriveTransparentAddressFromSecretKey(_ tsk: String, networkType: NetworkType) throws -> String?
     
     /**
      Derives a tranparent address from a public key
       - Parameter pubkey: public key represented as a string
      */
-    static func derivedTransparentAddressFromPublicKey(_ pubkey: String) throws -> String
+    static func derivedTransparentAddressFromPublicKey(_ pubkey: String, networkType: NetworkType) throws -> String
     
-    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey]
+    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedViewingKey]
     /**
      Gets the consensus branch id for the given height
      - Parameter height: the height you what to know the branch id for
      */
-    static func consensusBranchIdFor(height: Int32) throws -> Int32
+    static func consensusBranchIdFor(height: Int32, networkType: NetworkType) throws -> Int32
 }

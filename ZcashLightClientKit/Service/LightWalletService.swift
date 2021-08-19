@@ -25,6 +25,12 @@ public enum LightWalletServiceError: Error {
     case unknown
 }
 
+public protocol BlockProgressReporting {
+    var startHeight: BlockHeight { get }
+    var targetHeight: BlockHeight { get }
+    var progressHeight: BlockHeight { get }
+}
+
 extension LightWalletServiceError: Equatable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch lhs {
@@ -144,6 +150,7 @@ public protocol LightWalletService {
        */
     func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock]
     
+    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping  (BlockProgressReporting) -> Void) -> CancellableCall
     /**
      Submits a raw transaction over lightwalletd. Non-Blocking
      - Parameter spendTransaction: data representing the transaction to be sent

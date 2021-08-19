@@ -77,100 +77,108 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
-    static func getNearestRewindHeight(dbData: URL, height: Int32) -> Int32 {
+    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 {
         -1
     }
     
-    static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight) throws -> Int32 {
+    
+    static func getNearestRewindHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Int32 {
         -1
     }
     
-    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey]) throws -> Bool {
+    static func network(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 {
+        -1
+    }
+    
+    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey], networkType: NetworkType) throws -> Bool {
         false
     }
     
-    static func getVerifiedTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+    static func getVerifiedTransparentBalance(dbData: URL, address: String, networkType: NetworkType) throws -> Int64 {
         -1
     }
     
-    static func getTransparentBalance(dbData: URL, address: String) throws -> Int64 {
+    static func getTransparentBalance(dbData: URL, address: String, networkType: NetworkType) throws -> Int64 {
         -1
     }
     
-    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws -> Bool {
+    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight, networkType: NetworkType) throws -> Bool {
         false
     }
     
-    static func downloadedUtxoBalance(dbData: URL, address: String) throws -> WalletBalance {
+    static func downloadedUtxoBalance(dbData: URL, address: String, networkType: NetworkType) throws -> WalletBalance {
         throw RustWeldingError.genericError(message: "unimplemented")
     }
     
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64 {
         -1
     }
     
-    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64 {
         -1
     }
     
-    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String? {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int) throws -> String? {
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String? {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func deriveTransparentAddressFromSecretKey(_ tsk: String) throws -> String? {
+    static func deriveTransparentAddressFromSecretKey(_ tsk: String, networkType: NetworkType) throws -> String? {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func derivedTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
+    static func derivedTransparentAddressFromPublicKey(_ pubkey: String, networkType: NetworkType) throws -> String {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
+    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedViewingKey] {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func isValidExtendedFullViewingKey(_ key: String) throws -> Bool {
+    static func isValidExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool {
         false
     }
     
-    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8]) throws -> String? {
+    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], networkType: NetworkType) throws -> String? {
         nil
     }
     
-    static func initAccountsTable(dbData: URL, exfvks: [String]) throws -> Bool {
+    static func initAccountsTable(dbData: URL, exfvks: [String], networkType: NetworkType) throws -> Bool {
         false
     }
     
-    static func deriveTransparentAddressFromSeed(seed: [UInt8]) throws -> String? {
+    static func deriveTransparentAddressFromSeed(seed: [UInt8], networkType: NetworkType) throws -> String? {
         nil
     }
     
-    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
+    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]? {
         nil
     }
     
-    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32) throws -> [String]? {
+    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]? {
         nil
     }
     
-    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32) throws -> String? {
+    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32, networkType: NetworkType) throws -> String? {
         nil
     }
     
-    static func deriveShieldedAddressFromViewingKey(_ extfvk: String) throws -> String? {
+    static func deriveShieldedAddressFromViewingKey(_ extfvk: String, networkType: NetworkType) throws -> String? {
         nil
     }
     
     
-    static func consensusBranchIdFor(height: Int32) throws -> Int32 {
-        -1
+    static func consensusBranchIdFor(height: Int32, networkType: NetworkType) throws -> Int32 {
+        guard let c = consensusBranchID else {
+            return try rustBackend.consensusBranchIdFor(height: height, networkType: networkType)
+        }
+        return c
     }
     
-    
+    static var networkType = NetworkType.testnet
     static var mockDataDb = false
     static var mockAcounts = false
     static var mockError: RustWeldingError?
@@ -188,7 +196,7 @@ class MockRustBackend: ZcashRustBackendWelding {
     static var mockScanblocksSuccessRate: Float?
     static var mockCreateToAddress: Int64?
     static var rustBackend = ZcashRustBackend.self
-    
+    static var consensusBranchID: Int32?
     
     static func lastError() -> RustWeldingError? {
         mockError ?? rustBackend.lastError()
@@ -198,61 +206,61 @@ class MockRustBackend: ZcashRustBackendWelding {
         mockLastError ?? rustBackend.getLastError()
     }
     
-    static func isValidShieldedAddress(_ address: String) throws -> Bool {
+    static func isValidShieldedAddress(_ address: String, networkType: NetworkType) throws -> Bool {
         true
     }
     
-    static func isValidTransparentAddress(_ address: String) throws -> Bool {
+    static func isValidTransparentAddress(_ address: String, networkType: NetworkType) throws -> Bool {
         true
     }
     
-    static func initDataDb(dbData: URL) throws {
+    static func initDataDb(dbData: URL, networkType: NetworkType) throws {
         if !mockDataDb {
-            try rustBackend.initDataDb(dbData: dbData)
+            try rustBackend.initDataDb(dbData: dbData, networkType: networkType)
         }
     }
     
-    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32) -> [String]? {
-        mockAccounts ?? rustBackend.initAccountsTable(dbData: dbData, seed: seed, accounts: accounts)
+    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [String]? {
+        mockAccounts ?? rustBackend.initAccountsTable(dbData: dbData, seed: seed, accounts: accounts, networkType: networkType)
     }
     
-    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
+    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String, networkType: NetworkType) throws {
         if !mockDataDb {
-            try rustBackend.initBlocksTable(dbData: dbData, height: height, hash: hash, time: time, saplingTree: saplingTree)
+            try rustBackend.initBlocksTable(dbData: dbData, height: height, hash: hash, time: time, saplingTree: saplingTree, networkType: networkType)
         }
     }
     
-    static func getAddress(dbData: URL, account: Int32) -> String? {
-        mockAddresses?[Int(account)] ?? rustBackend.getAddress(dbData: dbData, account: account)
+    static func getAddress(dbData: URL, account: Int32, networkType: NetworkType) -> String? {
+        mockAddresses?[Int(account)] ?? rustBackend.getAddress(dbData: dbData, account: account, networkType: networkType)
     }
     
-    static func getBalance(dbData: URL, account: Int32) -> Int64 {
-        mockBalance ?? rustBackend.getBalance(dbData: dbData, account: account)
+    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
+        mockBalance ?? rustBackend.getBalance(dbData: dbData, account: account, networkType: networkType)
     }
     
-    static func getVerifiedBalance(dbData: URL, account: Int32) -> Int64 {
-        mockVerifiedBalance ?? rustBackend.getVerifiedBalance(dbData: dbData, account: account)
+    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
+        mockVerifiedBalance ?? rustBackend.getVerifiedBalance(dbData: dbData, account: account, networkType: networkType)
     }
     
-    static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {
-        mockMemo ?? rustBackend.getReceivedMemoAsUTF8(dbData: dbData, idNote: idNote)
+    static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {
+        mockMemo ?? rustBackend.getReceivedMemoAsUTF8(dbData: dbData, idNote: idNote, networkType: networkType)
     }
     
-    static func getSentMemoAsUTF8(dbData: URL, idNote: Int64) -> String? {
-        mockSentMemo ?? getSentMemoAsUTF8(dbData: dbData, idNote: idNote)
+    static func getSentMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {
+        mockSentMemo ?? getSentMemoAsUTF8(dbData: dbData, idNote: idNote, networkType: networkType)
     }
     
-    static func validateCombinedChain(dbCache: URL, dbData: URL) -> Int32 {
+    static func validateCombinedChain(dbCache: URL, dbData: URL, networkType: NetworkType) -> Int32 {
         if let rate = self.mockValidateCombinedChainSuccessRate {
             if shouldSucceed(successRate: rate) {
-                return validationResult(dbCache: dbCache, dbData: dbData)
+                return validationResult(dbCache: dbCache, dbData: dbData, networkType: networkType)
             } else {
                 return Int32(mockValidateCombinedChainFailureHeight)
             }
         } else if let attempts = self.mockValidateCombinedChainFailAfterAttempts {
             self.mockValidateCombinedChainFailAfterAttempts = attempts - 1
             if attempts > 0 {
-                return validationResult(dbCache: dbCache, dbData: dbData)
+                return validationResult(dbCache: dbCache, dbData: dbData, networkType: networkType)
             } else {
                 
                 if attempts == 0 {
@@ -260,38 +268,38 @@ class MockRustBackend: ZcashRustBackendWelding {
                 } else if attempts < 0 && mockValidateCombinedChainKeepFailing {
                     return Int32(mockValidateCombinedChainFailureHeight)
                 } else {
-                    return validationResult(dbCache: dbCache, dbData: dbData)
+                    return validationResult(dbCache: dbCache, dbData: dbData, networkType: networkType)
                 }
             }
         }
-        return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
+        return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData, networkType: networkType)
     }
     
-    private static func validationResult(dbCache: URL, dbData: URL) -> Int32{
+    private static func validationResult(dbCache: URL, dbData: URL, networkType: NetworkType) -> Int32{
         if mockDataDb {
             return -1
         } else {
-            return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData)
+            return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData, networkType: networkType)
         }
     }
     
-    static func rewindToHeight(dbData: URL, height: Int32) -> Bool {
-        mockDataDb ? true : rustBackend.rewindToHeight(dbData: dbData, height: height)
+    static func rewindToHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Bool {
+        mockDataDb ? true : rustBackend.rewindToHeight(dbData: dbData, height: height, networkType: networkType)
     }
     
-    static func scanBlocks(dbCache: URL, dbData: URL) -> Bool {
+    static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32, networkType: NetworkType) -> Bool {
         if let rate = mockScanblocksSuccessRate {
             
             if shouldSucceed(successRate: rate) {
-                return mockDataDb ? true : rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData)
+                return mockDataDb ? true : rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData, networkType: networkType)
             } else {
                 return false
             }
         }
-        return rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData)
+        return rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData, networkType: Self.networkType)
     }
     
-     static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String) -> Int64 {
+     static func createToAddress(dbData: URL, account: Int32, extsk: String, consensusBranchId: Int32, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64 {
 //        mockCreateToAddress ?? rustBackend.createToAddress(dbData: dbData, account: account, extsk: extsk, consensusBranchId: consensusBranchId, to: to, value: value, memo: memo, spendParamsPath: spendParamsPath, outputParamsPath: outputParamsPath)
         -1
     }
@@ -301,19 +309,19 @@ class MockRustBackend: ZcashRustBackendWelding {
         return random <= successRate
     }
     
-    static func deriveExtendedFullViewingKey(_ spendingKey: String) throws -> String? {
+    static func deriveExtendedFullViewingKey(_ spendingKey: String, networkType: NetworkType) throws -> String? {
         nil
     }
     
-    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32) throws -> [String]? {
+    static func deriveExtendedFullViewingKeys(seed: String, accounts: Int32, networkType: NetworkType) throws -> [String]? {
         nil
     }
     
-    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32) throws -> [String]? {
+    static func deriveExtendedSpendingKeys(seed: String, accounts: Int32, networkType: NetworkType) throws -> [String]? {
         nil
     }
     
-    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8]) -> Bool {
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], networkType: NetworkType) -> Bool {
         false
     }
     

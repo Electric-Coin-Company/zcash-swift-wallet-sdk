@@ -27,7 +27,8 @@ public struct LightWalletEndpoint {
     public var host: String
     public var port: Int
     public var secure: Bool
-    public var timeout: TimeInterval
+    public var singleCallTimeoutInMillis: Int64
+    public var streamingCallTimeoutInMillis: Int64
     
 /**
      initializes a LightWalletEndpoint
@@ -35,12 +36,19 @@ public struct LightWalletEndpoint {
         - address: a String containing the host address
         - port: string with the port of the host address
         - secure: true if connecting through TLS. Default value is true
+        - singleCallTimeoutInMillis: timeout for single calls in Milliseconds
+        - streamingCallTimeoutInMillis: timeout for streaming calls in Milliseconds
      */
-    public init(address: String, port: Int, secure: Bool = true, timeout: TimeInterval = 10) {
+    public init(address: String,
+                port: Int,
+                secure: Bool = true,
+                singleCallTimeoutInMillis: Int64 = 10000,
+                streamingCallTimeoutInMillis: Int64 = 100000) {
         self.host = address
         self.port = port
         self.secure = secure
-        self.timeout = timeout
+        self.singleCallTimeoutInMillis = singleCallTimeoutInMillis
+        self.streamingCallTimeoutInMillis = streamingCallTimeoutInMillis
     }
 }
 
@@ -65,7 +73,9 @@ public class Initializer {
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
     private(set) var accountRepository: AccountRepository
+    private(set) var storage: CompactBlockStorage
     private(set) var downloader: CompactBlockDownloader
+    private(set) var network: ZcashNetwork
     private(set) public var viewingKeys: [UnifiedViewingKey]
     private(set) public var walletBirthday: WalletBirthday
     /**
@@ -82,20 +92,19 @@ public class Initializer {
                  dataDbURL: URL,
                  pendingDbURL: URL,
                  endpoint: LightWalletEndpoint,
+                 network: ZcashNetwork,
                  spendParamsURL: URL,
                  outputParamsURL: URL,
                  viewingKeys: [UnifiedViewingKey],
-                 walletBirthday: BlockHeight = ZcashSDK.SAPLING_ACTIVATION_HEIGHT,
+                 walletBirthday: BlockHeight,
                  alias: String = "",
                  loggerProxy: Logger? = nil) {
-        
-        let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
-        try? storage.createTable()
         
         let lwdService = LightWalletGRPCService(endpoint: endpoint)
         
         self.init(rustBackend: ZcashRustBackend.self,
                   lowerBoundHeight: walletBirthday,
+                  network: network,
                   cacheDbURL: cacheDbURL,
                   dataDbURL: dataDbURL,
                   pendingDbURL: pendingDbURL,
@@ -103,7 +112,7 @@ public class Initializer {
                   service: lwdService,
                   repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
                   accountRepository: AccountRepositoryBuilder.build(dataDbURL: dataDbURL, readOnly: true, caching: true),
-                  downloader: CompactBlockDownloader(service: lwdService, storage: storage),
+                  storage: CompactBlockStorage(url: cacheDbURL, readonly: false),
                   spendParamsURL: spendParamsURL,
                   outputParamsURL: outputParamsURL,
                   viewingKeys: viewingKeys,
@@ -118,6 +127,7 @@ public class Initializer {
      */
     init(rustBackend: ZcashRustBackendWelding.Type,
          lowerBoundHeight: BlockHeight,
+         network: ZcashNetwork,
          cacheDbURL: URL,
          dataDbURL: URL,
          pendingDbURL: URL,
@@ -125,7 +135,7 @@ public class Initializer {
          service: LightWalletService,
          repository: TransactionRepository,
          accountRepository: AccountRepository,
-         downloader: CompactBlockDownloader,
+         storage: CompactBlockStorage,
          spendParamsURL: URL,
          outputParamsURL: URL,
          viewingKeys: [UnifiedViewingKey],
@@ -147,14 +157,14 @@ public class Initializer {
         self.lightWalletService = service
         self.transactionRepository = repository
         self.accountRepository = accountRepository
-        self.downloader = downloader
+        self.storage = storage
+        self.downloader = CompactBlockDownloader(service: service, storage: storage)
         self.viewingKeys = viewingKeys
-        self.walletBirthday = WalletBirthday.birthday(with: walletBirthday)
+        self.walletBirthday = WalletBirthday.birthday(with: walletBirthday, network: network)
+        self.network = network
     }
     
-    
     /**
-
      Initialize the wallet with the given seed and return the related private keys for each
      account specified or null if the wallet was previously initialized and block data exists on
      disk. When this method returns null, that signals that the wallet will need to retrieve the
@@ -170,9 +180,14 @@ public class Initializer {
      */
     
     public func initialize() throws {
+        do {
+            try storage.createTable()
+        } catch {
+            throw InitializerError.cacheDbInitFailed
+        }
         
         do {
-            try rustBackend.initDataDb(dbData: dataDbURL)
+            try rustBackend.initDataDb(dbData: dataDbURL, networkType: network.networkType)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
@@ -180,7 +195,7 @@ public class Initializer {
         }
     
         do {
-            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthday.height), hash: walletBirthday.hash, time: walletBirthday.time, saplingTree: walletBirthday.tree)
+            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthday.height), hash: walletBirthday.hash, time: walletBirthday.time, saplingTree: walletBirthday.tree, networkType: network.networkType)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
@@ -192,7 +207,7 @@ public class Initializer {
         lowerBoundHeight = max(walletBirthday.height, lastDownloaded)
  
         do {
-            guard try rustBackend.initAccountsTable(dbData: dataDbURL, uvks: viewingKeys) else {
+            guard try rustBackend.initAccountsTable(dbData: dataDbURL, uvks: viewingKeys, networkType: network.networkType) else {
                 throw rustBackend.lastError() ?? InitializerError.accountInitFailed
             }
         } catch RustWeldingError.dataDbNotEmpty {
@@ -202,7 +217,9 @@ public class Initializer {
         }
         
         let migrationManager = MigrationManager(cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
-                                                dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path), pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path))
+                                                dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path),
+                                                pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
+                                                networkType: self.network.networkType)
         
         try migrationManager.performMigration(uvks: viewingKeys)
     }
@@ -219,7 +236,7 @@ public class Initializer {
      - Parameter account: the index of the account
      */
     public func getBalance(account index: Int = 0) -> Int64 {
-        rustBackend.getBalance(dbData: dataDbURL, account: Int32(index))
+        rustBackend.getBalance(dbData: dataDbURL, account: Int32(index), networkType: network.networkType)
     }
     
     /**
@@ -227,20 +244,20 @@ public class Initializer {
     - Parameter account: the index of the account
     */
     public func getVerifiedBalance(account index: Int = 0) -> Int64 {
-        rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index))
+        rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index), networkType: network.networkType)
     }
     
     /**
      checks if the provided address is a valid shielded zAddress
      */
     public func isValidShieldedAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidShieldedAddress(address)) ?? false
+        (try? rustBackend.isValidShieldedAddress(address, networkType: network.networkType)) ?? false
     }
     /**
      checks if the provided address is a transparent zAddress
      */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidTransparentAddress(address)) ?? false
+        (try? rustBackend.isValidTransparentAddress(address,networkType: network.networkType)) ?? false
     }
     
     func isSpendParameterPresent() -> Bool {
@@ -298,16 +315,16 @@ public class Initializer {
 
 class CompactBlockProcessorBuilder {
     static func buildProcessor(configuration: CompactBlockProcessor.Configuration,
-                               downloader: CompactBlockDownloader,
+                               service: LightWalletService,
+                               storage: CompactBlockStorage,
                                transactionRepository: TransactionRepository,
                                accountRepository: AccountRepository,
                                backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
-        return CompactBlockProcessor(downloader: downloader,
+        return CompactBlockProcessor(service: service,
+                                     storage: storage,
                                      backend: backend,
                                      config: configuration,
                                      repository: transactionRepository,
                                      accountRepository: accountRepository)
     }
 }
-
-

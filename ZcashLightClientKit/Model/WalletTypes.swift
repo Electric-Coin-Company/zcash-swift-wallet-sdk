@@ -32,11 +32,9 @@ public struct WalletBirthday {
    public private(set) var tree: String = ""
 }
 
-
 /**
  Groups a Sapling Extended Full Viewing Key an a tranparent address extended public key.
  */
-
 
 public typealias ExtendedFullViewingKey = String
 public typealias ExtendedPublicKey = String
@@ -45,7 +43,6 @@ public protocol UnifiedViewingKey {
     var extfvk: ExtendedFullViewingKey { get set }
     var extpub: ExtendedPublicKey { get set }
 }
-
 
 public typealias TransparentAddress = String
 public typealias SaplingShieldedAddress = String

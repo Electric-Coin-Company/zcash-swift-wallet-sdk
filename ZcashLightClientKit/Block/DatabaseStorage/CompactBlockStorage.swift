@@ -13,7 +13,7 @@ protocol ConnectionProvider {
     func connection() throws -> Connection
 }
 
-struct CompactBlockStorage: CompactBlockDAO {
+class CompactBlockStorage: CompactBlockDAO {
     var dbProvider: ConnectionProvider
     
     init(connectionProvider: ConnectionProvider) {
@@ -36,6 +36,7 @@ struct CompactBlockStorage: CompactBlockDAO {
             let data = dataColumn()
             
             let db = try dbProvider.connection()
+         
             try db.run(compactBlocks.create(ifNotExists: true) { t in
                 t.column(height, primaryKey: true)
                 t.column(data)
@@ -55,7 +56,7 @@ struct CompactBlockStorage: CompactBlockDAO {
     func insert(_ blocks: [ZcashCompactBlock]) throws {
         let compactBlocks = compactBlocksTable()
         let db = try dbProvider.connection()
-            try db.transaction(.immediate) {
+        try db.transaction(.immediate) {
             for block in blocks {
                 try db.run(compactBlocks.insert(block))
             }

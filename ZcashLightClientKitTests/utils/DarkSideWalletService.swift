@@ -38,6 +38,10 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockProgressReporting) -> Void) -> CancellableCall {
+        return service.blockStream(startHeight: startHeight, endHeight: endHeight, result: result, handler: handler, progress: progress)
+    }
+    
     func getInfo() throws -> LightWalletdInfo {
         try service.getInfo()
     }
@@ -90,6 +94,14 @@ class DarksideWalletService: LightWalletService {
         self.service = LightWalletGRPCService(endpoint: endpoint)
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
+    
+    init(service: LightWalletGRPCService) {
+        self.channel = ChannelProvider().channel()
+        self.darksideService = DarksideStreamerClient(channel: channel)
+        self.service = service
+    }
+    
+    
     
     convenience init() {
         self.init(endpoint: LightWalletEndpointBuilder.default)
@@ -186,4 +198,39 @@ class DarksideWalletService: LightWalletService {
         _ = try darksideService.stageTransactions(txUrl, callOptions: nil).response.wait()
     }
  
+}
+
+
+class DarksideWalletDConstants: NetworkConstants {
+    static var SAPLING_ACTIVATION_HEIGHT: BlockHeight {
+        663150
+    }
+    
+    static var DEFAULT_DATA_DB_NAME: String {
+        ZcashSDKMainnetConstants.DEFAULT_DATA_DB_NAME
+    }
+    
+    static var DEFAULT_CACHES_DB_NAME: String {
+        ZcashSDKMainnetConstants.DEFAULT_CACHES_DB_NAME
+    }
+    
+    static var DEFAULT_PENDING_DB_NAME: String {
+        ZcashSDKMainnetConstants.DEFAULT_PENDING_DB_NAME
+    }
+    
+    static var DEFAULT_DB_NAME_PREFIX: String {
+        ZcashSDKMainnetConstants.DEFAULT_DB_NAME_PREFIX
+    }
+    
+    static var FEE_CHANGE_HEIGHT: BlockHeight {
+        ZcashSDKMainnetConstants.FEE_CHANGE_HEIGHT
+    }
+    
+    
+}
+class DarksideWalletDNetwork: ZcashNetwork {
+    var constants: NetworkConstants.Type = DarksideWalletDConstants.self
+    
+    var networkType = NetworkType.mainnet
+
 }

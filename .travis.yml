@@ -1,6 +1,6 @@
 language: swift
 os: osx
-osx_image: xcode12.2
+osx_image: xcode12.5
 xcode_workspace: ./Example/ZcashLightClientSample/ZcashLightClientSample.xcworkspace
 xcode_scheme: ZcashLightClientSample
 xcode_destination: platform=iOS Simulator,OS=14.2,name=iPhone 8
@@ -9,9 +9,6 @@ addons:
     packages:
     - rustup-init
     - sourcery
-env:
-  global:
-  - ZCASH_NETWORK_ENVIRONMENT: TESTNET
 install:
   - ${TRAVIS_BUILD_DIR}/Scripts/travis/rust_setup.sh
   - ${TRAVIS_BUILD_DIR}/Scripts/travis/ZcashLightClientSample_setup.sh
@@ -19,4 +16,4 @@ install:
   - curl https://z.cash/downloads/sapling-output.params > ${TRAVIS_BUILD_DIR}/ZcashLightClientKitTests/sapling-spend.params
 script:
   - swiftlint
-  - travis_wait 60 xcodebuild -quiet -UseModernBuildSystem=NO -workspace ./Example/ZcashLightClientSample/ZcashLightClientSample.xcworkspace -scheme ZcashLightClientSample -destination platform\=iOS\ Simulator,OS\=14.2,name\=iPhone\ 8 build
+  - travis_wait 60 xcodebuild -quiet -UseModernBuildSystem=NO -workspace ./Example/ZcashLightClientSample/ZcashLightClientSample.xcworkspace -scheme ZcashLightClientSample -destination platform\=iOS\ Simulator,OS\=14.5,name\=iPhone\ 8 build

@@ -1,5 +1,54 @@
+# 0.12.0-alpha.11
+* [Enhancement] Network Agnostic build
+
+#  0.12.0-alpha.10
+* Fix: UNIQUE Constraint bug when coming from background. fixed and logged warning to keep investigating
+* [New] latestScannedHeight added to SDKSynchronizer
+
+# 0.12.0-alpha.9 
+* CompactBlockProcessor states don't propagate correctly
+
+# 0.12.0-alpha.8
+* target height reporting enhancements
+
+# 0.12.0-alpha.7
+* improve status publishing for SDKSynchronizer
+* [FIX] missingStartHeight error when scanning from sapling activation
+
+# 0.12.0-alpha.6
+* Make sapling parameters default url public
+
+# 0.12.0-alpha.5
+* add output files to build phase to avoid CI failures
+* fix lint warnings
+
+# 0.12.0-alpha.4
+* Tests
+* [Fix] Issue #289 main thread lock when validating the server
+* [Fix] info single call times out all the time
+* make sure operations cancel in a timely manner
+* FigureNextBatchOperation.swift tests
+* make range function static
+
+# tag: 0.12.0-alpha.3
+* getInfo service times out too soon
+# 0.12.0-alpha.2
+* FIX: processor stalls on reconnection
+* Fix warnings
+# 0.12.0-alpha.1
+* Replace Status for SyncStatus
+* fix tests
+* Fix Demo App
+* fetch operation does not cancel when the previous operations do
+* Fix: operations start when they have been canceled already
+* fix progress being > 1
+* Synchronizing by phases, preview
+* Add fetch UTXO operation to compact block processor
+* CompactBlock batch download and stream download operation tests pass.
+
 # 0.11.2 
 * [FIX] Fix build for Apple Silicon (M1) #285 by @ealymbaev 
+
 # 0.11.1
 * [Enhancement] Rewind API has a `.quick` option
 # 0.11.0

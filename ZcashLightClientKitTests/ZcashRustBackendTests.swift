@@ -16,6 +16,9 @@ class ZcashRustBackendTests: XCTestCase {
     let spendingKey = "secret-extended-key-test1qvpevftsqqqqpqy52ut2vv24a2qh7nsukew7qg9pq6djfwyc3xt5vaxuenshp2hhspp9qmqvdh0gs2ljpwxders5jkwgyhgln0drjqaguaenfhehz4esdl4kwlm5t9q0l6wmzcrvcf5ed6dqzvct3e2ge7f6qdvzhp02m7sp5a0qjssrwpdh7u6tq89hl3wchuq8ljq8r8rwd6xdwh3nry9at80z7amnj3s6ah4jevnvfr08gxpws523z95g6dmn4wm6l3658kd4xcq9rc0qn"
     let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
     let zpend: Int = 500_000
+    
+    let networkType = NetworkType.testnet
+    
     override func setUp() {
         dbData = try! __dataDbURL()
         try? dataDbHandle.setUp()
@@ -30,9 +33,9 @@ class ZcashRustBackendTests: XCTestCase {
     func testInitWithShortSeedAndFail() {
         let seed = "testreferencealice"
         
-        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
+        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!, networkType: networkType))
         
-        let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1)
+        let _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1, networkType: networkType)
         XCTAssertNotNil(ZcashRustBackend.getLastError())
  
     }
@@ -41,7 +44,7 @@ class ZcashRustBackendTests: XCTestCase {
         let seed = Array("testreferencealicetestreferencealice".utf8)
         
         var spendingKeys: [String]? = nil
-        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1) }())
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
         
         XCTAssertNotNil(spendingKeys)
         XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
@@ -52,7 +55,7 @@ class ZcashRustBackendTests: XCTestCase {
         let seed = Array("testreferencealicetestreferencealice".utf8)
         
         var fullViewingKeys: [String]? = nil
-        XCTAssertNoThrow(try { fullViewingKeys = try ZcashRustBackend.deriveExtendedFullViewingKeys(seed: seed, accounts: 1) }())
+        XCTAssertNoThrow(try { fullViewingKeys = try ZcashRustBackend.deriveExtendedFullViewingKeys(seed: seed, accounts: 1, networkType: networkType) }())
         
         XCTAssertNotNil(fullViewingKeys)
         XCTAssertFalse(fullViewingKeys?.first?.isEmpty ?? true)
@@ -64,7 +67,7 @@ class ZcashRustBackendTests: XCTestCase {
         
         
         var spendingKeys: [String]? = nil
-        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1) }())
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
         
         XCTAssertNotNil(spendingKeys)
         XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
@@ -74,7 +77,7 @@ class ZcashRustBackendTests: XCTestCase {
             return
         }
         
-        XCTAssertNoThrow(try { fullViewingKey = try ZcashRustBackend.deriveExtendedFullViewingKey(spendingKey) }())
+        XCTAssertNoThrow(try { fullViewingKey = try ZcashRustBackend.deriveExtendedFullViewingKey(spendingKey, networkType: networkType) }())
         
         XCTAssertNotNil(fullViewingKey)
         XCTAssertFalse(fullViewingKey?.isEmpty ?? true)
@@ -86,24 +89,24 @@ class ZcashRustBackendTests: XCTestCase {
             return
         }
         let seed = "testreferencealicetestreferencealice"
-        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!))
+        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!, networkType: networkType))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
-        XCTAssertNotNil(ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1))
+        XCTAssertNotNil(ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1, networkType: networkType))
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
-        let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0)
+        let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0, networkType: networkType)
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         XCTAssertEqual(addr, Optional("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"))
         
-        XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData))
+        XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData, networkType: networkType))
         
     }
     
     func testIsValidTransparentAddressFalse() {
         var isValid: Bool? = nil
         
-        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc") }())
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc", networkType: networkType) }())
         
         if let valid = isValid {
             XCTAssertFalse(valid)
@@ -117,7 +120,7 @@ class ZcashRustBackendTests: XCTestCase {
     func testIsValidTransparentAddressTrue() {
         var isValid: Bool? = nil
         
-        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7") }())
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidTransparentAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7", networkType: networkType) }())
         
         if let valid = isValid {
             XCTAssertTrue(valid)
@@ -129,7 +132,7 @@ class ZcashRustBackendTests: XCTestCase {
     func testIsValidShieldedAddressTrue() {
         var isValid: Bool? = nil
         
-        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc") }())
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc", networkType: networkType) }())
         
         if let valid = isValid {
             XCTAssertTrue(valid)
@@ -141,7 +144,7 @@ class ZcashRustBackendTests: XCTestCase {
     func testIsValidShieldedAddressFalse() {
         var isValid: Bool? = nil
         
-        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7") }())
+        XCTAssertNoThrow(try { isValid = try ZcashRustBackend.isValidShieldedAddress("tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7", networkType: networkType) }())
         
         if let valid = isValid {
             XCTAssertFalse(valid)

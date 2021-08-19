@@ -22,25 +22,29 @@ import XCTest
 class ReOrgTests: XCTestCase {
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
        
-       let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
-       
-       let sendAmount: Int64 = 1000
-       var birthday: BlockHeight = 663150
-       let defaultLatestHeight: BlockHeight = 663175
-       var coordinator: TestCoordinator!
-       var syncedExpectation = XCTestExpectation(description: "synced")
-       var sentTransactionExpectation = XCTestExpectation(description: "sent")
-       var expectedReorgHeight: BlockHeight = 665188
-       var expectedRewindHeight: BlockHeight = 665188
-       var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
-       override func setUpWithError() throws {
+    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
+
+    let sendAmount: Int64 = 1000
+    var birthday: BlockHeight = 663150
+    let defaultLatestHeight: BlockHeight = 663175
+    var coordinator: TestCoordinator!
+    var syncedExpectation = XCTestExpectation(description: "synced")
+    var sentTransactionExpectation = XCTestExpectation(description: "sent")
+    var expectedReorgHeight: BlockHeight = 665188
+    var expectedRewindHeight: BlockHeight = 665188
+    let network = DarksideWalletDNetwork()
+    let branchID = "2bb40e60"
+    let chainName = "main"
+    var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
+    override func setUpWithError() throws {
             NotificationCenter.default.addObserver(self, selector: #selector(handleReOrgNotification(_:)), name: Notification.Name.blockProcessorHandledReOrg, object: nil)
            coordinator = try TestCoordinator(
                seed: seedPhrase,
                walletBirthday: birthday,
-               channelProvider: ChannelProvider()
+               channelProvider: ChannelProvider(),
+               network: network
            )
-        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
+        try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
            try coordinator.resetBlocks(dataset: .default)
            
        }
@@ -75,7 +79,7 @@ class ReOrgTests: XCTestCase {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663202)
         let reOrgHeight = BlockHeight(663195)
-        let walletBirthday = WalletBirthday.birthday(with: 663150).height
+        let walletBirthday = WalletBirthday.birthday(with: 663150, network: network).height
         
         try basicReOrgTest(baseDataset: .beforeReOrg,
                             reorgDataset: .afterSmallReorg,
@@ -89,7 +93,7 @@ class ReOrgTests: XCTestCase {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663250)
         let reOrgHeight = BlockHeight(663180)
-        let walletBirthday = WalletBirthday.birthday(with: BlockHeight(663150)).height
+        let walletBirthday = WalletBirthday.birthday(with: BlockHeight(663150), network: network).height
         
         try basicReOrgTest(baseDataset: .beforeReOrg,
                            reorgDataset: .afterLargeReorg,
@@ -107,7 +111,7 @@ class ReOrgTests: XCTestCase {
                         targetHeight: BlockHeight) throws {
      
         do {
-            try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
+            try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
             try coordinator.resetBlocks(dataset: .predefined(dataset: .beforeReOrg))
             try coordinator.applyStaged(blockheight: firstLatestHeight)
         } catch  {

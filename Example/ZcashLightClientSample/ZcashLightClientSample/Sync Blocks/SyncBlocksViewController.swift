@@ -20,7 +20,7 @@ class SyncBlocksViewController: UIViewController {
     @IBOutlet weak var progressLabel: UILabel!
     @IBOutlet weak var startPause: UIButton!
 
-    private var processor: CompactBlockProcessor?
+    private var processor: CompactBlockProcessor!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -28,9 +28,8 @@ class SyncBlocksViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         let wallet = Initializer.shared
-        
+        try! wallet.initialize()
         processor = CompactBlockProcessor(initializer: wallet)
-        
         statusLabel.text = textFor(state: processor?.state ?? .stopped)
         progressBar.progress = 0
         
@@ -54,12 +53,13 @@ class SyncBlocksViewController: UIViewController {
             
             switch notification.name {
             case let not where not == Notification.Name.blockProcessorUpdated:
-                guard let progress = notification.userInfo?[CompactBlockProcessorNotificationKey.progress] as? Float else { return }
-                self.progressBar.progress = progress
-                self.progressLabel.text = "\(progress)%"
+                guard let progress = notification.userInfo?[CompactBlockProcessorNotificationKey.progress] as? CompactBlockProgress else { return }
+                self.progressBar.progress = progress.progress
+                self.progressLabel.text = "\(progress.progress)%"
             default:
                 return
             }
+            
         }
     }
     
@@ -124,6 +124,10 @@ class SyncBlocksViewController: UIViewController {
             return "Retry"
         case .synced:
             return "Chill!"
+        case .enhancing:
+            return "Enhance"
+        case .fetching:
+            return "fetch"
         }
     }
     
@@ -141,6 +145,10 @@ class SyncBlocksViewController: UIViewController {
             return "Validating chain 🕵️‍♀️"
         case .synced:
             return "Synced 😎"
+        case .enhancing:
+            return "Enhancing 🤖"
+        case .fetching:
+            return "Fetching UTXOs"
         }
     }
 }

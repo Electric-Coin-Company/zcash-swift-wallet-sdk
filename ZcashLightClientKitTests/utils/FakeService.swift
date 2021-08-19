@@ -16,14 +16,32 @@ struct LightWalletServiceMockResponse: LightWalletServiceResponse {
     var unknownFields: UnknownStorage
     
 }
-
+struct MockCancellable: CancellableCall {
+    func cancel() {}
+}
 class MockLightWalletService: LightWalletService {
+    var mockLightDInfo: LightWalletdInfo?
+    var queue = DispatchQueue(label: "mock service queue")
+    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockProgressReporting) -> Void) -> CancellableCall {
+        return MockCancellable()
+    }
+    
     func getInfo() throws -> LightWalletdInfo {
-        throw LightWalletServiceError.generalError(message: "Not Implemented")
+        guard let info = mockLightDInfo else {
+            throw LightWalletServiceError.generalError(message: "Not Implemented")
+        }
+        return info
     }
     
     func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
-        return result(.failure(LightWalletServiceError.generalError(message: "Not Implemented")))
+        queue.async { [weak self] in
+            
+            guard let info = self?.mockLightDInfo else {
+                result(.failure(LightWalletServiceError.generalError(message: "Not Implemented")))
+                return
+            }
+            result(.success(info))
+        }
     }
     
     func closeConnection() {
@@ -50,13 +68,15 @@ class MockLightWalletService: LightWalletService {
         
     }
     
-    private var service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+    private var service: LightWalletService
     
     var latestHeight: BlockHeight
 
-    init(latestBlockHeight: BlockHeight) {
+    init(latestBlockHeight: BlockHeight, service: LightWalletService) {
         self.latestHeight = latestBlockHeight
+        self.service = service
     }
+    
     func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
             result(.success(self.latestHeight))

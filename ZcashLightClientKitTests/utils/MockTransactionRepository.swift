@@ -10,6 +10,10 @@ import Foundation
 @testable import ZcashLightClientKit
 
 class MockTransactionRepository: TransactionRepository {
+    func findConfirmedTransactionBy(rawId: Data) throws -> ConfirmedTransactionEntity? {
+        nil
+    }
+    
     func blockForHeight(_ height: BlockHeight) throws -> Block? {
         nil
     }
@@ -40,10 +44,15 @@ class MockTransactionRepository: TransactionRepository {
         receivedCount + sentCount
     }
     
-    init(unminedCount: Int, receivedCount: Int, sentCount: Int) {
+    var network: ZcashNetwork
+    init(unminedCount: Int,
+         receivedCount: Int,
+         sentCount: Int,
+         network: ZcashNetwork) {
         self.unminedCount = unminedCount
         self.receivedCount = receivedCount
         self.sentCount = sentCount
+        self.network = network
     }
     
     func generate() {
@@ -144,7 +153,7 @@ class MockTransactionRepository: TransactionRepository {
     }
     
     func randomBlockHeight() -> BlockHeight {
-        BlockHeight.random(in: ZcashSDK.SAPLING_ACTIVATION_HEIGHT ... 1_000_000)
+        BlockHeight.random(in: network.constants.SAPLING_ACTIVATION_HEIGHT ... 1_000_000)
     }
     func randomTimeInterval() -> TimeInterval {
         Double.random(in: Date().timeIntervalSince1970 - 1000000.0 ... Date().timeIntervalSince1970)

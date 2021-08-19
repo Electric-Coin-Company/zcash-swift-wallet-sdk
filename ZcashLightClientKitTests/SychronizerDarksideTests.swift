@@ -23,13 +23,15 @@ class SychronizerDarksideTests: XCTestCase {
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
     let branchID = "2bb40e60"
     let chainName = "main"
+    let network = DarksideWalletDNetwork()
     var foundTransactions = [ConfirmedTransactionEntity]()
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
-            channelProvider: ChannelProvider()
+            channelProvider: ChannelProvider(),
+            network: network
         )
         try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }

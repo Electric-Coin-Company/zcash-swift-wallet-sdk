@@ -14,7 +14,6 @@ protocol AccountEntity {
     var transparentAddress: String { get set }
 }
 
-
 struct Account: AccountEntity, Encodable, Decodable {
     
     enum CodingKeys: String, CodingKey {
@@ -129,7 +128,7 @@ class AccountSQDAO: AccountRepository {
 class CachingAccountDao: AccountRepository {
     
     var dao: AccountRepository
-    lazy var cache: [Int : AccountEntity] = {
+    lazy var cache: [Int: AccountEntity] = {
         var c = [Int : AccountEntity]()
         guard let all = try? dao.getAll() else {
             return c
@@ -146,7 +145,7 @@ class CachingAccountDao: AccountRepository {
     
     func getAll() throws -> [AccountEntity] {
         guard cache.isEmpty else {
-            return cache.values.sorted(by: {$0.account < $1.account})
+            return cache.values.sorted(by: { $0.account < $1.account })
         }
         let all = try dao.getAll()
         

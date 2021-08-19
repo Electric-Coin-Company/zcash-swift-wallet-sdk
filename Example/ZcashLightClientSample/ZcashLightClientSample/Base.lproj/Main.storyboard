@@ -3,7 +3,7 @@
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18092"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="18093"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -954,14 +954,14 @@
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" spacing="24" translatesAutoresizingMaskIntoConstraints="NO" id="dp8-P5-xEk">
                                 <rect key="frame" x="8" y="88" width="398" height="774"/>
                                 <subviews>
-                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="TdB-z4-xLJ">
+                                    <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="TdB-z4-xLJ">
                                         <rect key="frame" x="0.0" y="0.0" width="398" height="128"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>
-                                            <constraint firstAttribute="height" constant="128" id="enj-s3-Sct"/>
+                                            <constraint firstAttribute="height" relation="lessThanOrEqual" priority="751" constant="128" id="enj-s3-Sct"/>
                                         </constraints>
                                     </view>
-                                    <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="246" verticalCompressionResistancePriority="250" alignment="center" spacing="13" translatesAutoresizingMaskIntoConstraints="NO" id="IIl-kO-2M8">
+                                    <stackView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="246" verticalCompressionResistancePriority="250" ambiguous="YES" alignment="center" spacing="13" translatesAutoresizingMaskIntoConstraints="NO" id="IIl-kO-2M8">
                                         <rect key="frame" x="0.0" y="152" width="398" height="173"/>
                                         <subviews>
                                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="252" text="Status:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="3t3-Tr-UlI">
@@ -981,22 +981,22 @@
                                             <constraint firstAttribute="trailing" secondItem="Jj9-7r-s2Y" secondAttribute="trailing" id="fVB-y8-IS3"/>
                                         </constraints>
                                     </stackView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Progress" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JPx-ol-2nc">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="Progress" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="JPx-ol-2nc">
                                         <rect key="frame" x="0.0" y="349" width="390" height="43"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="36"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progressViewStyle="bar" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="oKg-9s-8Ym">
+                                    <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" ambiguous="YES" progressViewStyle="bar" progress="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="oKg-9s-8Ym">
                                         <rect key="frame" x="0.0" y="416" width="390" height="2.5"/>
                                     </progressView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0%" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kXE-5z-HN2">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="0%" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="kXE-5z-HN2">
                                         <rect key="frame" x="0.0" y="441.5" width="398" height="39.5"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="33"/>
                                         <nil key="textColor"/>
                                         <nil key="highlightedColor"/>
                                     </label>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="G5M-gm-1ux">
+                                    <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="G5M-gm-1ux">
                                         <rect key="frame" x="0.0" y="505" width="398" height="45"/>
                                         <fontDescription key="fontDescription" type="system" pointSize="27"/>
                                         <state key="normal" title="Start"/>
@@ -1004,7 +1004,7 @@
                                             <action selector="startStop" destination="eja-yc-RHW" eventType="touchUpInside" id="IKi-XW-r3i"/>
                                         </connections>
                                     </button>
-                                    <view contentMode="scaleToFill" verticalHuggingPriority="750" verticalCompressionResistancePriority="737" translatesAutoresizingMaskIntoConstraints="NO" id="fB9-xh-4fl" userLabel="Trailing View">
+                                    <view contentMode="scaleToFill" verticalHuggingPriority="750" verticalCompressionResistancePriority="737" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="fB9-xh-4fl" userLabel="Trailing View">
                                         <rect key="frame" x="0.0" y="574" width="398" height="200"/>
                                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                         <constraints>

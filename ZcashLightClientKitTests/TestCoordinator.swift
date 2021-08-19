@@ -43,38 +43,39 @@ class TestCoordinator {
     var service: DarksideWalletService
     var spendingKeys: [String]?
     var databases: TemporaryTestDatabases
-    
+    let network: ZcashNetwork
      convenience init(seed: String,
          walletBirthday: BlockHeight,
-         channelProvider: ChannelProvider) throws {
-        guard let spendingKey = try DerivationTool.default.deriveSpendingKeys(
+         channelProvider: ChannelProvider,
+         network: ZcashNetwork) throws {
+        let derivationTool = DerivationTool(networkType: network.networkType)
+        guard let spendingKey = try derivationTool.deriveSpendingKeys(
                 seed: TestSeed().seed(),
                 numberOfAccounts: 1).first else {
             throw CoordinatorError.builderError
         }
         
-        guard let uvk = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed(TestSeed().seed(), numberOfAccounts: 1).first else {
+        guard let uvk = try derivationTool.deriveUnifiedViewingKeysFromSeed(TestSeed().seed(), numberOfAccounts: 1).first else {
             throw CoordinatorError.builderError
         }
         
-        try self.init(spendingKey: spendingKey, unifiedViewingKey: uvk, walletBirthday: walletBirthday, channelProvider: channelProvider)
+        try self.init(spendingKey: spendingKey, unifiedViewingKey: uvk, walletBirthday: walletBirthday, channelProvider: channelProvider, network: network)
     }
     
     required init(
         spendingKey: String,
         unifiedViewingKey: UnifiedViewingKey,
-         walletBirthday: BlockHeight,
-         channelProvider: ChannelProvider) throws {
+        walletBirthday: BlockHeight,
+        channelProvider: ChannelProvider,
+        network: ZcashNetwork) throws {
         self.spendingKey = spendingKey
         self.birthday = walletBirthday
         self.channelProvider = channelProvider
         self.databases = TemporaryDbBuilder.build()
-        self.service = DarksideWalletService()
+        self.network = network
+        self.service = DarksideWalletService(service: LightWalletGRPCService(host: Constants.address, port: 9067, secure: false, singleCallTimeout: 10000, streamingCallTimeout: 1000000))
         let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
         try storage.createTable()
-        
-        let downloader = CompactBlockDownloader(service: self.service, storage: storage)
-        
         
         let buildResult = try TestSynchronizerBuilder.build(
                                 rustBackend: ZcashRustBackend.self,
@@ -85,13 +86,15 @@ class TestCoordinator {
                                 endpoint: LightWalletEndpointBuilder.default,
                                 service: self.service,
                                 repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
-                                accountRepository: AccountRepositoryBuilder.build(dataDbURL: databases.dataDB, readOnly: true),
-                                downloader: downloader,
+                                accountRepository: AccountRepositoryBuilder.build(dataDbURL: databases.dataDB,
+                                                                                  readOnly: true),
+                                storage: storage,
                                 spendParamsURL: try __spendParamsURL(),
                                 outputParamsURL: try __outputParamsURL(),
                                 spendingKey: spendingKey,
                                 unifiedViewingKey: unifiedViewingKey,
-                                walletBirthday: WalletBirthday.birthday(with: birthday),
+                                walletBirthday: WalletBirthday.birthday(with: birthday, network: network),
+                                network: network,
                                 loggerProxy: SampleLogger(logLevel: .debug))
         
         self.synchronizer = buildResult.synchronizer
@@ -106,7 +109,6 @@ class TestCoordinator {
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
-       
         switch state {
         case .default:
             try service.useDataset(DarksideDataset.beforeReOrg.rawValue)
@@ -115,7 +117,6 @@ class TestCoordinator {
         case .url(let urlString,_):
             try service.useDataset(from: urlString)
         }
-        
     }
     
     func setLatestHeight(height: BlockHeight) throws {
@@ -214,7 +215,8 @@ extension TestCoordinator {
                                                     maxBackoffInterval: config.maxBackoffInterval,
                                                     rewindDistance: config.rewindDistance,
                                                     walletBirthday: config.walletBirthday,
-                                                    saplingActivation: config.saplingActivation)
+                                                    saplingActivation: config.saplingActivation,
+                                                    network: config.network)
         try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)
     }
     
@@ -252,17 +254,19 @@ class TestSynchronizerBuilder {
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        downloader: CompactBlockDownloader,
+        storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
         spendingKey: String,
         unifiedViewingKey: UnifiedViewingKey,
         walletBirthday: WalletBirthday,
+        network: ZcashNetwork,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer)  {
         let initializer = Initializer(
             rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
+            network: network,
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
@@ -270,7 +274,7 @@ class TestSynchronizerBuilder {
             service: service,
             repository: repository,
             accountRepository: accountRepository,
-            downloader: downloader,
+            storage: CompactBlockStorage(url: cacheDbURL, readonly: false),
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             viewingKeys: [unifiedViewingKey],
@@ -285,9 +289,11 @@ class TestSynchronizerBuilder {
                                                 maxBackoffInterval: ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL,
                                                 rewindDistance: ZcashSDK.DEFAULT_REWIND_DISTANCE,
                                                 walletBirthday: walletBirthday.height,
-                                                saplingActivation: lowerBoundHeight)
+                                                saplingActivation: lowerBoundHeight,
+                                                network: network)
         
-        let processor = CompactBlockProcessor(downloader: downloader,
+        let processor = CompactBlockProcessor(service: service,
+                                              storage: storage,
                                               backend: rustBackend,
                                               config: config,
                                               repository: repository,
@@ -316,18 +322,19 @@ class TestSynchronizerBuilder {
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        downloader: CompactBlockDownloader,
+        storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
         seedBytes: [UInt8],
         walletBirthday: WalletBirthday,
+        network: ZcashNetwork,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
-        guard let spendingKey = try DerivationTool().deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
+        guard let spendingKey = try DerivationTool(networkType: network.networkType).deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw TestCoordinator.CoordinatorError.builderError
         }
         
-        guard let uvk = try DerivationTool().deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: 1).first else {
+        guard let uvk = try DerivationTool(networkType: network.networkType).deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: 1).first else {
             throw TestCoordinator.CoordinatorError.builderError
         }
         return try build(rustBackend: rustBackend,
@@ -339,12 +346,13 @@ class TestSynchronizerBuilder {
             service: service,
             repository: repository,
             accountRepository: accountRepository,
-            downloader: downloader,
+            storage: storage,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             spendingKey: spendingKey,
             unifiedViewingKey: uvk,
-            walletBirthday: walletBirthday)
+            walletBirthday: walletBirthday,
+            network: network)
         
     }
 }

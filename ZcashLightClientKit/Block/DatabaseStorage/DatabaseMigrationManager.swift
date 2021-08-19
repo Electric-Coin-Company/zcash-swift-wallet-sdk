@@ -25,13 +25,15 @@ class MigrationManager {
     var cacheDb: ConnectionProvider
     var dataDb: ConnectionProvider
     var pendingDb: ConnectionProvider
-    
+    var network: NetworkType
     init(cacheDbConnection: ConnectionProvider,
          dataDbConnection: ConnectionProvider,
-         pendingDbConnection: ConnectionProvider) {
+         pendingDbConnection: ConnectionProvider,
+         networkType: NetworkType) {
         self.cacheDb = cacheDbConnection
         self.dataDb = dataDbConnection
         self.pendingDb = pendingDbConnection
+        self.network = networkType
     }
     
     static let latestDataDbMigrationVersion: Int32 = DataDbMigrations.version1.rawValue
@@ -149,8 +151,7 @@ class MigrationManager {
             LoggerProxy.debug(message)
             throw StorageError.migrationFailedWithMessage(message: message)
         }
-        let derivationTool = DerivationTool.default
-        
+        let derivationTool = DerivationTool(networkType: self.network)
         
         for tuple in zip(accounts, viewingKeys) {
             let tAddr = try derivationTool.deriveTransparentAddressFromPublicKey(tuple.1.extpub)
@@ -178,7 +179,9 @@ class MigrationManager {
             return
         }
         
-        let uvks = try DerivationTool.default.deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)
+        let derivationTool = DerivationTool(networkType: self.network)
+        
+        let uvks = try derivationTool.deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)
         
         try performVersion1Migration(viewingKeys: uvks)
     }

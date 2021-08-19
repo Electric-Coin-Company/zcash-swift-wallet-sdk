@@ -81,19 +81,19 @@ class DerivationToolViewController: UIViewController {
     }
     
     func deriveFrom(seedPhrase: String) throws {
-        
 
         let seedBytes = try Mnemonic.deterministicSeedBytes(from: seedPhrase)
-        guard let spendingKey = try DerivationTool.default.deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
+        let derivationTool = DerivationTool(networkType: ZCASH_NETWORK.networkType)
+        guard let spendingKey = try derivationTool.deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw DerivationErrors.couldNotDeriveSpendingKeys(underlyingError: DerivationErrors.unknown)
         }
-        guard let viewingKey = try DerivationTool.default.deriveViewingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
+        guard let viewingKey = try derivationTool.deriveViewingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw DerivationErrors.couldNotDeriveViewingKeys(underlyingError: DerivationErrors.unknown)
         }
         
-        let shieldedAddress = try DerivationTool.default.deriveShieldedAddress(viewingKey: viewingKey)
+        let shieldedAddress = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
         
-        let transparentAddress = try DerivationTool.default.deriveTransparentAddress(seed: seedBytes)
+        let transparentAddress = try derivationTool.deriveTransparentAddress(seed: seedBytes)
         
         
         updateLabels(spendingKey: spendingKey,

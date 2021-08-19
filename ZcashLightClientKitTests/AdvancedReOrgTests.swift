@@ -24,12 +24,15 @@ class AdvancedReOrgTests: XCTestCase {
     var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
     let branchID = "2bb40e60"
     let chainName = "main"
+    let network = DarksideWalletDNetwork()
+    
     override func setUpWithError() throws {
         
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
-            channelProvider: ChannelProvider()
+            channelProvider: ChannelProvider(),
+            network: network
         )
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
@@ -44,13 +47,13 @@ class AdvancedReOrgTests: XCTestCase {
     
     @objc func handleReorg(_ notification: Notification) {
         
-        guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight
-//            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
+        guard let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
+            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
             else {
                 XCTFail("empty reorg notification")
                 return
         }
-        
+        logger!.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
 //        XCTAssertEqual(rewindHeight, expectedRewindHeight)
         XCTAssertEqual(reorgHeight, expectedReorgHeight)
         reorgExpectation.fulfill()
@@ -127,7 +130,7 @@ class AdvancedReOrgTests: XCTestCase {
             receivedTxExpectation.fulfill()
         }, error: self.handleError)
         sleep(2)
-        wait(for: [receivedTxExpectation], timeout: 5)
+        wait(for: [receivedTxExpectation], timeout: 10)
         
         guard let syncedSynchronizer = s else {
             XCTFail("nil synchronizer")
@@ -267,7 +270,6 @@ class AdvancedReOrgTests: XCTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance: Int64 = -1
-        var initialVerifiedBalance: Int64 = -1
         
         /*
          2. applyStaged(received_Tx_height)
@@ -281,7 +283,6 @@ class AdvancedReOrgTests: XCTestCase {
          3. sync up to received_Tx_height
          */
         try coordinator.sync(completion: { (synchronizer) in
-            initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
             initialTotalBalance = synchronizer.initializer.getBalance()
             preTxExpectation.fulfill()
         }, error: self.handleError)
@@ -406,7 +407,7 @@ class AdvancedReOrgTests: XCTestCase {
         hookToReOrgNotification()
         self.expectedReorgHeight = 663196
         self.expectedRewindHeight = 663175
-        try coordinator.reset(saplingActivation: birthday, branchID: "e9ff75a6", chainName: "main")
+        try coordinator.reset(saplingActivation: birthday, branchID: "2bb40e60", chainName: "main")
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txIndexChangeBefore))
         try coordinator.applyStaged(blockheight: 663195)
         sleep(1)
@@ -442,7 +443,7 @@ class AdvancedReOrgTests: XCTestCase {
             afterReorgSync.fulfill()
         }, error: self.handleError)
         
-        wait(for: [reorgExpectation,afterReorgSync], timeout: 5)
+        wait(for: [reorgExpectation,afterReorgSync], timeout: 15)
         
         XCTAssertEqual(postReorgVerifiedBalance, preReorgVerifiedBalance)
         XCTAssertEqual(postReorgTotalBalance, preReorgTotalBalance)
@@ -681,8 +682,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
          1a. sync to latest height
          */
-        try coordinator.sync(completion: { (s) in
-            
+        try coordinator.sync(completion: { (s) in   
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
         
@@ -883,7 +883,7 @@ class AdvancedReOrgTests: XCTestCase {
      9. verify that the balance is equal to the one before the reorg
      */
     func testReOrgChangesInboundMinedHeight() throws {
-        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        try coordinator.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         sleep(2)
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txHeightReOrgBefore))
         sleep(2)
@@ -942,7 +942,7 @@ class AdvancedReOrgTests: XCTestCase {
      */
     func testReOrgRemovesIncomingTxForever() throws {
         hookToReOrgNotification()
-        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        try coordinator.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txReOrgRemovesInboundTxBefore))
         
@@ -955,6 +955,9 @@ class AdvancedReOrgTests: XCTestCase {
         sleep(2)
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
+        /**
+         1. sync prior to incomingTxHeight - 1 to get balances there
+         */
         try coordinator.sync(completion: { (s) in
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
@@ -968,12 +971,18 @@ class AdvancedReOrgTests: XCTestCase {
         
         let secondSyncExpectation = XCTestExpectation(description: "second sync expectation")
         
+        /**
+         2. sync to latest height
+         */
         try coordinator.sync(completion: { (s) in
             secondSyncExpectation.fulfill()
         }, error: self.handleError)
         
-        wait(for: [secondSyncExpectation], timeout: 5)
+        wait(for: [secondSyncExpectation], timeout: 10)
         
+        /**
+         3. cause reorg
+         */
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txReOrgRemovesInboundTxAfter))
         
         try coordinator.applyStaged(blockheight: 663200)
@@ -1148,9 +1157,17 @@ class AdvancedReOrgTests: XCTestCase {
          */
         try coordinator.sync(completion: { (s) in
             firstSyncExpectation.fulfill()
-        }, error: self.handleError)
+        }, error: { error in
+            _ = try? self.coordinator.stop()
+            firstSyncExpectation.fulfill()
+            guard let testError = error else {
+                XCTFail("failed with nil error")
+                return
+            }
+            XCTFail("Failed with error: \(testError)")
+        })
         
-        wait(for: [firstSyncExpectation], timeout: 300)
+        wait(for: [firstSyncExpectation], timeout: 500)
         
         XCTAssertEqual(try coordinator.synchronizer.latestDownloadedHeight(), birthday + fullSyncLength)
     }
