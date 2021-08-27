@@ -315,9 +315,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1, limit, networkType.networkId) != 0
     }
 
-    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], networkType: NetworkType) -> Bool {
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], minedHeight: Int32, networkType: NetworkType) -> Bool {
         let dbData = dbData.osStr()
-        return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count), networkType.networkId) != 0
+        return zcashlc_decrypt_and_store_transaction(dbData.0, dbData.1, tx, UInt(tx.count), UInt32(minedHeight), networkType.networkId) != 0
     }
 
     static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64 {
