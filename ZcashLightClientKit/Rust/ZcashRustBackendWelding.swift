@@ -225,9 +225,10 @@ public protocol ZcashRustBackendWelding {
      - Parameters:
         - dbData: location of the data db file
         - tx:     the transaction to decrypt
+        - minedHeight: height on which this transaction was mined. this is used to fetch the consensus branch ID.
      returns false if fails to decrypt.
      */
-    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], networkType: NetworkType) -> Bool
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], minedHeight: Int32, networkType: NetworkType) -> Bool
     
     /**
      Creates a transaction to the given address from the given account

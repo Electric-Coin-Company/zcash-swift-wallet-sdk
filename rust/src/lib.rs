@@ -57,6 +57,8 @@ use base58::ToBase58;
 use sha2::{Digest, Sha256};
 use secp256k1::key::{SecretKey, PublicKey};
 
+const ANCHOR_OFFSET: u32 = 10;
+
 fn unwrap_exc_or<T>(exc: Result<T, ()>, def: T) -> T {
     match exc {
         Ok(value) => value,
@@ -727,7 +729,7 @@ pub extern "C" fn zcashlc_get_verified_balance(
         let db_data = wallet_db(db_data, db_data_len, network)?;
         if account >= 0 {
             (&db_data)
-                .get_target_and_anchor_heights()
+                .get_target_and_anchor_heights(ANCHOR_OFFSET)
                 .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
                 .and_then(|opt_anchor| {
                     opt_anchor
@@ -762,7 +764,7 @@ pub extern "C" fn zcashlc_get_verified_transparent_balance(
         let addr = unsafe { CStr::from_ptr(address).to_str()? };
         let taddr = TransparentAddress::decode(&network, &addr).unwrap();
         let amount = (&db_data)
-            .get_target_and_anchor_heights()
+            .get_target_and_anchor_heights(ANCHOR_OFFSET)
             .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
             .and_then(|opt_anchor| {
                 opt_anchor
@@ -771,12 +773,12 @@ pub extern "C" fn zcashlc_get_verified_transparent_balance(
             })
             .and_then(|anchor| {
                 (&db_data)
-                    .get_unspent_transparent_utxos(&taddr, anchor - 10)
+                    .get_unspent_transparent_utxos(&taddr, anchor)
                     .map_err(|e| format_err!("Error while fetching verified transparent balance: {}", e))
             })?
             .iter()
             .map(|utxo| utxo.value)
-            .sum::<Amount>();
+            .sum::<Option<Amount>>().unwrap();
 
         Ok(amount.into())
     });
@@ -798,7 +800,7 @@ pub extern "C" fn zcashlc_get_total_transparent_balance(
         let addr = unsafe { CStr::from_ptr(address).to_str()? };
         let taddr = TransparentAddress::decode(&network, &addr).unwrap();
         let amount = (&db_data)
-            .get_target_and_anchor_heights()
+            .get_target_and_anchor_heights(ANCHOR_OFFSET)
             .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
             .and_then(|opt_anchor| {
                 opt_anchor
@@ -812,7 +814,7 @@ pub extern "C" fn zcashlc_get_total_transparent_balance(
             })?
             .iter()
             .map(|utxo| utxo.value)
-            .sum::<Amount>();
+            .sum::<Option<Amount>>().unwrap();
 
         Ok(amount.into())
     });
@@ -1101,14 +1103,17 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     db_data_len: usize,
     tx: *const u8,
     tx_len: usize,
+    mined_height: u32,
     network_id: u32,
 ) -> i32 {
     let res = catch_panic(|| {
         let network = parse_network(network_id)?;
         let db_read = wallet_db(db_data, db_data_len, network)?;
         let mut db_data = db_read.get_update_ops()?;
+        let block_height = BlockHeight::from_u32(mined_height);
+        let branch_id = BranchId::for_height(&network,block_height);
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
-        let tx = Transaction::read(&tx_bytes[..])?;
+        let tx = Transaction::read(&tx_bytes[..],branch_id)?;
 
         match decrypt_and_store_transaction(&network, &mut db_data, &tx) {
             Ok(()) => Ok(1),
@@ -1205,7 +1210,7 @@ pub extern "C" fn zcashlc_create_to_address(
             value,
             memo,
             OvkPolicy::Sender,
-        )
+            ANCHOR_OFFSET)
         .map_err(|e| format_err!("Error while sending funds: {}", e))
     });
     unwrap_exc_or(res, -1)
@@ -1399,7 +1404,7 @@ pub extern "C" fn zcashlc_shield_funds(
             &sk,
             &extsk, 
             &memo_bytes, 
-            0) // fix off-by-one error. 10 confs already added in this function
+            ANCHOR_OFFSET) 
             .map_err(|e| format_err!("Error while shielding transaction: {}", e))
     });
     unwrap_exc_or(res, -1)

@@ -115,7 +115,13 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             throw error
         }
         
-        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, tx: rawBytes, networkType: network) else {
+        guard let minedHeight = tx.minedHeight else {
+            let error = EnhancementError.noRawData(message: "Critical Error - Attempt to decrypt and store an unmined transaction. Id: \(tx.transactionId.toHexStringTxId()) ")
+            LoggerProxy.error("\(error)")
+            throw error
+        }
+        
+        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, tx: rawBytes, minedHeight: Int32(minedHeight), networkType: network) else {
             if let rustError = rustBackend.lastError() {
                 throw EnhancementError.decryptError(error: rustError)
             }

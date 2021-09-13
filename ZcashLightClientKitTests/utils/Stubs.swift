@@ -77,6 +77,7 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    
     static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 {
         -1
     }
@@ -321,7 +322,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         nil
     }
     
-    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], networkType: NetworkType) -> Bool {
+    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], minedHeight: Int32, networkType: NetworkType) -> Bool {
         false
     }
     
