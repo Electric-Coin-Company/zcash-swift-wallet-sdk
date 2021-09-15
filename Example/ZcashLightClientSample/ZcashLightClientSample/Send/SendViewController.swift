@@ -173,8 +173,13 @@ class SendViewController: UIViewController {
         
         KRProgressHUD.show()
         
-        synchronizer.sendToAddress(spendingKey: address, zatoshi: zec, toAddress: recipient, memo: self.memoField.text.count > 0 ? self.memoField.text : nil, from: 0) {  [weak self] result in
-            
+        synchronizer.sendToAddress(
+            spendingKey: address,
+            zatoshi: zec,
+            toAddress: recipient,
+            memo: !self.memoField.text.isEmpty ? self.memoField.text : nil,
+            from: 0
+        ) {  [weak self] result in
             DispatchQueue.main.async {
                 KRProgressHUD.dismiss()
             }

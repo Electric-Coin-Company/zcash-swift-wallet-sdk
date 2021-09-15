@@ -81,7 +81,6 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
         }
         self.startedHandler?()
         do {
-            
             if self.targetHeight == nil {
                 self.targetHeight = try service.latestBlockHeight()
             }
@@ -93,7 +92,6 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             
             self.cancelable = self.service.blockStream(startHeight: startHeight, endHeight: latestHeight) { [weak self] result in
                 switch result {
-                
                 case .success(let r):
                     switch r {
                     case .ok:
@@ -109,7 +107,6 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                         self?.fail(error: e)
                     }
                 }
-               
             } handler: {[weak self] block in
                 guard let self = self else { return }
                 do {
@@ -156,14 +153,15 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
     private var startHeight: BlockHeight
     private var targetHeight: BlockHeight
     private weak var progressDelegate: CompactBlockProgressDelegate?
-    required init(service: LightWalletService,
-                  storage: CompactBlockStorage,
-                  startHeight: BlockHeight,
-                  targetHeight: BlockHeight,
-                  batchSize: Int = 100,
-                  maxRetries: Int = 5,
-                  progressDelegate: CompactBlockProgressDelegate? = nil) {
-        
+    required init(
+        service: LightWalletService,
+        storage: CompactBlockStorage,
+        startHeight: BlockHeight,
+        targetHeight: BlockHeight,
+        batchSize: Int = 100,
+        maxRetries: Int = 5,
+        progressDelegate: CompactBlockProgressDelegate? = nil
+    ) {
         self.storage = storage
         self.service = service
         self.startHeight = startHeight
@@ -182,7 +180,6 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
         }
         self.startedHandler?()
         do {
-           
             let localDownloadedHeight = try self.storage.latestHeight()
             
             if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight > startHeight {
@@ -196,7 +193,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
             while !isCancelled && currentHeight <= targetHeight {
                 var retries = 0
                 var success = true
-                var localError: Error? = nil
+                var localError: Error?
             
                 let range = nextRange(currentHeight: currentHeight, targetHeight: targetHeight)
                 
@@ -205,18 +202,25 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
                         let blocks = try service.blockRange(range)
                         try storage.insert(blocks)
                         success = true
-                       
                     } catch {
                         success = false
                         localError = error
-                        retries = retries + 1
+                        retries += 1
                     }
                 } while !isCancelled && !success && retries < maxRetries
                 if retries >= maxRetries {
                     throw CompactBlockBatchDownloadOperationError.batchDownloadFailed(range: range, error: localError)
                 }
                 
-                self.progressDelegate?.progressUpdated(.download(BlockProgress(startHeight: startHeight, targetHeight: targetHeight, progressHeight: range.upperBound)))
+                self.progressDelegate?.progressUpdated(
+                    .download(
+                        BlockProgress(
+                            startHeight: startHeight,
+                            targetHeight: targetHeight,
+                            progressHeight: range.upperBound
+                        )
+                    )
+                )
                 currentHeight = range.upperBound + 1
             }
         } catch {

@@ -169,10 +169,12 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     }
                     let previousScannedHeight = lastScannedHeight
                     let scanStartTime = Date()
-                    guard self.rustBackend.scanBlocks(dbCache: self.cacheDb,
-                                                      dbData: self.dataDb,
-                                                      limit: batchSize,
-                                                      networkType: network) else {
+                    guard self.rustBackend.scanBlocks(
+                            dbCache: self.cacheDb,
+                            dbData: self.dataDb,
+                            limit: batchSize,
+                            networkType: network
+                    ) else {
                         self.scanFailed(self.rustBackend.lastError() ?? ZcashOperationError.unknown)
                         return
                     }
@@ -184,12 +186,18 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
                         progressDelegate?.progressUpdated(.scan(progress))
-                        NotificationCenter.default.post(SDKMetrics.progressReportNotification(progress: progress, start: scanStartTime, end: scanFinishTime, task: .scanBlocks))
+                        NotificationCenter.default.post(
+                            SDKMetrics.progressReportNotification(
+                                progress: progress,
+                                start: scanStartTime,
+                                end: scanFinishTime,
+                                task: .scanBlocks
+                            )
+                        )
+                        // swiftlint:disable line_length
                         LoggerProxy.debug("Scanned \(lastScannedHeight - previousScannedHeight) blocks in \(scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate) seconds")
                     }
-                    
                 } while !self.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
-                
             }
         } catch {
             scanFailed(error)

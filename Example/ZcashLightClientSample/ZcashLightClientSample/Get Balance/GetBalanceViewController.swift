@@ -35,12 +35,12 @@ class GetBalanceViewController: UIViewController {
 
 extension Int64 {
     func asHumanReadableZecBalance() -> Double {
-        Double(self) / Double(ZcashSDK.ZATOSHI_PER_ZEC)
+        Double(self) / Double(ZcashSDK.zatoshiPerZEC)
     }
 }
 
 extension Double {
     func toZatoshi() -> Int64 {
-        Int64(self * Double(ZcashSDK.ZATOSHI_PER_ZEC))
+        Int64(self * Double(ZcashSDK.zatoshiPerZEC))
     }
 }

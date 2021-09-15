@@ -60,14 +60,13 @@ extension UnspentTransactionOutputEntity {
 }
 import SQLite
 class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
-    
     func store(utxos: [UnspentTransactionOutputEntity]) throws {
         do {
             
         let db = try dbProvider.connection()
         try dbProvider.connection().transaction {
-            for utxo in utxos.map({ (u) -> UTXO in
-                u as? UTXO ?? u.asUTXO()
+            for utxo in utxos.map({ (mappedUTXO) -> UTXO in
+                mappedUTXO as? UTXO ?? mappedUTXO.asUTXO()
             }) {
                 try db.run(table.insert(utxo))
             }
@@ -153,7 +152,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             let verified = try dbProvider.connection().scalar(
                     table.select(TableColumns.valueZat.sum)
                         .filter(TableColumns.address == address)
-                        .filter(TableColumns.height <= latestHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE)) ?? 0
+                        .filter(TableColumns.height <= latestHeight - ZcashSDK.defaultStaleTolerance)) ?? 0
             let total = try dbProvider.connection().scalar(
                 table.select(TableColumns.valueZat.sum)
                     .filter(TableColumns.address == address)) ?? 0

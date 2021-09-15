@@ -286,8 +286,8 @@ class TestSynchronizerBuilder {
                                                 dataDb: initializer.dataDbURL,
                                                 downloadBatchSize: 100,
                                                 retries: 5,
-                                                maxBackoffInterval: ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL,
-                                                rewindDistance: ZcashSDK.DEFAULT_REWIND_DISTANCE,
+                                                maxBackoffInterval: ZcashSDK.defaultMaxBackOffInterval,
+                                                rewindDistance: ZcashSDK.defaultRewindDistance,
                                                 walletBirthday: walletBirthday.height,
                                                 saplingActivation: lowerBoundHeight,
                                                 network: network)

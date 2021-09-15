@@ -40,8 +40,8 @@ class LightWalletServiceTests: XCTestCase {
     func testHundredBlocks() {
         let expect = XCTestExpectation(description: self.description)
         let count = 99
-        let lowerRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT + count
+        let lowerRange: BlockHeight = network.constants.saplingActivationHeight
+        let upperRange: BlockHeight = network.constants.saplingActivationHeight + count
         let blockRange = lowerRange ... upperRange
         
         service.blockRange(blockRange) { (result) in
@@ -61,8 +61,8 @@ class LightWalletServiceTests: XCTestCase {
     }
     
     func testSyncBlockRange() {
-        let lowerRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = network.constants.saplingActivationHeight
+        let upperRange: BlockHeight = network.constants.saplingActivationHeight + 99
         let blockRange = lowerRange ... upperRange
         
         do {
@@ -81,7 +81,7 @@ class LightWalletServiceTests: XCTestCase {
             case .failure(let e):
                 XCTFail("error: \(e)")
             case .success(let height):
-                XCTAssertTrue(height > self.network.constants.SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue(height > self.network.constants.saplingActivationHeight)
             }
         }
         

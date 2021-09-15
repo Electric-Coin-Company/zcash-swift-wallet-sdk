@@ -29,9 +29,9 @@ public struct DefaultResourceProvider: ResourceProvider {
         let constants = network.constants
         do {
             let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return url.appendingPathComponent(constants.DEFAULT_DATA_DB_NAME)
+            return url.appendingPathComponent(constants.defaultDataDbName)
         } catch {
-            return URL(fileURLWithPath: "file://\(constants.DEFAULT_DATA_DB_NAME)")
+            return URL(fileURLWithPath: "file://\(constants.defaultDataDbName)")
         }
         
     }
@@ -40,9 +40,9 @@ public struct DefaultResourceProvider: ResourceProvider {
         let constants = network.constants
         do {
             let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return path.appendingPathComponent(constants.DEFAULT_CACHES_DB_NAME)
+            return path.appendingPathComponent(constants.defaultCacheDbName)
         } catch {
-            return URL(fileURLWithPath: "file://\(constants.DEFAULT_CACHES_DB_NAME)")
+            return URL(fileURLWithPath: "file://\(constants.defaultCacheDbName)")
         }
     }
     

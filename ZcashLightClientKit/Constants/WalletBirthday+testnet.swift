@@ -4,7 +4,7 @@
 //
 //  Created by Francisco Gindre on 7/28/21.
 //
-
+// swiftlint:disable all
 import Foundation
 
 extension WalletBirthday {

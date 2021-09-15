@@ -118,40 +118,39 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     }
     
     func createrTableIfNeeded() throws {
-        let statement = table.create(ifNotExists: true) { t in
-            t.column(TableColumns.id, primaryKey: .autoincrement)
-            t.column(TableColumns.toAddress)
-            t.column(TableColumns.accountIndex)
-            t.column(TableColumns.minedHeight)
-            t.column(TableColumns.expiryHeight)
-            t.column(TableColumns.cancelled)
-            t.column(TableColumns.encodeAttempts, defaultValue: 0)
-            t.column(TableColumns.errorMessage)
-            t.column(TableColumns.errorCode)
-            t.column(TableColumns.submitAttempts, defaultValue: 0)
-            t.column(TableColumns.createTime)
-            t.column(TableColumns.rawTransactionId)
-            t.column(TableColumns.value)
-            t.column(TableColumns.raw)
-            t.column(TableColumns.memo)
+        let statement = table.create(ifNotExists: true) { createdTable in
+            createdTable.column(TableColumns.id, primaryKey: .autoincrement)
+            createdTable.column(TableColumns.toAddress)
+            createdTable.column(TableColumns.accountIndex)
+            createdTable.column(TableColumns.minedHeight)
+            createdTable.column(TableColumns.expiryHeight)
+            createdTable.column(TableColumns.cancelled)
+            createdTable.column(TableColumns.encodeAttempts, defaultValue: 0)
+            createdTable.column(TableColumns.errorMessage)
+            createdTable.column(TableColumns.errorCode)
+            createdTable.column(TableColumns.submitAttempts, defaultValue: 0)
+            createdTable.column(TableColumns.createTime)
+            createdTable.column(TableColumns.rawTransactionId)
+            createdTable.column(TableColumns.value)
+            createdTable.column(TableColumns.raw)
+            createdTable.column(TableColumns.memo)
         }
        
         try dbProvider.connection().run(statement)
     }
     
     func create(_ transaction: PendingTransactionEntity) throws -> Int {
+        let pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
         
-        let tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
-        
-        return try Int(dbProvider.connection().run(table.insert(tx)))
+        return try Int(dbProvider.connection().run(table.insert(pendingTx)))
     }
     
     func update(_ transaction: PendingTransactionEntity) throws {
-        let tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
-        guard let id = tx.id else {
+        let pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
+        guard let id = pendingTx.id else {
             throw StorageError.malformedEntity(fields: ["id"])
         }
-       let updatedRows = try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
+       let updatedRows = try dbProvider.connection().run(table.filter(TableColumns.id == id).update(pendingTx))
         if updatedRows == 0 {
             LoggerProxy.error("attempted to update pending transactions but no rows were updated")
         }
@@ -166,17 +165,16 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         } catch {
             throw StorageError.updateFailed
         }
-            
     }
     
     func cancel(_ transaction: PendingTransactionEntity) throws {
         
-        var tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
-        tx.cancelled = 1
-        guard let id = tx.id else {
+        var pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
+        pendingTx.cancelled = 1
+        guard let txId = pendingTx.id else {
             throw StorageError.malformedEntity(fields: ["id"])
         }
-        try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
+        try dbProvider.connection().run(table.filter(TableColumns.id == txId).update(pendingTx))
     }
     
     func find(by id: Int) throws -> PendingTransactionEntity? {
@@ -184,8 +182,8 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
             return nil
         }
         do {
-            let tx: PendingTransaction = try row.decode()
-            return tx
+            let pendingTx: PendingTransaction = try row.decode()
+            return pendingTx
         } catch {
             throw StorageError.operationFailed
         }

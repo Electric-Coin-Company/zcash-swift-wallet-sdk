@@ -55,7 +55,7 @@ class BlockScanOperationTests: XCTestCase {
         let latestScannedBlockExpect = XCTestExpectation(description: self.description + "latestScannedHeight")
         let service = LightWalletGRPCService(endpoint: LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067))
         let blockCount = 100
-        let range = network.constants.SAPLING_ACTIVATION_HEIGHT ...  network.constants.SAPLING_ACTIVATION_HEIGHT + blockCount
+        let range = network.constants.saplingActivationHeight ...  network.constants.saplingActivationHeight + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: CompactBlockDownloader.sqlDownloader(service: service, at: cacheDbURL)!, range: range)
         let scanOperation = CompactBlockScanningOperation(rustWelding: rustWelding, cacheDb: cacheDbURL, dataDb: dataDbURL, networkType: network.networkType)
         

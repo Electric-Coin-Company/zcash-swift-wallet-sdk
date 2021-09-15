@@ -98,9 +98,9 @@ public extension Notification.Name {
 /**
  Synchronizer implementation for UIKit and iOS 12+
  */
+// swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
-    
-    public struct NotificationKeys {
+    public enum NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
         public static let blockDate = "SDKSynchronizer.blockDate"
@@ -135,22 +135,23 @@ public class SDKSynchronizer: Synchronizer {
      - Parameter initializer: a wallet Initializer object
      */
     public convenience init(initializer: Initializer) throws {
-        
-        try self.init(status: .unprepared,
-                  initializer: initializer,
-                  transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
-                  transactionRepository: initializer.transactionRepository,
-                  utxoRepository: try UTXORepositoryBuilder.build(initializer: initializer),
-                  blockProcessor: CompactBlockProcessor(initializer: initializer))
-        
+        try self.init(
+                status: .unprepared,
+                initializer: initializer,
+                transactionManager:  try OutboundTransactionManagerBuilder.build(initializer: initializer),
+                transactionRepository: initializer.transactionRepository,
+                utxoRepository: try UTXORepositoryBuilder.build(initializer: initializer),
+                blockProcessor: CompactBlockProcessor(initializer: initializer))
     }
     
-    init(status: SyncStatus,
-         initializer: Initializer,
-         transactionManager: OutboundTransactionManager,
-         transactionRepository: TransactionRepository,
-         utxoRepository: UnspentTransactionOutputRepository,
-         blockProcessor: CompactBlockProcessor) throws {
+    init(
+        status: SyncStatus,
+        initializer: Initializer,
+        transactionManager: OutboundTransactionManager,
+        transactionRepository: TransactionRepository,
+        utxoRepository: UnspentTransactionOutputRepository,
+        blockProcessor: CompactBlockProcessor
+    ) throws {
         self.connectionState = .idle
         self.status = status
         self.initializer = initializer
@@ -183,7 +184,6 @@ public class SDKSynchronizer: Synchronizer {
      - Throws: CompactBlockProcessorError when failures occur
      */
     public func start(retry: Bool = false) throws {
-        
         switch status {
         case .unprepared:
             throw SynchronizerError.notPrepared
@@ -195,7 +195,7 @@ public class SDKSynchronizer: Synchronizer {
 //            assert(false,"warning:  synchronizer started when already started") // TODO: remove this assertion sometime in the near future
             LoggerProxy.warn("warning: synchronizer started when already started")
             return
-        case .stopped, .synced,.disconnected, .error:
+        case .stopped, .synced, .disconnected, .error:
             do {
                 try blockProcessor.start(retry: retry)
             } catch {
@@ -208,7 +208,6 @@ public class SDKSynchronizer: Synchronizer {
     Stops the synchronizer
     */
     public func stop() {
-     
         guard status != .stopped, status != .disconnected else {
             LoggerProxy.info("attempted to stop when status was: \(status)")
             return
@@ -221,74 +220,103 @@ public class SDKSynchronizer: Synchronizer {
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
         let center = NotificationCenter.default
         
-        center.addObserver(self,
-                           selector: #selector(processorUpdated(_:)),
-                           name: Notification.Name.blockProcessorUpdated,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorUpdated(_:)),
+            name: Notification.Name.blockProcessorUpdated,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorStartedDownloading(_:)),
-                           name: Notification.Name.blockProcessorStartedDownloading,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorStartedDownloading(_:)),
+            name: Notification.Name.blockProcessorStartedDownloading,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorStartedValidating(_:)),
-                           name: Notification.Name.blockProcessorStartedValidating,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorStartedValidating(_:)),
+            name: Notification.Name.blockProcessorStartedValidating,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorStartedScanning(_:)),
-                           name: Notification.Name.blockProcessorStartedScanning,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorStartedScanning(_:)),
+            name: Notification.Name.blockProcessorStartedScanning,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorStartedEnhancing(_:)),
-                           name: Notification.Name.blockProcessorStartedEnhancing,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorStartedEnhancing(_:)),
+            name: Notification.Name.blockProcessorStartedEnhancing,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorStartedFetching(_:)),
-                           name: Notification.Name.blockProcessorStartedFetching,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorStartedFetching(_:)),
+            name: Notification.Name.blockProcessorStartedFetching,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorStopped(_:)),
-                           name: Notification.Name.blockProcessorStopped,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorStopped(_:)),
+            name: Notification.Name.blockProcessorStopped,
+            object: processor
+        )
         
-        center.addObserver(self, selector: #selector(processorFailed(_:)),
-                           name: Notification.Name.blockProcessorFailed,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorFailed(_:)),
+            name: Notification.Name.blockProcessorFailed,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorIdle(_:)),
-                           name: Notification.Name.blockProcessorIdle,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorIdle(_:)),
+            name: Notification.Name.blockProcessorIdle,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorFinished(_:)),
-                           name: Notification.Name.blockProcessorFinished,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorFinished(_:)),
+            name: Notification.Name.blockProcessorFinished,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(processorTransitionUnknown(_:)),
-                           name: Notification.Name.blockProcessorUnknownTransition,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(processorTransitionUnknown(_:)),
+            name: Notification.Name.blockProcessorUnknownTransition,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(reorgDetected(_:)),
-                           name: Notification.Name.blockProcessorHandledReOrg,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(reorgDetected(_:)),
+            name: Notification.Name.blockProcessorHandledReOrg,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(transactionsFound(_:)),
-                           name: Notification.Name.blockProcessorFoundTransactions,
-                           object: processor)
+        center.addObserver(
+            self,
+            selector: #selector(transactionsFound(_:)),
+            name: Notification.Name.blockProcessorFoundTransactions,
+            object: processor
+        )
         
-        center.addObserver(self,
-                           selector: #selector(connectivityStateChanged(_:)),
-                           name: Notification.Name.blockProcessorConnectivityStateChanged,
-                           object: nil)
+        center.addObserver(
+            self,
+            selector: #selector(connectivityStateChanged(_:)),
+            name: Notification.Name.blockProcessorConnectivityStateChanged,
+            object: nil
+        )
     }
     
     // MARK: Block Processor notifications
@@ -304,9 +332,10 @@ public class SDKSynchronizer: Synchronizer {
             name: .synchronizerConnectionStateChanged,
             object: self,
             userInfo: [
-                NotificationKeys.previousConnectionState : ConnectionState(previous),
-                NotificationKeys.currentConnectionState : currentState
-        ])
+                NotificationKeys.previousConnectionState: ConnectionState(previous),
+                NotificationKeys.currentConnectionState: currentState
+            ]
+        )
         
         DispatchQueue.main.async { [weak self] in
             self?.connectionState = currentState
@@ -318,7 +347,13 @@ public class SDKSynchronizer: Synchronizer {
               let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ConfirmedTransactionEntity] else {
             return
         }
-        NotificationCenter.default.post(name: .synchronizerFoundTransactions, object: self, userInfo: [ NotificationKeys.foundTransactions : foundTransactions])
+        NotificationCenter.default.post(
+            name: .synchronizerFoundTransactions,
+            object: self,
+            userInfo: [
+                NotificationKeys.foundTransactions: foundTransactions
+            ]
+        )
     }
     
     @objc func reorgDetected(_ notification: Notification) {
@@ -388,14 +423,16 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorFailed(_ notification: Notification) {
-        
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             if let error = notification.userInfo?[CompactBlockProcessorNotificationKey.error] as? Error {
                 self.notifyFailure(error)
                 self.status = .error(self.mapError(error))
             } else {
-                self.notifyFailure(CompactBlockProcessorError.generalError(message: "This is strange. processorFailed Call received no error message"))
+                self.notifyFailure(
+                    CompactBlockProcessorError.generalError(
+                        message: "This is strange. processorFailed Call received no error message")
+                )
                 self.status = .error(SynchronizerError.generalError(message: "This is strange. processorFailed Call received no error message"))
             }
         }
@@ -426,14 +463,27 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     // MARK: Synchronizer methods
-    
-    public func sendToAddress(spendingKey: String, zatoshi: Int64, toAddress: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
-        
+    // swiftlint:disable type_body_length
+    public func sendToAddress(
+        spendingKey: String,
+        zatoshi: Int64,
+        toAddress: String,
+        memo: String?,
+        from accountIndex: Int,
+        resultBlock: @escaping (Result<PendingTransactionEntity, Error>
+    ) -> Void) {
         initializer.downloadParametersIfNeeded { (downloadResult) in
             DispatchQueue.main.async { [weak self] in
                 switch downloadResult {
                 case .success:
-                    self?.createToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo, from: accountIndex, resultBlock: resultBlock)
+                    self?.createToAddress(
+                        spendingKey: spendingKey,
+                        zatoshi: zatoshi,
+                        toAddress: toAddress,
+                        memo: memo,
+                        from: accountIndex,
+                        resultBlock: resultBlock
+                    )
                 case .failure(let error):
                     resultBlock(.failure(SynchronizerError.parameterMissing(underlyingError: error)))
                 }
@@ -441,8 +491,13 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
-    public func shieldFunds(spendingKey: String, transparentSecretKey: String, memo: String?, from accountIndex: Int, resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
-        
+    public func shieldFunds(
+        spendingKey: String,
+        transparentSecretKey: String,
+        memo: String?,
+        from accountIndex: Int,
+        resultBlock: @escaping (Result<PendingTransactionEntity, Error>
+    ) -> Void) {
         // let's see if there are funds to shield
         let derivationTool = DerivationTool(networkType: self.network.networkType)
         
@@ -455,8 +510,8 @@ public class SDKSynchronizer: Synchronizer {
                 resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
                 return
             }
-            let vk = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
-            let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: vk)
+            let viewingKey = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
+            let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
             
             let shieldingSpend = try transactionManager.initSpend(zatoshi: Int(tBalance.verified), toAddress: zAddr, memo: memo, from: 0)
             
@@ -564,7 +619,7 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.SAPLING_ACTIVATION_HEIGHT, result: { [weak self] r in
+        initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight, result: { [weak self] r in
             guard let self = self else { return }
             switch r {
             case .success(let utxos):
@@ -720,7 +775,7 @@ public class SDKSynchronizer: Synchronizer {
         let latestHeight = try transactionRepository.lastScannedHeight()
         
         try transactionManager.allPendingTransactions()?.filter( {
-            $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.DEFAULT_STALE_TOLERANCE }
+            $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.defaultStaleTolerance }
             ).forEach( {
                 try transactionManager.delete(pendingTransaction: $0)
             } )

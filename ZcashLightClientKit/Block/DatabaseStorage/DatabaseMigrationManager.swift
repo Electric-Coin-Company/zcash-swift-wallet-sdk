@@ -59,7 +59,7 @@ class MigrationManager {
         }
     }
     
-    fileprivate func migrateCacheDb() throws {
+    private func migrateCacheDb() throws {
         let currentCacheDbVersion = try cacheDb.connection().getUserVersion()
         
         LoggerProxy.debug("Attempting to perform migration for cache Db - currentVersion: \(currentCacheDbVersion). Latest version is: \(Self.latestCacheDbMigrationVersion)")
@@ -72,15 +72,17 @@ class MigrationManager {
         }
     }
     
-    fileprivate func migrateDataDb(uvks: [UnifiedViewingKey]) throws {
+    private func migrateDataDb(uvks: [UnifiedViewingKey]) throws {
         let currentDataDbVersion = try dataDb.connection().getUserVersion()
-        LoggerProxy.debug("Attempting to perform migration for data Db - currentVersion: \(currentDataDbVersion). Latest version is: \(Self.latestDataDbMigrationVersion)")
+        LoggerProxy.debug(
+            "Attempting to perform migration for data Db - currentVersion: \(currentDataDbVersion). Latest version is: \(Self.latestDataDbMigrationVersion)" // swiftlint:disable line_length
+        )
         
         if currentDataDbVersion < Self.latestDataDbMigrationVersion {
-            for v in (currentDataDbVersion + 1) ... Self.latestDataDbMigrationVersion {
-                guard let version = DataDbMigrations.init(rawValue: v) else {
+            for version in (currentDataDbVersion + 1) ... Self.latestDataDbMigrationVersion {
+                guard let version = DataDbMigrations.init(rawValue: version) else {
                     LoggerProxy.error("failed to determine migration version")
-                    throw StorageError.invalidMigrationVersion(version: v)
+                    throw StorageError.invalidMigrationVersion(version: version)
                 }
                 switch version {
                 case .version1:
@@ -95,7 +97,9 @@ class MigrationManager {
     }
     
     func performVersion1Migration(viewingKeys: [UnifiedViewingKey]) throws {
-        LoggerProxy.debug("Starting migration version 1 from viewing Keys")
+        LoggerProxy.debug(
+            "Starting migration version 1 from viewing Keys"
+        )
         let db = try self.dataDb.connection()
        
         let placeholder = "deriveMe"
@@ -147,7 +151,10 @@ class MigrationManager {
         }
         
         guard accounts.count == viewingKeys.count else {
-            let message = "Number of accounts found and viewing keys provided don't match. Found \(accounts.count) account(s) and there were \(viewingKeys.count) Viewing key(s) provided."
+            let message = """
+                Number of accounts found and viewing keys provided don't match.
+                Found \(accounts.count) account(s) and there were \(viewingKeys.count) Viewing key(s) provided.
+                """
             LoggerProxy.debug(message)
             throw StorageError.migrationFailedWithMessage(message: message)
         }
@@ -189,10 +196,10 @@ class MigrationManager {
 
 extension Connection {
     func getUserVersion() throws -> Int32 {
-        guard let v = try scalar("PRAGMA user_version") as? Int64 else {
+        guard let version = try scalar("PRAGMA user_version") as? Int64 else {
             return 0
         }
-        return Int32(v)
+        return Int32(version)
     }
     
     func setUserVersion(_ version: Int32) throws {

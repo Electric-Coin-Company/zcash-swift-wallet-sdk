@@ -26,7 +26,7 @@ class GetUTXOsViewController: UIViewController {
     }
     
     func updateUI() {
-        let tAddress = try! DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveTransparentAddress(seed: DemoAppConfig.seed)
+        let tAddress = try! DerivationTool(networkType: kZcashNetwork.networkType).deriveTransparentAddress(seed: DemoAppConfig.seed)
         self.transparentAddressLabel.text = tAddress
         
         let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
@@ -38,7 +38,7 @@ class GetUTXOsViewController: UIViewController {
     @IBAction func shieldFunds(_ sender: Any) {
         do {
             let seed =  DemoAppConfig.seed
-            let derivationTool = DerivationTool(networkType: ZCASH_NETWORK.networkType)
+            let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
             let sk = try derivationTool.deriveSpendingKeys(seed: seed, numberOfAccounts: 1).first!
             
             let tsk = try derivationTool.deriveTransparentPrivateKey(seed: seed)

@@ -56,25 +56,27 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         // fetch transactions
         
         do {
-            guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), transactions.count > 0 else {
+            guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), !transactions.isEmpty else {
                 LoggerProxy.debug("no transactions detected on range: \(range.printRange)")
                 return
             }
             
             for index in 0 ..< transactions.count {
-                let tx = transactions[index]
+                let transaction = transactions[index]
                 
                 var retry = true
                 while retry && self.retries < maxRetries {
                     do {
-                        let confirmedTx = try enhance(transaction: tx)
+                        let confirmedTx = try enhance(transaction: transaction)
                         retry = false
-                        self.reportProgress(totalTransactions: transactions.count,
-                                            enhanced: index + 1,
-                                            txEnhanced: confirmedTx)
+                        self.reportProgress(
+                            totalTransactions: transactions.count,
+                            enhanced: index + 1,
+                            txEnhanced: confirmedTx
+                        )
                     } catch {
-                        self.retries = self.retries + 1
-                        LoggerProxy.error("could not enhance txId \(tx.transactionId.toHexStringTxId()) - Error: \(error)")
+                        self.retries += 1
+                        LoggerProxy.error("could not enhance txId \(transaction.transactionId.toHexStringTxId()) - Error: \(error)")
                         if retries > maxRetries {
                             throw error
                         }
@@ -94,34 +96,42 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     }
     
     func reportProgress(totalTransactions: Int, enhanced: Int, txEnhanced: ConfirmedTransactionEntity) {
-        self.progressDelegate?.progressUpdated(.enhance(
-                                                EnhancementStreamProgress(
-                                                    totalTransactions: totalTransactions,
-                                                    enhancedTransactions: enhanced,
-                                                    lastFoundTransaction: txEnhanced,
-                                                    range: self.range.compactBlockRange)))
+        self.progressDelegate?.progressUpdated(
+            .enhance(
+                EnhancementStreamProgress(
+                    totalTransactions: totalTransactions,
+                    enhancedTransactions: enhanced,
+                    lastFoundTransaction: txEnhanced,
+                    range: self.range.compactBlockRange
+                )
+            )
+        )
     }
     
     func enhance(transaction: TransactionEntity) throws -> ConfirmedTransactionEntity {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId())")
         
-        let tx = try downloader.fetchTransaction(txId: transaction.transactionId)
+        let transaction = try downloader.fetchTransaction(txId: transaction.transactionId)
         
-        LoggerProxy.debug("Decrypting and storing transaction id: \(tx.transactionId.toHexStringTxId()) block: \(String(describing: tx.minedHeight))")
+        LoggerProxy.debug("Decrypting and storing transaction id: \(transaction.transactionId.toHexStringTxId()) block: \(String(describing: transaction.minedHeight))")
         
-        guard let rawBytes = tx.raw?.bytes else {
-            let error = EnhancementError.noRawData(message: "Critical Error: transaction id: \(tx.transactionId.toHexStringTxId()) has no data")
+        guard let rawBytes = transaction.raw?.bytes else {
+            let error = EnhancementError.noRawData(
+                message: "Critical Error: transaction id: \(transaction.transactionId.toHexStringTxId()) has no data"
+            )
             LoggerProxy.error("\(error)")
             throw error
         }
         
-        guard let minedHeight = tx.minedHeight else {
-            let error = EnhancementError.noRawData(message: "Critical Error - Attempt to decrypt and store an unmined transaction. Id: \(tx.transactionId.toHexStringTxId()) ")
+        guard let minedHeight = transaction.minedHeight else {
+            let error = EnhancementError.noRawData(
+                message: "Critical Error - Attempt to decrypt and store an unmined transaction. Id: \(transaction.transactionId.toHexStringTxId())"
+            )
             LoggerProxy.error("\(error)")
             throw error
         }
         
-        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, tx: rawBytes, minedHeight: Int32(minedHeight), networkType: network) else {
+        guard rustBackend.decryptAndStoreTransaction(dbData: dataDb, txBytes: rawBytes, minedHeight: Int32(minedHeight), networkType: network) else {
             if let rustError = rustBackend.lastError() {
                 throw EnhancementError.decryptError(error: rustError)
             }

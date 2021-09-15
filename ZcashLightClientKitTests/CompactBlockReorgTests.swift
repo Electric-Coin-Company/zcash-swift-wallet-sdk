@@ -11,7 +11,7 @@ import XCTest
 @testable import ZcashLightClientKit
 class CompactBlockReorgTests: XCTestCase {
     
-    let processorConfig = CompactBlockProcessor.Configuration.standard(for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.SAPLING_ACTIVATION_HEIGHT)
+    let processorConfig = CompactBlockProcessor.Configuration.standard(for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight)
     var processor: CompactBlockProcessor!
     var downloadStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -21,7 +21,7 @@ class CompactBlockReorgTests: XCTestCase {
     var idleNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
-    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.SAPLING_ACTIVATION_HEIGHT + 2000
+    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
     
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
@@ -38,7 +38,7 @@ class CompactBlockReorgTests: XCTestCase {
             info.chainName = "test"
             info.consensusBranchID = branchID.toString()
             info.estimatedHeight = UInt64(mockLatestHeight)
-            info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+            info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         })
         
         try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: .testnet)
@@ -49,7 +49,7 @@ class CompactBlockReorgTests: XCTestCase {
         let mockBackend = MockRustBackend.self
         mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
         mockBackend.mockValidateCombinedChainKeepFailing = false
-        mockBackend.mockValidateCombinedChainFailureHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT + 320
+        mockBackend.mockValidateCombinedChainFailureHeight = self.network.constants.saplingActivationHeight + 320
         
         processor = CompactBlockProcessor(service: service,
                                           storage: storage,
@@ -86,8 +86,8 @@ class CompactBlockReorgTests: XCTestCase {
             XCTAssertNotNil(notification.userInfo)
             if let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
                 let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
-                XCTAssertTrue( reorg == 0 || reorg > self.network.constants.SAPLING_ACTIVATION_HEIGHT)
-                XCTAssertTrue( rewind == 0 || rewind > self.network.constants.SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue( reorg == 0 || reorg > self.network.constants.saplingActivationHeight)
+                XCTAssertTrue( rewind == 0 || rewind > self.network.constants.saplingActivationHeight)
                 XCTAssertTrue( rewind <= reorg )
                 reorgNotificationExpectation.fulfill()
             } else {

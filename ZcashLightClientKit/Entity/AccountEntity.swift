@@ -114,10 +114,10 @@ class AccountSQDAO: AccountRepository {
     }
     
     func update(_ account: AccountEntity) throws {
-        guard let a = account as? Account else {
+        guard let acc = account as? Account else {
             throw StorageError.updateFailed
         }
-        let updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == a.account).update(a))
+        let updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
         if updatedRows == 0 {
             LoggerProxy.error("attempted to update pending transactions but no rows were updated")
             throw StorageError.updateFailed
@@ -126,17 +126,16 @@ class AccountSQDAO: AccountRepository {
 }
 
 class CachingAccountDao: AccountRepository {
-    
     var dao: AccountRepository
     lazy var cache: [Int: AccountEntity] = {
-        var c = [Int : AccountEntity]()
+        var accountCache = [Int: AccountEntity]()
         guard let all = try? dao.getAll() else {
-            return c
+            return accountCache
         }
-        for a in all {
-            c[a.account] = a
+        for acc in all {
+            accountCache[acc.account] = acc
         }
-        return c
+        return accountCache
     }()
     
     init(dao: AccountRepository) {
@@ -149,20 +148,20 @@ class CachingAccountDao: AccountRepository {
         }
         let all = try dao.getAll()
         
-        for a in all {
-            cache[a.account] = a
+        for acc in all {
+            cache[acc.account] = acc
         }
         return all
     }
     
     func findBy(account: Int) throws -> AccountEntity? {
-        if let a = cache[account] {
-            return a
+        if let acc = cache[account] {
+            return acc
         }
         
-        let a = try dao.findBy(account: account)
-        cache[account] = a
-        return a
+        let acc = try dao.findBy(account: account)
+        cache[account] = acc
+        return acc
     }
     
     func findBy(address: String) throws -> AccountEntity? {

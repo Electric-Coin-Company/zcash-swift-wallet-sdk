@@ -28,14 +28,14 @@ class BlockBatchValidationTests: XCTestCase {
         let service = MockLightWalletService(latestBlockHeight: 1210000, service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default))
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
-        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.SAPLING_ACTIVATION_HEIGHT, network: network)
+        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.saplingActivationHeight, network: network)
         var info = LightdInfo()
         info.blockHeight = 130000
         info.branch = "d34db33f"
         info.chainName = "main"
         info.buildUser = "test user"
         info.consensusBranchID = "d34db33f"
-        info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+        info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
         
         let mockRust = MockRustBackend.self
@@ -68,14 +68,14 @@ class BlockBatchValidationTests: XCTestCase {
         let service = MockLightWalletService(latestBlockHeight: 1210000, service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default))
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
-        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.SAPLING_ACTIVATION_HEIGHT, network: network)
+        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.saplingActivationHeight, network: network)
         var info = LightdInfo()
         info.blockHeight = 130000
         info.branch = "d34db33f"
         info.chainName = "test"
         info.buildUser = "test user"
         info.consensusBranchID = "d34db4d"
-        info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+        info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
         
         let mockRust = MockRustBackend.self
@@ -109,14 +109,14 @@ class BlockBatchValidationTests: XCTestCase {
         let service = MockLightWalletService(latestBlockHeight: 1210000, service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default))
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
-        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.SAPLING_ACTIVATION_HEIGHT, network: network)
+        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.saplingActivationHeight, network: network)
         var info = LightdInfo()
         info.blockHeight = 130000
         info.branch = "d34db33f"
         info.chainName = "another"
         info.buildUser = "test user"
         info.consensusBranchID = "d34db4d"
-        info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+        info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
         
         let mockRust = MockRustBackend.self
@@ -149,7 +149,7 @@ class BlockBatchValidationTests: XCTestCase {
         let service = MockLightWalletService(latestBlockHeight: 1210000, service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default))
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
-        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.SAPLING_ACTIVATION_HEIGHT, network: network)
+        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.saplingActivationHeight, network: network)
         var info = LightdInfo()
         info.blockHeight = 130000
         info.branch = "d34db33f"
@@ -171,7 +171,7 @@ class BlockBatchValidationTests: XCTestCase {
         operation.errorHandler = { error in
             expectation.fulfill()
             switch error {
-            case CompactBlockProcessorError.saplingActivationMismatch(expected: network.constants.SAPLING_ACTIVATION_HEIGHT, found: BlockHeight(info.saplingActivationHeight)):
+            case CompactBlockProcessorError.saplingActivationMismatch(expected: network.constants.saplingActivationHeight, found: BlockHeight(info.saplingActivationHeight)):
                 break
             default:
                 XCTFail("Expected CompactBlockProcessorError.saplingActivationMismatch but found \(error)")
@@ -193,14 +193,14 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedResult = FigureNextBatchOperation.NextState.wait(latestHeight: expectedLatestHeight, latestDownloadHeight: expectedLatestHeight)
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
-        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.SAPLING_ACTIVATION_HEIGHT, network: network)
+        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: 1210000, saplingActivation: network.constants.saplingActivationHeight, network: network)
         var info = LightdInfo()
         info.blockHeight = UInt64(expectedLatestHeight)
         info.branch = "d34db33f"
         info.chainName = "main"
         info.buildUser = "test user"
         info.consensusBranchID = "d34db4d"
-        info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+        info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
         
         let mockRust = MockRustBackend.self
@@ -250,14 +250,14 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedResult = FigureNextBatchOperation.NextState.processNewBlocks(range: CompactBlockProcessor.nextBatchBlockRange(latestHeight: expectedLatestHeight, latestDownloadedHeight: expectedStoreLatestHeight, walletBirthday: walletBirthday))
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
-        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: walletBirthday, saplingActivation: network.constants.SAPLING_ACTIVATION_HEIGHT, network: network)
+        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: walletBirthday, saplingActivation: network.constants.saplingActivationHeight, network: network)
         var info = LightdInfo()
         info.blockHeight = UInt64(expectedLatestHeight)
         info.branch = "d34db33f"
         info.chainName = "main"
         info.buildUser = "test user"
         info.consensusBranchID = "d34db4d"
-        info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+        info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
         
         let mockRust = MockRustBackend.self
@@ -307,14 +307,14 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedResult = FigureNextBatchOperation.NextState.finishProcessing(height: expectedStoreLatestHeight)
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
-        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: walletBirthday, saplingActivation: network.constants.SAPLING_ACTIVATION_HEIGHT, network: network)
+        let config = CompactBlockProcessor.Configuration(cacheDb: try!  __cacheDbURL(), dataDb: try! __dataDbURL(), downloadBatchSize: 100, retries: 5, maxBackoffInterval: 10, rewindDistance: 100, walletBirthday: walletBirthday, saplingActivation: network.constants.saplingActivationHeight, network: network)
         var info = LightdInfo()
         info.blockHeight = UInt64(expectedLatestHeight)
         info.branch = "d34db33f"
         info.chainName = "main"
         info.buildUser = "test user"
         info.consensusBranchID = "d34db4d"
-        info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+        info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
         
         let mockRust = MockRustBackend.self

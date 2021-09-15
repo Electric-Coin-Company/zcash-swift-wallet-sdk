@@ -81,7 +81,15 @@ public protocol ZcashRustBackendWelding {
        - time: in milliseconds from reference
        - saplingTree: hash of the sapling tree
      */
-    static func initBlocksTable(dbData: URL, height: Int32, hash: String, time: UInt32, saplingTree: String, networkType: NetworkType) throws
+    // swiftlint:disable function_parameter_count
+    static func initBlocksTable(
+        dbData: URL,
+        height: Int32,
+        hash: String,
+        time: UInt32,
+        saplingTree: String,
+        networkType: NetworkType
+    ) throws
 
     /**
      gets the address from data db from the given account
@@ -228,7 +236,10 @@ public protocol ZcashRustBackendWelding {
         - minedHeight: height on which this transaction was mined. this is used to fetch the consensus branch ID.
      returns false if fails to decrypt.
      */
-    static func decryptAndStoreTransaction(dbData: URL, tx: [UInt8], minedHeight: Int32, networkType: NetworkType) -> Bool
+    static func decryptAndStoreTransaction(dbData: URL,
+                                           txBytes: [UInt8],
+                                           minedHeight: Int32,
+                                           networkType: NetworkType) -> Bool
     
     /**
      Creates a transaction to the given address from the given account
@@ -242,7 +253,18 @@ public protocol ZcashRustBackendWelding {
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func createToAddress(dbData: URL, account: Int32, extsk: String, to: String, value: Int64, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64
+    // swiftlint:disable function_parameter_count
+    static func createToAddress(
+        dbData: URL,
+        account: Int32,
+        extsk: String,
+        to: String,
+        value: Int64,
+        memo: String?,
+        spendParamsPath: String,
+        outputParamsPath: String,
+        networkType: NetworkType
+    ) -> Int64
     
     /**
      Creates a transaction to shield all found UTXOs in cache db.
@@ -256,7 +278,18 @@ public protocol ZcashRustBackendWelding {
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
      */
-    static func shieldFunds(dbCache: URL, dbData: URL, account: Int32, tsk: String, extsk: String, memo: String?, spendParamsPath: String, outputParamsPath: String, networkType: NetworkType) -> Int64
+    // swiftlint:disable function_parameter_count
+    static func shieldFunds(
+        dbCache: URL,
+        dbData: URL,
+        account: Int32,
+        tsk: String,
+        extsk: String,
+        memo: String?,
+        spendParamsPath: String,
+        outputParamsPath: String,
+        networkType: NetworkType
+    ) -> Int64
     
     /**
      Derives a full viewing key from a seed

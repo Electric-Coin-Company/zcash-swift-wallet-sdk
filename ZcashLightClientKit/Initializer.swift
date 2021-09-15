@@ -195,7 +195,14 @@ public class Initializer {
         }
     
         do {
-            try rustBackend.initBlocksTable(dbData: dataDbURL, height: Int32(walletBirthday.height), hash: walletBirthday.hash, time: walletBirthday.time, saplingTree: walletBirthday.tree, networkType: network.networkType)
+            try rustBackend.initBlocksTable(
+                dbData: dataDbURL,
+                height: Int32(walletBirthday.height),
+                hash: walletBirthday.hash,
+                time: walletBirthday.time,
+                saplingTree: walletBirthday.tree,
+                networkType: network.networkType
+            )
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
@@ -212,14 +219,16 @@ public class Initializer {
             }
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
-        }catch {
+        } catch {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
         
-        let migrationManager = MigrationManager(cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
-                                                dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path),
-                                                pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
-                                                networkType: self.network.networkType)
+        let migrationManager = MigrationManager(
+            cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
+            dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path),
+            pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
+            networkType: self.network.networkType
+        )
         
         try migrationManager.performMigration(uvks: viewingKeys)
     }
@@ -257,7 +266,7 @@ public class Initializer {
      checks if the provided address is a transparent zAddress
      */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidTransparentAddress(address,networkType: network.networkType)) ?? false
+        (try? rustBackend.isValidTransparentAddress(address, networkType: network.networkType)) ?? false
     }
     
     func isSpendParameterPresent() -> Bool {
@@ -268,7 +277,7 @@ public class Initializer {
         FileManager.default.isReadableFile(atPath: self.outputParamsURL.path)
     }
     
-    func downloadParametersIfNeeded(result: @escaping (Result<Bool,Error>) -> Void)  {
+    func downloadParametersIfNeeded(result: @escaping (Result<Bool, Error>) -> Void) {
         let spendParameterPresent = isSpendParameterPresent()
         let outputParameterPresent = isOutputParameterPresent()
         
@@ -283,17 +292,17 @@ public class Initializer {
         if !outputParameterPresent {
             SaplingParameterDownloader.downloadOutputParameter(outputURL) { outputResult in
                 switch outputResult {
-                case .failure(let e):
-                    result(.failure(e))
+                case .failure(let error):
+                    result(.failure(error))
                 case .success:
                     guard !spendParameterPresent else {
                         result(.success(false))
                         return
                     }
-                    SaplingParameterDownloader.downloadSpendParameter(spendURL) { (spendResult) in
+                    SaplingParameterDownloader.downloadSpendParameter(spendURL) { spendResult in
                         switch spendResult {
-                        case .failure(let e):
-                            result(.failure(e))
+                        case .failure(let error):
+                            result(.failure(error))
                         case .success:
                             result(.success(false))
                         }
@@ -301,10 +310,10 @@ public class Initializer {
                 }
             }
         } else if !spendParameterPresent {
-            SaplingParameterDownloader.downloadSpendParameter(spendURL) { (spendResult) in
+            SaplingParameterDownloader.downloadSpendParameter(spendURL) { spendResult in
                 switch spendResult {
-                case .failure(let e):
-                    result(.failure(e))
+                case .failure(let error):
+                    result(.failure(error))
                 case .success:
                     result(.success(false))
                 }
@@ -314,17 +323,21 @@ public class Initializer {
 }
 
 class CompactBlockProcessorBuilder {
-    static func buildProcessor(configuration: CompactBlockProcessor.Configuration,
-                               service: LightWalletService,
-                               storage: CompactBlockStorage,
-                               transactionRepository: TransactionRepository,
-                               accountRepository: AccountRepository,
-                               backend: ZcashRustBackendWelding.Type) -> CompactBlockProcessor {
-        return CompactBlockProcessor(service: service,
-                                     storage: storage,
-                                     backend: backend,
-                                     config: configuration,
-                                     repository: transactionRepository,
-                                     accountRepository: accountRepository)
+    static func buildProcessor(
+        configuration: CompactBlockProcessor.Configuration,
+        service: LightWalletService,
+        storage: CompactBlockStorage,
+        transactionRepository: TransactionRepository,
+        accountRepository: AccountRepository,
+        backend: ZcashRustBackendWelding.Type
+    ) -> CompactBlockProcessor {
+        return CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: backend,
+            config: configuration,
+            repository: transactionRepository,
+            accountRepository: accountRepository
+        )
     }
 }

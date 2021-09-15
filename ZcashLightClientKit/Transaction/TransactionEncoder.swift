@@ -7,11 +7,11 @@
 
 import Foundation
 
-typealias TransactionEncoderResultBlock = (_ result: Result<EncodedTransaction,Error>) -> Void
+typealias TransactionEncoderResultBlock = (_ result: Result<EncodedTransaction, Error>) -> Void
 
 public enum TransactionEncoderError: Error {
     case notFound(transactionId: Int)
-    case NotEncoded(transactionId: Int)
+    case notEncoded(transactionId: Int)
     case missingParams
     case spendingKeyWrongNetwork
     case couldNotExpand(txId: Data)
@@ -34,7 +34,13 @@ protocol TransactionEncoder {
      
      - Throws: a TransactionEncoderError
     */
-    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction
+    func createTransaction(
+        spendingKey: String,
+        zatoshi: Int,
+        to: String,
+        memo: String?,
+        from accountIndex: Int
+    ) throws -> EncodedTransaction
     
     /**
     Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
@@ -50,7 +56,14 @@ protocol TransactionEncoder {
     - Parameter accountIndex: index of the account that will be used to send the funds
     - Parameter result: a non escaping closure that receives a Result containing either an EncodedTransaction or a TransactionEncoderError
     */
-    func createTransaction(spendingKey: String, zatoshi: Int, to: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
+    func createTransaction(
+        spendingKey: String,
+        zatoshi: Int,
+        to: String,
+        memo: String?,
+        from accountIndex: Int,
+        result: @escaping TransactionEncoderResultBlock
+    )
     
     /**
     Creates a transaction that will attempt to shield transparent funds that are present on the cacheDB .throwing an exception whenever things are missing. When the provided wallet implementation
@@ -66,7 +79,12 @@ protocol TransactionEncoder {
      
      - Throws: a TransactionEncoderError
     */
-    func createShieldingTransaction(spendingKey: String, tSecretKey: String, memo: String?, from accountIndex: Int) throws -> EncodedTransaction
+    func createShieldingTransaction(
+        spendingKey: String,
+        tSecretKey: String,
+        memo: String?,
+        from accountIndex: Int
+    ) throws -> EncodedTransaction
     
     /**
     Creates a transaction that will attempt to shield transparent funds that are present on the cacheDB .throwing an exception whenever things are missing. When the provided wallet implementation
@@ -83,7 +101,13 @@ protocol TransactionEncoder {
      - Returns: a TransactionEncoderResultBlock
     */
     
-    func createShieldingTransaction(spendingKey: String, tSecretKey: String, memo: String?, from accountIndex: Int, result: @escaping TransactionEncoderResultBlock)
+    func createShieldingTransaction(
+        spendingKey: String,
+        tSecretKey: String,
+        memo: String?,
+        from accountIndex: Int,
+        result: @escaping TransactionEncoderResultBlock
+    )
     
     /**
         Fetch the Transaction Entity from the encoded representation

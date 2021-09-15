@@ -25,7 +25,7 @@ class DownloadOperationTests: XCTestCase {
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
         let blockCount = 100
-        let activationHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
+        let activationHeight = network.constants.saplingActivationHeight
         let range = activationHeight ... activationHeight + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: downloader, range: range)
         
