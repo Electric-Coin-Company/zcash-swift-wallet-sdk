@@ -9,14 +9,14 @@
 - Are the requirements for the change well specified? Where are they documented? Bugfixes need a clear specification of the bug's cause and fix. (Small PRs might specify in a github ticket. Large changes may require stand-alone docs, or ZIPs.)
 - Is there a documented test plan, which describes how to manually verify the change works on testnet prior to a release?
 
-# User Documentation:
+# Documentation:
 
 - What is the "changelog" entry for this change? (All changes should include this.)
 - Are there any changes which require updates to user-facing documentation? If so, does the new documentation make sense? (documentation should be placed in [docs/](/docs) folder of the repo)
 
 # Testing:
 
-- For non-minor PRs (up to the code reviewers and PR creator if this is needed), we require authors to perform a thorough self-review and self-test of the resulting code base, including use cases that might not be visible affected by the introduced changes. Reviewers are not expected to run the changes locally, but are definitely encouraged to do so at their best judgement. 
+- For non-minor PRs (up to the code reviewers and PR creator if this is needed), we require authors to perform a thorough self-review and self-test of the resulting code base, including use cases that might not be visibly affected by the introduced changes. Reviewers are not expected to run the changes locally, but are definitely encouraged to do so at their best judgement. 
 - When introducing modifications that affect the UI, screenshots might be provided in a BEFORE/AFTER fashion to speed up UI/UX requirement validation. 
 - Are there new tests that check all of the requirements? If it's a bugfix does it include new tests testing the bug triggering condition? (Do they fail before the fix and pass after the fix?)
 - Do tests include edge cases, error conditions, and "negative case" tests to ensure the software is robust? Example: a function for verifying transaction signatures should include a bunch of tests for invalid signature cases.
