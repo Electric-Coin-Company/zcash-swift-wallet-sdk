@@ -55,7 +55,6 @@ private extension Connection {
 }
 
 class SimpleConnectionProvider: ConnectionProvider {
-    
     var path: String
     var readonly: Bool
     var db: Connection?
@@ -66,12 +65,11 @@ class SimpleConnectionProvider: ConnectionProvider {
     }
 
     func connection() throws -> Connection {
-        guard let c = db else {
-            let c = try Connection(path, readonly: readonly)
-            self.db = c
-            return c
+        guard let conn = db else {
+            let conn = try Connection(path, readonly: readonly)
+            self.db = conn
+            return conn
         }
-        return c
+        return conn
     }
-    
 }

@@ -15,7 +15,7 @@ class GetAddressViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let derivationTool = DerivationTool(networkType: ZCASH_NETWORK.networkType)
+        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
         // Do any additional setup after loading the view.
         
         zAddressLabel.text = (try? derivationTool.deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)) ?? "No Addresses found"
@@ -60,7 +60,7 @@ class GetAddressViewController: UIViewController {
     
     @IBAction func addressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
-        UIPasteboard.general.string = try? DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)
+        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType).deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)
         let alert = UIAlertController(title: "", message: "Address Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
@@ -68,7 +68,7 @@ class GetAddressViewController: UIViewController {
     
     @IBAction func tAddressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
-        UIPasteboard.general.string = try? DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveTransparentAddress(seed: DemoAppConfig.seed)
+        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType).deriveTransparentAddress(seed: DemoAppConfig.seed)
         let alert = UIAlertController(title: "", message: "Address Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)

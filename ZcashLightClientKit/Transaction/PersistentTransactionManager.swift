@@ -51,22 +51,46 @@ class PersistentTransactionManager: OutboundTransactionManager {
             guard let self = self else { return }
                 
             let derivationTool = DerivationTool(networkType: self.network)
-            guard let vk = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
-                  let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: vk) else {
-                result(.failure(TransactionManagerError.shieldingEncodingFailed(tx: pendingTransaction, reason: "There was an error Deriving your keys")))
-                return 
+            guard let viewingKey = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
+                  let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: viewingKey) else {
+                result(
+                    .failure(
+                        TransactionManagerError.shieldingEncodingFailed(
+                            tx: pendingTransaction,
+                            reason: "There was an error Deriving your keys")
+                    )
+                )
+                return
             }
             
             guard pendingTransaction.toAddress == zAddr else {
-                result(.failure(TransactionManagerError.shieldingEncodingFailed(tx: pendingTransaction, reason: "the recipient address does not match your derived shielded address. Shielding transactions addresses must match the ones derived from your keys. This is a serious error. We are not letting you encode this shielding transaction because it can lead to loss of funds")))
+                result(
+                    .failure(
+                        TransactionManagerError.shieldingEncodingFailed(
+                            tx: pendingTransaction,
+                            reason: """
+                                        the recipient address does not match your
+                                        derived shielded address. Shielding transactions
+                                        addresses must match the ones derived from your keys.
+                                        This is a serious error. We are not letting you encode
+                                        this shielding transaction because it can lead to loss
+                                        of funds
+                                    """
+                        )
+                    )
+                )
                 return
             }
             do {
-                let encodedTransaction = try self.encoder.createShieldingTransaction(spendingKey: spendingKey, tSecretKey: tsk, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: pendingTransaction.accountIndex)
+                let encodedTransaction = try self.encoder.createShieldingTransaction(
+                    spendingKey: spendingKey,
+                    tSecretKey: tsk,
+                    memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                    from: pendingTransaction.accountIndex)
                 let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
                 
                 var pending = pendingTransaction
-                pending.encodeAttempts = pending.encodeAttempts + 1
+                pending.encodeAttempts += 1
                 pending.raw = encodedTransaction.raw
                 pending.rawTransactionId = encodedTransaction.transactionId
                 pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
@@ -85,16 +109,23 @@ class PersistentTransactionManager: OutboundTransactionManager {
         }
     }
     
-    func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
-        
+    func encode(spendingKey: String,
+                pendingTransaction: PendingTransactionEntity,
+                result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         queue.async { [weak self] in
             guard let self = self else { return }
             do {
-                let encodedTransaction = try self.encoder.createTransaction(spendingKey: spendingKey, zatoshi: pendingTransaction.value, to: pendingTransaction.toAddress, memo: pendingTransaction.memo?.asZcashTransactionMemo(), from: pendingTransaction.accountIndex)
+                let encodedTransaction = try self.encoder.createTransaction(
+                    spendingKey: spendingKey,
+                    zatoshi: pendingTransaction.value,
+                    to: pendingTransaction.toAddress,
+                    memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                    from: pendingTransaction.accountIndex)
+
                 let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
                 
                 var pending = pendingTransaction
-                pending.encodeAttempts = pending.encodeAttempts + 1
+                pending.encodeAttempts +=  1
                 pending.raw = encodedTransaction.raw
                 pending.rawTransactionId = encodedTransaction.transactionId
                 pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
@@ -120,8 +151,8 @@ class PersistentTransactionManager: OutboundTransactionManager {
         }
     }
     
-    func submit(pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
-        
+    func submit(pendingTransaction: PendingTransactionEntity,
+                result: @escaping (Result<PendingTransactionEntity, Error>) -> Void) {
         guard let txId = pendingTransaction.id else {
             result(.failure(TransactionManagerError.notPending(tx: pendingTransaction)))// this transaction is not stored
             return
@@ -149,13 +180,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 }
                 let response = try self.service.submit(spendTransaction: raw)
                 
-                let tx = try self.update(transaction: storedTx, on: response)
+                let transaction = try self.update(transaction: storedTx, on: response)
                 guard response.errorCode >= 0 else {
-                    result(.failure(TransactionManagerError.submitFailed(tx: tx, errorCode: Int(response.errorCode))))
+                    result(.failure(TransactionManagerError.submitFailed(tx: transaction, errorCode: Int(response.errorCode))))
                     return
                 }
                 
-                result(.success(tx))
+                result(.success(transaction))
             } catch {
                 try? self.updateOnFailure(tx: pendingTransaction, error: error)
                 result(.failure(error))
@@ -191,8 +222,8 @@ class PersistentTransactionManager: OutboundTransactionManager {
             return
         }
         
-        try affectedTxs.map { (tx) -> PendingTransactionEntity in
-            var updatedTx = tx
+        try affectedTxs.map { (transaction) -> PendingTransactionEntity in
+            var updatedTx = transaction
             updatedTx.minedHeight = -1
             return updatedTx
         } .forEach({ try self.repository.update($0) })
@@ -227,13 +258,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     private func update(transaction: PendingTransactionEntity, on sendResponse: LightWalletServiceResponse) throws -> PendingTransactionEntity {
-        var tx = transaction
-        tx.submitAttempts = tx.submitAttempts + 1
+        var pendingTx = transaction
+        pendingTx.submitAttempts += 1
         let error = sendResponse.errorCode < 0
-        tx.errorCode = error ? Int(sendResponse.errorCode) : nil
-        tx.errorMessage = error ? sendResponse.errorMessage : nil
-        try repository.update(tx)
-        return tx
+        pendingTx.errorCode = error ? Int(sendResponse.errorCode) : nil
+        pendingTx.errorMessage = error ? sendResponse.errorMessage : nil
+        try repository.update(pendingTx)
+        return pendingTx
     }
     
     func delete(pendingTransaction: PendingTransactionEntity) throws {
@@ -243,18 +274,20 @@ class PersistentTransactionManager: OutboundTransactionManager {
             throw TransactionManagerError.notPending(tx: pendingTransaction)
         }
     }
-    
 }
 
-class OutboundTransactionManagerBuilder {
-    
+enum OutboundTransactionManagerBuilder {
     static func build(initializer: Initializer) throws -> OutboundTransactionManager {
-        return PersistentTransactionManager(encoder: TransactionEncoderbuilder.build(initializer: initializer), service: initializer.lightWalletService, repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer), networkType: initializer.network.networkType)
-        
+        PersistentTransactionManager(
+            encoder: TransactionEncoderbuilder.build(initializer: initializer),
+            service: initializer.lightWalletService,
+            repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer),
+            networkType: initializer.network.networkType
+        )
     }
 }
 
-class PendingTransactionRepositoryBuilder {
+enum PendingTransactionRepositoryBuilder {
     static func build(initializer: Initializer) throws -> PendingTransactionRepository {
         let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
         try dao.createrTableIfNeeded()
@@ -262,7 +295,7 @@ class PendingTransactionRepositoryBuilder {
     }
 }
 
-class TransactionEncoderbuilder {
+enum TransactionEncoderbuilder {
     static func build(initializer: Initializer) -> TransactionEncoder {
         WalletTransactionEncoder(initializer: initializer)
     }

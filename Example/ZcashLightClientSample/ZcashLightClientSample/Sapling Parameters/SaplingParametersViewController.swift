@@ -15,8 +15,8 @@ class SaplingParametersViewController: UIViewController {
     @IBOutlet weak var deleteButton: UIButton!
     override func viewDidLoad() {
         super.viewDidLoad()
-        let spendParamPath = try! __spendParamsURL().path
-        let outputParamPath = try! __outputParamsURL().path
+        let spendParamPath = try! spendParamsURLHelper().path
+        let outputParamPath = try! outputParamsURLHelper().path
         // Do any additional setup after loading the view.
         self.spendPath.text = spendParamPath
         self.outputPath.text = outputParamPath
@@ -29,14 +29,14 @@ class SaplingParametersViewController: UIViewController {
         self.updateButtons()
     }
     func updateButtons() {
-        let spendParamPath = try! __spendParamsURL().path
-        let outputParamPath = try! __outputParamsURL().path
+        let spendParamPath = try! spendParamsURLHelper().path
+        let outputParamPath = try! outputParamsURLHelper().path
         self.downloadButton.isHidden = fileExists(outputParamPath) && fileExists(spendParamPath)
         self.deleteButton.isHidden = !(fileExists(outputParamPath) || fileExists(spendParamPath))
     }
     func updateColor() {
-        let spendParamPath = try! __spendParamsURL().path
-        let outputParamPath = try! __outputParamsURL().path
+        let spendParamPath = try! spendParamsURLHelper().path
+        let outputParamPath = try! outputParamsURLHelper().path
         self.spendPath.textColor = fileExists(spendParamPath) ? UIColor.green : UIColor.red
         self.outputPath.textColor = fileExists(outputParamPath) ? UIColor.green : UIColor.red
     }
@@ -57,8 +57,8 @@ class SaplingParametersViewController: UIViewController {
     }
     
     @IBAction func download(_ sender: Any) {
-        let outputParameter = try! __outputParamsURL()
-        let spendParameter = try! __spendParamsURL()
+        let outputParameter = try! outputParamsURLHelper()
+        let spendParameter = try! spendParamsURLHelper()
         SaplingParameterDownloader.downloadParamsIfnotPresent(spendURL: spendParameter, outputURL: outputParameter) { (result) in
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -87,8 +87,8 @@ class SaplingParametersViewController: UIViewController {
     }
     
     @IBAction func deleteFiles(_ sender: Any) {
-        let spendParamURL = try! __spendParamsURL()
-        let outputParamURL = try! __outputParamsURL()
+        let spendParamURL = try! spendParamsURLHelper()
+        let outputParamURL = try! outputParamsURLHelper()
         
         try? FileManager.default.removeItem(at: spendParamURL)
         try? FileManager.default.removeItem(at: outputParamURL)

@@ -153,7 +153,7 @@ public extension PendingTransactionEntity {
             return false
         }
         
-        return abs(currentHeight - minedHeight) >= ZcashSDK.DEFAULT_STALE_TOLERANCE
+        return abs(currentHeight - minedHeight) >= ZcashSDK.defaultStaleTolerance
     }
 }
 
@@ -162,7 +162,15 @@ public extension PendingTransactionEntity {
      TransactionEntity representation of this PendingTransactionEntity transaction
      */
     var transactionEntity: TransactionEntity {
-        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.createTime).description, transactionIndex: -1, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
+        Transaction(
+            id: self.id ?? -1,
+            transactionId: self.rawTransactionId ?? Data(),
+            created: Date(timeIntervalSince1970: self.createTime).description,
+            transactionIndex: -1,
+            expiryHeight: self.expiryHeight,
+            minedHeight: self.minedHeight,
+            raw: self.raw
+        )
     }
 }
 
@@ -171,6 +179,14 @@ public extension ConfirmedTransactionEntity {
     TransactionEntity representation of this ConfirmedTransactionEntity transaction
     */
     var transactionEntity: TransactionEntity {
-        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.blockTimeInSeconds).description, transactionIndex: self.transactionIndex, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
+        Transaction(
+            id: self.id ?? -1,
+            transactionId: self.rawTransactionId ?? Data(),
+            created: Date(timeIntervalSince1970: self.blockTimeInSeconds).description,
+            transactionIndex: self.transactionIndex,
+            expiryHeight: self.expiryHeight,
+            minedHeight: self.minedHeight,
+            raw: self.raw
+        )
     }
 }

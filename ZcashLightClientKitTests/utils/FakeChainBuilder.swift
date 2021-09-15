@@ -79,7 +79,7 @@ class FakeChainBuilder {
 
         try darksideWallet.useDataset(testnetCanopyStartBlock)
         try darksideWallet.stageBlocksCreate(from: birthday + 1, count: length)
-        try darksideWallet.stageTransaction(from: testnetPreCanopyTx, at: networkActivationHeight - ZcashSDK.EXPIRY_OFFSET)
+        try darksideWallet.stageTransaction(from: testnetPreCanopyTx, at: networkActivationHeight - ZcashSDK.expiryOffset)
         
     }
     
@@ -96,7 +96,7 @@ class FakeChainBuilder {
     static func buildChainMixedFunds(darksideWallet: DarksideWalletService, birthday: BlockHeight, networkActivationHeight: BlockHeight, branchID: String, chainName: String, length: Int) throws {
         try buildChain(darksideWallet: darksideWallet, birthday: birthday, networkActivationHeight: networkActivationHeight, branchID: branchID, chainName: chainName, length: length)
         
-        try darksideWallet.stageTransaction(from: testnetPostCanopyTx, at: networkActivationHeight + ZcashSDK.EXPIRY_OFFSET)
+        try darksideWallet.stageTransaction(from: testnetPostCanopyTx, at: networkActivationHeight + ZcashSDK.expiryOffset)
         
     }
     

@@ -4,7 +4,7 @@
 //
 //  Created by Francisco Gindre on 7/28/21.
 //
-
+// swiftlint:disable function_body_length line_length cyclomatic_complexity
 import Foundation
 
 extension WalletBirthday {

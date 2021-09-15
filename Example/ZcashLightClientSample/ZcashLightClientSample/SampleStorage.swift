@@ -5,12 +5,11 @@
 //  Created by Francisco Gindre on 12/20/19.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
-
+// swiftlint:disable line_length force_try
 import Foundation
 
-
 protocol WalletStorage {
-    var seed: Data? {get set}
+    var seed: Data? { get set }
     var privateKey: String? { get set }
 }
 
@@ -25,24 +24,23 @@ class SampleStorage: WalletStorage {
     static var shared: WalletStorage! {
         _shared
     }
-    private let KEY_SEED = "cash.z.wallet.sdk.demoapp.SEED"
-    private let KEY_PK = "cash.z.wallet.sdk.demoapp.PK"
+    private let keySeed = "cash.z.wallet.sdk.demoapp.SEED"
+    private let keyPK = "cash.z.wallet.sdk.demoapp.PK"
     var seed: Data? {
         set {
-            UserDefaults.standard.set(newValue, forKey: KEY_SEED)
+            UserDefaults.standard.set(newValue, forKey: keySeed)
         }
         get {
-            UserDefaults.standard.value(forKey: KEY_SEED) as! Data?
+            UserDefaults.standard.value(forKey: keySeed) as! Data?
         }
     }
     
     var privateKey: String? {
         set {
-            UserDefaults.standard.set(newValue, forKey: KEY_PK)
+            UserDefaults.standard.set(newValue, forKey: keyPK)
         }
         get {
-            UserDefaults.standard.value(forKey: KEY_PK) as! String?
+            UserDefaults.standard.value(forKey: keyPK) as! String?
         }
     }
-    
 }

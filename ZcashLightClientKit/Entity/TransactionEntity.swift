@@ -59,11 +59,11 @@ public extension TransactionEntity {
     
     func anchor(network: ZcashNetwork) -> BlockHeight? {
         if let minedHeight = self.minedHeight, minedHeight != -1 {
-            return max(minedHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE, network.constants.SAPLING_ACTIVATION_HEIGHT)
+            return max(minedHeight - ZcashSDK.defaultStaleTolerance, network.constants.saplingActivationHeight)
         }
         
         if let expiryHeight = self.expiryHeight, expiryHeight != -1 {
-            return max(expiryHeight - ZcashSDK.EXPIRY_OFFSET - ZcashSDK.DEFAULT_STALE_TOLERANCE, network.constants.SAPLING_ACTIVATION_HEIGHT)
+            return max(expiryHeight - ZcashSDK.expiryOffset - ZcashSDK.defaultStaleTolerance, network.constants.saplingActivationHeight)
         }
         
         return nil

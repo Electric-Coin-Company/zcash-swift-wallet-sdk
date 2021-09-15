@@ -32,6 +32,8 @@ public protocol BlockProgressReporting {
 }
 
 extension LightWalletServiceError: Equatable {
+    // swiftlint:disable cyclomatic_complexity
+    // swiftlint:disable identifier_name
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch lhs {
         case .generalError(let m):
@@ -74,21 +76,21 @@ extension LightWalletServiceError: Equatable {
                 return false
             }
         case .criticalError:
-            switch rhs  {
+            switch rhs {
             case .criticalError:
                 return true
             default:
                 return false
             }
         case .userCancelled:
-            switch rhs  {
+            switch rhs {
             case .userCancelled:
                 return true
             default:
                 return false
             }
         case .unknown:
-            switch rhs  {
+            switch rhs {
             case .unknown:
                 return true
             default:
@@ -121,7 +123,7 @@ public protocol LightWalletService {
      
         - Parameter result: a result containing the height or an Error
      */
-    func latestBlockHeight(result: @escaping (Result<BlockHeight,LightWalletServiceError>) -> Void)
+    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void)
     
     /**
        Return the latest block height known to the service.
@@ -150,13 +152,19 @@ public protocol LightWalletService {
        */
     func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock]
     
-    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping  (BlockProgressReporting) -> Void) -> CancellableCall
+    @discardableResult func blockStream(
+        startHeight: BlockHeight,
+        endHeight: BlockHeight,
+        result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void,
+        handler: @escaping (ZcashCompactBlock) -> Void,
+        progress: @escaping  (BlockProgressReporting) -> Void
+    ) -> CancellableCall
     /**
      Submits a raw transaction over lightwalletd. Non-Blocking
      - Parameter spendTransaction: data representing the transaction to be sent
      - Parameter result: escaping closure that takes a result containing either LightWalletServiceResponse or LightWalletServiceError
      */
-    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void)
+    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void)
     
     /**
     Submits a raw transaction over lightwalletd. Blocking
@@ -183,7 +191,7 @@ public protocol LightWalletService {
      - Throws: LightWalletServiceError
      - Returns: LightWalletServiceResponse
      */
-    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity,LightWalletServiceError>) -> Void)
+    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void)
     
     func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity]
     

@@ -9,4 +9,4 @@
 import Foundation
 import ZcashLightClientKit
 
-let ZCASH_NETWORK = ZcashNetworkBuilder.network(for: .testnet)
+let kZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)

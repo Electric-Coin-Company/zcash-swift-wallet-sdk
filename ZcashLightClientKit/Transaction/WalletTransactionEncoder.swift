@@ -161,9 +161,9 @@ class WalletTransactionEncoder: TransactionEncoder {
      - Throws: a TransactionEncoderError
      */
     func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity {
-        guard let t = try? repository.findBy(rawId: encodedTransaction.transactionId) else {
+        guard let transaction = try? repository.findBy(rawId: encodedTransaction.transactionId) else {
             throw TransactionEncoderError.couldNotExpand(txId: encodedTransaction.transactionId)
         }
-        return t
+        return transaction
     }
 }

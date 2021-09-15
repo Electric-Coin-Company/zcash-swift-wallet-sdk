@@ -196,14 +196,12 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     }
     
     func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void) {
-        
         storage.rewind(to: height) { (e) in
             completion(e)
         }
     }
     
     func lastDownloadedBlockHeight(result: @escaping (Result<BlockHeight,Error>) -> Void) {
-        
         storage.latestHeight { (r) in
             switch r {
             case .failure(let e):
@@ -223,12 +221,12 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try self.storage.latestHeight()
     }
     
-    func fetchTransaction(txId: Data) throws -> TransactionEntity{
+    func fetchTransaction(txId: Data) throws -> TransactionEntity {
         try lightwalletService.fetchTransaction(txId: txId)
     }
     
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void) {
-        lightwalletService.fetchTransaction(txId: txId) { (txResult) in
+        lightwalletService.fetchTransaction(txId: txId) { txResult in
             switch txResult {
             case .failure(let error):
                 result(.failure(error))

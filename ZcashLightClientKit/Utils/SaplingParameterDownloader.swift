@@ -45,8 +45,8 @@ public class SaplingParameterDownloader {
     
     private static func downloadFileWithRequest(_ request: URLRequest, at destination: URL, result: @escaping (Result<URL,Error>) -> Void) {
         let task = URLSession.shared.downloadTask(with: request) { (url, _, error) in
-             if let e = error {
-                 result(.failure(Errors.failed(error: e)))
+             if let error = error {
+                 result(.failure(Errors.failed(error: error)))
                  return
              } else if let localUrl = url {
                  do {
@@ -110,10 +110,10 @@ public class SaplingParameterDownloader {
     }
     
     public static var spendParamsURLString: String {
-        return ZcashSDK.CLOUD_PARAM_DIR_URL + ZcashSDK.SPEND_PARAM_FILE_NAME
+        return ZcashSDK.cloudParameterURL + ZcashSDK.spendParamFilename
     }
     
     public static var outputParamsURLString: String {
-        return ZcashSDK.CLOUD_PARAM_DIR_URL + ZcashSDK.OUTPUT_PARAM_FILE_NAME
+        return ZcashSDK.cloudParameterURL + ZcashSDK.outputParamFilename
     }
 }

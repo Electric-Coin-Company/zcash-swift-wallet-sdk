@@ -40,8 +40,8 @@ class BlockDownloaderTests: XCTestCase {
         
         let expect = XCTestExpectation(description: self.description)
         expect.expectedFulfillmentCount = 3
-        let lowerRange: BlockHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
+        let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
         downloader.downloadBlockRange(range) { (error) in
@@ -66,8 +66,8 @@ class BlockDownloaderTests: XCTestCase {
     
     func testSmallDownload() {
         
-        let lowerRange: BlockHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
+        let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
         var latest: BlockHeight = 0
@@ -94,12 +94,12 @@ class BlockDownloaderTests: XCTestCase {
     }
     
     func testFailure() {
-        let awfulDownloader = CompactBlockDownloader(service: AwfulLightWalletService(latestBlockHeight: self.network.constants.SAPLING_ACTIVATION_HEIGHT + 1000, service: darksideWalletService), storage: ZcashConsoleFakeStorage())
+        let awfulDownloader = CompactBlockDownloader(service: AwfulLightWalletService(latestBlockHeight: self.network.constants.saplingActivationHeight + 1000, service: darksideWalletService), storage: ZcashConsoleFakeStorage())
         
         let expect = XCTestExpectation(description: self.description)
         expect.expectedFulfillmentCount = 1
-        let lowerRange: BlockHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
+        let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange,upperRange))
         

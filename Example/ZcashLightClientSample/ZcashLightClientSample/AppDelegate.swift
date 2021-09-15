@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 06/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
+// swiftlint:disable all
 
 import UIKit
 import ZcashLightClientKit
@@ -33,14 +34,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let wallet = wallet {
             return wallet
         } else {
-            let unifiedViewingKeys =  try! DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
-            let wallet = Initializer(cacheDbURL:try! __cacheDbURL(),
-                                     dataDbURL: try! __dataDbURL(),
-                                     pendingDbURL: try! __pendingDbURL(),
+            let unifiedViewingKeys =  try! DerivationTool(networkType: kZcashNetwork.networkType).deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
+            let wallet = Initializer(cacheDbURL:try! cacheDbURLHelper(),
+                                     dataDbURL: try! dataDbURLHelper(),
+                                     pendingDbURL: try! pendingDbURLHelper(),
                                      endpoint: DemoAppConfig.endpoint,
-                                     network: ZCASH_NETWORK,
-                                     spendParamsURL: try! __spendParamsURL(),
-                                     outputParamsURL: try! __outputParamsURL(),
+                                     network: kZcashNetwork,
+                                     spendParamsURL: try! spendParamsURLHelper(),
+                                     outputParamsURL: try! outputParamsURLHelper(),
                                      viewingKeys: unifiedViewingKeys,
                                      walletBirthday: DemoAppConfig.birthdayHeight,
                                      loggerProxy: loggerProxy)
@@ -49,7 +50,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             try! wallet.initialize()
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig.seed)
-            storage!.privateKey = try! DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
+            storage!.privateKey = try! DerivationTool(networkType: kZcashNetwork.networkType).deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
             self.wallet = wallet
             return wallet
         }
@@ -65,7 +66,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return
         }
         NotificationBubble.display(in: window!.rootViewController!.view, options: NotificationBubble.sucessOptions(animation: NotificationBubble.Animation.fade(duration: 1)), attributedText: NSAttributedString(string: "Transaction \(String(describing: tx.id))mined!")) {}
-        
     }
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -112,19 +112,19 @@ extension AppDelegate {
     
     func clearDatabases() {
         do {
-            try FileManager.default.removeItem(at: try __cacheDbURL())
+            try FileManager.default.removeItem(at: try cacheDbURLHelper())
         } catch {
             loggerProxy.error("error clearing cache DB: \(error)")
         }
         
         do {
-            try FileManager.default.removeItem(at: try __dataDbURL())
+            try FileManager.default.removeItem(at: try dataDbURLHelper())
         } catch {
             loggerProxy.error("error clearing data db: \(error)")
         }
         
         do {
-            try FileManager.default.removeItem(at: try __pendingDbURL())
+            try FileManager.default.removeItem(at: try pendingDbURLHelper())
         } catch {
             loggerProxy.error("error clearing data db: \(error)")
         }
@@ -148,38 +148,38 @@ extension Synchronizer {
     }
 }
 
-func __documentsDirectory() throws -> URL {
+func documentsDirectoryHelper() throws -> URL {
     try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
 }
 
-func __cacheDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent(ZCASH_NETWORK.constants.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_CACHES_DB_NAME, isDirectory: false)
+func cacheDbURLHelper() throws -> URL {
+    try documentsDirectoryHelper().appendingPathComponent(kZcashNetwork.constants.defaultDbNamePrefix+ZcashSDK.defaultCacheDbName, isDirectory: false)
 }
 
-func __dataDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent(ZCASH_NETWORK.constants.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_DATA_DB_NAME, isDirectory: false)
+func dataDbURLHelper() throws -> URL {
+    try documentsDirectoryHelper().appendingPathComponent(kZcashNetwork.constants.defaultDbNamePrefix+ZcashSDK.defaultDataDbName, isDirectory: false)
 }
 
-func __pendingDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent(ZCASH_NETWORK.constants.DEFAULT_DB_NAME_PREFIX+ZcashSDK.DEFAULT_PENDING_DB_NAME)
+func pendingDbURLHelper() throws -> URL {
+    try documentsDirectoryHelper().appendingPathComponent(kZcashNetwork.constants.defaultDbNamePrefix+ZcashSDK.defaultPendingDbName)
 }
 
-func __spendParamsURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("sapling-spend.params")
+func spendParamsURLHelper() throws -> URL {
+    try documentsDirectoryHelper().appendingPathComponent("sapling-spend.params")
 }
 
-func __outputParamsURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("sapling-output.params")
+func outputParamsURLHelper() throws -> URL {
+    try documentsDirectoryHelper().appendingPathComponent("sapling-output.params")
 }
-
-
 
 public extension NotificationBubble {
     static func sucessOptions(animation: NotificationBubble.Animation) -> [NotificationBubble.Style] {
-        return [ NotificationBubble.Style.animation(animation),
+        return [
+                 NotificationBubble.Style.animation(animation),
                  NotificationBubble.Style.margins(UIEdgeInsets(top: 40, left: 0, bottom: 0, right: 0)),
                  NotificationBubble.Style.cornerRadius(8),
                  NotificationBubble.Style.duration(timeInterval: 10),
-                 NotificationBubble.Style.backgroundColor(UIColor.green)]
+                 NotificationBubble.Style.backgroundColor(UIColor.green)
+        ]
     }
 }

@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 18/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
+// swiftlint:disable file_length type_body_length
 
 import Foundation
 import GRPC
@@ -34,7 +35,7 @@ public enum CompactBlockProcessorError: Error {
  CompactBlockProcessor notification userInfo object keys.
  check Notification.Name extensions for more details.
  */
-public struct CompactBlockProcessorNotificationKey {
+public enum CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
 //    public static let progressStartHeight = "CompactBlockProcessorNotificationKey.progressStartHeight"
 //    public static let progressTargetHeight = "CompactBlockProcessorNotificationKey.progressTargetHeight"
@@ -63,11 +64,11 @@ public enum CompactBlockProgress {
     
     public var progress: Float {
         switch self {
-        case .download(let p),
-             .scan(let p):
-            return p.progress
-        case .enhance(let p):
-            return p.progress
+        case .download(let blockProgress),
+             .scan(let blockProgress):
+            return blockProgress.progress
+        case .enhance(let enhancementProgress):
+            return enhancementProgress.progress
         default:
             return 0
         }
@@ -75,18 +76,19 @@ public enum CompactBlockProgress {
     
     public var progressHeight: BlockHeight? {
         switch self {
-        case .download(let p),
-             .scan(let p):
-            return p.progressHeight
-        case .enhance(let p):
-            return p.lastFoundTransaction?.minedHeight
+        case .download(let blockProgress),
+             .scan(let blockProgress):
+            return blockProgress.progressHeight
+        case .enhance(let enhancementProgress):
+            return enhancementProgress.lastFoundTransaction?.minedHeight
         default:
             return 0
         }
     }
     
     public var blockDate: Date? {
-        if case .enhance(let p ) = self, let time = p.lastFoundTransaction?.blockTimeInSeconds {
+        if case .enhance(let enhancementProgress) = self,
+           let time = enhancementProgress.lastFoundTransaction?.blockTimeInSeconds {
             return Date(timeIntervalSince1970: time)
         }
         return nil
@@ -94,8 +96,8 @@ public enum CompactBlockProgress {
     
     public var targetHeight: BlockHeight? {
         switch self {
-        case .download(let p), .scan(let p):
-            return p.targetHeight
+        case .download(let blockProgress), .scan(let blockProgress):
+            return blockProgress.targetHeight
         default:
             return nil
         }
@@ -201,7 +203,6 @@ public extension Notification.Name {
      Notification sent when the grpc service connection detects a change. Query the user info object  for status change details `currentConnectivityStatus` for current and previous with `previousConnectivityStatus`
      */
     static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
-    
 }
 
 /**
@@ -219,14 +220,14 @@ public class CompactBlockProcessor {
     public struct Configuration {
         public var cacheDb: URL
         public var dataDb: URL
-        public var downloadBatchSize = ZcashSDK.DEFAULT_BATCH_SIZE
+        public var downloadBatchSize = ZcashSDK.DefaultBatchSize
         public var blockPollInterval: TimeInterval {
-            TimeInterval.random(in: ZcashSDK.DEFAULT_POLL_INTERVAL / 2 ... ZcashSDK.DEFAULT_POLL_INTERVAL * 1.5)
+            TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
         }
         
-        public var retries = ZcashSDK.DEFAULT_RETRIES
-        public var maxBackoffInterval = ZcashSDK.DEFAULT_MAX_BACKOFF_INTERVAL
-        public var rewindDistance = ZcashSDK.DEFAULT_REWIND_DISTANCE
+        public var retries = ZcashSDK.defaultRetries
+        public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
+        public var rewindDistance = ZcashSDK.defaultRewindDistance
         public var walletBirthday: BlockHeight
         private(set) var network: ZcashNetwork
         private(set) var saplingActivation: BlockHeight
@@ -257,7 +258,7 @@ public class CompactBlockProcessor {
             self.cacheDb = cacheDb
             self.dataDb = dataDb
             self.walletBirthday = walletBirthday
-            self.saplingActivation = network.constants.SAPLING_ACTIVATION_HEIGHT
+            self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
         }
     }
@@ -322,12 +323,12 @@ public class CompactBlockProcessor {
             self.stop()
         }
     }
-    private var queue: OperationQueue = {
-        let q = OperationQueue()
-        q.name = "CompactBlockProcessorQueue"
-        q.maxConcurrentOperationCount = 1
-        return q
-    } ()
+    private var operationQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.name = "CompactBlockProcessorQueue"
+        queue.maxConcurrentOperationCount = 1
+        return queue
+    }()
     
     private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
@@ -352,7 +353,7 @@ public class CompactBlockProcessor {
      - Throws CompactBlockProcessorError.invalidConfiguration if block height is invalid or if processor is already started
      */
     func setStartHeight(_ startHeight: BlockHeight) throws {
-        guard self.state == .stopped, startHeight >= config.network.constants.SAPLING_ACTIVATION_HEIGHT else {
+        guard self.state == .stopped, startHeight >= config.network.constants.saplingActivationHeight else {
             throw CompactBlockProcessorError.invalidConfiguration
         }
         
@@ -367,16 +368,21 @@ public class CompactBlockProcessor {
      - downloader: an instance that complies to CompactBlockDownloading protocol
      - backend: a class that complies to ZcashRustBackendWelding
      */
-    convenience init(service: LightWalletService,
-                            storage: CompactBlockStorage,
-                            backend: ZcashRustBackendWelding.Type,
-                            config: Configuration) {
-        self.init(service: service,
-                  storage: storage,
-                  backend: backend,
-                  config: config,
-                  repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb),
-                  accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true))
+    convenience init(
+        service: LightWalletService,
+        storage: CompactBlockStorage,
+        backend: ZcashRustBackendWelding.Type,
+        config: Configuration
+    ) {
+        self.init(
+            service: service,
+            storage: storage,
+            backend: backend,
+            config: config,
+            repository: TransactionRepositoryBuilder.build(
+                dataDbURL: config.dataDb
+            ),
+accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true))
     }
     
     /**
@@ -385,24 +391,28 @@ public class CompactBlockProcessor {
      - initializer: an instance that complies to CompactBlockDownloading protocol
     */
     public convenience init(initializer: Initializer) {
-        
-        self.init(service: initializer.lightWalletService,
-                  storage: initializer.storage,
-                  backend: initializer.rustBackend,
-                  config: Configuration(cacheDb: initializer.cacheDbURL,
-                                        dataDb: initializer.dataDbURL,
-                                        walletBirthday: initializer.walletBirthday.height,
-                                        network: initializer.network),
-                  repository: initializer.transactionRepository,
-                  accountRepository: initializer.accountRepository)
+        self.init(
+            service: initializer.lightWalletService,
+            storage: initializer.storage,
+            backend: initializer.rustBackend,
+            config: Configuration(
+                cacheDb: initializer.cacheDbURL,
+                dataDb: initializer.dataDbURL,
+                walletBirthday: initializer.walletBirthday.height,
+                network: initializer.network
+            ),
+            repository: initializer.transactionRepository,
+accountRepository: initializer.accountRepository)
     }
     
-    internal init(service: LightWalletService,
-                  storage: CompactBlockStorage,
-                  backend: ZcashRustBackendWelding.Type,
-                  config: Configuration,
-                  repository: TransactionRepository,
-                  accountRepository: AccountRepository) {
+    internal init(
+        service: LightWalletService,
+        storage: CompactBlockStorage,
+        backend: ZcashRustBackendWelding.Type,
+        config: Configuration,
+        repository: TransactionRepository,
+        accountRepository: AccountRepository
+    ) {
         self.service = service
         self.downloader = CompactBlockDownloader(service: service, storage: storage)
         self.rustBackend = backend
@@ -414,7 +424,7 @@ public class CompactBlockProcessor {
     }
     
     deinit {
-        self.queue.cancelAllOperations()
+        self.operationQueue.cancelAllOperations()
     }
     
     var maxAttemptsReached: Bool {
@@ -447,7 +457,6 @@ public class CompactBlockProcessor {
      
      */
     public func start(retry: Bool = false) throws {
-        
         // TODO: check if this validation makes sense at all
         //        try validateConfiguration()
         if retry {
@@ -456,9 +465,9 @@ public class CompactBlockProcessor {
             self.backoffTimer?.invalidate()
             self.backoffTimer = nil
         }
-        guard !queue.isSuspended else {
+        guard !operationQueue.isSuspended else {
             LoggerProxy.debug("restarting suspended queue")
-            queue.isSuspended = false
+            operationQueue.isSuspended = false
             return
         }
         
@@ -487,7 +496,6 @@ public class CompactBlockProcessor {
     }
     
     func validateServer(completionBlock: @escaping (() -> Void)) {
-
         self.service.getInfo(result: { [weak self] result in
             guard let self = self else { return }
             
@@ -496,10 +504,12 @@ public class CompactBlockProcessor {
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
                     do {
-                        try Self.validateServerInfo(info,
-                                                    saplingActivation: self.config.saplingActivation,
-                                                    localNetwork: self.config.network,
-                                                    rustBackend: self.rustBackend)
+                        try Self.validateServerInfo(
+                            info,
+                            saplingActivation: self.config.saplingActivation,
+                            localNetwork: self.config.network,
+                            rustBackend: self.rustBackend
+                        )
                         completionBlock()
                     } catch {
                         self.severeFailure(error)
@@ -511,14 +521,18 @@ public class CompactBlockProcessor {
         })
     }
     
-    static func validateServerInfo(_ info: LightWalletdInfo,
-                                   saplingActivation: BlockHeight,
-                                   localNetwork: ZcashNetwork,
-                                   rustBackend: ZcashRustBackendWelding.Type) throws {
+    static func validateServerInfo(
+        _ info: LightWalletdInfo,
+        saplingActivation: BlockHeight,
+        localNetwork: ZcashNetwork,
+        rustBackend: ZcashRustBackendWelding.Type) throws {
         
         // check network types
         guard let remoteNetworkType = NetworkType.forChainName(info.chainName) else {
-            throw CompactBlockProcessorError.generalError(message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error")
+            throw CompactBlockProcessorError
+                        .generalError(
+                            message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'. this is probably an API or programming error"
+                        )
         }
         
         guard remoteNetworkType == localNetwork.networkType else {
@@ -539,8 +553,7 @@ public class CompactBlockProcessor {
         
         guard remoteBranchID == localBranch else {
             throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
-        }
-        
+        }  
     }
     
     /**
@@ -553,9 +566,9 @@ public class CompactBlockProcessor {
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         if cancelTasks {
-            queue.cancelAllOperations()
+            operationQueue.cancelAllOperations()
         } else {
-            self.queue.isSuspended = true
+            self.operationQueue.isSuspended = true
         }
         
         self.retryAttempts = 0
@@ -705,7 +718,15 @@ public class CompactBlockProcessor {
             }
         }
         
-        let scanBlocksOperation = CompactBlockBatchScanningOperation(rustWelding: rustBackend, cacheDb: config.cacheDb, dataDb: config.dataDb, transactionRepository: transactionRepository, range: range, networkType: self.config.network.networkType, progressDelegate: self)
+        let scanBlocksOperation = CompactBlockBatchScanningOperation(
+            rustWelding: rustBackend,
+            cacheDb: config.cacheDb,
+            dataDb: config.dataDb,
+            transactionRepository: transactionRepository,
+            range: range,
+            networkType: self.config.network.networkType,
+            progressDelegate: self
+        )
         
         let validateScanningAdapterOperation = BlockOperation { [weak scanBlocksOperation, weak validateChainOperation] in
             scanBlocksOperation?.error = validateChainOperation?.error
@@ -716,7 +737,7 @@ public class CompactBlockProcessor {
             }
         }
         
-        scanBlocksOperation.completionHandler = { [weak self] (finished, cancelled) in
+        scanBlocksOperation.completionHandler = { [weak self] finished, cancelled in
             guard !cancelled else {
                 DispatchQueue.main.async { [weak self] in
                     self?.state = .stopped
@@ -726,7 +747,7 @@ public class CompactBlockProcessor {
             }
         }
         
-        scanBlocksOperation.errorHandler = { [weak self] (error) in
+        scanBlocksOperation.errorHandler = { [weak self] error in
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.processingError = error
@@ -734,7 +755,14 @@ public class CompactBlockProcessor {
             }
         }
         
-        let enhanceOperation = CompactBlockEnhancementOperation(rustWelding: rustBackend, dataDb: config.dataDb, downloader: downloader, repository: transactionRepository, range: range.blockRange(), networkType: self.config.network.networkType)
+        let enhanceOperation = CompactBlockEnhancementOperation(
+            rustWelding: rustBackend,
+            dataDb: config.dataDb,
+            downloader: downloader,
+            repository: transactionRepository,
+            range: range.blockRange(),
+            networkType: self.config.network.networkType
+        )
         
         enhanceOperation.startedHandler = {
             LoggerProxy.debug("Started Enhancing range: \(range)")
@@ -743,18 +771,18 @@ public class CompactBlockProcessor {
             }
         }
         
-        enhanceOperation.txFoundHandler = { [weak self] (txs,range) in
-            self?.notifyTransactions(txs,in: range)
+        enhanceOperation.txFoundHandler = { [weak self] txs, range in
+            self?.notifyTransactions(txs, in: range)
         }
         
-        enhanceOperation.completionHandler  = { (finished, cancelled) in
+        enhanceOperation.completionHandler  = { finished, cancelled in
             guard !cancelled else {
                 LoggerProxy.debug("Warning: enhance operation on range \(range) cancelled")
                 return
             }
         }
         
-        enhanceOperation.errorHandler = { [weak self] (error) in
+        enhanceOperation.errorHandler = { [weak self] error in
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 
@@ -767,7 +795,14 @@ public class CompactBlockProcessor {
             enhanceOperation?.error = scanBlocksOperation?.error
         }
         
-        let fetchOperation = FetchUnspentTxOutputsOperation(accountRepository: accountRepository, downloader: self.downloader, rustbackend: rustBackend, dataDb: config.dataDb, startHeight: config.walletBirthday, networkType: self.config.network.networkType)
+        let fetchOperation = FetchUnspentTxOutputsOperation(
+            accountRepository: accountRepository,
+            downloader: self.downloader,
+            rustbackend: rustBackend,
+            dataDb: config.dataDb,
+            startHeight: config.walletBirthday,
+            networkType: self.config.network.networkType
+        )
         
         fetchOperation.startedHandler = { [weak self] in
             DispatchQueue.main.async { [weak self] in
@@ -775,7 +810,7 @@ public class CompactBlockProcessor {
             }
         }
         
-        fetchOperation.completionHandler = {  [weak self] (finished, cancelled) in
+        fetchOperation.completionHandler = {  [weak self] finished, cancelled in
             guard !cancelled else {
                 LoggerProxy.debug("Warning: fetch operation on range \(range) cancelled")
                 return
@@ -784,7 +819,7 @@ public class CompactBlockProcessor {
                 self?.processBatchFinished(range: range)
             }
         }
-        fetchOperation.errorHandler = { [weak self] (error) in
+        fetchOperation.errorHandler = { [weak self] error in
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 
@@ -809,7 +844,7 @@ public class CompactBlockProcessor {
         enhanceFetchAdapterOperation.addDependency(enhanceOperation)
         fetchOperation.addDependency(enhanceFetchAdapterOperation)
         
-        queue.addOperations([downloadBlockOperation,
+        operationQueue.addOperations([downloadBlockOperation,
                              downloadValidateAdapterOperation,
                              validateChainOperation,
                              validateScanningAdapterOperation,
@@ -853,15 +888,19 @@ public class CompactBlockProcessor {
     private func validationFailed(at height: BlockHeight) {
         
         // cancel all Tasks
-        queue.cancelAllOperations()
+        operationQueue.cancelAllOperations()
 
         // register latest failure
         self.lastChainValidationFailure = height
-        self.consecutiveChainValidationErrors = self.consecutiveChainValidationErrors + 1
+        self.consecutiveChainValidationErrors += 1
         
         // rewind
         
-        let rewindHeight = determineLowerBound(errorHeight: height, consecutiveErrors: consecutiveChainValidationErrors, walletBirthday: self.config.walletBirthday)
+        let rewindHeight = determineLowerBound(
+                            errorHeight: height,
+                            consecutiveErrors: consecutiveChainValidationErrors,
+                            walletBirthday: self.config.walletBirthday
+                        )
         guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network.networkType) else {
             fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
@@ -871,7 +910,13 @@ public class CompactBlockProcessor {
             try downloader.rewind(to: rewindHeight)
             
             // notify reorg
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorHandledReOrg, object: self, userInfo: [CompactBlockProcessorNotificationKey.reorgHeight : height, CompactBlockProcessorNotificationKey.rewindHeight : rewindHeight])
+            NotificationCenter.default.post(
+                name: Notification.Name.blockProcessorHandledReOrg,
+                object: self,
+                userInfo: [
+                    CompactBlockProcessorNotificationKey.reorgHeight: height, CompactBlockProcessorNotificationKey.rewindHeight: rewindHeight
+                ]
+            )
             
             // process next batch
             self.nextBatch()
@@ -880,13 +925,16 @@ public class CompactBlockProcessor {
         }
     }
     
-    func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
-        let offset = min(ZcashSDK.MAX_REORG_SIZE, ZcashSDK.DEFAULT_REWIND_DISTANCE * (consecutiveErrors + 1))
-        return max(errorHeight - offset, walletBirthday - ZcashSDK.MAX_REORG_SIZE)
+    func determineLowerBound(
+        errorHeight: Int,
+        consecutiveErrors: Int,
+        walletBirthday: BlockHeight
+    ) -> BlockHeight {
+        let offset = min(ZcashSDK.maxReorgSize, ZcashSDK.defaultRewindDistance * (consecutiveErrors + 1))
+        return max(errorHeight - offset, walletBirthday - ZcashSDK.maxReorgSize)
     }
     
     private func processBatchFinished(range: CompactBlockRange) {
-        
         guard processingError == nil else {
             retryProcessing(range: range)
             return
@@ -908,9 +956,10 @@ public class CompactBlockProcessor {
                 name: Notification.Name.blockProcessorFinished,
                 object: self,
                 userInfo: [
-                 CompactBlockProcessorNotificationKey.latestScannedBlockHeight : height,
-                 CompactBlockProcessorNotificationKey.foundBlocks : self.foundBlocks
-                ])
+                 CompactBlockProcessorNotificationKey.latestScannedBlockHeight: height,
+                 CompactBlockProcessorNotificationKey.foundBlocks: self.foundBlocks
+                ]
+            )
             self.state = .synced
             setTimer()
     }
@@ -923,13 +972,15 @@ public class CompactBlockProcessor {
 
                 do {
                     if self.shouldStart {
-                        LoggerProxy.debug("""
-                                          Timer triggered: Starting compact Block processor!.
-                                            Processor State: \(self.state)
-                                            latestHeight: \(self.latestBlockHeight)
-                                            attempts: \(self.retryAttempts)
-                                            lowerbound: \(String(describing: self.lowerBoundHeight))
-                                          """)
+                        LoggerProxy.debug(
+                            """
+                            Timer triggered: Starting compact Block processor!.
+                            Processor State: \(self.state)
+                            latestHeight: \(self.latestBlockHeight)
+                            attempts: \(self.retryAttempts)
+                            lowerbound: \(String(describing: self.lowerBoundHeight))
+                            """
+                        )
                         try self.start()
                     } else if self.maxAttemptsReached {
                         self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
@@ -944,7 +995,6 @@ public class CompactBlockProcessor {
     }
     
     static func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight, walletBirthday: BlockHeight) -> CompactBlockRange {
-        
         let lowerBound = latestDownloadedHeight <= walletBirthday ? walletBirthday : latestDownloadedHeight + 1
         
         let upperBound = latestHeight
@@ -952,10 +1002,9 @@ public class CompactBlockProcessor {
     }
     
     func retryProcessing(range: CompactBlockRange) {
-        
-        queue.cancelAllOperations()
+        operationQueue.cancelAllOperations()
         // update retries
-        self.retryAttempts = self.retryAttempts + 1
+        self.retryAttempts += 1
         self.processingError = nil
         guard self.retryAttempts < config.retries else {
             self.notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.retryAttempts))
@@ -972,25 +1021,23 @@ public class CompactBlockProcessor {
         } catch {
             self.fail(error)
         }
-        
     }
 
     func severeFailure(_ error: Error) {
-        queue.cancelAllOperations()
+        operationQueue.cancelAllOperations()
         LoggerProxy.error("show stoppper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error
         self.state = .error(error)
         self.notifyError(error)
-        
     }
     
     func fail(_ error: Error) {
         // todo specify: failure
         LoggerProxy.error("\(error)")
-        queue.cancelAllOperations()
-        self.retryAttempts = self.retryAttempts + 1
+        operationQueue.cancelAllOperations()
+        self.retryAttempts += 1
         self.processingError = error
         switch self.state {
         case .error:
@@ -1002,7 +1049,6 @@ public class CompactBlockProcessor {
         guard self.maxAttemptsReached else { return }
         // don't set a new timer if there are no more attempts.
         self.setTimer()
-        
     }
     
     private func transitionState(from oldValue: State, to newValue: State) {
@@ -1125,7 +1171,7 @@ extension CompactBlockProcessor {
         guard let account = try? accountRepository.findBy(account: accountIndex) else {
             return nil
         }
-        return UnifiedAddressShim(__account: account)
+        return UnifiedAddressShim(account: account)
     }
     
     public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
@@ -1144,38 +1190,40 @@ extension CompactBlockProcessor {
     }
 }
 
-fileprivate struct UnifiedAddressShim {
-    let __account: AccountEntity
+private struct UnifiedAddressShim {
+    let account: AccountEntity
 }
 
 extension UnifiedAddressShim: UnifiedAddress {
     var tAddress: TransparentAddress {
         get {
-            __account.transparentAddress
+            account.transparentAddress
         }
     }
     
     var zAddress: SaplingShieldedAddress {
         get {
-            __account.address
+            account.address
         }
     }
 }
 
 extension CompactBlockProcessor {
-    
     func refreshUTXOs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<RefreshedUTXOs,Error>) -> Void) {
         let dataDb = self.config.dataDb
         self.downloader.fetchUnspentTransactionOutputs(tAddress: tAddress, startHeight: startHeight) { [weak self](r) in
-            
             switch r {
             case .success(let utxos):
                 DispatchQueue.main.async {
-                    self?.queue.addOperation { [self] in
-                    
+                    self?.operationQueue.addOperation { [self] in
                         guard let self = self else { return }
                         do {
-                            guard try self.rustBackend.clearUtxos(dbData: dataDb, address: tAddress, sinceHeight: startHeight - 1, networkType: self.config.network.networkType) >= 0 else {
+                            guard try self.rustBackend.clearUtxos(
+                                    dbData: dataDb,
+                                    address: tAddress,
+                                    sinceHeight: startHeight - 1,
+                                    networkType: self.config.network.networkType
+                            ) >= 0 else {
                                 result(.failure(CompactBlockProcessorError.generalError(message: "attempted to clear utxos but -1 was returned")))
                                 return
                             }
@@ -1204,7 +1252,8 @@ extension CompactBlockProcessor {
                     script: utxo.script.bytes,
                     value: Int64(utxo.valueZat),
                     height: utxo.height,
-                    networkType: self.config.network.networkType) ? refreshed.append(utxo) : skipped.append(utxo)
+                    networkType: self.config.network.networkType
+                ) ? refreshed.append(utxo) : skipped.append(utxo)
             } catch {
                 LoggerProxy.info("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
@@ -1239,12 +1288,15 @@ extension CompactBlockProcessorError: LocalizedError {
         case .missingDbPath(let path):
             return "CompactBlockProcessor was set up with path \(path) but thath location couldn't be reached"
         case .networkMismatch(let expected, let found):
+            // swiftlint:disable:next line_length
             return "A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing to the right server"
         case .saplingActivationMismatch(let expected, let found):
+            // swiftlint:disable:next line_length
             return "A server was reached, it's showing a different sapling activation. App expected sapling activation height to be \(expected) but instead it found \(found). Are you sure you are pointing to the right server?"
         case .unspecifiedError(let underlyingError):
             return "Unspecified error caused by this underlying error: \(underlyingError)"
         case .wrongConsensusBranchId(let expectedLocally, let found):
+            // swiftlint:disable:next line_length
             return "The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade."
         }
     }
@@ -1286,24 +1338,24 @@ public extension BlockProgressReporting {
 }
 
 extension CompactBlockProcessor {
-    
-    class NextStateHelper {
-        
-        static func nextState(service: LightWalletService,
-                              downloader: CompactBlockDownloading,
-                              config: Configuration,
-                              rustBackend: ZcashRustBackendWelding.Type,
-                              queue: DispatchQueue?,
-                              result: @escaping (Result<FigureNextBatchOperation.NextState, Error>) -> Void) {
-            
+    enum NextStateHelper {
+        static func nextState(
+            service: LightWalletService,
+            downloader: CompactBlockDownloading,
+            config: Configuration,
+            rustBackend: ZcashRustBackendWelding.Type,
+            queue: DispatchQueue?,
+            result: @escaping (Result<FigureNextBatchOperation.NextState, Error>) -> Void
+        ) {
             let dispatchQueue = queue ?? DispatchQueue.global(qos: .userInitiated)
             
             dispatchQueue.async {
                 do {
-                    let r = try self.nextState(service: service,
-                                               downloader: downloader,
-                                               config: config,
-                                               rustBackend: rustBackend)
+                    let r = try self.nextState(
+                        service: service,
+                        downloader: downloader,
+                        config: config,
+                        rustBackend: rustBackend)
                     result(.success(r))
                 } catch {
                     result(.failure(error))
@@ -1311,28 +1363,34 @@ extension CompactBlockProcessor {
             }
         }
         
-        static func nextState(service: LightWalletService,
-                              downloader: CompactBlockDownloading,
-                              config: Configuration,
-                              rustBackend: ZcashRustBackendWelding.Type) throws -> FigureNextBatchOperation.NextState {
-                       
+        static func nextState(
+                        service: LightWalletService,
+                        downloader: CompactBlockDownloading,
+                        config: Configuration,
+                        rustBackend: ZcashRustBackendWelding.Type
+        ) throws -> FigureNextBatchOperation.NextState {
             let info = try service.getInfo()
             
             try CompactBlockProcessor.validateServerInfo(info, saplingActivation: config.saplingActivation, localNetwork: config.network, rustBackend: rustBackend)
             
             // get latest block height
-            let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday,try downloader.lastDownloadedBlockHeight())
+            let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday, try downloader.lastDownloadedBlockHeight())
             
             let latestBlockheight = try service.latestBlockHeight()
             
             if latestDownloadedBlockHeight < latestBlockheight {
-                return .processNewBlocks(range: CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockheight, latestDownloadedHeight: latestDownloadedBlockHeight, walletBirthday: config.walletBirthday))
+                return .processNewBlocks(
+                            range: CompactBlockProcessor.nextBatchBlockRange(
+                                        latestHeight: latestBlockheight,
+                                        latestDownloadedHeight: latestDownloadedBlockHeight,
+                                        walletBirthday: config.walletBirthday
+                                    )
+                        )
             } else if latestBlockheight == latestDownloadedBlockHeight {
                 return .finishProcessing(height: latestBlockheight)
             }
                 
             return .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestBlockheight)
-                
         }
     }
 }

@@ -49,7 +49,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
-        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE)
+        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.defaultStaleTolerance)
         sleep(5)
         
         try coordinator.sync(completion: { (synchronizer) in

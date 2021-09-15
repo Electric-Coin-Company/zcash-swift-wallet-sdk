@@ -83,7 +83,7 @@ class DerivationToolViewController: UIViewController {
     func deriveFrom(seedPhrase: String) throws {
 
         let seedBytes = try Mnemonic.deterministicSeedBytes(from: seedPhrase)
-        let derivationTool = DerivationTool(networkType: ZCASH_NETWORK.networkType)
+        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
         guard let spendingKey = try derivationTool.deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw DerivationErrors.couldNotDeriveSpendingKeys(underlyingError: DerivationErrors.unknown)
         }
