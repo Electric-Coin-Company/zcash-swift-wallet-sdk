@@ -2,8 +2,12 @@
 # https://github.com/raywenderlich/swift-style-guide
 
 excluded:
+  - Example
   - Pods
-  - xctemplates
+  - ZcashLightClientKitTests
+
+included: 
+  - ZcashLightClientKit
 
 disabled_rules:
   - notification_center_detachment
@@ -115,6 +119,10 @@ identifier_name:
     - x
     - y
     - z
+    - db
+    - n
+    - e
+    - r
 
 indentation_width:
   indentation_width: 4
