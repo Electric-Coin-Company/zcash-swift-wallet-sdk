@@ -20,7 +20,7 @@ This is an alpha build and is currently under active development. Please be advi
 
 ZcashLightClientKit uses a rust library called Librustzcash. In order to build it, you need to have rust and cargo installed on your environment.
 
-Install [Rust](https://www.rust-lang.org/learn/get-started), and then `cargo-lipo`:
+Install [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) following these directions, and then install `cargo-lipo` and add the appropriate architectures using `rustup` with the following example:
 
 ```
 $ cargo install cargo-lipo
@@ -29,14 +29,14 @@ $ rustup target add aarch64-apple-ios x86_64-apple-ios
 
 # Cocoapods Support
 
-## Installing as a ZcashLightClientKit as a Contributor
+## Installing ZcashLightClientKit as a Contributor
 ``` ruby
 use_frameworks!
 
 pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']  # include testspecs if you want to run the tests
 ```
 
-## Installing a wallet app developer
+## Installing ZcashLightClientKit as a wallet app developer
 ```` ruby
 use_frameworks!
 
