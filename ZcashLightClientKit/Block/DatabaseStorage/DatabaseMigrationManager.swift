@@ -79,10 +79,10 @@ class MigrationManager {
         )
         
         if currentDataDbVersion < Self.latestDataDbMigrationVersion {
-            for version in (currentDataDbVersion + 1) ... Self.latestDataDbMigrationVersion {
-                guard let version = DataDbMigrations.init(rawValue: version) else {
+            for dbVersion in (currentDataDbVersion + 1) ... Self.latestDataDbMigrationVersion {
+                guard let version = DataDbMigrations.init(rawValue: dbVersion) else {
                     LoggerProxy.error("failed to determine migration version")
-                    throw StorageError.invalidMigrationVersion(version: version)
+                    throw StorageError.invalidMigrationVersion(version: dbVersion)
                 }
                 switch version {
                 case .version1:
