@@ -12,20 +12,16 @@ public enum ResourceProviderError: Error {
     case unavailableResource
 }
 public protocol ResourceProvider {
-    
     var dataDbURL: URL { get }
     var cacheDbURL: URL { get }
-    
 }
 /**
- Convenience provider for a data db and cache db resources. 
- */
+Convenience provider for a data db and cache db resources.
+*/
 public struct DefaultResourceProvider: ResourceProvider {
-    init(network: ZcashNetwork) {
-        self.network = network
-    }
     var network: ZcashNetwork
-     public var dataDbURL: URL {
+
+    public var dataDbURL: URL {
         let constants = network.constants
         do {
             let url = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
@@ -33,7 +29,6 @@ public struct DefaultResourceProvider: ResourceProvider {
         } catch {
             return URL(fileURLWithPath: "file://\(constants.defaultDataDbName)")
         }
-        
     }
     
     public var cacheDbURL: URL {
@@ -45,5 +40,8 @@ public struct DefaultResourceProvider: ResourceProvider {
             return URL(fileURLWithPath: "file://\(constants.defaultCacheDbName)")
         }
     }
-    
+
+    init(network: ZcashNetwork) {
+        self.network = network
+    }
 }

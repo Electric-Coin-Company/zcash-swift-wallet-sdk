@@ -7,7 +7,7 @@
 
 import Foundation
 
-class TransactionRepositoryBuilder {
+enum TransactionRepositoryBuilder {
     static func build(initializer: Initializer) -> TransactionRepository {
         TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path, readonly: true))
     }
@@ -17,10 +17,8 @@ class TransactionRepositoryBuilder {
     }
 }
 
-class PagedTransactionRepositoryBuilder {
-    
+enum PagedTransactionRepositoryBuilder {
     static func build(initializer: Initializer, kind: TransactionKind = .all) -> PaginatedTransactionRepository {
-        
-        return PagedTransactionDAO(repository:  initializer.transactionRepository, kind: kind)
+        return PagedTransactionDAO(repository: initializer.transactionRepository, kind: kind)
     }
 }

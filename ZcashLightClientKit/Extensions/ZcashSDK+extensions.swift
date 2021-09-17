@@ -11,7 +11,7 @@ public typealias ConsensusBranchID = Int32
 
 public extension ConsensusBranchID {
     func toString() -> String {
-        String(format:"%02x", self)
+        String(format: "%02x", self)
     }
     
     static func fromString(_ str: String) -> ConsensusBranchID? {

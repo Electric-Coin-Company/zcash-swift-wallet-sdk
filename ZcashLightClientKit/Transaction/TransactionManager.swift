@@ -8,9 +8,9 @@
 import Foundation
 
 /**
- Manage outbound transactions with the main purpose of reporting which ones are still pending,
- particularly after failed attempts or dropped connectivity. The intent is to help see outbound
- transactions through to completion.
+Manage outbound transactions with the main purpose of reporting which ones are still pending,
+particularly after failed attempts or dropped connectivity. The intent is to help see outbound
+transactions through to completion.
 */
 
 protocol OutboundTransactionManager {
@@ -28,15 +28,15 @@ protocol OutboundTransactionManager {
     
     /**
     Attempts to Cancel a transaction. Returns true if successful
-     */
+    */
     func cancel(pendingTransaction: PendingTransactionEntity) -> Bool
     
     func allPendingTransactions() throws -> [PendingTransactionEntity]?
     
-    func handleReorg(at: BlockHeight) throws
+    func handleReorg(at blockHeight: BlockHeight) throws
     
     /**
-        deletes a pending transaction from the database
-     */
+    Deletes a pending transaction from the database
+    */
     func delete(pendingTransaction: PendingTransactionEntity) throws
 }

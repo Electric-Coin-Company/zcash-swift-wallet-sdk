@@ -15,7 +15,6 @@ extension CompactBlockRange {
 }
 
 extension BlockID {
-    
     init(height: UInt64) {
         self = BlockID()
         self.height = height
@@ -31,7 +30,6 @@ extension BlockID {
 }
 
 extension BlockRange {
-    
     init(startHeight: Int, endHeight: Int? = nil) {
         self = BlockRange()
         self.start = BlockID(height: UInt64(startHeight))
@@ -43,12 +41,10 @@ extension BlockRange {
     var compactBlockRange: CompactBlockRange {
         return Int(self.start.height) ... Int(self.end.height)
     }
-    
 }
 
 extension Array where Element == CompactBlock {
     func asZcashCompactBlocks() -> [ZcashCompactBlock] {
         self.map { ZcashCompactBlock(compactBlock: $0) }
     }
-    
 }

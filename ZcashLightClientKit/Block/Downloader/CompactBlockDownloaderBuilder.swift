@@ -11,7 +11,6 @@ import SQLite
 
 extension CompactBlockDownloader {
     static func sqlDownloader(service: LightWalletService, at url: URL) -> CompactBlockDownloader? {
-        
         let storage = CompactBlockStorage(url: url, readonly: false)
         
         guard (try? storage.createTable()) != nil else { return nil }
@@ -21,7 +20,6 @@ extension CompactBlockDownloader {
 }
 
 extension CompactBlockStorage {
-    
     convenience init(url: URL, readonly: Bool) {
         self.init(connectionProvider: SimpleConnectionProvider(path: url.absoluteString, readonly: readonly))
     }

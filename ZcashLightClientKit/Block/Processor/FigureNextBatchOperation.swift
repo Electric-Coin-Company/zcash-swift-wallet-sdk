@@ -13,21 +13,26 @@ class FigureNextBatchOperation: ZcashOperation {
         case processNewBlocks(range: CompactBlockRange)
         case wait(latestHeight: BlockHeight, latestDownloadHeight: BlockHeight)
     }
+    
     private var service: LightWalletService
     private var downloader: CompactBlockDownloading
     private var config: CompactBlockProcessor.Configuration
     private var rustBackend: ZcashRustBackendWelding.Type
     private(set) var result: NextState?
 
-    required init(downloader: CompactBlockDownloading,
-                  service: LightWalletService,
-                  config: CompactBlockProcessor.Configuration,
-                  rustBackend: ZcashRustBackendWelding.Type) {
+    required init(
+        downloader: CompactBlockDownloading,
+        service: LightWalletService,
+        config: CompactBlockProcessor.Configuration,
+        rustBackend: ZcashRustBackendWelding.Type
+    ) {
         self.service = service
         self.config = config
         self.downloader = downloader
         self.rustBackend = rustBackend
+
         super.init()
+
         self.name = "Next Batch Operation"
     }
     
@@ -36,13 +41,16 @@ class FigureNextBatchOperation: ZcashOperation {
             cancel()
             return
         }
+
         self.startedHandler?()
         
         do {
-            result = try CompactBlockProcessor.NextStateHelper.nextState(service: self.service,
-                                                                         downloader: self.downloader,
-                                                                         config: self.config,
-                                                                         rustBackend: self.rustBackend)
+            result = try CompactBlockProcessor.NextStateHelper.nextState(
+                service: self.service,
+                downloader: self.downloader,
+                config: self.config,
+                rustBackend: self.rustBackend
+            )
         } catch {
             self.fail(error: error)
         }

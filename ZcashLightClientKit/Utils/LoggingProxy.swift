@@ -8,10 +8,9 @@
 import Foundation
 
 /**
- Represents what's expected from a logging entity
- */
+Represents what's expected from a logging entity
+*/
 public protocol Logger {
-    
     func debug(_ message: String, file: StaticString, function: StaticString, line: Int)
     
     func info(_ message: String, file: StaticString, function: StaticString, line: Int)
@@ -21,13 +20,11 @@ public protocol Logger {
     func warn(_ message: String, file: StaticString, function: StaticString, line: Int)
     
     func error(_ message: String, file: StaticString, function: StaticString, line: Int)
-    
 }
 
 var logger: Logger?
 
-class LoggerProxy {
-    
+enum LoggerProxy {
     static func debug(_ message: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         logger?.debug(message, file: file, function: function, line: line)
     }
@@ -47,5 +44,4 @@ class LoggerProxy {
     static func error(_ message: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
         logger?.error(message, file: file, function: function, line: line)
     }
-    
 }

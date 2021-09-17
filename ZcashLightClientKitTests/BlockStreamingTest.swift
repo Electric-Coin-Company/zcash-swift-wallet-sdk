@@ -41,7 +41,7 @@ class BlockStreamingTest: XCTestCase {
             expectation.fulfill()
             switch result {
             case .success(let status):
-                XCTAssertEqual(GRPCResult.ok, status)
+                XCTAssertEqual(GRPCResult.success, status)
             case .failure(let error):
                 XCTFail("failed with error: \(error)")
             }

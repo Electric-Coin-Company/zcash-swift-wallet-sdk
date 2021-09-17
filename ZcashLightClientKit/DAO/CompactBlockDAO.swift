@@ -9,7 +9,6 @@
 import Foundation
 
 protocol CompactBlockDAO {
-    
     func createTable() throws
     
     func insert(_ block: ZcashCompactBlock) throws
@@ -17,8 +16,8 @@ protocol CompactBlockDAO {
     func insert(_ blocks: [ZcashCompactBlock]) throws
     
     /**
-     Query the latest block height, returns -1 if no block is stored
-     */
+    Query the latest block height, returns -1 if no block is stored
+    */
     func latestBlockHeight() throws -> BlockHeight
     
     func rewind(to height: BlockHeight) throws

@@ -15,35 +15,29 @@ protocol BlockDao {
 }
 
 struct Block: Codable {
-    
     enum CodingKeys: String, CodingKey {
-          case height
-          case hash
-          case time
-          case saplingTree = "sapling_tree"
-      }
+        case height
+        case hash
+        case time
+        case saplingTree = "sapling_tree"
+    }
+
+    enum TableStructure {
+        static var height = Expression<Int>(Block.CodingKeys.height.rawValue)
+        static var hash = Expression<Blob>(Block.CodingKeys.hash.rawValue)
+        static var time = Expression<Int>(Block.CodingKeys.time.rawValue)
+        static var saplingTree = Expression<Blob>(Block.CodingKeys.saplingTree.rawValue)
+    }
+
     var height: BlockHeight
     var hash: Data
     var time: Int
     var saplingTree: Data
     
     static var table = Table("blocks")
-    struct TableStructure {
-        static var height = Expression<Int>(Block.CodingKeys.height.rawValue)
-        static var hash = Expression<Blob>(Block.CodingKeys.hash.rawValue)
-        static var time = Expression<Int>(Block.CodingKeys.time.rawValue)
-        static var saplingTree = Expression<Blob>(Block.CodingKeys.saplingTree.rawValue)
-    }
 }
 
 class BlockSQLDAO: BlockDao {
-    func block(at height: BlockHeight) throws -> Block? {
-        try dbProvider.connection()
-                        .prepare(Block.table.filter(Block.TableStructure.height == height).limit(1))
-                        .map({ try $0.decode() })
-                        .first
-    }
-    
     var dbProvider: ConnectionProvider
     var table: Table
     var height = Expression<Int>("height")
@@ -52,11 +46,18 @@ class BlockSQLDAO: BlockDao {
         self.dbProvider = dbProvider
         self.table = Table("Blocks")
     }
+
+    func block(at height: BlockHeight) throws -> Block? {
+        try dbProvider
+            .connection()
+            .prepare(Block.table.filter(Block.TableStructure.height == height).limit(1))
+            .map({ try $0.decode() })
+            .first
+    }
     
     func latestBlockHeight() throws -> BlockHeight {
         try dbProvider.connection().scalar(table.select(height.max)) ?? BlockHeight.empty()
     }
-    
 }
 
 extension BlockSQLDAO: BlockRepository {

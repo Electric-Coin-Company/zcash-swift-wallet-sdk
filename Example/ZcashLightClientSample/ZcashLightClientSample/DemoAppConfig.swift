@@ -21,7 +21,12 @@ enum DemoAppConfig {
     }
     
     static var processorConfig: CompactBlockProcessor.Configuration  = {
-        CompactBlockProcessor.Configuration(cacheDb: try! cacheDbURLHelper(), dataDb: try! dataDbURLHelper(), walletBirthday: Self.birthdayHeight, network: kZcashNetwork)
+        CompactBlockProcessor.Configuration(
+            cacheDb: try! cacheDbURLHelper(),
+            dataDb: try! dataDbURLHelper(),
+            walletBirthday: Self.birthdayHeight,
+            network: kZcashNetwork
+        )
     }()
     
     static var endpoint: LightWalletEndpoint {
@@ -29,14 +34,11 @@ enum DemoAppConfig {
     }
 }
 
-
 extension ZcashSDK {
     static var isMainnet: Bool {
         switch kZcashNetwork.networkType {
-        case .mainnet:
-            return true
-        case .testnet:
-            return false
+        case .mainnet:  return true
+        case .testnet:  return false
         }
     }
 }

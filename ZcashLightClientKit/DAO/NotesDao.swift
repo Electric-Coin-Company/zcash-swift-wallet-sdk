@@ -9,7 +9,6 @@ import Foundation
 import SQLite
 
 struct ReceivedNote: ReceivedNoteEntity, Codable {
-    
     enum CodingKeys: String, CodingKey {
         case id = "id_note"
         case diversifier
@@ -37,10 +36,9 @@ struct ReceivedNote: ReceivedNoteEntity, Codable {
 }
 
 class ReceivedNotesSQLDAO: ReceivedNoteRepository {
-    
-    var dbProvider: ConnectionProvider
-    
     let table = Table("received_notes")
+
+    var dbProvider: ConnectionProvider
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
@@ -53,22 +51,27 @@ class ReceivedNotesSQLDAO: ReceivedNoteRepository {
     func receivedNote(byRawTransactionId: Data) throws -> ReceivedNoteEntity? {
         let transactions = Table("transactions")
         let idTx = Expression<Int>("id_tx")
-        let tx = Expression<Int>("tx")
+        let transaction = Expression<Int>("tx")
         let txid = Expression<Blob>("txid")
-        let joinStatement = table.join(.inner,
-                                       transactions,
-                                       on: transactions[idTx] == table[tx])
-                                .where(transactions[txid] == Blob(bytes: byRawTransactionId.bytes))
-                                .limit(1)
+        let joinStatement = table
+            .join(
+                .inner,
+                transactions,
+                on: transactions[idTx] == table[transaction]
+            )
+            .where(transactions[txid] == Blob(bytes: byRawTransactionId.bytes))
+            .limit(1)
         
-        return try dbProvider.connection().prepare(joinStatement).map({ (row) -> ReceivedNote in
-        try row.decode()
-        }).first
+        return try dbProvider.connection()
+            .prepare(joinStatement)
+            .map { row -> ReceivedNote in
+                try row.decode()
+            }
+            .first
     }
 }
 
 struct SentNote: SentNoteEntity, Codable {
-    
     enum CodingKeys: String, CodingKey {
         case id = "id_note"
         case transactionId = "tx"
@@ -89,8 +92,9 @@ struct SentNote: SentNoteEntity, Codable {
 }
 
 class SentNotesSQLDAO: SentNotesRepository {
-    var dbProvider: ConnectionProvider
     let table = Table("sent_notes")
+
+    var dbProvider: ConnectionProvider
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
@@ -103,19 +107,26 @@ class SentNotesSQLDAO: SentNotesRepository {
     func sentNote(byRawTransactionId: Data) throws -> SentNoteEntity? {
         let transactions = Table("transactions")
         let idTx = Expression<Int>("id_tx")
-        let tx = Expression<Int>("tx")
+        let transaction = Expression<Int>("tx")
         let txid = Expression<Blob>("txid")
-        let joinStatement = table.join(.inner,
-                                       transactions,
-                                       on: transactions[idTx] == table[tx])
-                                .where(transactions[txid] == Blob(bytes: byRawTransactionId.bytes))
-                                .limit(1)
-        return try dbProvider.connection().prepare(joinStatement).map({ (row) -> SentNote in
-            try row.decode()
-            }).first
-//        try dbProvider.connection().run("""
-//            SELECT sent_notes.id_note as id,
-//                sent_notes.tx as transactionId,
+        let joinStatement = table
+            .join(
+                .inner,
+                transactions,
+                on: transactions[idTx] == table[transaction]
+            )
+            .where(transactions[txid] == Blob(bytes: byRawTransactionId.bytes))
+            .limit(1)
+
+        return try dbProvider.connection()
+            .prepare(joinStatement)
+            .map { row -> SentNote in
+                try row.decode()
+            }
+            .first
+        //        try dbProvider.connection().run("""
+        //            SELECT sent_notes.id_note as id,
+        //                sent_notes.tx as transactionId,
 //                sent_notes.output_index as outputIndex,
 //                sent_notes.account as account,
 //                sent_notes.address as address,

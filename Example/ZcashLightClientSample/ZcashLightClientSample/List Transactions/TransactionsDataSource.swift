@@ -9,8 +9,8 @@
 import Foundation
 import UIKit
 import ZcashLightClientKit
-class TransactionsDataSource: NSObject, UITableViewDataSource {
-    
+
+class TransactionsDataSource: NSObject {
     enum TransactionType {
         case pending
         case sent
@@ -21,30 +21,17 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
     
     static let cellIdentifier = "TransactionCell"
     
-    private var status: TransactionType
+    // swiftlint:disable:next implicitly_unwrapped_optional
     var synchronizer: Synchronizer!
-    var transactions = [TransactionDetailModel]()
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return transactions.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
-        
-        let tx = transactions[indexPath.row]
-        cell.detailTextLabel?.text = tx.id ?? "no id"
-        cell.textLabel?.text = tx.created ?? "No date"
-        
-        return cell
-    }
-    
-    
+    var transactions: [TransactionDetailModel] = []
+
+    private var status: TransactionType
+
     init(status: TransactionType, synchronizer: Synchronizer) {
         self.status = status
         self.synchronizer = synchronizer
     }
-    
+
     func load() {
         switch status {
         case .pending:
@@ -64,12 +51,33 @@ class TransactionsDataSource: NSObject, UITableViewDataSource {
                 TransactionDetailModel(confirmedTransaction: $0)
             }
         case .all:
-            transactions = (synchronizer.pendingTransactions.map { $0.transactionEntity } +
-                synchronizer.clearedTransactions.map { $0.transactionEntity }).map { TransactionDetailModel(transaction: $0)}
-        }        
+            transactions = (
+                synchronizer.pendingTransactions.map { $0.transactionEntity } +
+                synchronizer.clearedTransactions.map { $0.transactionEntity }
+            )
+            .map { TransactionDetailModel(transaction: $0) }
+        }
     }
     
-    func transactionString(_ tx: TransactionEntity) -> String {
-        tx.transactionId.toHexStringTxId()
+    func transactionString(_ transcation: TransactionEntity) -> String {
+        transcation.transactionId.toHexStringTxId()
+    }
+}
+
+// MARK: - UITableViewDataSource
+
+extension TransactionsDataSource: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return transactions.count
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
+
+        let transaction = transactions[indexPath.row]
+        cell.detailTextLabel?.text = transaction.id ?? "no id"
+        cell.textLabel?.text = transaction.created ?? "No date"
+
+        return cell
     }
 }

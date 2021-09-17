@@ -13,7 +13,6 @@ enum CompactBlockValidationError: Error {
     case failedWithError(_ error: Error?)
 }
 class CompactBlockValidationOperation: ZcashOperation {
-    
     override var isConcurrent: Bool { false }
     
     override var isAsynchronous: Bool { false }
@@ -24,10 +23,12 @@ class CompactBlockValidationOperation: ZcashOperation {
     private var dataDb: URL
     private var network: NetworkType
     
-    init(rustWelding: ZcashRustBackendWelding.Type,
-         cacheDb: URL,
-         dataDb: URL,
-         networkType: NetworkType) {
+    init(
+        rustWelding: ZcashRustBackendWelding.Type,
+        cacheDb: URL,
+        dataDb: URL,
+        networkType: NetworkType
+    ) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
@@ -40,8 +41,11 @@ class CompactBlockValidationOperation: ZcashOperation {
             cancel()
             return
         }
+
         self.startedHandler?()
+
         let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb, networkType: self.network)
+
         switch result {
         case 0:
             let error = CompactBlockValidationError.failedWithError(rustBackend.lastError())
@@ -51,6 +55,7 @@ class CompactBlockValidationOperation: ZcashOperation {
             
         case ZcashRustBackendWeldingConstants.validChain:
             break
+            
         default:
             let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))
             self.error = error

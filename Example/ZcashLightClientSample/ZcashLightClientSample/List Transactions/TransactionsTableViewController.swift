@@ -8,8 +8,8 @@
 
 import UIKit
 import ZcashLightClientKit
+
 class TransactionsTableViewController: UITableViewController {
-    
     var datasource: TransactionsDataSource? {
         didSet {
             self.tableView.dataSource = datasource
@@ -21,55 +21,53 @@ class TransactionsTableViewController: UITableViewController {
     }
     
     var selectedTx: TransactionDetailModel?
-    
+    var selectedRow: Int?
+
     override func viewDidLoad() {
         super.viewDidLoad()
         self.tableView.dataSource = datasource
         datasource?.load()
         self.tableView.reloadData()
     }
+}
 
-    // MARK: - Table view data source
+// MARK: - UITableViewDataSource
 
+extension TransactionsTableViewController {
     override func numberOfSections(in tableView: UITableView) -> Int {
         // #warning Incomplete implementation, return the number of sections
-        return 0
+        0
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return 0
+        0
     }
-    
-    var selectedRow: Int?
+
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         selectedRow = indexPath.row
-        
+
         tableView.deselectRow(at: indexPath, animated: true)
-        
+
         if shouldPerformSegue(withIdentifier: "TransactionDetail", sender: self) {
             performSegue(withIdentifier: "TransactionDetail", sender: self)
         }
     }
-    
+
     override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool {
-        if identifier == "TransactionDetail",
-            let row = selectedRow,
-            let tx = datasource?.transactions[row] {
-            selectedTx = tx
+        if identifier == "TransactionDetail", let row = selectedRow, let transaction = datasource?.transactions[row] {
+            selectedTx = transaction
             return true
-            
         }
         return false
     }
-    
+
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if let destination = segue.destination as? TransactionDetailViewController, let tx = selectedTx {
-            destination.model = tx
+        if let destination = segue.destination as? TransactionDetailViewController, let transaction = selectedTx {
+            destination.model = transaction
             selectedTx = nil
             selectedRow = nil
         }
     }
-
 }
  

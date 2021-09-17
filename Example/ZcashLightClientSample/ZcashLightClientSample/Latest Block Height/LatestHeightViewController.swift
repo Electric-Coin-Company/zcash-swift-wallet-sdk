@@ -10,7 +10,6 @@ import UIKit
 import ZcashLightClientKit
 
 class LatestHeightViewController: UIViewController {
-    
     @IBOutlet weak var blockHeightLabel: UILabel!
     
     var service: LightWalletService = LightWalletGRPCService(endpoint: DemoAppConfig.endpoint)
@@ -29,12 +28,14 @@ class LatestHeightViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        service.latestBlockHeight { (result) in
+
+        service.latestBlockHeight { result in
             switch result {
             case .success(let height):
                 DispatchQueue.main.async { [weak self] in
                     self?.model = height
                 }
+
             case .failure(let error):
                 DispatchQueue.main.async { [weak self] in
                     self?.fail(error)
@@ -47,6 +48,7 @@ class LatestHeightViewController: UIViewController {
         guard let model = self.model else {
             return
         }
+        
         blockHeightLabel.text = String(model)
     }
     

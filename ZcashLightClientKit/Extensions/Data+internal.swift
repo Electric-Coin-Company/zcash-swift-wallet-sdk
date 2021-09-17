@@ -14,7 +14,7 @@ extension String {
             .map {
                 $0.reversed()
             }
-            .forEach { (reversed) in
+            .forEach { reversed in
                 id.append(String(reversed))
             }
         return id
