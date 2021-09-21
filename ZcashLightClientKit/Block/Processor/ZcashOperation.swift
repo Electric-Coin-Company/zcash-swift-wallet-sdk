@@ -21,7 +21,7 @@ class ZcashOperation: Operation {
     var startedHandler: ZcashOperationStartedBlock?
     var errorHandler: ZcashOperationErrorBlock?
     var completionHandler: ZcashOperationCompletionBlock?
-    var handlerDispatchQueue: DispatchQueue = DispatchQueue.main
+    var handlerDispatchQueue = DispatchQueue.main
     
     override init() {
         super.init()

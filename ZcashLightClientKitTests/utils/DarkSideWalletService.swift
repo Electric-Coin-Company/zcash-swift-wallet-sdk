@@ -161,7 +161,7 @@ class DarksideWalletService: LightWalletService {
         var txs = [RawTransaction]()
         let response = try darksideService.getIncomingTransactions(Empty(), handler: { txs.append($0) }).status.wait()
         switch response.code {
-        case .ok:
+        case .success:
             return txs.count > 0 ? txs : nil
         default:
             throw response

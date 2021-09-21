@@ -9,13 +9,10 @@
 import Foundation
 
 class CompactBlockDownloadOperation: ZcashOperation {
-    
     override var isConcurrent: Bool { false }
-    
     override var isAsynchronous: Bool { false }
     
     private var downloader: CompactBlockDownloading
-    
     private var range: CompactBlockRange
     
     required init(downloader: CompactBlockDownloading, range: CompactBlockRange) {
@@ -48,8 +45,8 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     enum CompactBlockStreamDownloadOperationError: Error {
         case startHeightMissing
     }
+
     override var isConcurrent: Bool { false }
-    
     override var isAsynchronous: Bool { false }
     
     private var storage: CompactBlockStorage
@@ -58,13 +55,16 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     private var cancelable: CancellableCall?
     private var startHeight: BlockHeight?
     private var targetHeight: BlockHeight?
+
     private weak var progressDelegate: CompactBlockProgressDelegate?
-    required init(service: LightWalletService,
-                  storage: CompactBlockStorage,
-                  startHeight: BlockHeight? = nil,
-                  targetHeight: BlockHeight? = nil,
-                  progressDelegate: CompactBlockProgressDelegate? = nil) {
-        
+
+    required init(
+        service: LightWalletService,
+        storage: CompactBlockStorage,
+        startHeight: BlockHeight? = nil,
+        targetHeight: BlockHeight? = nil,
+        progressDelegate: CompactBlockProgressDelegate? = nil
+    ) {
         self.storage = storage
         self.service = service
         self.startHeight = startHeight
@@ -74,6 +74,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
         self.name = "Download Stream Operation"
     }
     
+    // swiftlint:disable cyclomatic_complexity
     override func main() {
         guard !shouldCancel() else {
             cancel()
@@ -90,11 +91,11 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             let latestDownloaded = try storage.latestHeight()
             let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
             
-            self.cancelable = self.service.blockStream(startHeight: startHeight, endHeight: latestHeight) { [weak self] result in
-                switch result {
-                case .success(let r):
-                    switch r {
-                    case .ok:
+            self.cancelable = self.service.blockStream(startHeight: startHeight, endHeight: latestHeight) { [weak self] blockResult in
+                switch blockResult {
+                case .success(let result):
+                    switch result {
+                    case .success:
                         self?.done = true
                         return
                     case .error(let e):
@@ -125,6 +126,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             self.fail(error: error)
         }
     }
+
     override func fail(error: Error? = nil) {
         self.cancelable?.cancel()
         super.fail(error: error)
@@ -141,8 +143,8 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
         case startHeightMissing
         case batchDownloadFailed(range: CompactBlockRange, error: Error?)
     }
+
     override var isConcurrent: Bool { false }
-    
     override var isAsynchronous: Bool { false }
     
     private var batch: Int
@@ -152,7 +154,9 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
     private var cancelable: CancellableCall?
     private var startHeight: BlockHeight
     private var targetHeight: BlockHeight
+
     private weak var progressDelegate: CompactBlockProgressDelegate?
+
     required init(
         service: LightWalletService,
         storage: CompactBlockStorage,
@@ -188,7 +192,15 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
             }
             
             var currentHeight = startHeight
-            self.progressDelegate?.progressUpdated(.download(BlockProgress(startHeight: currentHeight, targetHeight: targetHeight, progressHeight: currentHeight)))
+            self.progressDelegate?.progressUpdated(
+                .download(
+                    BlockProgress(
+                        startHeight: currentHeight,
+                        targetHeight: targetHeight,
+                        progressHeight: currentHeight
+                    )
+                )
+            )
             
             while !isCancelled && currentHeight <= targetHeight {
                 var retries = 0
@@ -208,6 +220,7 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
                         retries += 1
                     }
                 } while !isCancelled && !success && retries < maxRetries
+
                 if retries >= maxRetries {
                     throw CompactBlockBatchDownloadOperationError.batchDownloadFailed(range: range, error: localError)
                 }
@@ -221,23 +234,25 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
                         )
                     )
                 )
+
                 currentHeight = range.upperBound + 1
             }
         } catch {
             self.fail(error: error)
         }
     }
-    
-    func nextRange(currentHeight: BlockHeight, targetHeight: BlockHeight) -> CompactBlockRange {
-        CompactBlockRange(uncheckedBounds: (lower: currentHeight, upper: min(currentHeight + batch, targetHeight)))
-    }
+
     override func fail(error: Error? = nil) {
         self.cancelable?.cancel()
         super.fail(error: error)
     }
-    
+
     override func cancel() {
         self.cancelable?.cancel()
         super.cancel()
+    }
+
+    func nextRange(currentHeight: BlockHeight, targetHeight: BlockHeight) -> CompactBlockRange {
+        CompactBlockRange(uncheckedBounds: (lower: currentHeight, upper: min(currentHeight + batch, targetHeight)))
     }
 }

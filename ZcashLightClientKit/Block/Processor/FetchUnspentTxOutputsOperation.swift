@@ -6,14 +6,14 @@
 //
 
 import Foundation
+
 class FetchUnspentTxOutputsOperation: ZcashOperation {
-    
     enum FetchUTXOError: Error {
         case clearingFailed(_ error: Error?)
         case fetchFailed(error: Error)
     }
+
     override var isConcurrent: Bool { false }
-    
     override var isAsynchronous: Bool { false }
     
     var fetchedUTXOsHandler: ((RefreshedUTXOs) -> Void)?
@@ -25,12 +25,14 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
     private var network: NetworkType
     private var dataDb: URL
     
-    init(accountRepository: AccountRepository,  
-         downloader: CompactBlockDownloading,
-         rustbackend: ZcashRustBackendWelding.Type,
-         dataDb: URL,
-         startHeight: BlockHeight,
-         networkType: NetworkType) {
+    init(
+        accountRepository: AccountRepository,
+        downloader: CompactBlockDownloading,
+        rustbackend: ZcashRustBackendWelding.Type,
+        dataDb: URL,
+        startHeight: BlockHeight,
+        networkType: NetworkType
+    ) {
         self.dataDb = dataDb
         self.accountRepository = accountRepository
         self.downloader = downloader
@@ -44,18 +46,20 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
             cancel()
             return
         }
+
         self.startedHandler?()
+
         do {
             let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
             do {
                 for tAddress in tAddresses {
-                    guard try self.rustbackend.clearUtxos(dbData: dataDb,
-                                                          address: tAddress,
-                                                          sinceHeight: startHeight - 1,
-                                                          networkType: network) >= 0 else {
-                        let rustError = rustbackend.lastError() ?? RustWeldingError.genericError(message: "attempted to clear utxos but -1 was returned")
-                        
-                        throw rustError
+                    guard try self.rustbackend.clearUtxos(
+                        dbData: dataDb,
+                        address: tAddress,
+                        sinceHeight: startHeight - 1,
+                        networkType: network
+                    ) >= 0 else {
+                        throw rustbackend.lastError() ?? RustWeldingError.genericError(message: "attempted to clear utxos but -1 was returned")
                     }
                 }
             } catch {
@@ -67,16 +71,15 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
             let result = storeUTXOs(utxos, in: dataDb)
             
             self.fetchedUTXOsHandler?(result)
-            
         } catch {
             self.fail(error: error)
         }
-        
     }
     
-    fileprivate func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) -> RefreshedUTXOs {
-        var refreshed = [UnspentTransactionOutputEntity]()
-        var skipped = [UnspentTransactionOutputEntity]()
+    private func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) -> RefreshedUTXOs {
+        var refreshed: [UnspentTransactionOutputEntity] = []
+        var skipped: [UnspentTransactionOutputEntity] = []
+
         for utxo in utxos {
             do {
                 try self.rustbackend.putUnspentTransparentOutput(
@@ -87,12 +90,14 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
                     script: utxo.script.bytes,
                     value: Int64(utxo.valueZat),
                     height: utxo.height,
-                    networkType: network) ? refreshed.append(utxo) : skipped.append(utxo)
+                    networkType: network
+                ) ? refreshed.append(utxo) : skipped.append(utxo)
             } catch {
                 LoggerProxy.error("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
             }
         }
+
         return (inserted: refreshed, skipped: skipped)
     }
 }

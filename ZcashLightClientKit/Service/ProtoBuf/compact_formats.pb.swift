@@ -11,7 +11,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or https://www.opensource.org/licenses/mit-license.php .
 
-// swiftlint:disable all
 import Foundation
 import SwiftProtobuf
 

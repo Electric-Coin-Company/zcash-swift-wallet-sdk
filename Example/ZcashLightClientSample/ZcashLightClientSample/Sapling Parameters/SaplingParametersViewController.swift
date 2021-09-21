@@ -8,16 +8,19 @@
 
 import UIKit
 import ZcashLightClientKit
+
+// swiftlint:disable force_try
 class SaplingParametersViewController: UIViewController {
     @IBOutlet weak var outputPath: UILabel!
     @IBOutlet weak var spendPath: UILabel!
     @IBOutlet weak var downloadButton: UIButton!
     @IBOutlet weak var deleteButton: UIButton!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         let spendParamPath = try! spendParamsURLHelper().path
         let outputParamPath = try! outputParamsURLHelper().path
-        // Do any additional setup after loading the view.
+
         self.spendPath.text = spendParamPath
         self.outputPath.text = outputParamPath
         self.updateColor()
@@ -28,30 +31,47 @@ class SaplingParametersViewController: UIViewController {
         
         self.updateButtons()
     }
+
     func updateButtons() {
         let spendParamPath = try! spendParamsURLHelper().path
         let outputParamPath = try! outputParamsURLHelper().path
         self.downloadButton.isHidden = fileExists(outputParamPath) && fileExists(spendParamPath)
         self.deleteButton.isHidden = !(fileExists(outputParamPath) || fileExists(spendParamPath))
     }
+
     func updateColor() {
         let spendParamPath = try! spendParamsURLHelper().path
         let outputParamPath = try! outputParamsURLHelper().path
         self.spendPath.textColor = fileExists(spendParamPath) ? UIColor.green : UIColor.red
         self.outputPath.textColor = fileExists(outputParamPath) ? UIColor.green : UIColor.red
     }
+
     @objc func spendPathTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard:\(self.spendPath.text ?? "")")
+
         UIPasteboard.general.string = self.spendPath.text
-        let alert = UIAlertController(title: "", message: "Path Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+
+        let alert = UIAlertController(
+            title: "",
+            message: "Path Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
     @objc func outputPathTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard:\(self.outputPath.text ?? "")")
+
         UIPasteboard.general.string = self.outputPath.text
-        let alert = UIAlertController(title: "", message: "Path Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+
+        let alert = UIAlertController(
+            title: "",
+            message: "Path Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
@@ -59,21 +79,25 @@ class SaplingParametersViewController: UIViewController {
     @IBAction func download(_ sender: Any) {
         let outputParameter = try! outputParamsURLHelper()
         let spendParameter = try! spendParamsURLHelper()
-        SaplingParameterDownloader.downloadParamsIfnotPresent(spendURL: spendParameter, outputURL: outputParameter) { (result) in
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                switch result {
-                case .success(let urls):
-                    self.spendPath.text = urls.spend.path
-                    self.outputPath.text = urls.output.path
-                    self.updateColor()
-                    self.updateButtons()
-                    
-                case .failure(let error):
-                    self.showError(error)
+        SaplingParameterDownloader.downloadParamsIfnotPresent(
+            spendURL: spendParameter,
+            outputURL: outputParameter,
+            result: { result in
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    switch result {
+                    case .success(let urls):
+                        self.spendPath.text = urls.spend.path
+                        self.outputPath.text = urls.output.path
+                        self.updateColor()
+                        self.updateButtons()
+
+                    case .failure(let error):
+                        self.showError(error)
+                    }
                 }
             }
-        }
+        )
     }
     
     func fileExists(_ path: String) -> Bool {
@@ -81,7 +105,12 @@ class SaplingParametersViewController: UIViewController {
     }
     
     func showError(_ error: Error) {
-        let alert = UIAlertController(title: "Download Failed", message: "\(error)", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(
+            title: "Download Failed",
+            message: "\(error)",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }

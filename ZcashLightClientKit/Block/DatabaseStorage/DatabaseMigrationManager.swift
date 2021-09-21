@@ -21,120 +21,73 @@ class MigrationManager {
     enum PendingDbMigration: Int32 {
         case none = 0
     }
+
+    static let latestDataDbMigrationVersion: Int32 = DataDbMigrations.version1.rawValue
+    static let latestCacheDbMigrationVersion: Int32 = CacheDbMigration.none.rawValue
+    static let latestPendingDbMigrationVersion: Int32 = PendingDbMigration.none.rawValue
     
     var cacheDb: ConnectionProvider
     var dataDb: ConnectionProvider
     var pendingDb: ConnectionProvider
     var network: NetworkType
-    init(cacheDbConnection: ConnectionProvider,
-         dataDbConnection: ConnectionProvider,
-         pendingDbConnection: ConnectionProvider,
-         networkType: NetworkType) {
+
+    init(
+        cacheDbConnection: ConnectionProvider,
+        dataDbConnection: ConnectionProvider,
+        pendingDbConnection: ConnectionProvider,
+        networkType: NetworkType
+    ) {
         self.cacheDb = cacheDbConnection
         self.dataDb = dataDbConnection
         self.pendingDb = pendingDbConnection
         self.network = networkType
     }
-    
-    static let latestDataDbMigrationVersion: Int32 = DataDbMigrations.version1.rawValue
-    static let latestCacheDbMigrationVersion: Int32 = CacheDbMigration.none.rawValue
-    static let latestPendingDbMigrationVersion: Int32 = PendingDbMigration.none.rawValue
-    
+
     func performMigration(uvks: [UnifiedViewingKey]) throws {
         try migrateDataDb(uvks: uvks)
         try migrateCacheDb()
         try migratePendingDb()
     }
-    
-    fileprivate func migratePendingDb() throws {
-        let currentPendingDbVersion = try pendingDb.connection().getUserVersion()
-        
-        LoggerProxy.debug("Attempting to perform migration for pending Db - currentVersion: \(currentPendingDbVersion). Latest version is: \(Self.latestPendingDbMigrationVersion)")
-        
-        if currentPendingDbVersion < Self.latestPendingDbMigrationVersion {
-            // perform no migration just adjust the version number
-            try self.cacheDb.connection().setUserVersion(PendingDbMigration.none.rawValue)
-        } else {
-            LoggerProxy.debug("PendingDb Db - no migration needed")
-        }
-    }
-    
-    private func migrateCacheDb() throws {
-        let currentCacheDbVersion = try cacheDb.connection().getUserVersion()
-        
-        LoggerProxy.debug("Attempting to perform migration for cache Db - currentVersion: \(currentCacheDbVersion). Latest version is: \(Self.latestCacheDbMigrationVersion)")
-        
-        if currentCacheDbVersion < Self.latestCacheDbMigrationVersion {
-            // perform no migration just adjust the version number
-            try self.cacheDb.connection().setUserVersion(CacheDbMigration.none.rawValue)
-        } else {
-            LoggerProxy.debug("Cache Db - no migration needed")
-        }
-    }
-    
-    private func migrateDataDb(uvks: [UnifiedViewingKey]) throws {
-        let currentDataDbVersion = try dataDb.connection().getUserVersion()
-        LoggerProxy.debug(
-            "Attempting to perform migration for data Db - currentVersion: \(currentDataDbVersion). Latest version is: \(Self.latestDataDbMigrationVersion)" // swiftlint:disable line_length
-        )
-        
-        if currentDataDbVersion < Self.latestDataDbMigrationVersion {
-            for dbVersion in (currentDataDbVersion + 1) ... Self.latestDataDbMigrationVersion {
-                guard let version = DataDbMigrations.init(rawValue: dbVersion) else {
-                    LoggerProxy.error("failed to determine migration version")
-                    throw StorageError.invalidMigrationVersion(version: dbVersion)
-                }
-                switch version {
-                case .version1:
-                    try performVersion1Migration(viewingKeys: uvks)
-                case .none:
-                    break
-                }
-            }
-        } else {
-            LoggerProxy.debug("Data Db - no migration needed")
-        }
-    }
-    
+
     func performVersion1Migration(viewingKeys: [UnifiedViewingKey]) throws {
-        LoggerProxy.debug(
-            "Starting migration version 1 from viewing Keys"
-        )
+        LoggerProxy.debug("Starting migration version 1 from viewing Keys")
         let db = try self.dataDb.connection()
        
         let placeholder = "deriveMe"
-        let migrationStatement = """
-                    BEGIN TRANSACTION;
-                    PRAGMA foreign_keys = OFF;
-                    DROP TABLE utxos;
-                    CREATE TABLE IF NOT EXISTS utxos(
-                                id_utxo INTEGER PRIMARY KEY,
-                                address TEXT NOT NULL,
-                                prevout_txid BLOB NOT NULL,
-                                prevout_idx INTEGER NOT NULL,
-                                script BLOB NOT NULL,
-                                value_zat INTEGER NOT NULL,
-                                height INTEGER NOT NULL,
-                                spent_in_tx INTEGER,
-                                FOREIGN KEY (spent_in_tx) REFERENCES transactions(id_tx),
-                                CONSTRAINT tx_outpoint UNIQUE (prevout_txid, prevout_idx));
-                    
-                    CREATE TABLE IF NOT EXISTS accounts_new (
-                                account INTEGER PRIMARY KEY,
-                                extfvk TEXT NOT NULL,
-                                address TEXT NOT NULL,
-                                transparent_address TEXT NOT NULL
-                            );
+        let migrationStatement =
+            """
+                BEGIN TRANSACTION;
+                PRAGMA foreign_keys = OFF;
+                DROP TABLE utxos;
+                CREATE TABLE IF NOT EXISTS utxos(
+                    id_utxo INTEGER PRIMARY KEY,
+                    address TEXT NOT NULL,
+                    prevout_txid BLOB NOT NULL,
+                    prevout_idx INTEGER NOT NULL,
+                    script BLOB NOT NULL,
+                    value_zat INTEGER NOT NULL,
+                    height INTEGER NOT NULL,
+                    spent_in_tx INTEGER,
+                    FOREIGN KEY (spent_in_tx) REFERENCES transactions(id_tx),
+                    CONSTRAINT tx_outpoint UNIQUE (prevout_txid, prevout_idx)
+                );
 
-                    INSERT INTO accounts_new SELECT account, extfvk, address, '\(placeholder)' FROM accounts;
-                    DROP TABLE accounts;
+                CREATE TABLE IF NOT EXISTS accounts_new (
+                    account INTEGER PRIMARY KEY,
+                    extfvk TEXT NOT NULL,
+                    address TEXT NOT NULL,
+                    transparent_address TEXT NOT NULL
+                );
 
-                    ALTER TABLE accounts_new RENAME TO accounts;
+                INSERT INTO accounts_new SELECT account, extfvk, address, '\(placeholder)' FROM accounts;
+                DROP TABLE accounts;
 
-                    PRAGMA user_version = 1;
-                    PRAGMA foreign_keys = ON;
-                    COMMIT TRANSACTION;
-                    """
+                ALTER TABLE accounts_new RENAME TO accounts;
+
+                PRAGMA user_version = 1;
+                PRAGMA foreign_keys = ON;
+                COMMIT TRANSACTION;
+            """
         LoggerProxy.debug("db.execute(\"\(migrationStatement)\")")
         try db.execute(migrationStatement)
             
@@ -158,21 +111,23 @@ class MigrationManager {
             LoggerProxy.debug(message)
             throw StorageError.migrationFailedWithMessage(message: message)
         }
+
         let derivationTool = DerivationTool(networkType: self.network)
         
         for tuple in zip(accounts, viewingKeys) {
             let tAddr = try derivationTool.deriveTransparentAddressFromPublicKey(tuple.1.extpub)
             var account = tuple.0
-                account.transparentAddress = tAddr
+            account.transparentAddress = tAddr
             try accountsDao.update(account)
         }
         
-//         sanity check
+        // sanity check
         guard try accountsDao.getAll().first(where: { $0.transparentAddress == placeholder }) == nil else {
             LoggerProxy.error("Accounts Migration performed but the transparent addresses were not derived")
             throw StorageError.migrationFailed(underlyingError: KeyDerivationErrors.unableToDerive)
         }
     }
+
     func performVersion1Migration(_ seedBytes: [UInt8]) throws {
         LoggerProxy.debug("Starting migration version 1")
         
@@ -191,6 +146,65 @@ class MigrationManager {
         let uvks = try derivationTool.deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)
         
         try performVersion1Migration(viewingKeys: uvks)
+    }
+}
+
+private extension MigrationManager {
+    func migratePendingDb() throws {
+        let currentPendingDbVersion = try pendingDb.connection().getUserVersion()
+
+        LoggerProxy.debug(
+            "Attempting to perform migration for pending Db - currentVersion: \(currentPendingDbVersion)." +
+            "Latest version is: \(Self.latestPendingDbMigrationVersion)"
+        )
+
+        if currentPendingDbVersion < Self.latestPendingDbMigrationVersion {
+            // perform no migration just adjust the version number
+            try self.cacheDb.connection().setUserVersion(PendingDbMigration.none.rawValue)
+        } else {
+            LoggerProxy.debug("PendingDb Db - no migration needed")
+        }
+    }
+
+    func migrateCacheDb() throws {
+        let currentCacheDbVersion = try cacheDb.connection().getUserVersion()
+
+        LoggerProxy.debug(
+            "Attempting to perform migration for cache Db - currentVersion: \(currentCacheDbVersion)." +
+            "Latest version is: \(Self.latestCacheDbMigrationVersion)"
+        )
+
+        if currentCacheDbVersion < Self.latestCacheDbMigrationVersion {
+            // perform no migration just adjust the version number
+            try self.cacheDb.connection().setUserVersion(CacheDbMigration.none.rawValue)
+        } else {
+            LoggerProxy.debug("Cache Db - no migration needed")
+        }
+    }
+
+    func migrateDataDb(uvks: [UnifiedViewingKey]) throws {
+        let currentDataDbVersion = try dataDb.connection().getUserVersion()
+        LoggerProxy.debug(
+            "Attempting to perform migration for data Db - currentVersion: \(currentDataDbVersion)." +
+            "Latest version is: \(Self.latestDataDbMigrationVersion)"
+        )
+
+        if currentDataDbVersion < Self.latestDataDbMigrationVersion {
+            for dbVersion in (currentDataDbVersion + 1) ... Self.latestDataDbMigrationVersion {
+                guard let version = DataDbMigrations.init(rawValue: dbVersion) else {
+                    LoggerProxy.error("failed to determine migration version")
+                    throw StorageError.invalidMigrationVersion(version: dbVersion)
+                }
+                switch version {
+                case .version1:
+                    try performVersion1Migration(viewingKeys: uvks)
+                case .none:
+                    break
+                }
+            }
+        } else {
+            LoggerProxy.debug("Data Db - no migration needed")
+        }
     }
 }
 

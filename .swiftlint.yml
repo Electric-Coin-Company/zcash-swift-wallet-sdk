@@ -2,11 +2,12 @@
 # https://github.com/raywenderlich/swift-style-guide
 
 excluded:
-  - Example
   - Pods
   - ZcashLightClientKitTests
+  - ZcashLightClientKit/Service/ProtoBuf
 
-included: 
+included:
+  - Example/ZcashLightClientSample/ZcashLIghtClientSample
   - ZcashLightClientKit
 
 disabled_rules:
@@ -15,7 +16,7 @@ disabled_rules:
   - todo
   - unused_capture_list
   - nesting # allow for types to be nested, common pattern in Swift
-  - multiple_closures_with_trailing_closure 
+  - multiple_closures_with_trailing_closure
   - generic_type_name # allow for arbitrarily long generic type names
 
 opt_in_rules:
@@ -114,15 +115,14 @@ legacy_hashing: error
 
 identifier_name:
   excluded:
-    - i
     - id
-    - x
-    - y
-    - z
     - db
-    - n
+    - nf
     - e
-    - r
+    - at
+    - lhs
+    - rhs
+    - ok
 
 indentation_width:
   indentation_width: 4
@@ -149,4 +149,4 @@ trailing_whitespace:
   ignores_comments: true
 
 vertical_whitespace:
-  max_empty_lines: 2
+  max_empty_lines: 1

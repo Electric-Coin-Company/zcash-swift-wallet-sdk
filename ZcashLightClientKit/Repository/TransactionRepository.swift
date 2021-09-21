@@ -18,7 +18,7 @@ protocol TransactionRepository {
     func findBy(id: Int) throws -> TransactionEntity?
     func findBy(rawId: Data) throws -> TransactionEntity?
     func findAllSentTransactions(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
-    func findAllReceivedTransactions(offset: Int, limit: Int) throws ->  [ConfirmedTransactionEntity]?
+    func findAllReceivedTransactions(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
     func findAll(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
     func findAll(from: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
     func lastScannedHeight() throws -> BlockHeight

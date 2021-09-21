@@ -7,7 +7,8 @@
 
 import Foundation
 import SQLite
-struct TransactionBuilder {
+
+enum TransactionBuilder {
     enum ConfirmedColumns: Int {
         case id
         case minedHeight
@@ -44,52 +45,54 @@ struct TransactionBuilder {
     }
     
     static func createTransactionEntity(txId: Data, rawTransaction: RawTransaction) -> TransactionEntity {
-        Transaction(id: nil,
-                    transactionId: txId,
-                    created: nil,
-                    transactionIndex: nil,
-                    expiryHeight: nil,
-                    minedHeight: Int(exactly: rawTransaction.height),
-                    raw: rawTransaction.data)
+        Transaction(
+            id: nil,
+            transactionId: txId,
+            created: nil,
+            transactionIndex: nil,
+            expiryHeight: nil,
+            minedHeight: Int(exactly: rawTransaction.height),
+            raw: rawTransaction.data
+        )
     }
     
     static func createTransactionEntity(from bindings: [Binding?]) -> TransactionEntity? {
-        guard
-            let txId = bindings[TransactionEntityColumns.txid.rawValue] as? Blob
-            else {
-                return nil
+        guard let txId = bindings[TransactionEntityColumns.txid.rawValue] as? Blob else {
+            return nil
         }
-        var rawData: Data? = nil
+
+        var rawData: Data?
         if let raw = bindings[TransactionEntityColumns.raw.rawValue] as? Blob {
             rawData = Data(blob: raw)
         }
-        return Transaction(id: bindings[TransactionEntityColumns.id.rawValue] as? Int,
-                           transactionId:  Data(blob: txId),
-                           created: nil,
-                           transactionIndex: bindings[TransactionEntityColumns.txIndex.rawValue] as? Int,
-                           expiryHeight: bindings[TransactionEntityColumns.expiryHeight.rawValue] as? Int,
-                           minedHeight: bindings[TransactionEntityColumns.minedHeight.rawValue] as? Int,
-                           raw: rawData)
+
+        return Transaction(
+            id: bindings[TransactionEntityColumns.id.rawValue] as? Int,
+            transactionId: Data(blob: txId),
+            created: nil,
+            transactionIndex: bindings[TransactionEntityColumns.txIndex.rawValue] as? Int,
+            expiryHeight: bindings[TransactionEntityColumns.expiryHeight.rawValue] as? Int,
+            minedHeight: bindings[TransactionEntityColumns.minedHeight.rawValue] as? Int,
+            raw: rawData
+        )
     }
     
     static func createConfirmedTransaction(from bindings: [Binding?]) -> ConfirmedTransaction? {
-        guard let id = bindings[ConfirmedColumns.id.rawValue] as? Int64,
+        guard
+            let id = bindings[ConfirmedColumns.id.rawValue] as? Int64,
             let noteId = bindings[ConfirmedColumns.noteId.rawValue] as? Int64,
             let transactionIndex = bindings[ConfirmedColumns.transactionIndex.rawValue] as? Int64,
             let value = bindings[ConfirmedColumns.value.rawValue] as? Int64
-            else { return nil }
+        else { return nil }
         
         let minedHeight = bindings[ConfirmedColumns.minedHeight.rawValue] as? Int64 ?? -1
         let blockTimeInSeconds = bindings[ConfirmedColumns.blockTimeInSeconds.rawValue] as? Int64 ?? 0
         // Optional values
         
-        var toAddress: String?
-        if let to = bindings[ConfirmedColumns.toAddress.rawValue] as? String {
-            toAddress = to
-        }
-        
+        let toAddress = bindings[ConfirmedColumns.toAddress.rawValue] as? String
+
         var expiryHeight: BlockHeight?
-        if let expiry = bindings[ConfirmedColumns.expiryHeight.rawValue] as? Int64{
+        if let expiry = bindings[ConfirmedColumns.expiryHeight.rawValue] as? Int64 {
             expiryHeight = BlockHeight(expiry)
         }
         
@@ -108,17 +111,19 @@ struct TransactionBuilder {
             transactionId = Data(blob: txIdBlob)
         }
         
-        return ConfirmedTransaction(toAddress: toAddress,
-                                    expiryHeight: expiryHeight,
-                                    minedHeight: Int(minedHeight),
-                                    noteId: Int(noteId),
-                                    blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
-                                    transactionIndex: Int(transactionIndex),
-                                    raw: raw,
-                                    id: Int(id),
-                                    value: Int(value),
-                                    memo: memo,
-                                    rawTransactionId: transactionId)
+        return ConfirmedTransaction(
+            toAddress: toAddress,
+            expiryHeight: expiryHeight,
+            minedHeight: Int(minedHeight),
+            noteId: Int(noteId),
+            blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
+            transactionIndex: Int(transactionIndex),
+            raw: raw,
+            id: Int(id),
+            value: Int(value),
+            memo: memo,
+            rawTransactionId: transactionId
+        )
     }
     
     static func createReceivedTransaction(from bindings: [Binding?]) -> ConfirmedTransaction? {
@@ -146,16 +151,19 @@ struct TransactionBuilder {
         if let rawBlob = bindings[ReceivedColumns.raw.rawValue] as? Blob {
             rawData = Data(blob: rawBlob)
         }
-        return ConfirmedTransaction(toAddress: nil,
-                                    expiryHeight: nil,
-                                    minedHeight: Int(minedHeight),
-                                    noteId: Int(noteId),
-                                    blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
-                                    transactionIndex: Int(transactionIndex),
-                                    raw: rawData,
-                                    id: Int(id),
-                                    value: Int(value),
-                                    memo: memo,
-                                    rawTransactionId: transactionId)
+
+        return ConfirmedTransaction(
+            toAddress: nil,
+            expiryHeight: nil,
+            minedHeight: Int(minedHeight),
+            noteId: Int(noteId),
+            blockTimeInSeconds: TimeInterval(integerLiteral: blockTimeInSeconds),
+            transactionIndex: Int(transactionIndex),
+            raw: rawData,
+            id: Int(id),
+            value: Int(value),
+            memo: memo,
+            rawTransactionId: transactionId
+        )
     }
 }

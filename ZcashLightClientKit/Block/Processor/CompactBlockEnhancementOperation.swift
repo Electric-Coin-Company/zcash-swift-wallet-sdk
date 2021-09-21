@@ -14,29 +14,31 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         case decryptError(error: Error)
         case txIdNotFound(txId: Data)
     }
+
     override var isConcurrent: Bool { false }
-    
     override var isAsynchronous: Bool { false }
     
     var rustBackend: ZcashRustBackendWelding.Type
     var txFoundHandler: (([ConfirmedTransactionEntity], BlockRange) -> Void)?
     var downloader: CompactBlockDownloading
     var repository: TransactionRepository
+    var range: BlockRange
     var maxRetries: Int = 5
     var retries: Int = 0
+
     private(set) var network: NetworkType
-    weak var progressDelegate: CompactBlockProgressDelegate?
+    private weak var progressDelegate: CompactBlockProgressDelegate?
     private var dataDb: URL
     
-    var range: BlockRange
-    
-    init(rustWelding: ZcashRustBackendWelding.Type,
-         dataDb: URL,
-         downloader: CompactBlockDownloading,
-         repository: TransactionRepository,
-         range: BlockRange,
-         networkType: NetworkType,
-         progressDelegate: CompactBlockProgressDelegate? = nil) {
+    init(
+        rustWelding: ZcashRustBackendWelding.Type,
+        dataDb: URL,
+        downloader: CompactBlockDownloading,
+        repository: TransactionRepository,
+        range: BlockRange,
+        networkType: NetworkType,
+        progressDelegate: CompactBlockProgressDelegate? = nil
+    ) {
         rustBackend = rustWelding
         self.dataDb = dataDb
         self.downloader = downloader
@@ -44,6 +46,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         self.range = range
         self.progressDelegate = progressDelegate
         self.network = networkType
+
         super.init()
     }
     
@@ -52,9 +55,10 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             cancel()
             return
         }
+
         self.startedHandler?()
+
         // fetch transactions
-        
         do {
             guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), !transactions.isEmpty else {
                 LoggerProxy.debug("no transactions detected on range: \(range.printRange)")
@@ -63,8 +67,8 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             
             for index in 0 ..< transactions.count {
                 let transaction = transactions[index]
-                
                 var retry = true
+
                 while retry && self.retries < maxRetries {
                     do {
                         let confirmedTx = try enhance(transaction: transaction)
@@ -112,8 +116,10 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId())")
         
         let transaction = try downloader.fetchTransaction(txId: transaction.transactionId)
-        
-        LoggerProxy.debug("Decrypting and storing transaction id: \(transaction.transactionId.toHexStringTxId()) block: \(String(describing: transaction.minedHeight))")
+
+        let transactionID = transaction.transactionId.toHexStringTxId()
+        let block = String(describing: transaction.minedHeight)
+        LoggerProxy.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
         
         guard let rawBytes = transaction.raw?.bytes else {
             let error = EnhancementError.noRawData(
@@ -144,7 +150,7 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     }
 }
 
-fileprivate extension BlockRange {
+private extension BlockRange {
     var printRange: String {
         "\(self.start.height) ... \(self.end.height)"
     }
