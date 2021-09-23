@@ -16,7 +16,11 @@ struct TestDbHandle {
     
     init(originalDb: URL) {
         self.originalDb = originalDb
-        self.readWriteDb = FileManager.default.temporaryDirectory.appendingPathComponent(self.originalDb.lastPathComponent.appending("_\(Date().timeIntervalSince1970)")) // avoid files clashing because crashing tests failed to remove previous ones by incrementally changing the filename
+        // avoid files clashing because crashing tests failed to remove previous ones by incrementally changing the filename
+        self.readWriteDb = FileManager.default.temporaryDirectory
+            .appendingPathComponent(
+                self.originalDb.lastPathComponent.appending("_\(Date().timeIntervalSince1970)")
+            )
     }
     
     func setUp() throws {
@@ -32,8 +36,9 @@ struct TestDbHandle {
     }
 }
 
+// This requires reference semantics, an enum cannot be used
+// swiftlint:disable:next convenience_type
 class TestDbBuilder {
-    
     enum TestBuilderError: Error {
         case generalError
     }
@@ -41,18 +46,21 @@ class TestDbBuilder {
     static func inMemoryCompactBlockStorage() throws -> CompactBlockStorage {
         let compactBlockDao = CompactBlockStorage(connectionProvider: try InMemoryDbProvider())
         try compactBlockDao.createTable()
+
         return compactBlockDao
     }
     
     static func diskCompactBlockStorage(at url: URL) throws -> CompactBlockStorage {
         let compactBlockDao = CompactBlockStorage(connectionProvider: SimpleConnectionProvider(path: url.absoluteString))
         try compactBlockDao.createTable()
+
         return compactBlockDao
     }
     
     static func pendingTransactionsDbURL() throws -> URL {
         try __documentsDirectory().appendingPathComponent("pending.db")
     }
+
     static func prePopulatedCacheDbURL() -> URL? {
         Bundle(for: TestDbBuilder.self).url(forResource: "cache", withExtension: "db")
     }
@@ -65,6 +73,7 @@ class TestDbBuilder {
         let bundle = Bundle(for: TestDbBuilder.self)
         guard let url = bundle.url(forResource: "ZcashSdk_Data", withExtension: "db") else { return nil }
         let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
+
         return provider
     }
     
@@ -85,7 +94,6 @@ class TestDbBuilder {
     }
         
     static func seed(db: CompactBlockRepository, with blockRange: CompactBlockRange) throws {
-        
         guard let blocks = StubBlockCreator.createBlockRange(blockRange) else {
             throw TestBuilderError.generalError
         }
@@ -96,8 +104,8 @@ class TestDbBuilder {
 
 struct InMemoryDbProvider: ConnectionProvider {
     var readonly: Bool
-    
     var conn: Connection
+
     init(readonly: Bool = false) throws {
         self.readonly = readonly
         self.conn = try Connection(.inMemory, readonly: readonly)
@@ -108,7 +116,7 @@ struct InMemoryDbProvider: ConnectionProvider {
     }
 }
 
-struct StubBlockCreator {
+enum StubBlockCreator {
     static func createRandomDataBlock(with height: BlockHeight) -> ZcashCompactBlock? {
         guard let data = randomData(ofLength: 100) else {
             LoggerProxy.debug("error creating stub block")
@@ -116,9 +124,9 @@ struct StubBlockCreator {
         }
         return ZcashCompactBlock(height: height, data: data)
     }
+
     static func createBlockRange(_ range: CompactBlockRange) -> [ZcashCompactBlock]? {
-        
-        var blocks = [ZcashCompactBlock]()
+        var blocks: [ZcashCompactBlock] = []
         for height in range {
             guard let block = createRandomDataBlock(with: height) else {
                 return nil
@@ -136,8 +144,7 @@ struct StubBlockCreator {
             return Data(bytes: &bytes, count: bytes.count)
         }
         LoggerProxy.debug("Status \(status)")
+
         return nil
-        
     }
-    
 }

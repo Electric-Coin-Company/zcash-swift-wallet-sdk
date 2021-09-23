@@ -11,7 +11,9 @@ import GRPC
 import ZcashLightClientKit
 import XCTest
 import NIO
-class LightWalletEndpointBuilder {
+
+// swiftlint:disable identifier_name
+enum LightWalletEndpointBuilder {
     static var `default`: LightWalletEndpoint {
         LightWalletEndpoint(address: Constants.address, port: 9067, secure: false)
     }
@@ -29,23 +31,25 @@ class ChannelProvider {
     func channel(secure: Bool = false) -> GRPCChannel {
         let endpoint = LightWalletEndpointBuilder.default
         
-        let configuration = ClientConnection.Configuration(target: .hostAndPort(endpoint.host, endpoint.port), eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1), tls: secure ? .init() : nil)
+        let configuration = ClientConnection.Configuration(
+            target: .hostAndPort(endpoint.host, endpoint.port),
+            eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1),
+            tls: secure ? .init() : nil
+        )
+
         return ClientConnection(configuration: configuration)
-       
     }
 }
 
-struct MockDbInit {
-    @discardableResult static func emptyFile(at path: String) -> Bool {
-        
+enum MockDbInit {
+    @discardableResult
+    static func emptyFile(at path: String) -> Bool {
         FileManager.default.createFile(atPath: path, contents: Data("".utf8), attributes: nil)
-        
     }
     
     static func destroy(at path: String) throws {
         try FileManager.default.removeItem(atPath: path)
     }
-
 }
 
 extension XCTestExpectation {
@@ -83,7 +87,6 @@ func __outputParamsURL() throws -> URL {
 }
 
 func copyParametersToDocuments() throws -> (spend: URL, output: URL) {
-    
     let spendURL = try __documentsDirectory().appendingPathComponent("sapling-spend.params", isDirectory: false)
     let outputURL = try __documentsDirectory().appendingPathComponent("sapling-output.params", isDirectory: false)
     try FileManager.default.copyItem(at: try __spendParamsURL(), to: spendURL)
@@ -94,37 +97,42 @@ func copyParametersToDocuments() throws -> (spend: URL, output: URL) {
 
 func deleteParametersFromDocuments() throws {
     let documents = try __documentsDirectory()
-    deleteParamsFrom(spend: documents.appendingPathComponent("sapling-spend.params"), output: documents.appendingPathComponent("sapling-output.params"))
+    deleteParamsFrom(
+        spend: documents.appendingPathComponent("sapling-spend.params"),
+        output: documents.appendingPathComponent("sapling-output.params")
+    )
 }
-func deleteParamsFrom(spend: URL, output: URL)  {
+func deleteParamsFrom(spend: URL, output: URL) {
     try? FileManager.default.removeItem(at: spend)
     try? FileManager.default.removeItem(at: output)
 }
 
 func parametersReady() -> Bool {
-    
-    guard let output = try? __outputParamsURL(),
-          let spend = try? __spendParamsURL(),
-          FileManager.default.isReadableFile(atPath: output.absoluteString),
-          FileManager.default.isReadableFile(atPath: spend.absoluteString) else {
-            return false
+    guard
+        let output = try? __outputParamsURL(),
+        let spend = try? __spendParamsURL(),
+        FileManager.default.isReadableFile(atPath: output.absoluteString),
+        FileManager.default.isReadableFile(atPath: spend.absoluteString)
+    else {
+        return false
     }
+
     return true
 }
 
 class StubTest: XCTestCase {}
+
 extension Bundle {
     static var testBundle: Bundle {
         Bundle(for: StubTest.self)
     }
 }
 
-
+// swiftlint:disable force_unwrapping
 class TestSeed {
-    
     /**
-     test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-     */
+    test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+    */
     let seedString = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
     
     func seed() -> [UInt8] {

@@ -3,12 +3,14 @@
 
 excluded:
   - Pods
-  - ZcashLightClientKitTests
   - ZcashLightClientKit/Service/ProtoBuf
+  - ZcashLightClientKitTests/proto
+  - ZcashLightClientKitTests/Constants.generated.swift
 
 included:
   - Example/ZcashLightClientSample/ZcashLIghtClientSample
   - ZcashLightClientKit
+  - ZcashLightClientKitTests
 
 disabled_rules:
   - notification_center_detachment

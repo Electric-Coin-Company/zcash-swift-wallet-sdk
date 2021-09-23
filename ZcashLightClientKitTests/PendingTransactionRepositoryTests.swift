@@ -7,22 +7,24 @@
 
 import XCTest
 @testable import ZcashLightClientKit
+
+// swiftlint:disable force_try force_unwrapping implicitly_unwrapped_optional
 class PendingTransactionRepositoryTests: XCTestCase {
-    
-    var pendingRepository: PendingTransactionRepository!
-    
     let dbUrl = try! TestDbBuilder.pendingTransactionsDbURL()
-    
     let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
+
+    var pendingRepository: PendingTransactionRepository!
+
     override func setUp() {
+        super.setUp()
         cleanUpDb()
         let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: try! TestDbBuilder.pendingTransactionsDbURL().absoluteString))
         try! dao.createrTableIfNeeded()
         pendingRepository = dao
-        
     }
     
     override func tearDown() {
+        super.tearDown()
         cleanUpDb()
     }
     
@@ -31,77 +33,79 @@ class PendingTransactionRepositoryTests: XCTestCase {
     }
     
     func testCreate() {
+        let transaction = createAndStoreMockedTransaction()
         
-        let tx = createAndStoreMockedTransaction()
-        
-        guard let id = tx.id, id >= 0 else {
+        guard let id = transaction.id, id >= 0 else {
             XCTFail("failed to create mocked transaction that was just inserted")
             return
         }
         
         var expectedTx: PendingTransactionEntity?
-        XCTAssertNoThrow(try { expectedTx = try pendingRepository.find(by: id)}())
+        XCTAssertNoThrow(try { expectedTx = try pendingRepository.find(by: id) }())
         
         guard let expected = expectedTx else {
             XCTFail("failed to retrieve mocked transaction by id \(id) that was just inserted")
             return
         }
         
-        XCTAssertEqual(tx.accountIndex, expected.accountIndex)
-        XCTAssertEqual(tx.value, expected.value)
-        XCTAssertEqual(tx.toAddress, expected.toAddress)
+        XCTAssertEqual(transaction.accountIndex, expected.accountIndex)
+        XCTAssertEqual(transaction.value, expected.value)
+        XCTAssertEqual(transaction.toAddress, expected.toAddress)
     }
     
     func testFindById() {
-        let tx = createAndStoreMockedTransaction()
+        let transaction = createAndStoreMockedTransaction()
         
         var expected: PendingTransactionEntity?
         
-        guard let id = tx.id else {
+        guard let id = transaction.id else {
             XCTFail("transaction with no id")
             return
         }
-        XCTAssertNoThrow(try { expected = try pendingRepository.find(by: id)}())
-        
+
+        XCTAssertNoThrow(try { expected = try pendingRepository.find(by: id) }())
         XCTAssertNotNil(expected)
     }
     
     func testCancel() {
-        let tx = createAndStoreMockedTransaction()
-        guard let id = tx.id else {
-                  XCTFail("transaction with no id")
-                  return
-              }
+        let transaction = createAndStoreMockedTransaction()
+
+        guard let id = transaction.id else {
+            XCTFail("transaction with no id")
+            return
+        }
+
         guard id >= 0 else {
             XCTFail("failed to create mocked transaction that was just inserted")
             return
         }
         
-        XCTAssertNoThrow(try pendingRepository.cancel(tx))
+        XCTAssertNoThrow(try pendingRepository.cancel(transaction))
     }
     
     func testDelete() {
-        let tx = createAndStoreMockedTransaction()
-        guard let id = tx.id else {
-                  XCTFail("transaction with no id")
-                  return
-              }
+        let transaction = createAndStoreMockedTransaction()
+
+        guard let id = transaction.id else {
+            XCTFail("transaction with no id")
+            return
+        }
+
         guard id >= 0 else {
             XCTFail("failed to create mocked transaction that was just inserted")
             return
         }
         
-        XCTAssertNoThrow(try pendingRepository.delete(tx))
+        XCTAssertNoThrow(try pendingRepository.delete(transaction))
         
         var unexpectedTx: PendingTransactionEntity?
         
         XCTAssertNoThrow(try { unexpectedTx = try pendingRepository.find(by: id) }())
-        
         XCTAssertNil(unexpectedTx)
     }
     
     func testGetAll() {
-        var mockTransactions = [PendingTransactionEntity]()
+        var mockTransactions: [PendingTransactionEntity] = []
         for _ in 1...100 {
             mockTransactions.append(createAndStoreMockedTransaction())
         }
@@ -116,20 +120,21 @@ class PendingTransactionRepositoryTests: XCTestCase {
         }
         
         XCTAssertEqual(mockTransactions.count, allTxs.count)
-        
     }
     
     func testUpdate() {
         let newAccountIndex = 1
         let newValue: Int = 123_456
-        let tx = createAndStoreMockedTransaction()
-        guard let id = tx.id else {
-                  XCTFail("transaction with no id")
-                  return
-              }
+        let transaction = createAndStoreMockedTransaction()
+
+        guard let id = transaction.id else {
+            XCTFail("transaction with no id")
+            return
+        }
+
         var stored: PendingTransactionEntity?
         
-        XCTAssertNoThrow(try { stored = try pendingRepository.find(by: id)}())
+        XCTAssertNoThrow(try { stored = try pendingRepository.find(by: id) }())
         
         guard stored != nil else {
             XCTFail("failed to store tx")
@@ -152,12 +157,12 @@ class PendingTransactionRepositoryTests: XCTestCase {
     }
     
     func createAndStoreMockedTransaction() -> PendingTransactionEntity {
-        var tx = mockTransaction()
+        var transaction = mockTransaction()
         var id: Int?
         
-        XCTAssertNoThrow(try { id = try pendingRepository.create(tx) }())
-        tx.id = Int(id ?? -1)
-        return tx
+        XCTAssertNoThrow(try { id = try pendingRepository.create(transaction) }())
+        transaction.id = Int(id ?? -1)
+        return transaction
     }
     
     func testPerformanceExample() {
@@ -170,5 +175,4 @@ class PendingTransactionRepositoryTests: XCTestCase {
     private func mockTransaction() -> PendingTransactionEntity {
         PendingTransaction(value: Int.random(in: 1 ... 1_000_000), toAddress: recipientAddress, memo: nil, account: 0)
     }
-    
 }
