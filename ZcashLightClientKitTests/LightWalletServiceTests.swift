@@ -9,19 +9,19 @@
 import XCTest
 @testable import ZcashLightClientKit
 import GRPC
+
+// swiftlint:disable implicitly_unwrapped_optional force_unwrapping
 class LightWalletServiceTests: XCTestCase {
-    
+    let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
+
     var service: LightWalletService!
     var channel: Channel!
-    let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
+
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
+        super.setUp()
         channel = ChannelProvider().channel()
         service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
-    }
-
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
     /// FIXME: check whether this test is stil valid on in memory lwd implementatiojn
@@ -44,7 +44,7 @@ class LightWalletServiceTests: XCTestCase {
         let upperRange: BlockHeight = network.constants.saplingActivationHeight + count
         let blockRange = lowerRange ... upperRange
         
-        service.blockRange(blockRange) { (result) in
+        service.blockRange(blockRange) { result in
             expect.fulfill()
             switch result {
             case .failure(let error):
@@ -73,9 +73,9 @@ class LightWalletServiceTests: XCTestCase {
         }
     }
     
-    func testLatestBlock(){
+    func testLatestBlock() {
         let expect = XCTestExpectation(description: self.description)
-        service.latestBlockHeight { (result) in
+        service.latestBlockHeight { result in
             expect.fulfill()
             switch result {
             case .failure(let e):
@@ -87,5 +87,4 @@ class LightWalletServiceTests: XCTestCase {
         
         wait(for: [expect], timeout: 10)
     }
-   
 }

@@ -8,12 +8,15 @@
 import Foundation
 import XCTest
 @testable import ZcashLightClientKit
+
+// swiftlint:disable implicitly_unwrapped_optional
 class DarksideSanityCheckTests: XCTestCase {
-    
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
-    
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
-    
+    // TODO: Parameterize this from environment?
+    // swiftlint:disable:next line_length
+    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+    // TODO: Parameterize this from environment
+    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
+
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
@@ -23,12 +26,12 @@ class DarksideSanityCheckTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var network = DarksideWalletDNetwork()
-    var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
+    var reorgExpectation = XCTestExpectation(description: "reorg")
     let branchID = "2bb40e60"
     let chainName = "main"
     
     override func setUpWithError() throws {
-        
+        try super.setUpWithError()
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
@@ -37,10 +40,10 @@ class DarksideSanityCheckTests: XCTestCase {
         )
         try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
         try coordinator.resetBlocks(dataset: .default)
-        
     }
     
     override func tearDownWithError() throws {
+        try super.tearDownWithError()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -54,17 +57,19 @@ class DarksideSanityCheckTests: XCTestCase {
         
         let syncExpectation = XCTestExpectation(description: "sync to \(expectedLastBlock.height)")
         
-        try coordinator.sync(completion: { (synchronizer) in
-            
-            syncExpectation.fulfill()
-        }, error: { (error) in
-            guard let e = error else {
-                XCTFail("failed with unknown error")
+        try coordinator.sync(
+            completion: { _ in
+                syncExpectation.fulfill()
+            },
+            error: { error in
+                guard let e = error else {
+                    XCTFail("failed with unknown error")
+                    return
+                }
+                XCTFail("failed with error: \(e)")
                 return
             }
-            XCTFail("failed with error: \(e)")
-            return
-        })
+        )
         
         wait(for: [syncExpectation], timeout: 5)
         
@@ -75,6 +80,5 @@ class DarksideSanityCheckTests: XCTestCase {
         
         XCTAssertEqual(firstBlock?.hash.toHexStringTxId(), expectedFirstBlock.hash)
         XCTAssertEqual(lastBlock?.hash.toHexStringTxId(), expectedLastBlock.hash)
-        
     }
 }

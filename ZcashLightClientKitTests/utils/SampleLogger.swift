@@ -10,6 +10,7 @@ import Foundation
 import ZcashLightClientKit
 import os
 
+// swiftlint:disable force_unwrapping print_function_usage
 class SampleLogger: ZcashLightClientKit.Logger {
     enum LogLevel: Int {
         case debug
@@ -46,8 +47,8 @@ class SampleLogger: ZcashLightClientKit.Logger {
     }
     
     func warn(_ message: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
-           guard level.rawValue <= LogLevel.warning.rawValue else { return }
-           log(level: "WARNING ⚠️", message: message, file: file, function: function, line: line)
+        guard level.rawValue <= LogLevel.warning.rawValue else { return }
+        log(level: "WARNING ⚠️", message: message, file: file, function: function, line: line)
     }
 
     func event(_ message: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) {
@@ -66,7 +67,14 @@ class SampleLogger: ZcashLightClientKit.Logger {
         case .printerLog:
             print("[\(level)] \(fileName) - \(function) - line: \(line) -> \(message)")
         default:
-            os_log("[%{public}@] %{public}@ - %{public}@ - Line: %{public}d -> %{public}@", level, fileName, String(describing: function), line, message)
+            os_log(
+                "[%{public}@] %{public}@ - %{public}@ - Line: %{public}d -> %{public}@",
+                level,
+                fileName,
+                String(describing: function),
+                line,
+                message
+            )
         }
     }
 }
