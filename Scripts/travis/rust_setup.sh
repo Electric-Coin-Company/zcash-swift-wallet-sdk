@@ -6,5 +6,5 @@ rustup-init --verbose -y
 
 source $HOME/.cargo/env
 
-cargo install cargo-lipo
-rustup target add aarch64-apple-ios x86_64-apple-ios
+rustup toolchain add nightly
+rustup +nightly target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
