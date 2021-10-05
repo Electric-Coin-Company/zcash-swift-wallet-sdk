@@ -1056,11 +1056,11 @@ pub extern "C" fn zcashlc_put_utxo(
         let script = script_bytes.to_vec();
         let script_pubkey = Script(script);
         
-        let txout = TxOut { value: Amount::from_i64(value).unwrap(), script_pubkey: script_pubkey };
+        let txout = TxOut { value: Amount::from_i64(value).unwrap(), script_pubkey };
 
         let output = WalletTransparentOutput {
             outpoint: OutPoint::new(txid, index as u32),
-            txout: txout,
+            txout,
             height: BlockHeight::from(height as u32),
         };
         match put_received_transparent_utxo(&mut db_data, &output) {
