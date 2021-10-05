@@ -6,5 +6,6 @@ rustup-init --verbose -y
 
 source $HOME/.cargo/env
 
-rustup toolchain add nightly
-rustup +nightly target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
+rustup target add aarch64-apple-ios x86_64-apple-ios
+rustup toolchain add nightly-2021-09-24
+rustup +nightly-2021-09-24 target add aarch64-apple-ios-sim

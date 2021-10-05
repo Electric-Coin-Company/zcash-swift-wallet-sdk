@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 SCRIPT_COMMONS="${PODS_TARGET_SRCROOT}/Scripts/script_commons.sh"
 if [ ! -f $SCRIPT_COMMONS ]; then
     echo "Failed to load $SCRIPT_COMMONS"
@@ -20,17 +22,20 @@ echo $PLATFORM_NAME
 if [ $PLATFORM_NAME = "iphonesimulator" ]; then
     if [[ `uname -m` == 'arm64' ]]; then
         ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios-sim"
+        RUSTUP_TOOLCHAIN="nightly-2021-09-24"
     else
         ZCASH_ACTIVE_ARCHITECTURE="x86_64-apple-ios"
+        RUSTUP_TOOLCHAIN="stable"
     fi
 else
     ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios"
+    RUSTUP_TOOLCHAIN="stable"
 fi
 
 echo "fix 'permission denied issue'"
 chmod -R +w ${PODS_TARGET_SRCROOT}
 
-echo "cargo +nightly build --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --target $ZCASH_ACTIVE_ARCHITECTURE --release"
+echo "RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN} cargo build --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --target $ZCASH_ACTIVE_ARCHITECTURE --release"
 if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
   # Assume we're in Xcode, which means we're probably cross-compiling.
   # In this case, we need to add an extra library search path for build scripts and proc-macros,
@@ -40,7 +45,7 @@ if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
   export LIBRARY_PATH="${DEVELOPER_SDK_DIR}/MacOSX.sdk/usr/lib:${LIBRARY_PATH:-}"
 fi
 if [ ! -f ${ZCASH_LIB_RUST_BUILD_PATH}/${ZCASH_ACTIVE_ARCHITECTURE}/release/${ZCASH_LIB_RUST_NAME} ]; then
-    cargo +nightly build --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --target $ZCASH_ACTIVE_ARCHITECTURE --release
+    RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN} cargo build --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --target $ZCASH_ACTIVE_ARCHITECTURE --release
     persist_environment
 fi
 
