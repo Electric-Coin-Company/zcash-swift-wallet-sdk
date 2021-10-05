@@ -271,7 +271,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         guard zcashlc_put_utxo(
             dbData.0,
             dbData.1,
-            [CChar](address.utf8CString),
             txid,
             UInt(txid.count),
             Int32(index),

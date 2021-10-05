@@ -11,7 +11,7 @@ use zcash_client_backend::{
     data_api::{
         chain::{scan_cached_blocks, validate_chain},
         error::Error,
-        wallet::{create_spend_to_address, decrypt_and_store_transaction, shield_funds},
+        wallet::{create_spend_to_address, decrypt_and_store_transaction, shield_transparent_funds},
         WalletRead,
     },
     encoding::{
@@ -45,9 +45,9 @@ use zcash_primitives::{
     block::BlockHash,
     consensus::{BlockHeight, BranchId, Network, Parameters},
     memo::{Memo, MemoBytes},
-    transaction::{components::Amount, components::OutPoint, Transaction},
+    transaction::{components::Amount, components::OutPoint, components::TxOut, Transaction },
     zip32::ExtendedFullViewingKey,
-    legacy::TransparentAddress,
+    legacy::{Script, TransparentAddress},
 };
 use zcash_primitives::consensus::Network::{MainNetwork, TestNetwork};
 
@@ -55,7 +55,7 @@ use zcash_proofs::prover::LocalTxProver;
 use std::convert::{TryFrom, TryInto};
 use base58::ToBase58;
 use sha2::{Digest, Sha256};
-use secp256k1::key::{SecretKey, PublicKey};
+use hdwallet::secp256k1::key::{SecretKey, PublicKey};
 
 const ANCHOR_OFFSET: u32 = 10;
 
@@ -773,11 +773,11 @@ pub extern "C" fn zcashlc_get_verified_transparent_balance(
             })
             .and_then(|anchor| {
                 (&db_data)
-                    .get_unspent_transparent_utxos(&taddr, anchor)
+                    .get_unspent_transparent_outputs(&taddr, anchor)
                     .map_err(|e| format_err!("Error while fetching verified transparent balance: {}", e))
             })?
             .iter()
-            .map(|utxo| utxo.value)
+            .map(|utxo| utxo.txout.value)
             .sum::<Option<Amount>>().unwrap();
 
         Ok(amount.into())
@@ -809,11 +809,11 @@ pub extern "C" fn zcashlc_get_total_transparent_balance(
             })
             .and_then(|anchor| {
                 (&db_data)
-                    .get_unspent_transparent_utxos(&taddr, anchor)
+                    .get_unspent_transparent_outputs(&taddr, anchor)
                     .map_err(|e| format_err!("Error while fetching total transparent balance: {}", e))
             })?
             .iter()
-            .map(|utxo| utxo.value)
+            .map(|utxo| utxo.txout.value)
             .sum::<Option<Amount>>().unwrap();
 
         Ok(amount.into())
@@ -1034,7 +1034,6 @@ pub extern "C" fn zcashlc_scan_blocks(
 pub extern "C" fn zcashlc_put_utxo(
     db_data: *const u8,
     db_data_len: usize,
-    address_str: *const c_char,
     txid_bytes: *const u8,
     txid_bytes_len: usize,
     index: i32,
@@ -1049,21 +1048,19 @@ pub extern "C" fn zcashlc_put_utxo(
         let db_data = wallet_db(db_data, db_data_len, network)?;
         let mut db_data = db_data.get_update_ops()?;
 
-        let addr = unsafe { CStr::from_ptr(address_str).to_str()? };
         let txid_bytes = unsafe { slice::from_raw_parts(txid_bytes, txid_bytes_len) };
         let mut txid = [0u8; 32];
         txid.copy_from_slice(&txid_bytes);
 
         let script_bytes = unsafe { slice::from_raw_parts(script_bytes, script_bytes_len) };
         let script = script_bytes.to_vec();
+        let script_pubkey = Script(script);
         
-        let address = TransparentAddress::decode(&network, &addr).unwrap();
+        let txout = TxOut { value: Amount::from_i64(value).unwrap(), script_pubkey: script_pubkey };
 
         let output = WalletTransparentOutput {
-            address: address,
             outpoint: OutPoint::new(txid, index as u32),
-            script: script,
-            value: Amount::from_i64(value).unwrap(),
+            txout: txout,
             height: BlockHeight::from(height as u32),
         };
         match put_received_transparent_utxo(&mut db_data, &output) {
@@ -1397,14 +1394,16 @@ pub extern "C" fn zcashlc_shield_funds(
         let memo = Memo::from_str(&memo).map_err(|_| format_err!("Invalid memo"))?;
         let memo_bytes = MemoBytes::from(memo);
         // shield_funds(&db_cache, &db_data, account, &tsk, &extsk, &memo, &spend_params, &output_params)
-        shield_funds(&mut update_ops, 
+        shield_transparent_funds(
+            &mut update_ops,
             &network, 
             LocalTxProver::new(spend_params, output_params), 
-            AccountId(account), 
             &sk,
-            &extsk, 
-            &memo_bytes, 
-            ANCHOR_OFFSET) 
+            &ExtendedFullViewingKey::from(&extsk),
+            AccountId(account),
+            &memo_bytes,
+            ANCHOR_OFFSET
+        )
             .map_err(|e| format_err!("Error while shielding transaction: {}", e))
     });
     unwrap_exc_or(res, -1)

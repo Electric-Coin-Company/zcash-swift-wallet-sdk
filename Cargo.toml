@@ -23,7 +23,6 @@ sha2 = "0.9"
 bs58 = { version = "0.3", features = ["check"] }
 hdwallet = "0.3.0"
 ripemd160 = "0.9"
-secp256k1 = "0.19"
 time = "0.2"
 funty = "=1.2.0"
 ##############################################################
@@ -45,17 +44,15 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/nuttycom/librustzcash", rev = "7d819b68a3da3ad568629bc6f51a63e39c2d7d6a" }
-zcash_client_sqlite = {git = "https://github.com/nuttycom/librustzcash", rev = "7d819b68a3da3ad568629bc6f51a63e39c2d7d6a" }
-zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", rev = "7d819b68a3da3ad568629bc6f51a63e39c2d7d6a" }
-zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", rev = "7d819b68a3da3ad568629bc6f51a63e39c2d7d6a" }
+zcash_client_backend = {git = "https://github.com/nuttycom/librustzcash", rev = "da3c84ff31beec2c114729044d05bec3211a03d3" }
+zcash_client_sqlite = {git = "https://github.com/nuttycom/librustzcash", rev = "da3c84ff31beec2c114729044d05bec3211a03d3" }
+zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", rev = "da3c84ff31beec2c114729044d05bec3211a03d3" }
+zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", rev = "da3c84ff31beec2c114729044d05bec3211a03d3" }
 zcash_note_encryption = { git = "https://github.com/zcash/librustzcash.git", rev = "13b023387bafdc7b5712c933dc0e16ee94b96a6a" }
 # In development.
-halo2 = { git = "https://github.com/zcash/halo2.git", rev = "27c4187673a9c6ade13fbdbd4f20955530c22d7f" }
-orchard = { git = "https://github.com/zcash/orchard.git", rev = "6aa85fcdfe5e97c8e0ef8616caec4430098b909d" }
+orchard = { git = "https://github.com/zcash/orchard.git", rev = "2c8241f25b943aa05203eacf9905db117c69bd29" }
 incrementalmerkletree = { git = "https://github.com/zcash/incrementalmerkletree.git", rev = "b7bd6246122a6e9ace8edb51553fbf5228906cbb" }
-
-
+hdwallet = { git = "https://github.com/nuttycom/hdwallet", rev = "576683b9f2865f1118c309017ff36e01f84420c9" }
 # Unreleased
 jubjub = { git = "https://github.com/zkcrypto/jubjub.git", rev = "96ab4162b83303378eae32a326b54d88b75bffc2" }
 
