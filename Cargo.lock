@@ -1973,8 +1973,3 @@ dependencies = [
  "syn",
  "synstructure",
 ]
-
-[[patch.unused]]
-name = "jubjub"
-version = "0.7.0"
-source = "git+https://github.com/zkcrypto/jubjub.git?rev=96ab4162b83303378eae32a326b54d88b75bffc2#96ab4162b83303378eae32a326b54d88b75bffc2"
