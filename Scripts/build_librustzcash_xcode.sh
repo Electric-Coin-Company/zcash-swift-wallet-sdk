@@ -20,13 +20,8 @@ echo ""
 echo "platform name"
 echo $PLATFORM_NAME
 if [ $PLATFORM_NAME = "iphonesimulator" ]; then
-    if [[ `uname -m` == 'arm64' ]]; then
-        ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios-sim"
-        RUSTUP_TOOLCHAIN="nightly-2021-09-24"
-    else
-        ZCASH_ACTIVE_ARCHITECTURE="x86_64-apple-ios"
-        RUSTUP_TOOLCHAIN="stable"
-    fi
+    ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios-sim x86_64-apple-ios"
+    RUSTUP_TOOLCHAIN="nightly-2021-09-24"
 else
     ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios"
     RUSTUP_TOOLCHAIN="stable"
@@ -44,8 +39,8 @@ if [[ -n "${DEVELOPER_SDK_DIR:-}" ]]; then
   echo "export LIBRARY_PATH=\"${DEVELOPER_SDK_DIR}/MacOSX.sdk/usr/lib:${LIBRARY_PATH:-}\""
   export LIBRARY_PATH="${DEVELOPER_SDK_DIR}/MacOSX.sdk/usr/lib:${LIBRARY_PATH:-}"
 fi
-if [ ! -f ${ZCASH_LIB_RUST_BUILD_PATH}/${ZCASH_ACTIVE_ARCHITECTURE}/release/${ZCASH_LIB_RUST_NAME} ]; then
-    RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN} cargo build --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --target $ZCASH_ACTIVE_ARCHITECTURE --release
+if [ ! -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ]; then
+    RUSTUP_TOOLCHAIN=${RUSTUP_TOOLCHAIN} cargo lipo --manifest-path ${PODS_TARGET_SRCROOT}/Cargo.toml --targets $ZCASH_ACTIVE_ARCHITECTURE --release
     persist_environment
 fi
 
@@ -60,9 +55,9 @@ rm -f "${ZCASH_SDK_RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
 echo "clean up sdk lib path: rm -f ${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
 
 rm -f "${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
-echo "copying artifacts: cp -f ${ZCASH_LIB_RUST_BUILD_PATH}/${ZCASH_ACTIVE_ARCHITECTURE}/release/${ZCASH_LIB_RUST_NAME} ${ZCASH_SDK_RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
+echo "copying artifacts: cp -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ${ZCASH_SDK_RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
 # ALWAYS SHIP RELEASE NO MATTER WHAT YOUR BUILD IS (FOR NOW AT LEAST)
-cp -f "${ZCASH_LIB_RUST_BUILD_PATH}/${ZCASH_ACTIVE_ARCHITECTURE}/release/${ZCASH_LIB_RUST_NAME}" "${ZCASH_SDK_RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
-echo "copying artifacts: cp -f ${ZCASH_LIB_RUST_BUILD_PATH}/${ZCASH_ACTIVE_ARCHITECTURE}/release/${ZCASH_LIB_RUST_NAME} ${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
-cp -f "${ZCASH_LIB_RUST_BUILD_PATH}/${ZCASH_ACTIVE_ARCHITECTURE}/release/${ZCASH_LIB_RUST_NAME}" "${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
+cp -f "${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME}" "${ZCASH_SDK_RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
+echo "copying artifacts: cp -f ${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME} ${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
+cp -f "${ZCASH_LIB_RUST_BUILD_PATH}/universal/release/${ZCASH_LIB_RUST_NAME}" "${RUST_LIB_PATH}/${ZCASH_LIB_RUST_NAME}"
 
