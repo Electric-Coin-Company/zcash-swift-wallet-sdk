@@ -53,7 +53,7 @@ int32_t zcashlc_decrypt_and_store_transaction(const uint8_t *db_data,
                                               uintptr_t db_data_len,
                                               const uint8_t *tx,
                                               uintptr_t tx_len,
-                                              uint32_t mined_height,
+                                              uint32_t _mined_height,
                                               uint32_t network_id);
 
 /**
