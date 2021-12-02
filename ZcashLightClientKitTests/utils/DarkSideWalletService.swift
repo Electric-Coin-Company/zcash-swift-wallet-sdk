@@ -11,35 +11,68 @@ import GRPC
 
 enum DarksideDataset: String {
     case afterLargeReorg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/after-large-large.txt"
-    case afterSmallReorg =  "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/after-small-reorg.txt"
+    case afterSmallReorg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/after-small-reorg.txt"
     case beforeReOrg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/before-reorg.txt"
     
     /**
-     see
-     https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-index-reorg
-     */
+    see
+    https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-index-reorg
+    */
     case txIndexChangeBefore = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/before-reorg.txt"
     
     case txIndexChangeAfter = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/after-reorg.txt"
     
     /**
-        See https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-height-reorg
-     */
+    See https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-height-reorg
+    */
     case txHeightReOrgBefore = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-height-reorg/before-reorg.txt"
     
     case txHeightReOrgAfter = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-height-reorg/after-reorg.txt"
     
     /*
-     see: https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-remove-reorg
-     */
+    see: https://github.com/zcash-hackworks/darksidewalletd-test-data/tree/master/tx-remove-reorg
+    */
     case txReOrgRemovesInboundTxBefore = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-remove-reorg/before-reorg.txt"
     
     case txReOrgRemovesInboundTxAfter = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-remove-reorg/after-reorg.txt"
 }
 
 class DarksideWalletService: LightWalletService {
-    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping (BlockProgressReporting) -> Void) -> CancellableCall {
-        return service.blockStream(startHeight: startHeight, endHeight: endHeight, result: result, handler: handler, progress: progress)
+    var channel: Channel
+    var service: LightWalletGRPCService
+    var darksideService: DarksideStreamerClient
+
+    init(endpoint: LightWalletEndpoint) {
+        self.channel = ChannelProvider().channel()
+        self.service = LightWalletGRPCService(endpoint: endpoint)
+        self.darksideService = DarksideStreamerClient(channel: channel)
+    }
+
+    init(service: LightWalletGRPCService) {
+        self.channel = ChannelProvider().channel()
+        self.darksideService = DarksideStreamerClient(channel: channel)
+        self.service = service
+    }
+
+    convenience init() {
+        self.init(endpoint: LightWalletEndpointBuilder.default)
+    }
+
+    @discardableResult
+    func blockStream(
+        startHeight: BlockHeight,
+        endHeight: BlockHeight,
+        result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void,
+        handler: @escaping (ZcashCompactBlock) -> Void,
+        progress: @escaping (BlockProgress) -> Void
+    ) -> CancellableCall {
+        return service.blockStream(
+            startHeight: startHeight,
+            endHeight: endHeight,
+            result: result,
+            handler: handler,
+            progress: progress
+        )
     }
     
     func getInfo() throws -> LightWalletdInfo {
@@ -51,15 +84,18 @@ class DarksideWalletService: LightWalletService {
     }
     
     func closeConnection() {
-        
     }
     
     func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
         return []
     }
     
-    func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+    func fetchUTXOs(
+        for tAddress: String,
+        height: BlockHeight,
+        result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
+    ) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
             result(.success([]))
         }
     }
@@ -68,14 +104,18 @@ class DarksideWalletService: LightWalletService {
         []
     }
     
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+    func fetchUTXOs(
+        for tAddresses: [String],
+        height: BlockHeight,
+        result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
+    ) {
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
             result(.success([]))
         }
     }
     
     func fetchUTXOs(for tAddress: String, result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void) {
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1){
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.1) {
             result(.success([]))
         }
     }
@@ -87,28 +127,6 @@ class DarksideWalletService: LightWalletService {
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
         service.fetchTransaction(txId: txId, result: result)
     }
-    
-    var channel: Channel
-    init(endpoint: LightWalletEndpoint) {
-        self.channel = ChannelProvider().channel()
-        self.service = LightWalletGRPCService(endpoint: endpoint)
-        self.darksideService = DarksideStreamerClient(channel: channel)
-    }
-    
-    init(service: LightWalletGRPCService) {
-        self.channel = ChannelProvider().channel()
-        self.darksideService = DarksideStreamerClient(channel: channel)
-        self.service = service
-    }
-    
-    
-    
-    convenience init() {
-        self.init(endpoint: LightWalletEndpointBuilder.default)
-    }
-    
-    var service: LightWalletGRPCService
-    var darksideService: DarksideStreamerClient
     
     func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
         service.latestBlockHeight(result: result)
@@ -127,8 +145,8 @@ class DarksideWalletService: LightWalletService {
     }
     
     /**
-     Darskside lightwalletd should do a fake submission, by sending over the tx, retrieving it and including it in a new block
-     */
+    Darskside lightwalletd should do a fake submission, by sending over the tx, retrieving it and including it in a new block
+    */
     func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
         service.submit(spendTransaction: spendTransaction, result: result)
     }
@@ -158,11 +176,17 @@ class DarksideWalletService: LightWalletService {
     }
     
     func getIncomingTransactions() throws -> [RawTransaction]? {
-        var txs = [RawTransaction]()
-        let response = try darksideService.getIncomingTransactions(Empty(), handler: { txs.append($0) }).status.wait()
+        var txs: [RawTransaction] = []
+        let response = try darksideService.getIncomingTransactions(
+            Empty(),
+            handler: { txs.append($0) }
+        )
+        .status
+        .wait()
+
         switch response.code {
         case .ok:
-            return txs.count > 0 ? txs : nil
+            return !txs.isEmpty ? txs : nil
         default:
             throw response
         }
@@ -186,9 +210,11 @@ class DarksideWalletService: LightWalletService {
     }
     
     func stageTransaction(_ rawTransaction: RawTransaction, at height: BlockHeight) throws {
-        var tx = rawTransaction
-        tx.height = UInt64(height)
-        _ = try darksideService.stageTransactionsStream().sendMessage(tx).wait()
+        var transaction = rawTransaction
+        transaction.height = UInt64(height)
+        _ = try darksideService.stageTransactionsStream()
+            .sendMessage(transaction)
+            .wait()
     }
     
     func stageTransaction(from url: String, at height: BlockHeight) throws {
@@ -197,40 +223,35 @@ class DarksideWalletService: LightWalletService {
         txUrl.url = url
         _ = try darksideService.stageTransactions(txUrl, callOptions: nil).response.wait()
     }
- 
 }
 
-
-class DarksideWalletDConstants: NetworkConstants {
-    static var SAPLING_ACTIVATION_HEIGHT: BlockHeight {
+enum DarksideWalletDConstants: NetworkConstants {
+    static var saplingActivationHeight: BlockHeight {
         663150
     }
     
-    static var DEFAULT_DATA_DB_NAME: String {
-        ZcashSDKMainnetConstants.DEFAULT_DATA_DB_NAME
+    static var defaultDataDbName: String {
+        ZcashSDKMainnetConstants.defaultDataDbName
     }
     
-    static var DEFAULT_CACHES_DB_NAME: String {
-        ZcashSDKMainnetConstants.DEFAULT_CACHES_DB_NAME
+    static var defaultCacheDbName: String {
+        ZcashSDKMainnetConstants.defaultCacheDbName
     }
     
-    static var DEFAULT_PENDING_DB_NAME: String {
-        ZcashSDKMainnetConstants.DEFAULT_PENDING_DB_NAME
+    static var defaultPendingDbName: String {
+        ZcashSDKMainnetConstants.defaultPendingDbName
     }
     
-    static var DEFAULT_DB_NAME_PREFIX: String {
-        ZcashSDKMainnetConstants.DEFAULT_DB_NAME_PREFIX
+    static var defaultDbNamePrefix: String {
+        ZcashSDKMainnetConstants.defaultDbNamePrefix
     }
     
-    static var FEE_CHANGE_HEIGHT: BlockHeight {
-        ZcashSDKMainnetConstants.FEE_CHANGE_HEIGHT
+    static var feeChangeHeight: BlockHeight {
+        ZcashSDKMainnetConstants.feeChangeHeight
     }
-    
-    
 }
+
 class DarksideWalletDNetwork: ZcashNetwork {
     var constants: NetworkConstants.Type = DarksideWalletDConstants.self
-    
     var networkType = NetworkType.mainnet
-
 }

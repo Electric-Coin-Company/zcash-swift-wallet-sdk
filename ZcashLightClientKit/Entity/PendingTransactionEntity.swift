@@ -7,94 +7,107 @@
 
 import Foundation
 /**
- Represents a sent transaction that has not been confirmed yet on the blockchain
- */
+Represents a sent transaction that has not been confirmed yet on the blockchain
+*/
 public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTransaction, RawIdentifiable {
     /**
-     recipient address
-     */
+    recipient address
+    */
     var toAddress: String { get set }
+
     /**
-     index of the account from which the funds were sent
-     */
+    index of the account from which the funds were sent
+    */
     var accountIndex: Int { get set }
     
     /**
-     height which the block was mined at.
-     -1 when block has not been mined yet
-     */
+    height which the block was mined at.
+    -1 when block has not been mined yet
+    */
     var minedHeight: BlockHeight { get set }
+
     /**
-     height for which the represented transaction would be considered expired
-     */
+    height for which the represented transaction would be considered expired
+    */
     var expiryHeight: BlockHeight { get set }
+
     /**
     value is 1 if the transaction was cancelled
-     */
+    */
     var cancelled: Int { get set }
+
     /**
-     how many times this transaction encoding was attempted
-     */
+    how many times this transaction encoding was attempted
+    */
     var encodeAttempts: Int { get set }
+    
     /**
-     How many attempts to send this transaction have been done
-     */
+    How many attempts to send this transaction have been done
+    */
     var submitAttempts: Int { get set }
+
     /**
-     Error message if available.
-     */
+    Error message if available.
+    */
     var errorMessage: String? { get set }
+
     /**
-     error code, if available
-     */
+    error code, if available
+    */
     var errorCode: Int? { get set }
+
     /**
-     create time of the represented transaction
+    create time of the represented transaction
      
-     - Note: represented in timeIntervalySince1970
-     */
+    - Note: represented in timeIntervalySince1970
+    */
     var createTime: TimeInterval { get set }
     
     /**
-     Checks whether this transaction is the same as the given transaction
-     */
+    Checks whether this transaction is the same as the given transaction
+    */
     func isSameTransactionId<T: RawIdentifiable> (other: T) -> Bool
     
     /**
-     returns whether the represented transaction is pending based on the provided block height
-     */
+    returns whether the represented transaction is pending based on the provided block height
+    */
     func isPending(currentHeight: Int) -> Bool
     
     /**
-     if the represented transaction is being created
-     */
+    if the represented transaction is being created
+    */
     var isCreating: Bool { get }
     
     /**
-     returns whether the represented transaction has failed to be encoded
-     */
+    returns whether the represented transaction has failed to be encoded
+    */
     var isFailedEncoding: Bool { get }
+
     /**
-     returns whether the represented transaction has failed to be submitted
-     */
+    returns whether the represented transaction has failed to be submitted
+    */
     var isFailedSubmit: Bool { get }
     
     /**
-     returns whether the represented transaction presents some kind of error
-     */
+    returns whether the represented transaction presents some kind of error
+    */
     var isFailure: Bool { get }
+
     /**
-     returns whether the represented transaction has been cancelled by the user
-     */
+    returns whether the represented transaction has been cancelled by the user
+    */
     var isCancelled: Bool { get }
+
     /**
-     returns whether the represented transaction has been successfully mined
-     */
+    returns whether the represented transaction has been successfully mined
+    */
     var isMined: Bool { get }
+
     /**
-     returns whether the represented transaction has been submitted
-     */
+    returns whether the represented transaction has been submitted
+    */
     var isSubmitted: Bool { get }
+    
     /**
     returns whether the represented transaction has been submitted successfully
     */
@@ -153,16 +166,24 @@ public extension PendingTransactionEntity {
             return false
         }
         
-        return abs(currentHeight - minedHeight) >= ZcashSDK.DEFAULT_STALE_TOLERANCE
+        return abs(currentHeight - minedHeight) >= ZcashSDK.defaultStaleTolerance
     }
 }
 
 public extension PendingTransactionEntity {
     /**
-     TransactionEntity representation of this PendingTransactionEntity transaction
-     */
+    TransactionEntity representation of this PendingTransactionEntity transaction
+    */
     var transactionEntity: TransactionEntity {
-        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.createTime).description, transactionIndex: -1, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
+        Transaction(
+            id: self.id ?? -1,
+            transactionId: self.rawTransactionId ?? Data(),
+            created: Date(timeIntervalSince1970: self.createTime).description,
+            transactionIndex: -1,
+            expiryHeight: self.expiryHeight,
+            minedHeight: self.minedHeight,
+            raw: self.raw
+        )
     }
 }
 
@@ -171,6 +192,14 @@ public extension ConfirmedTransactionEntity {
     TransactionEntity representation of this ConfirmedTransactionEntity transaction
     */
     var transactionEntity: TransactionEntity {
-        Transaction(id: self.id ?? -1, transactionId: self.rawTransactionId ?? Data(), created: Date(timeIntervalSince1970: self.blockTimeInSeconds).description, transactionIndex: self.transactionIndex, expiryHeight: self.expiryHeight, minedHeight: self.minedHeight, raw: self.raw)
+        Transaction(
+            id: self.id ?? -1,
+            transactionId: self.rawTransactionId ?? Data(),
+            created: Date(timeIntervalSince1970: self.blockTimeInSeconds).description,
+            transactionIndex: self.transactionIndex,
+            expiryHeight: self.expiryHeight,
+            minedHeight: self.minedHeight,
+            raw: self.raw
+        )
     }
 }

@@ -7,7 +7,16 @@
 
 import XCTest
 @testable import ZcashLightClientKit
+
+// swiftlint:disable implicitly_unwrapped_optional force_try
 class TransactionEnhancementTests: XCTestCase {
+    let mockLatestHeight = BlockHeight(663250)
+    let targetLatestHeight = BlockHeight(663251)
+    let walletBirthday = BlockHeight(663150)
+    let network = DarksideWalletDNetwork()
+    let branchID = "2bb40e60"
+    let chainName = "main"
+
     var initializer: Initializer!
     var processorConfig: CompactBlockProcessor.Configuration!
     var processor: CompactBlockProcessor!
@@ -23,26 +32,26 @@ class TransactionEnhancementTests: XCTestCase {
     var afterReorgIdleNotification: XCTestExpectation!
     var txFoundNotificationExpectation: XCTestExpectation!
     var waitExpectation: XCTestExpectation!
-    let mockLatestHeight = BlockHeight(663250)
-    let targetLatestHeight = BlockHeight(663251)
-    let walletBirthday = BlockHeight(663150)
-    let network = DarksideWalletDNetwork()
-    let branchID = "2bb40e60"
-    let chainName = "main"
+
     override func setUpWithError() throws {
+        try super.setUpWithError()
         logger = SampleLogger(logLevel: .debug)
         
-        downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
-        stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
-        updatedNotificationExpectation = XCTestExpectation(description: self.description + " updatedNotificationExpectation")
-        startedValidatingNotificationExpectation = XCTestExpectation(description: self.description + " startedValidatingNotificationExpectation")
-        startedScanningNotificationExpectation = XCTestExpectation(description: self.description + " startedScanningNotificationExpectation")
-        idleNotificationExpectation = XCTestExpectation(description: self.description + " idleNotificationExpectation")
-        afterReorgIdleNotification = XCTestExpectation(description: self.description + " afterReorgIdleNotification")
-        reorgNotificationExpectation = XCTestExpectation(description: self.description + " reorgNotificationExpectation")
-        txFoundNotificationExpectation = XCTestExpectation(description: self.description + "txFoundNotificationExpectation")
+        downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
+        stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
+        updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
+        startedValidatingNotificationExpectation = XCTestExpectation(
+            description: "\(self.description) startedValidatingNotificationExpectation"
+        )
+        startedScanningNotificationExpectation = XCTestExpectation(
+            description: "\(self.description) startedScanningNotificationExpectation"
+        )
+        idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
+        afterReorgIdleNotification = XCTestExpectation(description: "\(self.description) afterReorgIdleNotification")
+        reorgNotificationExpectation = XCTestExpectation(description: "\(self.description) reorgNotificationExpectation")
+        txFoundNotificationExpectation = XCTestExpectation(description: "\(self.description) txFoundNotificationExpectation")
         
-        waitExpectation = XCTestExpectation(description: self.description + "waitExpectation")
+        waitExpectation = XCTestExpectation(description: "\(self.description) waitExpectation")
         
         let birthday = WalletBirthday.birthday(with: walletBirthday, network: network)
         
@@ -50,14 +59,19 @@ class TransactionEnhancementTests: XCTestCase {
         let rustBackend = ZcashRustBackend.self
         processorConfig = config
         
-        
-        
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         
-        _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1,networkType: network.networkType)
+        _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1, networkType: network.networkType)
         _ = try rustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: network.networkType)
-        _ = try rustBackend.initBlocksTable(dbData: processorConfig.dataDb, height: Int32(birthday.height), hash: birthday.hash, time: birthday.time, saplingTree: birthday.tree, networkType: network.networkType)
+        _ = try rustBackend.initBlocksTable(
+            dbData: processorConfig.dataDb,
+            height: Int32(birthday.height),
+            hash: birthday.hash,
+            time: birthday.time,
+            saplingTree: birthday.tree,
+            networkType: network.networkType
+        )
         
         let service = DarksideWalletService()
         darksideWalletService = service
@@ -65,17 +79,23 @@ class TransactionEnhancementTests: XCTestCase {
         try! storage.createTable()
         
         downloader = CompactBlockDownloader(service: service, storage: storage)
-        processor = CompactBlockProcessor(service: service,
-                                          storage: storage,
-                                          backend: rustBackend,
-                                          config: processorConfig)
+        processor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: rustBackend,
+            config: processorConfig
+        )
         
-        
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(processorFailed(_:)), name: Notification.Name.blockProcessorFailed, object: processor)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(processorFailed(_:)),
+            name: Notification.Name.blockProcessorFailed,
+            object: processor
+        )
     }
     
     override func tearDownWithError() throws {
+        try super.tearDownWithError()
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         downloadStartedExpect.unsubscribeFromNotifications()
@@ -89,7 +109,7 @@ class TransactionEnhancementTests: XCTestCase {
         NotificationCenter.default.removeObserver(self)
     }
     
-    fileprivate func startProcessing() throws {
+    private func startProcessing() throws {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
@@ -98,13 +118,11 @@ class TransactionEnhancementTests: XCTestCase {
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
-        
 
         try processor.start()
     }
     
     func testBasicEnhacement() throws {
-        
         let targetLatestHeight = BlockHeight(663250)
         let walletBirthday = WalletBirthday.birthday(with: 663151, network: network).height
         
@@ -112,47 +130,48 @@ class TransactionEnhancementTests: XCTestCase {
     }
     
     func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) throws {
-     
         do {
             try darksideWalletService.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
             try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue)
             try darksideWalletService.applyStaged(nextLatestHeight: 663200)
-        } catch  {
+        } catch {
             XCTFail("Error: \(error)")
             return
         }
       
         sleep(3)
+
         /**
-         connect to dLWD
-         request latest height -> receive firstLatestHeight
-         */
+        connect to dLWD
+        request latest height -> receive firstLatestHeight
+        */
         do {
-             print("first latest height:  \(try darksideWalletService.latestBlockHeight())")
+            dump("first latest height:  \(try darksideWalletService.latestBlockHeight())")
         } catch {
             XCTFail("Error: \(error)")
             return
         }
-
         
         /**
-         download and sync blocks from walletBirthday to firstLatestHeight
-         */
+        download and sync blocks from walletBirthday to firstLatestHeight
+        */
         do {
-            
             try startProcessing()
-             
         } catch {
             XCTFail("Error: \(error)")
         }
-       
-        wait(for: [downloadStartedExpect,
-                   startedValidatingNotificationExpectation,
-                   startedScanningNotificationExpectation,
-                   txFoundNotificationExpectation,
-                   idleNotificationExpectation], timeout: 30)
-        idleNotificationExpectation.unsubscribeFromNotifications()
 
+        wait(
+            for: [
+                downloadStartedExpect,
+                startedValidatingNotificationExpectation,
+                startedScanningNotificationExpectation,
+                txFoundNotificationExpectation,
+                idleNotificationExpectation
+            ],
+            timeout: 30
+        )
+        idleNotificationExpectation.unsubscribeFromNotifications()
     }
     
     @objc func processorFailed(_ notification: Notification) {
@@ -163,6 +182,4 @@ class TransactionEnhancementTests: XCTestCase {
             XCTFail("CompactBlockProcessor failed")
         }
     }
-
 }
-

@@ -10,7 +10,6 @@ import UIKit
 import ZcashLightClientKit
 import KRProgressHUD
 class SendViewController: UIViewController {
-    
     @IBOutlet weak var addressLabel: UILabel!
     @IBOutlet weak var amountLabel: UILabel!
     @IBOutlet weak var addressTextField: UITextField!
@@ -25,13 +24,15 @@ class SendViewController: UIViewController {
     
     let characterLimit: Int = 512
     
-    var wallet: Initializer = Initializer.shared
-    
+    var wallet = Initializer.shared
+
+    // swiftlint:disable:next implicitly_unwrapped_optional
     var synchronizer: Synchronizer!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
+        // swiftlint:disable:next force_try
         try! synchronizer.prepare()
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
@@ -53,7 +54,7 @@ class SendViewController: UIViewController {
         let point = recognizer.location(in: self.view)
         if addressTextField.isFirstResponder && !addressTextField.frame.contains(point) {
             addressTextField.resignFirstResponder()
-        } else if amountTextField.isFirstResponder && !amountTextField.frame.contains(point)  {
+        } else if amountTextField.isFirstResponder && !amountTextField.frame.contains(point) {
             amountTextField.resignFirstResponder()
         } else if memoField.isFirstResponder &&
             !memoField.frame.contains(point) {
@@ -72,12 +73,34 @@ class SendViewController: UIViewController {
         charactersLeftLabel.text = textForCharacterCount(0)
         let center = NotificationCenter.default
         
-        center.addObserver(self, selector: #selector(synchronizerStarted(_:)), name: Notification.Name.synchronizerStarted, object: synchronizer)
-        center.addObserver(self, selector: #selector(synchronizerSynced(_:)), name: Notification.Name.synchronizerSynced, object: synchronizer)
-        center.addObserver(self, selector: #selector(synchronizerStopped(_:)), name: Notification.Name.synchronizerStopped, object: synchronizer)
-        center.addObserver(self, selector: #selector(synchronizerUpdated(_:)), name: Notification.Name.synchronizerProgressUpdated, object: synchronizer)
+        center.addObserver(
+            self,
+            selector: #selector(synchronizerStarted(_:)),
+            name: Notification.Name.synchronizerStarted,
+            object: synchronizer
+        )
+
+        center.addObserver(
+            self,
+            selector: #selector(synchronizerSynced(_:)),
+            name: Notification.Name.synchronizerSynced,
+            object: synchronizer
+        )
+
+        center.addObserver(
+            self,
+            selector: #selector(synchronizerStopped(_:)),
+            name: Notification.Name.synchronizerStopped,
+            object: synchronizer
+        )
+
+        center.addObserver(
+            self,
+            selector: #selector(synchronizerUpdated(_:)),
+            name: Notification.Name.synchronizerProgressUpdated,
+            object: synchronizer
+        )
     }
-    
     
     func format(balance: Int64 = 0) -> String {
         "Zec \(balance.asHumanReadableZecBalance())"
@@ -104,7 +127,7 @@ class SendViewController: UIViewController {
             return isBalanceValid() && isAmountValid() && isRecipientValid()
         default:
             return false
-        } 
+        }
     }
     
     func isBalanceValid() -> Bool {
@@ -112,11 +135,14 @@ class SendViewController: UIViewController {
     }
     
     func isAmountValid() -> Bool {
-        guard let value = amountTextField.text,
+        guard
+            let value = amountTextField.text,
             let amount = Double(value),
-            amount.toZatoshi() <= wallet.getVerifiedBalance() else {
-                return false
+            amount.toZatoshi() <= wallet.getVerifiedBalance()
+        else {
+            return false
         }
+        
         return true
     }
     
@@ -140,31 +166,41 @@ class SendViewController: UIViewController {
             loggerProxy.warn("WARNING: Form is invalid")
             return
         }
-        
-        let alert = UIAlertController(title: "About To send funds!",
-                                      message: "This is an ugly confirmation message. You should come up with something fancier that lets the user be sure about sending funds without disturbing the user experience with an annoying alert like this one",
-                                      preferredStyle: UIAlertController.Style.alert)
-        
-        let sendAction = UIAlertAction(title: "Send!", style: UIAlertAction.Style.default) { (_) in
-            self.send()
-        }
-        let cancelAction = UIAlertAction(title: "Go back! I'm not sure about this.",
-                                         style: UIAlertAction.Style.destructive) { (_) in
-                                            self.cancel()
-        }
+
+        let alert = UIAlertController(
+            title: "About To send funds!",
+            // swiftlint:disable:next line_length
+            message: "This is an ugly confirmation message. You should come up with something fancier that lets the user be sure about sending funds without disturbing the user experience with an annoying alert like this one",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
+        let sendAction = UIAlertAction(
+            title: "Send!",
+            style: UIAlertAction.Style.default,
+            handler: { _ in
+                self.send()
+            }
+        )
+
+        let cancelAction = UIAlertAction(
+            title: "Go back! I'm not sure about this.",
+            style: UIAlertAction.Style.destructive,
+            handler: { _ in
+                self.cancel()
+            }
+        )
+
         alert.addAction(sendAction)
         alert.addAction(cancelAction)
         
         self.present(alert, animated: true, completion: nil)
     }
     
-    
     func send() {
         guard isFormValid(), let amount = amountTextField.text, let zec = Double(amount)?.toZatoshi(), let recipient = addressTextField.text else {
             loggerProxy.warn("WARNING: Form is invalid")
             return
         }
-        
         
         guard let address = SampleStorage.shared.privateKey else {
             loggerProxy.error("NO ADDRESS")
@@ -173,11 +209,17 @@ class SendViewController: UIViewController {
         
         KRProgressHUD.show()
         
-        synchronizer.sendToAddress(spendingKey: address, zatoshi: zec, toAddress: recipient, memo: self.memoField.text.count > 0 ? self.memoField.text : nil, from: 0) {  [weak self] result in
-            
+        synchronizer.sendToAddress(
+            spendingKey: address,
+            zatoshi: zec,
+            toAddress: recipient,
+            memo: !self.memoField.text.isEmpty ? self.memoField.text : nil,
+            from: 0
+        ) {  [weak self] result in
             DispatchQueue.main.async {
                 KRProgressHUD.dismiss()
             }
+
             switch result {
             case .success(let pendingTransaction):
                 loggerProxy.info("transaction created: \(pendingTransaction)")
@@ -192,15 +234,18 @@ class SendViewController: UIViewController {
     }
     
     func fail(_ error: Error) {
-        let alert = UIAlertController(title: "Send failed!", message: "\(error)", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(
+            title: "Send failed!",
+            message: "\(error)",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         let action = UIAlertAction(title: "OK :(", style: UIAlertAction.Style.default, handler: nil)
         alert.addAction(action)
         self.present(alert, animated: true, completion: nil)
     }
     
-    func cancel() {
-        
-    }
+    func cancel() {}
     
     // MARK: synchronizer notifications
     @objc func synchronizerUpdated(_ notification: Notification) {
@@ -228,7 +273,6 @@ class SendViewController: UIViewController {
             }
             self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
         }
-        
     }
     
     @objc func synchronizerSynced(_ notification: Notification) {
@@ -245,9 +289,7 @@ class SendViewController: UIViewController {
     }
 }
 
-
 extension SendViewController: UITextFieldDelegate {
-    
     func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
         if textField == amountTextField {
             return !maxFunds.isOn
@@ -286,22 +328,31 @@ extension SDKSynchronizer {
         switch state {
         case .downloading(let progress):
             return "Downloading \(progress.progressHeight)/\(progress.targetHeight)"
+
         case .enhancing(let enhanceProgress):
             return "Enhancing tx \(enhanceProgress.enhancedTransactions) of \(enhanceProgress.totalTransactions)"
+
         case .fetching:
             return "fetching UTXOs"
+
         case .scanning(let scanProgress):
             return "Scanning: \(scanProgress.progressHeight)/\(scanProgress.targetHeight)"
+
         case .disconnected:
             return "disconnected 💔"
+
         case .stopped:
             return "Stopped 🚫"
+
         case .synced:
             return "Synced 😎"
+
         case .unprepared:
             return "Unprepared 😅"
+
         case .validating:
             return "Validating"
+
         case .error(let e):
             return "Error: \(e.localizedDescription)"
         }

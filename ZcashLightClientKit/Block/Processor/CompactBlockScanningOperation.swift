@@ -9,7 +9,6 @@
 import Foundation
 
 class CompactBlockScanningOperation: ZcashOperation {
-    
     override var isConcurrent: Bool { false }
     
     override var isAsynchronous: Bool { false }
@@ -44,8 +43,7 @@ class CompactBlockScanningOperation: ZcashOperation {
     }
 }
 
-public class SDKMetrics {
-    
+public enum SDKMetrics {
     struct BlockMetricReport {
         var startHeight: BlockHeight
         var targetHeight: BlockHeight
@@ -56,6 +54,7 @@ public class SDKMetrics {
     enum TaskReported: String {
         case scanBlocks
     }
+
     static let startBlockHeightKey = "SDKMetrics.startBlockHeightKey"
     static let targetBlockHeightKey = "SDKMetrics.targetBlockHeightKey"
     static let progressHeightKey = "SDKMetrics.progressHeight"
@@ -65,29 +64,42 @@ public class SDKMetrics {
     static let notificationName = Notification.Name("SDKMetrics.Notification")
     
     static func blockReportFromNotification(_ notification: Notification) -> BlockMetricReport? {
-        
-        guard notification.name == notificationName,
-              let info = notification.userInfo,
-              let startHeight = info[startBlockHeightKey] as? BlockHeight,
-              let targetHeight = info[targetBlockHeightKey] as? BlockHeight,
-              let task = info[taskReportedKey] as? TaskReported,
-              let startDate = info[startDateKey] as? Date,
-              let endDate = info[endDateKey] as? Date else {
+        guard
+            notification.name == notificationName,
+            let info = notification.userInfo,
+            let startHeight = info[startBlockHeightKey] as? BlockHeight,
+            let targetHeight = info[targetBlockHeightKey] as? BlockHeight,
+            let task = info[taskReportedKey] as? TaskReported,
+            let startDate = info[startDateKey] as? Date,
+            let endDate = info[endDateKey] as? Date
+        else {
             return nil
         }
         
-        return BlockMetricReport(startHeight: startHeight, targetHeight: targetHeight, duration: abs(startDate.timeIntervalSinceReferenceDate - endDate.timeIntervalSinceReferenceDate), task: task)
+        return BlockMetricReport(
+            startHeight: startHeight,
+            targetHeight: targetHeight,
+            duration: abs(
+                startDate.timeIntervalSinceReferenceDate - endDate.timeIntervalSinceReferenceDate
+            ),
+            task: task
+        )
     }
     
-    static func progressReportNotification(progress: BlockProgressReporting, start: Date, end: Date, task: SDKMetrics.TaskReported) -> Notification {
+    static func progressReportNotification(
+        progress: BlockProgress,
+        start: Date,
+        end: Date,
+        task: SDKMetrics.TaskReported
+    ) -> Notification {
         var notification = Notification(name: notificationName)
         notification.userInfo = [
-            startBlockHeightKey : progress.startHeight,
-            targetBlockHeightKey : progress.targetHeight,
-            progressHeightKey : progress.progressHeight,
-            startDateKey : start,
-            endDateKey : end,
-            taskReportedKey : task
+            startBlockHeightKey: progress.startHeight,
+            targetBlockHeightKey: progress.targetHeight,
+            progressHeightKey: progress.progressHeight,
+            startDateKey: start,
+            endDateKey: end,
+            taskReportedKey: task
         ]
         
         return notification
@@ -102,28 +114,30 @@ extension String.StringInterpolation {
 }
 
 class CompactBlockBatchScanningOperation: ZcashOperation {
-    
     override var isConcurrent: Bool { false }
-    
     override var isAsynchronous: Bool { false }
     
     var rustBackend: ZcashRustBackendWelding.Type
-    private weak var progressDelegate: CompactBlockProgressDelegate?
+
     private var cacheDb: URL
     private var dataDb: URL
     private var batchSize: UInt32
     private var blockRange: CompactBlockRange
     private var transactionRepository: TransactionRepository
     private var network: NetworkType
+
+    private weak var progressDelegate: CompactBlockProgressDelegate?
     
-    init(rustWelding: ZcashRustBackendWelding.Type,
-         cacheDb: URL,
-         dataDb: URL,
-         transactionRepository: TransactionRepository,
-         range: CompactBlockRange,
-         batchSize: UInt32 = 100,
-         networkType: NetworkType,
-         progressDelegate: CompactBlockProgressDelegate? = nil) {
+    init(
+        rustWelding: ZcashRustBackendWelding.Type,
+        cacheDb: URL,
+        dataDb: URL,
+        transactionRepository: TransactionRepository,
+        range: CompactBlockRange,
+        batchSize: UInt32 = 100,
+        networkType: NetworkType,
+        progressDelegate: CompactBlockProgressDelegate? = nil
+    ) {
         rustBackend = rustWelding
         self.cacheDb = cacheDb
         self.dataDb = dataDb
@@ -140,7 +154,9 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
             cancel()
             return
         }
+
         self.startedHandler?()
+
         do {
             if batchSize == 0 {
                 let scanStartTime = Date()
@@ -149,19 +165,27 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     return
                 }
                 let scanFinishTime = Date()
-                NotificationCenter.default.post(SDKMetrics.progressReportNotification(
-                                                    progress: BlockProgress(startHeight: self.blockRange.lowerBound,
-                                                                            targetHeight: self.blockRange.upperBound,
-                                                                            progressHeight: self.blockRange.upperBound),
-                                                    start: scanStartTime,
-                                                    end: scanFinishTime,
-                                                    task: .scanBlocks))
-                LoggerProxy.debug("Scanned \(blockRange.count) blocks in \(scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate) seconds")
+                NotificationCenter.default.post(
+                    SDKMetrics.progressReportNotification(
+                        progress: BlockProgress(
+                            startHeight: self.blockRange.lowerBound,
+                            targetHeight: self.blockRange.upperBound,
+                            progressHeight: self.blockRange.upperBound
+                        ),
+                        start: scanStartTime,
+                        end: scanFinishTime,
+                        task: .scanBlocks
+                    )
+                )
+                let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
+                LoggerProxy.debug("Scanned \(blockRange.count) blocks in \(seconds) seconds")
             } else {
                 let scanStartHeight = try transactionRepository.lastScannedHeight()
                 let targetScanHeight = blockRange.upperBound
+
                 var scannedNewBlocks = false
                 var lastScannedHeight = scanStartHeight
+
                 repeat {
                     guard !shouldCancel() else {
                         cancel()
@@ -169,10 +193,12 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     }
                     let previousScannedHeight = lastScannedHeight
                     let scanStartTime = Date()
-                    guard self.rustBackend.scanBlocks(dbCache: self.cacheDb,
-                                                      dbData: self.dataDb,
-                                                      limit: batchSize,
-                                                      networkType: network) else {
+                    guard self.rustBackend.scanBlocks(
+                        dbCache: self.cacheDb,
+                        dbData: self.dataDb,
+                        limit: batchSize,
+                        networkType: network
+                    ) else {
                         self.scanFailed(self.rustBackend.lastError() ?? ZcashOperationError.unknown)
                         return
                     }
@@ -184,12 +210,20 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
                         progressDelegate?.progressUpdated(.scan(progress))
-                        NotificationCenter.default.post(SDKMetrics.progressReportNotification(progress: progress, start: scanStartTime, end: scanFinishTime, task: .scanBlocks))
-                        LoggerProxy.debug("Scanned \(lastScannedHeight - previousScannedHeight) blocks in \(scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate) seconds")
+                        NotificationCenter.default.post(
+                            SDKMetrics.progressReportNotification(
+                                progress: progress,
+                                start: scanStartTime,
+                                end: scanFinishTime,
+                                task: .scanBlocks
+                            )
+                        )
+
+                        let heightCount = lastScannedHeight - previousScannedHeight
+                        let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
+                        LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
                     }
-                    
                 } while !self.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
-                
             }
         } catch {
             scanFailed(error)

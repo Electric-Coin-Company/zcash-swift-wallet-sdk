@@ -7,26 +7,32 @@
 
 import XCTest
 @testable import ZcashLightClientKit
+
+// swiftlint:disable implicitly_unwrapped_optional
 class SychronizerDarksideTests: XCTestCase {
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
-    
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
-    
+    // TODO: Parameterize this from environment?
+    // swiftlint:disable:next line_length
+    let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+
+    // TODO: Parameterize this from environment
+    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount: Int64 = 1000
-    var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
+    let branchID = "2bb40e60"
+    let chainName = "main"
+    let network = DarksideWalletDNetwork()
+
+    var birthday: BlockHeight = 663150
     var coordinator: TestCoordinator!
     var syncedExpectation = XCTestExpectation(description: "synced")
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
-    var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
-    let branchID = "2bb40e60"
-    let chainName = "main"
-    let network = DarksideWalletDNetwork()
-    var foundTransactions = [ConfirmedTransactionEntity]()
+    var reorgExpectation = XCTestExpectation(description: "reorg")
+    var foundTransactions: [ConfirmedTransactionEntity] = []
+
     override func setUpWithError() throws {
-        
+        try super.setUpWithError()
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
@@ -37,6 +43,7 @@ class SychronizerDarksideTests: XCTestCase {
     }
     
     override func tearDownWithError() throws {
+        try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
@@ -45,20 +52,22 @@ class SychronizerDarksideTests: XCTestCase {
     }
    
     func testFoundTransactions() throws {
-        NotificationCenter.default.addObserver(self, selector: #selector(handleFoundTransactions(_:)), name: Notification.Name.synchronizerFoundTransactions, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleFoundTransactions(_:)),
+            name: Notification.Name.synchronizerFoundTransactions,
+            object: nil
+        )
         
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
-        
     
         try coordinator.applyStaged(blockheight: receivedTxHeight + 1)
         
         sleep(2)
         let preTxExpectation = XCTestExpectation(description: "pre receive")
-        
 
-        try coordinator.sync(completion: { (synchronizer) in
-            
+        try coordinator.sync(completion: { _ in
             preTxExpectation.fulfill()
         }, error: self.handleError)
         
@@ -68,20 +77,22 @@ class SychronizerDarksideTests: XCTestCase {
     }
     
     func testFoundManyTransactions() throws {
-        NotificationCenter.default.addObserver(self, selector: #selector(handleFoundTransactions(_:)), name: Notification.Name.synchronizerFoundTransactions, object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleFoundTransactions(_:)),
+            name: Notification.Name.synchronizerFoundTransactions,
+            object: nil
+        )
         
-        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName,length: 1000)
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName, length: 1000)
         let receivedTxHeight: BlockHeight = 663229
-        
     
         try coordinator.applyStaged(blockheight: receivedTxHeight + 1)
         
         sleep(2)
         let firsTxExpectation = XCTestExpectation(description: "first sync")
-        
 
-        try coordinator.sync(completion: { (synchronizer) in
-            
+        try coordinator.sync(completion: { _ in
             firsTxExpectation.fulfill()
         }, error: self.handleError)
         
@@ -95,36 +106,34 @@ class SychronizerDarksideTests: XCTestCase {
         sleep(2)
         
         let preTxExpectation = XCTestExpectation(description: "intermediate sync")
-        
 
-        try coordinator.sync(completion: { (synchronizer) in
-            
+        try coordinator.sync(completion: { _ in
             preTxExpectation.fulfill()
         }, error: self.handleError)
         
         wait(for: [preTxExpectation], timeout: 10)
         
-        XCTAssertTrue(self.foundTransactions.count == 0)
+        XCTAssertTrue(self.foundTransactions.isEmpty)
         
         let findManyTxExpectation = XCTestExpectation(description: "final sync")
         
         try coordinator.applyStaged(blockheight: 664010)
         sleep(2)
         
-        try coordinator.sync(completion: { (synchronizer) in
-            
+        try coordinator.sync(completion: { _ in
             findManyTxExpectation.fulfill()
         }, error: self.handleError)
         
         wait(for: [findManyTxExpectation], timeout: 10)
         
         XCTAssertEqual(self.foundTransactions.count, 2)
-        
     }
     
     @objc func handleFoundTransactions(_ notification: Notification) {
-        guard let userInfo = notification.userInfo,
-              let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ConfirmedTransactionEntity] else {
+        guard
+            let userInfo = notification.userInfo,
+            let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ConfirmedTransactionEntity]
+        else {
             return
         }
         self.foundTransactions.append(contentsOf: transactions)

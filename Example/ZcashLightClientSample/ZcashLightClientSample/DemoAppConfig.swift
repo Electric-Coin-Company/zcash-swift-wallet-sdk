@@ -9,7 +9,8 @@
 import Foundation
 import ZcashLightClientKit
 import MnemonicSwift
-struct DemoAppConfig {
+// swiftlint:disable line_length force_try
+enum DemoAppConfig {
     static var host = ZcashSDK.isMainnet ? "lightwalletd.electriccoin.co" : "lightwalletd.testnet.electriccoin.co"
     static var port: Int = 9067
     static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 935000 : 1386000
@@ -20,7 +21,12 @@ struct DemoAppConfig {
     }
     
     static var processorConfig: CompactBlockProcessor.Configuration  = {
-        CompactBlockProcessor.Configuration(cacheDb: try! __cacheDbURL(), dataDb: try! __dataDbURL(), walletBirthday: Self.birthdayHeight, network: ZCASH_NETWORK)
+        CompactBlockProcessor.Configuration(
+            cacheDb: try! cacheDbURLHelper(),
+            dataDb: try! dataDbURLHelper(),
+            walletBirthday: Self.birthdayHeight,
+            network: kZcashNetwork
+        )
     }()
     
     static var endpoint: LightWalletEndpoint {
@@ -28,14 +34,11 @@ struct DemoAppConfig {
     }
 }
 
-
 extension ZcashSDK {
     static var isMainnet: Bool {
-        switch ZCASH_NETWORK.networkType {
-        case .mainnet:
-            return true
-        case .testnet:
-            return false
+        switch kZcashNetwork.networkType {
+        case .mainnet:  return true
+        case .testnet:  return false
         }
     }
 }

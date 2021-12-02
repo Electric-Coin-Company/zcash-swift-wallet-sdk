@@ -8,7 +8,6 @@
 import Foundation
 import SQLite
 struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
-    
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
         case accountIndex = "account_index"
@@ -42,58 +41,57 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     var value: Int
     var memo: Data?
     var rawTransactionId: Data?
-    
+
+    static func from(entity: PendingTransactionEntity) -> PendingTransaction {
+        PendingTransaction(
+            toAddress: entity.toAddress,
+            accountIndex: entity.accountIndex,
+            minedHeight: entity.minedHeight,
+            expiryHeight: entity.expiryHeight,
+            cancelled: entity.cancelled,
+            encodeAttempts: entity.encodeAttempts,
+            submitAttempts: entity.submitAttempts,
+            errorMessage: entity.errorMessage,
+            errorCode: entity.errorCode,
+            createTime: entity.createTime,
+            raw: entity.raw,
+            id: entity.id,
+            value: entity.value,
+            memo: entity.memo,
+            rawTransactionId: entity.raw
+        )
+    }
+
     func isSameTransactionId<T>(other: T) -> Bool where T: RawIdentifiable {
         self.rawTransactionId == other.rawTransactionId
-    }
-    
-    static func from(entity: PendingTransactionEntity) -> PendingTransaction {
-        PendingTransaction(toAddress: entity.toAddress,
-                           accountIndex: entity.accountIndex,
-                           minedHeight: entity.minedHeight,
-                           expiryHeight: entity.expiryHeight,
-                           cancelled: entity.cancelled,
-                           encodeAttempts: entity.encodeAttempts,
-                           submitAttempts: entity.submitAttempts,
-                           errorMessage: entity.errorMessage,
-                           errorCode: entity.errorCode,
-                           createTime: entity.createTime,
-                           raw: entity.raw,
-                           id: entity.id,
-                           value: entity.value,
-                           memo: entity.memo,
-                           rawTransactionId: entity.raw)
     }
 }
 
 extension PendingTransaction {
-    
     // TODO: Handle Memo
     init(value: Int, toAddress: String, memo: String?, account index: Int) {
-        
-        self = PendingTransaction(toAddress: toAddress,
-                                  accountIndex: index,
-                                  minedHeight: -1,
-                                  expiryHeight: -1,
-                                  cancelled: 0,
-                                  encodeAttempts: 0,
-                                  submitAttempts: 0,
-                                  errorMessage: nil,
-                                  errorCode: nil,
-                                  createTime: Date().timeIntervalSince1970,
-                                  raw: nil,
-                                  id: nil,
-                                  value: Int(value),
-                                  memo: memo?.encodeAsZcashTransactionMemo(),
-                                  rawTransactionId: nil)
+        self = PendingTransaction(
+            toAddress: toAddress,
+            accountIndex: index,
+            minedHeight: -1,
+            expiryHeight: -1,
+            cancelled: 0,
+            encodeAttempts: 0,
+            submitAttempts: 0,
+            errorMessage: nil,
+            errorCode: nil,
+            createTime: Date().timeIntervalSince1970,
+            raw: nil,
+            id: nil,
+            value: Int(value),
+            memo: memo?.encodeAsZcashTransactionMemo(),
+            rawTransactionId: nil
+        )
     }
 }
 
 class PendingTransactionSQLDAO: PendingTransactionRepository {
-
-    let table = Table("pending_transactions")
-    
-    struct TableColumns {
+    enum TableColumns {
         static var toAddress = Expression<String>("to_address")
         static var accountIndex = Expression<Int>("account_index")
         static var minedHeight = Expression<Int?>("mined_height")
@@ -110,6 +108,8 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         static var memo = Expression<Blob?>("memo")
         static var rawTransactionId = Expression<Blob?>("txid")
     }
+
+    let table = Table("pending_transactions")
     
     var dbProvider: ConnectionProvider
    
@@ -118,40 +118,40 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     }
     
     func createrTableIfNeeded() throws {
-        let statement = table.create(ifNotExists: true) { t in
-            t.column(TableColumns.id, primaryKey: .autoincrement)
-            t.column(TableColumns.toAddress)
-            t.column(TableColumns.accountIndex)
-            t.column(TableColumns.minedHeight)
-            t.column(TableColumns.expiryHeight)
-            t.column(TableColumns.cancelled)
-            t.column(TableColumns.encodeAttempts, defaultValue: 0)
-            t.column(TableColumns.errorMessage)
-            t.column(TableColumns.errorCode)
-            t.column(TableColumns.submitAttempts, defaultValue: 0)
-            t.column(TableColumns.createTime)
-            t.column(TableColumns.rawTransactionId)
-            t.column(TableColumns.value)
-            t.column(TableColumns.raw)
-            t.column(TableColumns.memo)
+        let statement = table.create(ifNotExists: true) { createdTable in
+            createdTable.column(TableColumns.id, primaryKey: .autoincrement)
+            createdTable.column(TableColumns.toAddress)
+            createdTable.column(TableColumns.accountIndex)
+            createdTable.column(TableColumns.minedHeight)
+            createdTable.column(TableColumns.expiryHeight)
+            createdTable.column(TableColumns.cancelled)
+            createdTable.column(TableColumns.encodeAttempts, defaultValue: 0)
+            createdTable.column(TableColumns.errorMessage)
+            createdTable.column(TableColumns.errorCode)
+            createdTable.column(TableColumns.submitAttempts, defaultValue: 0)
+            createdTable.column(TableColumns.createTime)
+            createdTable.column(TableColumns.rawTransactionId)
+            createdTable.column(TableColumns.value)
+            createdTable.column(TableColumns.raw)
+            createdTable.column(TableColumns.memo)
         }
        
         try dbProvider.connection().run(statement)
     }
     
     func create(_ transaction: PendingTransactionEntity) throws -> Int {
+        let pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
         
-        let tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
-        
-        return try Int(dbProvider.connection().run(table.insert(tx)))
+        return try Int(dbProvider.connection().run(table.insert(pendingTx)))
     }
     
     func update(_ transaction: PendingTransactionEntity) throws {
-        let tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
-        guard let id = tx.id else {
+        let pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
+        guard let id = pendingTx.id else {
             throw StorageError.malformedEntity(fields: ["id"])
         }
-       let updatedRows = try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
+
+        let updatedRows = try dbProvider.connection().run(table.filter(TableColumns.id == id).update(pendingTx))
         if updatedRows == 0 {
             LoggerProxy.error("attempted to update pending transactions but no rows were updated")
         }
@@ -159,53 +159,54 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     
     func delete(_ transaction: PendingTransactionEntity) throws {
         guard let id = transaction.id else {
-                  throw StorageError.malformedEntity(fields: ["id"])
-              }
+            throw StorageError.malformedEntity(fields: ["id"])
+        }
+
         do {
             try dbProvider.connection().run(table.filter(TableColumns.id == id).delete())
         } catch {
             throw StorageError.updateFailed
         }
-            
     }
     
     func cancel(_ transaction: PendingTransactionEntity) throws {
-        
-        var tx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
-        tx.cancelled = 1
-        guard let id = tx.id else {
+        var pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
+        pendingTx.cancelled = 1
+        guard let txId = pendingTx.id else {
             throw StorageError.malformedEntity(fields: ["id"])
         }
-        try dbProvider.connection().run(table.filter(TableColumns.id == id).update(tx))
+
+        try dbProvider.connection().run(table.filter(TableColumns.id == txId).update(pendingTx))
     }
     
     func find(by id: Int) throws -> PendingTransactionEntity? {
         guard let row = try dbProvider.connection().pluck(table.filter(TableColumns.id == id).limit(1)) else {
             return nil
         }
+
         do {
-            let tx: PendingTransaction = try row.decode()
-            return tx
+            let pendingTx: PendingTransaction = try row.decode()
+            return pendingTx
         } catch {
             throw StorageError.operationFailed
         }
     }
     
     func getAll() throws -> [PendingTransactionEntity] {
-        let allTxs: [PendingTransaction] = try dbProvider.connection().prepare(table).map({ row in
+        let allTxs: [PendingTransaction] = try dbProvider.connection().prepare(table).map { row in
             try row.decode()
-        })
+        }
+
         return allTxs
     }
     
     func applyMinedHeight(_ height: BlockHeight, id: Int) throws {
+        let transaction = table.filter(TableColumns.id == id)
         
-        let tx = table.filter(TableColumns.id == id)
+        let updatedRows = try dbProvider.connection()
+            .run(transaction.update([TableColumns.minedHeight <- height]))
         
-        let updatedRows = try dbProvider.connection().run(tx.update(
-            [TableColumns.minedHeight <- height]
-        ))
-        if updatedRows == 0  {
+        if updatedRows == 0 {
             LoggerProxy.error("attempted to update a row but none was updated")
         }
     }

@@ -8,9 +8,13 @@
 
 import XCTest
 @testable import ZcashLightClientKit
+
+// swiftlint:disable force_try implicitly_unwrapped_optional
 class CompactBlockProcessorTests: XCTestCase {
-    
-    let processorConfig = CompactBlockProcessor.Configuration.standard(for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.SAPLING_ACTIVATION_HEIGHT)
+    let processorConfig = CompactBlockProcessor.Configuration.standard(
+        for: ZcashNetworkBuilder.network(for: .testnet),
+        walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
+    )
     var processor: CompactBlockProcessor!
     var downloadStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -19,13 +23,16 @@ class CompactBlockProcessorTests: XCTestCase {
     var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
-    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.SAPLING_ACTIVATION_HEIGHT + 2000
+    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
     
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        try super.setUpWithError()
         logger = SampleLogger(logLevel: .debug)
         
-        let service = MockLightWalletService(latestBlockHeight: mockLatestHeight, service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet))
+        let service = MockLightWalletService(
+            latestBlockHeight: mockLatestHeight,
+            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+        )
         let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
         service.mockLightDInfo = LightdInfo.with({ info in
             info.blockHeight = UInt64(mockLatestHeight)
@@ -35,29 +42,39 @@ class CompactBlockProcessorTests: XCTestCase {
             info.chainName = "test"
             info.consensusBranchID = branchID.toString()
             info.estimatedHeight = UInt64(mockLatestHeight)
-            info.saplingActivationHeight = UInt64(network.constants.SAPLING_ACTIVATION_HEIGHT)
+            info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         })
         
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
         
-        
-        processor = CompactBlockProcessor(service: service,
-                                          storage: storage,
-                                          backend: ZcashRustBackend.self,
-                                          config: processorConfig)
+        processor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: ZcashRustBackend.self,
+            config: processorConfig
+        )
         try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: .testnet)
-        downloadStartedExpect = XCTestExpectation(description: self.description + " downloadStartedExpect")
-        stopNotificationExpectation = XCTestExpectation(description: self.description + " stopNotificationExpectation")
-        updatedNotificationExpectation = XCTestExpectation(description: self.description + " updatedNotificationExpectation")
-        startedValidatingNotificationExpectation = XCTestExpectation(description: self.description + " startedValidatingNotificationExpectation")
-        startedScanningNotificationExpectation = XCTestExpectation(description: self.description + " startedScanningNotificationExpectation")
-        idleNotificationExpectation = XCTestExpectation(description: self.description + " idleNotificationExpectation")
-        NotificationCenter.default.addObserver(self, selector: #selector(processorFailed(_:)), name: Notification.Name.blockProcessorFailed, object: processor)
+        downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
+        stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
+        updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
+        startedValidatingNotificationExpectation = XCTestExpectation(
+            description: "\(self.description) startedValidatingNotificationExpectation"
+        )
+        startedScanningNotificationExpectation = XCTestExpectation(
+            description: "\(self.description) startedScanningNotificationExpectation"
+        )
+        idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(processorFailed(_:)),
+            name: Notification.Name.blockProcessorFailed,
+            object: processor
+        )
     }
     
     override func tearDown() {
-        
+        super.tearDown()
         try! FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         downloadStartedExpect.unsubscribeFromNotifications()
@@ -78,7 +95,7 @@ class CompactBlockProcessorTests: XCTestCase {
         }
     }
     
-    fileprivate func startProcessing() {
+    private func startProcessing() {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
@@ -93,58 +110,82 @@ class CompactBlockProcessorTests: XCTestCase {
     }
     
     func testStartNotifiesSuscriptors() {
-        
         startProcessing()
    
-        wait(for: [
-                   downloadStartedExpect,
-                   startedValidatingNotificationExpectation,
-                   startedScanningNotificationExpectation,
-                   idleNotificationExpectation,
-                   ], timeout: 30,enforceOrder: true)
+        wait(
+            for: [
+                downloadStartedExpect,
+                startedValidatingNotificationExpectation,
+                startedScanningNotificationExpectation,
+                idleNotificationExpectation
+            ],
+            timeout: 30,
+            enforceOrder: true
+        )
     }
     
     func testProgressNotifications() {
-        
-        let expectedUpdates = expectedBatches(currentHeight: processorConfig.walletBirthday, targetHeight: mockLatestHeight, batchSize: processorConfig.downloadBatchSize)
+        let expectedUpdates = expectedBatches(
+            currentHeight: processorConfig.walletBirthday,
+            targetHeight: mockLatestHeight,
+            batchSize: processorConfig.downloadBatchSize
+        )
         updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
         
         startProcessing()
         wait(for: [updatedNotificationExpectation], timeout: 300)
-        
-        
     }
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {
-        (abs(currentHeight-targetHeight)/batchSize)
+        (abs(currentHeight - targetHeight) / batchSize)
     }
     
     func testNextBatchBlockRange() {
-        
         // test first range
         var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
-        var latestBlockchainHeight = BlockHeight(network.constants.SAPLING_ACTIVATION_HEIGHT + 1000)
+        var latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
         
         var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestBlockchainHeight))
         
-        XCTAssertEqual(expectedBatchRange, CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight, walletBirthday: processorConfig.walletBirthday))
+        XCTAssertEqual(
+            expectedBatchRange,
+            CompactBlockProcessor.nextBatchBlockRange(
+                latestHeight: latestBlockchainHeight,
+                latestDownloadedHeight: latestDownloadedHeight,
+                walletBirthday: processorConfig.walletBirthday
+            )
+        )
         
         // Test mid-range
-        latestDownloadedHeight = BlockHeight(network.constants.SAPLING_ACTIVATION_HEIGHT + ZcashSDK.DEFAULT_BATCH_SIZE)
-        latestBlockchainHeight = BlockHeight(network.constants.SAPLING_ACTIVATION_HEIGHT + 1000)
+        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + ZcashSDK.DefaultBatchSize)
+        latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
         
         expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
         
-        XCTAssertEqual(expectedBatchRange, CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight, walletBirthday: processorConfig.walletBirthday))
+        XCTAssertEqual(
+            expectedBatchRange,
+            CompactBlockProcessor.nextBatchBlockRange(
+                latestHeight: latestBlockchainHeight,
+                latestDownloadedHeight: latestDownloadedHeight,
+                walletBirthday: processorConfig.walletBirthday
+            )
+        )
         
         // Test last batch range
         
-        latestDownloadedHeight = BlockHeight(network.constants.SAPLING_ACTIVATION_HEIGHT + 950)
-        latestBlockchainHeight = BlockHeight(network.constants.SAPLING_ACTIVATION_HEIGHT + 1000)
+        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + 950)
+        latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
         
         expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
         
-        XCTAssertEqual(expectedBatchRange, CompactBlockProcessor.nextBatchBlockRange(latestHeight: latestBlockchainHeight, latestDownloadedHeight: latestDownloadedHeight, walletBirthday: processorConfig.walletBirthday))
+        XCTAssertEqual(
+            expectedBatchRange,
+            CompactBlockProcessor.nextBatchBlockRange(
+                latestHeight: latestBlockchainHeight,
+                latestDownloadedHeight: latestDownloadedHeight,
+                walletBirthday: processorConfig.walletBirthday
+            )
+        )
     }
     
     func testDetermineLowerBoundPastBirthday() {
@@ -156,7 +197,6 @@ class CompactBlockProcessorTests: XCTestCase {
         let expected = 781_886
         
         XCTAssertEqual(result, expected)
-        
     }
     
     func testDetermineLowerBound() {
@@ -168,6 +208,5 @@ class CompactBlockProcessorTests: XCTestCase {
         let expected = 781_896
         
         XCTAssertEqual(result, expected)
-        
     }
 }

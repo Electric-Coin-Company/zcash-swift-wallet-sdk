@@ -9,19 +9,19 @@
 import XCTest
 @testable import ZcashLightClientKit
 import GRPC
+
+// swiftlint:disable implicitly_unwrapped_optional force_unwrapping
 class LightWalletServiceTests: XCTestCase {
-    
+    let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
+
     var service: LightWalletService!
     var channel: Channel!
-    let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
+
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
+        super.setUp()
         channel = ChannelProvider().channel()
         service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
-    }
-
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
     /// FIXME: check whether this test is stil valid on in memory lwd implementatiojn
@@ -40,11 +40,11 @@ class LightWalletServiceTests: XCTestCase {
     func testHundredBlocks() {
         let expect = XCTestExpectation(description: self.description)
         let count = 99
-        let lowerRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT + count
+        let lowerRange: BlockHeight = network.constants.saplingActivationHeight
+        let upperRange: BlockHeight = network.constants.saplingActivationHeight + count
         let blockRange = lowerRange ... upperRange
         
-        service.blockRange(blockRange) { (result) in
+        service.blockRange(blockRange) { result in
             expect.fulfill()
             switch result {
             case .failure(let error):
@@ -61,8 +61,8 @@ class LightWalletServiceTests: XCTestCase {
     }
     
     func testSyncBlockRange() {
-        let lowerRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
-        let upperRange: BlockHeight = network.constants.SAPLING_ACTIVATION_HEIGHT + 99
+        let lowerRange: BlockHeight = network.constants.saplingActivationHeight
+        let upperRange: BlockHeight = network.constants.saplingActivationHeight + 99
         let blockRange = lowerRange ... upperRange
         
         do {
@@ -73,19 +73,18 @@ class LightWalletServiceTests: XCTestCase {
         }
     }
     
-    func testLatestBlock(){
+    func testLatestBlock() {
         let expect = XCTestExpectation(description: self.description)
-        service.latestBlockHeight { (result) in
+        service.latestBlockHeight { result in
             expect.fulfill()
             switch result {
             case .failure(let e):
                 XCTFail("error: \(e)")
             case .success(let height):
-                XCTAssertTrue(height > self.network.constants.SAPLING_ACTIVATION_HEIGHT)
+                XCTAssertTrue(height > self.network.constants.saplingActivationHeight)
             }
         }
         
         wait(for: [expect], timeout: 10)
     }
-   
 }

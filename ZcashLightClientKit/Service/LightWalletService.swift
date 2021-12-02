@@ -11,8 +11,8 @@ import GRPC
 import SwiftProtobuf
 
 /**
- Wrapper for errors received from a Lightwalletd endpoint
- */
+Wrapper for errors received from a Lightwalletd endpoint
+*/
 public enum LightWalletServiceError: Error {
     case generalError(message: String)
     case failed(statusCode: Int, message: String)
@@ -25,19 +25,14 @@ public enum LightWalletServiceError: Error {
     case unknown
 }
 
-public protocol BlockProgressReporting {
-    var startHeight: BlockHeight { get }
-    var targetHeight: BlockHeight { get }
-    var progressHeight: BlockHeight { get }
-}
-
 extension LightWalletServiceError: Equatable {
+    // swiftlint:disable cyclomatic_complexity
     public static func == (lhs: Self, rhs: Self) -> Bool {
         switch lhs {
-        case .generalError(let m):
+        case .generalError(let message):
             switch rhs {
             case .generalError(let msg):
-                return m == msg
+                return message == msg
             default:
                 return false
             }
@@ -74,21 +69,21 @@ extension LightWalletServiceError: Equatable {
                 return false
             }
         case .criticalError:
-            switch rhs  {
+            switch rhs {
             case .criticalError:
                 return true
             default:
                 return false
             }
         case .userCancelled:
-            switch rhs  {
+            switch rhs {
             case .userCancelled:
                 return true
             default:
                 return false
             }
         case .unknown:
-            switch rhs  {
+            switch rhs {
             case .unknown:
                 return true
             default:
@@ -108,90 +103,112 @@ extension SendResponse: LightWalletServiceResponse {}
 
 public protocol LightWalletService {
     /**
-     returns the info for this lightwalletd server (blocking)
-     */
+    returns the info for this lightwalletd server (blocking)
+    */
     func getInfo() throws -> LightWalletdInfo
     
     /**
-     returns the info for this lightwalletd server
-     */
+    returns the info for this lightwalletd server
+    */
     func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void)
+
     /**
         Return the latest block height known to the service.
      
         - Parameter result: a result containing the height or an Error
-     */
-    func latestBlockHeight(result: @escaping (Result<BlockHeight,LightWalletServiceError>) -> Void)
-    
-    /**
-       Return the latest block height known to the service.
-    
-       - Parameter result: a result containing the height or an Error
     */
+    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void)
     
-    func latestBlockHeight() throws -> BlockHeight
     /**
-          Return the given range of blocks.
+        Return the latest block height known to the service.
+    
+        - Parameter result: a result containing the height or an Error
+    */
+    func latestBlockHeight() throws -> BlockHeight
+
+    /**
+        Return the given range of blocks.
       
-          - Parameter range: the inclusive range to fetch.
-          For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
+            - Parameter range: the inclusive range to fetch.
+                For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
         Non blocking
     */
     func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void )
     
     /**
-             Return the given range of blocks.
+        Return the given range of blocks.
          
-             - Parameter range: the inclusive range to fetch.
-            
-     For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
-            blocking
-     
-       */
+            - Parameter range: the inclusive range to fetch.
+                For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
+        blocking
+    */
     func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock]
     
-    @discardableResult func blockStream(startHeight: BlockHeight, endHeight: BlockHeight, result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void, handler: @escaping (ZcashCompactBlock) -> Void, progress: @escaping  (BlockProgressReporting) -> Void) -> CancellableCall
+    @discardableResult
+    func blockStream(
+        startHeight: BlockHeight,
+        endHeight: BlockHeight,
+        result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void,
+        handler: @escaping (ZcashCompactBlock) -> Void,
+        progress: @escaping  (BlockProgress) -> Void
+    ) -> CancellableCall
+
     /**
-     Submits a raw transaction over lightwalletd. Non-Blocking
-     - Parameter spendTransaction: data representing the transaction to be sent
-     - Parameter result: escaping closure that takes a result containing either LightWalletServiceResponse or LightWalletServiceError
-     */
-    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse,LightWalletServiceError>) -> Void)
+    Submits a raw transaction over lightwalletd. Non-Blocking
+    - Parameter spendTransaction: data representing the transaction to be sent
+    - Parameter result: escaping closure that takes a result containing either LightWalletServiceResponse or LightWalletServiceError
+    */
+    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void)
     
     /**
     Submits a raw transaction over lightwalletd. Blocking
-     - Parameter spendTransaction: data representing the transaction to be sent
-     - Throws: LightWalletServiceError
-     - Returns: LightWalletServiceResponse
+    - Parameter spendTransaction: data representing the transaction to be sent
+    - Throws: LightWalletServiceError
+    - Returns: LightWalletServiceResponse
     */
-    
     func submit(spendTransaction: Data) throws -> LightWalletServiceResponse
     
     /**
     Gets a transaction by id
-     - Parameter txId: data representing the transaction ID
-     - Throws: LightWalletServiceError
-     - Returns: LightWalletServiceResponse
-     */
-    
+    - Parameter txId: data representing the transaction ID
+    - Throws: LightWalletServiceError
+    - Returns: LightWalletServiceResponse
+    */
     func fetchTransaction(txId: Data) throws -> TransactionEntity
     
     /**
     Gets a transaction by id
-     - Parameter txId: data representing the transaction ID
-     - Parameter result: handler for the result
-     - Throws: LightWalletServiceError
-     - Returns: LightWalletServiceResponse
-     */
-    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity,LightWalletServiceError>) -> Void)
+    - Parameter txId: data representing the transaction ID
+    - Parameter result: handler for the result
+    - Throws: LightWalletServiceError
+    - Returns: LightWalletServiceResponse
+    */
+    func fetchTransaction(
+        txId: Data,
+        result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void
+    )
     
-    func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    func fetchUTXOs(
+        for tAddress: String,
+        height: BlockHeight
+    ) throws -> [UnspentTransactionOutputEntity]
     
-    func fetchUTXOs(for tAddress: String, height: BlockHeight, result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void)
+    func fetchUTXOs(
+        for tAddress: String,
+        height: BlockHeight,
+        result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
+    )
     
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity]
+    func fetchUTXOs(
+        for tAddresses: [String],
+        height: BlockHeight
+    ) throws -> [UnspentTransactionOutputEntity]
     
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight, result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void)
+    func fetchUTXOs(
+        for tAddresses: [String],
+        height: BlockHeight,
+        result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
+    )
     
     func closeConnection()
 }

@@ -9,12 +9,14 @@
 import XCTest
 import SQLite
 @testable import ZcashLightClientKit
+
+// swiftlint:disable force_try
 class DownloadOperationTests: XCTestCase {
-    
     var operationQueue = OperationQueue()
     var network = ZcashNetworkBuilder.network(for: .testnet)
+
     override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        super.tearDown()
         operationQueue.cancelAllOperations()
     }
 
@@ -25,17 +27,17 @@ class DownloadOperationTests: XCTestCase {
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
         let blockCount = 100
-        let activationHeight = network.constants.SAPLING_ACTIVATION_HEIGHT
+        let activationHeight = network.constants.saplingActivationHeight
         let range = activationHeight ... activationHeight + blockCount
         let downloadOperation = CompactBlockDownloadOperation(downloader: downloader, range: range)
         
-        downloadOperation.completionHandler = { (finished, cancelled) in
+        downloadOperation.completionHandler = { finished, cancelled in
             expect.fulfill()
             XCTAssertTrue(finished)
             XCTAssertFalse(cancelled)
         }
         
-        downloadOperation.errorHandler = { (error) in
+        downloadOperation.errorHandler = { error in
             XCTFail("Donwload Operation failed with error: \(error)")
         }
         
@@ -43,7 +45,6 @@ class DownloadOperationTests: XCTestCase {
         
         wait(for: [expect], timeout: 10)
         
-        XCTAssertEqual(try! storage.latestHeight(),range.upperBound)
+        XCTAssertEqual(try! storage.latestHeight(), range.upperBound)
     }
-
 }

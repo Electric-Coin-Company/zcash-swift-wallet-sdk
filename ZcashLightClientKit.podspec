@@ -18,8 +18,6 @@ Pod::Spec.new do |s|
     s.source_files = 'ZcashLightClientKit/**/*.{swift,h}'
     s.swift_version = '5.4'
     s.ios.deployment_target = '12.0'
-    s.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
-    s.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
     s.dependency 'gRPC-Swift', '= 1.0.0'
     s.dependency 'SQLite.swift', '~> 0.12.2' 
     s.ios.vendored_libraries = 'lib/libzcashlc.a'

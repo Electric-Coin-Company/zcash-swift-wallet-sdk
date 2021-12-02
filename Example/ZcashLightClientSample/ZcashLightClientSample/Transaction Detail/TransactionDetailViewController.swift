@@ -17,7 +17,7 @@ final class TransactionDetailModel {
     var zatoshi: String?
     var memo: String?
     
-    init(){}
+    init() {}
     
     init(confirmedTransaction: ConfirmedTransactionEntity) {
         self.id = confirmedTransaction.rawTransactionId?.toHexStringTxId()
@@ -45,21 +45,18 @@ final class TransactionDetailModel {
         self.zatoshi = "not available in this entity"
     }
 }
+
+// swiftlint:disable implicitly_unwrapped_optional
 class TransactionDetailViewController: UITableViewController {
-    
     @IBOutlet weak var idLabel: UILabel!
     @IBOutlet weak var minedHeightLabel: UILabel!
     @IBOutlet weak var expiryHeightLabel: UILabel!
     @IBOutlet weak var createdLabel: UILabel!
     @IBOutlet weak var zatoshiLabel: UILabel!
     @IBOutlet weak var memoLabel: UILabel!
-    var model: TransactionDetailModel!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
 
-    }
-    
+    var model: TransactionDetailModel!
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         

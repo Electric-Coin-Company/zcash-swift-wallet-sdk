@@ -10,7 +10,6 @@ import UIKit
 import ZcashLightClientKit
 import MnemonicSwift
 class DerivationToolViewController: UIViewController {
-    
     enum DerivationErrors: Error {
         case couldNotDeriveSpendingKeys(underlyingError: Error)
         case couldNotDeriveViewingKeys(underlyingError: Error)
@@ -18,6 +17,7 @@ class DerivationToolViewController: UIViewController {
         case couldNotDeriveTransparentAddress(underlyingError: Error)
         case unknown
     }
+
     @IBOutlet weak var seedTextView: UITextView!
     @IBOutlet weak var seedTextLabel: UILabel!
     @IBOutlet weak var shieldedAddressLabel: UILabel!
@@ -31,40 +31,62 @@ class DerivationToolViewController: UIViewController {
         deriveButton.isEnabled = isValidSeed(seedTextView.text)
         updateValidationUI()
     }
+
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
-        
         loggerProxy.event("spending key copied to clipboard")
         
         UIPasteboard.general.string = self.spendingKeyLabel.text
         
-        let alert = UIAlertController(title: "", message: "Spending Key Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(
+            title: "",
+            message: "Spending Key Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
     @IBAction func viewingKeyTapped(_ gesture: UIGestureRecognizer) {
-        
         loggerProxy.event("extended full viewing key copied to clipboard")
         
         UIPasteboard.general.string = self.extendedFullViewingKeyLabel.text
         
-        let alert = UIAlertController(title: "", message: "extended full viewing key copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(
+            title: "",
+            message: "extended full viewing key copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
     @IBAction func zAddressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("zAddress copied to clipboard")
+
         UIPasteboard.general.string = self.shieldedAddressLabel.text
-        let alert = UIAlertController(title: "", message: "zAddress Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(
+            title: "",
+            message: "zAddress Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
     @IBAction func tAddressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("tAddress copied to clipboard")
+
         UIPasteboard.general.string = self.transparentAddressLabel.text
-        let alert = UIAlertController(title: "", message: "tAddress Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+
+        let alert = UIAlertController(
+            title: "",
+            message: "tAddress Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
@@ -72,7 +94,6 @@ class DerivationToolViewController: UIViewController {
     @IBAction func deriveButtonTapped(_ sender: Any) {
         do {
             try deriveFrom(seedPhrase: seedTextView.text)
-            
         } catch {
             fail(error)
             
@@ -81,12 +102,13 @@ class DerivationToolViewController: UIViewController {
     }
     
     func deriveFrom(seedPhrase: String) throws {
-
         let seedBytes = try Mnemonic.deterministicSeedBytes(from: seedPhrase)
-        let derivationTool = DerivationTool(networkType: ZCASH_NETWORK.networkType)
+        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
+
         guard let spendingKey = try derivationTool.deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw DerivationErrors.couldNotDeriveSpendingKeys(underlyingError: DerivationErrors.unknown)
         }
+
         guard let viewingKey = try derivationTool.deriveViewingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
             throw DerivationErrors.couldNotDeriveViewingKeys(underlyingError: DerivationErrors.unknown)
         }
@@ -94,19 +116,21 @@ class DerivationToolViewController: UIViewController {
         let shieldedAddress = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
         
         let transparentAddress = try derivationTool.deriveTransparentAddress(seed: seedBytes)
-        
-        
-        updateLabels(spendingKey: spendingKey,
-                     viewingKey: viewingKey,
-                     shieldedAddress: shieldedAddress,
-                     transaparentAddress: transparentAddress)
-        
+
+        updateLabels(
+            spendingKey: spendingKey,
+            viewingKey: viewingKey,
+            shieldedAddress: shieldedAddress,
+            transaparentAddress: transparentAddress
+        )
     }
     
-    func updateLabels(spendingKey: String = "",
-                      viewingKey: String = "",
-                      shieldedAddress: String = "",
-                      transaparentAddress: String = "") {
+    func updateLabels(
+        spendingKey: String = "",
+        viewingKey: String = "",
+        shieldedAddress: String = "",
+        transaparentAddress: String = ""
+    ) {
         spendingKeyLabel.text = spendingKey
         extendedFullViewingKeyLabel.text = viewingKey
         shieldedAddressLabel.text = shieldedAddress
@@ -114,7 +138,7 @@ class DerivationToolViewController: UIViewController {
     }
     
     func clearLabels() {
-       updateLabels()
+        updateLabels()
     }
     
     func fail(_ error: Error) {
@@ -150,7 +174,6 @@ class DerivationToolViewController: UIViewController {
         setValidSeed()
     }
 }
-
 
 extension DerivationToolViewController: UITextViewDelegate {
     func textViewDidEndEditing(_ textView: UITextView) {

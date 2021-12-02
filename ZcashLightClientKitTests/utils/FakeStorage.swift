@@ -35,7 +35,7 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
         }
     }
     
-    fileprivate func fakeSave(blocks: [ZcashCompactBlock]) {
+    private func fakeSave(blocks: [ZcashCompactBlock]) {
         blocks.forEach {
             LoggerProxy.debug("saving block \($0)")
             self.latestBlockHeight = $0.height
@@ -60,5 +60,4 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
         LoggerProxy.debug("rewind to \(height)")
         self.latestBlockHeight = min(self.latestBlockHeight, height)
     }
-    
 }

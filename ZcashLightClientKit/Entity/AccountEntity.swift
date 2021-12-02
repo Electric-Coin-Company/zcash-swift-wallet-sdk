@@ -15,7 +15,6 @@ protocol AccountEntity {
 }
 
 struct Account: AccountEntity, Encodable, Decodable {
-    
     enum CodingKeys: String, CodingKey {
         case account
         case extfvk
@@ -30,7 +29,6 @@ struct Account: AccountEntity, Encodable, Decodable {
     var address: String
     
     var transparentAddress: String
-    
 }
 
 extension Account: UnifiedAddress {
@@ -47,6 +45,7 @@ extension Account: UnifiedAddress {
         get {
             address
         }
+        // swiftlint:disable unused_setter_value
         set {
             address = transparentAddress
         }
@@ -62,10 +61,12 @@ extension Account: Hashable {
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
-        guard   lhs.account == rhs.account,
-                lhs.extfvk == rhs.extfvk,
-                lhs.address == rhs.address,
-                lhs.transparentAddress == rhs.transparentAddress else { return false }
+        guard
+            lhs.account == rhs.account,
+            lhs.extfvk == rhs.extfvk,
+            lhs.address == rhs.address,
+            lhs.transparentAddress == rhs.transparentAddress
+        else { return false }
         
         return true
     }
@@ -81,15 +82,16 @@ protocol AccountRepository {
 import SQLite
 
 class AccountSQDAO: AccountRepository {
-    
-    struct TableColums {
+    enum TableColums {
         static let account = Expression<Int>("account")
         static let extfvk = Expression<String>("extfvk")
         static let address = Expression<String>("address")
         static let transparentAddress = Expression<String>("transparent_address")
     }
-    var dbProvider: ConnectionProvider
+
     let table = Table("accounts")
+
+    var dbProvider: ConnectionProvider
     
     init (dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
@@ -114,10 +116,10 @@ class AccountSQDAO: AccountRepository {
     }
     
     func update(_ account: AccountEntity) throws {
-        guard let a = account as? Account else {
+        guard let acc = account as? Account else {
             throw StorageError.updateFailed
         }
-        let updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == a.account).update(a))
+        let updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
         if updatedRows == 0 {
             LoggerProxy.error("attempted to update pending transactions but no rows were updated")
             throw StorageError.updateFailed
@@ -126,17 +128,18 @@ class AccountSQDAO: AccountRepository {
 }
 
 class CachingAccountDao: AccountRepository {
-    
     var dao: AccountRepository
     lazy var cache: [Int: AccountEntity] = {
-        var c = [Int : AccountEntity]()
+        var accountCache: [Int: AccountEntity] = [:]
         guard let all = try? dao.getAll() else {
-            return c
+            return accountCache
         }
-        for a in all {
-            c[a.account] = a
+
+        for acc in all {
+            accountCache[acc.account] = acc
         }
-        return c
+
+        return accountCache
     }()
     
     init(dao: AccountRepository) {
@@ -147,33 +150,36 @@ class CachingAccountDao: AccountRepository {
         guard cache.isEmpty else {
             return cache.values.sorted(by: { $0.account < $1.account })
         }
+
         let all = try dao.getAll()
         
-        for a in all {
-            cache[a.account] = a
+        for acc in all {
+            cache[acc.account] = acc
         }
+
         return all
     }
     
     func findBy(account: Int) throws -> AccountEntity? {
-        if let a = cache[account] {
-            return a
+        if let acc = cache[account] {
+            return acc
         }
         
-        let a = try dao.findBy(account: account)
-        cache[account] = a
-        return a
+        let acc = try dao.findBy(account: account)
+        cache[account] = acc
+
+        return acc
     }
     
     func findBy(address: String) throws -> AccountEntity? {
-        if !cache.isEmpty,
-           let account = cache.values.first(where: { $0.address == address }) {
+        if !cache.isEmpty, let account = cache.values.first(where: { $0.address == address }) {
             return account
         }
         
         guard let account = try dao.findBy(address: address) else {
             return nil
         }
+
         cache[account.account] = account
         
         return account
@@ -182,15 +188,14 @@ class CachingAccountDao: AccountRepository {
     func update(_ account: AccountEntity) throws {
         try dao.update(account)
     }
-    
 }
-class AccountRepositoryBuilder {
-    
+
+enum AccountRepositoryBuilder {
     static func build(dataDbURL: URL, readOnly: Bool = false, caching: Bool = false) -> AccountRepository {
         if caching {
             return CachingAccountDao(dao: AccountSQDAO(dbProvider: SimpleConnectionProvider(path: dataDbURL.path, readonly: readOnly)))
         } else {
-            return AccountSQDAO(dbProvider: SimpleConnectionProvider(path: dataDbURL.path,readonly: readOnly))
+            return AccountSQDAO(dbProvider: SimpleConnectionProvider(path: dataDbURL.path, readonly: readOnly))
         }
     }
 }

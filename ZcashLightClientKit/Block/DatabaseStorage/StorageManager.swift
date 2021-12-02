@@ -10,11 +10,10 @@ import Foundation
 import SQLite
 
 class StorageManager {
+    static var shared = StorageManager()
     
-    static var shared: StorageManager = StorageManager()
-    
-    private var readOnly = [URL: Connection]()
-    private var readWrite = [URL: Connection]()
+    private var readOnly: [URL: Connection] = [:]
+    private var readWrite: [URL: Connection] = [:]
     
     init() {}
     
@@ -23,39 +22,37 @@ class StorageManager {
     }
     
     private func readOnlyConnection(at url: URL) throws -> Connection {
-        if let rw = readOnly[url] {
-            return rw
+        if let readOnlyConnection = readOnly[url] {
+            return readOnlyConnection
         }
         
-        let rw = try Connection.customConection(at: url)
-        readOnly[url] = rw
-        return rw
-        
+        let readOnlyConnection = try Connection.customConection(at: url)
+        readOnly[url] = readOnlyConnection
+
+        return readOnlyConnection
     }
     
     private func readWriteConnection(at url: URL) throws -> Connection {
-        if let rw = readWrite[url] {
-            return rw
+        if let readWriteConnection = readWrite[url] {
+            return readWriteConnection
         }
         
-        let rw = try Connection.customConection(at: url)
-        readWrite[url] = rw
-        return rw
+        let readWriteConnection = try Connection.customConection(at: url)
+        readWrite[url] = readWriteConnection
+
+        return readWriteConnection
     }
 }
 
 private extension Connection {
     static func customConection(at url: URL, readonly: Bool = false) throws -> Connection {
-        
         let conn = try Connection(url.absoluteString, readonly: readonly)
         try conn.run("PRAGMA journal_mode = TRUNCATE;")
         return conn
-        
     }
 }
 
 class SimpleConnectionProvider: ConnectionProvider {
-    
     var path: String
     var readonly: Bool
     var db: Connection?
@@ -66,12 +63,11 @@ class SimpleConnectionProvider: ConnectionProvider {
     }
 
     func connection() throws -> Connection {
-        guard let c = db else {
-            let c = try Connection(path, readonly: readonly)
-            self.db = c
-            return c
+        guard let conn = db else {
+            let conn = try Connection(path, readonly: readonly)
+            self.db = conn
+            return conn
         }
-        return c
+        return conn
     }
-    
 }

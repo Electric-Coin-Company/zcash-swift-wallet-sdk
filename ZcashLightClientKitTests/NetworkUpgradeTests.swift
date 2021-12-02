@@ -7,32 +7,31 @@
 
 import XCTest
 @testable import ZcashLightClientKit
+
+// swiftlint:disable implicitly_unwrapped_optional type_body_length force_unwrapping
 class NetworkUpgradeTests: XCTestCase {
-    
     let activationHeight: BlockHeight = 1028500
-    var spendingKey = "secret-extended-key-test1qv2vf437qqqqpqpfc0arpv55ncq33p2p895hlcx0ra6d0g739v93luqdjpxun3kt050j9qnrqjyp8d7fdxgedfyxpjmuyha2ulxa6hmqvm2gnvuc3tvs3enpxwuz768qfkd286vr3jgyrgr5ddx2ukrdl95ak3tzqylzjeqw3pnmgtmwsvemrj3sk6vqgwxm9khlv46wccn33ayw52prr233ea069c9u8m3839dvw30sdf6k32xddhpte6p6qsuxval6usyh6lr55pgypkgtz"
-    
-    let testRecipientAddress = "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc" //TODO: Parameterize this from environment
-    
+    let spendingKey =
+        // swiftlint:disable:next line_length
+        "secret-extended-key-test1qv2vf437qqqqpqpfc0arpv55ncq33p2p895hlcx0ra6d0g739v93luqdjpxun3kt050j9qnrqjyp8d7fdxgedfyxpjmuyha2ulxa6hmqvm2gnvuc3tvs3enpxwuz768qfkd286vr3jgyrgr5ddx2ukrdl95ak3tzqylzjeqw3pnmgtmwsvemrj3sk6vqgwxm9khlv46wccn33ayw52prr233ea069c9u8m3839dvw30sdf6k32xddhpte6p6qsuxval6usyh6lr55pgypkgtz"
+
+    // TODO: Parameterize this from environment
+    let testRecipientAddress = "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
     let sendAmount: Int64 = 1000
-    var birthday: BlockHeight = 1013250
     let branchID = "2bb40e60"
     let chainName = "main"
+
+    var birthday: BlockHeight = 1013250
     var coordinator: TestCoordinator!
     var network = ZcashNetworkBuilder.network(for: .testnet)
     
     override func setUpWithError() throws {
-        
-//        coordinator = try TestCoordinator(
-//            spendingKey: spendingKey,
-//            unifiedViewingKey: <#UnifiedViewingKey#>,
-//            walletBirthday: birthday,
-//            channelProvider: ChannelProvider()
-//        )
+        try super.setUpWithError()
         try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
     }
     
     override func tearDownWithError() throws {
+        try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
@@ -40,22 +39,26 @@ class NetworkUpgradeTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
 
-
     /**
-     Given that a wallet had funds prior to activation it can spend them after activation
-     */
+    Given that a wallet had funds prior to activation it can spend them after activation
+    */
     func testSpendPriorFundsAfterActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
+        try FakeChainBuilder.buildChain(
+            darksideWallet: coordinator.service,
+            birthday: birthday,
+            networkActivationHeight: activationHeight,
+            branchID: branchID,
+            chainName: chainName,
+            length: 15300
+        )
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
-        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.DEFAULT_STALE_TOLERANCE)
+        try coordinator.applyStaged(blockheight: activationHeight - ZcashSDK.defaultStaleTolerance)
         sleep(5)
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
@@ -69,31 +72,40 @@ class NetworkUpgradeTests: XCTestCase {
         sleep(2)
        
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var p: PendingTransactionEntity? = nil
+        var pendingEntity: PendingTransactionEntity?
         let spendAmount: Int64 = 10000
+
         /*
-         send transaction to recipient address
-         */
-        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
-            switch result {
-            case .failure(let e):
-                self.handleError(e)
-            case .success(let pendingTx):
-                p = pendingTx
+        send transaction to recipient address
+        */
+        coordinator.synchronizer.sendToAddress(
+            spendingKey: self.coordinator.spendingKeys!.first!,
+            zatoshi: spendAmount,
+            toAddress: self.testRecipientAddress,
+            memo: "this is a test",
+            from: 0,
+            resultBlock: { result in
+                switch result {
+                case .failure(let e):
+                    self.handleError(e)
+                case .success(let pendingTx):
+                    pendingEntity = pendingTx
+                }
+                sendExpectation.fulfill()
             }
-            sendExpectation.fulfill()
-        })
+        )
         
         wait(for: [sendExpectation], timeout: 11)
         
-        guard let _ = p else {
+        guard pendingEntity != nil else {
             XCTFail("no pending transaction after sending")
             try coordinator.stop()
             return
         }
+
         /*
-         getIncomingTransaction
-         */
+        getIncomingTransaction
+        */
         guard let incomingTx = try coordinator.getIncomingTransactions()?.first else {
             XCTFail("no incoming transaction")
             try coordinator.stop()
@@ -103,45 +115,44 @@ class NetworkUpgradeTests: XCTestCase {
         let sentTxHeight: BlockHeight = activationHeight + 2
    
         /*
-         stage transaction at sentTxHeight
-         */
-   
+        stage transaction at sentTxHeight
+        */
         try coordinator.stageTransaction(incomingTx, at: sentTxHeight)
         try coordinator.applyStaged(blockheight: activationHeight + 20)
         sleep(1)
         let afterSendExpectation = XCTestExpectation(description: "aftersend")
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             afterSendExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [afterSendExpectation], timeout: 10)
         
         XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), verifiedBalance - spendAmount)
-        
     }
     
     /**
-     Given that a wallet receives funds after activation it can spend them when confirmed
-     */
+    Given that a wallet receives funds after activation it can spend them when confirmed
+    */
     func testSpendPostActivationFundsAfterConfirmation() throws {
-        try FakeChainBuilder.buildChainPostActivationFunds(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, length: 15300)
+        try FakeChainBuilder.buildChainPostActivationFunds(
+            darksideWallet: coordinator.service,
+            birthday: birthday,
+            networkActivationHeight: activationHeight,
+            length: 15300
+        )
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
         try coordinator.applyStaged(blockheight: activationHeight + 10)
         sleep(3)
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
-        guard try coordinator.synchronizer.allReceivedTransactions().filter({$0.minedHeight > activationHeight}).count > 0 else {
+        guard try !coordinator.synchronizer.allReceivedTransactions().filter({ $0.minedHeight > activationHeight }).isEmpty else {
             XCTFail("this test requires funds received after activation height")
             return
         }
@@ -149,26 +160,33 @@ class NetworkUpgradeTests: XCTestCase {
         try coordinator.applyStaged(blockheight: activationHeight + 20)
         sleep(2)
         
-        
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var p: PendingTransactionEntity? = nil
+        var pendingEntity: PendingTransactionEntity?
         let spendAmount: Int64 = 10000
+
         /*
-         send transaction to recipient address
-         */
-        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
-            switch result {
-            case .failure(let e):
-                self.handleError(e)
-            case .success(let pendingTx):
-                p = pendingTx
+        send transaction to recipient address
+        */
+        coordinator.synchronizer.sendToAddress(
+            spendingKey: self.coordinator.spendingKeys!.first!,
+            zatoshi: spendAmount,
+            toAddress: self.testRecipientAddress,
+            memo: "this is a test",
+            from: 0,
+            resultBlock: { result in
+                switch result {
+                case .failure(let e):
+                    self.handleError(e)
+                case .success(let pendingTx):
+                    pendingEntity = pendingTx
+                }
+                sendExpectation.fulfill()
             }
-            sendExpectation.fulfill()
-        })
+        )
         
         wait(for: [sendExpectation], timeout: 11)
         
-        guard let _ = p else {
+        guard pendingEntity != nil else {
             XCTFail("no pending transaction after sending")
             try coordinator.stop()
             return
@@ -178,66 +196,74 @@ class NetworkUpgradeTests: XCTestCase {
         
         let afterSendExpectation = XCTestExpectation(description: "aftersend")
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             afterSendExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [afterSendExpectation], timeout: 10)
-        
     }
-    /**
-     Given that a wallet sends funds some between (activation - expiry_height) and activation, those funds are shown as sent if mined.
 
-     */
+    /**
+    Given that a wallet sends funds some between (activation - expiry_height) and activation, those funds are shown as sent if mined.
+    */
     func testSpendMinedSpendThatExpiresOnActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
+        try FakeChainBuilder.buildChain(
+            darksideWallet: coordinator.service,
+            birthday: birthday,
+            networkActivationHeight: activationHeight,
+            branchID: branchID,
+            chainName: chainName,
+            length: 15300
+        )
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
         try coordinator.applyStaged(blockheight: activationHeight - 10)
         sleep(3)
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: activationHeight))
         
-        
-        
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var p: PendingTransactionEntity? = nil
+        var pendingEntity: PendingTransactionEntity?
         let spendAmount: Int64 = 10000
+
         /*
-         send transaction to recipient address
-         */
-        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
-            switch result {
-            case .failure(let e):
-                self.handleError(e)
-            case .success(let pendingTx):
-                p = pendingTx
+        send transaction to recipient address
+        */
+        coordinator.synchronizer.sendToAddress(
+            spendingKey: self.coordinator.spendingKeys!.first!,
+            zatoshi: spendAmount,
+            toAddress: self.testRecipientAddress,
+            memo: "this is a test",
+            from: 0,
+            resultBlock: { result in
+                switch result {
+                case .failure(let e):
+                    self.handleError(e)
+                case .success(let pendingTx):
+                    pendingEntity = pendingTx
+                }
+                sendExpectation.fulfill()
             }
-            sendExpectation.fulfill()
-        })
+        )
         
         wait(for: [sendExpectation], timeout: 11)
         
-        guard let pendingTx = p else {
+        guard let pendingTx = pendingEntity else {
             XCTFail("no pending transaction after sending")
             try coordinator.stop()
             return
         }
         
         /*
-         getIncomingTransaction
-         */
+        getIncomingTransaction
+        */
         guard let incomingTx = try coordinator.getIncomingTransactions()?.first else {
             XCTFail("no incoming transaction")
             try coordinator.stop()
@@ -246,12 +272,9 @@ class NetworkUpgradeTests: XCTestCase {
         
         let sentTxHeight: BlockHeight = activationHeight - 5
         
-        
         /*
-         stage transaction at sentTxHeight
-         */
-    
-        
+        stage transaction at sentTxHeight
+        */
         try coordinator.stageTransaction(incomingTx, at: sentTxHeight)
         
         try coordinator.applyStaged(blockheight: activationHeight + 5)
@@ -259,15 +282,16 @@ class NetworkUpgradeTests: XCTestCase {
         
         let afterSendExpectation = XCTestExpectation(description: "aftersend")
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             afterSendExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [afterSendExpectation], timeout: 10)
         
-        guard let confirmedTx = try coordinator.synchronizer.allConfirmedTransactions(from: nil, limit: Int.max)?.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId }) else {
+        guard
+            let confirmedTx = try coordinator.synchronizer.allConfirmedTransactions(from: nil, limit: Int.max)?
+                .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+        else {
             XCTFail("the sent transaction is not listed as a confirmed transaction")
             return
         }
@@ -276,11 +300,17 @@ class NetworkUpgradeTests: XCTestCase {
     }
     
     /**
-     Given that a wallet sends funds somewhere between (activation - expiry_height) and activation, those funds are available if  expired after expiration height.
-     */
-    
+    Given that a wallet sends funds somewhere between (activation - expiry_height) and activation, those funds are available if  expired after expiration height.
+    */
     func testExpiredSpendAfterActivation() throws {
-        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
+        try FakeChainBuilder.buildChain(
+            darksideWallet: coordinator.service,
+            birthday: birthday,
+            networkActivationHeight: activationHeight,
+            branchID: branchID,
+            chainName: chainName,
+            length: 15300
+        )
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         let offset = 5
@@ -289,10 +319,8 @@ class NetworkUpgradeTests: XCTestCase {
         
         let verifiedBalancePreActivation = coordinator.synchronizer.initializer.getVerifiedBalance()
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
@@ -303,57 +331,64 @@ class NetworkUpgradeTests: XCTestCase {
         }
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var p: PendingTransactionEntity? = nil
+        var pendingEntity: PendingTransactionEntity?
         let spendAmount: Int64 = 10000
+
         /*
-         send transaction to recipient address
-         */
-        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
-            switch result {
-            case .failure(let e):
-                self.handleError(e)
-            case .success(let pendingTx):
-                p = pendingTx
+        send transaction to recipient address
+        */
+        coordinator.synchronizer.sendToAddress(
+            spendingKey: self.coordinator.spendingKeys!.first!,
+            zatoshi: spendAmount,
+            toAddress: self.testRecipientAddress,
+            memo: "this is a test",
+            from: 0,
+            resultBlock: { result in
+                switch result {
+                case .failure(let e):
+                    self.handleError(e)
+                case .success(let pendingTx):
+                    pendingEntity = pendingTx
+                }
+                sendExpectation.fulfill()
             }
-            sendExpectation.fulfill()
-        })
+        )
         
         wait(for: [sendExpectation], timeout: 11)
         
-        guard let pendingTx = p else {
+        guard let pendingTx = pendingEntity else {
             XCTFail("no pending transaction after sending")
             try coordinator.stop()
             return
         }
         
         /*
-         getIncomingTransaction
-         */
-        guard let _ = try coordinator.getIncomingTransactions()?.first else {
+        getIncomingTransaction
+        */
+        guard try coordinator.getIncomingTransactions()?.first != nil else {
             XCTFail("no incoming transaction")
             try coordinator.stop()
             return
         }
             
         /*
-         don't stage transaction
-         */
-    
-        
+        don't stage transaction
+        */
         try coordinator.applyStaged(blockheight: activationHeight + offset)
         sleep(2)
         
         let afterSendExpectation = XCTestExpectation(description: "aftersend")
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             afterSendExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [afterSendExpectation], timeout: 10)
         
-        guard try coordinator.synchronizer.allConfirmedTransactions(from: nil, limit: Int.max)?.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId }) == nil else {
+        guard
+            try coordinator.synchronizer.allConfirmedTransactions(from: nil, limit: Int.max)?
+                .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId }) == nil
+        else {
             XCTFail("the sent transaction should not be not listed as a confirmed transaction")
             return
         }
@@ -362,20 +397,25 @@ class NetworkUpgradeTests: XCTestCase {
     }
     
     /**
-     Given that a wallet has notes both received prior and after activation these can be combined to supply a larger amount spend.
-     */
+    Given that a wallet has notes both received prior and after activation these can be combined to supply a larger amount spend.
+    */
     func testCombinePreActivationNotesAndPostActivationNotesOnSpend() throws {
-        try FakeChainBuilder.buildChainMixedFunds(darksideWallet: coordinator.service, birthday: birthday, networkActivationHeight: activationHeight, branchID: branchID, chainName: chainName, length: 15300)
+        try FakeChainBuilder.buildChainMixedFunds(
+            darksideWallet: coordinator.service,
+            birthday: birthday,
+            networkActivationHeight: activationHeight,
+            branchID: branchID,
+            chainName: chainName,
+            length: 15300
+        )
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
         try coordinator.applyStaged(blockheight: activationHeight - 1)
         sleep(3)
         
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
@@ -386,14 +426,12 @@ class NetworkUpgradeTests: XCTestCase {
         sleep(2)
         
         let secondSyncExpectation = XCTestExpectation(description: "second sync")
-        try coordinator.sync(completion: { (synchronizer) in
-          
+        try coordinator.sync(completion: { _ in
             secondSyncExpectation.fulfill()
-            
         }, error: self.handleError)
         
         wait(for: [secondSyncExpectation], timeout: 10)
-        guard try coordinator.synchronizer.allReceivedTransactions().filter({$0.minedHeight > activationHeight}).count > 0 else {
+        guard try !coordinator.synchronizer.allReceivedTransactions().filter({ $0.minedHeight > activationHeight }).isEmpty else {
             XCTFail("this test requires funds received after activation height")
             return
         }
@@ -401,27 +439,34 @@ class NetworkUpgradeTests: XCTestCase {
         
         XCTAssertTrue(preActivationBalance < postActivationBalance, "This test requires that funds post activation are greater that pre activation")
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var p: PendingTransactionEntity? = nil
+        var pendingEntity: PendingTransactionEntity?
         
         // spend all the funds
         let spendAmount: Int64 = postActivationBalance - Int64(network.constants.defaultFee(for: activationHeight))
         
         /*
-         send transaction to recipient address
-         */
-        coordinator.synchronizer.sendToAddress(spendingKey: self.coordinator.spendingKeys!.first!, zatoshi: spendAmount, toAddress: self.testRecipientAddress, memo: "this is a test", from: 0, resultBlock: { (result) in
-            switch result {
-            case .failure(let e):
-                self.handleError(e)
-            case .success(let pendingTx):
-                p = pendingTx
+        send transaction to recipient address
+        */
+        coordinator.synchronizer.sendToAddress(
+            spendingKey: self.coordinator.spendingKeys!.first!,
+            zatoshi: spendAmount,
+            toAddress: self.testRecipientAddress,
+            memo: "this is a test",
+            from: 0,
+            resultBlock: { result in
+                switch result {
+                case .failure(let e):
+                    self.handleError(e)
+                case .success(let pendingTx):
+                    pendingEntity = pendingTx
+                }
+                sendExpectation.fulfill()
             }
-            sendExpectation.fulfill()
-        })
+        )
         
         wait(for: [sendExpectation], timeout: 15)
         
-        guard let _ = p else {
+        guard pendingEntity != nil else {
             XCTFail("no pending transaction after sending")
             try coordinator.stop()
             return

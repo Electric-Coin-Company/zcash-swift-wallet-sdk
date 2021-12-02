@@ -15,37 +15,42 @@ class GetAddressViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let derivationTool = DerivationTool(networkType: ZCASH_NETWORK.networkType)
+        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
         // Do any additional setup after loading the view.
         
         zAddressLabel.text = (try? derivationTool.deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)) ?? "No Addresses found"
         tAddressLabel.text = (try? derivationTool.deriveTransparentAddress(seed: DemoAppConfig.seed)) ?? "could not derive t-address"
         spendingKeyLabel.text = SampleStorage.shared.privateKey ?? "No Spending Key found"
-        zAddressLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(addressTapped(_:))))
+        zAddressLabel.addGestureRecognizer(
+            UITapGestureRecognizer(
+                target: self,
+                action: #selector(addressTapped(_:))
+            )
+        )
         zAddressLabel.isUserInteractionEnabled = true
         
         tAddressLabel.isUserInteractionEnabled = true
-        tAddressLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tAddressTapped(_:))))
-        spendingKeyLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(spendingKeyTapped(_:))))
+        tAddressLabel.addGestureRecognizer(
+            UITapGestureRecognizer(
+                target: self,
+                action: #selector(tAddressTapped(_:))
+            )
+        )
+        spendingKeyLabel.addGestureRecognizer(
+            UITapGestureRecognizer(
+                target: self,
+                action: #selector(spendingKeyTapped(_:))
+            )
+        )
         spendingKeyLabel.isUserInteractionEnabled = true
         loggerProxy.info("Address: \(String(describing: Initializer.shared.getAddress()))")
         // NOTE: NEVER LOG YOUR PRIVATE KEYS IN REAL LIFE
+        // swiftlint:disable:next print_function_usage
         print("Spending Key: \(SampleStorage.shared.privateKey ?? "No Spending Key found")")
     }
-    
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-    
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
-        guard let key =  SampleStorage.shared.privateKey else {
+        guard let key = SampleStorage.shared.privateKey else {
             loggerProxy.warn("nothing to copy")
             return
         }
@@ -53,23 +58,42 @@ class GetAddressViewController: UIViewController {
         loggerProxy.event("copied to clipboard")
         
         UIPasteboard.general.string = key
-        let alert = UIAlertController(title: "", message: "Spending Key Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+        let alert = UIAlertController(
+            title: "",
+            message: "Spending Key Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
     @IBAction func addressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
-        UIPasteboard.general.string = try? DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)
-        let alert = UIAlertController(title: "", message: "Address Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+
+        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType)
+            .deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)
+
+        let alert = UIAlertController(
+            title: "",
+            message: "Address Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
     @IBAction func tAddressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
-        UIPasteboard.general.string = try? DerivationTool(networkType: ZCASH_NETWORK.networkType).deriveTransparentAddress(seed: DemoAppConfig.seed)
-        let alert = UIAlertController(title: "", message: "Address Copied to clipboard", preferredStyle: UIAlertController.Style.alert)
+        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType)
+            .deriveTransparentAddress(seed: DemoAppConfig.seed)
+
+        let alert = UIAlertController(
+            title: "",
+            message: "Address Copied to clipboard",
+            preferredStyle: UIAlertController.Style.alert
+        )
+        
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }

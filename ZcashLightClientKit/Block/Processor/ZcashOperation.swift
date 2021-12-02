@@ -21,7 +21,7 @@ class ZcashOperation: Operation {
     var startedHandler: ZcashOperationStartedBlock?
     var errorHandler: ZcashOperationErrorBlock?
     var completionHandler: ZcashOperationCompletionBlock?
-    var handlerDispatchQueue: DispatchQueue = DispatchQueue.main
+    var handlerDispatchQueue = DispatchQueue.main
     
     override init() {
         super.init()
@@ -51,8 +51,8 @@ class ZcashOperation: Operation {
             self.cancel()
         }
         
-        if let e = error {
-            self.error = e
+        if let error = error {
+            self.error = error
         }
         LoggerProxy.debug("\(self) failed")
         
@@ -61,9 +61,8 @@ class ZcashOperation: Operation {
         }
         
         self.handlerDispatchQueue.async { [weak self] in
-            let e = error ?? (self?.error ?? ZcashOperationError.unknown)
-            errorHandler(e)
+            let error = error ?? (self?.error ?? ZcashOperationError.unknown)
+            errorHandler(error)
         }
-        
     }
 }

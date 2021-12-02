@@ -8,19 +8,20 @@
 
 import Foundation
 import XCTest
+
+// swiftlint:disable force_try
 @testable import ZcashLightClientKit
 class CompactBlockStorageTests: XCTestCase {
-    
-    var compactBlockDao: CompactBlockRepository = try! TestDbBuilder.inMemoryCompactBlockStorage()
-    
     let network = ZcashNetworkBuilder.network(for: .testnet)
+    var compactBlockDao: CompactBlockRepository = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
     func testEmptyStorage() {
         XCTAssertEqual(try! compactBlockDao.latestHeight(), BlockHeight.empty())
     }
     
     func testStoreThousandBlocks() {
         let initialHeight = try! compactBlockDao.latestHeight()
-        let startHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT
+        let startHeight = self.network.constants.saplingActivationHeight
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         
@@ -34,11 +35,9 @@ class CompactBlockStorageTests: XCTestCase {
         let latestHeight = try! compactBlockDao.latestHeight()
         XCTAssertNotEqual(initialHeight, latestHeight)
         XCTAssertEqual(latestHeight, finalHeight)
-        
     }
     
     func testStoreOneBlockFromEmpty() {
-        
         let initialHeight = try! compactBlockDao.latestHeight()
         guard initialHeight == BlockHeight.empty() else {
             XCTFail("database not empty, latest height: \(initialHeight)")
@@ -62,8 +61,7 @@ class CompactBlockStorageTests: XCTestCase {
     }
     
     func testRewindTo() {
-        
-        let startHeight = self.network.constants.SAPLING_ACTIVATION_HEIGHT
+        let startHeight = self.network.constants.saplingActivationHeight
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         
@@ -79,10 +77,8 @@ class CompactBlockStorageTests: XCTestCase {
         do {
             let latestHeight = try compactBlockDao.latestHeight()
             XCTAssertEqual(latestHeight, rewindHeight - 1)
-            
         } catch {
             XCTFail("Rewind latest block failed with error: \(error)")
         }
-        
     }
 }

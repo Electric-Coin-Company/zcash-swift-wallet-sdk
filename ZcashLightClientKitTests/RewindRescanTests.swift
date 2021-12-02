@@ -7,48 +7,59 @@
 
 import XCTest
 @testable import ZcashLightClientKit
+
+// swiftlint:disable type_body_length implicitly_unwrapped_optional
 class RewindRescanTests: XCTestCase {
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
-    
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a" //TODO: Parameterize this from environment
-    
+    // TODO: Parameterize this from environment?
+    // swiftlint:disable:next line_length
+    let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+
+    // TODO: Parameterize this from environment
+    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount: Int64 = 1000
-    var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
+    let branchID = "2bb40e60"
+    let chainName = "main"
+
+    var birthday: BlockHeight = 663150
     var coordinator: TestCoordinator!
     var syncedExpectation = XCTestExpectation(description: "synced")
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
-    var reorgExpectation: XCTestExpectation = XCTestExpectation(description: "reorg")
-    let branchID = "2bb40e60"
-    let chainName = "main"
+    var reorgExpectation = XCTestExpectation(description: "reorg")
     var network = ZcashNetworkBuilder.network(for: .mainnet)
+
     override func setUpWithError() throws {
-        
+        try super.setUpWithError()
+
         coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
             channelProvider: ChannelProvider(),
             network: network
         )
+
         try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     
     override func tearDownWithError() throws {
+        try super.tearDownWithError()
+
         NotificationCenter.default.removeObserver(self)
+
         try coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
-
     
     func handleError(_ error: Error?) {
         guard let testError = error else {
             XCTFail("failed with nil error")
             return
         }
+        
         XCTFail("Failed with error: \(testError)")
     }
     
@@ -62,7 +73,7 @@ class RewindRescanTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try coordinator.sync(completion: { (synchronizer) in
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: handleError)
         
@@ -77,14 +88,14 @@ class RewindRescanTests: XCTestCase {
         try coordinator.synchronizer.rewind(.birthday)
         
         // assert that after the new height is
-        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),self.birthday)
+        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
         
         // check that the balance is cleared
         XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         
-        try coordinator.sync(completion: { (synchronizer) in
+        try coordinator.sync(completion: { _ in
             secondScanExpectation.fulfill()
         }, error: handleError)
         
@@ -93,24 +104,28 @@ class RewindRescanTests: XCTestCase {
         // verify that the balance still adds up
         XCTAssertEqual(verifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(totalBalance, coordinator.synchronizer.initializer.getBalance())
-        
     }
-    
     
     func testRescanToHeight() throws {
         // 1 sync and get spendable funds
-        try FakeChainBuilder.buildChainWithTxsFarFromEachOther(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: 10000)
+        try FakeChainBuilder.buildChainWithTxsFarFromEachOther(
+            darksideWallet: coordinator.service,
+            branchID: branchID,
+            chainName: chainName,
+            length: 10000
+        )
         let newChaintTip = defaultLatestHeight + 10000
         try coordinator.applyStaged(blockheight: newChaintTip)
         sleep(3)
         let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-//        let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
-        
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try coordinator.sync(completion: { (synchronizer) in
-            firstSyncExpectation.fulfill()
-        }, error: handleError)
+        try coordinator.sync(
+            completion: { _ in
+                firstSyncExpectation.fulfill()
+            },
+            error: handleError
+        )
         
         wait(for: [firstSyncExpectation], timeout: 20)
         let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
@@ -121,23 +136,24 @@ class RewindRescanTests: XCTestCase {
         
         // rewind to birthday
         let targetHeight: BlockHeight = newChaintTip - 8000
-        let rewindHeight = ZcashRustBackend.getNearestRewindHeight(dbData: coordinator.databases.dataDB, height: Int32(targetHeight), networkType: network.networkType)
+        let rewindHeight = ZcashRustBackend.getNearestRewindHeight(
+            dbData: coordinator.databases.dataDB,
+            height: Int32(targetHeight),
+            networkType: network.networkType
+        )
         try coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
-        
         
         guard rewindHeight > 0 else {
             XCTFail("get nearest height failed error: \(ZcashRustBackend.getLastError() ?? "null")")
             return
         }
-        // assert that after the new height is
-//        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), BlockHeight(rewindHeight))
-        
+
         // check that the balance is cleared
         XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
 
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         
-        try coordinator.sync(completion: { (synchronizer) in
+        try coordinator.sync(completion: { _ in
             secondScanExpectation.fulfill()
         }, error: handleError)
         
@@ -149,7 +165,13 @@ class RewindRescanTests: XCTestCase {
         
         // try to spend the funds
         let sendExpectation = XCTestExpectation(description: "after rewind expectation")
-        coordinator.synchronizer.sendToAddress(spendingKey: coordinator.spendingKey, zatoshi: 1000, toAddress: testRecipientAddress, memo: nil, from: 0) { result in
+        coordinator.synchronizer.sendToAddress(
+            spendingKey: coordinator.spendingKey,
+            zatoshi: 1000,
+            toAddress: testRecipientAddress,
+            memo: nil,
+            from: 0
+        ) { result in
             sendExpectation.fulfill()
             switch result {
             case .success(let pendingTx):
@@ -159,9 +181,6 @@ class RewindRescanTests: XCTestCase {
             }
         }
         wait(for: [sendExpectation], timeout: 15)
-        
-        
-        
     }
 
     func testRescanToTransaction() throws {
@@ -173,7 +192,7 @@ class RewindRescanTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try coordinator.sync(completion: { (synchronizer) in
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: handleError)
         
@@ -191,14 +210,16 @@ class RewindRescanTests: XCTestCase {
         }
 
         try coordinator.synchronizer.rewind(.transaction(transaction.transactionEntity))
-
         
         // assert that after the new height is
-        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),transaction.transactionEntity.anchor(network: network))
+        XCTAssertEqual(
+            try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),
+            transaction.transactionEntity.anchor(network: network)
+        )
         
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         
-        try coordinator.sync(completion: { (synchronizer) in
+        try coordinator.sync(completion: { _ in
             secondScanExpectation.fulfill()
         }, error: handleError)
         
@@ -207,7 +228,6 @@ class RewindRescanTests: XCTestCase {
         // verify that the balance still adds up
         XCTAssertEqual(verifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
         XCTAssertEqual(totalBalance, coordinator.synchronizer.initializer.getBalance())
-        
     }
     
     func testRewindAfterSendingTransaction() throws {
@@ -225,7 +245,7 @@ class RewindRescanTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try coordinator.sync(completion: { (synchronizer) in
+        try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: handleError)
         
@@ -246,11 +266,13 @@ class RewindRescanTests: XCTestCase {
             return
         }
         var pendingTx: PendingTransactionEntity?
-        coordinator.synchronizer.sendToAddress(spendingKey: spendingKey,
-                                               zatoshi: maxBalance,
-                                               toAddress: testRecipientAddress,
-                                               memo: "test send \(self.description) \(Date().description)",
-        from: 0) { result in
+        coordinator.synchronizer.sendToAddress(
+            spendingKey: spendingKey,
+            zatoshi: maxBalance,
+            toAddress: testRecipientAddress,
+            memo: "test send \(self.description) \(Date().description)",
+            from: 0
+        ) { result in
             switch result {
             case .failure(let error):
                 XCTFail("sendToAddress failed: \(error)")
@@ -265,13 +287,12 @@ class RewindRescanTests: XCTestCase {
             return
         }
         
-        notificationHandler.synchronizerMinedTransaction = { tx in
-            XCTAssertNotNil(tx.rawTransactionId)
+        notificationHandler.synchronizerMinedTransaction = { transaction in
+            XCTAssertNotNil(transaction.rawTransactionId)
             XCTAssertNotNil(pendingTx.rawTransactionId)
-            XCTAssertEqual(tx.rawTransactionId, pendingTx.rawTransactionId)
+            XCTAssertEqual(transaction.rawTransactionId, pendingTx.rawTransactionId)
             transactionMinedExpectation.fulfill()
         }
-        
         
         // 5 apply to height
         // 6 mine the block
@@ -284,7 +305,7 @@ class RewindRescanTests: XCTestCase {
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
-            let foundTx = txs.first(where: { $0.rawTransactionId ==  pendingTx.rawTransactionId})
+            let foundTx = txs.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
             XCTAssertNotNil(foundTx)
             XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
             
@@ -296,24 +317,26 @@ class RewindRescanTests: XCTestCase {
         try coordinator.applyStaged(blockheight: sentTxHeight)
         sleep(2)
         
-        
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
-        try coordinator.sync(completion: { (synchronizer) in
-            let p = synchronizer.pendingTransactions.first(where: {$0.rawTransactionId == pendingTx.rawTransactionId})
-            XCTAssertNotNil(p, "pending transaction should have been mined by now")
-            XCTAssertTrue(p?.isMined ?? false)
-            XCTAssertEqual(p?.minedHeight, sentTxHeight)
-            mineExpectation.fulfill()
+        try coordinator.sync(
+            completion: { synchronizer in
+                let pendingTransaction = synchronizer.pendingTransactions
+                    .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                XCTAssertNotNil(pendingTransaction, "pending transaction should have been mined by now")
+                XCTAssertTrue(pendingTransaction?.isMined ?? false)
+                XCTAssertEqual(pendingTransaction?.minedHeight, sentTxHeight)
+                mineExpectation.fulfill()
+            },
+            error: { error in
+                guard let e = error else {
+                    XCTFail("unknown error syncing after sending transaction")
+                    return
+                }
             
-        }, error: { (error) in
-            guard let e = error else {
-                XCTFail("unknown error syncing after sending transaction")
-                return
+                XCTFail("Error: \(e)")
             }
-            
-            XCTFail("Error: \(e)")
-        })
+        )
         
         wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
@@ -327,36 +350,45 @@ class RewindRescanTests: XCTestCase {
         
         try coordinator.synchronizer.rewind(.height(blockheight: sentTxHeight - 5))
         
-        guard let np = try coordinator.synchronizer.allPendingTransactions().first(where: { $0.rawTransactionId == pendingTx.rawTransactionId}) else {
+        guard
+            let pendingEntity = try coordinator.synchronizer.allPendingTransactions()
+                .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+        else {
             XCTFail("sent pending transaction not found after rewind")
             return
         }
         
-        XCTAssertFalse(np.isMined)
+        XCTAssertFalse(pendingEntity.isMined)
+
         let confirmExpectation = XCTestExpectation(description: "confirm expectation")
         notificationHandler.transactionsFound = { txs in
             XCTAssertEqual(txs.count, 1)
-            guard let t = txs.first else {
+            guard let transaction = txs.first else {
                 XCTFail("should have found sent transaction but didn't")
                 return
             }
-            XCTAssertEqual(t.rawTransactionId, pendingTx.rawTransactionId,"should have mined sent transaction but didn't")
+            XCTAssertEqual(transaction.rawTransactionId, pendingTx.rawTransactionId, "should have mined sent transaction but didn't")
         }
-        notificationHandler.synchronizerMinedTransaction = { tx in
-            XCTFail("We shouldn't find any mined transactions at this point but found \(tx)")
+
+        notificationHandler.synchronizerMinedTransaction = { transaction in
+            XCTFail("We shouldn't find any mined transactions at this point but found \(transaction)")
         }
-        try coordinator.sync(completion: { synchronizer in
-            confirmExpectation.fulfill()
-        }, error: { e in
-            self.handleError(e)
-        })
+
+        try coordinator.sync(
+            completion: { _ in
+                confirmExpectation.fulfill()
+            },
+            error: { e in
+                self.handleError(e)
+            }
+        )
         
         wait(for: [confirmExpectation], timeout: 10)
         
-        let confirmedPending = try coordinator.synchronizer.allPendingTransactions().first(where: { $0.rawTransactionId == pendingTx.rawTransactionId})
+        let confirmedPending = try coordinator.synchronizer.allPendingTransactions()
+            .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
         
         XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
-        
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), 0)
         XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), 0)
     }

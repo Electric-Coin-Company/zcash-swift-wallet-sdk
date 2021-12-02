@@ -37,13 +37,13 @@ class CompactBlockStorage: CompactBlockDAO {
             
             let db = try dbProvider.connection()
          
-            try db.run(compactBlocks.create(ifNotExists: true) { t in
-                t.column(height, primaryKey: true)
-                t.column(data)
-            } )
+            try db.run(compactBlocks.create(ifNotExists: true) { table in
+                table.column(height, primaryKey: true)
+                table.column(data)
+            }
+            )
             
             try db.run(compactBlocks.createIndex(height, ifNotExists: true))
-            
         } catch {
             throw StorageError.couldNotCreate
         }
@@ -64,7 +64,6 @@ class CompactBlockStorage: CompactBlockDAO {
     }
     
     func latestBlockHeight() throws -> BlockHeight {
-        
         guard let maxHeight = try dbProvider.connection().scalar(compactBlocksTable().select(heightColumn().max)) else {
             return BlockHeight.empty()
         }
@@ -82,7 +81,6 @@ class CompactBlockStorage: CompactBlockDAO {
 }
 
 extension CompactBlockStorage: CompactBlockRepository {
-    
     func latestHeight() throws -> BlockHeight {
         try latestBlockHeight()
     }
@@ -117,11 +115,9 @@ extension CompactBlockStorage: CompactBlockRepository {
             do {
                 try self.rewind(to: height)
                 completion?(nil)
-                
             } catch {
                 completion?(error)
             }
         }
     }
-    
 }
