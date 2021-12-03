@@ -53,7 +53,7 @@ int32_t zcashlc_decrypt_and_store_transaction(const uint8_t *db_data,
                                               uintptr_t db_data_len,
                                               const uint8_t *tx,
                                               uintptr_t tx_len,
-                                              uint32_t mined_height,
+                                              uint32_t _mined_height,
                                               uint32_t network_id);
 
 /**
@@ -294,6 +294,7 @@ int32_t zcashlc_last_error_length(void);
 
 bool zcashlc_put_utxo(const uint8_t *db_data,
                       uintptr_t db_data_len,
+                      const char *address_str,
                       const uint8_t *txid_bytes,
                       uintptr_t txid_bytes_len,
                       int32_t index,

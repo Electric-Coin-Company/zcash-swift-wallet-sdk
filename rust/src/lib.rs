@@ -11,7 +11,7 @@ use zcash_client_backend::{
     data_api::{
         chain::{scan_cached_blocks, validate_chain},
         error::Error,
-        wallet::{create_spend_to_address, decrypt_and_store_transaction, shield_transparent_funds},
+        wallet::{create_spend_to_address, decrypt_and_store_transaction, shield_funds},
         WalletRead,
     },
     encoding::{
@@ -45,17 +45,15 @@ use zcash_primitives::{
     block::BlockHash,
     consensus::{BlockHeight, BranchId, Network, Parameters},
     memo::{Memo, MemoBytes},
-    transaction::{components::Amount, components::OutPoint, components::TxOut, Transaction },
+    transaction::{components::Amount, components::OutPoint, Transaction},
     zip32::ExtendedFullViewingKey,
-    legacy::{Script, TransparentAddress},
+    legacy::TransparentAddress,
 };
 use zcash_primitives::consensus::Network::{MainNetwork, TestNetwork};
 
 use zcash_proofs::prover::LocalTxProver;
 use std::convert::{TryFrom, TryInto};
-use base58::ToBase58;
-use sha2::{Digest, Sha256};
-use hdwallet::secp256k1::key::{SecretKey, PublicKey};
+use secp256k1::key::{SecretKey, PublicKey};
 
 const ANCHOR_OFFSET: u32 = 10;
 
@@ -729,7 +727,7 @@ pub extern "C" fn zcashlc_get_verified_balance(
         let db_data = wallet_db(db_data, db_data_len, network)?;
         if account >= 0 {
             (&db_data)
-                .get_target_and_anchor_heights(ANCHOR_OFFSET)
+                .get_target_and_anchor_heights()
                 .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
                 .and_then(|opt_anchor| {
                     opt_anchor
@@ -764,7 +762,7 @@ pub extern "C" fn zcashlc_get_verified_transparent_balance(
         let addr = unsafe { CStr::from_ptr(address).to_str()? };
         let taddr = TransparentAddress::decode(&network, &addr).unwrap();
         let amount = (&db_data)
-            .get_target_and_anchor_heights(ANCHOR_OFFSET)
+            .get_target_and_anchor_heights()
             .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
             .and_then(|opt_anchor| {
                 opt_anchor
@@ -773,12 +771,12 @@ pub extern "C" fn zcashlc_get_verified_transparent_balance(
             })
             .and_then(|anchor| {
                 (&db_data)
-                    .get_unspent_transparent_outputs(&taddr, anchor)
+                    .get_unspent_transparent_utxos(&taddr, anchor)
                     .map_err(|e| format_err!("Error while fetching verified transparent balance: {}", e))
             })?
             .iter()
-            .map(|utxo| utxo.txout.value)
-            .sum::<Option<Amount>>().unwrap();
+            .map(|utxo| utxo.value)
+            .sum::<Amount>();
 
         Ok(amount.into())
     });
@@ -800,7 +798,7 @@ pub extern "C" fn zcashlc_get_total_transparent_balance(
         let addr = unsafe { CStr::from_ptr(address).to_str()? };
         let taddr = TransparentAddress::decode(&network, &addr).unwrap();
         let amount = (&db_data)
-            .get_target_and_anchor_heights(ANCHOR_OFFSET)
+            .get_target_and_anchor_heights()
             .map_err(|e| format_err!("Error while fetching anchor height: {}", e))
             .and_then(|opt_anchor| {
                 opt_anchor
@@ -809,12 +807,12 @@ pub extern "C" fn zcashlc_get_total_transparent_balance(
             })
             .and_then(|anchor| {
                 (&db_data)
-                    .get_unspent_transparent_outputs(&taddr, anchor)
+                    .get_unspent_transparent_utxos(&taddr, anchor)
                     .map_err(|e| format_err!("Error while fetching total transparent balance: {}", e))
             })?
             .iter()
-            .map(|utxo| utxo.txout.value)
-            .sum::<Option<Amount>>().unwrap();
+            .map(|utxo| utxo.value)
+            .sum::<Amount>();
 
         Ok(amount.into())
     });
@@ -1034,6 +1032,7 @@ pub extern "C" fn zcashlc_scan_blocks(
 pub extern "C" fn zcashlc_put_utxo(
     db_data: *const u8,
     db_data_len: usize,
+    address_str: *const c_char,
     txid_bytes: *const u8,
     txid_bytes_len: usize,
     index: i32,
@@ -1048,19 +1047,21 @@ pub extern "C" fn zcashlc_put_utxo(
         let db_data = wallet_db(db_data, db_data_len, network)?;
         let mut db_data = db_data.get_update_ops()?;
 
+        let addr = unsafe { CStr::from_ptr(address_str).to_str()? };
         let txid_bytes = unsafe { slice::from_raw_parts(txid_bytes, txid_bytes_len) };
         let mut txid = [0u8; 32];
         txid.copy_from_slice(&txid_bytes);
 
         let script_bytes = unsafe { slice::from_raw_parts(script_bytes, script_bytes_len) };
         let script = script_bytes.to_vec();
-        let script_pubkey = Script(script);
         
-        let txout = TxOut { value: Amount::from_i64(value).unwrap(), script_pubkey };
+        let address = TransparentAddress::decode(&network, &addr).unwrap();
 
         let output = WalletTransparentOutput {
+            address: address,
             outpoint: OutPoint::new(txid, index as u32),
-            txout,
+            script: script,
+            value: Amount::from_i64(value).unwrap(),
             height: BlockHeight::from(height as u32),
         };
         match put_received_transparent_utxo(&mut db_data, &output) {
@@ -1100,17 +1101,15 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
     db_data_len: usize,
     tx: *const u8,
     tx_len: usize,
-    mined_height: u32,
+    _mined_height: u32,
     network_id: u32,
 ) -> i32 {
     let res = catch_panic(|| {
         let network = parse_network(network_id)?;
         let db_read = wallet_db(db_data, db_data_len, network)?;
         let mut db_data = db_read.get_update_ops()?;
-        let block_height = BlockHeight::from_u32(mined_height);
-        let branch_id = BranchId::for_height(&network,block_height);
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
-        let tx = Transaction::read(&tx_bytes[..],branch_id)?;
+        let tx = Transaction::read(&tx_bytes[..])?;
 
         match decrypt_and_store_transaction(&network, &mut db_data, &tx) {
             Ok(()) => Ok(1),
@@ -1206,8 +1205,8 @@ pub extern "C" fn zcashlc_create_to_address(
             &to,
             value,
             memo,
-            OvkPolicy::Sender,
-            ANCHOR_OFFSET)
+            OvkPolicy::Sender
+        )
         .map_err(|e| format_err!("Error while sending funds: {}", e))
     });
     unwrap_exc_or(res, -1)
@@ -1394,16 +1393,14 @@ pub extern "C" fn zcashlc_shield_funds(
         let memo = Memo::from_str(&memo).map_err(|_| format_err!("Invalid memo"))?;
         let memo_bytes = MemoBytes::from(memo);
         // shield_funds(&db_cache, &db_data, account, &tsk, &extsk, &memo, &spend_params, &output_params)
-        shield_transparent_funds(
-            &mut update_ops,
+        shield_funds(&mut update_ops, 
             &network, 
             LocalTxProver::new(spend_params, output_params), 
+            AccountId(account), 
             &sk,
-            &ExtendedFullViewingKey::from(&extsk),
-            AccountId(account),
-            &memo_bytes,
-            ANCHOR_OFFSET
-        )
+            &extsk, 
+            &memo_bytes, 
+            ANCHOR_OFFSET) 
             .map_err(|e| format_err!("Error while shielding transaction: {}", e))
     });
     unwrap_exc_or(res, -1)
@@ -1419,34 +1416,4 @@ fn parse_network(value: u32) -> Result<Network, failure::Error> {
         1 => Ok(MainNetwork),
         _ => Err(format_err!("Invalid network type: {}. Expected either 0 or 1 for Testnet or Mainnet, respectively.", value))
     }
-}
-
-//
-// Helper code from: https://github.com/adityapk00/zecwallet-light-cli/blob/master/lib/src/lightwallet.rs
-//
-
-/// A trait for converting a [u8] to base58 encoded string.
-pub trait ToBase58Check {
-    /// Converts a value of `self` to a base58 value, returning the owned string.
-    /// The version is a coin-specific prefix that is added.
-    /// The suffix is any bytes that we want to add at the end (like the "iscompressed" flag for
-    /// Secret key encoding)
-    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String;
-}
-impl ToBase58Check for [u8] {
-    fn to_base58check(&self, version: &[u8], suffix: &[u8]) -> String {
-        let mut payload: Vec<u8> = Vec::new();
-        payload.extend_from_slice(version);
-        payload.extend_from_slice(self);
-        payload.extend_from_slice(suffix);
-
-        let checksum = double_sha256(&payload);
-        payload.append(&mut checksum[..4].to_vec());
-        payload.to_base58()
-    }
-}
-pub fn double_sha256(payload: &[u8]) -> Vec<u8> {
-    let h1 = Sha256::digest(&payload);
-    let h2 = Sha256::digest(&h1);
-    h2.to_vec()
 }
