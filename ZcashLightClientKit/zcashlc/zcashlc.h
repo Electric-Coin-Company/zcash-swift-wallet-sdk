@@ -124,9 +124,6 @@ char *zcashlc_derive_transparent_address_from_seed(const uint8_t *seed,
                                                    uint32_t network_id);
 
 /**
- * TEST TEST 123 TEST
- *
- *
  * Derives a transparent private key from seed
  */
 char *zcashlc_derive_transparent_private_key_from_seed(const uint8_t *seed,

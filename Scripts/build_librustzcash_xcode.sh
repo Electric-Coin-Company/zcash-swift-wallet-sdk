@@ -21,7 +21,7 @@ echo "platform name"
 echo $PLATFORM_NAME
 if [ $PLATFORM_NAME = "iphonesimulator" ]; then
     ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios-sim x86_64-apple-ios"
-    RUSTUP_TOOLCHAIN="nightly-2021-09-24"
+    RUSTUP_TOOLCHAIN="stable"
 else
     ZCASH_ACTIVE_ARCHITECTURE="aarch64-apple-ios"
     RUSTUP_TOOLCHAIN="stable"

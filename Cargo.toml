@@ -46,10 +46,10 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/gmale/librustzcash", branch = "autoshield-poc-daa-taddr3"}
-zcash_client_sqlite = {git = "https://github.com/gmale/librustzcash", branch = "autoshield-poc-daa-taddr3"}
-zcash_primitives = {git = "https://github.com/gmale/librustzcash", branch = "autoshield-poc-daa-taddr3"}
-zcash_proofs = {git = "https://github.com/gmale/librustzcash", branch = "autoshield-poc-daa-taddr3"}
+zcash_client_backend = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
+zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
+zcash_primitives = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
+zcash_proofs = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
