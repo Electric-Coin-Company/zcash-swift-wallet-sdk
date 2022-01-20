@@ -23,7 +23,7 @@ PODS:
   - KRProgressHUD (3.4.5):
     - KRActivityIndicatorView (= 3.0.5)
   - Logging (1.4.0)
-  - MnemonicSwift (2.0.0)
+  - MnemonicSwift (2.1.0)
   - NotificationBubbles (0.1.1)
   - PaginatedTableView (1.0.1)
   - SQLite.swift (0.12.2):
@@ -82,7 +82,7 @@ DEPENDENCIES:
   - gRPC-Swift (= 1.0.0)
   - gRPC-Swift-Plugins (= 1.0.0)
   - KRProgressHUD
-  - MnemonicSwift (~> 2.0.0)
+  - MnemonicSwift (from `https://github.com/zcash-hackworks/MnemonicSwift.git`, tag `2.1.0`)
   - NotificationBubbles
   - PaginatedTableView
   - ZcashLightClientKit (from `../../`)
@@ -104,7 +104,6 @@ SPEC REPOS:
     - KRActivityIndicatorView
     - KRProgressHUD
     - Logging
-    - MnemonicSwift
     - NotificationBubbles
     - PaginatedTableView
     - SQLite.swift
@@ -121,8 +120,16 @@ SPEC REPOS:
     - SwiftProtobuf
 
 EXTERNAL SOURCES:
+  MnemonicSwift:
+    :git: https://github.com/zcash-hackworks/MnemonicSwift.git
+    :tag: 2.1.0
   ZcashLightClientKit:
     :path: "../../"
+
+CHECKOUT OPTIONS:
+  MnemonicSwift:
+    :git: https://github.com/zcash-hackworks/MnemonicSwift.git
+    :tag: 2.1.0
 
 SPEC CHECKSUMS:
   CGRPCZlib: b0c9d704a12fa667f1824ffff20688f191945989
@@ -138,7 +145,7 @@ SPEC CHECKSUMS:
   KRActivityIndicatorView: 912bc0413d98340f384b12a4e1e6aa8f42fb377d
   KRProgressHUD: df4cdc3a1baf708d4276a089ee34d133fa9a6f3e
   Logging: beeb016c9c80cf77042d62e83495816847ef108b
-  MnemonicSwift: 36384fc6b2640d93df9fe9fb60a8da7957cec36d
+  MnemonicSwift: 2415962992f524a762222c3aa1cc912736252b43
   NotificationBubbles: 91ee10deee54f35b5d49a161e1cb3d788ab5d011
   PaginatedTableView: 294d9831d5ddf5c0dcfbb4a281d4fcfb8d12f55a
   SQLite.swift: d2b4642190917051ce6bd1d49aab565fe794eea3
@@ -153,8 +160,8 @@ SPEC CHECKSUMS:
   SwiftNIOTLS: 4f8df225f03393f08e0b47b4d876ae38167f8a27
   SwiftNIOTransportServices: 896c9a4ac98698d32aa2feea7657ade219ae80bb
   SwiftProtobuf: 4e16842b83c6fda06b10fac50d73b3f1fce8ab7b
-  ZcashLightClientKit: 36355e1a185106eb3474a989a45c96d623643e2f
+  ZcashLightClientKit: e278bfbe966b9ff0592df09a5f6129f53a552120
 
-PODFILE CHECKSUM: 0e90dc69ac4c19fd97c0ce4835ece810d79ade23
+PODFILE CHECKSUM: 04cc0428dd2604ef8e1bad37e4a870165d530505
 
 COCOAPODS: 1.11.2
