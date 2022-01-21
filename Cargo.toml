@@ -11,8 +11,8 @@ build = "rust/build.rs"
 failure = "0.1"
 ffi_helpers = "0.2"
 hex = "0.4"
-zcash_client_backend = "0.5"
-zcash_client_sqlite = "0.3"
+zcash_client_backend = { version = "0.5", features = ["transparent-inputs"] }
+zcash_client_sqlite = { version = "0.3", features = ["transparent-inputs"] }
 zcash_primitives = "0.5"
 zcash_proofs = "0.5"
 
@@ -23,8 +23,8 @@ base58 = "0.1.0"
 #bs58 = { version = "0.3", features = ["check"] }
 #hdwallet = "0.3.0"
 #ripemd160 = "0.9"
-hdwallet = { git = "https://github.com/nuttycom/hdwallet", rev = "72f1f7a56c114eed484cefd6d402b7ef28158712"}
-secp256k1 = "0.19"
+#hdwallet = { git = "https://github.com/nuttycom/hdwallet", rev = "72f1f7a56c114eed484cefd6d402b7ef28158712"}
+#secp256k1 = "0.20"
 time = "0.2"
 num-bigint = "0.3.3"
 ##############################################################
@@ -46,10 +46,10 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
-zcash_client_sqlite = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
-zcash_primitives = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
-zcash_proofs = {git = "https://github.com/zcash/librustzcash", branch = "autoshielding-poc-sdk-dnm"}
+zcash_client_backend = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
+zcash_client_sqlite = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
+zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
+zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]

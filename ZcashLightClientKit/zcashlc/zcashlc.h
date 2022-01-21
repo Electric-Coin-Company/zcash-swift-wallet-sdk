@@ -200,7 +200,8 @@ char *zcashlc_get_sent_memo_as_utf8(const uint8_t *db_data,
 int64_t zcashlc_get_total_transparent_balance(const uint8_t *db_data,
                                               uintptr_t db_data_len,
                                               const char *address,
-                                              uint32_t network_id);
+                                              uint32_t network_id,
+                                              uint32_t min_confirmations);
 
 /**
  * Returns the verified balance for the account, which ignores notes that have been
