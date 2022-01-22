@@ -21,10 +21,9 @@ zcash_proofs = "0.5"
 base58 = "0.1.0"
 #sha2 = "0.9"
 #bs58 = { version = "0.3", features = ["check"] }
-#hdwallet = "0.3.0"
+hdwallet = "0.3.0"
 #ripemd160 = "0.9"
-#hdwallet = { git = "https://github.com/nuttycom/hdwallet", rev = "72f1f7a56c114eed484cefd6d402b7ef28158712"}
-#secp256k1 = "0.20"
+secp256k1 = "0.20"
 time = "0.2"
 num-bigint = "0.3.3"
 ##############################################################
@@ -46,10 +45,11 @@ crate-type = ["staticlib"]
 lto = true
 
 [patch.crates-io]
-zcash_client_backend = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
-zcash_client_sqlite = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
-zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
-zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", branch = "autoshield-poc-daa"}
+zcash_client_backend = {git = "https://github.com/nuttycom/librustzcash", rev = "15eb5aab503190d3dae4cc62c76cbdc5e8699ab1"}
+zcash_client_sqlite = {git = "https://github.com/nuttycom/librustzcash", rev = "15eb5aab503190d3dae4cc62c76cbdc5e8699ab1"}
+zcash_primitives = {git = "https://github.com/nuttycom/librustzcash", rev = "15eb5aab503190d3dae4cc62c76cbdc5e8699ab1"}
+zcash_proofs = {git = "https://github.com/nuttycom/librustzcash", rev = "15eb5aab503190d3dae4cc62c76cbdc5e8699ab1"}
+hdwallet = { git = "https://github.com/nuttycom/hdwallet", rev = "576683b9f2865f1118c309017ff36e01f84420c9" }
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
