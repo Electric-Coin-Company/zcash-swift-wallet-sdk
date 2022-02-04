@@ -19,10 +19,10 @@ zcash_proofs = "0.5"
 #### Temporary additions: ####################################
 #bitvec = "0.22"
 base58 = "0.1.0"
-#sha2 = "0.9"
+sha2 = "0.9"
 #bs58 = { version = "0.3", features = ["check"] }
 hdwallet = "0.3.0"
-#ripemd160 = "0.9"
+ripemd160 = "0.9"
 secp256k1 = "0.20"
 time = "0.2"
 num-bigint = "0.3.3"

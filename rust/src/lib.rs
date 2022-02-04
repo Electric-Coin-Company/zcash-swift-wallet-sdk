@@ -1,3 +1,4 @@
+
 use failure::format_err;
 use ffi_helpers::panic::catch_panic;
 use hdwallet::{
@@ -25,7 +26,15 @@ use zcash_client_backend::{
         encode_extended_full_viewing_key, encode_extended_spending_key, encode_payment_address,
         AddressCodec,
     },
-    keys::{sapling, transparent, UnifiedFullViewingKey, UnifiedSpendingKey},
+    keys::{
+        sapling, 
+        
+        transparent::{
+            AccountPrivKey            
+        }, 
+        UnifiedFullViewingKey, 
+        UnifiedSpendingKey 
+        },
     wallet::{AccountId, OvkPolicy, WalletTransparentOutput},
 };
 use zcash_client_sqlite::{
@@ -38,19 +47,24 @@ use zcash_client_sqlite::{
     BlockDb, NoteId, WalletDb,
 };
 use zcash_primitives::consensus::Network::{MainNetwork, TestNetwork};
+
 use zcash_primitives::{
     block::BlockHash,
     consensus::{BlockHeight, BranchId, Network, Parameters},
-    legacy::{Script, TransparentAddress},
+    legacy::{
+        Script, 
+        TransparentAddress,
+    },
     memo::{Memo, MemoBytes},
     transaction::{
         components::{Amount, OutPoint, TxOut},
         Transaction,
     },
     zip32::ExtendedFullViewingKey,
+    
 };
-
-use secp256k1::key::{PublicKey, SecretKey};
+use sha2::{Digest, Sha256};
+use secp256k1::key::{PublicKey};
 use std::convert::TryFrom;
 use zcash_proofs::prover::LocalTxProver;
 
@@ -160,23 +174,23 @@ pub extern "C" fn zcashlc_init_accounts_table(
 
         let sapling_extsks: Vec<_> = (0..accounts)
             .map(|account| {
-                let accountId = AccountId(account);
+                let account_id = AccountId(account);
                 (
-                    accountId,
-                    sapling::spending_key(&seed, network.coin_type(), accountId),
+                    account_id,
+                    sapling::spending_key(&seed, network.coin_type(), account_id),
                 )
             })
             .collect();
 
         let ufvks: Vec<_> = sapling_extsks
             .iter()
-            .map(|(accountId, sapling_extsk)| {
+            .map(|(account_id, sapling_extsk)| {
                 let t_account_key =
-                    transparent::AccountPrivKey::from_seed(&network, &seed, *accountId)
+                    AccountPrivKey::from_seed(&network, &seed, *account_id)
                         .expect("error occurred deriving transparent account key from seed")
                         .to_account_pubkey();
                 UnifiedFullViewingKey::new(
-                    *accountId,
+                    *account_id,
                     Some(t_account_key),
                     Some(ExtendedFullViewingKey::from(sapling_extsk)),
                 )
@@ -189,7 +203,7 @@ pub extern "C" fn zcashlc_init_accounts_table(
                 // Return the ExtendedSpendingKeys for the created accounts.
                 let mut v: Vec<_> = sapling_extsks
                     .iter()
-                    .map(|(account, extsk)| {
+                    .map(|(_, extsk)| {
                         let encoded = encode_extended_spending_key(
                             network.hrp_sapling_extended_spending_key(),
                             extsk,
@@ -383,8 +397,8 @@ pub unsafe extern "C" fn zcashlc_derive_unified_viewing_keys_from_seed(
 
         let uvks = (0..accounts)
             .map(|account| {
-                let accountId = AccountId(account);
-                UnifiedSpendingKey::from_seed(&network, &seed, accountId)
+                let account_id = AccountId(account);
+                UnifiedSpendingKey::from_seed(&network, &seed, account_id)
                     .map_err(|_| format_err!("error generating unified spending key from seed"))
                     .map(|usk| usk.to_unified_full_viewing_key())
             })
@@ -472,6 +486,16 @@ pub unsafe extern "C" fn zcashlc_derive_shielded_address_from_seed(
     unwrap_exc_or_null(res)
 }
 
+/// This function should be removed from the FFI for NU5.
+/// It was ported for compatibility reasons
+fn derive_transparent_address_from_public_key(
+    public_key: &secp256k1::key::PublicKey,
+) -> TransparentAddress {
+    let mut hash160 = ripemd160::Ripemd160::new();
+    hash160.update(Sha256::digest(&public_key.serialize()));
+    TransparentAddress::PublicKey(*hash160.finalize().as_ref())
+}
+
 /// derives a shielded address from the given viewing key.
 /// call zcashlc_string_free with the returned pointer when done using it
 #[no_mangle]
@@ -483,9 +507,9 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_public_key(
         let network = parse_network(network_id)?;
         let public_key_str = CStr::from_ptr(pubkey).to_str()?;
         let pk = PublicKey::from_str(&public_key_str)?;
-        let taddr = derive_transparent_address_from_public_key(&pk).encode(&network);
+        let taddr = derive_transparent_address_from_public_key(&pk);
 
-        Ok(CString::new(taddr).unwrap().into_raw())
+        Ok(CString::new(taddr.encode(&network)).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
 }
@@ -1093,7 +1117,7 @@ pub extern "C" fn zcashlc_put_utxo(
         let script_bytes = unsafe { slice::from_raw_parts(script_bytes, script_bytes_len) };
         let script = Script(script_bytes.to_vec());
 
-        let address = TransparentAddress::decode(&network, &addr).unwrap();
+        let _address = TransparentAddress::decode(&network, &addr).unwrap();
 
         let output = WalletTransparentOutput {
             outpoint: OutPoint::new(txid, index as u32),
@@ -1148,9 +1172,9 @@ pub extern "C" fn zcashlc_decrypt_and_store_transaction(
         let db_read = wallet_db(db_data, db_data_len, network)?;
         let mut db_data = db_read.get_update_ops()?;
         let tx_bytes = unsafe { slice::from_raw_parts(tx, tx_len) };
-        let branchId = BranchId::for_height(&network, BlockHeight::from(network as u32));
+        let branch_id = BranchId::for_height(&network, BlockHeight::from(network as u32));
 
-        let tx = Transaction::read(&tx_bytes[..], branchId)?;
+        let tx = Transaction::read(&tx_bytes[..], branch_id)?;
 
         match decrypt_and_store_transaction(&network, &mut db_data, &tx) {
             Ok(()) => Ok(1),
@@ -1307,7 +1331,7 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_private_key_from_seed(
             return Err(format_err!("account argument must be positive"));
         };
 
-        let index = if index >= 0 {
+        let _index = if index >= 0 {
             index as u32
         } else {
             return Err(format_err!("index argument must be positive"));
@@ -1350,7 +1374,7 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_seed(
             .map_err(|_| format_err!("could not derive unified spending key from seed"))?
             .transparent()
             .to_account_pubkey()
-            .derive_external_pubkey(0)
+            .derive_external_pubkey(index)
             .unwrap()
             .to_address()
             .encode(&network);
@@ -1368,15 +1392,24 @@ pub unsafe extern "C" fn zcashlc_derive_transparent_address_from_secret_key(
 ) -> *mut c_char {
     let res = catch_panic(|| {
         let network = parse_network(network_id)?;
-        let tsk_wif = CStr::from_ptr(tsk).to_str()?;
+        let tsk = CStr::from_ptr(tsk).to_str()?;
 
-        let sk: SecretKey = (&transparent::Wif(tsk_wif.to_string()))
-            .to_secret_key(&network)
-            .expect("invalid private key WIF");
+        let epk: zcash_client_backend::keys::transparent::ExternalPrivKey = hex::decode(tsk)
+        .map_err(|_| format_err!("error decoding hex string"))
+        .and_then(|tsk_bytes| {
+            ExtendedPrivKey::deserialize(&tsk_bytes)
+                .map_err(|_| format_err!("error decoding transparent spending key."))
+        })
+        .map(|decoded_account_key| {
+            AccountPrivKey::from_extended_privkey(decoded_account_key)
+                .derive_external_secret_key(0)
+                .unwrap()
+        })
+        .unwrap();
 
-        // derive the corresponding t-address
-        let taddr = derive_transparent_address_from_secret_key(&sk).encode(&network);
-        Ok(CString::new(taddr).unwrap().into_raw())
+        let taddr = epk.to_external_pubkey().to_address();
+
+        Ok(CString::new(taddr.encode(&network)).unwrap().into_raw())
     });
     unwrap_exc_or_null(res)
 }
@@ -1418,14 +1451,14 @@ pub extern "C" fn zcashlc_shield_funds(
         }));
 
         // decode secret private key for spending t-funds
-        let tsk: transparent::ExternalPrivKey = hex::decode(tsk)
+        let tsk: zcash_client_backend::keys::transparent::ExternalPrivKey = hex::decode(tsk)
             .map_err(|_| format_err!("error decoding hex string"))
             .and_then(|tsk_bytes| {
                 ExtendedPrivKey::deserialize(&tsk_bytes)
                     .map_err(|_| format_err!("error decoding transparent spending key."))
             })
             .map(|decoded_account_key| {
-                transparent::AccountPrivKey::from_extended_privkey(decoded_account_key)
+                AccountPrivKey::from_extended_privkey(decoded_account_key)
                     .derive_external_secret_key(0)
                     .unwrap()
             })
