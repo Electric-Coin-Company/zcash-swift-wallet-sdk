@@ -16,123 +16,44 @@ This is an alpha build and is currently under active development. Please be advi
 - Developers using this SDK must familiarize themselves with the current [threat
   model](https://zcash.readthedocs.io/en/latest/rtd_pages/wallet_threat_model.html), especially the known weaknesses described there.
 
-# Build dependencies
+# Installation
 
-ZcashLightClientKit uses a rust library called Librustzcash. In order to build it, you need to have rust and cargo installed on your environment.
+## Swift Package Manager
 
-Install [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) following these directions, and then install `cargo-lipo` and add the appropriate architectures using `rustup` with the following example:
+Add a package with the source "https://github.com/zcash/ZcashLightClientKit.git" and from version "0.13.0" onwards in either Xcode's GUI or in your "Package.swift" file
 
-```
-$ cargo install cargo-lipo
-$ rustup target add aarch64-apple-ios x86_64-apple-ios
-```
+## Cocoapods Support
 
-# Cocoapods Support
+1. Add the following to the top of your podfile to resolve downstream dependencies.
 
-## Installing ZcashLightClientKit as a Contributor
-``` ruby
-use_frameworks!
-
-pod 'ZcashLightClientKit', :path => '../../', :testspecs => ['Tests']  # include testspecs if you want to run the tests
+```ruby
+source "https://github.com/dh-ecc/CocoaPodsSpecs.git"
+source "https://cdn.cocoapods.org/"
 ```
 
-## Installing ZcashLightClientKit as a wallet app developer
-```` ruby
-use_frameworks!
-
-pod 'ZcashLightClientKit'
-````
-
-### Custom build phases warning
-When running `pod install` you will see this warning upon success:
-```` bash
-[!] ZcashLightClientKit has added 2 script phases. Please inspect before executing a build. 
-See `https://guides.cocoapods.org/syntax/podspec.html#script_phases` for more information.
-````
-Integrating Rust code with Swift code and delivering it in a consistent and (build) reproducible way, is hard. We've taken the lead to get that burden off your shoulders as much as possible by leveraging the `prepare_command` and `script_phases` features from Cocoapods to carefully generate a build for the Rust layer.
-
-## Build system
-
-This section explains the 'Build System' that integrates the rust code and creates the corresponding environment.
-
-### Overview
-
-There are some basic steps to build ZcashLightClientKit. Even though they are 'basic' they can be cumbersome. So we automated them in scripts.
-
-**1. Pod install and `prepare_command`**
-
-ZcashLightClientKit needs files to be present at pod installation time, but that can't be defined properly yet and depend on librustzcash building properly and for an environment to be set up at build time. For know we just need to let Cocoapods that these files exist:
-
-- `${ZCASH_POD_SRCROOT}/zcashlc/libzcashlc.a` this is the librustzcash build .a file itself
-- `lib/libzcashlc.a` (as vendored library that will be added as an asset by xcodeproj)
-
-
-**2. Build Phase**
-
-The build Phase scripts executes within the Xcode Build Step and has all the known variables of a traditional build at hand.
-
-```` ruby
-s.script_phase = {
-      :name => 'Build generate constants and build librustzcash',
-      :script => 'sh ${PODS_TARGET_SRCROOT}/Scripts/build_librustzcash_xcode.sh',
-      :execution_position => :before_compile
-   }
-````
-
-This step will generate files needed on the next steps and build the librustzcash with Xcode but *not using cargo's built-in Xcode integration*
-
-** Building librustzcash and integrating it to the pod structure**
-
-Where the magic happens. Here we will make sure that everything is set up properly to start building librustzcash. When on mainnet, the build will append a parameter to include mainnet features.
-
-### Scripts
-
-On the Scripts folder you will find the following files:
-````
- | Scripts
- |-/prepare_zcash_sdk.sh
- |-/generate_test_constants.sh
- |-/build_librustzcash_xcode.sh
- |-/build_librustzcash.sh
- |-/script_commons.sh
- ````
-
-#### prepare_zcash_sdk.sh
-This script is run by the Cocoapods 'prepare_command'.
-
-```` Ruby
-s.prepare_command = <<-CMD
-      sh Scripts/prepare_zcash_sdk.sh
-    CMD
-````
-It basically creates empty files that cocoapods needs to pick up on its pod structure but that are still not present in the file system and that will be generated in later build phases.
-
-NOTE: pod install will only run this phase when no Pods/ folder is present or if your pod hash has changed or is not present on manifest.lock. When in doubt, just clean the Pods/ folder and start over. That usually gets rid of weirdness caused by Xcode caching a lot of stuff you are not aware of.
-
-#### script_commons.sh
-A lot of important environment variables and helper functions live in the `script_commons.sh`.
-
+2. Add `pod "ZcashLightClientKit", ~> "0.13.0"` to the target you want to add the kit too.
 
 # Testing
 
-Currently tests depend on a `lightwalletd` server instance running locally or remotely to pass.
-To know more about running `lightwalletd`, refer to its repo https://github.com/zcash/lightwalletd
+The best way to run tests is to open "Package.swift" in Xcode and use the Test panel and target an iOS device. Tests will build and run for a Mac target but are not currently working as expected.
 
-## Pointing tests to a lightwalletd instance
+There are three test targets grouped by external requirements:
+1. `OfflineTests`
+    - No external requirements.
+2. `NetworkTests`
+    - Require an active internet connection.
+3. `DarksideTests`
+    - Require an instance of `lightwalletd` to be running while the tests are being run, see below for some information on how to set up. (Darkside refers to a mode in lightwalletd that allows it to be updated to represent/mock different states of the underlying blockchain.)
 
-Tests use `Sourcery` to generate a Constants file which injects the `lightwalletd` server address to the test themselves.
+## lightwalletd
 
-### Installing sourcery
-
-Refer to the official repo https://github.com/krzysztofzablocki/Sourcery
-
-### Setting env-var.sh file to run locally
-
-Create a file called `env-var.sh` on the project root to create the `LIGHTWALLETD_ADDRESS` environment variable on build time.
+The `DarksideTests` test target depend on a `lightwalletd` server instance running locally (or remotely). For convenience, we have added a universal (Mac) `lightwalletd` binary (in `Tests/lightwalletd/lightwalletd) and it can be run locally for use by the tests with the following command:
 
 ```
-export LIGHTWALLETD_ADDRESS="localhost%3a9067"
+Tests/lightwalletd/lightwalletd --no-tls-very-insecure --data-dir /tmp --darkside-very-insecure --log-file /dev/stdout
 ```
+
+You can find out more about running `lightwalletd`, from the main repo https://github.com/zcash/lightwalletd.
 
 ### Integrating with CD/CI
 
@@ -166,44 +87,8 @@ For more details look the Sample App's `AppDelegate` code.
 # Swiftlint
 
 We don't like reinventing the wheel, so we gently borrowed swift lint rules from AirBnB which we find pretty cool and reasonable.
-
-## Troubleshooting
-
-#### clean pod install
-it's not necessary to delete the whole Pods/ directory and download all of your dependencies again
-1. on your project root, locate the `Pods/` directory
-2. remove ZcashLightClientKit from it
-3. clean derived data from Xcode
-4. close Xcode
-5. run `pod install` (run --verbose to see more details)
-6. open Xcode project
-7. build
-
-### _function_name  referenced from...
-if you get a build error similar to ```_function_name  referenced from...```
-
-* on your project root directory *
-1. remove the 'Pods' directory ``` rm -rf Pods/```
-2. delete derived data and clean
-3. run `pod install`
-4. build
-
-### can't find crate for ...  target may not be installed
-This error could be a side effect of having more then one rust toolchain installed. 
-If you worked with ZcashLightClientKit 0.6.6 or below you might have had to set the compiler to 1.40.0 which can cause this compilation error to happen.
-make sure that the directory that you are working on has the correct rust environment.
-You can do so by calling `rustup show` in the working directory. 
-
-### Building in Apple Silicon 
-So far we have come up with this set up (april 2021)
-
-* Clone a terminal and run it in rosetta mode
-* Clone your Xcode of choice and run it in rosetta mode
-* Installing the right toolchain for cargo
-  * `rustup toolchain add stable-x86_64-apple-darwin`
-  * `rustup target add aarch64-apple-ios x86_64-apple-darwin x86_64-apple-ios`
   
-## Versioning
+# Versioning
 
 This project follows [semantic versioning](https://semver.org/) with pre-release versions. An example of a valid version number is `1.0.4-alpha11` denoting the `11th` iteration of the `alpha` pre-release of version `1.0.4`. Stable releases, such as `1.0.4` will not contain any pre-release identifiers. Pre-releases include the following, in order of stability: `alpha`, `beta`, `rc`. Version codes offer a numeric representation of the build name that always increases. The first six significant digits represent the major, minor and patch number (two digits each) and the last 3 significant digits represent the pre-release identifier. The first digit of the identifier signals the build type. Lastly, each new build has a higher version code than all previous builds. The following table breaks this down:
 

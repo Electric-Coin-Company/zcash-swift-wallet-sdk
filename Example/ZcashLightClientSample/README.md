@@ -7,24 +7,13 @@ It relies on [Lightwalletd](https://github.com/zcash/lightwalletd), a backend se
 ## Contents
 
 - [Requirements](#requirements)
-- [Installation](#installation)
 - [Exploring the demo app](#exploring-the-demo-app)
   - [Demos](#demos)
 - [Getting started](#getting-started)
 - [Resources](#resources)
 
 ## Requirements
-Demo app requires a target device running iOS 12+. The demo directly links source code so building it also requires Rust, Sourcery, and Xcode. 
-
-[Back to contents](#contents)
-
-## Installation
-Refer to [build instructions](https://github.com/zcash/ZcashLightClientKit) in the readme of the android-wallet-sdk repository for detailed instructions. In short, you will need to: 
-
-1. Install rust: https://www.rust-lang.org/learn/get-started 
-1. Install sourcery: https://github.com/krzysztofzablocki/Sourcery
-1. Clone this repo, https://github.com/zcash/ZcashLightClientKit
-1. Launch from Xcode, https://developer.apple.com/xcode/
+Demo app requires a target device running iOS 12+. 
 
 [Back to contents](#contents)
 
