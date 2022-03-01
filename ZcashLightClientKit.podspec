@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
         'Francisco Gindre' => 'francisco.gindre@gmail.com',
         'Jack Grigg' => 'str4d@electriccoin.co'
      }
-    s.source           = { :git => 'https://github.com/dh-ecc/ZcashLightClientKit.git', :tag => s.version.to_s }
+    s.source           = { :git => 'https://github.com/zcash/ZcashLightClientKit.git', :tag => s.version.to_s }
 
     s.source_files = 'Sources/ZcashLightClientKit/**/*.{swift,h}'
     s.swift_version = '5.4'
