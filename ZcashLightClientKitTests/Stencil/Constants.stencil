@@ -1,4 +1,0 @@
-public struct Constants {
-    static let address: String = "{{ argument.addr }}"
-}
-

@@ -8,6 +8,7 @@
 
 import UIKit
 import ZcashLightClientKit
+
 class GetBalanceViewController: UIViewController {
     @IBOutlet weak var balance: UILabel!
     @IBOutlet weak var verified: UILabel!
