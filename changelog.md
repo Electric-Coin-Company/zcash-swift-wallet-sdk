@@ -1,3 +1,20 @@
+# 0.13.0-beta.1
+- [Enhancement] PR #338. Rust-less build. Check for new documentation on how to benefit from this huge change
+- [Enhancement] Swift Package Manager Support!
+
+# 0.12.0-beta.6
+- [Enhancement] Fresh checkpoints
+
+# 0.12.0-beta.5
+- FIX fixes to Apple Silicon M1 builds
+
+# 0.12.0-beta.4
+- Fix: add parameter to ensure 10 confs when shielding.
+
+# 0.12.0-beta.2
+- [Fix] Issue #293 MaxAttemptsReached error surfaces when it's actually dismissable and the wallet is working fine
+- [Enhancement] Add test to verify that a checksum invalid t-address fails to validate.
+
 # 0.12.0-alpha.11
 * [Enhancement] Network Agnostic build
 

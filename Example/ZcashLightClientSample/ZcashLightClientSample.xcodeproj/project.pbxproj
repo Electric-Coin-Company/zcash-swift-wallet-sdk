@@ -13,33 +13,41 @@
 		0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
 		0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
 		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
-		0D76121726B1D5F5001CA417 /* Mainnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121526B1D5ED001CA417 /* Mainnet.swift */; };
 		0D76121926B1D66D001CA417 /* Testnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121826B1D66D001CA417 /* Testnet.swift */; };
-		0D76121A26B1E8F6001CA417 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
 		0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7C85E423AD5A9B006878FC /* SampleStorage.swift */; };
-		0D8BB45223B1DA0700D5E2A1 /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
-		0D8BB45323B1DA0700D5E2A1 /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
-		0D8BB45423B1DA0700D5E2A1 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F172322CC5900D641FE /* ViewController.swift */; };
-		0D8BB45523B1DA0700D5E2A1 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
-		0D8BB45623B1DA0700D5E2A1 /* TransactionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */; };
-		0D8BB45723B1DA0700D5E2A1 /* TransactionsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */; };
-		0D8BB45823B1DA0700D5E2A1 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
-		0D8BB45923B1DA0700D5E2A1 /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
-		0D8BB45A23B1DA0700D5E2A1 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
-		0D8BB45B23B1DA0700D5E2A1 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
-		0D8BB45C23B1DA0700D5E2A1 /* SampleStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7C85E423AD5A9B006878FC /* SampleStorage.swift */; };
-		0D8BB45D23B1DA0700D5E2A1 /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
-		0D8BB45E23B1DA0700D5E2A1 /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
-		0D8BB46223B1DA0700D5E2A1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
-		0D8BB46323B1DA0700D5E2A1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1C2322CC5B00D641FE /* Assets.xcassets */; };
-		0D8BB46423B1DA0700D5E2A1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F192322CC5900D641FE /* Main.storyboard */; };
 		0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
 		0D907F182322CC5900D641FE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F172322CC5900D641FE /* ViewController.swift */; };
 		0D907F1B2322CC5900D641FE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F192322CC5900D641FE /* Main.storyboard */; };
 		0D907F1D2322CC5B00D641FE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1C2322CC5B00D641FE /* Assets.xcassets */; };
 		0D907F202322CC5B00D641FE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
-		0D907F2B2322CC5B00D641FE /* ZcashLightClientSampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */; };
+		0DA1C4AA27D11B2900E5006E /* ZcashLightClientSampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA1C4A927D11B2900E5006E /* ZcashLightClientSampleTests.swift */; };
+		0DA1C4BC27D11D9500E5006E /* GetBalanceViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DCD3DC6238D88B100DD3EC4 /* GetBalanceViewController.swift */; };
+		0DA1C4BD27D11D9500E5006E /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
+		0DA1C4BE27D11D9500E5006E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F172322CC5900D641FE /* ViewController.swift */; };
+		0DA1C4BF27D11D9500E5006E /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
+		0DA1C4C027D11D9500E5006E /* TransactionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */; };
+		0DA1C4C227D11D9500E5006E /* TransactionsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */; };
+		0DA1C4C327D11D9500E5006E /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
+		0DA1C4C427D11D9500E5006E /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
+		0DA1C4C527D11D9500E5006E /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
+		0DA1C4C627D11D9500E5006E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
+		0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
+		0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */; };
+		0DA1C4C927D11D9500E5006E /* DerivationToolViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */; };
+		0DA1C4CA27D11D9500E5006E /* SampleStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7C85E423AD5A9B006878FC /* SampleStorage.swift */; };
+		0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
+		0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
+		0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
+		0DA1C4CF27D11D9500E5006E /* KRProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 0DA1C4B227D11D9500E5006E /* KRProgressHUD */; };
+		0DA1C4D027D11D9500E5006E /* MnemonicSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0DA1C4B427D11D9500E5006E /* MnemonicSwift */; };
+		0DA1C4D127D11D9500E5006E /* PaginatedTableView in Frameworks */ = {isa = PBXBuildFile; productRef = 0DA1C4B627D11D9500E5006E /* PaginatedTableView */; };
+		0DA1C4D227D11D9500E5006E /* ZcashLightClientKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0DA1C4B127D11D9500E5006E /* ZcashLightClientKit */; };
+		0DA1C4D327D11D9500E5006E /* NotificationBubbles in Frameworks */ = {isa = PBXBuildFile; productRef = 0DA1C4B827D11D9500E5006E /* NotificationBubbles */; };
+		0DA1C4D527D11D9500E5006E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1E2322CC5B00D641FE /* LaunchScreen.storyboard */; };
+		0DA1C4D627D11D9500E5006E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F1C2322CC5B00D641FE /* Assets.xcassets */; };
+		0DA1C4D727D11D9500E5006E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F192322CC5900D641FE /* Main.storyboard */; };
+		0DA1C4DE27D11E5000E5006E /* Mainnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121526B1D5ED001CA417 /* Mainnet.swift */; };
 		0DA58B942397DDD9004596EA /* TransactionsTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */; };
 		0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
 		0DBF8F9523A80F5A0010B85F /* TransactionDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */; };
@@ -47,10 +55,7 @@
 		0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
 		0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
 		0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
-		481792F96AA8DF873DDD19A8 /* Pods_ZcashLightClientSampleUITests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 372CC57DB80CC242BA556A30 /* Pods_ZcashLightClientSampleUITests.framework */; };
-		8462F5B5D7D1652782D6917E /* Pods_ZcashLightClientSampleTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 22AE1E6F756FD3EA41A397FC /* Pods_ZcashLightClientSampleTests.framework */; };
 		F94912632790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F94912622790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist */; };
-		F94912642790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F94912622790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist */; };
 		F9D63D1F27CD114A00F4DC5F /* ZcashLightClientKit in Frameworks */ = {isa = PBXBuildFile; productRef = F9D63D1E27CD114A00F4DC5F /* ZcashLightClientKit */; };
 		F9D63D2227CD125300F4DC5F /* KRProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = F9D63D2127CD125300F4DC5F /* KRProgressHUD */; };
 		F9D63D2527CD12AA00F4DC5F /* MnemonicSwift in Frameworks */ = {isa = PBXBuildFile; productRef = F9D63D2427CD12AA00F4DC5F /* MnemonicSwift */; };
@@ -59,14 +64,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		0D907F272322CC5B00D641FE /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0D907F0A2322CC5900D641FE /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 0D907F112322CC5900D641FE;
-			remoteInfo = ZcashLightClientSample;
-		};
-		0D907F322322CC5B00D641FE /* PBXContainerItemProxy */ = {
+		0DA1C4AB27D11B2900E5006E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0D907F0A2322CC5900D641FE /* Project object */;
 			proxyType = 1;
@@ -86,7 +84,6 @@
 		0D76121826B1D66D001CA417 /* Testnet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Testnet.swift; sourceTree = "<group>"; };
 		0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBlocksViewController.swift; sourceTree = "<group>"; };
 		0D7C85E423AD5A9B006878FC /* SampleStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleStorage.swift; sourceTree = "<group>"; };
-		0D8BB46C23B1DA0700D5E2A1 /* ZcashLightClientSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZcashLightClientSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F122322CC5900D641FE /* ZcashLightClientSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZcashLightClientSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F152322CC5900D641FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0D907F172322CC5900D641FE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -94,10 +91,11 @@
 		0D907F1C2322CC5B00D641FE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0D907F1F2322CC5B00D641FE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0D907F212322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		0D907F262322CC5B00D641FE /* ZcashLightClientSampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleTests.swift; sourceTree = "<group>"; };
 		0D907F2C2322CC5B00D641FE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DA1C4A727D11B2900E5006E /* ZcashLightClientSampleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZcashLightClientSampleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DA1C4A927D11B2900E5006E /* ZcashLightClientSampleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZcashLightClientSampleTests.swift; sourceTree = "<group>"; };
+		0DA1C4DC27D11D9500E5006E /* ZcashLightClientSample-Mainnet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ZcashLightClientSample-Mainnet.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		0DA58B932397DDD9004596EA /* TransactionsTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsTableViewController.swift; sourceTree = "<group>"; };
 		0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsDataSource.swift; sourceTree = "<group>"; };
 		0DBF8F9423A80F5A0010B85F /* TransactionDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDetailViewController.swift; sourceTree = "<group>"; };
@@ -114,13 +112,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		0D8BB45F23B1DA0700D5E2A1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0D907F0F2322CC5900D641FE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -133,19 +124,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0D907F232322CC5B00D641FE /* Frameworks */ = {
+		0DA1C4A427D11B2900E5006E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8462F5B5D7D1652782D6917E /* Pods_ZcashLightClientSampleTests.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0D907F2E2322CC5B00D641FE /* Frameworks */ = {
+		0DA1C4CE27D11D9500E5006E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				481792F96AA8DF873DDD19A8 /* Pods_ZcashLightClientSampleUITests.framework in Frameworks */,
+				0DA1C4CF27D11D9500E5006E /* KRProgressHUD in Frameworks */,
+				0DA1C4D027D11D9500E5006E /* MnemonicSwift in Frameworks */,
+				0DA1C4D127D11D9500E5006E /* PaginatedTableView in Frameworks */,
+				0DA1C4D227D11D9500E5006E /* ZcashLightClientKit in Frameworks */,
+				0DA1C4D327D11D9500E5006E /* NotificationBubbles in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,6 +209,7 @@
 				F9D63D1C27CD103E00F4DC5F /* Packages */,
 				0D907F142322CC5900D641FE /* ZcashLightClientSample */,
 				0D907F292322CC5B00D641FE /* ZcashLightClientSampleTests */,
+				0DA1C4A827D11B2900E5006E /* ZcashLightClientSampleTests */,
 				0D907F132322CC5900D641FE /* Products */,
 				F93EF550279077B70063E43A /* Frameworks */,
 			);
@@ -224,9 +219,8 @@
 			isa = PBXGroup;
 			children = (
 				0D907F122322CC5900D641FE /* ZcashLightClientSample.app */,
-				0D907F262322CC5B00D641FE /* ZcashLightClientSampleTests.xctest */,
-				0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */,
-				0D8BB46C23B1DA0700D5E2A1 /* ZcashLightClientSample.app */,
+				0DA1C4A727D11B2900E5006E /* ZcashLightClientSampleTests.xctest */,
+				0DA1C4DC27D11D9500E5006E /* ZcashLightClientSample-Mainnet.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -265,6 +259,14 @@
 			children = (
 				0D907F2A2322CC5B00D641FE /* ZcashLightClientSampleTests.swift */,
 				0D907F2C2322CC5B00D641FE /* Info.plist */,
+			);
+			path = ZcashLightClientSampleTests;
+			sourceTree = "<group>";
+		};
+		0DA1C4A827D11B2900E5006E /* ZcashLightClientSampleTests */ = {
+			isa = PBXGroup;
+			children = (
+				0DA1C4A927D11B2900E5006E /* ZcashLightClientSampleTests.swift */,
 			);
 			path = ZcashLightClientSampleTests;
 			sourceTree = "<group>";
@@ -332,24 +334,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		0D8BB44E23B1DA0700D5E2A1 /* ZcashLightClientSample-Mainnet */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 0D8BB46923B1DA0700D5E2A1 /* Build configuration list for PBXNativeTarget "ZcashLightClientSample-Mainnet" */;
-			buildPhases = (
-				0D8BB45023B1DA0700D5E2A1 /* ShellScript */,
-				0D8BB45123B1DA0700D5E2A1 /* Sources */,
-				0D8BB45F23B1DA0700D5E2A1 /* Frameworks */,
-				0D8BB46123B1DA0700D5E2A1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = "ZcashLightClientSample-Mainnet";
-			productName = ZcashLightClientSample;
-			productReference = 0D8BB46C23B1DA0700D5E2A1 /* ZcashLightClientSample.app */;
-			productType = "com.apple.product-type.application";
-		};
 		0D907F112322CC5900D641FE /* ZcashLightClientSample */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0D907F3A2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSample" */;
@@ -375,41 +359,48 @@
 			productReference = 0D907F122322CC5900D641FE /* ZcashLightClientSample.app */;
 			productType = "com.apple.product-type.application";
 		};
-		0D907F252322CC5B00D641FE /* ZcashLightClientSampleTests */ = {
+		0DA1C4A627D11B2900E5006E /* ZcashLightClientSampleTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0D907F3D2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleTests" */;
+			buildConfigurationList = 0DA1C4AD27D11B2900E5006E /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleTests" */;
 			buildPhases = (
-				0D907F222322CC5B00D641FE /* Sources */,
-				0D907F232322CC5B00D641FE /* Frameworks */,
-				0D907F242322CC5B00D641FE /* Resources */,
+				0DA1C4A327D11B2900E5006E /* Sources */,
+				0DA1C4A427D11B2900E5006E /* Frameworks */,
+				0DA1C4A527D11B2900E5006E /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				0D907F282322CC5B00D641FE /* PBXTargetDependency */,
+				0DA1C4AC27D11B2900E5006E /* PBXTargetDependency */,
 			);
 			name = ZcashLightClientSampleTests;
 			productName = ZcashLightClientSampleTests;
-			productReference = 0D907F262322CC5B00D641FE /* ZcashLightClientSampleTests.xctest */;
+			productReference = 0DA1C4A727D11B2900E5006E /* ZcashLightClientSampleTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		0D907F302322CC5B00D641FE /* ZcashLightClientSampleUITests */ = {
+		0DA1C4B027D11D9500E5006E /* ZcashLightClientSample-Mainnet */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0D907F402322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleUITests" */;
+			buildConfigurationList = 0DA1C4D927D11D9500E5006E /* Build configuration list for PBXNativeTarget "ZcashLightClientSample-Mainnet" */;
 			buildPhases = (
-				0D907F2D2322CC5B00D641FE /* Sources */,
-				0D907F2E2322CC5B00D641FE /* Frameworks */,
-				0D907F2F2322CC5B00D641FE /* Resources */,
+				0DA1C4BA27D11D9500E5006E /* ShellScript */,
+				0DA1C4BB27D11D9500E5006E /* Sources */,
+				0DA1C4CE27D11D9500E5006E /* Frameworks */,
+				0DA1C4D427D11D9500E5006E /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				0D907F332322CC5B00D641FE /* PBXTargetDependency */,
 			);
-			name = ZcashLightClientSampleUITests;
-			productName = ZcashLightClientSampleUITests;
-			productReference = 0D907F312322CC5B00D641FE /* ZcashLightClientSampleUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
+			name = "ZcashLightClientSample-Mainnet";
+			packageProductDependencies = (
+				0DA1C4B127D11D9500E5006E /* ZcashLightClientKit */,
+				0DA1C4B227D11D9500E5006E /* KRProgressHUD */,
+				0DA1C4B427D11D9500E5006E /* MnemonicSwift */,
+				0DA1C4B627D11D9500E5006E /* PaginatedTableView */,
+				0DA1C4B827D11D9500E5006E /* NotificationBubbles */,
+			);
+			productName = ZcashLightClientSample;
+			productReference = 0DA1C4DC27D11D9500E5006E /* ZcashLightClientSample-Mainnet.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
@@ -417,19 +408,15 @@
 		0D907F0A2322CC5900D641FE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1020;
+				LastSwiftUpdateCheck = 1320;
 				LastUpgradeCheck = 1250;
 				ORGANIZATIONNAME = "Electric Coin Company";
 				TargetAttributes = {
 					0D907F112322CC5900D641FE = {
 						CreatedOnToolsVersion = 10.2.1;
 					};
-					0D907F252322CC5B00D641FE = {
-						CreatedOnToolsVersion = 10.2.1;
-						TestTargetID = 0D907F112322CC5900D641FE;
-					};
-					0D907F302322CC5B00D641FE = {
-						CreatedOnToolsVersion = 10.2.1;
+					0DA1C4A627D11B2900E5006E = {
+						CreatedOnToolsVersion = 13.2.1;
 						TestTargetID = 0D907F112322CC5900D641FE;
 					};
 				};
@@ -454,25 +441,13 @@
 			projectRoot = "";
 			targets = (
 				0D907F112322CC5900D641FE /* ZcashLightClientSample */,
-				0D907F252322CC5B00D641FE /* ZcashLightClientSampleTests */,
-				0D907F302322CC5B00D641FE /* ZcashLightClientSampleUITests */,
-				0D8BB44E23B1DA0700D5E2A1 /* ZcashLightClientSample-Mainnet */,
+				0DA1C4A627D11B2900E5006E /* ZcashLightClientSampleTests */,
+				0DA1C4B027D11D9500E5006E /* ZcashLightClientSample-Mainnet */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		0D8BB46123B1DA0700D5E2A1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0D8BB46223B1DA0700D5E2A1 /* LaunchScreen.storyboard in Resources */,
-				0D8BB46323B1DA0700D5E2A1 /* Assets.xcassets in Resources */,
-				0D8BB46423B1DA0700D5E2A1 /* Main.storyboard in Resources */,
-				F94912642790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0D907F102322CC5900D641FE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -484,24 +459,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0D907F242322CC5B00D641FE /* Resources */ = {
+		0DA1C4A527D11B2900E5006E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0D907F2F2322CC5B00D641FE /* Resources */ = {
+		0DA1C4D427D11D9500E5006E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DA1C4D527D11D9500E5006E /* LaunchScreen.storyboard in Resources */,
+				0DA1C4D627D11D9500E5006E /* Assets.xcassets in Resources */,
+				0DA1C4D727D11D9500E5006E /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0D8BB45023B1DA0700D5E2A1 /* ShellScript */ = {
+		0DA1C4BA27D11D9500E5006E /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -538,28 +516,6 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		0D8BB45123B1DA0700D5E2A1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0D76121726B1D5F5001CA417 /* Mainnet.swift in Sources */,
-				0D8BB45223B1DA0700D5E2A1 /* GetBalanceViewController.swift in Sources */,
-				0D8BB45323B1DA0700D5E2A1 /* GetAddressViewController.swift in Sources */,
-				0D8BB45423B1DA0700D5E2A1 /* ViewController.swift in Sources */,
-				0D8BB45523B1DA0700D5E2A1 /* LatestHeightViewController.swift in Sources */,
-				0D8BB45623B1DA0700D5E2A1 /* TransactionDetailViewController.swift in Sources */,
-				0D8BB45723B1DA0700D5E2A1 /* TransactionsTableViewController.swift in Sources */,
-				0D8BB45823B1DA0700D5E2A1 /* SendViewController.swift in Sources */,
-				0D8BB45923B1DA0700D5E2A1 /* SyncBlocksViewController.swift in Sources */,
-				0D8BB45A23B1DA0700D5E2A1 /* DemoAppConfig.swift in Sources */,
-				0D8BB45B23B1DA0700D5E2A1 /* AppDelegate.swift in Sources */,
-				0D8BB45C23B1DA0700D5E2A1 /* SampleStorage.swift in Sources */,
-				0D8BB45D23B1DA0700D5E2A1 /* TransactionsDataSource.swift in Sources */,
-				0D8BB45E23B1DA0700D5E2A1 /* PaginatedTransactionsViewController.swift in Sources */,
-				0D76121A26B1E8F6001CA417 /* SampleLogger.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0D907F0E2322CC5900D641FE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -585,33 +541,46 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0D907F222322CC5B00D641FE /* Sources */ = {
+		0DA1C4A327D11B2900E5006E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0D907F2B2322CC5B00D641FE /* ZcashLightClientSampleTests.swift in Sources */,
+				0DA1C4AA27D11B2900E5006E /* ZcashLightClientSampleTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0D907F2D2322CC5B00D641FE /* Sources */ = {
+		0DA1C4BB27D11D9500E5006E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0DA1C4BC27D11D9500E5006E /* GetBalanceViewController.swift in Sources */,
+				0DA1C4BD27D11D9500E5006E /* GetAddressViewController.swift in Sources */,
+				0DA1C4BE27D11D9500E5006E /* ViewController.swift in Sources */,
+				0DA1C4BF27D11D9500E5006E /* LatestHeightViewController.swift in Sources */,
+				0DA1C4DE27D11E5000E5006E /* Mainnet.swift in Sources */,
+				0DA1C4C027D11D9500E5006E /* TransactionDetailViewController.swift in Sources */,
+				0DA1C4C227D11D9500E5006E /* TransactionsTableViewController.swift in Sources */,
+				0DA1C4C327D11D9500E5006E /* SendViewController.swift in Sources */,
+				0DA1C4C427D11D9500E5006E /* SyncBlocksViewController.swift in Sources */,
+				0DA1C4C527D11D9500E5006E /* DemoAppConfig.swift in Sources */,
+				0DA1C4C627D11D9500E5006E /* AppDelegate.swift in Sources */,
+				0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */,
+				0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */,
+				0DA1C4C927D11D9500E5006E /* DerivationToolViewController.swift in Sources */,
+				0DA1C4CA27D11D9500E5006E /* SampleStorage.swift in Sources */,
+				0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */,
+				0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */,
+				0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		0D907F282322CC5B00D641FE /* PBXTargetDependency */ = {
+		0DA1C4AC27D11B2900E5006E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 0D907F112322CC5900D641FE /* ZcashLightClientSample */;
-			targetProxy = 0D907F272322CC5B00D641FE /* PBXContainerItemProxy */;
-		};
-		0D907F332322CC5B00D641FE /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 0D907F112322CC5900D641FE /* ZcashLightClientSample */;
-			targetProxy = 0D907F322322CC5B00D641FE /* PBXContainerItemProxy */;
+			targetProxy = 0DA1C4AB27D11B2900E5006E /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -635,48 +604,6 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		0D8BB46A23B1DA0700D5E2A1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6J82A38BF9;
-				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "$(SRCROOT)/ZcashLightClientSample-Mainnet-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
-				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Mainnet";
-				PRODUCT_MODULE_NAME = ZcashLightClientSample;
-				PRODUCT_NAME = ZcashLightClientSample;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		0D8BB46B23B1DA0700D5E2A1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6J82A38BF9;
-				ENABLE_BITCODE = NO;
-				INFOPLIST_FILE = "$(SRCROOT)/ZcashLightClientSample-Mainnet-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
-				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Mainnet";
-				PRODUCT_MODULE_NAME = ZcashLightClientSample;
-				PRODUCT_NAME = ZcashLightClientSample;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 		0D907F382322CC5B00D641FE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -843,100 +770,95 @@
 			};
 			name = Release;
 		};
-		0D907F3E2322CC5B00D641FE /* Debug */ = {
+		0DA1C4AE27D11B2900E5006E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6J82A38BF9;
-				INFOPLIST_FILE = ZcashLightClientSampleTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleTests;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RLPRR8CPQG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.apple.ZcashLightClientSampleTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ZcashLightClientSample.app/ZcashLightClientSample";
 			};
 			name = Debug;
 		};
-		0D907F3F2322CC5B00D641FE /* Release */ = {
+		0DA1C4AF27D11B2900E5006E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = "$(inherited)";
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 6J82A38BF9;
-				INFOPLIST_FILE = ZcashLightClientSampleTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
-				);
-				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleTests;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RLPRR8CPQG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.apple.ZcashLightClientSampleTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ZcashLightClientSample.app/ZcashLightClientSample";
 			};
 			name = Release;
 		};
-		0D907F412322CC5B00D641FE /* Debug */ = {
+		0DA1C4DA27D11D9500E5006E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6J82A38BF9;
-				INFOPLIST_FILE = ZcashLightClientSampleUITests/Info.plist;
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "$(inherited)";
+				INFOPLIST_FILE = "ZcashLightClientSample-Mainnet-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleUITests;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
+				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Testnet";
+				PRODUCT_MODULE_NAME = ZcashLightClientSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ZcashLightClientSample;
 			};
 			name = Debug;
 		};
-		0D907F422322CC5B00D641FE /* Release */ = {
+		0DA1C4DB27D11D9500E5006E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 6J82A38BF9;
-				INFOPLIST_FILE = ZcashLightClientSampleUITests/Info.plist;
+				ENABLE_BITCODE = NO;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "$(inherited)";
+				INFOPLIST_FILE = "ZcashLightClientSample-Mainnet-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = co.electriccoin.ZcashLightClientSampleUITests;
+				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
+				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Testnet";
+				PRODUCT_MODULE_NAME = ZcashLightClientSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = ZcashLightClientSample;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		0D8BB46923B1DA0700D5E2A1 /* Build configuration list for PBXNativeTarget "ZcashLightClientSample-Mainnet" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0D8BB46A23B1DA0700D5E2A1 /* Debug */,
-				0D8BB46B23B1DA0700D5E2A1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		0D907F0D2322CC5900D641FE /* Build configuration list for PBXProject "ZcashLightClientSample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -955,20 +877,20 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0D907F3D2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleTests" */ = {
+		0DA1C4AD27D11B2900E5006E /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0D907F3E2322CC5B00D641FE /* Debug */,
-				0D907F3F2322CC5B00D641FE /* Release */,
+				0DA1C4AE27D11B2900E5006E /* Debug */,
+				0DA1C4AF27D11B2900E5006E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		0D907F402322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSampleUITests" */ = {
+		0DA1C4D927D11D9500E5006E /* Build configuration list for PBXNativeTarget "ZcashLightClientSample-Mainnet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0D907F412322CC5B00D641FE /* Debug */,
-				0D907F422322CC5B00D641FE /* Release */,
+				0DA1C4DA27D11D9500E5006E /* Debug */,
+				0DA1C4DB27D11D9500E5006E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -976,6 +898,38 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		0DA1C4B327D11D9500E5006E /* XCRemoteSwiftPackageReference "KRProgressHUD" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krimpedance/KRProgressHUD.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+		0DA1C4B527D11D9500E5006E /* XCRemoteSwiftPackageReference "MnemonicSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/zcash-hackworks/MnemonicSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		0DA1C4B727D11D9500E5006E /* XCRemoteSwiftPackageReference "PaginatedTableView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dh-ecc/PaginatedTableView";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		0DA1C4B927D11D9500E5006E /* XCRemoteSwiftPackageReference "NotificationBubbles" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pacu/NotificationBubbles.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		F9D63D2027CD125300F4DC5F /* XCRemoteSwiftPackageReference "KRProgressHUD" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/krimpedance/KRProgressHUD.git";
@@ -1011,6 +965,30 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0DA1C4B127D11D9500E5006E /* ZcashLightClientKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = ZcashLightClientKit;
+		};
+		0DA1C4B227D11D9500E5006E /* KRProgressHUD */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0DA1C4B327D11D9500E5006E /* XCRemoteSwiftPackageReference "KRProgressHUD" */;
+			productName = KRProgressHUD;
+		};
+		0DA1C4B427D11D9500E5006E /* MnemonicSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0DA1C4B527D11D9500E5006E /* XCRemoteSwiftPackageReference "MnemonicSwift" */;
+			productName = MnemonicSwift;
+		};
+		0DA1C4B627D11D9500E5006E /* PaginatedTableView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0DA1C4B727D11D9500E5006E /* XCRemoteSwiftPackageReference "PaginatedTableView" */;
+			productName = PaginatedTableView;
+		};
+		0DA1C4B827D11D9500E5006E /* NotificationBubbles */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0DA1C4B927D11D9500E5006E /* XCRemoteSwiftPackageReference "NotificationBubbles" */;
+			productName = NotificationBubbles;
+		};
 		F9D63D1E27CD114A00F4DC5F /* ZcashLightClientKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = ZcashLightClientKit;

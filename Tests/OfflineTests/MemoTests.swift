@@ -22,21 +22,21 @@ class MemoTests: XCTestCase {
     */
     func testMemoLength() throws {
         XCTAssertEqual(validMemoData.count, 512)
-        XCTAssertEqual(validMemoData.asZcashTransactionMemo()!.count, Self.validMemoDataExpectedString.count)
+        XCTAssertEqual(validMemoData.asZcashTransactionMemo()!.trimmingCharacters(in: .controlCharacters).count, Self.validMemoDataExpectedString.count)
     }
     /**
     Verify support for common unicode characters
     */
     func testUnicodeCharacters() throws {
-        let memo = validMemoData.asZcashTransactionMemo()
+        let memo = validMemoData.asZcashTransactionMemo()!.trimmingCharacters(in: .controlCharacters)
         XCTAssertNotNil(memo)
-        XCTAssertEqual(memo!, Self.validMemoDataExpectedString)
+        XCTAssertEqual(memo, Self.validMemoDataExpectedString)
     }
     
     func testEmojiUnicodeCharacters() throws {
-        let memo = Self.emojiMemoData.asZcashTransactionMemo()
+        let memo = Self.emojiMemoData.asZcashTransactionMemo()!.trimmingCharacters(in: .controlCharacters)
         XCTAssertNotNil(memo)
-        XCTAssertEqual(memo!, Self.expectedEmojiMemoString)
+        XCTAssertEqual(memo, Self.expectedEmojiMemoString)
     }
     
     /**
@@ -44,7 +44,7 @@ class MemoTests: XCTestCase {
     */
     func testBlankMemos() throws {
         // This is an example of a functional test case.
-        XCTAssertNil(emptyMemoData.asZcashTransactionMemo())
+        XCTAssertEqual(emptyMemoData.asZcashTransactionMemo(), String(data: emptyMemoData, encoding: .utf8))
     }
     
     /**

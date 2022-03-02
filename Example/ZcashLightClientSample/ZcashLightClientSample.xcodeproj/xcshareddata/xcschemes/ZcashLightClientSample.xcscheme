@@ -32,19 +32,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0D907F252322CC5B00D641FE"
+               BlueprintIdentifier = "0DA1C4A627D11B2900E5006E"
                BuildableName = "ZcashLightClientSampleTests.xctest"
                BlueprintName = "ZcashLightClientSampleTests"
-               ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0D907F302322CC5B00D641FE"
-               BuildableName = "ZcashLightClientSampleUITests.xctest"
-               BlueprintName = "ZcashLightClientSampleUITests"
                ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
             </BuildableReference>
          </TestableReference>
