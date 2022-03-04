@@ -29,15 +29,6 @@
         }
       },
       {
-        "package": "libzcashlc",
-        "repositoryURL": "https://github.com/dh-ecc/libzcashlc.git",
-        "state": {
-          "branch": "main",
-          "revision": "900dbfe0bc8c0e5f4774bf038678292ee5de0150",
-          "version": null
-        }
-      },
-      {
         "package": "MnemonicSwift",
         "repositoryURL": "https://github.com/zcash-hackworks/MnemonicSwift.git",
         "state": {
@@ -143,6 +134,15 @@
           "branch": null,
           "revision": "7e2c5f3cbbeea68e004915e3a8961e20bd11d824",
           "version": "1.18.0"
+        }
+      },
+      {
+        "package": "libzcashlc",
+        "repositoryURL": "https://github.com/zcash-hackworks/zcash-light-client-ffi.git",
+        "state": {
+          "branch": "main",
+          "revision": "e5aaf60faf16554e47e4bb123a8b4e5c22475e9f",
+          "version": null
         }
       }
     ]

@@ -34,7 +34,6 @@ class BlockDownloaderTests: XCTestCase {
     }
     
     override func tearDown() {
-        try super.tearDown()
         service = nil
         storage = nil
         downloader = nil

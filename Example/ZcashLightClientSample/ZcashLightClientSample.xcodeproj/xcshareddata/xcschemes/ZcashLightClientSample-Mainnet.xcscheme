@@ -3,7 +3,7 @@
    LastUpgradeVersion = "1250"
    version = "1.3">
    <BuildAction
-      parallelizeBuildables = "NO"
+      parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
       <BuildActionEntries>
          <BuildActionEntry
@@ -44,19 +44,21 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
+            BlueprintIdentifier = "0DA1C4B027D11D9500E5006E"
+            BuildableName = "ZcashLightClientSample-Mainnet.app"
+            BlueprintName = "ZcashLightClientSample-Mainnet"
+            ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
             BlueprintIdentifier = "0D8BB44E23B1DA0700D5E2A1"
             BuildableName = "ZcashLightClientSample.app"
             BlueprintName = "ZcashLightClientSample-Mainnet"
             ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
          </BuildableReference>
-      </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "ZCASH_NETWORK_ENVIRONMENT"
-            value = "MAINNET"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
+      </MacroExpansion>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
