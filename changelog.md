@@ -1,3 +1,5 @@
+# 0.13.0-beta.2
+- [Enhancement] Fix: make BlockProgress `.nullProgress` static property public for ECC Reference Wallet CombineSynchonizer 
 # 0.13.0-beta.1
 - [Enhancement] PR #338. Rust-less build. Check for new documentation on how to benefit from this huge change
 - [Enhancement] Swift Package Manager Support!

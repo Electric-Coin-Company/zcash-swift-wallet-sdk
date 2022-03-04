@@ -921,12 +921,6 @@ extension ConnectionState {
     }
 }
 
-extension BlockProgress {
-    static var nullProgress: Self {
-        return .init(startHeight: 0, targetHeight: 0, progressHeight: 0)
-    }
-}
-
 private struct NullEnhancementProgress: EnhancementProgress {
     var totalTransactions: Int { 0 }
     var enhancedTransactions: Int { 0 }
