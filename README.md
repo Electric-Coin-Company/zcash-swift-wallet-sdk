@@ -27,11 +27,11 @@ Add a package with the source "https://github.com/zcash/ZcashLightClientKit.git"
 1. Add the following to the top of your podfile to resolve downstream dependencies.
 
 ```ruby
-source "https://github.com/dh-ecc/CocoaPodsSpecs.git"
+source "https://github.com/zcash-hackworks/CocoaPodsSpecs.git"
 source "https://cdn.cocoapods.org/"
 ```
 
-2. Add `pod "ZcashLightClientKit", ~> "0.13.0"` to the target you want to add the kit too.
+2. Add `pod "ZcashLightClientKit", ~> "0.13.0-beta.1"` to the target you want to add the kit too.
 
 # Testing
 
