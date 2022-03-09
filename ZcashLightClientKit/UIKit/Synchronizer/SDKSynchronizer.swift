@@ -692,7 +692,7 @@ public class SDKSynchronizer: Synchronizer {
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
-    
+
     public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
         try blockProcessor.getTransparentBalance(accountIndex: accountIndex)
     }
@@ -919,12 +919,6 @@ extension ConnectionState {
         case .transientFailure:
             self = .reconnecting
         }
-    }
-}
-
-extension BlockProgress {
-    static var nullProgress: Self {
-        return .init(startHeight: 0, targetHeight: 0, progressHeight: 0)
     }
 }
 

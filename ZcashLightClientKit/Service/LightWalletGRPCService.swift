@@ -83,6 +83,10 @@ public struct BlockProgress: Equatable {
     }
 }
 
+public extension BlockProgress {
+    static let nullProgress = BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)
+}
+
 public class LightWalletGRPCService {
     let channel: Channel
     let connectionManager: ConnectionStatusManager
