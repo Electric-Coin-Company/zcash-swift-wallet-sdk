@@ -24,7 +24,7 @@ Add a package with the source "https://github.com/zcash/ZcashLightClientKit.git"
 
 ## Cocoapods Support
 
-Add `pod "ZcashLightClientKit", ~> "0.13.0"` to the target you want to add the kit too.
+Add `pod "ZcashLightClientKit", ~> "0.13.0-beta.2"` to the target you want to add the kit too.
 
 # Testing
 
