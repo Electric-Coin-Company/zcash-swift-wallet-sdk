@@ -30,6 +30,9 @@ let package = Package(
                 "Service/ProtoBuf/proto/compact_formats.proto",
                 "Service/ProtoBuf/proto/service.proto",
                 "Stencil"
+            ],
+            resources: [
+                .copy("Resources/saplingtree-checkpoints")
             ]
         ),
         .target(
