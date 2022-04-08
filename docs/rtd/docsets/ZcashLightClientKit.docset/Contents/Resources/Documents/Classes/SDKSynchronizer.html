@@ -8,19 +8,27 @@
     <script src="../js/jquery.min.js" defer></script>
     <script src="../js/jazzy.js" defer></script>
     
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
     <a name="//apple_ref/swift/Class/SDKSynchronizer" class="dashAnchor"></a>
     <a title="SDKSynchronizer Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">ZcashLightClientKit Docs</a> (71% documented)</p>
+        <p><a href="../index.html">ZcashLightClientKit 0.13.0-beta.2 Docs</a> (53% documented)</p>
+        <div class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </div>
       </div>
     </header>
     <div class="content-wrapper">
       <p id="breadcrumbs">
         <a href="../index.html">ZcashLightClientKit Reference</a>
-        <img id="carat" src="../img/carat.png" />
+        <img id="carat" src="../img/carat.png" alt=""/>
         SDKSynchronizer Class Reference
       </p>
     </div>
@@ -40,6 +48,9 @@
                 <a href="../Classes/CompactBlockProcessor/State.html">– State</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Classes/DerivationTool.html">DerivationTool</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Classes/Initializer.html">Initializer</a>
               </li>
               <li class="nav-group-task">
@@ -52,7 +63,10 @@
                 <a href="../Classes/SDKSynchronizer/NotificationKeys.html">– NotificationKeys</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Classes/ZcashSDK.html">ZcashSDK</a>
+                <a href="../Classes/ZcashSDKMainnetConstants.html">ZcashSDKMainnetConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ZcashSDKTestnetConstants.html">ZcashSDKTestnetConstants</a>
               </li>
             </ul>
           </li>
@@ -63,19 +77,52 @@
                 <a href="../Enums/CompactBlockProcessorError.html">CompactBlockProcessorError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProcessorNotificationKey.html">CompactBlockProcessorNotificationKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProgress.html">CompactBlockProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ConnectionState.html">ConnectionState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/GRPCResult.html">GRPCResult</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Enums/InitializerError.html">InitializerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/KeyDerivationErrors.html">KeyDerivationErrors</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/LightWalletServiceError.html">LightWalletServiceError</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Enums/NetworkType.html">NetworkType</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Enums/ResourceProviderError.html">ResourceProviderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/RewindPolicy.html">RewindPolicy</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/RustWeldingError.html">RustWeldingError</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Enums/Status.html">Status</a>
+                <a href="../Enums.html#/s:19ZcashLightClientKit10SDKMetricsO">SDKMetrics</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SaplingParameterDownloader.html">SaplingParameterDownloader</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SaplingParameterDownloader/Errors.html">– Errors</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ShieldFundsError.html">ShieldFundsError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SyncStatus.html">SyncStatus</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Enums/SynchronizerError.html">SynchronizerError</a>
@@ -86,34 +133,34 @@
               <li class="nav-group-task">
                 <a href="../Enums/TransactionKind.html">TransactionKind</a>
               </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ZcashNetworkBuilder.html">ZcashNetworkBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums.html#/s:19ZcashLightClientKit0A27RustBackendWeldingConstantsO">ZcashRustBackendWeldingConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ZcashSDK.html">ZcashSDK</a>
+              </li>
             </ul>
           </li>
           <li class="nav-group-name">
             <a href="../Extensions.html">Extensions</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Extensions/Array.html">Array</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/BlockHeight.html">BlockHeight</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Collection.html">Collection</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/CompactBlockRange.html">CompactBlockRange</a>
+                <a href="../Extensions/ConsensusBranchID.html">ConsensusBranchID</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Data.html">Data</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="../Extensions/Data/HexEncodingOptions.html">– HexEncodingOptions</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Notification.html">Notification</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/Notification/Name.html">– Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/ServerStreamingCall.html">ServerStreamingCall</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Extensions/String.html">String</a>
@@ -127,10 +174,22 @@
                 <a href="../Protocols/AbstractTransaction.html">AbstractTransaction</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/CancellableCall.html">CancellableCall</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/CompactBlockDownloading.html">CompactBlockDownloading</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/EnhancementProgress.html">EnhancementProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/KeyDeriving.html">KeyDeriving</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/KeyValidation.html">KeyValidation</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/LightWalletService.html">LightWalletService</a>
@@ -139,10 +198,16 @@
                 <a href="../Protocols/LightWalletServiceResponse.html">LightWalletServiceResponse</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Protocols/LightWalletdInfo.html">LightWalletdInfo</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Protocols/Logger.html">Logger</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/MinedTransactionEntity.html">MinedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/NetworkConstants.html">NetworkConstants</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/PaginatedTransactionRepository.html">PaginatedTransactionRepository</a>
@@ -157,9 +222,6 @@
                 <a href="../Protocols/ResourceProvider.html">ResourceProvider</a>
               </li>
               <li class="nav-group-task">
-                <a href="../Protocols/SeedProvider.html">SeedProvider</a>
-              </li>
-              <li class="nav-group-task">
                 <a href="../Protocols/SignedTransactionEntity.html">SignedTransactionEntity</a>
               </li>
               <li class="nav-group-task">
@@ -167,6 +229,21 @@
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/TransactionEntity.html">TransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/UnifiedAddress.html">UnifiedAddress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/UnifiedViewingKey.html">UnifiedViewingKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/UnspentTransactionOutputEntity.html">UnspentTransactionOutputEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/WalletBalance.html">WalletBalance</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ZcashNetwork.html">ZcashNetwork</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Protocols/ZcashRustBackendWelding.html">ZcashRustBackendWelding</a>
@@ -177,10 +254,13 @@
             <a href="../Structs.html">Structures</a>
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
-                <a href="../Structs/CompactBlockProcessorNotificationKey.html">CompactBlockProcessorNotificationKey</a>
+                <a href="../Structs/BlockProgress.html">BlockProgress</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/DefaultResourceProvider.html">DefaultResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/EnhancementStreamProgress.html">EnhancementStreamProgress</a>
               </li>
               <li class="nav-group-task">
                 <a href="../Structs/LightWalletEndpoint.html">LightWalletEndpoint</a>
@@ -191,9 +271,6 @@
               <li class="nav-group-task">
                 <a href="../Structs/ZcashCompactBlock.html">ZcashCompactBlock</a>
               </li>
-              <li class="nav-group-task">
-                <a href="../Structs.html#/s:19ZcashLightClientKit0A27RustBackendWeldingConstantsV">ZcashRustBackendWeldingConstants</a>
-              </li>
             </ul>
           </li>
           <li class="nav-group-name">
@@ -203,7 +280,28 @@
                 <a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a>
               </li>
               <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit7Channela">Channel</a>
+              </li>
+              <li class="nav-group-task">
                 <a href="../Typealiases.html#/s:19ZcashLightClientKit17CompactBlockRangea">CompactBlockRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17ConsensusBranchIDa">ConsensusBranchID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit22ExtendedFullViewingKeya">ExtendedFullViewingKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17ExtendedPublicKeya">ExtendedPublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit14RefreshedUTXOsa">RefreshedUTXOs</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit22SaplingShieldedAddressa">SaplingShieldedAddress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit18TransparentAddressa">TransparentAddress</a>
               </li>
             </ul>
           </li>
@@ -215,11 +313,12 @@
             <h1>SDKSynchronizer</h1>
               <div class="declaration">
                 <div class="language">
+                  
                   <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">class</span> <span class="kt">SDKSynchronizer</span> <span class="p">:</span> <span class="kt"><a href="../Protocols/Synchronizer.html">Synchronizer</a></span></code></pre>
 
                 </div>
               </div>
-            <p>Synchronizer implementation for UIKit and iOS 12+</p>
+            <p>Undocumented</p>
 
           </section>
           <section class="section task-group-section">
@@ -228,9 +327,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC16NotificationKeysV"></a>
-                    <a name="//apple_ref/swift/Struct/NotificationKeys" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC16NotificationKeysV">NotificationKeys</a>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC16NotificationKeysO"></a>
+                    <a name="//apple_ref/swift/Enum/NotificationKeys" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC16NotificationKeysO">NotificationKeys</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -246,7 +345,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">struct</span> <span class="kt">NotificationKeys</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">NotificationKeys</span></code></pre>
 
                         </div>
                       </div>
@@ -256,9 +355,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19ZcashLightClientKit12SynchronizerP6statusAA6StatusOvp"></a>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP6statusAA10SyncStatusOvp"></a>
                     <a name="//apple_ref/swift/Property/status" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP6statusAA6StatusOvp">status</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP6statusAA10SyncStatusOvp">status</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -272,7 +371,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">status</span><span class="p">:</span> <span class="kt"><a href="../Enums/Status.html">Status</a></span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">status</span><span class="p">:</span> <span class="kt"><a href="../Enums/SyncStatus.html">SyncStatus</a></span> <span class="p">{</span> <span class="k">get</span> <span class="k">set</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -282,9 +381,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19ZcashLightClientKit12SynchronizerP8progressSfvp"></a>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC8progressSfvp"></a>
                     <a name="//apple_ref/swift/Property/progress" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP8progressSfvp">progress</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC8progressSfvp">progress</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -292,7 +391,8 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
@@ -308,9 +408,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC14blockProcessorAA012CompactBlockG0CSgvp"></a>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC14blockProcessorAA012CompactBlockG0Cvp"></a>
                     <a name="//apple_ref/swift/Property/blockProcessor" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC14blockProcessorAA012CompactBlockG0CSgvp">blockProcessor</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC14blockProcessorAA012CompactBlockG0Cvp">blockProcessor</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -325,7 +425,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">blockProcessor</span><span class="p">:</span> <span class="kt"><a href="../Classes/CompactBlockProcessor.html">CompactBlockProcessor</a></span><span class="p">?</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">blockProcessor</span><span class="p">:</span> <span class="kt"><a href="../Classes/CompactBlockProcessor.html">CompactBlockProcessor</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
 
                         </div>
                       </div>
@@ -362,9 +462,89 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC19latestScannedHeightSivp"></a>
+                    <a name="//apple_ref/swift/Property/latestScannedHeight" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC19latestScannedHeightSivp">latestScannedHeight</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">latestScannedHeight</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP15connectionStateAA010ConnectionG0Ovp"></a>
+                    <a name="//apple_ref/swift/Property/connectionState" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP15connectionStateAA010ConnectionG0Ovp">connectionState</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">connectionState</span><span class="p">:</span> <span class="kt"><a href="../Enums/ConnectionState.html">ConnectionState</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC7networkAA0A7Network_pvp"></a>
+                    <a name="//apple_ref/swift/Property/network" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC7networkAA0A7Network_pvp">network</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">private(set)</span> <span class="k">var</span> <span class="nv">network</span><span class="p">:</span> <span class="kt"><a href="../Protocols/ZcashNetwork.html">ZcashNetwork</a></span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:19ZcashLightClientKit15SDKSynchronizerC11initializerAcA11InitializerC_tKcfc"></a>
                     <a name="//apple_ref/swift/Method/init(initializer:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC11initializerAcA11InitializerC_tKcfc">init(initializer:)</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC11initializerAcA11InitializerC_tKcfc">init(initializer:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -379,7 +559,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">initializer</span><span class="p">:</span> <span class="kt"><a href="../Classes/Initializer.html">Initializer</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">convenience</span> <span class="nf">init</span><span class="p">(</span><span class="nv">initializer</span><span class="p">:</span> <span class="kt"><a href="../Classes/Initializer.html">Initializer</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -408,9 +588,62 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC10initializeyyKF"></a>
+                    <a name="//apple_ref/swift/Method/initialize()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC10initializeyyKF">initialize()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">initialize</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP7prepareyyKF"></a>
+                    <a name="//apple_ref/swift/Method/prepare()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP7prepareyyKF">prepare()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">prepare</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:19ZcashLightClientKit15SDKSynchronizerC5start5retryySb_tKF"></a>
                     <a name="//apple_ref/swift/Method/start(retry:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC5start5retryySb_tKF">start(retry:)</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC5start5retryySb_tKF">start(retry:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -440,9 +673,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC4stopyyKF"></a>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC4stopyyF"></a>
                     <a name="//apple_ref/swift/Method/stop()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC4stopyyKF">stop()</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC4stopyyF">stop()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -451,18 +684,13 @@
                       <div class="pointer"></div>
                       <div class="abstract">
                         <p>Stops the synchronizer</p>
-<div class="aside aside-throws">
-    <p class="aside-title">Throws</p>
-    CompactBlockProcessorError when failures occur
-
-</div>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stop</span><span class="p">()</span> <span class="k">throws</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">stop</span><span class="p">()</span></code></pre>
 
                         </div>
                       </div>
@@ -477,7 +705,7 @@
                 <a name="//apple_ref/swift/Section/Synchronizer methods" class="dashAnchor"></a>
                 <div class="section-name-container">
                   <a class="section-name-link" href="#/Synchronizer%20methods"></a>
-                  <h3 class="section-name"><p>Synchronizer methods</p>
+                  <h3 class="section-name"><span>Synchronizer methods</span>
 </h3>
                 </div>
               </div>
@@ -485,9 +713,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19ZcashLightClientKit12SynchronizerP13sendToAddress11spendingKey7zatoshi02toH04memo4from11resultBlockySS_s5Int64VS2SSgSiys6ResultOyAA24PendingTransactionEntity_ps5Error_pGctF"></a>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC13sendToAddress11spendingKey7zatoshi02toH04memo4from11resultBlockySS_s5Int64VS2SSgSiys6ResultOyAA24PendingTransactionEntity_ps5Error_pGctF"></a>
                     <a name="//apple_ref/swift/Method/sendToAddress(spendingKey:zatoshi:toAddress:memo:from:resultBlock:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP13sendToAddress11spendingKey7zatoshi02toH04memo4from11resultBlockySS_s5Int64VS2SSgSiys6ResultOyAA24PendingTransactionEntity_ps5Error_pGctF">sendToAddress(spendingKey:zatoshi:toAddress:memo:from:resultBlock:)</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC13sendToAddress11spendingKey7zatoshi02toH04memo4from11resultBlockySS_s5Int64VS2SSgSiys6ResultOyAA24PendingTransactionEntity_ps5Error_pGctF">sendToAddress(spendingKey:<wbr>zatoshi:<wbr>toAddress:<wbr>memo:<wbr>from:<wbr>resultBlock:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -495,13 +723,21 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        
+                        <p>Undocumented</p>
+
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">sendToAddress</span><span class="p">(</span><span class="nv">spendingKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">zatoshi</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">,</span> <span class="nv">toAddress</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">memo</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="n">from</span> <span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span> <span class="nv">resultBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt"><a href="../Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a></span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">sendToAddress</span><span class="p">(</span>
+    <span class="nv">spendingKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">zatoshi</span><span class="p">:</span> <span class="kt">Int64</span><span class="p">,</span>
+    <span class="nv">toAddress</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">memo</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span>
+    <span class="n">from</span> <span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span>
+    <span class="nv">resultBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt"><a href="../Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a></span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span>
+<span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -511,9 +747,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19ZcashLightClientKit12SynchronizerP10getAddress12accountIndexSSSi_tF"></a>
-                    <a name="//apple_ref/swift/Method/getAddress(accountIndex:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP10getAddress12accountIndexSSSi_tF">getAddress(accountIndex:)</a>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP11shieldFunds11spendingKey017transparentSecretI04memo4from11resultBlockySS_S2SSgSiys6ResultOyAA24PendingTransactionEntity_ps5Error_pGctF"></a>
+                    <a name="//apple_ref/swift/Method/shieldFunds(spendingKey:transparentSecretKey:memo:from:resultBlock:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP11shieldFunds11spendingKey017transparentSecretI04memo4from11resultBlockySS_S2SSgSiys6ResultOyAA24PendingTransactionEntity_ps5Error_pGctF">shieldFunds(spendingKey:<wbr>transparentSecretKey:<wbr>memo:<wbr>from:<wbr>resultBlock:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -527,7 +763,13 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getAddress</span><span class="p">(</span><span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">shieldFunds</span><span class="p">(</span>
+    <span class="nv">spendingKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">transparentSecretKey</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span>
+    <span class="nv">memo</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span>
+    <span class="n">from</span> <span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">,</span>
+    <span class="nv">resultBlock</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt"><a href="../Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a></span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span>
+<span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -539,7 +781,7 @@
                     <code>
                     <a name="/s:19ZcashLightClientKit12SynchronizerP11cancelSpend11transactionSbAA24PendingTransactionEntity_p_tF"></a>
                     <a name="//apple_ref/swift/Method/cancelSpend(transaction:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP11cancelSpend11transactionSbAA24PendingTransactionEntity_p_tF">cancelSpend(transaction:)</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP11cancelSpend11transactionSbAA24PendingTransactionEntity_p_tF">cancelSpend(transaction:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -671,9 +913,35 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP24allConfirmedTransactions4from5limitSayAA0G17TransactionEntity_pGSgAaG_pSg_SitKF"></a>
+                    <a name="//apple_ref/swift/Method/allConfirmedTransactions(from:limit:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP24allConfirmedTransactions4from5limitSayAA0G17TransactionEntity_pGSgAaG_pSg_SitKF">allConfirmedTransactions(from:<wbr>limit:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">allConfirmedTransactions</span><span class="p">(</span><span class="n">from</span> <span class="nv">transaction</span><span class="p">:</span> <span class="kt"><a href="../Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a></span><span class="p">?,</span> <span class="nv">limit</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt"><a href="../Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a></span><span class="p">]?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:19ZcashLightClientKit12SynchronizerP21paginatedTransactions2ofAA30PaginatedTransactionRepository_pAA0J4KindO_tF"></a>
                     <a name="//apple_ref/swift/Method/paginatedTransactions(of:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP21paginatedTransactions2ofAA30PaginatedTransactionRepository_pAA0J4KindO_tF">paginatedTransactions(of:)</a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP21paginatedTransactions2ofAA30PaginatedTransactionRepository_pAA0J4KindO_tF">paginatedTransactions(of:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -688,6 +956,346 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">paginatedTransactions</span><span class="p">(</span><span class="n">of</span> <span class="nv">kind</span><span class="p">:</span> <span class="kt"><a href="../Enums/TransactionKind.html">TransactionKind</a></span> <span class="o">=</span> <span class="o">.</span><span class="n">all</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/PaginatedTransactionRepository.html">PaginatedTransactionRepository</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP22latestDownloadedHeightSiyKF"></a>
+                    <a name="//apple_ref/swift/Method/latestDownloadedHeight()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP22latestDownloadedHeightSiyKF">latestDownloadedHeight()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">latestDownloadedHeight</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP12latestHeight6resultyys6ResultOySis5Error_pGc_tF"></a>
+                    <a name="//apple_ref/swift/Method/latestHeight(result:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP12latestHeight6resultyys6ResultOySis5Error_pGc_tF">latestHeight(result:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">latestHeight</span><span class="p">(</span><span class="nv">result</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP12latestHeightSiyKF"></a>
+                    <a name="//apple_ref/swift/Method/latestHeight()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP12latestHeightSiyKF">latestHeight()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">latestHeight</span><span class="p">()</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC11latestUTXOs7address6resultySS_ys6ResultOySayAA30UnspentTransactionOutputEntity_pGs5Error_pGctF"></a>
+                    <a name="//apple_ref/swift/Method/latestUTXOs(address:result:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC11latestUTXOs7address6resultySS_ys6ResultOySayAA30UnspentTransactionOutputEntity_pGs5Error_pGctF">latestUTXOs(address:<wbr>result:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">latestUTXOs</span><span class="p">(</span><span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="nv">result</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="p">[</span><span class="kt"><a href="../Protocols/UnspentTransactionOutputEntity.html">UnspentTransactionOutputEntity</a></span><span class="p">],</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP12refreshUTXOs7address4from6resultySS_Siys6ResultOySayAA30UnspentTransactionOutputEntity_pG8inserted_AK7skippedts5Error_pGctF"></a>
+                    <a name="//apple_ref/swift/Method/refreshUTXOs(address:from:result:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP12refreshUTXOs7address4from6resultySS_Siys6ResultOySayAA30UnspentTransactionOutputEntity_pG8inserted_AK7skippedts5Error_pGctF">refreshUTXOs(address:<wbr>from:<wbr>result:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">refreshUTXOs</span><span class="p">(</span><span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">,</span> <span class="n">from</span> <span class="nv">height</span><span class="p">:</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a></span><span class="p">,</span> <span class="nv">result</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit14RefreshedUTXOsa">RefreshedUTXOs</a></span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP18getShieldedBalance12accountIndexs5Int64VSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getShieldedBalance(accountIndex:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP18getShieldedBalance12accountIndexs5Int64VSi_tF">getShieldedBalance(accountIndex:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getShieldedBalance</span><span class="p">(</span><span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP26getShieldedVerifiedBalance12accountIndexs5Int64VSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getShieldedVerifiedBalance(accountIndex:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP26getShieldedVerifiedBalance12accountIndexs5Int64VSi_tF">getShieldedVerifiedBalance(accountIndex:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getShieldedVerifiedBalance</span><span class="p">(</span><span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Int64</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP18getShieldedAddress12accountIndexSSSgSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getShieldedAddress(accountIndex:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP18getShieldedAddress12accountIndexSSSgSi_tF">getShieldedAddress(accountIndex:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getShieldedAddress</span><span class="p">(</span><span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit22SaplingShieldedAddressa">SaplingShieldedAddress</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP17getUnifiedAddress12accountIndexAA0gH0_pSgSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getUnifiedAddress(accountIndex:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP17getUnifiedAddress12accountIndexAA0gH0_pSgSi_tF">getUnifiedAddress(accountIndex:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getUnifiedAddress</span><span class="p">(</span><span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/UnifiedAddress.html">UnifiedAddress</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP21getTransparentAddress12accountIndexSSSgSi_tF"></a>
+                    <a name="//apple_ref/swift/Method/getTransparentAddress(accountIndex:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP21getTransparentAddress12accountIndexSSSgSi_tF">getTransparentAddress(accountIndex:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getTransparentAddress</span><span class="p">(</span><span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Typealiases.html#/s:19ZcashLightClientKit18TransparentAddressa">TransparentAddress</a></span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP21getTransparentBalance12accountIndexAA06WalletH0_pSi_tKF"></a>
+                    <a name="//apple_ref/swift/Method/getTransparentBalance(accountIndex:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP21getTransparentBalance12accountIndexAA06WalletH0_pSi_tKF">getTransparentBalance(accountIndex:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getTransparentBalance</span><span class="p">(</span><span class="nv">accountIndex</span><span class="p">:</span> <span class="kt">Int</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/WalletBalance.html">WalletBalance</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit15SDKSynchronizerC21getTransparentBalance7addressAA06WalletH0_pSS_tKF"></a>
+                    <a name="//apple_ref/swift/Method/getTransparentBalance(address:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit15SDKSynchronizerC21getTransparentBalance7addressAA06WalletH0_pSS_tKF">getTransparentBalance(address:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the last stored unshielded balance</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getTransparentBalance</span><span class="p">(</span><span class="nv">address</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="k">throws</span> <span class="o">-&gt;</span> <span class="kt"><a href="../Protocols/WalletBalance.html">WalletBalance</a></span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit12SynchronizerP6rewindyyAA12RewindPolicyOKF"></a>
+                    <a name="//apple_ref/swift/Method/rewind(_:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit12SynchronizerP6rewindyyAA12RewindPolicyOKF">rewind(_:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">rewind</span><span class="p">(</span><span class="n">_</span> <span class="nv">policy</span><span class="p">:</span> <span class="kt"><a href="../Enums/RewindPolicy.html">RewindPolicy</a></span><span class="p">)</span> <span class="k">throws</span></code></pre>
 
                         </div>
                       </div>
@@ -803,11 +1411,10 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2020 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2020-04-06)</p>
-          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.1</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+          <p>&copy; 2022 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external noopener">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2022-04-07)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
         </section>
       </article>
     </div>
   </body>
-</div>
 </html>

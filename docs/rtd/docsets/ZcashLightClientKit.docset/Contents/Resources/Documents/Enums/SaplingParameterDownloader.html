@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SaplingParameterDownloader Enumeration Reference</title>
+    <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="../js/jquery.min.js" defer></script>
+    <script src="../js/jazzy.js" defer></script>
+    
+    <script src="../js/lunr.min.js" defer></script>
+    <script src="../js/typeahead.jquery.js" defer></script>
+    <script src="../js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a name="//apple_ref/swift/Enum/SaplingParameterDownloader" class="dashAnchor"></a>
+    <a title="SaplingParameterDownloader Enumeration Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="../index.html">ZcashLightClientKit 0.13.0-beta.2 Docs</a> (53% documented)</p>
+        <div class="header-right">
+          <form role="search" action="../search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </div>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="../index.html">ZcashLightClientKit Reference</a>
+        <img id="carat" src="../img/carat.png" alt=""/>
+        SaplingParameterDownloader Enumeration Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="../Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor.html">CompactBlockProcessor</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/Configuration.html">– Configuration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/CompactBlockProcessor/State.html">– State</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/DerivationTool.html">DerivationTool</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/Initializer.html">Initializer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/LightWalletGRPCService.html">LightWalletGRPCService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer.html">SDKSynchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/SDKSynchronizer/NotificationKeys.html">– NotificationKeys</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ZcashSDKMainnetConstants.html">ZcashSDKMainnetConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Classes/ZcashSDKTestnetConstants.html">ZcashSDKTestnetConstants</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Enums.html">Enumerations</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProcessorError.html">CompactBlockProcessorError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProcessorNotificationKey.html">CompactBlockProcessorNotificationKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/CompactBlockProgress.html">CompactBlockProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ConnectionState.html">ConnectionState</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/GRPCResult.html">GRPCResult</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/InitializerError.html">InitializerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/KeyDerivationErrors.html">KeyDerivationErrors</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/LightWalletServiceError.html">LightWalletServiceError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/NetworkType.html">NetworkType</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ResourceProviderError.html">ResourceProviderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/RewindPolicy.html">RewindPolicy</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/RustWeldingError.html">RustWeldingError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums.html#/s:19ZcashLightClientKit10SDKMetricsO">SDKMetrics</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SaplingParameterDownloader.html">SaplingParameterDownloader</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SaplingParameterDownloader/Errors.html">– Errors</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ShieldFundsError.html">ShieldFundsError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SyncStatus.html">SyncStatus</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/SynchronizerError.html">SynchronizerError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionEncoderError.html">TransactionEncoderError</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/TransactionKind.html">TransactionKind</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ZcashNetworkBuilder.html">ZcashNetworkBuilder</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums.html#/s:19ZcashLightClientKit0A27RustBackendWeldingConstantsO">ZcashRustBackendWeldingConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Enums/ZcashSDK.html">ZcashSDK</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Extensions/ConsensusBranchID.html">ConsensusBranchID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Data.html">Data</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification.html">Notification</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/Notification/Name.html">– Name</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/ServerStreamingCall.html">ServerStreamingCall</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Extensions/String.html">String</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Protocols/AbstractTransaction.html">AbstractTransaction</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CancellableCall.html">CancellableCall</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/CompactBlockDownloading.html">CompactBlockDownloading</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ConfirmedTransactionEntity.html">ConfirmedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/EnhancementProgress.html">EnhancementProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/KeyDeriving.html">KeyDeriving</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/KeyValidation.html">KeyValidation</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletService.html">LightWalletService</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletServiceResponse.html">LightWalletServiceResponse</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/LightWalletdInfo.html">LightWalletdInfo</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Logger.html">Logger</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/MinedTransactionEntity.html">MinedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/NetworkConstants.html">NetworkConstants</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PaginatedTransactionRepository.html">PaginatedTransactionRepository</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/PendingTransactionEntity.html">PendingTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/RawIdentifiable.html">RawIdentifiable</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ResourceProvider.html">ResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/SignedTransactionEntity.html">SignedTransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/Synchronizer.html">Synchronizer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/TransactionEntity.html">TransactionEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/UnifiedAddress.html">UnifiedAddress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/UnifiedViewingKey.html">UnifiedViewingKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/UnspentTransactionOutputEntity.html">UnspentTransactionOutputEntity</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/WalletBalance.html">WalletBalance</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ZcashNetwork.html">ZcashNetwork</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Protocols/ZcashRustBackendWelding.html">ZcashRustBackendWelding</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Structs.html">Structures</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Structs/BlockProgress.html">BlockProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/DefaultResourceProvider.html">DefaultResourceProvider</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/EnhancementStreamProgress.html">EnhancementStreamProgress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/LightWalletEndpoint.html">LightWalletEndpoint</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/WalletBirthday.html">WalletBirthday</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Structs/ZcashCompactBlock.html">ZcashCompactBlock</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="../Typealiases.html">Type Aliases</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit11BlockHeighta">BlockHeight</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit7Channela">Channel</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17CompactBlockRangea">CompactBlockRange</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17ConsensusBranchIDa">ConsensusBranchID</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit22ExtendedFullViewingKeya">ExtendedFullViewingKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit17ExtendedPublicKeya">ExtendedPublicKey</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit14RefreshedUTXOsa">RefreshedUTXOs</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit22SaplingShieldedAddressa">SaplingShieldedAddress</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="../Typealiases.html#/s:19ZcashLightClientKit18TransparentAddressa">TransparentAddress</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            <h1>SaplingParameterDownloader</h1>
+              <div class="declaration">
+                <div class="language">
+                  
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">SaplingParameterDownloader</span></code></pre>
+
+                </div>
+              </div>
+            <p>Helper class to handle the download of Sapling parameters</p>
+
+          </section>
+          <section class="section task-group-section">
+            <div class="task-group">
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit26SaplingParameterDownloaderO6ErrorsO"></a>
+                    <a name="//apple_ref/swift/Enum/Errors" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit26SaplingParameterDownloaderO6ErrorsO">Errors</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                        <a href="../Enums/SaplingParameterDownloader/Errors.html" class="slightly-smaller">See more</a>
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">enum</span> <span class="kt">Errors</span> <span class="p">:</span> <span class="kt">Error</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit26SaplingParameterDownloaderO013downloadSpendF0_6resulty10Foundation3URLV_ys6ResultOyAHs5Error_pGctFZ"></a>
+                    <a name="//apple_ref/swift/Method/downloadSpendParameter(_:result:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit26SaplingParameterDownloaderO013downloadSpendF0_6resulty10Foundation3URLV_ys6ResultOyAHs5Error_pGctFZ">downloadSpendParameter(_:<wbr>result:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Download a Spend parameter from default host and stores it at given URL</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">downloadSpendParameter</span><span class="p">(</span><span class="n">_</span> <span class="nv">at</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">result</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt">URL</span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>at</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The destination URL for the download</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>result</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>block to handle the download success or error</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit26SaplingParameterDownloaderO014downloadOutputF0_6resulty10Foundation3URLV_ys6ResultOyAHs5Error_pGctFZ"></a>
+                    <a name="//apple_ref/swift/Method/downloadOutputParameter(_:result:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit26SaplingParameterDownloaderO014downloadOutputF0_6resulty10Foundation3URLV_ys6ResultOyAHs5Error_pGctFZ">downloadOutputParameter(_:<wbr>result:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Download an Output parameter from default host and stores it at given URL</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">downloadOutputParameter</span><span class="p">(</span><span class="n">_</span> <span class="nv">at</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">result</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="kt">URL</span><span class="p">,</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>at</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>The destination URL for the download</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>result</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>block to handle the download success or error</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit26SaplingParameterDownloaderO26downloadParamsIfnotPresent8spendURL06outputM06resulty10Foundation0M0V_AJys6ResultOyAJ0L0_AJ0N0ts5Error_pGctFZ"></a>
+                    <a name="//apple_ref/swift/Method/downloadParamsIfnotPresent(spendURL:outputURL:result:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit26SaplingParameterDownloaderO26downloadParamsIfnotPresent8spendURL06outputM06resulty10Foundation0M0V_AJys6ResultOyAJ0L0_AJ0N0ts5Error_pGctFZ">downloadParamsIfnotPresent(spendURL:<wbr>outputURL:<wbr>result:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Downloads the parameters if not present and provides the resulting URLs for both parameters</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">func</span> <span class="nf">downloadParamsIfnotPresent</span><span class="p">(</span>
+    <span class="nv">spendURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span>
+    <span class="nv">outputURL</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span>
+    <span class="nv">result</span><span class="p">:</span> <span class="kd">@escaping</span> <span class="p">(</span><span class="kt">Result</span><span class="o">&lt;</span><span class="p">(</span><span class="nv">spend</span><span class="p">:</span> <span class="kt">URL</span><span class="p">,</span> <span class="nv">output</span><span class="p">:</span> <span class="kt">URL</span><span class="p">),</span> <span class="kt">Error</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">Void</span>
+<span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>spendURL</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>URL to check whether the parameter is already downloaded</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>outputURL</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>URL to check whether the parameter is already downloaded</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>result</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>block to handle success or error</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit26SaplingParameterDownloaderO20spendParamsURLStringSSvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/spendParamsURLString" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit26SaplingParameterDownloaderO20spendParamsURLStringSSvpZ">spendParamsURLString</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">spendParamsURLString</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19ZcashLightClientKit26SaplingParameterDownloaderO21outputParamsURLStringSSvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/outputParamsURLString" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19ZcashLightClientKit26SaplingParameterDownloaderO21outputParamsURLStringSSvpZ">outputParamsURLString</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Undocumented</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">static</span> <span class="k">var</span> <span class="nv">outputParamsURLString</span><span class="p">:</span> <span class="kt">String</span> <span class="p">{</span> <span class="k">get</span> <span class="p">}</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+        </section>
+        <section id="footer">
+          <p>&copy; 2022 <a class="link" href="https://github.com/zcash/ZcashLightClientKit" target="_blank" rel="external noopener">Francisco Gindre and Jack Grigg</a>. All rights reserved. (Last updated: 2022-04-07)</p>
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external noopener">jazzy ♪♫ v0.14.2</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external noopener">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</html>
