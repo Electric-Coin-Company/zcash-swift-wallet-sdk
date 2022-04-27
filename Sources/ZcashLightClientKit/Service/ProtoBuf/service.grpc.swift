@@ -74,6 +74,12 @@ internal protocol CompactTxStreamerClientProtocol: GRPCClient {
     handler: @escaping (CompactTx) -> Void
   ) -> ServerStreamingCall<Exclude, CompactTx>
 
+  func getMempoolStream(
+    _ request: Empty,
+    callOptions: CallOptions?,
+    handler: @escaping (RawTransaction) -> Void
+  ) -> ServerStreamingCall<Empty, RawTransaction>
+
   func getTreeState(
     _ request: BlockID,
     callOptions: CallOptions?
@@ -268,6 +274,27 @@ extension CompactTxStreamerClientProtocol {
   ) -> ServerStreamingCall<Exclude, CompactTx> {
     return self.makeServerStreamingCall(
       path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetMempoolTx",
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      handler: handler
+    )
+  }
+
+  /// Return a stream of current Mempool transactions. This will keep the output stream open while
+  /// there are mempool transactions. It will close the returned stream when a new block is mined.
+  ///
+  /// - Parameters:
+  ///   - request: Request to send to GetMempoolStream.
+  ///   - callOptions: Call options.
+  ///   - handler: A closure called when each response is received from the server.
+  /// - Returns: A `ServerStreamingCall` with futures for the metadata and status.
+  internal func getMempoolStream(
+    _ request: Empty,
+    callOptions: CallOptions? = nil,
+    handler: @escaping (RawTransaction) -> Void
+  ) -> ServerStreamingCall<Empty, RawTransaction> {
+    return self.makeServerStreamingCall(
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetMempoolStream",
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
       handler: handler

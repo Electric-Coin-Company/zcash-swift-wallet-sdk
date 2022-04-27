@@ -105,7 +105,8 @@ struct TxFilter {
 }
 
 /// RawTransaction contains the complete transaction data. It also optionally includes 
-/// the block height in which the transaction was included.
+/// the block height in which the transaction was included, or, when returned
+/// by GetMempoolStream(), the latest block height.
 struct RawTransaction {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
