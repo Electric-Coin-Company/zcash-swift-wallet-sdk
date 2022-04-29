@@ -8,6 +8,7 @@ Please read it before you start participating.
 * [Asking Questions](#asking-questions)
 * [Reporting Security Issues](#reporting-security-issues)
 * [Reporting Non Security Issues](#reporting-other-issues)
+* [Commit Messages](#commit-messages)
 * [Developers Certificate of Origin](#developers-certificate-of-origin)
 
 ## Asking Questions
