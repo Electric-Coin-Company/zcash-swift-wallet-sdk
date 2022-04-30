@@ -143,7 +143,7 @@ class BlockStreamingTest: XCTestCase {
         wait(for: [errorExpectation], timeout: 4)
         let now = Date()
         
-        let elapsed = now.distance(to: date)
+        let elapsed = now.timeIntervalSince(date)
         print("took \(elapsed) seconds")
     }
     

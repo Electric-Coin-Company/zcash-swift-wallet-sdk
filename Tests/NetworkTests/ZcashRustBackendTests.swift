@@ -94,7 +94,7 @@ class ZcashRustBackendTests: XCTestCase {
     }
     
     func testInitAndScanBlocks() {
-        guard  let cacheDb = Bundle.module.url(forResource: "cache", withExtension: "db") else {
+        guard let cacheDb = TestDbBuilder.prePopulatedCacheDbURL() else {
             XCTFail("pre populated Db not present")
             return
         }
