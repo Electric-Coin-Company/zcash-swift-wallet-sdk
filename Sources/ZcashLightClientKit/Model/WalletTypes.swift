@@ -25,7 +25,7 @@ New wallets can ignore any blocks created before their birthday.
 generate from scratch because all blocks since activation need to be considered. So when it is calculated in
 advance it can save the user a lot of time.
 */
-public struct WalletBirthday {
+public struct WalletBirthday: Equatable {
     public private(set) var height: BlockHeight = -1
     public private(set) var hash: String = ""
     public private(set) var time: UInt32 = 0
