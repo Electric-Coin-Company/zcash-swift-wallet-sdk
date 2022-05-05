@@ -28,8 +28,10 @@ let package = Package(
             ],
             exclude: [
                 "Service/ProtoBuf/proto/compact_formats.proto",
-                "Service/ProtoBuf/proto/service.proto",
-                "Stencil"
+                "Service/ProtoBuf/proto/service.proto"
+            ],
+            resources: [
+                .copy("Resources/saplingtree-checkpoints")
             ]
         ),
         .target(

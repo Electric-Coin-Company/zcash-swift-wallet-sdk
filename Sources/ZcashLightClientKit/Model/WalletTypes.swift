@@ -25,12 +25,62 @@ New wallets can ignore any blocks created before their birthday.
 generate from scratch because all blocks since activation need to be considered. So when it is calculated in
 advance it can save the user a lot of time.
 */
-public struct WalletBirthday {
+public struct WalletBirthday: Equatable {
     public private(set) var height: BlockHeight = -1
     public private(set) var hash: String = ""
     public private(set) var time: UInt32 = 0
     public private(set) var tree: String = ""
 }
+
+
+extension WalletBirthday: Decodable {
+  //  let height: BlockHeight
+  //  let hash: String
+  //  let time: UInt32
+  //  let tree: String
+  //
+  //  func walletBirthday() -> WalletBirthday {
+  //    WalletBirthday(
+  //      height: height,
+  //      hash: hash,
+  //      time: time,
+  //      tree: tree
+  //    )
+  //  }
+
+  public enum CodingKeys: String, CodingKey {
+    case height
+    case hash
+    case time
+    case tree
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.height = try Self.getHeight(from: container)
+    self.hash = try container.decode(String.self, forKey: .hash)
+    self.time = try container.decode(UInt32.self, forKey: .time)
+    self.tree = try container.decode(String.self, forKey: .tree)
+  }
+
+  static func getHeight(from container: KeyedDecodingContainer<CodingKeys>) throws -> Int {
+    guard
+      let heightString = try? container.decode(String.self, forKey: .height),
+      let height = Int(heightString)
+    else {
+      throw DecodingError.typeMismatch(
+        String.self,
+        DecodingError.Context(
+          codingPath: [CodingKeys.height],
+          debugDescription: "expected height to be encoded as a string",
+          underlyingError: nil
+        )
+      )
+    }
+    return height
+  }
+}
+
 
 /**
 Groups a Sapling Extended Full Viewing Key an a tranparent address extended public key.
