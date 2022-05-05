@@ -25,11 +25,17 @@ extension WalletBirthday {
   }
 
   private static func bestCheckpointHeight(for height: BlockHeight, checkpointDirectory: URL) -> Int? {
-    guard let checkPointsInFolder = try? FileManager.default.contentsOfDirectory(atPath: checkpointDirectory.absoluteString) else {
+    guard let checkPointURLs = try? FileManager.default.contentsOfDirectory(
+      at: checkpointDirectory,
+      includingPropertiesForKeys: nil,
+      options: .skipsHiddenFiles
+    ) else {
       return nil
     }
 
-    return checkPointsInFolder
+    return checkPointURLs
+      .map { $0.deletingPathExtension() }
+      .map(\.lastPathComponent)
       .compactMap(Int.init)
       .filter { $0 <= height }
       .sorted()
