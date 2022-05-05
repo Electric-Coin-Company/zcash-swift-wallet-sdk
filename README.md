@@ -20,7 +20,11 @@ This is an alpha build and is currently under active development. Please be advi
 
 ## Swift Package Manager
 
-Add a package with the source "https://github.com/zcash/ZcashLightClientKit.git" and from version "0.13.0" onwards in either Xcode's GUI or in your "Package.swift" file
+Add a package with the source "https://github.com/zcash/ZcashLightClientKit.git" and from version `0.13.0` onwards in either Xcode's GUI or in your `Package.swift` file.
+
+### Beta version support for Xcode projects
+
+If you want to include a beta version of `ZCashLightClientKit` in an Xcode project e.g `0.13.0-beta.2` you will need to specify it with the commit sha instead as it does not appear that Xcode supports 'meta data' from semantic version strings for swift packages (at the time of writing).
 
 ## Cocoapods Support
 
