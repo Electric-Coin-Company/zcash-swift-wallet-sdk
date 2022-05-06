@@ -1,3 +1,12 @@
+# 0.13.1-beta
+- [#326] Load Checkpoint files from bundle.
+This is great news! now checkpoints are loaded from files on the bundle instead of
+hardcoding them on source files. This will make updates easier, less error prone,
+and mostly automatable. 
+
+- PR #356 Adds a caveat to SPM / Xcode integration in Readme
+- [#367] Darksidewalletd for testing `shield_funds` 
+- [#351] Write a Commit message Section for CONTRIBUTING.md
 # 0.13.0-beta.2
 - [Enhancement] Fix: make BlockProgress `.nullProgress` static property public for ECC Reference Wallet CombineSynchonizer 
 # 0.13.0-beta.1
