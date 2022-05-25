@@ -1,3 +1,5 @@
+# 0.14.0-beta
+- [#388] Integrate libzcashlc 0.0.3 to support v5 transaction parsing on NU5 activation
 # 0.13.1-beta
 - [#326] Load Checkpoint files from bundle.
 This is great news! now checkpoints are loaded from files on the bundle instead of
