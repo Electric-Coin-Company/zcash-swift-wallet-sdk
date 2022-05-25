@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = 'ZcashLightClientKit'
-    s.version          = '0.13.1-beta'
+    s.version          = '0.14.0-beta'
     s.summary          = 'Zcash Light Client wallet SDK for iOS'
   
     s.description      = <<-DESC
@@ -21,7 +21,7 @@ Pod::Spec.new do |s|
     s.ios.deployment_target = '12.0'
     s.dependency 'gRPC-Swift', '~> 1.0'
     s.dependency 'SQLite.swift', '~> 0.12.2' 
-    s.dependency 'libzcashlc', '0.0.2'
+    s.dependency 'libzcashlc', '0.0.3'
     s.static_framework = true
 
 end
