@@ -117,22 +117,40 @@ extension MemoBytes.Errors: LocalizedError {
 }
 
 public extension MemoBytes {
+    /// Parsing of the MemoBytes in terms of ZIP-302 Specification
+    /// See https://zips.z.cash/zip-0302#specification
+    /// - Returns:
+    ///   - `.text(MemoText)` If the first byte (byte 0) has a value of 0xF4 or smaller
+    ///   - `.future(MemoBytes)`  If the memo matches any of these patterns, then this memo is from the future,
+    ///     because these ranges are reserved for future updates to this specification:
+    ///      - The first byte has a value of 0xF5.
+    ///      - The first byte has a value of 0xF6, and the remaining 511 bytes are not all 0x00.
+    ///      - The first byte has a value between 0xF7 and 0xFE inclusive.
+    ///   - `.arbitrary(Bytes)` when the first byte is 0xFF. The Bytes don't include the 0xFF leading byte.
+    /// - Throws:
+    ///  - `MemoBytes.Errors.invalidUTF8` when the case of Text memo is found but then invalid UTF-8 is found
     func intoMemo() throws -> Memo {
         switch self.bytes[0] {
-        case 0xF6:
-            return self.bytes.dropFirst().first(where: { $0 != 0 }) == nil ?
-                Memo.empty :
-                Memo.future(self)
-
-        case 0xFF:
-            return .arbitrary([UInt8](bytes[1...]))
-
         case 0x00 ... 0xF4:
             guard let validatedUTF8String = String(validatingUTF8: self.unpaddedRawBytes()) else {
                 throw MemoBytes.Errors.invalidUTF8
             }
 
             return .text(try MemoText(validatedUTF8String))
+
+        case 0xF5:
+            return Memo.future(self)
+
+        case 0xF6:
+            return self.bytes.dropFirst().first(where: { $0 != 0 }) == nil ?
+                Memo.empty :
+                Memo.future(self)
+
+        case 0xF7 ... 0xFE:
+            return Memo.future(self)
+
+        case 0xFF:
+            return .arbitrary([UInt8](bytes[1...]))
 
         default:
             return .future(self)
@@ -141,7 +159,6 @@ public extension MemoBytes {
 }
 
 extension MemoBytes {
-
     ///  Returns raw bytes, excluding null padding
     func unpaddedRawBytes() -> [UInt8] {
         guard let firstNullByte = self.bytes.enumerated()
