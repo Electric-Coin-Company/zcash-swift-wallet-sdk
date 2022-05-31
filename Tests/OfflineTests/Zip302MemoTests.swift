@@ -105,10 +105,7 @@ class Zip302MemoTests: XCTestCase {
     func testItCreatesAMemoFromAValidAndShortEnoughText() throws {
         let almostTooLongString = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo but it's just short enough"
 
-        guard let memo = try Memo(string: almostTooLongString) else {
-            XCTFail("Expected `Memo` or `Error` thrown but found `nil`")
-            return
-        }
+        let memo = try Memo(string: almostTooLongString)
 
         let memoBytes = try memo.asMemoBytes()
 
@@ -128,11 +125,100 @@ class Zip302MemoTests: XCTestCase {
             switch error {
             case .tooLong(let count):
                 XCTAssertEqual(count, 515)
-
             case .invalidUTF8:
                 XCTFail("Expected `.tooLong(515) but found `.invalidUTF8`")
+            case .endsWithNullBytes:
+                XCTFail("Expected `.tooLong(515) but found `.endsWithNullBytes`")
             }
         }
+    }
+
+    func testInitMemoBytesFromContiguousBytes() throws {
+        let contiguousEmptyBytes = ContiguousArray<UInt8>(Zip302MemoTests.emptyMemoBytes)
+
+        let emptyMemoBytes = try MemoBytes(contiguousBytes: contiguousEmptyBytes)
+
+        XCTAssertEqual(emptyMemoBytes.bytes, .emptyMemoBytes)
+
+        let contiguousTextMemoBytes = ContiguousArray<UInt8>(Zip302MemoTests.helloImATextMemo)
+
+        let textMemoBytes = try MemoBytes(contiguousBytes: contiguousTextMemoBytes)
+
+        XCTAssertEqual(textMemoBytes.bytes, Zip302MemoTests.helloImATextMemo)
+    }
+
+    func testThrowsWhenTextMemoIsConstructedWithTrailingNullBytes() throws {
+        let nullTrailedString = "This Is a memo with text and trailing null bytes\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}"
+
+        XCTAssertThrowsError(try Memo(string: nullTrailedString)) { error in
+            guard let thrownError = error as? MemoBytes.Errors else {
+                XCTFail("Thrown erros is not MemoBytes.Error")
+                return
+            }
+
+            switch thrownError {
+            case .invalidUTF8, .tooLong:
+                XCTFail("Expected .endsWithNullBytes found other errors")
+            case .endsWithNullBytes:
+                return
+            }
+        }
+    }
+
+    func testThrowsWhenTextMemoIsConstructedWithNullBytes() throws {
+        let nullTrailedString = "\u{0}"
+
+        XCTAssertThrowsError(try Memo(string: nullTrailedString)) { error in
+            guard let thrownError = error as? MemoBytes.Errors else {
+                XCTFail("Thrown erros is not MemoBytes.Error")
+                return
+            }
+
+            switch thrownError {
+            case .invalidUTF8, .tooLong:
+                XCTFail("Expected .endsWithNullBytes found other errors")
+            case .endsWithNullBytes:
+                return
+            }
+        }
+    }
+
+    func testTextMemoIsConstructedWithLeadingNullBytes() throws {
+        let nullLedString = "\u{0}ABC"
+
+        let nullLedTextMemo = try MemoText(nullLedString)
+
+        let nullLedMemo = try Memo(string: nullLedString)
+
+        if case .text(let textMemo) = nullLedMemo {
+            XCTAssertEqual(nullLedTextMemo, textMemo)
+        } else {
+            XCTFail("Expected a TextMemo")
+        }
+    }
+
+    func testTextMemoIsConstructedWithEmptyString() throws {
+        let emptyString = ""
+
+        let emptyTextMemo = try MemoText(emptyString)
+
+        let emptyStringMemo = try Memo(string: emptyString)
+
+        if case .text(let textMemo) = emptyStringMemo {
+            XCTAssertEqual(emptyTextMemo, textMemo)
+        } else {
+            XCTFail("Expected a TextMemo")
+        }
+    }
+
+    func testUnpaddedRawBytesWhenPaddingIsFound() throws {
+        let expected: [UInt8] = [0x56, 0x17, 0xe0, 0xac, 0x3c, 0xbc, 0xde]
+
+        XCTAssertEqual(Zip302MemoTests.shortButPaddedBytes.unpaddedRawBytes(), expected)
+    }
+
+    func testUnpaddedRawBytesWhenThereIsNoPadding() throws {
+        XCTAssertEqual(Self.fullMemoBytes.unpaddedRawBytes(), Self.fullMemoBytes)
     }
 }
 

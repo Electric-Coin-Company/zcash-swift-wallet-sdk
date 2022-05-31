@@ -14,12 +14,12 @@ public enum Memo: Equatable {
     case arbitrary([UInt8])
 
     /// Parses the given bytes as in ZIP-302
-    public init?(bytes: [UInt8]) throws {
+    public init(bytes: [UInt8]) throws {
         self = try MemoBytes(bytes: bytes).intoMemo()
     }
 
     /// Converts these memo bytes into a ZIP-302 Memo
-    public init?(memoBytes: MemoBytes) throws {
+    public init(memoBytes: MemoBytes) throws {
         self = try memoBytes.intoMemo()
     }
 
@@ -27,7 +27,7 @@ public enum Memo: Equatable {
     /// - Throws:
     ///   - `MemoBytes.Errors.tooLong(length)` if the UTF-8 length
     /// of this string is greater than `MemoBytes.capacity`  (512 bytes)
-    public init?(string: String) throws {
+    public init(string: String) throws {
         self = .text(try MemoText(String(string.utf8)))
     }
 }
@@ -60,12 +60,14 @@ public struct MemoText: Equatable {
     public private(set) var string: String
 
     init(_ string: String) throws {
-        guard string.utf8.count <= MemoBytes.capacity else {
-            throw MemoBytes.Errors.tooLong(string.utf8.count)
+        let trimmedString = String(string.reversed().drop(while: { $0 == "\u{0}"}).reversed())
+
+        guard trimmedString.count == string.count else {
+            throw MemoBytes.Errors.endsWithNullBytes
         }
 
-        guard !string.containsCStringNullBytesBeforeStringEnding() else {
-            throw MemoBytes.Errors.invalidUTF8
+        guard string.utf8.count <= MemoBytes.capacity else {
+            throw MemoBytes.Errors.tooLong(string.utf8.count)
         }
 
         self.string = string
@@ -74,7 +76,11 @@ public struct MemoText: Equatable {
 
 public struct MemoBytes: Equatable {
     public enum Errors: Error {
+        /// Invalid UTF-8 Bytes where detected when attempting to create a Text Memo
         case invalidUTF8
+        /// Trailing null-bytes were found when attempting to create a Text memo
+        case endsWithNullBytes
+        /// the resulting bytes provided are too long to be stored as a Memo in any of its forms.
         case tooLong(Int)
     }
 
@@ -100,6 +106,18 @@ public struct MemoBytes: Equatable {
         self.bytes = rawBytes
     }
 
+    init(contiguousBytes: ContiguousArray<UInt8>) throws {
+        guard contiguousBytes.capacity <= Self.capacity else { throw Errors.tooLong(contiguousBytes.capacity) }
+
+        var rawBytes = [UInt8](repeating: 0x0, count: Self.capacity)
+
+        _ = contiguousBytes.withUnsafeBufferPointer { ptr in
+            memmove(&rawBytes[0], ptr.baseAddress, ptr.count)
+        }
+
+        self.bytes = rawBytes
+    }
+
     public static func empty() -> Self {
         try! Self(bytes: .emptyMemoBytes)
     }
@@ -108,6 +126,8 @@ public struct MemoBytes: Equatable {
 extension MemoBytes.Errors: LocalizedError {
     var localizedDescription: String {
         switch self {
+        case .endsWithNullBytes:
+            return "MemoBytes.Errors.endsWithNullBytes: The UTF-8 bytes provided have trailing null-bytes."
         case .invalidUTF8:
             return "MemoBytes.Errors.invalidUTF8: Invalid UTF-8 byte found on memo bytes"
         case .tooLong(let length):
@@ -161,12 +181,7 @@ public extension MemoBytes {
 extension MemoBytes {
     ///  Returns raw bytes, excluding null padding
     func unpaddedRawBytes() -> [UInt8] {
-        guard let firstNullByte = self.bytes.enumerated()
-            .reversed()
-            .first(where: { $0.1 != 0 })
-            .map({ $0.0 + 1 }) else { return [UInt8](bytes[0 ... 1]) }
-
-        return [UInt8](bytes[0 ... firstNullByte])
+        self.bytes.unpaddedRawBytes()
     }
 }
 
@@ -175,6 +190,17 @@ extension Array where Element == UInt8 {
         var emptyMemo = [UInt8](repeating: 0x00, count: MemoBytes.capacity)
         emptyMemo[0] = 0xF6
         return emptyMemo
+    }
+
+    func unpaddedRawBytes() -> [UInt8] {
+        guard let lastNullByte = self.enumerated()
+            .reversed()
+            .first(where: { $0.1 != 0 })
+            .map({ $0.0 + 1 }) else {
+                return [UInt8](self[0 ..< 1])
+        }
+
+        return [UInt8](self[0 ..< lastNullByte])
     }
 }
 
@@ -185,5 +211,27 @@ extension String {
             return nil
         }
         self = s
+    }
+}
+
+extension Optional where WrappedType == String {
+    func intoMemo() throws -> Memo {
+        switch self {
+        case .none:
+            return .empty
+        case .some(let string):
+            return try Memo(string: string)
+        }
+    }
+}
+
+extension Optional where WrappedType == Data {
+    func intoMemoBytes() throws -> MemoBytes {
+        switch self {
+        case .none:
+            return .empty()
+        case .some(let data):
+            return try .init(bytes: data.bytes)
+        }
     }
 }

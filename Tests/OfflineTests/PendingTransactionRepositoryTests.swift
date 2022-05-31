@@ -157,8 +157,8 @@ class PendingTransactionRepositoryTests: XCTestCase {
         XCTAssertEqual(updatedTransaction.toAddress, stored!.toAddress)
     }
     
-    func createAndStoreMockedTransaction() -> PendingTransactionEntity {
-        var transaction = mockTransaction()
+    func createAndStoreMockedTransaction(with value: Zatoshi = Zatoshi(1000)) -> PendingTransactionEntity {
+        var transaction = mockTransaction(with: value)
         var id: Int?
         
         XCTAssertNoThrow(try { id = try pendingRepository.create(transaction) }())
@@ -173,12 +173,7 @@ class PendingTransactionRepositoryTests: XCTestCase {
         }
     }
     
-    private func mockTransaction() -> PendingTransactionEntity {
-        PendingTransaction(
-            value: Zatoshi(Int64.random(in: 1 ... 1_000_000)),
-            toAddress: recipientAddress,
-            memo: nil,
-            account: 0
-        )
+    private func mockTransaction(with value: Zatoshi = Zatoshi(1000)) -> PendingTransactionEntity {
+        PendingTransaction(value: value, toAddress: recipientAddress, memo: .empty(), account: 0)
     }
 }

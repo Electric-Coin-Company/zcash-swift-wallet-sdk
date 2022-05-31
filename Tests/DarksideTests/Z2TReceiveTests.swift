@@ -105,7 +105,7 @@ class Z2TReceiveTests: XCTestCase {
             spendingKey: coordinator.spendingKeys!.first!,
             zatoshi: sendAmount,
             toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "test transaction",
+            memo: try Memo(string: "test transaction"),
             from: 0
         ) { result in
             switch result {
