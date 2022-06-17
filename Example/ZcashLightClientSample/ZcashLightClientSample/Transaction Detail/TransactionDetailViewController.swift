@@ -24,7 +24,7 @@ final class TransactionDetailModel {
         self.minedHeight = confirmedTransaction.minedHeight.description
         self.expiryHeight = confirmedTransaction.expiryHeight?.description
         self.created = Date(timeIntervalSince1970: confirmedTransaction.blockTimeInSeconds).description
-        self.zatoshi = confirmedTransaction.value.description
+        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: confirmedTransaction.value.amount))
         if let memoData = confirmedTransaction.memo, let memoString = String(bytes: memoData, encoding: .utf8) {
             self.memo = memoString
         }
@@ -34,7 +34,7 @@ final class TransactionDetailModel {
         self.minedHeight = pendingTransaction.minedHeight.description
         self.expiryHeight = pendingTransaction.expiryHeight.description
         self.created = Date(timeIntervalSince1970: pendingTransaction.createTime).description
-        self.zatoshi = pendingTransaction.value.description
+        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: pendingTransaction.value.amount))
     }
     
     init(transaction: TransactionEntity) {

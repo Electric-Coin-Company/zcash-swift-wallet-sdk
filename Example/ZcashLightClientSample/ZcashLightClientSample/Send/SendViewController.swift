@@ -102,8 +102,8 @@ class SendViewController: UIViewController {
         )
     }
     
-    func format(balance: Int64 = 0) -> String {
-        "Zec \(balance.asHumanReadableZecBalance())"
+    func format(balance: Zatoshi = Zatoshi()) -> String {
+        "Zec \(balance.formattedString ?? "0.0")"
     }
     
     func toggleSendButton() {
@@ -111,9 +111,9 @@ class SendViewController: UIViewController {
     }
     
     func maxFundsOn() {
-        let fee: Int64 = 10000
-        let max = wallet.getVerifiedBalance() - fee
-        amountTextField.text = String(max.asHumanReadableZecBalance())
+        let fee = Zatoshi(10000)
+        let max: Zatoshi = wallet.getVerifiedBalance() - fee
+        amountTextField.text = format(balance: max)
         amountTextField.isEnabled = false
     }
     
@@ -131,14 +131,14 @@ class SendViewController: UIViewController {
     }
     
     func isBalanceValid() -> Bool {
-        wallet.getVerifiedBalance() > 0
+        wallet.getVerifiedBalance() > .zero
     }
     
     func isAmountValid() -> Bool {
         guard
             let value = amountTextField.text,
-            let amount = Double(value),
-            amount.toZatoshi() <= wallet.getVerifiedBalance()
+            let amount = NumberFormatter.zcashNumberFormatter.number(from: value).flatMap({ Zatoshi($0.int64Value) }),
+            amount <= wallet.getVerifiedBalance()
         else {
             return false
         }
@@ -197,7 +197,12 @@ class SendViewController: UIViewController {
     }
     
     func send() {
-        guard isFormValid(), let amount = amountTextField.text, let zec = Double(amount)?.toZatoshi(), let recipient = addressTextField.text else {
+        guard
+            isFormValid(),
+            let amount = amountTextField.text,
+            let zec = NumberFormatter.zcashNumberFormatter.number(from: amount).flatMap({ Zatoshi($0.int64Value) }),
+            let recipient = addressTextField.text
+        else {
             loggerProxy.warn("WARNING: Form is invalid")
             return
         }

@@ -37,7 +37,7 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
     var transactionIndex: Int
     var raw: Data?
     var id: Int?
-    var value: Int
+    var value: Zatoshi
     var memo: Data?
     var rawTransactionId: Data?
 }

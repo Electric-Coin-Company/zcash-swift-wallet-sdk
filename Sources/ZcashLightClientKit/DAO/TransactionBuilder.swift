@@ -120,7 +120,7 @@ enum TransactionBuilder {
             transactionIndex: Int(transactionIndex),
             raw: raw,
             id: Int(id),
-            value: Int(value),
+            value: Zatoshi(value),
             memo: memo,
             rawTransactionId: transactionId
         )
@@ -161,7 +161,7 @@ enum TransactionBuilder {
             transactionIndex: Int(transactionIndex),
             raw: rawData,
             id: Int(id),
-            value: Int(value),
+            value: Zatoshi(value),
             memo: memo,
             rawTransactionId: transactionId
         )

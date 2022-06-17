@@ -294,7 +294,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func downloadedUtxoBalance(dbData: URL, address: String, networkType: NetworkType) throws -> WalletBalance {
         let verified = try getVerifiedTransparentBalance(dbData: dbData, address: address, networkType: networkType)
         let total = try getTransparentBalance(dbData: dbData, address: address, networkType: networkType)
-        return TransparentBalance(verified: verified, total: total, address: address)
+        
+        return WalletBalance(verified: Zatoshi(verified), total: Zatoshi(total))
     }
     
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {

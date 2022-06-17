@@ -16,19 +16,13 @@ class GetBalanceViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.title = "Account 0 Balance"
-        self.balance.text = "\(Initializer.shared.getBalance().asHumanReadableZecBalance()) ZEC"
-        self.verified.text = "\(Initializer.shared.getVerifiedBalance().asHumanReadableZecBalance()) ZEC"
+        self.balance.text = "\(Initializer.shared.getBalance().formattedString ?? "0.0") ZEC"
+        self.verified.text = "\(Initializer.shared.getVerifiedBalance().formattedString ?? "0.0") ZEC"
     }
 }
 
-extension Int64 {
-    func asHumanReadableZecBalance() -> Double {
-        Double(self) / Double(ZcashSDK.zatoshiPerZEC)
-    }
-}
-
-extension Double {
-    func toZatoshi() -> Int64 {
-        Int64(self * Double(ZcashSDK.zatoshiPerZEC))
+extension Zatoshi {
+    var formattedString: String? {
+        NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: self.amount))
     }
 }

@@ -18,7 +18,7 @@ class NetworkUpgradeTests: XCTestCase {
 
     // TODO: Parameterize this from environment
     let testRecipientAddress = "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
-    let sendAmount: Int64 = 1000
+    let sendAmount = Zatoshi(1000)
     let branchID = "2bb40e60"
     let chainName = "main"
 
@@ -63,7 +63,7 @@ class NetworkUpgradeTests: XCTestCase {
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
-        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         guard verifiedBalance > network.constants.defaultFee(for: activationHeight) else {
             XCTFail("not enough balance to continue test")
             return
@@ -74,7 +74,7 @@ class NetworkUpgradeTests: XCTestCase {
        
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: PendingTransactionEntity?
-        let spendAmount: Int64 = 10000
+        let spendAmount = Zatoshi(10000)
 
         /*
         send transaction to recipient address
@@ -163,7 +163,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: PendingTransactionEntity?
-        let spendAmount: Int64 = 10000
+        let spendAmount = Zatoshi(10000)
 
         /*
         send transaction to recipient address
@@ -227,12 +227,12 @@ class NetworkUpgradeTests: XCTestCase {
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
-        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: activationHeight))
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: PendingTransactionEntity?
-        let spendAmount: Int64 = 10000
+        let spendAmount = Zatoshi(10000)
 
         /*
         send transaction to recipient address
@@ -318,14 +318,14 @@ class NetworkUpgradeTests: XCTestCase {
         try coordinator.applyStaged(blockheight: activationHeight - 10)
         sleep(3)
         
-        let verifiedBalancePreActivation = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let verifiedBalancePreActivation: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
         
         wait(for: [firstSyncExpectation], timeout: 120)
-        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         guard verifiedBalance > network.constants.defaultFee(for: activationHeight) else {
             XCTFail("balance is not enough to continue with this test")
             return
@@ -333,7 +333,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: PendingTransactionEntity?
-        let spendAmount: Int64 = 10000
+        let spendAmount = Zatoshi(10000)
 
         /*
         send transaction to recipient address
@@ -421,7 +421,7 @@ class NetworkUpgradeTests: XCTestCase {
         
         wait(for: [firstSyncExpectation], timeout: 120)
         
-        let preActivationBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let preActivationBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         try coordinator.applyStaged(blockheight: activationHeight + 30)
         sleep(2)
@@ -436,14 +436,16 @@ class NetworkUpgradeTests: XCTestCase {
             XCTFail("this test requires funds received after activation height")
             return
         }
-        let postActivationBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let postActivationBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         XCTAssertTrue(preActivationBalance < postActivationBalance, "This test requires that funds post activation are greater that pre activation")
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: PendingTransactionEntity?
         
         // spend all the funds
-        let spendAmount: Int64 = postActivationBalance - Int64(network.constants.defaultFee(for: activationHeight))
+        let spendAmount = Zatoshi(
+            postActivationBalance.amount - Int64(network.constants.defaultFee(for: activationHeight).amount)
+        )
         
         /*
         send transaction to recipient address
@@ -473,7 +475,7 @@ class NetworkUpgradeTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), 0)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), .zero)
     }
  
     func handleError(_ error: Error?) {

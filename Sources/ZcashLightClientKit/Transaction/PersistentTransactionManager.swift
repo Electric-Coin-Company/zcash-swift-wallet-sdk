@@ -8,7 +8,7 @@
 import Foundation
 
 enum TransactionManagerError: Error {
-    case couldNotCreateSpend(toAddress: String, account: Int, zatoshi: Int)
+    case couldNotCreateSpend(toAddress: String, account: Int, zatoshi: Zatoshi)
     case encodingFailed(PendingTransactionEntity)
     case updateFailed(PendingTransactionEntity)
     case notPending(PendingTransactionEntity)
@@ -39,7 +39,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func initSpend(
-        zatoshi: Int,
+        zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
         from accountIndex: Int
@@ -149,7 +149,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             do {
                 let encodedTransaction = try self.encoder.createTransaction(
                     spendingKey: spendingKey,
-                    zatoshi: pendingTransaction.value,
+                    zatoshi: pendingTransaction.intValue,
                     to: pendingTransaction.toAddress,
                     memo: pendingTransaction.memo?.asZcashTransactionMemo(),
                     from: pendingTransaction.accountIndex

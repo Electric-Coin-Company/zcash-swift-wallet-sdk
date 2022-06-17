@@ -102,7 +102,7 @@ public protocol UnifiedAddress {
     var zAddress: SaplingShieldedAddress { get }
 }
 
-public protocol WalletBalance {
-    var verified: Int64 { get set }
-    var total: Int64 { get set }
+public struct WalletBalance {
+    public var verified: Zatoshi
+    public var total: Zatoshi
 }

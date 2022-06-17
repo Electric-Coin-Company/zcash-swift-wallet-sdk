@@ -96,7 +96,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             // swiftlint:disable:next force_unwrapping
             spendingKey: self.coordinator.spendingKeys!.first!,
-            zatoshi: 20000,
+            zatoshi: Zatoshi(20000),
             toAddress: self.testRecipientAddress,
             memo: "this is a test",
             from: 0,

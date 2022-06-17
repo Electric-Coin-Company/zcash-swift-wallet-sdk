@@ -80,7 +80,7 @@ class MockTransactionRepository {
             transactionIndex: index,
             raw: Data(),
             id: index,
-            value: Int.random(in: 1 ... ZcashSDK.zatoshiPerZEC),
+            value: Zatoshi(Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi)),
             memo: nil,
             rawTransactionId: Data()
         )
@@ -96,7 +96,7 @@ class MockTransactionRepository {
             transactionIndex: index,
             raw: Data(),
             id: index,
-            value: Int.random(in: 1 ... ZcashSDK.zatoshiPerZEC),
+            value: Zatoshi(Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi)),
             memo: nil,
             rawTransactionId: Data()
         )

@@ -87,7 +87,7 @@ public protocol AbstractTransaction {
     /**
     value in zatoshi
     */
-    var value: Int { get set }
+    var value: Zatoshi { get set }
 
     /**
     data containing the memo if any
@@ -157,5 +157,11 @@ public extension ConfirmedTransactionEntity {
     
     var blockTimeInMilliseconds: Double {
         self.blockTimeInSeconds * 1000
+    }
+}
+
+public extension AbstractTransaction {
+    var intValue: Int {
+        Int(self.value.amount)
     }
 }

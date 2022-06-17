@@ -166,16 +166,18 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
                     .filter(TableColumns.address == address)
             ) ?? 0
             
-            return TransparentBalance(verified: Int64(verified), total: Int64(total), address: address)
+            return WalletBalance(
+                    verified: Zatoshi(Int64(verified)),
+                    total: Zatoshi(Int64(total))
+            )
         } catch {
             throw StorageError.operationFailed
         }
     }
 }
 
-struct TransparentBalance: WalletBalance {
-    var verified: Int64
-    var total: Int64
+struct TransparentBalance {
+    var balance: WalletBalance
     var address: String
 }
 
