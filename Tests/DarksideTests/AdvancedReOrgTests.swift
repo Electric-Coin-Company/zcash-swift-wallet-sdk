@@ -18,7 +18,7 @@ class AdvancedReOrgTests: XCTestCase {
     // TODO: Parameterize this from environment
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 
-    let sendAmount: Int64 = 1000
+    let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
     var coordinator: TestCoordinator!
@@ -87,8 +87,8 @@ class AdvancedReOrgTests: XCTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         var shouldContinue = false
         let receivedTxHeight: BlockHeight = 663188
-        var initialTotalBalance: Int64 = -1
-        var initialVerifiedBalance: Int64 = -1
+        var initialTotalBalance = Zatoshi(-1)
+        var initialVerifiedBalance = Zatoshi(-1)
         self.expectedReorgHeight = receivedTxHeight + 1
         
         /*
@@ -128,8 +128,8 @@ class AdvancedReOrgTests: XCTestCase {
         3. sync up to received_Tx_height
         */
         let receivedTxExpectation = XCTestExpectation(description: "received tx")
-        var receivedTxTotalBalance = Int64(-1)
-        var receivedTxVerifiedBalance = Int64(-1)
+        var receivedTxTotalBalance = Zatoshi(-1)
+        var receivedTxVerifiedBalance = Zatoshi(-1)
         
         try coordinator.sync(completion: { synchro in
             synchronizer = synchro
@@ -153,7 +153,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         3a. verify that balance is previous balance + tx amount
         */
-        XCTAssertEqual(receivedTxTotalBalance, initialTotalBalance + Int64(receivedTx.value))
+        XCTAssertEqual(receivedTxTotalBalance, initialTotalBalance + receivedTx.value)
         XCTAssertEqual(receivedTxVerifiedBalance, initialVerifiedBalance)
 
         /*
@@ -192,8 +192,8 @@ class AdvancedReOrgTests: XCTestCase {
         */
         let reorgSyncexpectation = XCTestExpectation(description: "reorg expectation")
         
-        var afterReorgTxTotalBalance = Int64(-1)
-        var afterReorgTxVerifiedBalance = Int64(-1)
+        var afterReorgTxTotalBalance = Zatoshi(-1)
+        var afterReorgTxVerifiedBalance = Zatoshi(-1)
         
         try coordinator.sync(completion: { synchronizer in
             afterReorgTxTotalBalance = synchronizer.initializer.getBalance()
@@ -218,8 +218,8 @@ class AdvancedReOrgTests: XCTestCase {
         */
         let finalsyncExpectation = XCTestExpectation(description: "final sync")
         
-        var finalReorgTxTotalBalance = Int64(-1)
-        var finalReorgTxVerifiedBalance = Int64(-1)
+        var finalReorgTxTotalBalance = Zatoshi(-1)
+        var finalReorgTxVerifiedBalance = Zatoshi(-1)
         
         try coordinator.applyStaged(blockheight: reorgedTxheight + 1)
         sleep(3)
@@ -239,7 +239,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         XCTAssertEqual(reorgedTx.minedHeight, reorgedTxheight)
         XCTAssertEqual(initialVerifiedBalance, finalReorgTxVerifiedBalance)
-        XCTAssertEqual(initialTotalBalance + Int64(receivedTx.value), finalReorgTxTotalBalance)
+        XCTAssertEqual(initialTotalBalance + receivedTx.value, finalReorgTxTotalBalance)
     }
     
     /**
@@ -271,7 +271,7 @@ class AdvancedReOrgTests: XCTestCase {
     func testReorgChangesOutboundTxIndex() throws {
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
-        var initialTotalBalance: Int64 = -1
+        var initialTotalBalance = Zatoshi(-1)
         
         /*
         2. applyStaged(received_Tx_height)
@@ -294,7 +294,7 @@ class AdvancedReOrgTests: XCTestCase {
         let sendExpectation = XCTestExpectation(description: "sendToAddress")
         var pendingEntity: PendingTransactionEntity?
         var error: Error?
-        let sendAmount: Int64 = 10000
+        let sendAmount = Zatoshi(10000)
 
         /*
         4. create transaction
@@ -382,7 +382,7 @@ class AdvancedReOrgTests: XCTestCase {
                 */
                 let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
                 XCTAssertEqual(pMinedHeight, sentTxHeight)
-                XCTAssertEqual(initialTotalBalance - sendAmount - Int64(1000), synchronizer.initializer.getBalance()) // fee change on this branch
+                XCTAssertEqual(initialTotalBalance - sendAmount - Zatoshi(1000), synchronizer.initializer.getBalance()) // fee change on this branch
                 afterReOrgExpectation.fulfill()
             },
             error: self.handleError
@@ -408,8 +408,10 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [lastSyncExpectation], timeout: 5)
         
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
-        XCTAssertEqual(initialTotalBalance - Int64(pendingTx.value) - Int64(1000), coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance - pendingTx.value - Zatoshi(1000), coordinator.synchronizer.initializer.getVerifiedBalance())
+
+        let resultingBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        XCTAssertEqual(resultingBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
     }
     
     func testIncomingTransactionIndexChange() throws {
@@ -422,8 +424,8 @@ class AdvancedReOrgTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        var preReorgTotalBalance = Int64(0)
-        var preReorgVerifiedBalance = Int64(0)
+        var preReorgTotalBalance = Zatoshi.zero
+        var preReorgVerifiedBalance = Zatoshi.zero
         try coordinator.sync(completion: { synchronizer in
             preReorgTotalBalance = synchronizer.initializer.getBalance()
             preReorgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
@@ -442,8 +444,8 @@ class AdvancedReOrgTests: XCTestCase {
         
         let afterReorgSync = XCTestExpectation(description: "after reorg sync")
         
-        var postReorgTotalBalance = Int64(0)
-        var postReorgVerifiedBalance = Int64(0)
+        var postReorgTotalBalance = Zatoshi.zero
+        var postReorgVerifiedBalance = Zatoshi.zero
         try coordinator.sync(completion: { synchronizer in
             postReorgTotalBalance = synchronizer.initializer.getBalance()
             postReorgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
@@ -462,8 +464,8 @@ class AdvancedReOrgTests: XCTestCase {
         try coordinator.applyStaged(blockheight: receivedTxHeight - 1)
         sleep(2)
         let expectation = XCTestExpectation(description: "sync to \(receivedTxHeight - 1) expectation")
-        var initialBalance: Int64 = -1
-        var initialVerifiedBalance: Int64 = -1
+        var initialBalance = Zatoshi(-1)
+        var initialVerifiedBalance = Zatoshi(-1)
         try coordinator.sync(completion: { synchronizer in
             initialBalance = synchronizer.initializer.getBalance()
             initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
@@ -477,8 +479,8 @@ class AdvancedReOrgTests: XCTestCase {
         sleep(2)
         let afterTxSyncExpectation = XCTestExpectation(description: "sync to \(afterTxHeight) expectation")
         
-        var afterTxBalance: Int64 = -1
-        var afterTxVerifiedBalance: Int64 = -1
+        var afterTxBalance = Zatoshi(-1)
+        var afterTxVerifiedBalance = Zatoshi(-1)
         try coordinator.sync(completion: { synchronizer in
             afterTxBalance = synchronizer.initializer.getBalance()
             afterTxVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
@@ -502,8 +504,8 @@ class AdvancedReOrgTests: XCTestCase {
         sleep(2)
         let afterReorgExpectation = XCTestExpectation(description: "after reorg expectation")
         
-        var afterReOrgBalance: Int64 = -1
-        var afterReOrgVerifiedBalance: Int64 = -1
+        var afterReOrgBalance = Zatoshi(-1)
+        var afterReOrgVerifiedBalance = Zatoshi(-1)
         try coordinator.sync(completion: { synchronizer in
             afterReOrgBalance = synchronizer.initializer.getBalance()
             afterReOrgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
@@ -543,8 +545,8 @@ class AdvancedReOrgTests: XCTestCase {
         */
         let firstSyncExpectation = XCTestExpectation(description: "first sync test expectation")
         
-        var initialBalance: Int64 = -1
-        var initialVerifiedBalance: Int64 = -1
+        var initialBalance = Zatoshi(-1)
+        var initialVerifiedBalance = Zatoshi(-1)
         var incomingTx: ConfirmedTransactionEntity?
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
@@ -622,8 +624,8 @@ class AdvancedReOrgTests: XCTestCase {
         let finalHeight = BlockHeight(663200)
         try coordinator.applyStaged(blockheight: txReorgHeight)
         let firstSyncExpectation = XCTestExpectation(description: "first sync test expectation")
-        var initialBalance: Int64 = -1
-        var initialVerifiedBalance: Int64 = -1
+        var initialBalance = Zatoshi(-1)
+        var initialVerifiedBalance = Zatoshi(-1)
         try coordinator.sync(completion: { synchronizer in
             initialBalance = synchronizer.initializer.getBalance()
             initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
@@ -696,7 +698,7 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [firstSyncExpectation], timeout: 5)
         
         sleep(1)
-        let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
+        let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: PendingTransactionEntity?
@@ -706,7 +708,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
-            zatoshi: 20000,
+            zatoshi: Zatoshi(20000),
             toAddress: self.testRecipientAddress,
             memo: "this is a test",
             from: 0,
@@ -877,12 +879,12 @@ class AdvancedReOrgTests: XCTestCase {
         )
         
         XCTAssertEqual(
-            initialTotalBalance - Int64(newlyPendingTx.value) - Int64(1000),
+            initialTotalBalance - newlyPendingTx.value - Zatoshi(1000),
             coordinator.synchronizer.initializer.getBalance()
         )
 
         XCTAssertEqual(
-            initialTotalBalance - Int64(newlyPendingTx.value) - Int64(1000),
+            initialTotalBalance - newlyPendingTx.value - Zatoshi(1000),
             coordinator.synchronizer.initializer.getVerifiedBalance()
         )
     }
@@ -917,8 +919,8 @@ class AdvancedReOrgTests: XCTestCase {
         
         wait(for: [firstSyncExpectation], timeout: 5)
         
-        let initialBalance = coordinator.synchronizer.initializer.getBalance()
-        let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let initialBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        let initialVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         guard let initialTxHeight = try coordinator.synchronizer.allReceivedTransactions().first?.minedHeight else {
             XCTFail("no incoming transaction found!")
             return
@@ -982,8 +984,8 @@ class AdvancedReOrgTests: XCTestCase {
         
         wait(for: [firstSyncExpectation], timeout: 5)
         
-        let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
-        let initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        let initialVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         try coordinator.applyStaged(blockheight: reorgHeight)
         
@@ -1056,7 +1058,7 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [firstSyncExpectation], timeout: 5)
         
         sleep(1)
-        let initialTotalBalance = coordinator.synchronizer.initializer.getBalance()
+        let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: PendingTransactionEntity?
@@ -1066,7 +1068,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
-            zatoshi: 20000,
+            zatoshi: Zatoshi(20000),
             toAddress: self.testRecipientAddress,
             memo: "this is a test",
             from: 0,

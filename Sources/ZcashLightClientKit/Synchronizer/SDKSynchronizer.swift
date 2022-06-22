@@ -9,98 +9,75 @@
 import Foundation
 
 public extension Notification.Name {
-    /**
-    Notification is posted whenever transactions are updated
-     
-    - Important: not yet posted
-    */
+    /// Notification is posted whenever transactions are updated
+    ///
+    /// - Important: not yet posted
     static let transactionsUpdated = Notification.Name("SDKSyncronizerTransactionUpdated")
     
-    /**
-    Posted when the synchronizer is started.
-    */
+
+    /// Posted when the synchronizer is started.
     static let synchronizerStarted = Notification.Name("SDKSyncronizerStarted")
     
-    /**
-    Posted when there are progress updates.
-     
-    - Note: Query userInfo object for NotificationKeys.progress  for Float progress percentage and NotificationKeys.blockHeight  for the current progress height
-    */
+
+    /// Posted when there are progress updates.
+    ///
+    /// - Note: Query userInfo object for NotificationKeys.progress for Float
+    /// progress percentage and NotificationKeys.blockHeight  /// for the current progress height
     static let synchronizerProgressUpdated = Notification.Name("SDKSyncronizerProgressUpdated")
     
     static let synchronizerStatusWillUpdate = Notification.Name("SDKSynchronizerStatusWillUpdate")
 
-    /**
-    Posted when the synchronizer is synced to latest height
-    */
+    /// Posted when the synchronizer is synced to latest height
     static let synchronizerSynced = Notification.Name("SDKSyncronizerSynced")
-    
-    /**
-    Posted when the synchronizer is stopped
-    */
+
+    /// Posted when the synchronizer is stopped
     static let synchronizerStopped = Notification.Name("SDKSyncronizerStopped")
 
-    /**
-    Posted when the synchronizer loses connection
-    */
+    /// Posted when the synchronizer loses connection
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
 
-    /**
-    Posted when the synchronizer starts syncing
-    */
+    /// Posted when the synchronizer starts syncing
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
-    
-    /**
-    Posted when synchronizer starts downloading blocks
-    */
+
+    /// Posted when synchronizer starts downloading blocks
     static let synchronizerDownloading = Notification.Name("SDKSyncronizerDownloading")
-    
-    /**
-    Posted when synchronizer starts validating blocks
-    */
+
+    /// Posted when synchronizer starts validating blocks
     static let synchronizerValidating = Notification.Name("SDKSyncronizerValidating")
-    
-    /**
-    Posted when synchronizer starts scanning blocks
-    */
+
+    /// Posted when synchronizer starts scanning blocks
     static let synchronizerScanning = Notification.Name("SDKSyncronizerScanning")
     
-    /**
-    Posted when the synchronizer starts Enhancing
-    */
+
+    /// Posted when the synchronizer starts Enhancing
     static let synchronizerEnhancing = Notification.Name("SDKSyncronizerEnhancing")
     
-    /**
-    Posted when the synchronizer starts fetching UTXOs
-    */
+
+    /// Posted when the synchronizer starts fetching UTXOs
     static let synchronizerFetching = Notification.Name("SDKSyncronizerFetching")
     
-    /**
-    Posted when the synchronizer finds a pendingTransaction that hast been newly mined
-    - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
-    */
+
+    /// Posted when the synchronizer finds a pendingTransaction that hast been newly mined
+    /// - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
     static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
     
-    /**
-    Posted when the synchronizer finds a mined transaction
-    - Note: query userInfo on NotificationKeys.foundTransactions for the [ConfirmedTransactionEntity]. This notification could arrive in a background thread.
-    */
+
+    /// Posted when the synchronizer finds a mined transaction
+    /// - Note: query userInfo on NotificationKeys.foundTransactions for
+    /// the `[ConfirmedTransactionEntity]`. This notification could arrive in a background thread.
     static let synchronizerFoundTransactions = Notification.Name("synchronizerFoundTransactions")
-    
-    /**
-    Posted when the synchronizer presents an error
-    - Note: query userInfo on NotificationKeys.error for an error
-    */
+
+    /// Posted when the synchronizer presents an error
+    /// - Note: query userInfo on NotificationKeys.error for an error
     static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
     
     static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
 }
 
-/**
-Synchronizer implementation for UIKit and iOS 12+
-*/
+/// Synchronizer implementation for UIKit and iOS 12+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
+
     public enum NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
@@ -132,10 +109,8 @@ public class SDKSynchronizer: Synchronizer {
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
 
-    /**
-    Creates an SDKSynchronizer instance
-    - Parameter initializer: a wallet Initializer object
-    */
+    /// Creates an SDKSynchronizer instance
+    /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) throws {
         try self.init(
             status: .unprepared,
@@ -183,10 +158,9 @@ public class SDKSynchronizer: Synchronizer {
         self.status = .disconnected
     }
 
-    /**
-    Starts the synchronizer
-    - Throws: CompactBlockProcessorError when failures occur
-    */
+
+    /// Starts the synchronizer
+    /// - Throws: CompactBlockProcessorError when failures occur
     public func start(retry: Bool = false) throws {
         switch status {
         case .unprepared:
@@ -204,10 +178,8 @@ public class SDKSynchronizer: Synchronizer {
             }
         }
     }
-    
-    /**
-    Stops the synchronizer
-    */
+
+    /// Stops the synchronizer
     public func stop() {
         guard status != .stopped, status != .disconnected else {
             LoggerProxy.info("attempted to stop when status was: \(status)")
@@ -482,10 +454,29 @@ public class SDKSynchronizer: Synchronizer {
     
     // MARK: Synchronizer methods
 
-    // swiftlint:disable:next function_parameter_count
+    @available(*, deprecated, message: "This function will be removed soon, use the one reveiving a `Zatoshi` value instead")
     public func sendToAddress(
         spendingKey: String,
         zatoshi: Int64,
+        toAddress: String,
+        memo: String?,
+        from accountIndex: Int,
+        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
+    ) {
+        sendToAddress(
+            spendingKey: spendingKey,
+            zatoshi: Zatoshi(zatoshi),
+            toAddress: toAddress,
+            memo: memo,
+            from: accountIndex,
+            resultBlock: resultBlock
+        )
+    }
+
+    // swiftlint:disable:next function_parameter_count
+    public func sendToAddress(
+        spendingKey: String,
+        zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
         from accountIndex: Int,
@@ -532,7 +523,7 @@ public class SDKSynchronizer: Synchronizer {
             let viewingKey = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
             let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: Int(tBalance.verified), toAddress: zAddr, memo: memo, from: 0)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: zAddr, memo: memo, from: 0)
             
             transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
@@ -567,7 +558,7 @@ public class SDKSynchronizer: Synchronizer {
     // swiftlint:disable:next function_parameter_count
     func createToAddress(
         spendingKey: String,
-        zatoshi: Int64,
+        zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
         from accountIndex: Int,
@@ -575,7 +566,7 @@ public class SDKSynchronizer: Synchronizer {
     ) {
         do {
             let spend = try transactionManager.initSpend(
-                zatoshi: Int(zatoshi),
+                zatoshi: zatoshi,
                 toAddress: toAddress,
                 memo: memo,
                 from: accountIndex
@@ -671,15 +662,24 @@ public class SDKSynchronizer: Synchronizer {
     public func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
         self.blockProcessor.refreshUTXOs(tAddress: address, startHeight: height, result: result)
     }
-    
+    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
+        initializer.getBalance(account: accountIndex).amount
+    }
+
+    public func getShieldedBalance(accountIndex: Int = 0) -> Zatoshi {
         initializer.getBalance(account: accountIndex)
     }
-    
+
+    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Int64 {
+        initializer.getVerifiedBalance(account: accountIndex).amount
+    }
+
+    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Zatoshi {
         initializer.getVerifiedBalance(account: accountIndex)
     }
-    
+
     public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
         blockProcessor.getShieldedAddress(accountIndex: accountIndex)
     }

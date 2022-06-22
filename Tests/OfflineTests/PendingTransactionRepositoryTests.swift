@@ -125,7 +125,7 @@ class PendingTransactionRepositoryTests: XCTestCase {
     
     func testUpdate() {
         let newAccountIndex = 1
-        let newValue: Int = 123_456
+        let newValue = Zatoshi(123_456)
         let transaction = createAndStoreMockedTransaction()
 
         guard let id = transaction.id else {
@@ -174,6 +174,11 @@ class PendingTransactionRepositoryTests: XCTestCase {
     }
     
     private func mockTransaction() -> PendingTransactionEntity {
-        PendingTransaction(value: Int.random(in: 1 ... 1_000_000), toAddress: recipientAddress, memo: nil, account: 0)
+        PendingTransaction(
+            value: Zatoshi(Int64.random(in: 1 ... 1_000_000)),
+            toAddress: recipientAddress,
+            memo: nil,
+            account: 0
+        )
     }
 }

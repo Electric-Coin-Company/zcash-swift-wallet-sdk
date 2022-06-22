@@ -8,6 +8,7 @@
 import Foundation
 import SQLite
 struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
+
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
         case accountIndex = "account_index"
@@ -38,7 +39,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     var createTime: TimeInterval
     var raw: Data?
     var id: Int?
-    var value: Int
+    var value: Zatoshi
     var memo: Data?
     var rawTransactionId: Data?
 
@@ -69,7 +70,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
 
 extension PendingTransaction {
     // TODO: Handle Memo
-    init(value: Int, toAddress: String, memo: String?, account index: Int) {
+    init(value: Zatoshi, toAddress: String, memo: String?, account index: Int) {
         self = PendingTransaction(
             toAddress: toAddress,
             accountIndex: index,
@@ -83,7 +84,7 @@ extension PendingTransaction {
             createTime: Date().timeIntervalSince1970,
             raw: nil,
             id: nil,
-            value: Int(value),
+            value: value,
             memo: memo?.encodeAsZcashTransactionMemo(),
             rawTransactionId: nil
         )
@@ -104,7 +105,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         static var createTime = Expression<TimeInterval?>("create_time")
         static var raw = Expression<Blob?>("raw")
         static var id = Expression<Int>("id")
-        static var value = Expression<Int>("value")
+        static var value = Expression<Zatoshi>("value")
         static var memo = Expression<Blob?>("memo")
         static var rawTransactionId = Expression<Blob?>("txid")
     }
@@ -186,6 +187,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
 
         do {
             let pendingTx: PendingTransaction = try row.decode()
+
             return pendingTx
         } catch {
             throw StorageError.operationFailed

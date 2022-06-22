@@ -17,7 +17,7 @@ class BalanceTests: XCTestCase {
 
     // TODO: Parameterize this from environment
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
-    let sendAmount: Int64 = 1000
+    let sendAmount = Zatoshi(1000)
     let defaultLatestHeight: BlockHeight = 663188
     let branchID = "2bb40e60"
     let chainName = "main"
@@ -64,12 +64,12 @@ class BalanceTests: XCTestCase {
         wait(for: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
-        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let totalBalance = coordinator.synchronizer.initializer.getBalance()
+        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalance = verifiedBalance - Int64(network.constants.defaultFee(for: defaultLatestHeight))
+        let maxBalance = verifiedBalance - network.constants.defaultFee(for: defaultLatestHeight)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -179,8 +179,8 @@ class BalanceTests: XCTestCase {
         
         XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
         
-        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), 0)
-        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), 0)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), .zero)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), .zero)
     }
     
     /**
@@ -208,12 +208,12 @@ class BalanceTests: XCTestCase {
         wait(for: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
-        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let totalBalance = coordinator.synchronizer.initializer.getBalance()
+        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalanceMinusOne = verifiedBalance - Int64(network.constants.defaultFee(for: defaultLatestHeight)) - 1
+        let maxBalanceMinusOne = verifiedBalance - network.constants.defaultFee(for: defaultLatestHeight) - Zatoshi(1)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -321,8 +321,8 @@ class BalanceTests: XCTestCase {
         
         XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
         
-        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), 1)
-        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), 1)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), Zatoshi(1))
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), Zatoshi(1))
     }
     
     /**
@@ -350,12 +350,12 @@ class BalanceTests: XCTestCase {
         wait(for: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
-        let verifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let totalBalance = coordinator.synchronizer.initializer.getBalance()
+        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalanceMinusOne = 100000 - network.constants.defaultFee(for: defaultLatestHeight)
+        let maxBalanceMinusOne = Zatoshi(100000) - network.constants.defaultFee(for: defaultLatestHeight)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -462,8 +462,8 @@ class BalanceTests: XCTestCase {
         
         XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
         
-        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), 100000)
-        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), 100000)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), Zatoshi(100000))
+        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), Zatoshi(100000))
     }
     
     /**
@@ -499,17 +499,17 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let presendVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let presendVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         
         /*
         there's more zatoshi to send than network fee
         */
-        XCTAssertTrue(presendVerifiedBalance >= (Int64(network.constants.defaultFee(for: defaultLatestHeight)) + sendAmount))
+        XCTAssertTrue(presendVerifiedBalance >= network.constants.defaultFee(for: defaultLatestHeight) + sendAmount)
         
         var pendingTx: PendingTransactionEntity?
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
-            zatoshi: Int64(sendAmount),
+            zatoshi: sendAmount,
             toAddress: testRecipientAddress,
             memo: "test send \(self.description) \(Date().description)",
             from: 0,
@@ -529,7 +529,7 @@ class BalanceTests: XCTestCase {
             }
         )
         
-        XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > 0)
+        XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > .zero)
         wait(for: [sentTransactionExpectation], timeout: 12)
         
         // sync and mine
@@ -579,7 +579,7 @@ class BalanceTests: XCTestCase {
         /*
         basic health check
         */
-        XCTAssertEqual(Int64(transaction.value), self.sendAmount)
+        XCTAssertEqual(transaction.value, self.sendAmount)
         
         /*
         build up repos to get data
@@ -631,9 +631,9 @@ class BalanceTests: XCTestCase {
         
         self.verifiedBalanceValidation(
             previousBalance: presendVerifiedBalance,
-            spentNoteValue: Int64(sentNote.value),
-            changeValue: Int64(receivedNote.value),
-            sentAmount: Int64(self.sendAmount),
+            spentNoteValue: Zatoshi(Int64(sentNote.value)),
+            changeValue: Zatoshi(Int64(receivedNote.value)),
+            sentAmount: self.sendAmount,
             currentVerifiedBalance: self.coordinator.synchronizer.initializer.getVerifiedBalance()
         )
     }
@@ -671,16 +671,16 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let presendBalance = coordinator.synchronizer.initializer.getBalance()
+        let presendBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
 
         // there's more zatoshi to send than network fee
-        XCTAssertTrue(presendBalance >= (Int64(network.constants.defaultFee(for: defaultLatestHeight)) + sendAmount))
+        XCTAssertTrue(presendBalance >= network.constants.defaultFee(for: defaultLatestHeight) + sendAmount)
         var pendingTx: PendingTransactionEntity?
         
         var error: Error?
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
-            zatoshi: Int64(sendAmount),
+            zatoshi: sendAmount,
             toAddress: testRecipientAddress,
             memo: "test send \(self.description) \(Date().description)",
             from: 0,
@@ -698,7 +698,7 @@ class BalanceTests: XCTestCase {
             }
         )
         
-        XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > 0)
+        XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > .zero)
         wait(for: [sentTransactionExpectation], timeout: 12)
         
         if let e = error {
@@ -711,11 +711,11 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(Int64(transaction.value), self.sendAmount)
+        XCTAssertEqual(transaction.value, self.sendAmount)
         
         XCTAssertEqual(
             self.coordinator.synchronizer.initializer.getBalance(),
-            presendBalance - Int64(self.sendAmount) - network.constants.defaultFee(for: defaultLatestHeight)
+            presendBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight)
         )
         
         XCTAssertNil(transaction.errorCode)
@@ -747,7 +747,7 @@ class BalanceTests: XCTestCase {
         wait(for: [mineExpectation], timeout: 5)
         
         XCTAssertEqual(
-            presendBalance - self.sendAmount - Int64(network.constants.defaultFee(for: defaultLatestHeight)),
+            presendBalance - self.sendAmount - network.constants.defaultFee(for: defaultLatestHeight),
             coordinator.synchronizer.initializer.getBalance()
         )
     }
@@ -777,7 +777,7 @@ class BalanceTests: XCTestCase {
         wait(for: [syncedExpectation], timeout: 5)
         
         XCTAssertEqual(coordinator.synchronizer.clearedTransactions.count, 2)
-        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), 200000)
+        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), Zatoshi(200000))
     }
     
     /**
@@ -820,8 +820,8 @@ class BalanceTests: XCTestCase {
         
         wait(for: [syncedExpectation], timeout: 6)
         
-        let previousVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let previousTotalBalance = coordinator.synchronizer.initializer.getBalance()
+        let previousVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let previousTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         
         guard let spendingKeys = coordinator.spendingKeys?.first else {
             XCTFail("null spending keys")
@@ -835,7 +835,7 @@ class BalanceTests: XCTestCase {
         var pendingTx: PendingTransactionEntity?
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKeys,
-            zatoshi: Int64(sendAmount),
+            zatoshi: sendAmount,
             toAddress: testRecipientAddress,
             memo: memo,
             from: 0,
@@ -890,7 +890,7 @@ class BalanceTests: XCTestCase {
                 /*
                 There’s a sent transaction matching the amount sent to the given zAddr
                 */
-                XCTAssertEqual(Int64(confirmedTx.value), self.sendAmount)
+                XCTAssertEqual(confirmedTx.value, self.sendAmount)
                 XCTAssertEqual(confirmedTx.toAddress, self.testRecipientAddress)
                 XCTAssertEqual(confirmedTx.memo?.asZcashTransactionMemo(), memo)
 
@@ -934,7 +934,7 @@ class BalanceTests: XCTestCase {
                 */
                 XCTAssertEqual(
                     previousVerifiedBalance - self.sendAmount - self.network.constants.defaultFee(for: self.defaultLatestHeight),
-                    Int64(receivedNote.value)
+                    Zatoshi(Int64(receivedNote.value))
                 )
 
                 /*
@@ -942,16 +942,16 @@ class BalanceTests: XCTestCase {
                 */
                 self.verifiedBalanceValidation(
                     previousBalance: previousVerifiedBalance,
-                    spentNoteValue: Int64(sentNote.value),
-                    changeValue: Int64(receivedNote.value),
-                    sentAmount: Int64(self.sendAmount),
+                    spentNoteValue: Zatoshi(Int64(sentNote.value)),
+                    changeValue: Zatoshi(Int64(receivedNote.value)),
+                    sentAmount: self.sendAmount,
                     currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance()
                 )
 
                 self.totalBalanceValidation(
                     totalBalance: synchronizer.initializer.getBalance(),
                     previousTotalbalance: previousTotalBalance,
-                    sentAmount: Int64(self.sendAmount)
+                    sentAmount: self.sendAmount
                 )
 
                 syncToMinedheightExpectation.fulfill()
@@ -1001,8 +1001,8 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let previousVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let previousTotalBalance = coordinator.synchronizer.initializer.getBalance()
+        let previousVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let previousTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingTx: PendingTransactionEntity?
         coordinator.synchronizer.sendToAddress(
@@ -1089,21 +1089,21 @@ class BalanceTests: XCTestCase {
     check if (previous available funds - spent note + change) equals to (previous available funds - sent amount)
     */
     func verifiedBalanceValidation(
-        previousBalance: Int64,
-        spentNoteValue: Int64,
-        changeValue: Int64,
-        sentAmount: Int64,
-        currentVerifiedBalance: Int64
+        previousBalance: Zatoshi,
+        spentNoteValue: Zatoshi,
+        changeValue: Zatoshi,
+        sentAmount: Zatoshi,
+        currentVerifiedBalance: Zatoshi
     ) {
         XCTAssertEqual(previousBalance - spentNoteValue + changeValue, currentVerifiedBalance - sentAmount)
     }
     
     func totalBalanceValidation(
-        totalBalance: Int64,
-        previousTotalbalance: Int64,
-        sentAmount: Int64
+        totalBalance: Zatoshi,
+        previousTotalbalance: Zatoshi,
+        sentAmount: Zatoshi
     ) {
-        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - Int64(network.constants.defaultFee(for: defaultLatestHeight)))
+        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - network.constants.defaultFee(for: defaultLatestHeight))
     }
 }
 

@@ -17,7 +17,7 @@ class ShieldFundsTests: XCTestCase {
     // TODO: Parameterize this from environment
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 
-    let sendAmount: Int64 = 1000
+    let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 1631000
     var coordinator: TestCoordinator!
     var syncedExpectation = XCTestExpectation(description: "synced")
@@ -90,8 +90,8 @@ class ShieldFundsTests: XCTestCase {
 
         let utxoHeight = BlockHeight(1631177)
         var shouldContinue = false
-        var initialTotalBalance: Int64 = -1
-        var initialVerifiedBalance: Int64 = -1
+        var initialTotalBalance = Zatoshi(-1)
+        var initialVerifiedBalance = Zatoshi(-1)
         var initialTransparentBalance: WalletBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         let utxo = try GetAddressUtxosReply(jsonString: """
@@ -128,12 +128,12 @@ class ShieldFundsTests: XCTestCase {
         }
 
         // at this point the balance should be all zeroes for transparent and shielded funds
-        XCTAssertEqual(initialTotalBalance, 0)
-        XCTAssertEqual(initialVerifiedBalance, 0)
+        XCTAssertEqual(initialTotalBalance, Zatoshi.zero)
+        XCTAssertEqual(initialVerifiedBalance, Zatoshi.zero)
         initialTransparentBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
-        XCTAssertEqual(initialTransparentBalance.total, 0)
-        XCTAssertEqual(initialTransparentBalance.verified, 0)
+        XCTAssertEqual(initialTransparentBalance.total, .zero)
+        XCTAssertEqual(initialTransparentBalance.verified, .zero)
 
         // 4. Add the UTXO to darksidewalletd fake chain
         try coordinator.service.addUTXO(utxo)
@@ -163,8 +163,8 @@ class ShieldFundsTests: XCTestCase {
         // and 10000 zatoshi of total (not verified) transparent funds.
         let tFundsDetectedBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
-        XCTAssertEqual(tFundsDetectedBalance.total, 10000)
-        XCTAssertEqual(tFundsDetectedBalance.verified, 10000) //FIXME: this should be zero
+        XCTAssertEqual(tFundsDetectedBalance.total, Zatoshi(10000))
+        XCTAssertEqual(tFundsDetectedBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
 
         let tFundsConfirmationSyncExpectation = XCTestExpectation(description: "t funds confirmation")
 
@@ -189,8 +189,8 @@ class ShieldFundsTests: XCTestCase {
         // the transparent funds should be 10000 zatoshis both total and verified
         let confirmedTFundsBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
-        XCTAssertEqual(confirmedTFundsBalance.total, 10000)
-        XCTAssertEqual(confirmedTFundsBalance.verified, 10000)
+        XCTAssertEqual(confirmedTFundsBalance.total, Zatoshi(10000))
+        XCTAssertEqual(confirmedTFundsBalance.verified, Zatoshi(10000))
 
         // 9. shield the funds
         let shieldFundsExpectation = XCTestExpectation(description: "shield funds")
@@ -221,7 +221,7 @@ class ShieldFundsTests: XCTestCase {
 
             case .success(let pendingTx):
                 shouldContinue = true
-                XCTAssertEqual(pendingTx.value, 10000)
+                XCTAssertEqual(pendingTx.value, Zatoshi(10000))
                 shieldingPendingTx = pendingTx
             }
             shieldFundsExpectation.fulfill()
@@ -235,9 +235,9 @@ class ShieldFundsTests: XCTestCase {
         // when funds are shielded the UTXOs should be marked as spend and not shown on the balance.
         // now balance should be zero shielded, zero transaparent.
         // verify that the balance has been marked as spent regardless of confirmation
-        XCTAssertEqual(postShieldingBalance.verified, 10000) //FIXME: this should be zero
-        XCTAssertEqual(postShieldingBalance.total, 10000) //FIXME: this should be zero
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), 0)
+        XCTAssertEqual(postShieldingBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
+        XCTAssertEqual(postShieldingBalance.total, Zatoshi(10000)) //FIXME: this should be zero
+        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), .zero)
 
         // 10. clear the UTXO from darksidewalletd's cache
         try coordinator.service.clearAddedUTXOs()
@@ -281,9 +281,9 @@ class ShieldFundsTests: XCTestCase {
         // Fees at the time of writing the tests are 1000 zatoshi as defined on ZIP-313
         let postShieldingShieldedBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
-        XCTAssertEqual(postShieldingShieldedBalance.total, 10000) //FIXME: this should be zero
-        XCTAssertEqual(postShieldingShieldedBalance.verified, 10000) //FIXME: this should be zero
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), 0) //FIXME: this should be 9000
+        XCTAssertEqual(postShieldingShieldedBalance.total, Zatoshi(10000)) //FIXME: this should be zero
+        XCTAssertEqual(postShieldingShieldedBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
+        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), .zero) //FIXME: this should be 9000
 
         // 14. proceed confirm the shielded funds by staging ten more blocks
         try coordinator.service.applyStaged(nextLatestHeight: utxoHeight + 10 + 1 + 10)
@@ -311,10 +311,10 @@ class ShieldFundsTests: XCTestCase {
 
         XCTAssertNotNil(clearedTransaction)
 
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), 9000)
+        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), Zatoshi(9000))
         let postShieldingConfirmationShieldedBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
-        XCTAssertEqual(postShieldingConfirmationShieldedBalance.total, 0)
-        XCTAssertEqual(postShieldingConfirmationShieldedBalance.verified, 0)
+        XCTAssertEqual(postShieldingConfirmationShieldedBalance.total, .zero)
+        XCTAssertEqual(postShieldingConfirmationShieldedBalance.verified, .zero)
 
     }
 

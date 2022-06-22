@@ -14,8 +14,8 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "0D8BB44E23B1DA0700D5E2A1"
-               BuildableName = "ZcashLightClientSample.app"
+               BlueprintIdentifier = "0DA1C4B027D11D9500E5006E"
+               BuildableName = "ZcashLightClientSample-Mainnet.app"
                BlueprintName = "ZcashLightClientSample-Mainnet"
                ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
             </BuildableReference>
@@ -50,15 +50,6 @@
             ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0D8BB44E23B1DA0700D5E2A1"
-            BuildableName = "ZcashLightClientSample.app"
-            BlueprintName = "ZcashLightClientSample-Mainnet"
-            ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -70,8 +61,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "0D8BB44E23B1DA0700D5E2A1"
-            BuildableName = "ZcashLightClientSample.app"
+            BlueprintIdentifier = "0DA1C4B027D11D9500E5006E"
+            BuildableName = "ZcashLightClientSample-Mainnet.app"
             BlueprintName = "ZcashLightClientSample-Mainnet"
             ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
          </BuildableReference>

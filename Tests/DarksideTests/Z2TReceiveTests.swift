@@ -97,7 +97,7 @@ class Z2TReceiveTests: XCTestCase {
         let sendExpectation = XCTestExpectation(description: "sendToAddress")
         var pendingEntity: PendingTransactionEntity?
         var error: Error?
-        let sendAmount: Int64 = 10000
+        let sendAmount = Zatoshi(10000)
         /*
         4. create transaction
         */

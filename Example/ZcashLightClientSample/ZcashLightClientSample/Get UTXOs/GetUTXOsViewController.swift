@@ -32,8 +32,8 @@ class GetUTXOsViewController: UIViewController {
         // swiftlint:disable:next force_try
         let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
         
-        self.totalBalanceLabel.text = String(balance.total.asHumanReadableZecBalance())
-        self.verifiedBalanceLabel.text = String(balance.verified.asHumanReadableZecBalance())
+        self.totalBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.total.amount))
+        self.verifiedBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.verified.amount))
     }
     
     @IBAction func shieldFunds(_ sender: Any) {
