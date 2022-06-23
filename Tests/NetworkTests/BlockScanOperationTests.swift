@@ -170,7 +170,7 @@ class BlockScanOperationTests: XCTestCase {
             height: Int32(walletBirthDay.height),
             hash: walletBirthDay.hash,
             time: walletBirthDay.time,
-            saplingTree: walletBirthDay.tree,
+            saplingTree: walletBirthDay.saplingTree,
             networkType: network.networkType
         )
         
