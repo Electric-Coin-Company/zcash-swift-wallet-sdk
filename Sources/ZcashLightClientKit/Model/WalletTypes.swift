@@ -105,4 +105,15 @@ public protocol UnifiedAddress {
 public struct WalletBalance {
     public var verified: Zatoshi
     public var total: Zatoshi
+
+    public init(verified: Zatoshi, total: Zatoshi) {
+        self.verified = verified
+        self.total = total
+    }
+}
+
+public extension WalletBalance {
+    static var zero: WalletBalance {
+        Self(verified: .zero, total: .zero)
+    }
 }
