@@ -7,8 +7,7 @@
 
 import Foundation
 import SQLite
-struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
-
+struct PendingTransaction: PendingTransactionEntity, Codable {
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
         case accountIndex = "account_index"
@@ -61,6 +60,82 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
             memo: entity.memo,
             rawTransactionId: entity.raw
         )
+    }
+
+    init(
+        toAddress: String,
+        accountIndex: Int,
+        minedHeight: BlockHeight,
+        expiryHeight: BlockHeight,
+        cancelled: Int,
+        encodeAttempts: Int,
+        submitAttempts: Int,
+        errorMessage: String?,
+        errorCode: Int?,
+        createTime: TimeInterval,
+        raw: Data?,
+        id: Int?,
+        value: Zatoshi,
+        memo: Data?,
+        rawTransactionId: Data?
+    ) {
+        self.toAddress = toAddress
+        self.accountIndex = accountIndex
+        self.minedHeight = minedHeight
+        self.expiryHeight = expiryHeight
+        self.cancelled = cancelled
+        self.encodeAttempts = encodeAttempts
+        self.submitAttempts = submitAttempts
+        self.errorMessage = errorMessage
+        self.errorCode = errorCode
+        self.createTime = createTime
+        self.raw = raw
+        self.id = id
+        self.value = value
+        self.memo = memo
+        self.rawTransactionId = rawTransactionId
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        self.toAddress = try container.decode(String.self, forKey: .toAddress)
+        self.accountIndex = try container.decode(Int.self, forKey: .accountIndex)
+        self.minedHeight = try container.decode(BlockHeight.self, forKey: .minedHeight)
+        self.expiryHeight = try container.decode(BlockHeight.self, forKey: .expiryHeight)
+        self.cancelled = try container.decode(Int.self, forKey: .cancelled)
+        self.encodeAttempts = try container.decode(Int.self, forKey: .encodeAttempts)
+        self.submitAttempts = try container.decode(Int.self, forKey: .submitAttempts)
+        self.errorMessage = try container.decodeIfPresent(String.self, forKey: .errorMessage)
+        self.errorCode = try container.decodeIfPresent(Int.self, forKey: .errorCode)
+        self.createTime = try container.decode(TimeInterval.self, forKey: .createTime)
+        self.raw = try container.decodeIfPresent(Data.self, forKey: .raw)
+        self.id = try container.decodeIfPresent(Int.self, forKey: .id)
+
+        let zatoshiValue = try container.decode(Int64.self, forKey: .value)
+        self.value = Zatoshi(zatoshiValue)
+        self.memo = try container.decodeIfPresent(Data.self, forKey: .memo)
+        self.rawTransactionId = try container.decodeIfPresent(Data.self, forKey: .rawTransactionId)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+
+        try container.encode(self.toAddress, forKey: .toAddress)
+        try container.encode(self.accountIndex, forKey: .accountIndex)
+        try container.encode(self.minedHeight, forKey: .minedHeight)
+        try container.encode(self.expiryHeight, forKey: .expiryHeight)
+        try container.encode(self.cancelled, forKey: .cancelled)
+        try container.encode(self.encodeAttempts, forKey: .encodeAttempts)
+        try container.encode(self.submitAttempts, forKey: .submitAttempts)
+        try container.encodeIfPresent(self.errorMessage, forKey: .errorMessage)
+        try container.encodeIfPresent(self.errorCode, forKey: .errorCode)
+        try container.encode(self.createTime, forKey: .createTime)
+        try container.encodeIfPresent(self.raw, forKey: .raw)
+        try container.encodeIfPresent(self.id, forKey: .id)
+        try container.encode(self.value.amount, forKey: .value)
+        try container.encodeIfPresent(self.memo, forKey: .memo)
+        try container.encodeIfPresent(self.rawTransactionId, forKey: .rawTransactionId)
     }
 
     func isSameTransactionId<T>(other: T) -> Bool where T: RawIdentifiable {
