@@ -4,7 +4,6 @@
 //
 //  Created by Francisco Gindre on 7/28/21.
 //
-// swiftlint:disable function_body_length line_length cyclomatic_complexity
 import Foundation
 
 extension WalletBirthday {
@@ -15,6 +14,6 @@ extension WalletBirthday {
     saplingTree: "000000"
   )
 
-  static let mainnetCheckpointDirectory = Bundle.module.bundleURL.appendingPathComponent("saplingtree-checkpoints/mainnet/")
+  static let mainnetCheckpointDirectory = Bundle.module.bundleURL.appendingPathComponent("checkpoints/mainnet/")
 
 }

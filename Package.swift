@@ -31,7 +31,7 @@ let package = Package(
                 "Service/ProtoBuf/proto/service.proto"
             ],
             resources: [
-                .copy("Resources/saplingtree-checkpoints")
+                .copy("Resources/checkpoints")
             ]
         ),
         .target(
