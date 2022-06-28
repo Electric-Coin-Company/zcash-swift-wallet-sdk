@@ -111,37 +111,37 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
     
-    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey], networkType: NetworkType) throws -> Bool {
+    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool {
         let dbData = dbData.osStr()
         
-        var ffiUvks: [FFIUnifiedViewingKey] = []
-        for uvk in uvks {
-            guard !uvk.extfvk.containsCStringNullBytesBeforeStringEnding() else {
+        var ffiUfvks: [FFIUnifiedViewingKey] = []
+        for ufvk in ufvks {
+            guard !ufvk.extfvk.containsCStringNullBytesBeforeStringEnding() else {
                 throw RustWeldingError.malformedStringInput
             }
-            guard !uvk.extpub.containsCStringNullBytesBeforeStringEnding() else {
+            guard !ufvk.extpub.containsCStringNullBytesBeforeStringEnding() else {
                 throw RustWeldingError.malformedStringInput
             }
             
-            guard try self.isValidExtendedFullViewingKey(uvk.extfvk, networkType: networkType) else {
+            guard try self.isValidExtendedFullViewingKey(ufvk.extfvk, networkType: networkType) else {
                 throw RustWeldingError.malformedStringInput
             }
 
-            let extfvkCStr = [CChar](String(uvk.extfvk).utf8CString)
+            let extfvkCStr = [CChar](String(ufvk.extfvk).utf8CString)
             
             let extfvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extfvkCStr.count)
             extfvkPtr.initialize(from: extfvkCStr, count: extfvkCStr.count)
             
-            let extpubCStr = [CChar](String(uvk.extpub).utf8CString)
+            let extpubCStr = [CChar](String(ufvk.extpub).utf8CString)
             let extpubPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extpubCStr.count)
             extpubPtr.initialize(from: extpubCStr, count: extpubCStr.count)
             
-            ffiUvks.append(FFIUnifiedViewingKey(extfvk: extfvkPtr, extpub: extpubPtr))
+            ffiUfvks.append(FFIUnifiedViewingKey(extfvk: extfvkPtr, extpub: extpubPtr))
         }
         
         var result = false
 
-        ffiUvks.withContiguousMutableStorageIfAvailable { pointer in
+        ffiUfvks.withContiguousMutableStorageIfAvailable { pointer in
             let slice = UnsafeMutablePointer<FFIUVKBoxedSlice>.allocate(capacity: 1)
             slice.initialize(to: FFIUVKBoxedSlice(ptr: pointer.baseAddress, len: UInt(pointer.count)))
             
@@ -150,9 +150,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         }
         
         defer {
-            for uvk in ffiUvks {
-                uvk.extfvk.deallocate()
-                uvk.extpub.deallocate()
+            for ufvk in ffiUfvks {
+                ufvk.extfvk.deallocate()
+                ufvk.extpub.deallocate()
             }
         }
         
@@ -488,13 +488,13 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return extsks
     }
 
-    static func deriveUnifiedViewingKeyFromSeed(
+    static func deriveUnifiedFullViewingKeyFromSeed(
         _ seed: [UInt8],
         numberOfAccounts: Int,
         networkType: NetworkType
-    ) throws -> [UnifiedViewingKey] {
+    ) throws -> [UnifiedFullViewingKey] {
         guard
-            let uvksStruct = zcashlc_derive_unified_viewing_keys_from_seed(
+            let ufvksStruct = zcashlc_derive_unified_viewing_keys_from_seed(
                 seed,
                 UInt(seed.count),
                 Int32(numberOfAccounts),
@@ -507,16 +507,16 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.unableToDeriveKeys
         }
         
-        let uvksSize = uvksStruct.pointee.len
+        let ufvksSize = ufvksStruct.pointee.len
 
-        guard let uvksArrayPointer = uvksStruct.pointee.ptr, uvksSize > 0 else {
+        guard let ufvksArrayPointer = ufvksStruct.pointee.ptr, ufvksSize > 0 else {
             throw RustWeldingError.unableToDeriveKeys
         }
 
-        var uvks: [UnifiedViewingKey] = []
+        var ufvks: [UnifiedFullViewingKey] = []
         
-        for item in 0 ..< Int(uvksSize) {
-            let itemPointer = uvksArrayPointer.advanced(by: item)
+        for item in 0 ..< Int(ufvksSize) {
+            let itemPointer = ufvksArrayPointer.advanced(by: item)
             
             guard let extfvk = String(validatingUTF8: itemPointer.pointee.extfvk) else {
                 throw RustWeldingError.unableToDeriveKeys
@@ -526,12 +526,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 throw RustWeldingError.unableToDeriveKeys
             }
             
-            uvks.append(UVK(extfvk: extfvk, extpub: extpub))
+            ufvks.append(UFVK(extfvk: extfvk, extpub: extpub))
         }
         
-        zcashlc_free_uvk_array(uvksStruct)
+        zcashlc_free_uvk_array(ufvksStruct)
         
-        return uvks
+        return ufvks
     }
     
     static func deriveShieldedAddressFromSeed(
@@ -687,7 +687,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
 }
 
-private struct UVK: UnifiedViewingKey {
+private struct UFVK: UnifiedFullViewingKey {
     var extfvk: ExtendedFullViewingKey
     var extpub: ExtendedPublicKey
 }

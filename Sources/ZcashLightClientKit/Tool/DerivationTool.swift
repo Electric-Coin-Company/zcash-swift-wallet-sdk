@@ -86,15 +86,15 @@ public protocol KeyDeriving {
     func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String
     
     /**
-    derives unified viewing keys from seedbytes, specifying a number of accounts
+    derives unified full viewing keys from seedbytes, specifying a number of accounts
     - Returns an array of unified viewing key tuples.
     */
-    func deriveUnifiedViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey]
+    func deriveUnifiedFullViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey]
     
     /**
-    derives a Unified Address from a Unified Viewing Key
+    derives a Unified Address from a Unified Full Viewing Key
     */
-    func deriveUnifiedAddressFromUnifiedViewingKey(_ uvk: UnifiedViewingKey) throws -> UnifiedAddress
+    func deriveUnifiedAddressFromUnifiedFullViewingKey(_ ufvk: UnifiedFullViewingKey) throws -> UnifiedAddress
 }
 
 public enum KeyDerivationErrors: Error {
@@ -236,24 +236,24 @@ public class DerivationTool: KeyDeriving {
         }
     }
     
-    public func deriveUnifiedViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedViewingKey] {
+    public func deriveUnifiedFullViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] {
         guard numberOfAccounts > 0 else {
             throw KeyDerivationErrors.invalidInput
         }
         do {
-            return try rustwelding.deriveUnifiedViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts, networkType: networkType)
+            return try rustwelding.deriveUnifiedFullViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts, networkType: networkType)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
     
     /**
-    derives a Unified Address from a Unified Viewing Key
+    derives a Unified Address from a Unified Full Viewing Key
     */
-    public func deriveUnifiedAddressFromUnifiedViewingKey(_ uvk: UnifiedViewingKey) throws -> UnifiedAddress {
+    public func deriveUnifiedAddressFromUnifiedFullViewingKey(_ ufvk: UnifiedFullViewingKey) throws -> UnifiedAddress {
         do {
-            let tAddress = try deriveTransparentAddressFromPublicKey(uvk.extpub)
-            let zAddress = try deriveShieldedAddress(viewingKey: uvk.extfvk)
+            let tAddress = try deriveTransparentAddressFromPublicKey(ufvk.extpub)
+            let zAddress = try deriveShieldedAddress(viewingKey: ufvk.extfvk)
             return ConcreteUnifiedAddress(tAddress: tAddress, zAddress: zAddress)
         } catch {
             throw KeyDerivationErrors.unableToDerive

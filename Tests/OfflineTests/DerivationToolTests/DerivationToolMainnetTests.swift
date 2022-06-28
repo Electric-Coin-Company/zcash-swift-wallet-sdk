@@ -79,7 +79,7 @@ class DerivationToolMainnetTests: XCTestCase {
     }
     
     func testDeriveUnifiedKeysFromSeed() throws {
-        let unifiedKeys = try derivationTool.deriveUnifiedViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 1)
+        let unifiedKeys = try derivationTool.deriveUnifiedFullViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 1)
         XCTAssertEqual(unifiedKeys.count, 1)
         
         XCTAssertEqual(unifiedKeys[0].extfvk, expectedViewingKey)
@@ -88,7 +88,7 @@ class DerivationToolMainnetTests: XCTestCase {
     }
     
     func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
-        let unifiedKeys = try derivationTool.deriveUnifiedViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 10)
+        let unifiedKeys = try derivationTool.deriveUnifiedFullViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 10)
         XCTAssertEqual(unifiedKeys.count, 10)
         
         XCTAssertEqual(unifiedKeys[0].extfvk, expectedViewingKey)

@@ -64,8 +64,8 @@ class TestCoordinator {
         }
         
         guard
-            let uvk = try derivationTool
-                .deriveUnifiedViewingKeysFromSeed(
+            let ufvk = try derivationTool
+                .deriveUnifiedFullViewingKeysFromSeed(
                     TestSeed().seed(),
                     numberOfAccounts: 1
                 )
@@ -76,7 +76,7 @@ class TestCoordinator {
         
         try self.init(
             spendingKey: spendingKey,
-            unifiedViewingKey: uvk,
+            unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
             channelProvider: channelProvider,
             network: network
@@ -85,7 +85,7 @@ class TestCoordinator {
     
     required init(
         spendingKey: String,
-        unifiedViewingKey: UnifiedViewingKey,
+        unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
         network: ZcashNetwork
@@ -124,7 +124,7 @@ class TestCoordinator {
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
             spendingKey: spendingKey,
-            unifiedViewingKey: unifiedViewingKey,
+            unifiedFullViewingKey: unifiedFullViewingKey,
             walletBirthday: walletBirthday,
             network: network,
             loggerProxy: SampleLogger(logLevel: .debug)
@@ -288,7 +288,7 @@ enum TestSynchronizerBuilder {
         spendParamsURL: URL,
         outputParamsURL: URL,
         spendingKey: String,
-        unifiedViewingKey: UnifiedViewingKey,
+        unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
@@ -301,7 +301,7 @@ enum TestSynchronizerBuilder {
             network: network,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
-            viewingKeys: [unifiedViewingKey],
+            viewingKeys: [unifiedFullViewingKey],
             walletBirthday: walletBirthday,
             alias: "",
             loggerProxy: loggerProxy
@@ -340,7 +340,7 @@ enum TestSynchronizerBuilder {
         }
         
         guard let uvk = try DerivationTool(networkType: network.networkType)
-            .deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: 1)
+            .deriveUnifiedFullViewingKeysFromSeed(seedBytes, numberOfAccounts: 1)
             .first
         else {
             throw TestCoordinator.CoordinatorError.builderError
@@ -360,7 +360,7 @@ enum TestSynchronizerBuilder {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             spendingKey: spendingKey,
-            unifiedViewingKey: uvk,
+            unifiedFullViewingKey: uvk,
             walletBirthday: walletBirthday,
             network: network
         )

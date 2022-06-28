@@ -70,9 +70,9 @@ public protocol ZcashRustBackendWelding {
     initialize the accounts table from a set of unified viewing keys
     - Parameters:
         - dbData: location of the data db
-        - uvks: an array of UnifiedViewingKeys
+        - ufvks: an array of UnifiedFullViewingKeys
     */
-    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey], networkType: NetworkType) throws -> Bool
+    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool
 
     /**
     initialize the blocks table from a given checkpoint (birthday)
@@ -379,7 +379,7 @@ public protocol ZcashRustBackendWelding {
     */
     static func derivedTransparentAddressFromPublicKey(_ pubkey: String, networkType: NetworkType) throws -> String
     
-    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedViewingKey]
+    static func deriveUnifiedFullViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedFullViewingKey]
 
     /**
     Gets the consensus branch id for the given height

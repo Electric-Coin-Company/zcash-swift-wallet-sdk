@@ -89,7 +89,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         -1
     }
     
-    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey], networkType: NetworkType) throws -> Bool {
+    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool {
         false
     }
     
@@ -162,7 +162,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedViewingKey] {
+    static func deriveUnifiedFullViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedFullViewingKey] {
         throw KeyDerivationErrors.unableToDerive
     }
     
