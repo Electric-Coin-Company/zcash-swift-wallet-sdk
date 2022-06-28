@@ -93,6 +93,21 @@ class ZcashRustBackend: ZcashRustBackendWelding {
 
         return true
     }
+
+    static func isValidUnifiedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool {
+        guard !key.containsCStringNullBytesBeforeStringEnding() else {
+            return false
+        }
+
+        guard zcashlc_is_valid_unified_full_viewing_key([CChar](key.utf8CString), networkType.networkId) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+
+        return true
+    }
     
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [String]? {
         let dbData = dbData.osStr()
@@ -116,27 +131,20 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         var ffiUfvks: [FFIUnifiedViewingKey] = []
         for ufvk in ufvks {
-            guard !ufvk.extfvk.containsCStringNullBytesBeforeStringEnding() else {
-                throw RustWeldingError.malformedStringInput
-            }
-            guard !ufvk.extpub.containsCStringNullBytesBeforeStringEnding() else {
+            guard !ufvk.encoding.containsCStringNullBytesBeforeStringEnding() else {
                 throw RustWeldingError.malformedStringInput
             }
             
-            guard try self.isValidExtendedFullViewingKey(ufvk.extfvk, networkType: networkType) else {
+            guard try self.isValidUnifiedFullViewingKey(ufvk.encoding, networkType: networkType) else { // TODO Fix
                 throw RustWeldingError.malformedStringInput
             }
 
-            let extfvkCStr = [CChar](String(ufvk.extfvk).utf8CString)
+            let ufvkCStr = [CChar](String(ufvk.encoding).utf8CString)
             
-            let extfvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extfvkCStr.count)
-            extfvkPtr.initialize(from: extfvkCStr, count: extfvkCStr.count)
+            let ufvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: ufvkCStr.count)
+            ufvkPtr.initialize(from: ufvkCStr, count: ufvkCStr.count)
             
-            let extpubCStr = [CChar](String(ufvk.extpub).utf8CString)
-            let extpubPtr = UnsafeMutablePointer<CChar>.allocate(capacity: extpubCStr.count)
-            extpubPtr.initialize(from: extpubCStr, count: extpubCStr.count)
-            
-            ffiUfvks.append(FFIUnifiedViewingKey(extfvk: extfvkPtr, extpub: extpubPtr))
+            ffiUfvks.append(FFIUnifiedViewingKey(account_id: ufvk.account, encoding: ufvkPtr))
         }
         
         var result = false
@@ -151,8 +159,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         defer {
             for ufvk in ffiUfvks {
-                ufvk.extfvk.deallocate()
-                ufvk.extpub.deallocate()
+                ufvk.encoding.deallocate()
             }
         }
         
@@ -262,17 +269,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return result
     }
     
-    static func putUnspentTransparentOutput(dbData: URL, address: String, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight, networkType: NetworkType) throws -> Bool {
+    static func putUnspentTransparentOutput(dbData: URL, txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight, networkType: NetworkType) throws -> Bool {
         let dbData = dbData.osStr()
-        
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            throw RustWeldingError.malformedStringInput
-        }
         
         guard zcashlc_put_utxo(
             dbData.0,
             dbData.1,
-            [CChar](address.utf8CString),
             txid,
             UInt(txid.count),
             Int32(index),
@@ -387,7 +389,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         dbCache: URL,
         dbData: URL,
         account: Int32,
-        tsk: String,
+        xprv: String,
         extsk: String,
         memo: String?,
         spendParamsPath: String,
@@ -401,7 +403,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             dbData.0,
             dbData.1,
             account,
-            [CChar](tsk.utf8CString),
+            [CChar](xprv.utf8CString),
             [CChar](extsk.utf8CString),
             [CChar](memoBytes.utf8CString),
             spendParamsPath,
@@ -490,11 +492,11 @@ class ZcashRustBackend: ZcashRustBackendWelding {
 
     static func deriveUnifiedFullViewingKeyFromSeed(
         _ seed: [UInt8],
-        numberOfAccounts: Int,
+        numberOfAccounts: Int32,
         networkType: NetworkType
     ) throws -> [UnifiedFullViewingKey] {
         guard
-            let ufvksStruct = zcashlc_derive_unified_viewing_keys_from_seed(
+            let ufvksStruct = zcashlc_derive_unified_full_viewing_keys_from_seed(
                 seed,
                 UInt(seed.count),
                 Int32(numberOfAccounts),
@@ -518,15 +520,11 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         for item in 0 ..< Int(ufvksSize) {
             let itemPointer = ufvksArrayPointer.advanced(by: item)
             
-            guard let extfvk = String(validatingUTF8: itemPointer.pointee.extfvk) else {
+            guard let encoding = String(validatingUTF8: itemPointer.pointee.encoding) else {
                 throw RustWeldingError.unableToDeriveKeys
             }
             
-            guard let extpub = String(validatingUTF8: itemPointer.pointee.extpub) else {
-                throw RustWeldingError.unableToDeriveKeys
-            }
-            
-            ufvks.append(UFVK(extfvk: extfvk, extpub: extpub))
+            ufvks.append(UFVK(account: UInt32(item), encoding: encoding))
         }
         
         zcashlc_free_uvk_array(ufvksStruct)
@@ -534,13 +532,13 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return ufvks
     }
     
-    static func deriveShieldedAddressFromSeed(
+    static func deriveUnifiedAddressFromSeed(
         seed: [UInt8],
         accountIndex: Int32,
         networkType: NetworkType
     ) throws -> String? {
         guard
-            let zaddrCStr = zcashlc_derive_shielded_address_from_seed(
+            let uaddrCStr = zcashlc_derive_unified_address_from_seed(
                 seed,
                 UInt(seed.count),
                 accountIndex,
@@ -552,23 +550,23 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             }
             return nil
         }
-        let zAddr = String(validatingUTF8: zaddrCStr)
+        let uAddr = String(validatingUTF8: uaddrCStr)
         
-        zcashlc_string_free(zaddrCStr)
+        zcashlc_string_free(uaddrCStr)
         
-        return zAddr
+        return uAddr
     }
     
-    static func deriveShieldedAddressFromViewingKey(
-        _ extfvk: String,
+    static func deriveUnifiedAddressFromViewingKey(
+        _ ufvk: String,
         networkType: NetworkType
     ) throws -> String? {
-        guard !extfvk.containsCStringNullBytesBeforeStringEnding() else {
+        guard !ufvk.containsCStringNullBytesBeforeStringEnding() else {
             throw RustWeldingError.malformedStringInput
         }
         guard
-            let zaddrCStr = zcashlc_derive_shielded_address_from_viewing_key(
-                [CChar](extfvk.utf8CString),
+            let zaddrCStr = zcashlc_derive_unified_address_from_viewing_key(
+                [CChar](ufvk.utf8CString),
                 networkType.networkId
             )
         else {
@@ -577,11 +575,11 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             }
             return nil
         }
-        let zAddr = String(validatingUTF8: zaddrCStr)
+        let uAddr = String(validatingUTF8: zaddrCStr)
         
         zcashlc_string_free(zaddrCStr)
         
-        return zAddr
+        return uAddr
     }
     
     static func deriveTransparentAddressFromSeed(
@@ -610,18 +608,16 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return tAddr
     }
     
-    static func deriveTransparentPrivateKeyFromSeed(
+    static func deriveTransparentAccountPrivateKeyFromSeed(
         seed: [UInt8],
         account: Int,
-        index: Int,
         networkType: NetworkType
     ) throws -> String? {
         guard
-            let skCStr = zcashlc_derive_transparent_private_key_from_seed(
+            let skCStr = zcashlc_derive_transparent_account_private_key_from_seed(
                 seed,
                 UInt(seed.count),
                 Int32(account),
-                Int32(index),
                 networkType.networkId
             )
         else {
@@ -659,12 +655,20 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return tAddr
     }
     
-    static func deriveTransparentAddressFromSecretKey(_ tsk: String, networkType: NetworkType) throws -> String? {
+    static func deriveTransparentAddressFromAccountPrivateKey(
+        _ tsk: String,
+        index: Int,
+        networkType: NetworkType
+    ) throws -> String? {
         guard !tsk.containsCStringNullBytesBeforeStringEnding() else {
             throw RustWeldingError.malformedStringInput
         }
         
-        guard let tAddrCStr = zcashlc_derive_transparent_address_from_secret_key([CChar](tsk.utf8CString), networkType.networkId) else {
+        guard let tAddrCStr = zcashlc_derive_transparent_address_from_account_private_key(
+            [CChar](tsk.utf8CString),
+            Int32(index),
+            networkType.networkId
+        ) else {
             if let error = lastError() {
                 throw error
             }
@@ -688,8 +692,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
 }
 
 private struct UFVK: UnifiedFullViewingKey {
-    var extfvk: ExtendedFullViewingKey
-    var extpub: ExtendedPublicKey
+    var account: UInt32
+    var encoding: String
 }
 
 private extension ZcashRustBackend {

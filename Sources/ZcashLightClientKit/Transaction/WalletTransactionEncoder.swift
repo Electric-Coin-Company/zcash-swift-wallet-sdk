@@ -133,13 +133,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     func createShieldingTransaction(
         spendingKey: String,
-        tSecretKey: String,
+        tAccountPrivateKey: String,
         memo: String?,
         from accountIndex: Int
     ) throws -> EncodedTransaction {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
-            tsk: tSecretKey,
+            xprv: tAccountPrivateKey,
             memo: memo,
             accountIndex: accountIndex
         )
@@ -160,7 +160,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     func createShieldingTransaction(
         spendingKey: String,
-        tSecretKey: String,
+        tAccountPrivateKey: String,
         memo: String?,
         from accountIndex: Int,
         result: @escaping TransactionEncoderResultBlock
@@ -170,7 +170,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
     }
     
-    func createShieldingSpend(spendingKey: String, tsk: String, memo: String?, accountIndex: Int) throws -> Int {
+    func createShieldingSpend(spendingKey: String, xprv: String, memo: String?, accountIndex: Int) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
@@ -179,7 +179,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             dbCache: self.cacheDbURL,
             dbData: self.dataDbURL,
             account: Int32(accountIndex),
-            tsk: tsk,
+            xprv: xprv,
             extsk: spendingKey,
             memo: memo,
             spendParamsPath: self.spendParamsURL.path,

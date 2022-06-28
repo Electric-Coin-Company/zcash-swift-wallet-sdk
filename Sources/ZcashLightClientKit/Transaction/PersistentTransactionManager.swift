@@ -66,7 +66,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     
     func encodeShieldingTransaction(
         spendingKey: String,
-        tsk: String,
+        xprv: String,
         pendingTransaction: PendingTransactionEntity,
         result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
@@ -77,7 +77,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
 
             guard
                 let viewingKey = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
-                let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
+                let uAddr = try? derivationTool.deriveUnifiedAddress(viewingKey: viewingKey)
             else {
                 result(
                     .failure(
@@ -90,7 +90,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 return
             }
             
-            guard pendingTransaction.toAddress == zAddr else {
+            guard pendingTransaction.toAddress == uAddr else {
                 result(
                     .failure(
                         TransactionManagerError.shieldingEncodingFailed(
@@ -111,7 +111,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             do {
                 let encodedTransaction = try self.encoder.createShieldingTransaction(
                     spendingKey: spendingKey,
-                    tSecretKey: tsk,
+                    tAccountPrivateKey: xprv,
                     memo: pendingTransaction.memo?.asZcashTransactionMemo(),
                     from: pendingTransaction.accountIndex
                 )

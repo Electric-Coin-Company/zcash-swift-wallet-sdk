@@ -44,7 +44,11 @@ class MigrationManager {
     }
 
     func performMigration(ufvks: [UnifiedFullViewingKey]) throws {
-        try migrateDataDb(ufvks: ufvks)
+        // TODO: DataDB migrations will be handled by rustBackend.initDataDb
+        // once https://github.com/zcash/librustzcash/pull/600 merges, and in
+        // the interim the old migrations here will fail if we try to run them
+        // due to changes to table column names in zcash/librustzcash.
+        //try migrateDataDb(ufvks: ufvks)
         try migrateCacheDb()
         try migratePendingDb()
     }
@@ -115,7 +119,8 @@ class MigrationManager {
         let derivationTool = DerivationTool(networkType: self.network)
         
         for tuple in zip(accounts, viewingKeys) {
-            let tAddr = try derivationTool.deriveTransparentAddressFromPublicKey(tuple.1.extpub)
+            // TODO: Should the v1 migration be changed to "migrate from pre-v1 database to v2"?
+            let tAddr = try derivationTool.deriveTransparentAddressFromPublicKey(tuple.1.encoding)
             var account = tuple.0
             account.transparentAddress = tAddr
             try accountsDao.update(account)
