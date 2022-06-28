@@ -20,8 +20,8 @@ class BlockScanOperationTests: XCTestCase {
     var dataDbURL: URL!
 
     var ufvk = UFVFakeKey(
-        extfvk: "zxviewtestsapling1qw88ayg8qqqqpqyhg7jnh9mlldejfqwu46pm40ruwstd8znq3v3l4hjf33qcu2a5e36katshcfhcxhzgyfugj2lkhmt40j45cv38rv3frnghzkxcx73k7m7afw9j7ujk7nm4dx5mv02r26umxqgar7v3x390w2h3crqqgjsjly7jy4vtwzrmustm5yudpgcydw7x78awca8wqjvkqj8p8e3ykt7lrgd7xf92fsfqjs5vegfsja4ekzpfh5vtccgvs5747xqm6qflmtqpr8s9u", // swiftlint:disable:this line_length
-        extpub: "02075a7f5f7507d64022dad5954849f216b0f1b09b2d588be663d8e7faeb5aaf61"
+        account: 0,
+        encoding: "uviewtest1q48t999peecrfkq7ykcxckfkjt77w3lckk5mptlrtuy7xltjnzg8fm5434cxe9p9838ljs24yv83rluhk33ew098dkarapzyj4vk5kfxp5zn2jp3ww74jwd48r05aqjvgqxzx3nqn6zfqh3cmwdtmz0mc5624tvdza55q7mguxrehwcy4y0uktcpp4tkpex4qhazddux4yt6hr0sc9fkqmfr5tyz6ldd7yrq93tyj7446u4kst3vhmd40uga636p56hr0hjfdhgp07qyh90kmsl3qnmld6c8h7u06vekkjywmxv07mqzz9muwcl6weczrn5vf3p27uc9ufrumdp64zdzulzvc373wx3gl0yntntujhcsjhrwk9xwyjpvyuf0s8q3mgjs7uy3pg960w40dthpngcnauhgg9xq8cdcyfkq7ctnngqg4nkp5eh9knd4ckwjyd9czdd240lumul96r2fuerlvjeha6cyn9ftm7gr6xqjmq0zy6tv" // swiftlint:disable:this line_length
     )
 
     var walletBirthDay = Checkpoint.birthday(
@@ -260,6 +260,6 @@ extension BlockScanOperationTests: CompactBlockProgressDelegate {
 }
 
 struct UFVFakeKey: UnifiedFullViewingKey {
-    var extfvk: ExtendedFullViewingKey
-    var extpub: ExtendedPublicKey
+    var account: UInt32
+    var encoding: String
 }

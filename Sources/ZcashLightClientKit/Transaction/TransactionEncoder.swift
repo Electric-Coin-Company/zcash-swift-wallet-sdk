@@ -71,7 +71,7 @@ protocol TransactionEncoder {
      
     - Parameters:
     - Parameter spendingKey: a string containing the spending key
-    - Parameter tSecretKey: transparent secret key to spend the UTXOs
+    - Parameter tAccountPrivateKey: transparent account private key to spend the UTXOs
     - Parameter memo: string containing the memo (optional)
     - Parameter accountIndex: index of the account that will be used to send the funds
      
@@ -79,7 +79,7 @@ protocol TransactionEncoder {
     */
     func createShieldingTransaction(
         spendingKey: String,
-        tSecretKey: String,
+        tAccountPrivateKey: String,
         memo: String?,
         from accountIndex: Int
     ) throws -> EncodedTransaction
@@ -91,7 +91,7 @@ protocol TransactionEncoder {
      
     - Parameters:
         - Parameter spendingKey: a string containing the spending key
-        - Parameter tSecretKey: transparent secret key to spend the UTXOs
+        - Parameter tAccountPrivateKey: transparent account private key to spend the UTXOs
         - Parameter memo: string containing the memo (optional)
         - Parameter accountIndex: index of the account that will be used to send the funds
      
@@ -100,7 +100,7 @@ protocol TransactionEncoder {
     
     func createShieldingTransaction(
         spendingKey: String,
-        tSecretKey: String,
+        tAccountPrivateKey: String,
         memo: String?,
         from accountIndex: Int,
         result: @escaping TransactionEncoderResultBlock

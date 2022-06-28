@@ -234,6 +234,8 @@ public class Initializer {
             }
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
+        } catch RustWeldingError.malformedStringInput {
+            throw RustWeldingError.malformedStringInput
         } catch {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }

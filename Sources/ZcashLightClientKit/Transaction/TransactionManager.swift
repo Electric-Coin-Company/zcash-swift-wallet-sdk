@@ -16,7 +16,7 @@ transactions through to completion.
 protocol OutboundTransactionManager {
     func initSpend(zatoshi: Zatoshi, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity
 
-    func encodeShieldingTransaction(spendingKey: String, tsk: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
+    func encodeShieldingTransaction(spendingKey: String, xprv: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
     
     func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
     

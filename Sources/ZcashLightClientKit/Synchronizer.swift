@@ -144,12 +144,12 @@ public protocol Synchronizer {
 
     /// Sends zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.
-    /// - Parameter transparentSecretKey: the key that allows to spend transaprent funds
+    /// - Parameter transparentAccountPrivateKey: the key that allows to spend transparent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
     /// - Parameter accountIndex: the optional account id that will be used to shield  your funds to. By default, the first account is used.
     func shieldFunds(
         spendingKey: String,
-        transparentSecretKey: String,
+        transparentAccountPrivateKey: String,
         memo: String?,
         from accountIndex: Int,
         resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void

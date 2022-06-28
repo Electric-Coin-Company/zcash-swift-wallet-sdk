@@ -8,6 +8,7 @@
 import Foundation
 
 public protocol UnspentTransactionOutputEntity {
+    // TODO: Remove address field?
     var address: String { get set }
     var txid: Data { get set }
     var index: Int { get set }

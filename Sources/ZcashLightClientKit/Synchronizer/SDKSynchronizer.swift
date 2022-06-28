@@ -505,7 +505,7 @@ public class SDKSynchronizer: Synchronizer {
     
     public func shieldFunds(
         spendingKey: String,
-        transparentSecretKey: String,
+        transparentAccountPrivateKey: String,
         memo: String?,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
@@ -514,7 +514,7 @@ public class SDKSynchronizer: Synchronizer {
         let derivationTool = DerivationTool(networkType: self.network.networkType)
         
         do {
-            let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
+            let tAddr = try derivationTool.deriveTransparentAddressFromAccountPrivateKey(transparentAccountPrivateKey, index: 0) // TODO: FIX
             let tBalance = try utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
             
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
@@ -523,13 +523,13 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
             let viewingKey = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
-            let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
+            let uAddr = try derivationTool.deriveUnifiedAddress(viewingKey: viewingKey)
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: zAddr, memo: memo, from: 0)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr, memo: memo, from: 0)
             
             transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
-                tsk: transparentSecretKey,
+                xprv: transparentAccountPrivateKey,
                 pendingTransaction: shieldingSpend
             ) { [weak self] result in
                 guard let self = self else { return }

@@ -84,7 +84,6 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
             do {
                 try self.rustbackend.putUnspentTransparentOutput(
                     dbData: dataDb,
-                    address: utxo.address,
                     txid: utxo.txid.bytes,
                     index: utxo.index,
                     script: utxo.script.bytes,
