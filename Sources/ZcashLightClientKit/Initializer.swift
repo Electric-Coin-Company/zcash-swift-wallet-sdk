@@ -207,7 +207,7 @@ public class Initializer {
                 height: Int32(walletBirthday.height),
                 hash: walletBirthday.hash,
                 time: walletBirthday.time,
-                saplingTree: walletBirthday.tree,
+                saplingTree: walletBirthday.saplingTree,
                 networkType: network.networkType
             )
         } catch RustWeldingError.dataDbNotEmpty {

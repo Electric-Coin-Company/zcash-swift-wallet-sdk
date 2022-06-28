@@ -70,7 +70,7 @@ class TransactionEnhancementTests: XCTestCase {
             height: Int32(birthday.height),
             hash: birthday.hash,
             time: birthday.time,
-            saplingTree: birthday.tree,
+            saplingTree: birthday.saplingTree,
             networkType: network.networkType
         )
         
