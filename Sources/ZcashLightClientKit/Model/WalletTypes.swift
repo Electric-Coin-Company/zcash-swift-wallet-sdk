@@ -12,7 +12,12 @@
 public typealias ExtendedFullViewingKey = String
 public typealias ExtendedPublicKey = String
 
-public protocol UnifiedViewingKey {
+/**
+ A ZIP 316 Unified Full Viewing Key.
+
+ TODO: Use the correct ZIP 316 format.
+ */
+public protocol UnifiedFullViewingKey {
     var extfvk: ExtendedFullViewingKey { get set }
     var extpub: ExtendedPublicKey { get set }
 }

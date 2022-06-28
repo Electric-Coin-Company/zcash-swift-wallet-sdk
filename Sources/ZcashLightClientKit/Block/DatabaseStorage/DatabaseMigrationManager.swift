@@ -43,13 +43,13 @@ class MigrationManager {
         self.network = networkType
     }
 
-    func performMigration(uvks: [UnifiedViewingKey]) throws {
-        try migrateDataDb(uvks: uvks)
+    func performMigration(ufvks: [UnifiedFullViewingKey]) throws {
+        try migrateDataDb(ufvks: ufvks)
         try migrateCacheDb()
         try migratePendingDb()
     }
 
-    func performVersion1Migration(viewingKeys: [UnifiedViewingKey]) throws {
+    func performVersion1Migration(viewingKeys: [UnifiedFullViewingKey]) throws {
         LoggerProxy.debug("Starting migration version 1 from viewing Keys")
         let db = try self.dataDb.connection()
        
@@ -143,9 +143,9 @@ class MigrationManager {
         
         let derivationTool = DerivationTool(networkType: self.network)
         
-        let uvks = try derivationTool.deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)
+        let ufvks = try derivationTool.deriveUnifiedFullViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)
         
-        try performVersion1Migration(viewingKeys: uvks)
+        try performVersion1Migration(viewingKeys: ufvks)
     }
 }
 
@@ -182,7 +182,7 @@ private extension MigrationManager {
         }
     }
 
-    func migrateDataDb(uvks: [UnifiedViewingKey]) throws {
+    func migrateDataDb(ufvks: [UnifiedFullViewingKey]) throws {
         let currentDataDbVersion = try dataDb.connection().getUserVersion()
         LoggerProxy.debug(
             "Attempting to perform migration for data Db - currentVersion: \(currentDataDbVersion)." +
@@ -197,7 +197,7 @@ private extension MigrationManager {
                 }
                 switch version {
                 case .version1:
-                    try performVersion1Migration(viewingKeys: uvks)
+                    try performVersion1Migration(viewingKeys: ufvks)
                 case .none:
                     break
                 }
