@@ -1,3 +1,23 @@
+# 0.15.0-beta
+** IMPORTANT ** This version no longer supports iOS 12
+We've made a decision to make iOS 13 the minimum deployment target
+in order to adopt and support Structured Concurrency and other important features
+of the Swift language like Combine. 
+
+- [#363] bump iOS minimum deployment target to iOS 13.0 (#407)
+- [#381] Move Zatoshi and Amount Types to the SDK (#396)
+This deprecates many methods on `SDKSynchronizer` using Zatoshi for amounts
+instead of `Int64`. This exposes number formatters that conveniently provide
+decimal conversion from `Zatoshi` to "human-readable" ZEC decimal numbers.
+
+- [#397] Checkpoint format that supports NU5 TreeStates (#399)
+`WalletBirthday` now have both `saplingTree` and `orchardTree` values. The
+latter being Optional for checkpoints prior to Orchard activation height.
+
+- [#401] DecodingError when refreshing pending transactions (#402)
+- [#394] Update swift-grpc to 1.8.0 (#395)
+
+other changes: renamed changelog.md to CHANGELOG.md
 # 0.14.0-beta
 - [#388] Integrate libzcashlc 0.0.3 to support v5 transaction parsing on NU5 activation
 # 0.13.1-beta
