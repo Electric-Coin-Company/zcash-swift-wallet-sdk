@@ -112,14 +112,19 @@ public class LightWalletGRPCService {
         self.streamingCallTimeout = TimeLimit.timeout(.milliseconds(streamingCallTimeout))
         self.singleCallTimeout = TimeLimit.timeout(.milliseconds(singleCallTimeout))
 
-        let configuration = ClientConnection.Configuration(
-            target: .hostAndPort(host, port),
-            eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1),
-            connectivityStateDelegate: connectionManager,
-            connectivityStateDelegateQueue: queue,
-            tls: secure ? .init() : nil
-        )
-        let channel = ClientConnection(configuration: configuration)
+        let connectionBuilder = secure ?
+        ClientConnection.usingPlatformAppropriateTLS(for: MultiThreadedEventLoopGroup(numberOfThreads: 1)) :
+        ClientConnection.insecure(group: MultiThreadedEventLoopGroup(numberOfThreads: 1))
+
+        let channel = connectionBuilder
+            .withConnectivityStateDelegate(connectionManager, executingOn: queue)
+            .withKeepalive(
+                ClientConnectionKeepalive(
+                  interval: .seconds(15),
+                  timeout: .seconds(10)
+                )
+            )
+            .connect(host: host, port: port)
 
         self.channel = channel
 

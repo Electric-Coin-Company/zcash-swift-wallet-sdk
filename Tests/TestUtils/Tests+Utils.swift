@@ -38,14 +38,21 @@ enum LightWalletEndpointBuilder {
 class ChannelProvider {
     func channel(secure: Bool = false) -> GRPCChannel {
         let endpoint = LightWalletEndpointBuilder.default
-        
-        let configuration = ClientConnection.Configuration(
-            target: .hostAndPort(endpoint.host, endpoint.port),
-            eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1),
-            tls: secure ? .init() : nil
-        )
 
-        return ClientConnection(configuration: configuration)
+        let connectionBuilder = secure ?
+        ClientConnection.usingPlatformAppropriateTLS(for: MultiThreadedEventLoopGroup(numberOfThreads: 1)) :
+        ClientConnection.insecure(group: MultiThreadedEventLoopGroup(numberOfThreads: 1))
+
+        let channel = connectionBuilder
+            .withKeepalive(
+                ClientConnectionKeepalive(
+                  interval: .seconds(15),
+                  timeout: .seconds(10)
+                )
+            )
+            .connect(host: endpoint.host, port: endpoint.port)
+
+        return channel
     }
 }
 
