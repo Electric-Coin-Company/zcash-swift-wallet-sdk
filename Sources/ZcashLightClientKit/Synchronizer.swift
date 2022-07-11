@@ -11,21 +11,21 @@ import Foundation
 
 /// Represents errors thrown by a Synchronizer
 public enum SynchronizerError: Error {
-    case initFailed(message: String)
-    case notPrepared
-    case syncFailed
-    case connectionFailed(message: Error)
-    case generalError(message: String)
-    case maxRetryAttemptsReached(attempts: Int)
-    case connectionError(status: Int, message: String)
-    case networkTimeout
-    case uncategorized(underlyingError: Error)
-    case criticalError
-    case parameterMissing(underlyingError: Error)
-    case rewindError(underlyingError: Error)
-    case rewindErrorUnknownArchorHeight
-    case invalidAccount
-    case lightwalletdValidationFailed(underlyingError: Error)
+    case initFailed(message: String) // ZcashLightClientKit.SynchronizerError error 0.
+    case notPrepared // ZcashLightClientKit.SynchronizerError error 9.
+    case syncFailed // ZcashLightClientKit.SynchronizerError error 10.
+    case connectionFailed(message: Error) // ZcashLightClientKit.SynchronizerError error 1.
+    case generalError(message: String) // ZcashLightClientKit.SynchronizerError error 2.
+    case maxRetryAttemptsReached(attempts: Int) // ZcashLightClientKit.SynchronizerError error 3.
+    case connectionError(status: Int, message: String) // ZcashLightClientKit.SynchronizerError error 4.
+    case networkTimeout // ZcashLightClientKit.SynchronizerError error 11.
+    case uncategorized(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 5.
+    case criticalError // ZcashLightClientKit.SynchronizerError error 12.
+    case parameterMissing(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 6.
+    case rewindError(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 7.
+    case rewindErrorUnknownArchorHeight // ZcashLightClientKit.SynchronizerError error 13.
+    case invalidAccount // ZcashLightClientKit.SynchronizerError error 14.
+    case lightwalletdValidationFailed(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 8.
 }
 
 public enum ShieldFundsError: Error {
