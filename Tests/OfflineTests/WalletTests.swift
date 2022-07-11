@@ -57,9 +57,3 @@ class WalletTests: XCTestCase {
 //        XCTAssertNoThrow( try FileManager.default.removeItem(at: cacheData!) )
     }
 }
-
-enum WalletBirthdayProvider {
-    static var testBirthday: WalletBirthday {
-        WalletBirthday()
-    }
-}

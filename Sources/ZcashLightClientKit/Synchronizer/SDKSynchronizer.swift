@@ -137,7 +137,7 @@ public class SDKSynchronizer: Synchronizer {
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
-        self.latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday.height
+        self.latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
         self.network = initializer.network
         self.subscribeToProcessorNotifications(blockProcessor)
     }
@@ -149,12 +149,12 @@ public class SDKSynchronizer: Synchronizer {
     
     public func initialize() throws {
         try self.initializer.initialize()
-        try self.blockProcessor.setStartHeight(initializer.walletBirthday.height)
+        try self.blockProcessor.setStartHeight(initializer.walletBirthday)
     }
     
     public func prepare() throws {
         try self.initializer.initialize()
-        try self.blockProcessor.setStartHeight(initializer.walletBirthday.height)
+        try self.blockProcessor.setStartHeight(initializer.walletBirthday)
         self.status = .disconnected
     }
 
