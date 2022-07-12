@@ -7,8 +7,8 @@
 
 import Foundation
 
-public extension WalletBirthday {
-    static func birthday(with height: BlockHeight, network: ZcashNetwork) -> WalletBirthday {
+extension Checkpoint {
+    static func birthday(with height: BlockHeight, network: ZcashNetwork) -> Checkpoint {
         let checkpointDirectoryURL = BundleCheckpointURLProvider.default.url(network.networkType)
 
         switch network.networkType {
@@ -20,8 +20,8 @@ public extension WalletBirthday {
     }
 }
 
-extension WalletBirthday {
-    static func birthday(with height: BlockHeight, checkpointDirectory: URL) -> WalletBirthday? {
+extension Checkpoint {
+    static func birthday(with height: BlockHeight, checkpointDirectory: URL) -> Checkpoint? {
         return bestCheckpointHeight(for: height, checkpointDirectory: checkpointDirectory)
             .flatMap { checkpoint(height: $0, directory: checkpointDirectory) }
     }
@@ -44,7 +44,7 @@ extension WalletBirthday {
             .last
     }
 
-    private static func checkpoint(height: BlockHeight, directory checkpointDirectory: URL) -> WalletBirthday? {
+    private static func checkpoint(height: BlockHeight, directory checkpointDirectory: URL) -> Checkpoint? {
         let url = checkpointDirectory
             .appendingPathComponent(String(height))
             .appendingPathExtension("json")
@@ -52,9 +52,9 @@ extension WalletBirthday {
         return try? checkpoint(at: url)
     }
 
-    private static func checkpoint(at url: URL) throws -> WalletBirthday {
+    private static func checkpoint(at url: URL) throws -> Checkpoint {
         let data = try Data(contentsOf: url)
-        let checkpoint = try JSONDecoder().decode(WalletBirthday.self, from: data)
+        let checkpoint = try JSONDecoder().decode(Checkpoint.self, from: data)
         return checkpoint
     }
 }
@@ -79,9 +79,9 @@ extension BundleCheckpointURLProvider {
     static var iOS = BundleCheckpointURLProvider(url: { networkType in
         switch networkType {
         case .mainnet:
-            return WalletBirthday.mainnetCheckpointDirectory
+            return Checkpoint.mainnetCheckpointDirectory
         case .testnet:
-            return WalletBirthday.testnetCheckpointDirectory
+            return Checkpoint.testnetCheckpointDirectory
         }
     })
 
@@ -99,7 +99,7 @@ extension BundleCheckpointURLProvider {
                 subdirectory: "checkpoints/mainnet/",
                 localization: nil
             )?
-            .deletingLastPathComponent() ?? WalletBirthday.mainnetCheckpointDirectory
+            .deletingLastPathComponent() ?? Checkpoint.mainnetCheckpointDirectory
         case .testnet:
            return Bundle.module.url(
                 forResource: "280000",
@@ -107,7 +107,7 @@ extension BundleCheckpointURLProvider {
                 subdirectory: "checkpoints/testnet/",
                 localization: nil
             )?
-            .deletingLastPathComponent() ?? WalletBirthday.testnetCheckpointDirectory
+            .deletingLastPathComponent() ?? Checkpoint.testnetCheckpointDirectory
         }
     })
 }

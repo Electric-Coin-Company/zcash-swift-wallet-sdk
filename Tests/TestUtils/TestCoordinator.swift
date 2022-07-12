@@ -125,7 +125,7 @@ class TestCoordinator {
             outputParamsURL: try __outputParamsURL(),
             spendingKey: spendingKey,
             unifiedViewingKey: unifiedViewingKey,
-            walletBirthday: WalletBirthday.birthday(with: birthday, network: network),
+            walletBirthday: Checkpoint.birthday(with: birthday, network: network),
             network: network,
             loggerProxy: SampleLogger(logLevel: .debug)
         )
@@ -289,7 +289,7 @@ enum TestSynchronizerBuilder {
         outputParamsURL: URL,
         spendingKey: String,
         unifiedViewingKey: UnifiedViewingKey,
-        walletBirthday: WalletBirthday,
+        walletBirthday: Checkpoint,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
@@ -361,7 +361,7 @@ enum TestSynchronizerBuilder {
         spendParamsURL: URL,
         outputParamsURL: URL,
         seedBytes: [UInt8],
-        walletBirthday: WalletBirthday,
+        walletBirthday: Checkpoint,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {

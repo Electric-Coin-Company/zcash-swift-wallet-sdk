@@ -403,7 +403,10 @@ public class CompactBlockProcessor {
             config: Configuration(
                 cacheDb: initializer.cacheDbURL,
                 dataDb: initializer.dataDbURL,
-                walletBirthday: initializer.walletBirthday.height,
+                walletBirthday: Checkpoint.birthday(
+                    with: initializer.walletBirthday,
+                    network: initializer.network
+                ).height,
                 network: initializer.network
             ),
             repository: initializer.transactionRepository,

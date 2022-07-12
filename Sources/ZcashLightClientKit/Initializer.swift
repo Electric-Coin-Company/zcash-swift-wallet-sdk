@@ -78,7 +78,7 @@ public class Initializer {
     private(set) var downloader: CompactBlockDownloader
     private(set) var network: ZcashNetwork
     private(set) public var viewingKeys: [UnifiedViewingKey]
-    private(set) public var walletBirthday: WalletBirthday
+    private(set) public var walletBirthday: BlockHeight
 
     /**
     Constructs the Initializer
@@ -168,7 +168,7 @@ public class Initializer {
         self.storage = storage
         self.downloader = CompactBlockDownloader(service: service, storage: storage)
         self.viewingKeys = viewingKeys
-        self.walletBirthday = WalletBirthday.birthday(with: walletBirthday, network: network)
+        self.walletBirthday = walletBirthday
         self.network = network
     }
     
@@ -202,12 +202,13 @@ public class Initializer {
         }
     
         do {
+            let checkpoint = Checkpoint.birthday(with: self.walletBirthday, network: network)
             try rustBackend.initBlocksTable(
                 dbData: dataDbURL,
-                height: Int32(walletBirthday.height),
-                hash: walletBirthday.hash,
-                time: walletBirthday.time,
-                saplingTree: walletBirthday.saplingTree,
+                height: Int32(checkpoint.height),
+                hash: checkpoint.hash,
+                time: checkpoint.time,
+                saplingTree: checkpoint.saplingTree,
                 networkType: network.networkType
             )
         } catch RustWeldingError.dataDbNotEmpty {
@@ -216,9 +217,9 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed
         }
         
-        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? walletBirthday.height
+        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? walletBirthday
         // resume from last downloaded block
-        lowerBoundHeight = max(walletBirthday.height, lastDownloaded)
+        lowerBoundHeight = max(walletBirthday, lastDownloaded)
  
         do {
             guard try rustBackend.initAccountsTable(

@@ -24,7 +24,7 @@ class BlockScanOperationTests: XCTestCase {
         extpub: "02075a7f5f7507d64022dad5954849f216b0f1b09b2d588be663d8e7faeb5aaf61"
     )
 
-    var walletBirthDay = WalletBirthday.birthday(
+    var walletBirthDay = Checkpoint.birthday(
         with: 1386000,
         network: ZcashNetworkBuilder.network(for: .testnet)
     )
