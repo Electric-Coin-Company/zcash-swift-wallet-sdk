@@ -1,3 +1,18 @@
+# 0.16.0-beta
+This version changes the way wallet birthdays are handled.
+`WalletBirthday' struct is not longer public and has been renamed
+to `Checkpoint`. 
+
+`SynchronizerError` has a default `LocalizedError` compliance to 
+help debug errors and display them to the user. This is a workaround
+to get rid of cryptic errors that are being reported to maintainers and 
+are subject to change in future versions.
+
+- [#392] Synchronizer error 8. when syncing. (#413)
+- [#398] Make WalletBirthday an internal type (#414)
+- [#411] add Fresh checkpoints for release 0.16.0-beta (#412)
+- [#406] some BirthdayTests fail for MacOS target (#410)
+- [#404] Configure GRPC KeepAlive according to docs (#409)
 # 0.15.0-beta
 ** IMPORTANT ** This version no longer supports iOS 12
 We've made a decision to make iOS 13 the minimum deployment target
