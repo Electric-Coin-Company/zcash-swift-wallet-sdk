@@ -118,12 +118,6 @@ public class LightWalletGRPCService {
 
         let channel = connectionBuilder
             .withConnectivityStateDelegate(connectionManager, executingOn: queue)
-            .withKeepalive(
-                ClientConnectionKeepalive(
-                  interval: .seconds(15),
-                  timeout: .seconds(10)
-                )
-            )
             .connect(host: host, port: port)
 
         self.channel = channel
@@ -131,7 +125,7 @@ public class LightWalletGRPCService {
         compactTxStreamer = CompactTxStreamerClient(
             channel: self.channel,
             defaultCallOptions: Self.callOptions(
-                timeLimit: TimeLimit.timeout(.seconds(Int64(singleCallTimeout)))
+                timeLimit: self.singleCallTimeout
             )
         )
     }
@@ -348,7 +342,7 @@ extension LightWalletGRPCService: LightWalletService {
     
     public func latestBlockHeight() throws -> BlockHeight {
         guard let height = try? latestBlock().compactBlockHeight() else {
-            throw LightWalletServiceError.invalidBlock
+            throw LightWalletServiceError.timeOut
         }
         return height
     }
