@@ -1,3 +1,11 @@
+# 0.16.1-beta
+- [#422] Make Zatoshi extensions of `NSDecimalNumber` public (#423)
+- [#419] Fix Unavailable Transport 14 when attempting to sync (#426)
+ this changes timeout settings and Keepalive changes. 
+ Recommended settings for lightwalletd.com are 60000ms singleCallTimeout
+ on `LightWalletEndpoint`
+ 
+- [#416] Update GRPC to 1.8.2 (#421)
 # 0.16.0-beta
 This version changes the way wallet birthdays are handled.
 `WalletBirthday' struct is not longer public and has been renamed
