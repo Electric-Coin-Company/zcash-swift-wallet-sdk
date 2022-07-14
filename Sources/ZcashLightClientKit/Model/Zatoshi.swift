@@ -78,7 +78,7 @@ extension Zatoshi: Comparable {
     }
 }
 
-extension NSDecimalNumber {
+public extension NSDecimalNumber {
     /// Round the decimal to 8 fraction digits
     var roundedZec: NSDecimalNumber {
         self.rounding(accordingToBehavior: Zatoshi.decimalHandler)
