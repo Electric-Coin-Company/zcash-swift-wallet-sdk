@@ -24,7 +24,7 @@ class BlockDownloaderTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+        service = try LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         storage = try! TestDbBuilder.diskCompactBlockStorage(at: cacheDB)
         downloader = CompactBlockDownloader(service: service, storage: storage)
         darksideWalletService = DarksideWalletService(service: service as! LightWalletGRPCService)

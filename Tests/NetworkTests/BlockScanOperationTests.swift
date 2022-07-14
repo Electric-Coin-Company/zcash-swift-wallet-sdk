@@ -56,7 +56,7 @@ class BlockScanOperationTests: XCTestCase {
         try? FileManager.default.removeItem(at: dataDbURL)
     }
     
-    func testSingleDownloadAndScanOperation() {
+    func testSingleDownloadAndScanOperation() throws {
         logger = SampleLogger(logLevel: .debug)
 
         XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, networkType: network.networkType))
@@ -66,7 +66,7 @@ class BlockScanOperationTests: XCTestCase {
         let scanStartedExpect = XCTestExpectation(description: "\(self.description) scan started")
         let scanExpect = XCTestExpectation(description: "\(self.description) scan")
         let latestScannedBlockExpect = XCTestExpectation(description: "\(self.description) latestScannedHeight")
-        let service = LightWalletGRPCService(
+        let service = try LightWalletGRPCService(
             endpoint: LightWalletEndpoint(
                 address: "lightwalletd.testnet.electriccoin.co",
                 port: 9067
@@ -174,7 +174,7 @@ class BlockScanOperationTests: XCTestCase {
             networkType: network.networkType
         )
         
-        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+        let service = try LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
         let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
         try storage.createTable()
         

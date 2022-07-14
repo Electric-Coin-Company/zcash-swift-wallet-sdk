@@ -38,13 +38,21 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    var currentEndpoint: LightWalletEndpoint {
+        service.currentEndpoint
+    }
+
+    func switchToEndpoint(_ endpoint: LightWalletEndpoint) throws {
+        throw LightWalletServiceError.generalError(message: "not implemented for darksidewalletservice")
+    }
+
     var channel: Channel
     var service: LightWalletGRPCService
     var darksideService: DarksideStreamerClient
 
-    init(endpoint: LightWalletEndpoint) {
+    init(endpoint: LightWalletEndpoint) throws {
         self.channel = ChannelProvider().channel()
-        self.service = LightWalletGRPCService(endpoint: endpoint)
+        self.service = try LightWalletGRPCService(endpoint: endpoint)
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
 
@@ -54,8 +62,8 @@ class DarksideWalletService: LightWalletService {
         self.service = service
     }
 
-    convenience init() {
-        self.init(endpoint: LightWalletEndpointBuilder.default)
+    convenience init() throws {
+        try self.init(endpoint: LightWalletEndpointBuilder.default)
     }
 
     @discardableResult

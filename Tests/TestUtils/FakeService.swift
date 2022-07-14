@@ -21,6 +21,14 @@ struct MockCancellable: CancellableCall {
 }
 
 class MockLightWalletService: LightWalletService {
+    var currentEndpoint: LightWalletEndpoint {
+        LightWalletEndpoint(address: "localhost", port: 9067)
+    }
+
+    func switchToEndpoint(_ endpoint: LightWalletEndpoint) throws {
+        
+    }
+
     var mockLightDInfo: LightWalletdInfo?
     var queue = DispatchQueue(label: "mock service queue")
 

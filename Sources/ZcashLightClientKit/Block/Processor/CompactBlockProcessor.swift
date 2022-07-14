@@ -204,11 +204,6 @@ public extension Notification.Name {
     static let blockProcessorEnhancementProgress = Notification.Name("CompactBlockProcessorEnhancementProgress")
     
     static let blockProcessorStartedFetching = Notification.Name(rawValue: "CompactBlockProcessorStartedFetching")
-    
-    /**
-    Notification sent when the grpc service connection detects a change. Query the user info object  for status change details `currentConnectivityStatus` for current and previous with `previousConnectivityStatus`
-    */
-    static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
 }
 
 /**
@@ -1198,6 +1193,8 @@ extension LightWalletServiceError {
             return CompactBlockProcessorError.connectionTimeout
         case .unknown:
             return CompactBlockProcessorError.unspecifiedError(underlyingError: self)
+        case .failedToInitialize(let error):
+            return CompactBlockProcessorError.connectionError(underlyingError: error)
         }
     }
 }

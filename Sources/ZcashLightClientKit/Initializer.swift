@@ -8,10 +8,8 @@
 
 import Foundation
 
-/**
-Wrapper for the Rust backend. This class basically represents all the Rust-wallet
-capabilities and the supporting data required to exercise those abilities.
-*/
+/// Wrapper for the Rust backend. This class basically represents all the Rust-wallet
+/// capabilities and the supporting data required to exercise those abilities.
 public enum InitializerError: Error {
     case cacheDbInitFailed
     case dataDbInitFailed
@@ -20,10 +18,8 @@ public enum InitializerError: Error {
     case invalidViewingKey(key: String)
 }
 
-/**
-Represents a lightwallet instance endpoint to connect to
-*/
-public struct LightWalletEndpoint {
+/// Represents a lightwallet instance endpoint to connect to
+public struct LightWalletEndpoint: Equatable {
     public var host: String
     public var port: Int
     public var secure: Bool
@@ -43,8 +39,8 @@ public struct LightWalletEndpoint {
         address: String,
         port: Int,
         secure: Bool = true,
-        singleCallTimeoutInMillis: Int64 = 10000,
-        streamingCallTimeoutInMillis: Int64 = 100000
+        singleCallTimeoutInMillis: Int64 = 10_000_000,
+        streamingCallTimeoutInMillis: Int64 = 100_000_000
     ) {
         self.host = address
         self.port = port
@@ -54,18 +50,15 @@ public struct LightWalletEndpoint {
     }
 }
 
-/**
-Wrapper for all the Rust backend functionality that does not involve processing blocks. This
-class initializes the Rust backend and the supporting data required to exercise those abilities.
-The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
-functionality, related to processing blocks.
-*/
+/// Wrapper for all the Rust backend functionality that does not involve processing blocks. This
+/// class initializes the Rust backend and the supporting data required to exercise those abilities.
+/// The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
+/// functionality, related to processing blocks.
 public class Initializer {
+    private var lowerBoundHeight: BlockHeight
     private(set) var rustBackend: ZcashRustBackendWelding.Type
     private(set) var alias: String
     private(set) var endpoint: LightWalletEndpoint
-    
-    private var lowerBoundHeight: BlockHeight
     private(set) var cacheDbURL: URL
     private(set) var dataDbURL: URL
     private(set) var pendingDbURL: URL
@@ -80,16 +73,16 @@ public class Initializer {
     private(set) public var viewingKeys: [UnifiedViewingKey]
     private(set) public var walletBirthday: BlockHeight
 
-    /**
-    Constructs the Initializer
-    - Parameters:
-        - cacheDbURL: location of the compact blocks cache db
-        - dataDbURL: Location of the data db
-        - pendingDbURL: location of the pending transactions database
-        - endpoint: the endpoint representing the lightwalletd instance you want to point to
-        - spendParamsURL: location of the spend parameters
-        - outputParamsURL: location of the output parameters
-    */
+    /// Constructs the Initializer
+    /// - Parameters:
+    ///     - cacheDbURL: location of the compact blocks cache db
+    ///     - dataDbURL: Location of the data db
+    ///     - pendingDbURL: location of the pending transactions database
+    ///     - endpoint: the endpoint representing the lightwalletd instance you want to point to
+    ///     - spendParamsURL: location of the spend parameters
+    ///     - outputParamsURL: location of the output parameters
+    ///  - Throws: `LightWalletServiceError.failedToInitialize(error)`
+    ///    for the case that we can't create the service from the lightwallet endpoint provided.
     convenience public init (
         cacheDbURL: URL,
         dataDbURL: URL,
@@ -102,8 +95,8 @@ public class Initializer {
         walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
-    ) {
-        let lwdService = LightWalletGRPCService(endpoint: endpoint)
+    ) throws {
+        let lwdService = try LightWalletGRPCService(endpoint: endpoint)
         
         self.init(
             rustBackend: ZcashRustBackend.self,
@@ -171,21 +164,19 @@ public class Initializer {
         self.walletBirthday = walletBirthday
         self.network = network
     }
-    
-    /**
-    Initialize the wallet with the given seed and return the related private keys for each
-    account specified or null if the wallet was previously initialized and block data exists on
-    disk. When this method returns null, that signals that the wallet will need to retrieve the
-    private keys from its own secure storage. In other words, the private keys are only given out
-    once for each set of database files. Subsequent calls to [initialize] will only load the Rust
-    library and return null.
-     
-    'compactBlockCache.db' and 'transactionData.db' files are created by this function (if they
-    do not already exist). These files can be given a prefix for scenarios where multiple wallets
 
-    - Parameters:
-        - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
-    */
+    /// Initialize the wallet with the given seed and return the related private keys for each
+    /// account specified or null if the wallet was previously initialized and block data exists on
+    /// disk. When this method returns null, that signals that the wallet will need to retrieve the
+    /// private keys from its own secure storage. In other words, the private keys are only given out
+    /// once for each set of database files. Subsequent calls to [initialize] will only load the Rust
+    /// library and return null.
+    ///
+    /// 'compactBlockCache.db' and 'transactionData.db' files are created by this function (if they
+    /// do not already exist). These files can be given a prefix for scenarios where multiple wallets
+
+    /// - Parameters:
+    ///     - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
     public func initialize() throws {
         do {
             try storage.createTable()
@@ -245,10 +236,9 @@ public class Initializer {
         try migrationManager.performMigration(uvks: viewingKeys)
     }
     
-    /**
-    get address from the given account index
-    - Parameter account:  the index of the account
-    */
+
+    /// get address from the given account index
+    /// - Parameter account:  the index of the account
     public func getAddress(index account: Int = 0) -> String? {
         try? accountRepository.findBy(account: account)?.address
     }

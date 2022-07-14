@@ -30,7 +30,7 @@ class BlockStreamingTest: XCTestCase {
     func testStreamOperation() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
-        let service = LightWalletGRPCService(
+        let service = try LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
@@ -64,7 +64,7 @@ class BlockStreamingTest: XCTestCase {
     func testStreamOperationCancellation() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
-        let service = LightWalletGRPCService(
+        let service = try LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
@@ -101,7 +101,7 @@ class BlockStreamingTest: XCTestCase {
     func testStreamOperationTimeout() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         let errorExpectation = XCTestExpectation(description: "blockstream error expectation")
-        let service = LightWalletGRPCService(
+        let service = try LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
@@ -150,7 +150,7 @@ class BlockStreamingTest: XCTestCase {
     func testBatchOperation() throws {
         let expectation = XCTestExpectation(description: "blockbatch expectation")
         
-        let service = LightWalletGRPCService(
+        let service = try LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
@@ -188,7 +188,7 @@ class BlockStreamingTest: XCTestCase {
     func testBatchOperationCancellation() throws {
         let expectation = XCTestExpectation(description: "blockbatch expectation")
         
-        let service = LightWalletGRPCService(
+        let service = try LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,

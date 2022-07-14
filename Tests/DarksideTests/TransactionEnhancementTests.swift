@@ -74,7 +74,7 @@ class TransactionEnhancementTests: XCTestCase {
             networkType: network.networkType
         )
         
-        let service = DarksideWalletService()
+        let service = try DarksideWalletService()
         darksideWalletService = service
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()

@@ -16,15 +16,15 @@ class ZcashLightClientKitTests: XCTestCase {
     var latestBlockHeight: BlockHeight!
     var service: LightWalletGRPCService!
 
-    override func setUp() {
-        super.setUp()
-        service = LightWalletGRPCService(endpoint: LightWalletEndpoint(address: Constants.address, port: 9067))
+    override func setUpWithError() throws{
+        try super.setUpWithError()
+        service = try LightWalletGRPCService(endpoint: LightWalletEndpoint(address: Constants.address, port: 9067))
         
         latestBlockHeight = try! service.latestBlock().compactBlockHeight()!
     }
     
-    override func tearDown() {
-        super.tearDown()
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
         service = nil
         latestBlockHeight = nil
     }

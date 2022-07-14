@@ -32,7 +32,7 @@ class CompactBlockProcessorTests: XCTestCase {
         
         let service = MockLightWalletService(
             latestBlockHeight: mockLatestHeight,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+            service: try LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
         )
         let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
         service.mockLightDInfo = LightdInfo.with({ info in

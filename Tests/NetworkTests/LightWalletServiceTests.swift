@@ -14,29 +14,13 @@ import GRPC
 // swiftlint:disable implicitly_unwrapped_optional force_unwrapping
 class LightWalletServiceTests: XCTestCase {
     let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
-
     var service: LightWalletService!
-    var channel: Channel!
 
-    override func setUp() {
+    override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        super.setUp()
-        channel = ChannelProvider().channel()
-        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+        try super.setUpWithError()
+        service = try LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
     }
-
-    /// FIXME: check whether this test is stil valid on in memory lwd implementatiojn
-//    func testFailure() {
-//
-//        let expect = XCTestExpectation(description: self.description)
-//        let excessivelyHugeRange = Range<BlockHeight>(uncheckedBounds: (lower: 280_000, upper: 600_000))
-//        service.blockRange(excessivelyHugeRange) { (result) in
-//            XCTAssertEqual(result, .failure(LightWalletServiceError.failed(statusCode: SwiftGRPC.StatusCode.cancelled)))
-//            expect.fulfill()
-//
-//        }
-//        wait(for: [expect], timeout: 20)
-//    }
     
     func testHundredBlocks() {
         let expect = XCTestExpectation(description: self.description)
@@ -87,5 +71,17 @@ class LightWalletServiceTests: XCTestCase {
         }
         
         wait(for: [expect], timeout: 10)
+    }
+
+    func testServerChanges() throws {
+        let expectedEndpoint = LightWalletEndpoint(address: "localhost", port: 9067)
+
+        let service = try LightWalletGRPCService(endpoint: LightWalletEndpoint(address: "mainnet.lightwalletd.com", port: 9067))
+
+        XCTAssertEqual(service.currentEndpoint.host, "mainnet.lightwalletd.com")
+
+        try service.switchToEndpoint(expectedEndpoint)
+
+        XCTAssertEqual(service.currentEndpoint.host, expectedEndpoint.host)
     }
 }

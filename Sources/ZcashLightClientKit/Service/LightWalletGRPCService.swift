@@ -88,16 +88,21 @@ public extension BlockProgress {
 }
 
 public class LightWalletGRPCService {
-    let channel: Channel
-    let connectionManager: ConnectionStatusManager
-    let compactTxStreamer: CompactTxStreamerClient
-    let singleCallTimeout: TimeLimit
-    let streamingCallTimeout: TimeLimit
+    private (set) var host: String
+    private (set) var port: Int
+    private (set) var secure: Bool
+    private (set) var channel: Channel
+    private (set) var compactTxStreamer: CompactTxStreamerClient
+    private (set) var singleCallTimeout: TimeLimit
+    private (set) var streamingCallTimeout: TimeLimit
+    private (set) var queue: DispatchQueue
 
-    var queue: DispatchQueue
+    public var currentEndpoint: LightWalletEndpoint {
+        LightWalletEndpoint(address: host, port: port, secure: secure)
+    }
     
-    public convenience init(endpoint: LightWalletEndpoint) {
-        self.init(
+    public convenience init(endpoint: LightWalletEndpoint) throws {
+        try self.init(
             host: endpoint.host,
             port: endpoint.port,
             secure: endpoint.secure,
@@ -106,45 +111,84 @@ public class LightWalletGRPCService {
         )
     }
 
-    public init(host: String, port: Int = 9067, secure: Bool = true, singleCallTimeout: Int64 = 10000, streamingCallTimeout: Int64 = 10000) {
-        self.connectionManager = ConnectionStatusManager()
+    /// Initializes the GRPC Service for the given
+    /// - Parameters:
+    ///   - host: String with the host's URL or IP
+    ///   - host: port of the host
+    ///   - secure: Bool that uses default SSL settings for NIOSSL or plaintext if set to `false`
+    ///   - singleCallTimeout: Timeout that will be set for single time calls in milliseconds
+    ///   - streamingCallTimeout: Timeout that will be set for streaming calls
+    ///  - Throws: This will throw `LightWalletServiceError.failedToInitialize(error)`
+    ///  for the case that he channel can't be initialized. The error will refer to the original one thrown
+    ///  by Swift-GRPC or NIOSSL
+    public init(
+        host: String,
+        port: Int = 9067,
+        secure: Bool = true,
+        singleCallTimeout: Int64 = 10000000,
+        streamingCallTimeout: Int64 = 10000000
+    ) throws {
+        self.host = host
+        self.port = port
+        self.secure = secure
         self.queue = DispatchQueue.init(label: "LightWalletGRPCService")
         self.streamingCallTimeout = TimeLimit.timeout(.milliseconds(streamingCallTimeout))
         self.singleCallTimeout = TimeLimit.timeout(.milliseconds(singleCallTimeout))
 
-        let connectionBuilder = secure ?
-        ClientConnection.usingPlatformAppropriateTLS(for: MultiThreadedEventLoopGroup(numberOfThreads: 1)) :
-        ClientConnection.insecure(group: MultiThreadedEventLoopGroup(numberOfThreads: 1))
-
-        let channel = connectionBuilder
-            .withConnectivityStateDelegate(connectionManager, executingOn: queue)
-            .withKeepalive(
-                ClientConnectionKeepalive(
-                  interval: .seconds(15),
-                  timeout: .seconds(10)
-                )
-            )
-            .connect(host: host, port: port)
+        let channel = try Self.createChannel(secure, host, port, singleCallTimeout)
 
         self.channel = channel
-
-        compactTxStreamer = CompactTxStreamerClient(
+        self.compactTxStreamer = CompactTxStreamerClient(
             channel: self.channel,
             defaultCallOptions: Self.callOptions(
-                timeLimit: TimeLimit.timeout(.seconds(Int64(singleCallTimeout)))
+                timeLimit: self.singleCallTimeout
             )
         )
     }
 
+    /// Disconnects from the current channel, cancelling all in-flight calls and attempts to switch
+    /// to the given endpoint.
+    ///  - Throws:`LightWalletServiceError.failedToInitialize(Error)` if
+    ///  fails.
+    ///  This function will first attempt to create the channel and the switch it if successfull.
+    public func switchToEndpoint(_ endpoint: LightWalletEndpoint) throws {
+        let newChannel = try Self.createChannel(
+            endpoint.secure,
+            endpoint.host,
+            endpoint.port,
+            endpoint.singleCallTimeoutInMillis
+        )
+
+        stop()
+
+        initializeWithChannel(newChannel)
+
+        self.host = endpoint.host
+        self.port = endpoint.port
+        self.streamingCallTimeout = TimeLimit.timeout(.milliseconds(endpoint.streamingCallTimeoutInMillis))
+        self.singleCallTimeout = TimeLimit.timeout(.milliseconds(endpoint.singleCallTimeoutInMillis))
+    }
+
     deinit {
+        stop()
+    }
+
+    public func stop() {
         _ = channel.close()
         _ = compactTxStreamer.channel.close()
     }
 
-    func stop() {
-        _ = channel.close()
+    func initializeWithChannel(_ channel: GRPCChannel) {
+        self.channel = channel
+
+        self.compactTxStreamer = CompactTxStreamerClient(
+            channel: self.channel,
+            defaultCallOptions: Self.callOptions(
+                timeLimit: singleCallTimeout
+            )
+        )
     }
-    
+
     func blockRange(startHeight: BlockHeight, endHeight: BlockHeight? = nil, result: @escaping (CompactBlock) -> Void) throws -> ServerStreamingCall<BlockRange, CompactBlock> {
         compactTxStreamer.getBlockRange(BlockRange(startHeight: startHeight, endHeight: endHeight), handler: result)
     }
@@ -169,6 +213,35 @@ public class LightWalletGRPCService {
             requestIDHeader: nil,
             cacheable: false
         )
+    }
+
+    static fileprivate func createChannel(
+        _ secure: Bool,
+        _ host: String,
+        _ port: Int,
+        _ singleCallTimeout: Int64
+    ) throws -> GRPCChannel {
+        let transportSecurity = secure ?
+        GRPCChannelPool
+            .Configuration
+            .TransportSecurity
+            .tls(
+                .makeClientConfigurationBackedByNIOSSL()
+            ) :
+        GRPCChannelPool
+            .Configuration
+            .TransportSecurity
+            .plaintext
+
+        do {
+            return try GRPCChannelPool.with(
+                target: ConnectionTarget.hostAndPort(host, port),
+                transportSecurity: transportSecurity,
+                eventLoopGroup: MultiThreadedEventLoopGroup(numberOfThreads: 1)
+            )
+        } catch {
+            throw LightWalletServiceError.failedToInitialize(error)
+        }
     }
 }
 
@@ -538,19 +611,5 @@ extension LightWalletServiceError {
         default:
             return LightWalletServiceError.genericError(error: status)
         }
-    }
-}
-
-class ConnectionStatusManager: ConnectivityStateDelegate {
-    func connectivityStateDidChange(from oldState: ConnectivityState, to newState: ConnectivityState) {
-        LoggerProxy.event("Connection Changed from \(oldState) to \(newState)")
-        NotificationCenter.default.post(
-            name: .blockProcessorConnectivityStateChanged,
-            object: self,
-            userInfo: [
-                CompactBlockProcessorNotificationKey.currentConnectivityStatus: newState,
-                CompactBlockProcessorNotificationKey.previousConnectivityStatus: oldState
-            ]
-        )
     }
 }

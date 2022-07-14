@@ -48,19 +48,15 @@ public extension Notification.Name {
     /// Posted when synchronizer starts scanning blocks
     static let synchronizerScanning = Notification.Name("SDKSyncronizerScanning")
     
-
     /// Posted when the synchronizer starts Enhancing
     static let synchronizerEnhancing = Notification.Name("SDKSyncronizerEnhancing")
-    
 
     /// Posted when the synchronizer starts fetching UTXOs
     static let synchronizerFetching = Notification.Name("SDKSyncronizerFetching")
-    
 
     /// Posted when the synchronizer finds a pendingTransaction that hast been newly mined
     /// - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
     static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
-    
 
     /// Posted when the synchronizer finds a mined transaction
     /// - Note: query userInfo on NotificationKeys.foundTransactions for
@@ -70,14 +66,11 @@ public extension Notification.Name {
     /// Posted when the synchronizer presents an error
     /// - Note: query userInfo on NotificationKeys.error for an error
     static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
-    
-    static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
 }
 
 /// Synchronizer implementation for UIKit and iOS 12+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
-
     public enum NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
         public static let blockHeight = "SDKSynchronizer.blockHeight"
@@ -157,7 +150,6 @@ public class SDKSynchronizer: Synchronizer {
         try self.blockProcessor.setStartHeight(initializer.walletBirthday)
         self.status = .disconnected
     }
-
 
     /// Starts the synchronizer
     /// - Throws: CompactBlockProcessorError when failures occur
@@ -283,43 +275,6 @@ public class SDKSynchronizer: Synchronizer {
             name: Notification.Name.blockProcessorFoundTransactions,
             object: processor
         )
-        
-        center.addObserver(
-            self,
-            selector: #selector(connectivityStateChanged(_:)),
-            name: Notification.Name.blockProcessorConnectivityStateChanged,
-            object: nil
-        )
-    }
-    
-    // MARK: Block Processor notifications
-
-    @objc func connectivityStateChanged(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let previous = userInfo[CompactBlockProcessorNotificationKey.previousConnectivityStatus] as? ConnectivityState,
-            let current = userInfo[CompactBlockProcessorNotificationKey.currentConnectivityStatus] as? ConnectivityState
-        else {
-            LoggerProxy.error(
-                "Found \(Notification.Name.blockProcessorConnectivityStateChanged) but lacks dictionary information." +
-                "This is probably a programming error"
-            )
-            return
-        }
-
-        let currentState = ConnectionState(current)
-        NotificationCenter.default.post(
-            name: .synchronizerConnectionStateChanged,
-            object: self,
-            userInfo: [
-                NotificationKeys.previousConnectionState: ConnectionState(previous),
-                NotificationKeys.currentConnectionState: currentState
-            ]
-        )
-        
-        DispatchQueue.main.async { [weak self] in
-            self?.connectionState = currentState
-        }
     }
     
     @objc func transactionsFound(_ notification: Notification) {

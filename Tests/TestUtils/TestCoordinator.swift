@@ -96,7 +96,7 @@ class TestCoordinator {
         self.databases = TemporaryDbBuilder.build()
         self.network = network
         self.service = DarksideWalletService(
-            service: LightWalletGRPCService(
+            service: try LightWalletGRPCService(
                 host: Constants.address,
                 port: 9067,
                 secure: false,
