@@ -1,3 +1,9 @@
+# 0.16.2-beta
+- [#418] "Swift.EncodingError.InvalidValue Encoding an Int64 is not supported" (#430)
+This fixes Cocoapods clients pointing to SQLite 0.12.2 instead of using 0.13
+the former does not support custom encoding of Int64 and makes Zatoshi break
+
+- [#428] make some helpers publicly accessible (#429)
 # 0.16.1-beta
 - [#422] Make Zatoshi extensions of `NSDecimalNumber` public (#423)
 - [#419] Fix Unavailable Transport 14 when attempting to sync (#426)
