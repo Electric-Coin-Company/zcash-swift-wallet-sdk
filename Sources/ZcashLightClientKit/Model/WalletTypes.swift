@@ -25,7 +25,7 @@ public protocol UnifiedAddress {
     var zAddress: SaplingShieldedAddress { get }
 }
 
-public struct WalletBalance {
+public struct WalletBalance: Equatable {
     public var verified: Zatoshi
     public var total: Zatoshi
 
