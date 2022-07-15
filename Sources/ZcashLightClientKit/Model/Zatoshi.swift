@@ -16,7 +16,7 @@ public struct Zatoshi {
     
     public static var zero: Zatoshi { Zatoshi() }
     
-    static let decimalHandler = NSDecimalNumberHandler(
+    public static let decimalHandler = NSDecimalNumberHandler(
         roundingMode: NSDecimalNumber.RoundingMode.bankers,
         scale: 8,
         raiseOnExactness: true,
