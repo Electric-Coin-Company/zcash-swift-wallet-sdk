@@ -320,9 +320,11 @@ public class CompactBlockProcessor {
             self.stop()
         }
     }
+
     var maxAttemptsReached: Bool {
         self.retryAttempts >= self.config.retries
     }
+
     var shouldStart: Bool {
         switch self.state {
         case .stopped, .synced, .error:
@@ -330,6 +332,10 @@ public class CompactBlockProcessor {
         default:
             return false
         }
+    }
+
+    public var currentEndpoint: LightWalletEndpoint {
+        service.currentEndpoint
     }
 
     private var service: LightWalletService
@@ -446,26 +452,44 @@ public class CompactBlockProcessor {
         }
 
         guard remoteNetworkType == localNetwork.networkType else {
-            throw CompactBlockProcessorError.networkMismatch(expected: localNetwork.networkType, found: remoteNetworkType)
+            throw CompactBlockProcessorError.networkMismatch(
+                expected: localNetwork.networkType,
+                found: remoteNetworkType
+            )
         }
 
         guard saplingActivation == info.saplingActivationHeight else {
-            throw CompactBlockProcessorError.saplingActivationMismatch(expected: saplingActivation, found: BlockHeight(info.saplingActivationHeight))
+            throw CompactBlockProcessorError.saplingActivationMismatch(
+                expected: saplingActivation,
+                found: BlockHeight(info.saplingActivationHeight)
+            )
         }
 
         // check branch id
-        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight), networkType: localNetwork.networkType)
+        let localBranch = try rustBackend.consensusBranchIdFor(
+            height: Int32(info.blockHeight),
+            networkType: localNetwork.networkType
+        )
 
         guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
-            throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
+            throw CompactBlockProcessorError.generalError(
+                message: "Consensus BranchIDs don't match this is probably an API or programming error"
+            )
         }
 
         guard remoteBranchID == localBranch else {
-            throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
+            throw CompactBlockProcessorError.wrongConsensusBranchId(
+                expectedLocally: localBranch,
+                found: remoteBranchID
+            )
         }
     }
 
-    static func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight, walletBirthday: BlockHeight) -> CompactBlockRange {
+    static func nextBatchBlockRange(
+        latestHeight: BlockHeight,
+        latestDownloadedHeight: BlockHeight,
+        walletBirthday: BlockHeight
+    ) -> CompactBlockRange {
         let lowerBound = latestDownloadedHeight <= walletBirthday ? walletBirthday : latestDownloadedHeight + 1
 
         let upperBound = latestHeight
@@ -481,14 +505,13 @@ public class CompactBlockProcessor {
 
     */
     public func start(retry: Bool = false) throws {
-        // TODO: check if this validation makes sense at all
-        //        try validateConfiguration()
         if retry {
             self.retryAttempts = 0
             self.processingError = nil
             self.backoffTimer?.invalidate()
             self.backoffTimer = nil
         }
+
         guard !operationQueue.isSuspended else {
             LoggerProxy.debug("restarting suspended queue")
             operationQueue.isSuspended = false
@@ -539,10 +562,36 @@ public class CompactBlockProcessor {
         self.state = .stopped
     }
 
-    /**
-    Rewinds to provided height.
-    If nil is provided, it will rescan to nearest height (quick rescan)
-    */
+    public func switchToEndpoint(
+        _ endpoint: LightWalletEndpoint,
+        result: @escaping ((Result<LightWalletdInfo, CompactBlockProcessorError>) -> Void)
+    ) {
+        self.stop(cancelTasks: true)
+
+        do {
+            try self.service.switchToEndpoint(endpoint)
+
+            self.validateServer { validationResult in
+                switch validationResult {
+                case .success(let info):
+                    result(.success(info))
+
+                case .failure(let processorError):
+                    result(.failure(processorError))
+                }
+            }
+        } catch {
+            guard let serviceError = error as? LightWalletServiceError else {
+                result(.failure(self.mapError(error)))
+                return
+            }
+
+            result(.failure(serviceError.mapToProcessorError()))
+        }
+    }
+
+    /// Rewinds to provided height.
+    /// If nil is provided, it will rescan to nearest height (quick rescan)
     public func rewindTo(_ height: BlockHeight?) throws -> BlockHeight {
         self.stop()
 
@@ -572,12 +621,11 @@ public class CompactBlockProcessor {
         self.lowerBoundHeight = try? downloader.lastDownloadedBlockHeight()
         return BlockHeight(rewindHeight)
     }
-    /**
-    changes the wallet birthday in configuration. Use this method when wallet birthday is not available and the processor can't be lazy initialized.
-    - Note: this does not rewind your chain state
-    - Parameter startHeight: the wallet birthday for this compact block processor
-    - Throws CompactBlockProcessorError.invalidConfiguration if block height is invalid or if processor is already started
-    */
+
+    /// changes the wallet birthday in configuration. Use this method when wallet birthday is not available and the processor can't be lazy initialized.
+    /// - Note: this does not rewind your chain state
+    /// - Parameter startHeight: the wallet birthday for this compact block processor
+    /// - Throws CompactBlockProcessorError.invalidConfiguration if block height is invalid or if processor is already started
     func setStartHeight(_ startHeight: BlockHeight) throws {
         guard self.state == .stopped, startHeight >= config.network.constants.saplingActivationHeight else {
             throw CompactBlockProcessorError.invalidConfiguration
@@ -588,37 +636,38 @@ public class CompactBlockProcessor {
         self.config = config
     }
 
-    func validateServer(completionBlock: @escaping (() -> Void)) {
-        self.service.getInfo(result: { [weak self] result in
+    func validateServer(result: @escaping ((Result<LightWalletdInfo, CompactBlockProcessorError>) -> Void)) {
+        self.service.getInfo(result: { [weak self] infoResult in
             guard let self = self else { return }
-            
-            switch result {
+            switch infoResult {
             case .success(let info):
-                DispatchQueue.main.async { [weak self] in
-                    guard let self = self else { return }
-                    do {
-                        try Self.validateServerInfo(
-                            info,
-                            saplingActivation: self.config.saplingActivation,
-                            localNetwork: self.config.network,
-                            rustBackend: self.rustBackend
+                do {
+                    try Self.validateServerInfo(
+                        info,
+                        saplingActivation: self.config.saplingActivation,
+                        localNetwork: self.config.network,
+                        rustBackend: self.rustBackend
+                    )
+                } catch {
+                    guard let processorError = error as? CompactBlockProcessorError else {
+                        result(
+                            .failure(CompactBlockProcessorError.unspecifiedError(underlyingError: error))
                         )
-                        completionBlock()
-                    } catch {
-                        self.severeFailure(error)
+                        return
                     }
+
+                    result(.failure(processorError))
                 }
-            case .failure(let error):
-                self.severeFailure(error.mapToProcessorError())
+            case .failure(let serviceError):
+                result(.failure(serviceError.mapToProcessorError()))
             }
         })
     }
 
-    /**
-    processes new blocks on the given range based on the configuration set for this instance
-    the way operations are queued is implemented based on the following good practice https://forums.developer.apple.com/thread/25761
-     
-    */
+
+    /// processes new blocks on the given range based on the configuration set for this instance
+    /// the way operations are queued is implemented based on the following good practices https://forums.developer.apple.com/thread/25761
+
     // swiftlint:disable cyclomatic_complexity
     func processNewBlocks(range: CompactBlockRange) {
         self.foundBlocks = true
@@ -961,16 +1010,6 @@ public class CompactBlockProcessor {
             }
         }
         return .unspecifiedError(underlyingError: error)
-    }
-
-    private func validateConfiguration() throws {
-        guard FileManager.default.isReadableFile(atPath: config.cacheDb.absoluteString) else {
-            throw CompactBlockProcessorError.missingDbPath(path: config.cacheDb.absoluteString)
-        }
-
-        guard FileManager.default.isReadableFile(atPath: config.dataDb.absoluteString) else {
-            throw CompactBlockProcessorError.missingDbPath(path: config.dataDb.absoluteString)
-        }
     }
 
     private func nextBatch() {

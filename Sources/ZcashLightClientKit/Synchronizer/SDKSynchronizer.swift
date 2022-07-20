@@ -80,8 +80,6 @@ public class SDKSynchronizer: Synchronizer {
         public static let error = "SDKSynchronizer.error"
         public static let currentStatus = "SDKSynchronizer.currentStatus"
         public static let nextStatus = "SDKSynchronizer.nextStatus"
-        public static let currentConnectionState = "SDKSynchronizer.currentConnectionState"
-        public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
     }
     
     public private(set) var status: SyncStatus {
@@ -96,7 +94,6 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
     public private(set) var latestScannedHeight: BlockHeight
-    public private(set) var connectionState: ConnectionState
     public private(set) var network: ZcashNetwork
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
@@ -123,7 +120,6 @@ public class SDKSynchronizer: Synchronizer {
         utxoRepository: UnspentTransactionOutputRepository,
         blockProcessor: CompactBlockProcessor
     ) throws {
-        self.connectionState = .idle
         self.status = status
         self.initializer = initializer
         self.transactionManager = transactionManager
@@ -181,7 +177,11 @@ public class SDKSynchronizer: Synchronizer {
         blockProcessor.stop(cancelTasks: true)
         self.status = .stopped
     }
-    
+
+    public func switchToEndpoint(_ endpoint: LightWalletEndpoint, result: (Result<Void, Error>) -> Void){
+        
+    }
+
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
         let center = NotificationCenter.default
         
@@ -617,6 +617,7 @@ public class SDKSynchronizer: Synchronizer {
     public func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
         self.blockProcessor.refreshUTXOs(tAddress: address, startHeight: height, result: result)
     }
+
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
         initializer.getBalance(account: accountIndex).amount
@@ -855,24 +856,6 @@ extension SDKSynchronizer {
     
     public var receivedTransactions: [ConfirmedTransactionEntity] {
         (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
-    }
-}
-
-import GRPC
-extension ConnectionState {
-    init(_ connectivityState: ConnectivityState) {
-        switch connectivityState {
-        case .connecting:
-            self = .connecting
-        case .idle:
-            self = .idle
-        case .ready:
-            self = .online
-        case .shutdown:
-            self = .shutdown
-        case .transientFailure:
-            self = .reconnecting
-        }
     }
 }
 

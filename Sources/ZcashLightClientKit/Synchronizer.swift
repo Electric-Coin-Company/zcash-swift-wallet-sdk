@@ -47,36 +47,11 @@ extension ShieldFundsError: LocalizedError {
     }
 }
 
-
-/// Represent the connection state to the lightwalletd server
-public enum ConnectionState {
-    /// not in use
-    case idle
-
-    /// there's a connection being attempted from a non error state
-    case connecting
-
-    /// connection is established, ready to use or in use
-    case online
-
-    /// the connection is being re-established after losing it temporarily
-    case reconnecting
-
-    /// the connection has been closed
-    case shutdown
-}
-
-
 /// Primary interface for interacting with the SDK. Defines the contract that specific
 /// implementations like SdkSynchronizer fulfill.
 public protocol Synchronizer {
-
     /// Value representing the Status of this Synchronizer. As the status changes, it will be also notified
     var status: SyncStatus { get }
-
-    /// reflects current connection state to LightwalletEndpoint
-    var connectionState: ConnectionState { get }
-    
 
     /// prepares this initializer to operate. Initializes the internal state with the given
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
@@ -90,8 +65,14 @@ public protocol Synchronizer {
 
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
     func stop() throws
-    
 
+    /// Stops the synchronizer and attempts to switch the connection to this new endpoint settings.
+    /// This will cancel all in-flight requests make sure you are not interrupting anything important.
+    /// - Parameter endpoint: The `LightWalletEndpoint` corresponding to the new lightwalletd server you wish to connect to
+    /// - Throws:
+    ///   - Some exception
+    func switchToEndpoint(_ endpoint: LightWalletEndpoint, result: (Result<Void, Error>) -> Void)
+    
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
