@@ -53,6 +53,9 @@ public protocol Synchronizer {
     /// Value representing the Status of this Synchronizer. As the status changes, it will be also notified
     var status: SyncStatus { get }
 
+    /// the endpoint this synchronizer is currently using
+    var currentEndpoint: LightWalletEndpoint { get }
+
     /// prepares this initializer to operate. Initializes the internal state with the given
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
     func prepare() throws
@@ -70,14 +73,14 @@ public protocol Synchronizer {
     /// This will cancel all in-flight requests make sure you are not interrupting anything important.
     /// - Parameter endpoint: The `LightWalletEndpoint` corresponding to the new lightwalletd server you wish to connect to
     /// - Throws:
-    ///   - Some exception
-    func switchToEndpoint(_ endpoint: LightWalletEndpoint, result: (Result<Void, Error>) -> Void)
+    ///   - `LightWalletServiceError.failedToInitialize(Error)` if the server was unable to be switched
+    /// - Returns: a Result containing the published info for that endpoint or an Error.
+    func switchToEndpoint(_ endpoint: LightWalletEndpoint, result: @escaping (Result<LightWalletdInfo, Error>) -> Void)
     
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
     func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress?
-    
 
     /// Gets the unified address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
@@ -105,7 +108,6 @@ public protocol Synchronizer {
         from accountIndex: Int,
         resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
     )
-
 
     /// Sends zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.
@@ -141,7 +143,6 @@ public protocol Synchronizer {
     /// - Parameter transaction: the transaction to cancel.
     /// - Returns: true when the cancellation request was successful. False when it is too late.
     func cancelSpend(transaction: PendingTransactionEntity) -> Bool
-    
 
     /// all outbound pending transactions that have been sent but are awaiting confirmations
     var pendingTransactions: [PendingTransactionEntity] { get }
@@ -154,12 +155,10 @@ public protocol Synchronizer {
 
     /// all transactions related to receiving funds
     var receivedTransactions: [ConfirmedTransactionEntity] { get }
-    
 
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
-    
 
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
@@ -170,28 +169,23 @@ public protocol Synchronizer {
 
     /// Returns the latest downloaded height from the compact block cache
     func latestDownloadedHeight() throws -> BlockHeight
-    
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
-    
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking
     func latestHeight() throws -> BlockHeight
-    
 
     /// Returns the latests UTXOs for the given address from the specified height on
     func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
 
     /// Returns the last stored unshielded balance
     func getTransparentBalance(accountIndex: Int) throws -> WalletBalance
-    
 
     /// Returns the shielded total balance (includes verified and unverified balance)
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     func getShieldedBalance(accountIndex: Int) -> Int64
-
 
     /// Returns the shielded total balance (includes verified and unverified balance)
     func getShieldedBalance(accountIndex: Int) -> Zatoshi
@@ -202,7 +196,6 @@ public protocol Synchronizer {
 
     /// Returns the shielded verified balance (anchor is 10 blocks back)
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
-    
 
     /// Stops the synchronizer and rescans the known blocks with the current keys.
     /// - Parameter policy: the rewind policy
@@ -222,22 +215,18 @@ public enum SyncStatus: Equatable {
     /// Indicates that this Synchronizer is actively downloading new blocks from the server.
     case downloading(_ status: BlockProgress)
 
-
     /// Indicates that this Synchronizer is actively validating new blocks that were downloaded
     /// from the server. Blocks need to be verified before they are scanned. This confirms that
     /// each block is chain-sequential, thereby detecting missing blocks and reorgs.
     case validating
 
-
     /// Indicates that this Synchronizer is actively scanning new valid blocks that were
     /// downloaded from the server.
     case scanning(_ progress: BlockProgress)
 
-
     /// Indicates that this Synchronizer is actively enhancing newly scanned blocks
     /// with additional transaction details, fetched from the server.
     case enhancing(_ progress: EnhancementProgress)
-
 
     /// fetches the transparent balance and stores it locally
     case fetching
@@ -246,10 +235,8 @@ public enum SyncStatus: Equatable {
     /// When set, a UI element may want to turn green.
     case synced
 
-
     /// Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
     case stopped
-
 
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     /// When set, a UI element may want to turn red.
@@ -281,7 +268,6 @@ public enum TransactionKind {
     case received
     case all
 }
-
 
 /// Type of rewind available
 ///     -birthday: rewinds the local state to this wallet's birthday

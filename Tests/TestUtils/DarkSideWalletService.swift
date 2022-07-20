@@ -43,7 +43,7 @@ class DarksideWalletService: LightWalletService {
     }
 
     func switchToEndpoint(_ endpoint: LightWalletEndpoint) throws {
-        throw LightWalletServiceError.generalError(message: "not implemented for darksidewalletservice")
+        try service.switchToEndpoint(endpoint)
     }
 
     var channel: Channel

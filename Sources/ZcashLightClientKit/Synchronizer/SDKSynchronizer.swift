@@ -13,11 +13,9 @@ public extension Notification.Name {
     ///
     /// - Important: not yet posted
     static let transactionsUpdated = Notification.Name("SDKSyncronizerTransactionUpdated")
-    
 
     /// Posted when the synchronizer is started.
     static let synchronizerStarted = Notification.Name("SDKSyncronizerStarted")
-    
 
     /// Posted when there are progress updates.
     ///
@@ -68,7 +66,7 @@ public extension Notification.Name {
     static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
 }
 
-/// Synchronizer implementation for UIKit and iOS 12+
+/// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
     public enum NotificationKeys {
@@ -98,6 +96,10 @@ public class SDKSynchronizer: Synchronizer {
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
+
+    public var currentEndpoint: LightWalletEndpoint {
+        self.blockProcessor.currentEndpoint
+    }
 
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
@@ -178,8 +180,14 @@ public class SDKSynchronizer: Synchronizer {
         self.status = .stopped
     }
 
-    public func switchToEndpoint(_ endpoint: LightWalletEndpoint, result: (Result<Void, Error>) -> Void){
-        
+    public func switchToEndpoint(_ endpoint: LightWalletEndpoint, result: @escaping (Result<LightWalletdInfo, Error>) -> Void){
+        self.blockProcessor.switchToEndpoint(endpoint) { switchResult in
+            result(
+                switchResult.mapError { processorError in
+                    processorError as Error
+                }
+            )
+        }
     }
 
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {

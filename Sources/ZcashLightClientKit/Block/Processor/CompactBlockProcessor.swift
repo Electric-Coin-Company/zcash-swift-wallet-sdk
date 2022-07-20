@@ -667,7 +667,6 @@ public class CompactBlockProcessor {
 
     /// processes new blocks on the given range based on the configuration set for this instance
     /// the way operations are queued is implemented based on the following good practices https://forums.developer.apple.com/thread/25761
-
     // swiftlint:disable cyclomatic_complexity
     func processNewBlocks(range: CompactBlockRange) {
         self.foundBlocks = true
