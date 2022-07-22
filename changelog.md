@@ -27,6 +27,12 @@ are subject to change in future versions.
 - [#411] add Fresh checkpoints for release 0.16.0-beta (#412)
 - [#406] some BirthdayTests fail for MacOS target (#410)
 - [#404] Configure GRPC KeepAlive according to docs (#409)
+# 0.15.1-beta (hotfix)
+- [#432] create 0.15.1-beta with SQLite 0.13 
+this build is a hotfix for cocoapods. which has the wront SQLite dependency
+It moves it from 0.12.2 to 0.13
+
+
 # 0.15.0-beta
 ** IMPORTANT ** This version no longer supports iOS 12
 We've made a decision to make iOS 13 the minimum deployment target
