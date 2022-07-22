@@ -8,11 +8,11 @@
 
 import UIKit
 import ZcashLightClientKit
-
+// swiftlint:disable force_try 
 class LatestHeightViewController: UIViewController {
     @IBOutlet weak var blockHeightLabel: UILabel!
-    
-    var service: LightWalletService = LightWalletGRPCService(endpoint: DemoAppConfig.endpoint)
+
+    var service: LightWalletService = try! LightWalletGRPCService(endpoint: DemoAppConfig.endpoint)
     var model: BlockHeight? {
         didSet {
             if viewIfLoaded != nil {

@@ -7,8 +7,15 @@
 //
 
 import UIKit
+import SwiftUI
 
 class MainTableViewController: UITableViewController {
+    var switchServerModel = SwitchServerModel(
+                                serverAndPort: "\(DemoAppConfig.address):\(DemoAppConfig.port)",
+                                serverInfo: ""
+                            )
+
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -76,11 +83,25 @@ class MainTableViewController: UITableViewController {
                     synchronizer: AppDelegate.shared.sharedSynchronizer
                 )
                 destination.title = "All Transactions"
+            } else if let id = segue.identifier, id == "serverSwitch" {
+                segue.destination = UIHostingController(
+                    rootView: SwitchServerView(
+                        model: self.switchServerModel,
+                        connectionSwitcher: { [weak self] in
+
+                        },
+                        currentServer: { [weak self] in
+                            DemoAppConfig.
+                        })
+                )
             }
+
         } else if let destination = segue.destination as? PaginatedTransactionsViewController {
             let paginatedRepo = AppDelegate.shared.sharedSynchronizer.paginatedTransactions()
             destination.paginatedRepository = paginatedRepo
         }
         super.prepare(for: segue, sender: sender)
     }
+
+    
 }

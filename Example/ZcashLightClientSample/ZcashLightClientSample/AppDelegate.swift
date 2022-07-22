@@ -36,7 +36,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let unifiedViewingKeys = try! DerivationTool(networkType: kZcashNetwork.networkType)
                 .deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
 
-            let wallet = Initializer(
+            let wallet = try! Initializer(
                 cacheDbURL: try! cacheDbURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
                 pendingDbURL: try! pendingDbURLHelper(),
