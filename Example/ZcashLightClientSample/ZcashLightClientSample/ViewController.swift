@@ -8,14 +8,12 @@
 
 import UIKit
 import SwiftUI
-
+import ZcashLightClientKit
+// swiftlint:disable force_try implicitly_unwrapped_optional
 class MainTableViewController: UITableViewController {
-    var switchServerModel = SwitchServerModel(
-                                serverAndPort: "\(DemoAppConfig.address):\(DemoAppConfig.port)",
-                                serverInfo: ""
-                            )
+    var switchServerModel: SwitchServerModel!
 
-
+    var synchronizer: SDKSynchronizer!
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -23,6 +21,46 @@ class MainTableViewController: UITableViewController {
             barButtonSystemItem: .trash,
             target: self,
             action: #selector(clearDatabases(_:))
+        )
+
+        self.synchronizer = try! SDKSynchronizer(initializer: Initializer.shared)
+        try! self.synchronizer.initialize()
+        try! self.synchronizer.prepare()
+        self.switchServerModel = SwitchServerModel(
+            serverAndPort: self.synchronizer.currentEndpoint.serverAndPort,
+            serverInfo: "",
+            connectionSwitcher: { [weak self] in
+                guard let self = self else { return }
+                let serverAndPort = self.switchServerModel.serverAndPort.split(separator: ":")
+
+                guard
+                    serverAndPort.count == 2,
+                    let port = Int(serverAndPort[1]) else {
+                    return
+                }
+
+                self.synchronizer.switchToEndpoint(
+                    LightWalletEndpoint(
+                        address: String(serverAndPort[0]),
+                        port: port
+                    )
+                ) { switchResult in
+                    DispatchQueue.main.async {
+                        switch switchResult {
+                        case .success(let info):
+                            self.switchServerModel.serverInfo = "\(info)"
+                            try! self.synchronizer.start()
+                        case .failure(let error):
+                            self.switchServerModel.serverInfo = "Error: \(error.localizedDescription)"
+                        }
+                    }
+                }
+            },
+            currentServer: { [weak self] in
+                guard let self = self else { return "No Server Set up." }
+
+                return "\(self.synchronizer.currentEndpoint.host):\(self.synchronizer.currentEndpoint.port)"
+            }
         )
     }
     
@@ -83,19 +121,7 @@ class MainTableViewController: UITableViewController {
                     synchronizer: AppDelegate.shared.sharedSynchronizer
                 )
                 destination.title = "All Transactions"
-            } else if let id = segue.identifier, id == "serverSwitch" {
-                segue.destination = UIHostingController(
-                    rootView: SwitchServerView(
-                        model: self.switchServerModel,
-                        connectionSwitcher: { [weak self] in
-
-                        },
-                        currentServer: { [weak self] in
-                            DemoAppConfig.
-                        })
-                )
             }
-
         } else if let destination = segue.destination as? PaginatedTransactionsViewController {
             let paginatedRepo = AppDelegate.shared.sharedSynchronizer.paginatedTransactions()
             destination.paginatedRepository = paginatedRepo
@@ -103,5 +129,21 @@ class MainTableViewController: UITableViewController {
         super.prepare(for: segue, sender: sender)
     }
 
-    
+    @IBSegueAction func showServerSwitching(_ coder: NSCoder) -> UIViewController? {
+        let serverSwitchingView = SwitchServerView(model: self.switchServerModel)
+            .onAppear {
+                try! self.synchronizer.start()
+            }
+            .onDisappear {
+                self.synchronizer.stop()
+            }
+
+        return UIHostingController(coder: coder, rootView: serverSwitchingView)
+    }
+}
+
+extension LightWalletEndpoint {
+    var serverAndPort: String {
+        "\(self.host):\(self.port)"
+    }
 }

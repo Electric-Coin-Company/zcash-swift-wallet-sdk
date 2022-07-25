@@ -9,26 +9,44 @@
 import SwiftUI
 
 class SwitchServerModel: ObservableObject {
-    var serverAndPort: String
-    var serverInfo: String
+    @Published var serverAndPort: String
+    @Published var serverInfo: String
+    var connectionSwitcher: () -> Void
+    var currentServer: () -> String
 
-    init(serverAndPort: String = "testnet.lightwalletd.com:9067", serverInfo: String = "" ) {
+    var sameServer: Bool {
+        currentServer() == serverAndPort
+    }
+
+    init(
+        serverAndPort: String = "testnet.lightwalletd.com:9067",
+        serverInfo: String = "",
+        connectionSwitcher: @escaping () -> Void = ConnectionSwitcher.demo,
+        currentServer: @escaping () -> String = CurrentServerFetcher.demo
+    ) {
         self.serverAndPort = serverAndPort
         self.serverInfo = serverInfo
+        self.connectionSwitcher = connectionSwitcher
+        self.currentServer = currentServer
     }
 }
 
 struct SwitchServerView: View {
     @StateObject var model: SwitchServerModel
-    var connectionSwitcher: () -> Void
-    var currentServer: () -> String
+
     var body: some View {
-        VStack(alignment: .center, spacing: 30){
-            Text("Current Server: \(currentServer())")
+        VStack(alignment: .center, spacing: 30) {
+            Text("Current Server: \(model.currentServer())")
             TextField("LightWalletdServer", text: $model.serverAndPort)
+                .textCase(.none)
+                .textInputAutocapitalization(.never)
+                .textContentType(.URL)
+
             Button("Switch to server") {
-                connectionSwitcher()
+                model.connectionSwitcher()
             }
+            .disabled(model.sameServer)
+
             Text(model.serverInfo)
                 .multilineTextAlignment(.leading)
         }
@@ -39,9 +57,7 @@ struct SwitchServerView: View {
 struct SwitchServerView_Previews: PreviewProvider {
     static var previews: some View {
         SwitchServerView(
-            model: SwitchServerModel(),
-            connectionSwitcher: ConnectionSwitcher.demo,
-            currentServer: CurrentServerFetcher.demo
+            model: SwitchServerModel()
         )
     }
 }

@@ -353,6 +353,7 @@ public class SDKSynchronizer: Synchronizer {
             self.status = .scanning(.nullProgress)
         }
     }
+    
     @objc func processorStartedEnhancing(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self, self.status != .enhancing(NullEnhancementProgress()) else { return }

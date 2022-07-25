@@ -568,25 +568,30 @@ public class CompactBlockProcessor {
     ) {
         self.stop(cancelTasks: true)
 
-        do {
-            try self.service.switchToEndpoint(endpoint)
+        /// Wait until the queue is empty
 
-            self.validateServer { validationResult in
-                switch validationResult {
-                case .success(let info):
-                    result(.success(info))
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            guard let self = self else { return }
+            do {
+                try self.service.switchToEndpoint(endpoint)
 
-                case .failure(let processorError):
-                    result(.failure(processorError))
+                self.validateServer { validationResult in
+                    switch validationResult {
+                    case .success(let info):
+                        result(.success(info))
+
+                    case .failure(let processorError):
+                        result(.failure(processorError))
+                    }
                 }
-            }
-        } catch {
-            guard let serviceError = error as? LightWalletServiceError else {
-                result(.failure(self.mapError(error)))
-                return
-            }
+            } catch {
+                guard let serviceError = error as? LightWalletServiceError else {
+                    result(.failure(self.mapError(error)))
+                    return
+                }
 
-            result(.failure(serviceError.mapToProcessorError()))
+                result(.failure(serviceError.mapToProcessorError()))
+            }
         }
     }
 
@@ -648,6 +653,8 @@ public class CompactBlockProcessor {
                         localNetwork: self.config.network,
                         rustBackend: self.rustBackend
                     )
+                    
+                    result(.success(info))
                 } catch {
                     guard let processorError = error as? CompactBlockProcessorError else {
                         result(

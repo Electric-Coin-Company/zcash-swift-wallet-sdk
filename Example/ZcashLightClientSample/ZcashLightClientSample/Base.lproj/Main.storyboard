@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Ewq-Xy-xHb">
     <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
+        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="System colors in document resources" minToolsVersion="11.0"/>
@@ -316,7 +317,7 @@
                                             </subviews>
                                         </tableViewCellContentView>
                                         <connections>
-                                            <segue destination="7na-ax-zvd" kind="show" identifier="serverSwitch" id="tcp-0O-U05"/>
+                                            <segue destination="7na-ax-zvd" kind="show" identifier="serverSwitch" destinationCreationSelector="showServerSwitching:" id="tcp-0O-U05"/>
                                         </connections>
                                     </tableViewCell>
                                 </cells>
@@ -329,9 +330,6 @@
                     </tableView>
                     <navigationItem key="navigationItem" title="Zcash Light Client Demo" id="rvd-yg-s1L"/>
                     <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" prompted="NO"/>
-                    <connections>
-                        <outlet property="pushServerSwitches" destination="SFq-gk-XlH" id="riQ-Dn-MXb"/>
-                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="u9B-ne-NE7" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" id="vYi-by-eJM">
@@ -1111,7 +1109,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="mVQ-br-4uP" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1745" y="261"/>
+            <point key="canvasLocation" x="2829" y="-1112"/>
         </scene>
         <!--Hosting Controller-->
         <scene sceneID="eM4-rS-4K6">
