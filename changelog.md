@@ -1,3 +1,7 @@
+# 0.16.3-beta
+ - [#436] Add checkpoint with a lower interval on mainnet (#437)
+ This adds checkpoint at a 2500 block interval to help reduce scan times
+ on new wallets
 # 0.16.2-beta
 - [#418] "Swift.EncodingError.InvalidValue Encoding an Int64 is not supported" (#430)
 This fixes Cocoapods clients pointing to SQLite 0.12.2 instead of using 0.13
