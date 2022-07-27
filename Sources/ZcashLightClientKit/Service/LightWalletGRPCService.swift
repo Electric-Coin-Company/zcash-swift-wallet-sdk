@@ -106,7 +106,20 @@ public class LightWalletGRPCService {
         )
     }
 
-    public init(host: String, port: Int = 9067, secure: Bool = true, singleCallTimeout: Int64 = 10000, streamingCallTimeout: Int64 = 10000) {
+    /// Inits a connection to a Lightwalletd service to the given
+    /// - Parameters:
+    ///  - host: the hostname of the lightwalletd server
+    ///  - port: port of the server. Default is 9067
+    ///  - secure: whether this server is TLS or plaintext. default True (TLS)
+    ///  - singleCallTimeout: Timeout for unary calls in milliseconds.
+    ///  - streamingCallTimeout: Timeout for streaming calls in milliseconds.
+    public init(
+        host: String,
+        port: Int = 9067,
+        secure: Bool = true,
+        singleCallTimeout: Int64,
+        streamingCallTimeout: Int64
+    ) {
         self.connectionManager = ConnectionStatusManager()
         self.queue = DispatchQueue.init(label: "LightWalletGRPCService")
         self.streamingCallTimeout = TimeLimit.timeout(.milliseconds(streamingCallTimeout))
