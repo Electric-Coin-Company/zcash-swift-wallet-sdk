@@ -322,9 +322,11 @@ public class CompactBlockProcessor {
             self.stop()
         }
     }
+
     var maxAttemptsReached: Bool {
         self.retryAttempts >= self.config.retries
     }
+
     var shouldStart: Bool {
         switch self.state {
         case .stopped, .synced, .error:
@@ -335,7 +337,7 @@ public class CompactBlockProcessor {
     }
 
     private var service: LightWalletService
-    private var downloader: CompactBlockDownloading
+    private(set) var downloader: CompactBlockDownloading
     private var storage: CompactBlockStorage
     private var transactionRepository: TransactionRepository
     private var accountRepository: AccountRepository
@@ -1130,7 +1132,8 @@ public class CompactBlockProcessor {
         case .downloading:
             NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
         case .synced:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorFinished, object: self)
+            // transition to this state is handled by `processingFinished(height: BlockHeight)`
+            break
         case .error(let err):
             notifyError(err)
         case .scanning:
