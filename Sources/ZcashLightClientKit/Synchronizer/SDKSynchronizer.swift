@@ -77,6 +77,12 @@ public extension Notification.Name {
 /// Synchronizer implementation for UIKit and iOS 12+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
+    public struct SynchronizerState {
+        public var shieldedBalance: WalletBalance
+        public var transparentBalance: WalletBalance
+        public var syncStatus: SyncStatus
+        public var latestScannedHeight: BlockHeight
+    }
 
     public enum NotificationKeys {
         public static let progress = "SDKSynchronizer.progress"
@@ -89,6 +95,7 @@ public class SDKSynchronizer: Synchronizer {
         public static let nextStatus = "SDKSynchronizer.nextStatus"
         public static let currentConnectionState = "SDKSynchronizer.currentConnectionState"
         public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
+        public static let synchronizerState = "SDKSynchronizer.synchronizerState"
     }
     
     public private(set) var status: SyncStatus {
@@ -437,14 +444,14 @@ public class SDKSynchronizer: Synchronizer {
     @objc func processorFinished(_ notification: Notification) {
         // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories
             
-            DispatchQueue.main.async { [weak self] in
-                guard let self = self else { return }
-                if let blockHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.latestScannedBlockHeight] as? BlockHeight {
-                    self.latestScannedHeight = blockHeight
-                }
-                self.refreshPendingTransactions()
-                self.status = .synced
+//        DispatchQueue.main.async { [weak self] in
+//            guard let self = self else { return }
+            if let blockHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.latestScannedBlockHeight] as? BlockHeight {
+                self.latestScannedHeight = blockHeight
             }
+            self.refreshPendingTransactions()
+            self.status = .synced
+//        }
     }
     
     @objc func processorTransitionUnknown(_ notification: Notification) {
@@ -624,15 +631,15 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func latestDownloadedHeight() throws -> BlockHeight {
-        try initializer.downloader.lastDownloadedBlockHeight()
+        try blockProcessor.downloader.lastDownloadedBlockHeight()
     }
     
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        initializer.downloader.latestBlockHeight(result: result)
+        blockProcessor.downloader.latestBlockHeight(result: result)
     }
     
     public func latestHeight() throws -> BlockHeight {
-        try initializer.downloader.latestBlockHeight()
+        try blockProcessor.downloader.latestBlockHeight()
     }
     
     public func latestUTXOs(address: String, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
@@ -770,7 +777,16 @@ public class SDKSynchronizer: Synchronizer {
                 name: Notification.Name.synchronizerSynced,
                 object: self,
                 userInfo: [
-                    SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight
+                    SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
+                    SDKSynchronizer.NotificationKeys.synchronizerState: SynchronizerState(
+                        shieldedBalance: WalletBalance(
+                            verified: initializer.getVerifiedBalance(),
+                            total: initializer.getBalance()
+                        ),
+                        transparentBalance: (try? self.getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
+                        syncStatus: status,
+                        latestScannedHeight: self.latestScannedHeight
+                    )
                 ]
             )
         case .unprepared:
