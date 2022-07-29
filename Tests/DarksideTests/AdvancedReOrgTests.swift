@@ -452,7 +452,7 @@ class AdvancedReOrgTests: XCTestCase {
             afterReorgSync.fulfill()
         }, error: self.handleError)
         
-        wait(for: [reorgExpectation, afterReorgSync], timeout: 15)
+        wait(for: [reorgExpectation, afterReorgSync], timeout: 30)
         
         XCTAssertEqual(postReorgVerifiedBalance, preReorgVerifiedBalance)
         XCTAssertEqual(postReorgTotalBalance, preReorgTotalBalance)
