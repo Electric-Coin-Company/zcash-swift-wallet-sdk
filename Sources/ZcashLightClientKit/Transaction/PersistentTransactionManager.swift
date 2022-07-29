@@ -35,7 +35,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         self.encoder = encoder
         self.service = service
         self.network = networkType
-        self.queue = DispatchQueue.init(label: "PersistentTransactionManager.serial.queue", qos: .userInitiated)
+        self.queue = DispatchQueue.init(label: "PersistentTransactionManager.serial.queue", qos: .default)
     }
     
     func initSpend(

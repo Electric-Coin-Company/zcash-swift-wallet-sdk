@@ -50,7 +50,7 @@ class PagedTransactionDAO: PaginatedTransactionRepository {
     }
     
     func page(_ number: Int, result: @escaping (Result<[TransactionEntity]?, Error>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        DispatchQueue.global(qos: .default).async { [weak self] in
             guard let self = self else { return }
             do {
                 result(.success(try self.page(number)))

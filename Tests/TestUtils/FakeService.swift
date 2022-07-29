@@ -111,7 +111,7 @@ class MockLightWalletService: LightWalletService {
     }
     
     func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 1) {
+        DispatchQueue.global(qos: .default).asyncAfter(deadline: .now() + 1) {
             result(.success(LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())))
         }
     }
