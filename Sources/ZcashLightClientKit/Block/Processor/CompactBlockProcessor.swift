@@ -624,16 +624,24 @@ public class CompactBlockProcessor {
         self.backoffTimer = nil
         
         let cfg = self.config
-        
-        let downloadBlockOperation = CompactBlockBatchDownloadOperation(
+        let downloadBlockOperation = CompactBlockStreamDownloadOperation(
             service: self.service,
             storage: self.storage,
+            downloadBatchSize: self.config.downloadBatchSize,
             startHeight: range.lowerBound,
             targetHeight: range.upperBound,
-            batchSize: self.config.downloadBatchSize,
-            maxRetries: self.config.retries,
             progressDelegate: self
         )
+
+//        let downloadBlockOperation = CompactBlockBatchDownloadOperation(
+//            service: self.service,
+//            storage: self.storage,
+//            startHeight: range.lowerBound,
+//            targetHeight: range.upperBound,
+//            batchSize: self.config.downloadBatchSize,
+//            maxRetries: self.config.retries,
+//            progressDelegate: self
+//        )
         
         downloadBlockOperation.startedHandler = { [weak self] in
             DispatchQueue.main.async {

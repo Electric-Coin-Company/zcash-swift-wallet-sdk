@@ -55,12 +55,15 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     private var cancelable: CancellableCall?
     private var startHeight: BlockHeight?
     private var targetHeight: BlockHeight?
+    private var storeBatchSize: Int
+    private var buffer: [ZcashCompactBlock] = []
 
     private weak var progressDelegate: CompactBlockProgressDelegate?
 
     required init(
         service: LightWalletService,
         storage: CompactBlockStorage,
+        downloadBatchSize: Int,
         startHeight: BlockHeight? = nil,
         targetHeight: BlockHeight? = nil,
         progressDelegate: CompactBlockProgressDelegate? = nil
@@ -70,6 +73,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
         self.startHeight = startHeight
         self.targetHeight = targetHeight
         self.progressDelegate = progressDelegate
+        self.storeBatchSize = downloadBatchSize
         super.init()
         self.name = "Download Stream Operation"
     }
@@ -96,7 +100,12 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                 case .success(let result):
                     switch result {
                     case .success:
-                        self?.done = true
+                        do {
+                            try self?.flush()
+                            self?.done = true
+                        } catch {
+                            self?.fail(error: error)
+                        }
                         return
                     case .error(let e):
                         self?.fail(error: e)
@@ -111,7 +120,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             } handler: {[weak self] block in
                 guard let self = self else { return }
                 do {
-                    try self.storage.insert(block)
+                    try self.cache(block, flushCache: false)
                 } catch {
                     self.fail(error: error)
                 }
@@ -135,6 +144,19 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     override func cancel() {
         self.cancelable?.cancel()
         super.cancel()
+    }
+
+    func cache(_ block: ZcashCompactBlock, flushCache: Bool) throws {
+        self.buffer.append(block)
+
+        if flushCache || buffer.count >= storeBatchSize {
+            try flush()
+        }
+    }
+
+    func flush() throws {
+        try self.storage.write(blocks: self.buffer)
+        self.buffer.removeAll(keepingCapacity: true)
     }
 }
 
