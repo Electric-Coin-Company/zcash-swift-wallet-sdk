@@ -1,3 +1,9 @@
+# 0.16.4-beta
+- [#444] Syncing Restarts to zero when the wallet is wiped and synced from zero in one go. (#445)
+- [#440] Split constants for Download Batches and Scanning Batches (#441)
+This change was done to aleviate memory load when downloading large blocks.
+Default download batch constant is deprecated in favor of `DefaultDownloadBatch` and 
+`DefaultScanningBatch`
 # 0.16.3-beta
  - [#436] Add checkpoint with a lower interval on mainnet (#437)
  This adds checkpoint at a 2500 block interval to help reduce scan times
