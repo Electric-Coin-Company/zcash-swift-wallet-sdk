@@ -63,30 +63,35 @@ public enum ZcashSDK {
     /// The theoretical maximum number of blocks in a reorg, due to other bottlenecks in the protocol design.
     public static var maxReorgSize = 100
 
-
     /// The amount of blocks ahead of the current height where new transactions are set to expire. This value is controlled
     /// by the rust backend but it is helpful to know what it is set to and should be kept in sync.
     public static var expiryOffset = 20
 
-
     // mark: Defaults
 
-    /// Default size of batches of blocks to request from the compact block service.
+    /// Default size of batches of blocks to request from the compact block service. Which was used both for scanning and downloading.
+    /// consider basing your code assumptions on `DefaultDownloadBatch` and `DefaultScanningBatch` instead.
+    @available(*, deprecated, message: "this value is being deprecated in favor of `DefaultDownloadBatch` and `DefaultScanningBatch`")
     public static var DefaultBatchSize = 100
+
+    /// Default batch size for downloading blocks for the compact block processor. This value was changed due to
+    /// full blocks causing block download memory usage significantly and also timeouts on grpc calls.
+    /// this value is subject to change in the future.
+    public static var DefaultDownloadBatch = 10
+
+    /// Default batch size for scanning blocks for the compact block processor
+    public static var DefaultScanningBatch = 100
 
     /// Default amount of time, in in seconds, to poll for new blocks. Typically, this should be about half the average
     /// block time.
     public static var defaultPollInterval: TimeInterval = 20
 
-
     /// Default attempts at retrying.
     public static var defaultRetries: Int = 5
-
 
     /// The default maximum amount of time to wait during retry backoff intervals. Failed loops will never wait longer than
     /// this before retyring.
     public static var defaultMaxBackOffInterval: TimeInterval = 600
-
 
     /// Default number of blocks to rewind when a chain reorg is detected. This should be large enough to recover from the
     /// reorg but smaller than the theoretical max reorg size of 100.
@@ -95,7 +100,6 @@ public enum ZcashSDK {
     /// The number of blocks to allow before considering our data to be stale. This usually helps with what to do when
     /// returning from the background and is exposed via the Synchronizer's isStale function.
     public static var defaultStaleTolerance: Int = 10
-    
 
     /// Default Name for LibRustZcash data.db
     public static var defaultDataDbName = "data.db"
@@ -105,14 +109,12 @@ public enum ZcashSDK {
 
     /// Default name for pending transactions db
     public static var defaultPendingDbName = "pending.db"
-    
 
     /// File name for the sapling spend params
     public static var spendParamFilename = "sapling-spend.params"
 
     /// File name for the sapling output params
     public static var outputParamFilename = "sapling-output.params"
-
 
     /// The Url that is used by default in zcashd.
     /// We'll want to make this externally configurable, rather than baking it into the SDK but
@@ -121,11 +123,9 @@ public enum ZcashSDK {
 }
 
 public protocol NetworkConstants {
-
     /// The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
     /// prior to this height, at all.
     static var saplingActivationHeight: BlockHeight { get }
-    
 
     /// Default Name for LibRustZcash data.db
     static var defaultDataDbName: String { get }
@@ -133,13 +133,11 @@ public protocol NetworkConstants {
     /// Default Name for Compact Block caches db
     static var defaultCacheDbName: String { get }
 
-
     /// Default name for pending transactions db
     static var defaultPendingDbName: String { get }
 
     /// Default prefix for db filenames
     static var defaultDbNamePrefix: String { get }
-   
 
     /// fixed height where the SDK considers that the ZIP-321 was deployed. This is a workaround
     /// for librustzcash not figuring out the tx fee from the tx itself.
@@ -169,7 +167,6 @@ public extension NetworkConstants {
 
 public class ZcashSDKMainnetConstants: NetworkConstants {
     private init() {}
-    
 
     /// The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
     /// prior to this height, at all.
@@ -191,26 +188,21 @@ public class ZcashSDKMainnetConstants: NetworkConstants {
 
 public class ZcashSDKTestnetConstants: NetworkConstants {
     private init() {}
-   
 
     /// The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
     /// prior to this height, at all.
     public static var saplingActivationHeight: BlockHeight = 280_000
-   
 
     /// Default Name for LibRustZcash data.db
     public static var defaultDataDbName = "data.db"
 
-
     /// Default Name for Compact Block caches db
     public static var defaultCacheDbName = "caches.db"
-
 
     /// Default name for pending transactions db
     public static var defaultPendingDbName = "pending.db"
     
     public static var defaultDbNamePrefix = "ZcashSdk_testnet_"
-    
 
     /// Estimated height where wallets are supposed to change the fee
     public static var feeChangeHeight: BlockHeight = 1_028_500

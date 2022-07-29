@@ -38,8 +38,6 @@ check Notification.Name extensions for more details.
 */
 public enum CompactBlockProcessorNotificationKey {
     public static let progress = "CompactBlockProcessorNotificationKey.progress"
-    // public static let progressStartHeight = "CompactBlockProcessorNotificationKey.progressStartHeight"
-    // public static let progressTargetHeight = "CompactBlockProcessorNotificationKey.progressTargetHeight"
     public static let progressBlockTime = "CompactBlockProcessorNotificationKey.progressBlockTime"
     public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
     public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
@@ -211,21 +209,20 @@ public extension Notification.Name {
     static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
 }
 
-/**
-The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
-when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
-*/
+
+/// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
+/// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
 public class CompactBlockProcessor {
-    /**
-    Compact Block Processor configuration
-     
-    Property: cacheDbPath absolute file path of the DB where raw, unprocessed compact blocks are stored.
-    Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
-    */
+
+    /// Compact Block Processor configuration
+    ///
+    /// Property: cacheDbPath absolute file path of the DB where raw, unprocessed compact blocks are stored.
+    /// Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
     public struct Configuration {
         public var cacheDb: URL
         public var dataDb: URL
-        public var downloadBatchSize = ZcashSDK.DefaultBatchSize
+        public var downloadBatchSize = ZcashSDK.DefaultDownloadBatch
+        public var scanningBatchSize = ZcashSDK.DefaultScanningBatch
         public var retries = ZcashSDK.defaultRetries
         public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
         public var rewindDistance = ZcashSDK.defaultRewindDistance
@@ -366,12 +363,13 @@ public class CompactBlockProcessor {
         return queue
     }()
 
-    /**
-    Initializes a CompactBlockProcessor instance
-    - Parameters:
-    - downloader: an instance that complies to CompactBlockDownloading protocol
-    - backend: a class that complies to ZcashRustBackendWelding
-    */
+
+    /// Initializes a CompactBlockProcessor instance
+    /// - Parameters:
+    ///  - service: concrete implementation of `LightWalletService` protocol
+    ///  - storage: concrete implementation of `CompactBlockStorage` protocol
+    ///  - backend: a class that complies to `ZcashRustBackendWelding`
+    ///  - config: `Configuration` struct for this processor
     convenience init(
         service: LightWalletService,
         storage: CompactBlockStorage,
@@ -389,12 +387,10 @@ public class CompactBlockProcessor {
             accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true)
         )
     }
-    
-    /**
-    Initializes a CompactBlockProcessor instance from an Initialized object
-    - Parameters:
-        - initializer: an instance that complies to CompactBlockDownloading protocol
-    */
+
+    /// Initializes a CompactBlockProcessor instance from an Initialized object
+    /// - Parameters:
+    ///     - initializer: an instance that complies to CompactBlockDownloading protocol
     public convenience init(initializer: Initializer) {
         self.init(
             service: initializer.lightWalletService,
@@ -477,17 +473,12 @@ public class CompactBlockProcessor {
         return lowerBound ... upperBound
     }
 
-    /**
-    Starts the CompactBlockProcessor instance and starts downloading and processing blocks
-
-    triggers the blockProcessorStartedDownloading notification
-
-    - Important: subscribe to the notifications before calling this method
-
-    */
+    /// Starts the CompactBlockProcessor instance and starts downloading and processing blocks
+    ///
+    /// triggers the blockProcessorStartedDownloading notification
+    ///
+    /// - Important: subscribe to the notifications before calling this method
     public func start(retry: Bool = false) throws {
-        // TODO: check if this validation makes sense at all
-        //        try validateConfiguration()
         if retry {
             self.retryAttempts = 0
             self.processingError = nil
@@ -637,6 +628,8 @@ public class CompactBlockProcessor {
             storage: self.storage,
             startHeight: range.lowerBound,
             targetHeight: range.upperBound,
+            batchSize: self.config.downloadBatchSize,
+            maxRetries: self.config.retries,
             progressDelegate: self
         )
         
@@ -714,6 +707,7 @@ public class CompactBlockProcessor {
             dataDb: config.dataDb,
             transactionRepository: transactionRepository,
             range: range,
+            batchSize: UInt32(self.config.scanningBatchSize),
             networkType: self.config.network.networkType,
             progressDelegate: self
         )

@@ -158,7 +158,7 @@ class CompactBlockProcessorTests: XCTestCase {
         )
         
         // Test mid-range
-        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + ZcashSDK.DefaultBatchSize)
+        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + ZcashSDK.DefaultDownloadBatch)
         latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
         
         expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))

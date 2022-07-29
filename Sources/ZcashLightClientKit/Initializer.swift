@@ -36,14 +36,14 @@ public struct LightWalletEndpoint {
         - address: a String containing the host address
         - port: string with the port of the host address
         - secure: true if connecting through TLS. Default value is true
-        - singleCallTimeoutInMillis: timeout for single calls in Milliseconds
-        - streamingCallTimeoutInMillis: timeout for streaming calls in Milliseconds
+        - singleCallTimeoutInMillis: timeout for single calls in Milliseconds. Default 30 seconds
+        - streamingCallTimeoutInMillis: timeout for streaming calls in Milliseconds. Default 100 seconds
     */
     public init(
         address: String,
         port: Int,
         secure: Bool = true,
-        singleCallTimeoutInMillis: Int64 = 10000,
+        singleCallTimeoutInMillis: Int64 = 30000,
         streamingCallTimeoutInMillis: Int64 = 100000
     ) {
         self.host = address

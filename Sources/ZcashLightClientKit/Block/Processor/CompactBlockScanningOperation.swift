@@ -134,7 +134,7 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
         dataDb: URL,
         transactionRepository: TransactionRepository,
         range: CompactBlockRange,
-        batchSize: UInt32 = 100,
+        batchSize: UInt32,
         networkType: NetworkType,
         progressDelegate: CompactBlockProgressDelegate? = nil
     ) {
