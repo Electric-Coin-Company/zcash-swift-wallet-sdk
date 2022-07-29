@@ -78,6 +78,8 @@ public class Initializer {
     private(set) var downloader: CompactBlockDownloader
     private(set) var network: ZcashNetwork
     private(set) public var viewingKeys: [UnifiedViewingKey]
+    /// The effective birthday of the wallet based on the height provided when initializing
+    /// and the checkpoints available on this SDK
     private(set) public var walletBirthday: BlockHeight
 
     /**
@@ -200,9 +202,9 @@ public class Initializer {
         } catch {
             throw InitializerError.dataDbInitFailed
         }
-    
+
+        let checkpoint = Checkpoint.birthday(with: self.walletBirthday, network: network)
         do {
-            let checkpoint = Checkpoint.birthday(with: self.walletBirthday, network: network)
             try rustBackend.initBlocksTable(
                 dbData: dataDbURL,
                 height: Int32(checkpoint.height),
@@ -216,6 +218,7 @@ public class Initializer {
         } catch {
             throw InitializerError.dataDbInitFailed
         }
+        self.walletBirthday = checkpoint.height
         
         let lastDownloaded = (try? downloader.storage.latestHeight()) ?? walletBirthday
         // resume from last downloaded block

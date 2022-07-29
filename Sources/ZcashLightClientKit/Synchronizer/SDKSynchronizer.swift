@@ -158,7 +158,6 @@ public class SDKSynchronizer: Synchronizer {
         self.status = .disconnected
     }
 
-
     /// Starts the synchronizer
     /// - Throws: CompactBlockProcessorError when failures occur
     public func start(retry: Bool = false) throws {

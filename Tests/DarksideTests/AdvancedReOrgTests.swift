@@ -35,7 +35,7 @@ class AdvancedReOrgTests: XCTestCase {
         try super.setUpWithError()
         coordinator = try TestCoordinator(
             seed: seedPhrase,
-            walletBirthday: birthday,
+            walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
             channelProvider: ChannelProvider(),
             network: network
         )

@@ -125,7 +125,7 @@ class TestCoordinator {
             outputParamsURL: try __outputParamsURL(),
             spendingKey: spendingKey,
             unifiedViewingKey: unifiedViewingKey,
-            walletBirthday: Checkpoint.birthday(with: birthday, network: network),
+            walletBirthday: walletBirthday,
             network: network,
             loggerProxy: SampleLogger(logLevel: .debug)
         )
@@ -289,59 +289,25 @@ enum TestSynchronizerBuilder {
         outputParamsURL: URL,
         spendingKey: String,
         unifiedViewingKey: UnifiedViewingKey,
-        walletBirthday: Checkpoint,
+        walletBirthday: BlockHeight,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
-            rustBackend: rustBackend,
-            lowerBoundHeight: lowerBoundHeight,
-            network: network,
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
             endpoint: endpoint,
-            service: service,
-            repository: repository,
-            accountRepository: accountRepository,
-            storage: CompactBlockStorage(url: cacheDbURL, readonly: false),
+            network: network,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             viewingKeys: [unifiedViewingKey],
-            walletBirthday: walletBirthday.height,
+            walletBirthday: walletBirthday,
+            alias: "",
             loggerProxy: loggerProxy
         )
 
-        let config = CompactBlockProcessor.Configuration(
-            cacheDb: initializer.cacheDbURL,
-            dataDb: initializer.dataDbURL,
-            downloadBatchSize: 100,
-            retries: 5,
-            maxBackoffInterval: ZcashSDK.defaultMaxBackOffInterval,
-            rewindDistance: ZcashSDK.defaultRewindDistance,
-            walletBirthday: walletBirthday.height,
-            saplingActivation: lowerBoundHeight,
-            network: network
-        )
-        
-        let processor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            backend: rustBackend,
-            config: config,
-            repository: repository,
-            accountRepository: accountRepository
-        )
-        
-        let synchronizer = try SDKSynchronizer(
-            status: .unprepared,
-            initializer: initializer,
-            transactionManager: OutboundTransactionManagerBuilder.build(initializer: initializer),
-            transactionRepository: repository,
-            utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
-            blockProcessor: processor
-        )
-
+        let synchronizer = try SDKSynchronizer(initializer: initializer)
         try synchronizer.prepare()
         
         return ([spendingKey], synchronizer)
@@ -361,7 +327,7 @@ enum TestSynchronizerBuilder {
         spendParamsURL: URL,
         outputParamsURL: URL,
         seedBytes: [UInt8],
-        walletBirthday: Checkpoint,
+        walletBirthday: BlockHeight,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
