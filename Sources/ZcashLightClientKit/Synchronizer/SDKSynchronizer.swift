@@ -442,16 +442,12 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     @objc func processorFinished(_ notification: Notification) {
-        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories
-            
-//        DispatchQueue.main.async { [weak self] in
-//            guard let self = self else { return }
-            if let blockHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.latestScannedBlockHeight] as? BlockHeight {
-                self.latestScannedHeight = blockHeight
-            }
-            self.refreshPendingTransactions()
-            self.status = .synced
-//        }
+        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories see: https://github.com/zcash/ZcashLightClientKit/issues/450
+        if let blockHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.latestScannedBlockHeight] as? BlockHeight {
+            self.latestScannedHeight = blockHeight
+        }
+        self.refreshPendingTransactions()
+        self.status = .synced
     }
     
     @objc func processorTransitionUnknown(_ notification: Notification) {
