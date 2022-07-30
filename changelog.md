@@ -1,3 +1,10 @@
+# 0.16.5-beta
+- [#449] Use CompactBlock Streamer download instead of batch downloads (#451)
+This increases the speed of downloads significantly while reducing the memory footprint.
+- [#435] thread sanitizer issues (#448)
+Issues related to Thread Sanitizer warnings
+
+Also new Checkpoint for 1755000 on mainnet
 # 0.16.4-beta
 - [#444] Syncing Restarts to zero when the wallet is wiped and synced from zero in one go. (#445)
 - [#440] Split constants for Download Batches and Scanning Batches (#441)
