@@ -227,7 +227,7 @@ public class CompactBlockProcessor {
         public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
         public var rewindDistance = ZcashSDK.defaultRewindDistance
         public var walletBirthday: BlockHeight
-
+        public private(set) var downloadBufferSize: Int = 10
         private(set) var network: ZcashNetwork
         private(set) var saplingActivation: BlockHeight
 
@@ -624,14 +624,12 @@ public class CompactBlockProcessor {
         self.backoffTimer = nil
         
         let cfg = self.config
-        
-        let downloadBlockOperation = CompactBlockBatchDownloadOperation(
+        let downloadBlockOperation = CompactBlockStreamDownloadOperation(
             service: self.service,
             storage: self.storage,
+            blockBufferSize: self.config.downloadBufferSize,
             startHeight: range.lowerBound,
             targetHeight: range.upperBound,
-            batchSize: self.config.downloadBatchSize,
-            maxRetries: self.config.retries,
             progressDelegate: self
         )
         

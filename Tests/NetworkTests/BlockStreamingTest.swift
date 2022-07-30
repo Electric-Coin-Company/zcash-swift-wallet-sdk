@@ -77,6 +77,7 @@ class BlockStreamingTest: XCTestCase {
         let operation = CompactBlockStreamDownloadOperation(
             service: service,
             storage: storage,
+            blockBufferSize: 10,
             startHeight: startHeight,
             progressDelegate: self
         )
@@ -114,6 +115,7 @@ class BlockStreamingTest: XCTestCase {
         let operation = CompactBlockStreamDownloadOperation(
             service: service,
             storage: storage,
+            blockBufferSize: 10,
             startHeight: startHeight,
             progressDelegate: self
         )

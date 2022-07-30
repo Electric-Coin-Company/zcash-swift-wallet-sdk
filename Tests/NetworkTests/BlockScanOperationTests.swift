@@ -185,6 +185,7 @@ class BlockScanOperationTests: XCTestCase {
         let downloadOperation = CompactBlockStreamDownloadOperation(
             service: service,
             storage: storage,
+            blockBufferSize: 10,
             startHeight: walletBirthDay.height,
             targetHeight: walletBirthDay.height + 10000,
             progressDelegate: self

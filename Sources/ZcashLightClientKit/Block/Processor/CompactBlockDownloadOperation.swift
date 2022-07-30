@@ -55,12 +55,30 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     private var cancelable: CancellableCall?
     private var startHeight: BlockHeight?
     private var targetHeight: BlockHeight?
+    private var blockBufferSize: Int
+    private var buffer: [ZcashCompactBlock] = []
 
     private weak var progressDelegate: CompactBlockProgressDelegate?
 
+    /// Creates an Compact Block Stream Download Operation Operation
+    ///  - Parameters:
+    ///    - service: instance that conforms to `LightWalletService`
+    ///    - storage: instance that conforms to `CompactBlockStorage`
+    ///    - blockBufferSize: the number of blocks that the stream downloader will store in memory
+    ///    before writing them to disk. Making this number smaller makes the downloader easier on RAM
+    ///    memory while being less efficient on disk writes. Making it bigger takes up more RAM memory
+    ///    but is less straining on Disk Writes. Too little or too big buffer will make this less efficient.
+    ///    - startHeight: the height this downloader will start downloading from. If `nil`,
+    ///    it will start from the latest height found on the local cacheDb
+    ///    - targetHeight: the upper bound for this stream download. If `nil`, the
+    ///    streamer will call `service.latestBlockHeight()`
+    ///    - progressDelegate: Optional delegate to report ongoing progress conforming to
+    ///    `CompactBlockProgressDelegate`
+    ///
     required init(
         service: LightWalletService,
         storage: CompactBlockStorage,
+        blockBufferSize: Int,
         startHeight: BlockHeight? = nil,
         targetHeight: BlockHeight? = nil,
         progressDelegate: CompactBlockProgressDelegate? = nil
@@ -70,6 +88,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
         self.startHeight = startHeight
         self.targetHeight = targetHeight
         self.progressDelegate = progressDelegate
+        self.blockBufferSize = blockBufferSize
         super.init()
         self.name = "Download Stream Operation"
     }
@@ -96,7 +115,12 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
                 case .success(let result):
                     switch result {
                     case .success:
-                        self?.done = true
+                        do {
+                            try self?.flush()
+                            self?.done = true
+                        } catch {
+                            self?.fail(error: error)
+                        }
                         return
                     case .error(let e):
                         self?.fail(error: e)
@@ -111,7 +135,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             } handler: {[weak self] block in
                 guard let self = self else { return }
                 do {
-                    try self.storage.insert(block)
+                    try self.cache(block, flushCache: false)
                 } catch {
                     self.fail(error: error)
                 }
@@ -135,6 +159,19 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     override func cancel() {
         self.cancelable?.cancel()
         super.cancel()
+    }
+
+    func cache(_ block: ZcashCompactBlock, flushCache: Bool) throws {
+        self.buffer.append(block)
+
+        if flushCache || buffer.count >= blockBufferSize {
+            try flush()
+        }
+    }
+
+    func flush() throws {
+        try self.storage.write(blocks: self.buffer)
+        self.buffer.removeAll(keepingCapacity: true)
     }
 }
 
