@@ -138,7 +138,7 @@ class AdvancedReOrgTests: XCTestCase {
             receivedTxExpectation.fulfill()
         }, error: self.handleError)
         sleep(2)
-        wait(for: [receivedTxExpectation], timeout: 10)
+        wait(for: [receivedTxExpectation], timeout: 12)
         
         guard let syncedSynchronizer = synchronizer else {
             XCTFail("nil synchronizer")
