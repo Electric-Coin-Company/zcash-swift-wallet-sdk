@@ -468,8 +468,41 @@ public class CompactBlockProcessor {
         }
     }
 
-    static func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight, walletBirthday: BlockHeight) -> CompactBlockRange {
-        let lowerBound = latestDownloadedHeight <= walletBirthday ? walletBirthday : latestDownloadedHeight + 1
+    /// Helper to define the next download batch range
+    /// - Parameters:
+    ///  - latestHeight: height of the latest block on the chain. Can't be or `BlockHeight.empty()`
+    ///  Can't be  lower than  than `network.saplingActivation()`
+    ///  - latestDownloadedHeight: latest `BlockHeight` that has been downloaded to disk or `BlockHeight.empty()`.
+    ///  Can't be  lower than  than `network.saplingActivation()`
+    ///  - latestScannedHeight: latest `BlockHeight` that was reached when scanning or `BlockHeight.empty()`
+    ///  Can't be  lower than  than `network.saplingActivation()`
+    ///  - walletBirthday: this wallet's birthday. can't be`BlockHeight.empty()` or less than `network.saplingActivation()`
+    ///  - network: `ZcashNetwork` to consider.
+    static func nextDownloadBatchBlockRange(
+        latestHeight: BlockHeight,
+        latestDownloadedHeight: BlockHeight,
+        latestScannedHeight: BlockHeight,
+        walletBirthday: BlockHeight,
+        network: ZcashNetwork
+    ) -> CompactBlockRange? {
+
+        func emptyOrHigherThanSaplingActivation(_ blockHeight: BlockHeight, network: ZcashNetwork) -> Bool {
+            blockHeight == BlockHeight.empty() || equalOrGreaterThanSaplingActivation(blockHeight, network: network)
+        }
+
+        func equalOrGreaterThanSaplingActivation(_ blockHeight: BlockHeight, network: ZcashNetwork) -> Bool {
+            blockHeight >= network.constants.saplingActivationHeight
+        }
+
+        guard equalOrGreaterThanSaplingActivation(walletBirthday, network: network) else { return nil }
+        guard emptyOrHigherThanSaplingActivation(latestDownloadedHeight, network: network) else { return nil }
+        guard emptyOrHigherThanSaplingActivation(latestScannedHeight, network: network) else { return nil }
+        guard equalOrGreaterThanSaplingActivation(latestHeight, network: network) else { return nil }
+        
+
+        let maxLowerStoreLowerBound = max(latestScannedHeight, latestDownloadedHeight)
+        guard latestHeight >= maxLowerStoreLowerBound else { return nil }
+        let lowerBound = maxLowerStoreLowerBound <= walletBirthday ? walletBirthday : maxLowerStoreLowerBound + 1
 
         let upperBound = latestHeight
         return lowerBound ... upperBound
@@ -934,7 +967,6 @@ public class CompactBlockProcessor {
             try downloader.rewind(to: max(range.lowerBound, self.config.walletBirthday))
 
             // process next batch
-            // processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
             nextBatch()
         } catch {
             self.fail(error)
@@ -977,6 +1009,7 @@ public class CompactBlockProcessor {
         NextStateHelper.nextState(
             service: self.service,
             downloader: self.downloader,
+            transactionRepository: self.transactionRepository,
             config: self.config,
             rustBackend: self.rustBackend,
             queue: nil
@@ -1392,6 +1425,7 @@ extension CompactBlockProcessor {
         static func nextState(
             service: LightWalletService,
             downloader: CompactBlockDownloading,
+            transactionRepository: TransactionRepository,
             config: Configuration,
             rustBackend: ZcashRustBackendWelding.Type,
             queue: DispatchQueue?,
@@ -1404,6 +1438,7 @@ extension CompactBlockProcessor {
                     let nextResult = try self.nextState(
                         service: service,
                         downloader: downloader,
+                        transactionRepository: transactionRepository,
                         config: config,
                         rustBackend: rustBackend
                     )
@@ -1417,6 +1452,7 @@ extension CompactBlockProcessor {
         static func nextState(
             service: LightWalletService,
             downloader: CompactBlockDownloading,
+            transactionRepository: TransactionRepository,
             config: Configuration,
             rustBackend: ZcashRustBackendWelding.Type
         ) throws -> FigureNextBatchOperation.NextState {
@@ -1428,25 +1464,30 @@ extension CompactBlockProcessor {
                 localNetwork: config.network,
                 rustBackend: rustBackend
             )
+
+            let lastScannedHeight = try transactionRepository.lastScannedHeight()
             
             // get latest block height
             let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday, try downloader.lastDownloadedBlockHeight())
             
             let latestBlockheight = try service.latestBlockHeight()
             
-            if latestDownloadedBlockHeight < latestBlockheight {
+            if latestDownloadedBlockHeight < latestBlockheight,
+                let range = CompactBlockProcessor.nextDownloadBatchBlockRange(
+                latestHeight: latestBlockheight,
+                latestDownloadedHeight: latestDownloadedBlockHeight,
+                latestScannedHeight: lastScannedHeight,
+                walletBirthday: config.walletBirthday,
+                network: config.network
+            ) {
                 return .processNewBlocks(
-                    range: CompactBlockProcessor.nextBatchBlockRange(
-                        latestHeight: latestBlockheight,
-                        latestDownloadedHeight: latestDownloadedBlockHeight,
-                        walletBirthday: config.walletBirthday
-                    )
+                    range: range
                 )
             } else if latestBlockheight == latestDownloadedBlockHeight {
                 return .finishProcessing(height: latestBlockheight)
             }
                 
-            return .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestBlockheight)
+            return .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestDownloadedBlockHeight)
         }
     }
 }

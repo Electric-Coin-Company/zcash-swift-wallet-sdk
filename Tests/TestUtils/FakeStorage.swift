@@ -10,6 +10,17 @@ import Foundation
 @testable import ZcashLightClientKit
 
 class ZcashConsoleFakeStorage: CompactBlockRepository {
+    func flushCache(latestScannedHeight: ZcashLightClientKit.BlockHeight) throws {
+
+    }
+
+    func flushCache(
+        latestScannedHeight: ZcashLightClientKit.BlockHeight,
+        completion: @escaping (Result<Void, Error>) -> Void
+    ) {
+
+    }
+
     func latestHeight() throws -> Int {
         return self.latestBlockHeight
     }

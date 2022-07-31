@@ -14,6 +14,7 @@ class MockTransactionRepository {
         case received
     }
 
+    var latestScannedHeight = BlockHeight.empty()
     var unminedCount: Int
     var receivedCount: Int
     var sentCount: Int
@@ -28,11 +29,13 @@ class MockTransactionRepository {
     }
 
     init(
+        lastScannedHeight: BlockHeight = BlockHeight.empty(),
         unminedCount: Int,
         receivedCount: Int,
         sentCount: Int,
         network: ZcashNetwork
     ) {
+        self.latestScannedHeight = lastScannedHeight
         self.unminedCount = unminedCount
         self.receivedCount = receivedCount
         self.sentCount = sentCount
@@ -169,7 +172,7 @@ extension MockTransactionRepository: TransactionRepository {
     }
 
     func lastScannedHeight() throws -> BlockHeight {
-        return 700000
+        return latestScannedHeight
     }
 
     func isInitialized() throws -> Bool {

@@ -81,6 +81,14 @@ class CompactBlockStorage: CompactBlockDAO {
 }
 
 extension CompactBlockStorage: CompactBlockRepository {
+    func flushCache(latestScannedHeight: BlockHeight) throws {
+
+    }
+
+    func flushCache(latestScannedHeight: BlockHeight, completion: @escaping (Swift.Result<Void, Error>) -> Void) {
+        
+    }
+
     func latestHeight() throws -> BlockHeight {
         try latestBlockHeight()
     }

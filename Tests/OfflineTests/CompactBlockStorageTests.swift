@@ -82,4 +82,26 @@ class CompactBlockStorageTests: XCTestCase {
             XCTFail("Rewind latest block failed with error: \(error)")
         }
     }
+
+    func testFlushCache() throws {
+        let startHeight = self.network.constants.saplingActivationHeight
+        let blockCount = Int(1_000)
+        let finalHeight = startHeight + blockCount
+
+        do {
+            try TestDbBuilder.seed(db: compactBlockDao, with: startHeight...finalHeight)
+        } catch {
+            XCTFail("seed faild with error: \(error)")
+            return
+        }
+        let rewindHeight = BlockHeight(finalHeight - 233)
+
+        XCTAssertNoThrow(try compactBlockDao.rewind(to: rewindHeight))
+        do {
+            let latestHeight = try compactBlockDao.latestHeight()
+            XCTAssertEqual(latestHeight, rewindHeight - 1)
+        } catch {
+            XCTFail("Rewind latest block failed with error: \(error)")
+        }
+    }
 }

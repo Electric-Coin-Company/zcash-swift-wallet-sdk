@@ -16,6 +16,7 @@ class FigureNextBatchOperation: ZcashOperation {
     
     private var service: LightWalletService
     private var downloader: CompactBlockDownloading
+    private var transactionRepository: TransactionRepository
     private var config: CompactBlockProcessor.Configuration
     private var rustBackend: ZcashRustBackendWelding.Type
     private(set) var result: NextState?
@@ -23,12 +24,14 @@ class FigureNextBatchOperation: ZcashOperation {
     required init(
         downloader: CompactBlockDownloading,
         service: LightWalletService,
+        transactionRepository: TransactionRepository,
         config: CompactBlockProcessor.Configuration,
         rustBackend: ZcashRustBackendWelding.Type
     ) {
         self.service = service
         self.config = config
         self.downloader = downloader
+        self.transactionRepository = transactionRepository
         self.rustBackend = rustBackend
 
         super.init()
@@ -48,6 +51,7 @@ class FigureNextBatchOperation: ZcashOperation {
             result = try CompactBlockProcessor.NextStateHelper.nextState(
                 service: self.service,
                 downloader: self.downloader,
+                transactionRepository: self.transactionRepository,
                 config: self.config,
                 rustBackend: self.rustBackend
             )
