@@ -94,14 +94,9 @@ class CompactBlockStorageTests: XCTestCase {
             XCTFail("seed faild with error: \(error)")
             return
         }
-        let rewindHeight = BlockHeight(finalHeight - 233)
 
-        XCTAssertNoThrow(try compactBlockDao.rewind(to: rewindHeight))
-        do {
-            let latestHeight = try compactBlockDao.latestHeight()
-            XCTAssertEqual(latestHeight, rewindHeight - 1)
-        } catch {
-            XCTFail("Rewind latest block failed with error: \(error)")
-        }
+        try compactBlockDao.flushCache(latestScannedHeight: finalHeight)
+
+        XCTAssertEqual(try compactBlockDao.latestHeight(), BlockHeight.empty())
     }
 }

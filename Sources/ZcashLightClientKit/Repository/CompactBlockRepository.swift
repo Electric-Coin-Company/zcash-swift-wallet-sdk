@@ -74,7 +74,7 @@ protocol CompactBlockRepository {
     func rewind(to height: BlockHeight, completion: ((Error?) -> Void)?)
 
 
-    func flushCache(latestScannedHeight: BlockHeight) throws
+        func flushCache(latestScannedHeight: BlockHeight) throws
 
 
     func flushCache(latestScannedHeight: BlockHeight, completion: @escaping (Result<Void, Error>) -> Void)

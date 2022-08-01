@@ -81,12 +81,23 @@ class CompactBlockStorage: CompactBlockDAO {
 }
 
 extension CompactBlockStorage: CompactBlockRepository {
-    func flushCache(latestScannedHeight: BlockHeight) throws {
 
+    func flushCache(latestScannedHeight: BlockHeight) throws {
+        try dbProvider.connection().run(compactBlocksTable().filter(heightColumn() <= Int64(latestScannedHeight)).delete())
+
+        try dbProvider.connection().vacuum()
     }
 
     func flushCache(latestScannedHeight: BlockHeight, completion: @escaping (Swift.Result<Void, Error>) -> Void) {
-        
+        DispatchQueue.global(qos: .default).async { [weak self] in
+            guard let self = self else { return }
+            do {
+                try self.flushCache(latestScannedHeight: latestScannedHeight)
+                completion(.success(()))
+            } catch {
+                completion(.failure(StorageError.operationFailed))
+            }
+        }
     }
 
     func latestHeight() throws -> BlockHeight {
