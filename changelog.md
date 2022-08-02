@@ -1,3 +1,5 @@
+# 0.16.6-beta
+- There's a problem with 0.16.5-beta hash. Re-relasing 
 # 0.16.5-beta
 - [#449] Use CompactBlock Streamer download instead of batch downloads (#451)
 This increases the speed of downloads significantly while reducing the memory footprint.
