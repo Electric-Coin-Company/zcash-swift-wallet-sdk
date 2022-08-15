@@ -1,5 +1,28 @@
+# 0.16.7-beta
+- [#455] revert queue priority downgrade changes from [#435] (#456)
+    
+This reverts queue priority changes from commit `a5d0e447748257d2af5c9101391dd05a5ce929a2` since we detected it might prevent downloads to be scheduled in a timely fashion
+
+Checkpoints added:
+Mainnet
+```
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1757500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1760000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1762500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1765000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1767500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1770000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1772500.json
+```
+
+Testnet
+```
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/1980000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/1990000.json
+```
+
 # 0.16.6-beta
-- There's a problem with 0.16.5-beta hash. Re-relasing 
+- There's a problem with 0.16.5-beta hash. Re-releasing 
 # 0.16.5-beta
 - [#449] Use CompactBlock Streamer download instead of batch downloads (#451)
 This increases the speed of downloads significantly while reducing the memory footprint.
