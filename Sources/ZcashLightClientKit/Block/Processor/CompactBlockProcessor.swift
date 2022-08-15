@@ -1397,7 +1397,7 @@ extension CompactBlockProcessor {
             queue: DispatchQueue?,
             result: @escaping (Result<FigureNextBatchOperation.NextState, Error>) -> Void
         ) {
-            let dispatchQueue = queue ?? DispatchQueue.global(qos: .default)
+            let dispatchQueue = queue ?? DispatchQueue.global(qos: .userInitiated)
             
             dispatchQueue.async {
                 do {
