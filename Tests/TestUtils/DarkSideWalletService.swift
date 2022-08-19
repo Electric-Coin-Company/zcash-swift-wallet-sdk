@@ -75,6 +75,10 @@ class DarksideWalletService: LightWalletService {
         )
     }
 
+    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        service.blockStream(startHeight: startHeight, endHeight: endHeight)
+    }
+
     func getInfo() throws -> LightWalletdInfo {
         try service.getInfo()
     }
@@ -87,7 +91,11 @@ class DarksideWalletService: LightWalletService {
     }
 
     func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        return []
+        try service.fetchUTXOs(for: tAddress, height: height)
+    }
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
+        try service.fetchUTXOs(for: tAddresses, height: height)
     }
 
     func fetchUTXOs(
@@ -98,8 +106,8 @@ class DarksideWalletService: LightWalletService {
         service.fetchUTXOs(for: tAddress, height: height, result: result)
     }
 
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        try service.fetchUTXOs(for: tAddresses, height: height)
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        service.fetchUTXOs(for: tAddress, height: height)
     }
 
     func fetchUTXOs(
@@ -109,7 +117,10 @@ class DarksideWalletService: LightWalletService {
     ) {
         service.fetchUTXOs(for: tAddresses, height: height, result: result)
     }
-
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        service.fetchUTXOs(for: tAddresses, height: height)
+    }
 
     func fetchTransaction(txId: Data) throws -> TransactionEntity {
         try service.fetchTransaction(txId: txId)
@@ -221,6 +232,26 @@ class DarksideWalletService: LightWalletService {
 
     func clearAddedUTXOs() throws {
         _ = try darksideService.clearAddressUtxo(Empty(), callOptions: nil).response.wait()
+    }
+    
+    func getInfoAsync() async throws -> LightWalletdInfo {
+        try service.getInfo()
+    }
+    
+    func latestBlockHeightAsync() async throws -> BlockHeight {
+        try service.latestBlockHeight()
+    }
+    
+    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        service.blockRange(range)
+    }
+    
+    func submitAsync(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+        try service.submit(spendTransaction: spendTransaction)
+    }
+    
+    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity {
+        try service.fetchTransaction(txId: txId)
     }
 }
 

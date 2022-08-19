@@ -53,6 +53,7 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     private var service: LightWalletService
     private var done = false
     private var cancelable: CancellableCall?
+    private var cancelableTask: Task<Void, Error>?
     private var startHeight: BlockHeight?
     private var targetHeight: BlockHeight?
     private var blockBufferSize: Int
@@ -93,13 +94,13 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
         self.name = "Download Stream Operation"
     }
     
-    // swiftlint:disable cyclomatic_complexity
     override func main() {
         guard !shouldCancel() else {
             cancel()
             return
         }
         self.startedHandler?()
+        
         do {
             if self.targetHeight == nil {
                 self.targetHeight = try service.latestBlockHeight()
@@ -109,38 +110,32 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             }
             let latestDownloaded = try storage.latestHeight()
             let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
-            
-            self.cancelable = self.service.blockStream(startHeight: startHeight, endHeight: latestHeight) { [weak self] blockResult in
-                switch blockResult {
-                case .success(let result):
-                    switch result {
-                    case .success:
-                        do {
-                            try self?.flush()
-                            self?.done = true
-                        } catch {
-                            self?.fail(error: error)
-                        }
-                        return
-                    case .error(let e):
-                        self?.fail(error: e)
-                    }
-                case .failure(let e):
-                    if case .userCancelled = e {
-                        self?.done = true
-                    } else {
-                        self?.fail(error: e)
-                    }
-                }
-            } handler: {[weak self] block in
-                guard let self = self else { return }
+
+            let stream = service.blockStream(
+                startHeight: startHeight,
+                endHeight: latestHeight
+            )
+
+            cancelableTask = Task {
                 do {
-                    try self.cache(block, flushCache: false)
+                    for try await zcashCompactBlock in stream {
+                        try self.cache(zcashCompactBlock, flushCache: false)
+                        let progress = BlockProgress(
+                            startHeight: startHeight,
+                            targetHeight: latestHeight,
+                            progressHeight: zcashCompactBlock.height
+                        )
+                        self.progressDelegate?.progressUpdated(.download(progress))
+                    }
+                    try self.flush()
+                    self.done = true
                 } catch {
-                    self.fail(error: error)
+                    if let err = error as? LightWalletServiceError, case .userCancelled = err {
+                        self.done = true
+                    } else {
+                        self.fail(error: error)
+                    }
                 }
-            } progress: { progress in
-                self.progressDelegate?.progressUpdated(.download(progress))
             }
             
             while !done && !isCancelled {
@@ -153,11 +148,13 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
 
     override func fail(error: Error? = nil) {
         self.cancelable?.cancel()
+        self.cancelableTask?.cancel()
         super.fail(error: error)
     }
     
     override func cancel() {
         self.cancelable?.cancel()
+        self.cancelableTask?.cancel()
         super.cancel()
     }
 
