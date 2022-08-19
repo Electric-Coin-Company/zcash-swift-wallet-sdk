@@ -58,6 +58,12 @@ public protocol ZcashRustBackendWelding {
     static func isValidExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool
     
     /**
+    - Returns: true when the address is valid and a UFVK. false in any other case
+    - Throws: Error when there's another problem not related to validity of the string in question
+    */
+    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) throws -> Bool
+
+    /**
     initialize the accounts table from a given seed and a number of accounts
     - Parameters:
         - dbData: location of the data db
@@ -67,12 +73,12 @@ public protocol ZcashRustBackendWelding {
     static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [String]?
     
     /**
-    initialize the accounts table from a set of unified viewing keys
+    initialize the accounts table from a set of unified full viewing keys
     - Parameters:
         - dbData: location of the data db
-        - uvks: an array of UnifiedViewingKeys
+        - ufvks: an array of UnifiedFullViewingKeys
     */
-    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey], networkType: NetworkType) throws -> Bool
+    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool
 
     /**
     initialize the blocks table from a given checkpoint (birthday)
@@ -203,7 +209,6 @@ public protocol ZcashRustBackendWelding {
     puts a UTXO into the data db database
     - Parameters:
         - dbData: location of the data db file
-        - address: the address of the UTXO
         - txid: the txid bytes for the UTXO
         - index: the index of the UTXO
         - value: the value of the UTXO
@@ -212,7 +217,6 @@ public protocol ZcashRustBackendWelding {
     */
     static func putUnspentTransparentOutput(
         dbData: URL,
-        address: String,
         txid: [UInt8],
         index: Int,
         script: [UInt8],
@@ -289,7 +293,7 @@ public protocol ZcashRustBackendWelding {
         - dbCache: URL for the Cache DB
         - dbData: URL for the Data DB
         - account: the account index that will originate the transaction
-        - tsk: transparent Secret Key for the shielded funds.
+        - xprv: transparent account private key for the shielded funds.
         - extsk: extended spending key string
         - memo: the memo string for this transaction
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
@@ -300,7 +304,7 @@ public protocol ZcashRustBackendWelding {
         dbCache: URL,
         dbData: URL,
         account: Int32,
-        tsk: String,
+        xprv: String,
         extsk: String,
         memo: String?,
         spendParamsPath: String,
@@ -335,21 +339,21 @@ public protocol ZcashRustBackendWelding {
     static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]?
     
     /**
-    Derives a shielded address from a seed
+    Derives a unified address from a seed
     - Parameter seed: an array of bytes of the seed
     - Parameter accountIndex: the index of the account you want the address for
     - Returns: an optional String containing the Shielded address
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32, networkType: NetworkType) throws -> String?
+    static func deriveUnifiedAddressFromSeed(seed: [UInt8], accountIndex: Int32, networkType: NetworkType) throws -> String?
     
     /**
-    Derives a shielded address from an Extended Full Viewing Key
-    - Parameter extfvk: a string containing the extended full viewing key
+    Derives a unified address from a Unified Full Viewing Key
+    - Parameter ufvk: a string containing the extended full viewing key
     - Returns: an optional String containing the Shielded address
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveShieldedAddressFromViewingKey(_  extfvk: String, networkType: NetworkType) throws -> String?
+    static func deriveUnifiedAddressFromViewingKey(_  ufvk: String, networkType: NetworkType) throws -> String?
     
     /**
     Derives a shielded address from an Extended Full Viewing Key
@@ -360,18 +364,18 @@ public protocol ZcashRustBackendWelding {
     static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String?
     
     /**
-    Derives a transparent secret key from Seed
+    Derives a transparent account private key from Seed
     - Parameter seed: an array of bytes containing the seed
     - Returns: an optional String containing the transparent secret (private) key
     */
-    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String?
+    static func deriveTransparentAccountPrivateKeyFromSeed(seed: [UInt8], account: Int, networkType: NetworkType) throws -> String?
     
     /**
     Derives a transparent address from a secret key
     - Parameter tsk: a hex string containing the Secret Key
     - Returns: an optional String containing the transparent address.
     */
-    static func deriveTransparentAddressFromSecretKey(_ tsk: String, networkType: NetworkType) throws -> String?
+    static func deriveTransparentAddressFromAccountPrivateKey(_ tsk: String, index: Int, networkType: NetworkType) throws -> String?
     
     /**
     Derives a tranparent address from a public key
@@ -379,7 +383,7 @@ public protocol ZcashRustBackendWelding {
     */
     static func derivedTransparentAddressFromPublicKey(_ pubkey: String, networkType: NetworkType) throws -> String
     
-    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedViewingKey]
+    static func deriveUnifiedFullViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int32, networkType: NetworkType) throws -> [UnifiedFullViewingKey]
 
     /**
     Gets the consensus branch id for the given height

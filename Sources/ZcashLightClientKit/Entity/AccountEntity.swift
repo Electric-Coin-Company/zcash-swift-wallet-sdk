@@ -9,7 +9,7 @@ import Foundation
 
 protocol AccountEntity {
     var account: Int { get set }
-    var extfvk: String { get set }
+    var ufvk: String { get set }
     var address: String { get set }
     var transparentAddress: String { get set }
 }
@@ -17,14 +17,14 @@ protocol AccountEntity {
 struct Account: AccountEntity, Encodable, Decodable {
     enum CodingKeys: String, CodingKey {
         case account
-        case extfvk
+        case ufvk
         case address
         case transparentAddress = "transparent_address"
     }
     
     var account: Int
     
-    var extfvk: String
+    var ufvk: String
     
     var address: String
     
@@ -32,22 +32,13 @@ struct Account: AccountEntity, Encodable, Decodable {
 }
 
 extension Account: UnifiedAddress {
-    var tAddress: TransparentAddress {
-        get {
-            transparentAddress
-        }
-        set {
-            transparentAddress = newValue
-        }
-    }
-    
-    var zAddress: SaplingShieldedAddress {
+    var encoding: String {
         get {
             address
         }
         // swiftlint:disable unused_setter_value
         set {
-            address = transparentAddress
+            address = encoding
         }
     }
 }
@@ -55,7 +46,7 @@ extension Account: UnifiedAddress {
 extension Account: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(account)
-        hasher.combine(extfvk)
+        hasher.combine(ufvk)
         hasher.combine(address)
         hasher.combine(transparentAddress)
     }
@@ -63,7 +54,7 @@ extension Account: Hashable {
     static func == (lhs: Self, rhs: Self) -> Bool {
         guard
             lhs.account == rhs.account,
-            lhs.extfvk == rhs.extfvk,
+            lhs.ufvk == rhs.ufvk,
             lhs.address == rhs.address,
             lhs.transparentAddress == rhs.transparentAddress
         else { return false }

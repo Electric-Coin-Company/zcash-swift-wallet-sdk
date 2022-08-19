@@ -6,23 +6,18 @@
 //
 
 /**
- Groups a Sapling Extended Full Viewing Key an a tranparent address extended public key.
+ A ZIP 316 Unified Full Viewing Key.
  */
-
-public typealias ExtendedFullViewingKey = String
-public typealias ExtendedPublicKey = String
-
-public protocol UnifiedViewingKey {
-    var extfvk: ExtendedFullViewingKey { get set }
-    var extpub: ExtendedPublicKey { get set }
+public protocol UnifiedFullViewingKey {
+    var account: UInt32 { get set }
+    var encoding: String { get set }
 }
 
 public typealias TransparentAddress = String
 public typealias SaplingShieldedAddress = String
 
 public protocol UnifiedAddress {
-    var tAddress: TransparentAddress { get }
-    var zAddress: SaplingShieldedAddress { get }
+    var encoding: String { get }
 }
 
 public struct WalletBalance: Equatable {

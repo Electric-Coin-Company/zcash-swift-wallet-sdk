@@ -77,7 +77,7 @@ public class Initializer {
     private(set) var storage: CompactBlockStorage
     private(set) var downloader: CompactBlockDownloader
     private(set) var network: ZcashNetwork
-    private(set) public var viewingKeys: [UnifiedViewingKey]
+    private(set) public var viewingKeys: [UnifiedFullViewingKey]
     /// The effective birthday of the wallet based on the height provided when initializing
     /// and the checkpoints available on this SDK
     private(set) public var walletBirthday: BlockHeight
@@ -100,7 +100,7 @@ public class Initializer {
         network: ZcashNetwork,
         spendParamsURL: URL,
         outputParamsURL: URL,
-        viewingKeys: [UnifiedViewingKey],
+        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
@@ -149,7 +149,7 @@ public class Initializer {
         storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
-        viewingKeys: [UnifiedViewingKey],
+        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
@@ -227,13 +227,15 @@ public class Initializer {
         do {
             guard try rustBackend.initAccountsTable(
                 dbData: dataDbURL,
-                uvks: viewingKeys,
+                ufvks: viewingKeys,
                 networkType: network.networkType
             ) else {
                 throw rustBackend.lastError() ?? InitializerError.accountInitFailed
             }
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
+        } catch RustWeldingError.malformedStringInput {
+            throw RustWeldingError.malformedStringInput
         } catch {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
@@ -245,7 +247,7 @@ public class Initializer {
             networkType: self.network.networkType
         )
         
-        try migrationManager.performMigration(uvks: viewingKeys)
+        try migrationManager.performMigration(ufvks: viewingKeys)
     }
     
     /**

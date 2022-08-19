@@ -33,8 +33,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let wallet = wallet {
             return wallet
         } else {
-            let unifiedViewingKeys = try! DerivationTool(networkType: kZcashNetwork.networkType)
-                .deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
+            let unifiedFullViewingKeys = try! DerivationTool(networkType: kZcashNetwork.networkType)
+                .deriveUnifiedFullViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
 
             let wallet = Initializer(
                 cacheDbURL: try! cacheDbURLHelper(),
@@ -44,7 +44,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 network: kZcashNetwork,
                 spendParamsURL: try! spendParamsURLHelper(),
                 outputParamsURL: try! outputParamsURLHelper(),
-                viewingKeys: unifiedViewingKeys,
+                viewingKeys: unifiedFullViewingKeys,
                 walletBirthday: DemoAppConfig.birthdayHeight,
                 loggerProxy: loggerProxy
             )

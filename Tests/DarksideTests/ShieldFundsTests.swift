@@ -195,13 +195,12 @@ class ShieldFundsTests: XCTestCase {
         // 9. shield the funds
         let shieldFundsExpectation = XCTestExpectation(description: "shield funds")
 
-        let transparentSecretKey = try DerivationTool(
+        let transparentAccountPrivateKey = try DerivationTool(
                                         networkType: network.networkType
                                     )
-                                    .deriveTransparentPrivateKey(
+                                    .deriveTransparentAccountPrivateKey(
                                         seed: TestSeed().seed(),
-                                        account: 0,
-                                        index: 0
+                                        account: 0
                                     )
 
         shouldContinue = false
@@ -211,7 +210,7 @@ class ShieldFundsTests: XCTestCase {
         // shield the funds
         coordinator.synchronizer.shieldFunds(
             spendingKey: coordinator.spendingKey,
-            transparentSecretKey: transparentSecretKey,
+            transparentAccountPrivateKey: transparentAccountPrivateKey,
             memo: "shield funds",
             from: 0
         ) { result in

@@ -89,7 +89,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         -1
     }
     
-    static func initAccountsTable(dbData: URL, uvks: [UnifiedViewingKey], networkType: NetworkType) throws -> Bool {
+    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool {
         false
     }
     
@@ -103,7 +103,6 @@ class MockRustBackend: ZcashRustBackendWelding {
     
     static func putUnspentTransparentOutput(
         dbData: URL,
-        address: String,
         txid: [UInt8],
         index: Int,
         script: [UInt8],
@@ -136,7 +135,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         dbCache: URL,
         dbData: URL,
         account: Int32,
-        tsk: String,
+        xprv: String,
         extsk: String,
         memo: String?,
         spendParamsPath: String,
@@ -150,11 +149,11 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String? {
+    static func deriveTransparentAccountPrivateKeyFromSeed(seed: [UInt8], account: Int, networkType: NetworkType) throws -> String? {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func deriveTransparentAddressFromSecretKey(_ tsk: String, networkType: NetworkType) throws -> String? {
+    static func deriveTransparentAddressFromAccountPrivateKey(_ xprv: String, index: Int, networkType: NetworkType) throws -> String? {
         throw KeyDerivationErrors.unableToDerive
     }
     
@@ -162,7 +161,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func deriveUnifiedViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int, networkType: NetworkType) throws -> [UnifiedViewingKey] {
+    static func deriveUnifiedFullViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int32, networkType: NetworkType) throws -> [UnifiedFullViewingKey] {
         throw KeyDerivationErrors.unableToDerive
     }
     
@@ -170,6 +169,10 @@ class MockRustBackend: ZcashRustBackendWelding {
         false
     }
     
+    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) throws -> Bool {
+        false
+    }
+
     static func deriveTransparentPrivateKeyFromSeed(seed: [UInt8], networkType: NetworkType) throws -> String? {
         nil
     }
@@ -190,11 +193,11 @@ class MockRustBackend: ZcashRustBackendWelding {
         nil
     }
     
-    static func deriveShieldedAddressFromSeed(seed: [UInt8], accountIndex: Int32, networkType: NetworkType) throws -> String? {
+    static func deriveUnifiedAddressFromSeed(seed: [UInt8], accountIndex: Int32, networkType: NetworkType) throws -> String? {
         nil
     }
     
-    static func deriveShieldedAddressFromViewingKey(_ extfvk: String, networkType: NetworkType) throws -> String? {
+    static func deriveUnifiedAddressFromViewingKey(_ ufvk: String, networkType: NetworkType) throws -> String? {
         nil
     }
     

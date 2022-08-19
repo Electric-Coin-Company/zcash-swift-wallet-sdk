@@ -1252,7 +1252,7 @@ private struct UnifiedAddressShim {
 }
 
 extension UnifiedAddressShim: UnifiedAddress {
-    var tAddress: TransparentAddress {
+    var encoding: String {
         account.transparentAddress
     }
     
@@ -1299,7 +1299,6 @@ extension CompactBlockProcessor {
             do {
                 try self.rustBackend.putUnspentTransparentOutput(
                     dbData: dataDb,
-                    address: utxo.address,
                     txid: utxo.txid.bytes,
                     index: utxo.index,
                     script: utxo.script.bytes,
