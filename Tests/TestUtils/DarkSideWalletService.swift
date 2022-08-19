@@ -222,6 +222,34 @@ class DarksideWalletService: LightWalletService {
     func clearAddedUTXOs() throws {
         _ = try darksideService.clearAddressUtxo(Empty(), callOptions: nil).response.wait()
     }
+    
+    func getInfoAsync() async throws -> LightWalletdInfo {
+        try service.getInfo()
+    }
+    
+    func latestBlockHeightAsync() async throws -> BlockHeight {
+        try service.latestBlockHeight()
+    }
+    
+    func blockRangeAsync(_ range: CompactBlockRange) async throws -> [ZcashCompactBlock] {
+        try service.blockRange(range)
+    }
+    
+    func submitAsync(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+        try service.submit(spendTransaction: spendTransaction)
+    }
+    
+    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity {
+        try service.fetchTransaction(txId: txId)
+    }
+    
+    func fetchUTXOsAsync(for tAddress: String, height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
+    
+    func fetchUTXOsAsync(for tAddresses: [String], height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
+        try service.fetchUTXOs(for: tAddresses, height: height)
+    }
 }
 
 enum DarksideWalletDConstants: NetworkConstants {

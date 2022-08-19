@@ -126,4 +126,35 @@ class MockLightWalletService: LightWalletService {
     
     func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
     }
+    
+    func getInfoAsync() async throws -> LightWalletdInfo {
+        guard let info = mockLightDInfo else {
+            throw LightWalletServiceError.generalError(message: "Not Implemented")
+        }
+        return info
+    }
+    
+    func latestBlockHeightAsync() async throws -> BlockHeight {
+        latestHeight
+    }
+    
+    func blockRangeAsync(_ range: CompactBlockRange) async throws -> [ZcashCompactBlock] {
+        try service.blockRange(range)
+    }
+    
+    func submitAsync(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+        LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
+    }
+    
+    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity {
+        Transaction(id: 1, transactionId: Data(), created: "Today", transactionIndex: 1, expiryHeight: -1, minedHeight: -1, raw: nil)
+    }
+    
+    func fetchUTXOsAsync(for tAddress: String, height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
+    
+    func fetchUTXOsAsync(for tAddresses: [String], height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
+        []
+    }
 }
