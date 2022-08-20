@@ -12,15 +12,23 @@ class GetAddressViewController: UIViewController {
     @IBOutlet weak var unifiedAddressLabel: UILabel!
     @IBOutlet weak var tAddressLabel: UILabel!
     @IBOutlet weak var spendingKeyLabel: UILabel! // THIS SHOULD BE SUPER SECRET!!!!!
-    
+
+    // THIS SHOULD NEVER BE STORED IN MEMORY
+    // swiftlint:disable:next implicitly_unwrapped_optional
+    var spendingKey: SaplingExtendedSpendingKey!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
+
+        // swiftlint:disable:next force_try force_unwrapping
+        self.spendingKey = try! derivationTool.deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1).first!
+
         // Do any additional setup after loading the view.
-        
-        unifiedAddressLabel.text = (try? derivationTool.deriveUnifiedAddress(seed: DemoAppConfig.seed, accountIndex: 0)) ?? "No Addresses found"
-        tAddressLabel.text = (try? derivationTool.deriveTransparentAddress(seed: DemoAppConfig.seed)) ?? "could not derive t-address"
-        spendingKeyLabel.text = SampleStorage.shared.privateKey ?? "No Spending Key found"
+        // swiftlint:disable:next line_length
+        unifiedAddressLabel.text = (try? derivationTool.deriveUnifiedAddress(seed: DemoAppConfig.seed, accountIndex: 0))?.stringEncoded ?? "No Addresses found"
+        tAddressLabel.text = (try? derivationTool.deriveTransparentAddress(seed: DemoAppConfig.seed))?.stringEncoded ?? "could not derive t-address"
+        spendingKeyLabel.text = self.spendingKey.stringEncoded
         unifiedAddressLabel.addGestureRecognizer(
             UITapGestureRecognizer(
                 target: self,
@@ -44,20 +52,12 @@ class GetAddressViewController: UIViewController {
         )
         spendingKeyLabel.isUserInteractionEnabled = true
         loggerProxy.info("Address: \(String(describing: Initializer.shared.getAddress()))")
-        // NOTE: NEVER LOG YOUR PRIVATE KEYS IN REAL LIFE
-        // swiftlint:disable:next print_function_usage
-        print("Spending Key: \(SampleStorage.shared.privateKey ?? "No Spending Key found")")
     }
 
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
-        guard let key = SampleStorage.shared.privateKey else {
-            loggerProxy.warn("nothing to copy")
-            return
-        }
-        
         loggerProxy.event("copied to clipboard")
         
-        UIPasteboard.general.string = key
+        UIPasteboard.general.string = self.spendingKey.stringEncoded
         let alert = UIAlertController(
             title: "",
             message: "Spending Key Copied to clipboard",
@@ -85,7 +85,7 @@ class GetAddressViewController: UIViewController {
     @IBAction func tAddressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
         UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveTransparentAddress(seed: DemoAppConfig.seed)
+            .deriveTransparentAddress(seed: DemoAppConfig.seed).stringEncoded
 
         let alert = UIAlertController(
             title: "",

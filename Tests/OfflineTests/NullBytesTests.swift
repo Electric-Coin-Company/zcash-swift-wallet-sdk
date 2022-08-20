@@ -17,7 +17,7 @@ class NullBytesTests: XCTestCase {
         let validZaddr = "zs1gqtfu59z20s9t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp"
         let zAddrWithNullBytes = "\(validZaddr)\0something else that makes the address invalid"
         
-        XCTAssertFalse(try ZcashRustBackend.isValidShieldedAddress(zAddrWithNullBytes, networkType: networkType))
+        XCTAssertFalse(try ZcashRustBackend.isValidSaplingAddress(zAddrWithNullBytes, networkType: networkType))
     }
     
     func testTaddrNullBytes() throws {
@@ -91,13 +91,13 @@ class NullBytesTests: XCTestCase {
     
     func testderiveExtendedFullViewingKeyWithNullBytes() throws {
         // swiftlint:disable:next line_length
-        let wrongSpendingKeys = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mq\0uy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv" // this spending key corresponds to the "demo app reference seed"
+        let wrongSpendingKeys = SaplingExtendedSpendingKey(validatedEncoding: "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mq\0uy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv") // this spending key corresponds to the "demo app reference seed"
 
         // swiftlint:disable:next line_length
-        let goodSpendingKeys = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv"
+        let goodSpendingKeys = SaplingExtendedSpendingKey(validatedEncoding: "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv")
         
         XCTAssertThrowsError(
-            try ZcashRustBackend.deriveExtendedFullViewingKey(wrongSpendingKeys, networkType: networkType),
+            try ZcashRustBackend.deriveSaplingExtendedFullViewingKey(wrongSpendingKeys, networkType: networkType),
             "Should have thrown an error but didn't! this is dangerous!"
         ) { error in
             guard let rustError = error as? RustWeldingError else {
@@ -113,7 +113,7 @@ class NullBytesTests: XCTestCase {
             }
         }
         
-        XCTAssertNoThrow(try ZcashRustBackend.deriveExtendedFullViewingKey(goodSpendingKeys, networkType: networkType))
+        XCTAssertNoThrow(try ZcashRustBackend.deriveSaplingExtendedFullViewingKey(goodSpendingKeys, networkType: networkType))
     }
     
     func testCheckNullBytes() throws {

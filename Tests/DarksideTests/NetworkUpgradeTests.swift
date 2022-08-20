@@ -82,7 +82,7 @@ class NetworkUpgradeTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in
@@ -171,7 +171,7 @@ class NetworkUpgradeTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in
@@ -240,7 +240,7 @@ class NetworkUpgradeTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in
@@ -341,7 +341,7 @@ class NetworkUpgradeTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in
@@ -453,7 +453,7 @@ class NetworkUpgradeTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in

@@ -5,7 +5,7 @@ let package = Package(
     name: "ZcashLightClientKit",
     platforms: [
         .iOS(.v13),
-        .macOS(.v10_12)
+        .macOS(.v10_15)
     ],
     products: [
         .library(
@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.8.0"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.13.0"),
-        .package(name:"libzcashlc", url: "https://github.com/zcash-hackworks/zcash-light-client-ffi.git", branch: "librustzcash_0_7_build_test"),
+        .package(name:"libzcashlc", url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", branch: "bin/librustzcash_0_7"),
     ],
     targets: [
         .target(

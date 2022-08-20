@@ -150,7 +150,7 @@ class SendViewController: UIViewController {
         guard let addr = self.addressTextField.text else {
             return false
         }
-        return wallet.isValidShieldedAddress(addr) || wallet.isValidTransparentAddress(addr)
+        return wallet.isValidSaplingAddress(addr) || wallet.isValidTransparentAddress(addr)
     }
     
     @IBAction func maxFundsValueChanged(_ sender: Any) {
@@ -206,18 +206,19 @@ class SendViewController: UIViewController {
             loggerProxy.warn("WARNING: Form is invalid")
             return
         }
-        
-        guard let address = SampleStorage.shared.privateKey else {
-            loggerProxy.error("NO ADDRESS")
+        // swiftlint:disable:next line_length force_try
+        guard let spendingKey = try! DerivationTool(networkType: kZcashNetwork.networkType).deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1).first else {
+            loggerProxy.error("NO SPENDING KEY")
             return
         }
         
         KRProgressHUD.show()
-        
+
         synchronizer.sendToAddress(
-            spendingKey: address,
+            spendingKey: spendingKey,
             zatoshi: zec,
-            toAddress: recipient,
+            // swiftlint:disable:next force_try
+            toAddress: try! Recipient(recipient, network: kZcashNetwork.networkType),
             memo: !self.memoField.text.isEmpty ? self.memoField.text : nil,
             from: 0
         ) {  [weak self] result in

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,7 +15,6 @@
 		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
 		0D76121926B1D66D001CA417 /* Testnet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D76121826B1D66D001CA417 /* Testnet.swift */; };
 		0D7A4A83236CCD88001F4DD8 /* SyncBlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */; };
-		0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7C85E423AD5A9B006878FC /* SampleStorage.swift */; };
 		0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
 		0D907F182322CC5900D641FE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F172322CC5900D641FE /* ViewController.swift */; };
 		0D907F1B2322CC5900D641FE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0D907F192322CC5900D641FE /* Main.storyboard */; };
@@ -35,7 +34,6 @@
 		0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
 		0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */; };
 		0DA1C4C927D11D9500E5006E /* DerivationToolViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */; };
-		0DA1C4CA27D11D9500E5006E /* SampleStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D7C85E423AD5A9B006878FC /* SampleStorage.swift */; };
 		0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
 		0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
@@ -83,7 +81,6 @@
 		0D76121526B1D5ED001CA417 /* Mainnet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mainnet.swift; sourceTree = "<group>"; };
 		0D76121826B1D66D001CA417 /* Testnet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Testnet.swift; sourceTree = "<group>"; };
 		0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBlocksViewController.swift; sourceTree = "<group>"; };
-		0D7C85E423AD5A9B006878FC /* SampleStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleStorage.swift; sourceTree = "<group>"; };
 		0D907F122322CC5900D641FE /* ZcashLightClientSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ZcashLightClientSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0D907F152322CC5900D641FE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0D907F172322CC5900D641FE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -248,7 +245,6 @@
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				F94912622790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
-				0D7C85E423AD5A9B006878FC /* SampleStorage.swift */,
 				0D49A18B241698A800CC0649 /* SampleLogger.swift */,
 			);
 			path = ZcashLightClientSample;
@@ -498,6 +494,7 @@
 		};
 		0DCB58A4237B5B580040096C /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -534,7 +531,6 @@
 				0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */,
 				0D1BE47F2581937100F78BE3 /* GetUTXOsViewController.swift in Sources */,
 				0D1BE4512581585C00F78BE3 /* DerivationToolViewController.swift in Sources */,
-				0D7C85E523AD5A9B006878FC /* SampleStorage.swift in Sources */,
 				0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */,
 				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
 				0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */,
@@ -567,7 +563,6 @@
 				0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */,
 				0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */,
 				0DA1C4C927D11D9500E5006E /* DerivationToolViewController.swift in Sources */,
-				0DA1C4CA27D11D9500E5006E /* SampleStorage.swift in Sources */,
 				0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */,
 				0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */,
 				0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */,

@@ -82,7 +82,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: maxBalance,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test send \(self.description) \(Date().description)",
             from: 0,
             resultBlock: { result in
@@ -226,7 +226,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: maxBalanceMinusOne,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test send \(self.description) \(Date().description)",
             from: 0,
             resultBlock: { result in
@@ -367,7 +367,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: maxBalanceMinusOne,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test send \(self.description) \(Date().description)",
             from: 0,
             resultBlock: { result in
@@ -510,7 +510,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: sendAmount,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test send \(self.description) \(Date().description)",
             from: 0,
             resultBlock: { result in
@@ -681,7 +681,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: sendAmount,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test send \(self.description) \(Date().description)",
             from: 0,
             resultBlock: { result in
@@ -836,7 +836,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKeys,
             zatoshi: sendAmount,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: memo,
             from: 0,
             resultBlock: { sendResult in
@@ -1008,7 +1008,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: sendAmount,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test send \(self.description)",
             from: 0,
             resultBlock: { result in

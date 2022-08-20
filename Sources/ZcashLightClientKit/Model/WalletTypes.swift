@@ -5,20 +5,193 @@
 //  Created by Francisco Gindre on 4/6/21.
 //
 
+enum KeyEncodingError: Error {
+    case invalidEncoding
+}
+
+/// Something that can be encoded as a String
+public protocol StringEncoded {
+    var stringEncoded: String { get }
+}
+
+/// Sapling Extended Spending Key
+public struct SaplingExtendedSpendingKey: Equatable, StringEncoded, Undescribable {
+    var encoding: String
+
+    public var stringEncoded: String {
+        encoding
+    }
+
+    /// Initializes a new Sapling Extended Full Viewing Key from the provided string encoding
+    /// - Parameters:
+    ///  - parameter encoding: String encoding of ExtSK
+    ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
+    /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
+    /// found to be invalid
+    public init(encoding: String, network: NetworkType) throws {
+        guard let valid = try? DerivationTool(networkType: network).isValidSaplingExtendedSpendingKey(encoding), valid else {
+            throw KeyEncodingError.invalidEncoding
+        }
+        self.encoding = encoding
+    }
+}
+
+/// A Transparent Account Private Key
+public struct TransparentAccountPrivKey: Equatable, Undescribable {
+    var encoding: String
+}
+
 /**
  A ZIP 316 Unified Full Viewing Key.
  */
-public protocol UnifiedFullViewingKey {
-    var account: UInt32 { get set }
-    var encoding: String { get set }
+public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
+    var encoding: String
+
+    public var account: UInt32
+
+    public var stringEncoded: String { encoding }
+
+    /// Initializes a new UnifiedFullViewingKey (UFVK) from the provided string encoding
+    /// - Parameters:
+    ///  - parameter encoding: String encoding of unified full viewing key
+    ///  - parameter account: account number of the given UFVK
+    ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
+    /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
+    /// found to be invalid
+    public init(encoding: String, account: UInt32, network: NetworkType) throws {
+        guard let valid = try? DerivationTool(networkType: network).isValidExtendedViewingKey(encoding), valid else {
+            throw KeyEncodingError.invalidEncoding
+        }
+
+        self.encoding = encoding
+        self.account = account
+    }
 }
 
-public typealias TransparentAddress = String
-public typealias SaplingShieldedAddress = String
+public struct SaplingExtendedFullViewingKey: Equatable, StringEncoded, Undescribable {
+    var encoding: String
+    public var stringEncoded: String {
+        encoding
+    }
 
-public protocol UnifiedAddress {
-    var encoding: String { get }
+    /// Initializes a new Extended Full Viewing key (EFVK) for Sapling from the provided string encoding
+    /// - Parameters:
+    ///  - parameter encoding: String encoding of Sapling extended full viewing key
+    ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
+    /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
+    /// found to be invalid
+    public init(encoding: String, network: NetworkType) throws {
+        guard let valid = try? DerivationTool(networkType: network).isValidExtendedViewingKey(encoding), valid else {
+            throw KeyEncodingError.invalidEncoding
+        }
+        self.encoding = encoding
+    }
 }
+
+/// A Transparent Address that can be encoded as a String
+///
+/// Transactions sent to this address are totally visible in the public
+/// ledger. See "Multiple transaction types" in https://z.cash/technology/
+public struct TransparentAddress: Equatable, StringEncoded {
+    var encoding: String
+
+    public var stringEncoded: String { encoding }
+
+    /// Initializes a new TransparentAddress (t-address) from the provided string encoding
+    ///
+    ///  - parameter encoding: String encoding of the t-address
+    ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
+    /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
+    /// found to be invalid
+    public init(encoding: String, network: NetworkType) throws {
+        guard let valid = try? DerivationTool(networkType: network).isValidTransparentAddress(encoding), valid else {
+            throw KeyEncodingError.invalidEncoding
+        }
+
+        self.encoding = encoding
+    }
+}
+
+/// Represents a Sapling receiver address. Comonly called zAddress.
+/// This address corresponds to the Zcash Sapling shielded pool.
+/// Although this it is fully functional, we encourage developers to
+/// choose `UnifiedAddress` before Sapling or Transparent ones. 
+public struct SaplingAddress: Equatable, StringEncoded {
+    var encoding: String
+
+    public var stringEncoded: String { encoding }
+
+    /// Initializes a new Sapling shielded address (z-address) from the provided string encoding
+    ///
+    /// - parameter encoding: String encoding of the z-address
+    /// - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
+    ///
+    /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
+    /// found to be invalid
+    public init(encoding: String, network: NetworkType) throws {
+        guard let valid = try? DerivationTool(networkType: network).isValidSaplingAddress(encoding), valid else {
+            throw KeyEncodingError.invalidEncoding
+        }
+
+        self.encoding = encoding
+    }
+}
+
+public struct UnifiedAddress: Equatable, StringEncoded {
+    var encoding: String
+
+    public var stringEncoded: String { encoding }
+
+    /// Initializes a new Unified Address (UA) from the provided string encoding
+    /// - Parameters:
+    ///  - parameter encoding: String encoding of the UA
+    ///  - parameter network: `NetworkType` corresponding to the encoding (Mainnet or Testnet)
+    /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
+    /// found to be invalid
+    public init(encoding: String, network: NetworkType) throws {
+        guard let valid = try? DerivationTool(networkType: network).isValidUnifiedAddress(encoding), valid else {
+            throw KeyEncodingError.invalidEncoding
+        }
+
+        self.encoding = encoding
+    }
+}
+
+/// Represents a valid recipient of Zcash
+public enum Recipient: Equatable, StringEncoded {
+    case transparent(TransparentAddress)
+    case sapling(SaplingAddress)
+    case unified(UnifiedAddress)
+
+    public var stringEncoded: String {
+        switch self {
+        case .transparent(let tAddr):
+            return tAddr.stringEncoded
+        case .sapling(let zAddr):
+            return zAddr.stringEncoded
+        case .unified(let uAddr):
+            return uAddr.stringEncoded
+        }
+    }
+
+    /// Initializes a `Recipient` with string encoded Zcash address
+    /// - Parameter string: a string encoded Zcash address
+    /// - Parameter network: the `ZcashNetwork.NetworkType` of the recipient
+    /// - Throws: `KeyEncodingError.invalidEncoding` if the received string-encoded address
+    /// can't be initialized as a valid Zcash Address.
+    public init(_ string: String, network: NetworkType) throws {
+        if let unified = try? UnifiedAddress(encoding: string, network: network) {
+            self = .unified(unified)
+        } else if let sapling = try? SaplingAddress(encoding: string, network: network) {
+            self = .sapling(sapling)
+        } else if let transparent = try? TransparentAddress(encoding: string, network: network) {
+            self = .transparent(transparent)
+        } else {
+            throw KeyEncodingError.invalidEncoding
+        }
+    }
+}
+
 
 public struct WalletBalance: Equatable {
     public var verified: Zatoshi

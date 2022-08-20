@@ -19,9 +19,9 @@ class BlockScanOperationTests: XCTestCase {
     var cacheDbURL: URL!
     var dataDbURL: URL!
 
-    var ufvk = UFVFakeKey(
-        account: 0,
-        encoding: "uviewtest1q48t999peecrfkq7ykcxckfkjt77w3lckk5mptlrtuy7xltjnzg8fm5434cxe9p9838ljs24yv83rluhk33ew098dkarapzyj4vk5kfxp5zn2jp3ww74jwd48r05aqjvgqxzx3nqn6zfqh3cmwdtmz0mc5624tvdza55q7mguxrehwcy4y0uktcpp4tkpex4qhazddux4yt6hr0sc9fkqmfr5tyz6ldd7yrq93tyj7446u4kst3vhmd40uga636p56hr0hjfdhgp07qyh90kmsl3qnmld6c8h7u06vekkjywmxv07mqzz9muwcl6weczrn5vf3p27uc9ufrumdp64zdzulzvc373wx3gl0yntntujhcsjhrwk9xwyjpvyuf0s8q3mgjs7uy3pg960w40dthpngcnauhgg9xq8cdcyfkq7ctnngqg4nkp5eh9knd4ckwjyd9czdd240lumul96r2fuerlvjeha6cyn9ftm7gr6xqjmq0zy6tv" // swiftlint:disable:this line_length
+    var ufvk = UnifiedFullViewingKey(
+        validatedEncoding: "uviewtest1q48t999peecrfkq7ykcxckfkjt77w3lckk5mptlrtuy7xltjnzg8fm5434cxe9p9838ljs24yv83rluhk33ew098dkarapzyj4vk5kfxp5zn2jp3ww74jwd48r05aqjvgqxzx3nqn6zfqh3cmwdtmz0mc5624tvdza55q7mguxrehwcy4y0uktcpp4tkpex4qhazddux4yt6hr0sc9fkqmfr5tyz6ldd7yrq93tyj7446u4kst3vhmd40uga636p56hr0hjfdhgp07qyh90kmsl3qnmld6c8h7u06vekkjywmxv07mqzz9muwcl6weczrn5vf3p27uc9ufrumdp64zdzulzvc373wx3gl0yntntujhcsjhrwk9xwyjpvyuf0s8q3mgjs7uy3pg960w40dthpngcnauhgg9xq8cdcyfkq7ctnngqg4nkp5eh9knd4ckwjyd9czdd240lumul96r2fuerlvjeha6cyn9ftm7gr6xqjmq0zy6tv", // swiftlint:disable:this line_length
+        account: 0
     )
 
     var walletBirthDay = Checkpoint.birthday(
@@ -267,9 +267,4 @@ class BlockScanOperationTests: XCTestCase {
 extension BlockScanOperationTests: CompactBlockProgressDelegate {
     func progressUpdated(_ progress: CompactBlockProgress) {
     }
-}
-
-struct UFVFakeKey: UnifiedFullViewingKey {
-    var account: UInt32
-    var encoding: String
 }
