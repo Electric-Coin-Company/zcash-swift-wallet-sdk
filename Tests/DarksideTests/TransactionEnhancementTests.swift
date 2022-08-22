@@ -64,7 +64,14 @@ class TransactionEnhancementTests: XCTestCase {
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         
         _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1, networkType: network.networkType)
-        _ = try rustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: network.networkType)
+        
+        let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
+            return
+        }
+
         _ = try rustBackend.initBlocksTable(
             dbData: processorConfig.dataDb,
             height: Int32(birthday.height),

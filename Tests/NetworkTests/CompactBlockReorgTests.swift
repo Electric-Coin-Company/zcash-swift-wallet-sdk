@@ -46,9 +46,14 @@ class CompactBlockReorgTests: XCTestCase {
             info.estimatedHeight = UInt64(mockLatestHeight)
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         }
-        
-        try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: .testnet)
-        
+
+        let dbInit = try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
+            return
+        }
+
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
         

@@ -61,6 +61,12 @@ The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Ru
 functionality, related to processing blocks.
 */
 public class Initializer {
+
+    public enum InitializationResult {
+        case success
+        case seedRequired
+    }
+
     private(set) var rustBackend: ZcashRustBackendWelding.Type
     private(set) var alias: String
     private(set) var endpoint: LightWalletEndpoint
@@ -188,7 +194,7 @@ public class Initializer {
     - Parameters:
         - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
     */
-    public func initialize() throws {
+    public func initialize(with seed: [UInt8]?) throws -> InitializationResult {
         do {
             try storage.createTable()
         } catch {
@@ -196,9 +202,9 @@ public class Initializer {
         }
         
         do {
-            try rustBackend.initDataDb(dbData: dataDbURL, networkType: network.networkType)
-        } catch RustWeldingError.dataDbNotEmpty {
-            // this is fine
+            if case .seedRequired = try rustBackend.initDataDb(dbData: dataDbURL, seed: seed, networkType: network.networkType) {
+                return .seedRequired
+            }
         } catch {
             throw InitializerError.dataDbInitFailed
         }
@@ -242,12 +248,13 @@ public class Initializer {
         
         let migrationManager = MigrationManager(
             cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
-            dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path),
             pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
             networkType: self.network.networkType
         )
         
         try migrationManager.performMigration(ufvks: viewingKeys)
+
+        return .success
     }
     
     /**

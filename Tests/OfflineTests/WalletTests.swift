@@ -49,7 +49,15 @@ class WalletTests: XCTestCase {
         )
         
         let synchronizer = try SDKSynchronizer(initializer: wallet)
-        XCTAssertNoThrow(try synchronizer.prepare())
+
+        var dbInit: Initializer.InitializationResult!
+
+        XCTAssertNoThrow({ dbInit = try synchronizer.prepare(with: nil) })
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
+            return
+        }
         
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
         XCTAssertNoThrow( try FileManager.default.removeItem(at: dbData!) )
