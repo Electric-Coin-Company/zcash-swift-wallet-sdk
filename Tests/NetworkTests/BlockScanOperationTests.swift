@@ -60,7 +60,7 @@ class BlockScanOperationTests: XCTestCase {
         logger = SampleLogger(logLevel: .debug)
 
         var dbInit: DbInitResult!
-        XCTAssertNoThrow({ dbInit = try ZcashRustBackend.initDataDb(dbData: self.dataDbURL, seed: nil, networkType: .testnet) })
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dataDbURL, seed: nil, networkType: .testnet) }())
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")

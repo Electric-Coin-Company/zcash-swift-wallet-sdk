@@ -52,7 +52,7 @@ class WalletTests: XCTestCase {
 
         var dbInit: Initializer.InitializationResult!
 
-        XCTAssertNoThrow({ dbInit = try synchronizer.prepare(with: nil) })
+        XCTAssertNoThrow(try { dbInit = try synchronizer.prepare(with: nil) }())
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")

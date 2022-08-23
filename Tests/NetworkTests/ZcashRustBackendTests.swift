@@ -39,10 +39,10 @@ class ZcashRustBackendTests: XCTestCase {
         let seed = "testreferencealice"
 
         var dbInit: DbInitResult!
-        XCTAssertNoThrow({ dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) })
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) }())
 
         guard case .success = dbInit else {
-            XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
             return
         }
 
@@ -107,7 +107,7 @@ class ZcashRustBackendTests: XCTestCase {
         let seed = "testreferencealicetestreferencealice"
 
         var dbInit: DbInitResult!
-        XCTAssertNoThrow({ dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) })
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) }())
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
