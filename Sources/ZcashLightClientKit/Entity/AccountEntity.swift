@@ -36,7 +36,6 @@ extension Account: UnifiedAddress {
         get {
             address
         }
-        // swiftlint:disable unused_setter_value
         set {
             address = newValue
         }
