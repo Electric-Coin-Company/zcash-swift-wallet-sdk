@@ -514,7 +514,7 @@ public class CompactBlockProcessor {
             return
         }
 
-        self.nextBatch()
+        self.nextBatchTask()
     }
 
     /**
@@ -935,7 +935,7 @@ public class CompactBlockProcessor {
 
             // process next batch
             // processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
-            nextBatch()
+            nextBatchTask()
         } catch {
             self.fail(error)
         }
@@ -972,6 +972,7 @@ public class CompactBlockProcessor {
         }
     }
 
+    @available(*, deprecated, message: "This static method will be removed soon, use `nextBatchTask()` instead.")
     private func nextBatch() {
         self.state = .downloading
         NextStateHelper.nextState(
@@ -1009,6 +1010,40 @@ public class CompactBlockProcessor {
             }
         }
     }
+    
+    private func nextBatchTask() {
+        self.state = .downloading
+        Task { [self] in
+            do {
+                let nextState = try await NextStateHelper.nextStateAsync(
+                    service: self.service,
+                    downloader: self.downloader,
+                    config: self.config,
+                    rustBackend: self.rustBackend
+                )
+                switch nextState {
+                case .finishProcessing(let height):
+                    self.latestBlockHeight = height
+                    self.processingFinished(height: height)
+                case .processNewBlocks(let range):
+                    self.latestBlockHeight = range.upperBound
+                    self.lowerBoundHeight = range.lowerBound
+                    self.processNewBlocks(range: range)
+                case let .wait(latestHeight, latestDownloadHeight):
+                    // Lightwalletd might be syncing
+                    self.lowerBoundHeight = latestDownloadHeight
+                    self.latestBlockHeight = latestHeight
+                    LoggerProxy.info(
+                        "Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight)" +
+                        "while latest blockheight is reported at: \(latestHeight)"
+                    )
+                    self.processingFinished(height: latestDownloadHeight)
+                }
+            } catch {
+                self.severeFailure(error)
+            }
+        }
+    }
 
     private func validationFailed(at height: BlockHeight) {
         // cancel all Tasks
@@ -1043,7 +1078,7 @@ public class CompactBlockProcessor {
             )
             
             // process next batch
-            self.nextBatch()
+            self.nextBatchTask()
         } catch {
             self.fail(error)
         }
@@ -1063,7 +1098,7 @@ public class CompactBlockProcessor {
             return
         }
         
-        nextBatch()
+        nextBatchTask()
     }
     
     private func processingFinished(height: BlockHeight) {
@@ -1398,7 +1433,7 @@ extension CompactBlockProcessor {
             result: @escaping (Result<FigureNextBatchOperation.NextState, Error>) -> Void
         ) {
             let dispatchQueue = queue ?? DispatchQueue.global(qos: .userInitiated)
-            
+
             dispatchQueue.async {
                 do {
                     let nextResult = try self.nextState(
@@ -1412,6 +1447,25 @@ extension CompactBlockProcessor {
                     result(.failure(error))
                 }
             }
+        }
+        
+        static func nextStateAsync(
+            service: LightWalletService,
+            downloader: CompactBlockDownloading,
+            config: Configuration,
+            rustBackend: ZcashRustBackendWelding.Type
+        ) async throws -> FigureNextBatchOperation.NextState {
+            let task = Task(priority: .userInitiated) {
+                // TODO: refactor to async call, issue 463, PR 493
+                // https://github.com/zcash/ZcashLightClientKit/issues/463
+                try nextState(
+                    service: service,
+                    downloader: downloader,
+                    config: config,
+                    rustBackend: rustBackend
+                )
+            }
+            return try await task.value
         }
         
         static func nextState(
