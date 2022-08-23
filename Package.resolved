@@ -86,8 +86,8 @@
         "package": "libzcashlc",
         "repositoryURL": "https://github.com/zcash-hackworks/zcash-light-client-ffi.git",
         "state": {
-          "branch": "librustzcash_0_7",
-          "revision": "127a6b9d19841fea232bf0d0887ae5f2cad8df04",
+          "branch": "librustzcash_0_7_build_test",
+          "revision": "331777b199e3346db08f62afb0848335a34061c9",
           "version": null
         }
       }
