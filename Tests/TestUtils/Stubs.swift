@@ -33,6 +33,10 @@ class AwfulLightWalletService: MockLightWalletService {
         }
     }
     
+    override func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        AsyncThrowingStream { continuation in continuation.finish(throwing: LightWalletServiceError.invalidBlock) }
+    }
+
     override func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             result(.failure(LightWalletServiceError.invalidBlock))
