@@ -42,13 +42,13 @@ class GetUTXOsViewController: UIViewController {
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
             // swiftlint:disable:next force_unwrapping
             let spendingKey = try derivationTool.deriveSpendingKeys(seed: seed, numberOfAccounts: 1).first!
-            let transparentSecretKey = try derivationTool.deriveTransparentPrivateKey(seed: seed)
+            let transparentSecretKey = try derivationTool.deriveTransparentAccountPrivateKey(seed: seed, account: 0)
 
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
 
             AppDelegate.shared.sharedSynchronizer.shieldFunds(
                 spendingKey: spendingKey,
-                transparentSecretKey: transparentSecretKey,
+                transparentAccountPrivateKey: transparentSecretKey,
                 memo: "shielding is fun!",
                 from: 0,
                 resultBlock: { result in
