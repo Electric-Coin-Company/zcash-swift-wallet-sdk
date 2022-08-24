@@ -59,7 +59,13 @@ class BlockScanOperationTests: XCTestCase {
     func testSingleDownloadAndScanOperation() {
         logger = SampleLogger(logLevel: .debug)
 
-        XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, networkType: network.networkType))
+        var dbInit: DbInitResult!
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dataDbURL, seed: nil, networkType: .testnet) }())
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
+            return
+        }
 
         let downloadStartedExpect = XCTestExpectation(description: "\(self.description) download started")
         let downloadExpect = XCTestExpectation(description: "\(self.description) download")
@@ -157,8 +163,12 @@ class BlockScanOperationTests: XCTestCase {
             name: SDKMetrics.notificationName,
             object: nil
         )
-         
-        try self.rustWelding.initDataDb(dbData: dataDbURL, networkType: network.networkType)
+
+        let dbInit = try self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType)
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
+            return
+        }
 
         guard try self.rustWelding.initAccountsTable(dbData: self.dataDbURL, ufvks: [ufvk], networkType: network.networkType) else {
             XCTFail("failed to init account table")

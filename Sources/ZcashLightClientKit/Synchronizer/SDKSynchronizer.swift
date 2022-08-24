@@ -154,16 +154,17 @@ public class SDKSynchronizer: Synchronizer {
         self.blockProcessor.stop()
     }
     
-    public func initialize() throws {
-        try self.initializer.initialize()
-        try self.blockProcessor.setStartHeight(initializer.walletBirthday)
-    }
-    
-    public func prepare() throws {
-        try self.initializer.initialize()
+    public func prepare(with seed: [UInt8]?) throws -> Initializer.InitializationResult {
+        if case .seedRequired = try self.initializer.initialize(with: seed) {
+            return .seedRequired
+        }
+
         try self.blockProcessor.setStartHeight(initializer.walletBirthday)
         self.status = .disconnected
+
+        return .success
     }
+
 
     /// Starts the synchronizer
     /// - Throws: CompactBlockProcessorError when failures occur

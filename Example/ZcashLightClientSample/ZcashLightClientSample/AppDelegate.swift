@@ -49,7 +49,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 loggerProxy: loggerProxy
             )
             
-            try! wallet.initialize()
+            _ = try! wallet.initialize(with: DemoAppConfig.seed)
             var storage = SampleStorage.shared
             storage!.seed = Data(DemoAppConfig.seed)
             storage!.privateKey = try! DerivationTool(networkType: kZcashNetwork.networkType)

@@ -80,7 +80,7 @@ public protocol Synchronizer {
 
     /// prepares this initializer to operate. Initializes the internal state with the given
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
-    func prepare() throws
+    func prepare(with seed: [UInt8]?) throws -> Initializer.InitializationResult
 
     ///Starts this synchronizer within the given scope.
     ///

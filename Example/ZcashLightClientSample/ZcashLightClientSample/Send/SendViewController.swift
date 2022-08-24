@@ -33,7 +33,7 @@ class SendViewController: UIViewController {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
         // swiftlint:disable:next force_try
-        try! synchronizer.prepare()
+        _ = try! synchronizer.prepare(with: DemoAppConfig.seed)
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()

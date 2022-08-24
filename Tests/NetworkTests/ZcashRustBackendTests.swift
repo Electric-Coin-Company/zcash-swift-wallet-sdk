@@ -37,9 +37,15 @@ class ZcashRustBackendTests: XCTestCase {
     
     func testInitWithShortSeedAndFail() {
         let seed = "testreferencealice"
-        
-        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!, networkType: networkType))
-        
+
+        var dbInit: DbInitResult!
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) }())
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
+            return
+        }
+
         _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1, networkType: networkType)
         XCTAssertNotNil(ZcashRustBackend.getLastError())
     }
@@ -99,7 +105,15 @@ class ZcashRustBackendTests: XCTestCase {
             return
         }
         let seed = "testreferencealicetestreferencealice"
-        XCTAssertNoThrow(try ZcashRustBackend.initDataDb(dbData: dbData!, networkType: networkType))
+
+        var dbInit: DbInitResult!
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) }())
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
+            return
+        }
+        
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
         XCTAssertNotNil(ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1, networkType: networkType))

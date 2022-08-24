@@ -55,7 +55,13 @@ class CompactBlockProcessorTests: XCTestCase {
             backend: ZcashRustBackend.self,
             config: processorConfig
         )
-        try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: .testnet)
+        let dbInit = try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
+            return
+        }
+        
         downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")

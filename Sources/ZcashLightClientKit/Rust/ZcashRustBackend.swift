@@ -39,13 +39,19 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     /**
     * Sets up the internal structure of the data database.
     */
-    static func initDataDb(dbData: URL, networkType: NetworkType) throws {
+    static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: NetworkType) throws -> DbInitResult {
         let dbData = dbData.osStr()
-        guard zcashlc_init_data_database(dbData.0, dbData.1, networkType.networkId) != 0 else {
+        switch zcashlc_init_data_database(dbData.0, dbData.1, seed, UInt(seed?.count ?? 0), networkType.networkId) {
+        case 0: //ok
+            return DbInitResult.success
+        case 1:
+            return DbInitResult.seedRequired
+        default:
             if let error = lastError() {
                 throw throwDataDbError(error)
+            } else {
+                throw RustWeldingError.dataDbInitFailed(message: "Database initialization failed: unknown error")
             }
-            throw RustWeldingError.dataDbInitFailed(message: "unknown error")
         }
     }
     
@@ -165,6 +171,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         return result
     }
+    
     // swiftlint:disable function_parameter_count
     static func initBlocksTable(
         dbData: URL,

@@ -29,7 +29,7 @@ class SyncBlocksViewController: UIViewController {
         
         let wallet = Initializer.shared
         // swiftlint:disable:next force_try
-        try! wallet.initialize()
+        _ = try! wallet.initialize(with: DemoAppConfig.seed)
         processor = CompactBlockProcessor(initializer: wallet)
         statusLabel.text = textFor(state: processor?.state ?? .stopped)
         progressBar.progress = 0

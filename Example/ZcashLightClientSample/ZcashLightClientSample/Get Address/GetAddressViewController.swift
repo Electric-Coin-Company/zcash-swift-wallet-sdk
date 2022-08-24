@@ -9,7 +9,7 @@
 import UIKit
 import ZcashLightClientKit
 class GetAddressViewController: UIViewController {
-    @IBOutlet weak var zAddressLabel: UILabel!
+    @IBOutlet weak var unifiedAddressLabel: UILabel!
     @IBOutlet weak var tAddressLabel: UILabel!
     @IBOutlet weak var spendingKeyLabel: UILabel! // THIS SHOULD BE SUPER SECRET!!!!!
     
@@ -18,16 +18,16 @@ class GetAddressViewController: UIViewController {
         let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
         // Do any additional setup after loading the view.
         
-        zAddressLabel.text = (try? derivationTool.deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)) ?? "No Addresses found"
+        unifiedAddressLabel.text = (try? derivationTool.deriveUnifiedAddress(seed: DemoAppConfig.seed, accountIndex: 0)) ?? "No Addresses found"
         tAddressLabel.text = (try? derivationTool.deriveTransparentAddress(seed: DemoAppConfig.seed)) ?? "could not derive t-address"
         spendingKeyLabel.text = SampleStorage.shared.privateKey ?? "No Spending Key found"
-        zAddressLabel.addGestureRecognizer(
+        unifiedAddressLabel.addGestureRecognizer(
             UITapGestureRecognizer(
                 target: self,
                 action: #selector(addressTapped(_:))
             )
         )
-        zAddressLabel.isUserInteractionEnabled = true
+        unifiedAddressLabel.isUserInteractionEnabled = true
         
         tAddressLabel.isUserInteractionEnabled = true
         tAddressLabel.addGestureRecognizer(
@@ -70,8 +70,7 @@ class GetAddressViewController: UIViewController {
     @IBAction func addressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
 
-        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)
+        UIPasteboard.general.string = unifiedAddressLabel.text
 
         let alert = UIAlertController(
             title: "",

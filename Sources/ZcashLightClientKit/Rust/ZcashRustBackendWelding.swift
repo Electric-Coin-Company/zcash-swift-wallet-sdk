@@ -22,6 +22,15 @@ public enum ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }
 
+/**
+    Enumeration of potential return states for database initialization. If `seedRequired` is returned, the caller must
+    re-attempt initialization providing the seed
+ */
+public enum DbInitResult {
+    case success
+    case seedRequired
+}
+
 public protocol ZcashRustBackendWelding {
     /**
     gets the latest error if available. Clear the existing error
@@ -37,7 +46,7 @@ public protocol ZcashRustBackendWelding {
     initializes the data db
     - Parameter dbData: location of the data db sql file
     */
-    static func initDataDb(dbData: URL, networkType: NetworkType) throws
+    static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: NetworkType) throws -> DbInitResult
     
     /**
     - Returns: true when the address is valid and shielded. Returns false in any other case

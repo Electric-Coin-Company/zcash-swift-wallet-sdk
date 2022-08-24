@@ -77,6 +77,10 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.DbInitResult {
+        .seedRequired
+    }
+
     static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 {
         -1
     }
@@ -246,7 +250,7 @@ class MockRustBackend: ZcashRustBackendWelding {
     
     static func initDataDb(dbData: URL, networkType: NetworkType) throws {
         if !mockDataDb {
-            try rustBackend.initDataDb(dbData: dbData, networkType: networkType)
+            _ = try rustBackend.initDataDb(dbData: dbData, seed: nil, networkType: networkType)
         }
     }
     

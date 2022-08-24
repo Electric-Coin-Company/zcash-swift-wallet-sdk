@@ -21,6 +21,7 @@ class TestCoordinator {
         case notificationFromUnknownSynchronizer
         case notMockLightWalletService
         case builderError
+        case seedRequiredForMigration
     }
     
     enum SyncThreshold {
@@ -291,6 +292,7 @@ enum TestSynchronizerBuilder {
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
+        seed: [UInt8]? = nil,
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
@@ -308,7 +310,9 @@ enum TestSynchronizerBuilder {
         )
 
         let synchronizer = try SDKSynchronizer(initializer: initializer)
-        try synchronizer.prepare()
+        if case .seedRequired = try synchronizer.prepare(with: seed) {
+            throw TestCoordinator.CoordinatorError.seedRequiredForMigration
+        }
         
         return ([spendingKey], synchronizer)
     }

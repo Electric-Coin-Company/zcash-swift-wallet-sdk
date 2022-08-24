@@ -109,18 +109,18 @@ class DerivationToolViewController: UIViewController {
             throw DerivationErrors.couldNotDeriveSpendingKeys(underlyingError: DerivationErrors.unknown)
         }
 
-        guard let viewingKey = try derivationTool.deriveViewingKeys(seed: seedBytes, numberOfAccounts: 1).first else {
+        guard let viewingKey = try derivationTool.deriveUnifiedFullViewingKeysFromSeed(seedBytes, numberOfAccounts: 1).first else {
             throw DerivationErrors.couldNotDeriveViewingKeys(underlyingError: DerivationErrors.unknown)
         }
         
-        let shieldedAddress = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
+        let unifiedAddress = try derivationTool.deriveUnifiedAddress(viewingKey: viewingKey.encoding)
         
         let transparentAddress = try derivationTool.deriveTransparentAddress(seed: seedBytes)
 
         updateLabels(
             spendingKey: spendingKey,
-            viewingKey: viewingKey,
-            shieldedAddress: shieldedAddress,
+            viewingKey: viewingKey.encoding,
+            shieldedAddress: unifiedAddress,
             transaparentAddress: transparentAddress
         )
     }
