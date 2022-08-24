@@ -301,6 +301,7 @@ extension LightWalletGRPCService: LightWalletServiceBlockingAPI {
 // MARK: - LightWalletServiceNonBlockingAPI
 
 extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
+
     public func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
         compactTxStreamer.getLightdInfo(Empty()).response.whenComplete { completionResult in
             switch completionResult {
@@ -454,30 +455,38 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
         }
     }
     
-    public func fetchUTXOsAsync(for tAddress: String, height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
+    public func fetchUTXOsAsync(for tAddress: String, height: BlockHeight) async throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
         let arg = GetAddressUtxosArg.with { utxoArgs in
             utxoArgs.addresses = [tAddress]
             utxoArgs.startHeight = UInt64(height)
         }
-        var utxos: [UnspentTransactionOutputEntity] = []
-        let stream = compactTxStreamerAsync.getAddressUtxosStream(arg)
-        
-        for try await reply in stream {
-            utxos.append(
-                UTXO(
-                    id: nil,
-                    address: tAddress,
-                    prevoutTxId: reply.txid,
-                    prevoutIndex: Int(reply.index),
-                    script: reply.script,
-                    valueZat: Int(reply.valueZat),
-                    height: Int(reply.height),
-                    spentInTx: nil
-                )
-            )
+
+        let utxoStreamCall = compactTxStreamerAsync.makeGetAddressUtxosStreamCall(arg)
+
+        return AsyncThrowingStream { continuation in
+            Task {
+                continuation.onTermination = { @Sendable _ in
+                    utxoStreamCall.cancel()
+                }
+
+                for try await reply in utxoStreamCall.responseStream {
+                    continuation.yield(
+                        UTXO(
+                            id: nil,
+                            address: tAddress,
+                            prevoutTxId: reply.txid,
+                            prevoutIndex: Int(reply.index),
+                            script: reply.script,
+                            valueZat: Int(reply.valueZat),
+                            height: Int(reply.height),
+                            spentInTx: nil
+                        )
+                    )
+                }
+
+                continuation.finish()
+            }
         }
-        
-        return utxos
     }
     
     public func fetchUTXOs(
@@ -524,36 +533,6 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
                 result(.failure(error.mapToServiceError()))
             }
         }
-    }
-    
-    public func fetchUTXOsAsync(for tAddresses: [String], height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
-        guard !tAddresses.isEmpty else {
-            return [] // FIXME: throw a real error
-        }
-        
-        var utxos: [UnspentTransactionOutputEntity] = []
-        let args = GetAddressUtxosArg.with { utxoArgs in
-            utxoArgs.addresses = tAddresses
-            utxoArgs.startHeight = UInt64(height)
-        }
-        let stream = compactTxStreamerAsync.getAddressUtxosStream(args)
-        
-        for try await reply in stream {
-            utxos.append(
-                UTXO(
-                    id: nil,
-                    address: reply.address,
-                    prevoutTxId: reply.txid,
-                    prevoutIndex: Int(reply.index),
-                    script: reply.script,
-                    valueZat: Int(reply.valueZat),
-                    height: Int(reply.height),
-                    spentInTx: nil
-                )
-            )
-        }
-        
-        return utxos
     }
 }
 

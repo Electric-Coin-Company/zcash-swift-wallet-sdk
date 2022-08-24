@@ -38,6 +38,10 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    func fetchUTXOsAsync(for tAddress: String, height: BlockHeight) async throws -> AsyncThrowingStream<ZcashLightClientKit.UnspentTransactionOutputEntity, Error> {
+        return try await service.fetchUTXOsAsync(for: tAddress, height: height)
+    }
+
     var channel: Channel
     var service: LightWalletGRPCService
     var darksideService: DarksideStreamerClient
@@ -245,10 +249,6 @@ class DarksideWalletService: LightWalletService {
     
     func fetchUTXOsAsync(for tAddress: String, height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
         []
-    }
-    
-    func fetchUTXOsAsync(for tAddresses: [String], height: BlockHeight) async throws -> [UnspentTransactionOutputEntity] {
-        try service.fetchUTXOs(for: tAddresses, height: height)
     }
 }
 

@@ -187,7 +187,11 @@ public protocol LightWalletServiceNonBlockingAPI {
         height: BlockHeight,
         result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
     )
-    func fetchUTXOsAsync(for tAddress: String, height: BlockHeight) async throws -> [UnspentTransactionOutputEntity]
+
+    func fetchUTXOsAsync(
+        for tAddress: String,
+        height: BlockHeight
+    ) async throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> 
     
     @available(*, deprecated, message: "This function will be removed soon. Use the `fetchUTXOsAsync(for tAddresses: [String], height: BlockHeight)` instead.")
     func fetchUTXOs(
@@ -195,7 +199,6 @@ public protocol LightWalletServiceNonBlockingAPI {
         height: BlockHeight,
         result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
     )
-    func fetchUTXOsAsync(for tAddresses: [String], height: BlockHeight) async throws -> [UnspentTransactionOutputEntity]
 }
 
 public protocol LightWalletService: LightWalletServiceNonBlockingAPI, LightWalletServiceBlockingAPI {

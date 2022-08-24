@@ -21,6 +21,10 @@ struct MockCancellable: CancellableCall {
 }
 
 class MockLightWalletService: LightWalletService {
+    func fetchUTXOsAsync(for tAddress: String, height: ZcashLightClientKit.BlockHeight) async throws -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        return AsyncThrowingStream { _ in }
+    }
+
     var mockLightDInfo: LightWalletdInfo?
     var queue = DispatchQueue(label: "mock service queue")
 
