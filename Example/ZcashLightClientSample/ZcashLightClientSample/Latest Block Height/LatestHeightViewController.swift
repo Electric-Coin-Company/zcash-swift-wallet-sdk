@@ -28,18 +28,13 @@ class LatestHeightViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
-        service.latestBlockHeight { result in
-            switch result {
-            case .success(let height):
-                DispatchQueue.main.async { [weak self] in
-                    self?.model = height
-                }
-
-            case .failure(let error):
-                DispatchQueue.main.async { [weak self] in
-                    self?.fail(error)
-                }
+        
+        /// Note: It's safe to modify model or call fail() because all methods of a UIViewController are MainActor methods by default.
+        Task {
+            do {
+                model = try await service.latestBlockHeightAsync()
+            } catch {
+                fail(error as? LightWalletServiceError ?? .unknown)
             }
         }
     }

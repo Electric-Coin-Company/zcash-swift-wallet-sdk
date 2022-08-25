@@ -22,11 +22,15 @@
 //
 import GRPC
 import NIO
+import NIOConcurrencyHelpers
 import SwiftProtobuf
 
 
-/// Usage: instantiate CompactTxStreamerClient, then call methods of this protocol to make API calls.
+/// Usage: instantiate `CompactTxStreamerClient`, then call methods of this protocol to make API calls.
 internal protocol CompactTxStreamerClientProtocol: GRPCClient {
+  var serviceName: String { get }
+  var interceptors: CompactTxStreamerClientInterceptorFactoryProtocol? { get }
+
   func getLatestBlock(
     _ request: ChainSpec,
     callOptions: CallOptions?
@@ -99,10 +103,12 @@ internal protocol CompactTxStreamerClientProtocol: GRPCClient {
     _ request: Duration,
     callOptions: CallOptions?
   ) -> UnaryCall<Duration, PingResponse>
-
 }
 
 extension CompactTxStreamerClientProtocol {
+  internal var serviceName: String {
+    return "cash.z.wallet.sdk.rpc.CompactTxStreamer"
+  }
 
   /// Return the height of the tip of the best chain
   ///
@@ -115,9 +121,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<ChainSpec, BlockID> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLatestBlock",
+      path: CompactTxStreamerClientMetadata.Methods.getLatestBlock.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetLatestBlockInterceptors() ?? []
     )
   }
 
@@ -132,9 +139,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<BlockID, CompactBlock> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlock",
+      path: CompactTxStreamerClientMetadata.Methods.getBlock.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetBlockInterceptors() ?? []
     )
   }
 
@@ -151,9 +159,10 @@ extension CompactTxStreamerClientProtocol {
     handler: @escaping (CompactBlock) -> Void
   ) -> ServerStreamingCall<BlockRange, CompactBlock> {
     return self.makeServerStreamingCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlockRange",
+      path: CompactTxStreamerClientMetadata.Methods.getBlockRange.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetBlockRangeInterceptors() ?? [],
       handler: handler
     )
   }
@@ -169,9 +178,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<TxFilter, RawTransaction> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTransaction",
+      path: CompactTxStreamerClientMetadata.Methods.getTransaction.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTransactionInterceptors() ?? []
     )
   }
 
@@ -186,9 +196,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<RawTransaction, SendResponse> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/SendTransaction",
+      path: CompactTxStreamerClientMetadata.Methods.sendTransaction.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeSendTransactionInterceptors() ?? []
     )
   }
 
@@ -205,9 +216,10 @@ extension CompactTxStreamerClientProtocol {
     handler: @escaping (RawTransaction) -> Void
   ) -> ServerStreamingCall<TransparentAddressBlockFilter, RawTransaction> {
     return self.makeServerStreamingCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressTxids",
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressTxids.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressTxidsInterceptors() ?? [],
       handler: handler
     )
   }
@@ -223,9 +235,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<AddressList, Balance> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalance",
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressBalance.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressBalanceInterceptors() ?? []
     )
   }
 
@@ -241,8 +254,9 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> ClientStreamingCall<Address, Balance> {
     return self.makeClientStreamingCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalanceStream",
-      callOptions: callOptions ?? self.defaultCallOptions
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressBalanceStream.path,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressBalanceStreamInterceptors() ?? []
     )
   }
 
@@ -267,9 +281,10 @@ extension CompactTxStreamerClientProtocol {
     handler: @escaping (CompactTx) -> Void
   ) -> ServerStreamingCall<Exclude, CompactTx> {
     return self.makeServerStreamingCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetMempoolTx",
+      path: CompactTxStreamerClientMetadata.Methods.getMempoolTx.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetMempoolTxInterceptors() ?? [],
       handler: handler
     )
   }
@@ -288,9 +303,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<BlockID, TreeState> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTreeState",
+      path: CompactTxStreamerClientMetadata.Methods.getTreeState.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTreeStateInterceptors() ?? []
     )
   }
 
@@ -305,9 +321,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<GetAddressUtxosArg, GetAddressUtxosReplyList> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxos",
+      path: CompactTxStreamerClientMetadata.Methods.getAddressUtxos.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetAddressUtxosInterceptors() ?? []
     )
   }
 
@@ -324,9 +341,10 @@ extension CompactTxStreamerClientProtocol {
     handler: @escaping (GetAddressUtxosReply) -> Void
   ) -> ServerStreamingCall<GetAddressUtxosArg, GetAddressUtxosReply> {
     return self.makeServerStreamingCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxosStream",
+      path: CompactTxStreamerClientMetadata.Methods.getAddressUtxosStream.path,
       request: request,
       callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetAddressUtxosStreamInterceptors() ?? [],
       handler: handler
     )
   }
@@ -342,9 +360,10 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Empty, LightdInfo> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLightdInfo",
+      path: CompactTxStreamerClientMetadata.Methods.getLightdInfo.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetLightdInfoInterceptors() ?? []
     )
   }
 
@@ -359,25 +378,679 @@ extension CompactTxStreamerClientProtocol {
     callOptions: CallOptions? = nil
   ) -> UnaryCall<Duration, PingResponse> {
     return self.makeUnaryCall(
-      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/Ping",
+      path: CompactTxStreamerClientMetadata.Methods.ping.path,
       request: request,
-      callOptions: callOptions ?? self.defaultCallOptions
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makePingInterceptors() ?? []
     )
   }
 }
 
+#if compiler(>=5.6)
+@available(*, deprecated)
+extension CompactTxStreamerClient: @unchecked Sendable {}
+#endif // compiler(>=5.6)
+
+@available(*, deprecated, renamed: "CompactTxStreamerNIOClient")
 internal final class CompactTxStreamerClient: CompactTxStreamerClientProtocol {
+  private let lock = Lock()
+  private var _defaultCallOptions: CallOptions
+  private var _interceptors: CompactTxStreamerClientInterceptorFactoryProtocol?
   internal let channel: GRPCChannel
-  internal var defaultCallOptions: CallOptions
+  internal var defaultCallOptions: CallOptions {
+    get { self.lock.withLock { return self._defaultCallOptions } }
+    set { self.lock.withLockVoid { self._defaultCallOptions = newValue } }
+  }
+  internal var interceptors: CompactTxStreamerClientInterceptorFactoryProtocol? {
+    get { self.lock.withLock { return self._interceptors } }
+    set { self.lock.withLockVoid { self._interceptors = newValue } }
+  }
 
   /// Creates a client for the cash.z.wallet.sdk.rpc.CompactTxStreamer service.
   ///
   /// - Parameters:
   ///   - channel: `GRPCChannel` to the service host.
   ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
-  internal init(channel: GRPCChannel, defaultCallOptions: CallOptions = CallOptions()) {
+  ///   - interceptors: A factory providing interceptors for each RPC.
+  internal init(
+    channel: GRPCChannel,
+    defaultCallOptions: CallOptions = CallOptions(),
+    interceptors: CompactTxStreamerClientInterceptorFactoryProtocol? = nil
+  ) {
+    self.channel = channel
+    self._defaultCallOptions = defaultCallOptions
+    self._interceptors = interceptors
+  }
+}
+
+internal struct CompactTxStreamerNIOClient: CompactTxStreamerClientProtocol {
+  internal var channel: GRPCChannel
+  internal var defaultCallOptions: CallOptions
+  internal var interceptors: CompactTxStreamerClientInterceptorFactoryProtocol?
+
+  /// Creates a client for the cash.z.wallet.sdk.rpc.CompactTxStreamer service.
+  ///
+  /// - Parameters:
+  ///   - channel: `GRPCChannel` to the service host.
+  ///   - defaultCallOptions: Options to use for each service call if the user doesn't provide them.
+  ///   - interceptors: A factory providing interceptors for each RPC.
+  internal init(
+    channel: GRPCChannel,
+    defaultCallOptions: CallOptions = CallOptions(),
+    interceptors: CompactTxStreamerClientInterceptorFactoryProtocol? = nil
+  ) {
     self.channel = channel
     self.defaultCallOptions = defaultCallOptions
+    self.interceptors = interceptors
+  }
+}
+
+#if compiler(>=5.6)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+internal protocol CompactTxStreamerAsyncClientProtocol: GRPCClient {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: CompactTxStreamerClientInterceptorFactoryProtocol? { get }
+
+  func makeGetLatestBlockCall(
+    _ request: ChainSpec,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<ChainSpec, BlockID>
+
+  func makeGetBlockCall(
+    _ request: BlockID,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<BlockID, CompactBlock>
+
+  func makeGetBlockRangeCall(
+    _ request: BlockRange,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncServerStreamingCall<BlockRange, CompactBlock>
+
+  func makeGetTransactionCall(
+    _ request: TxFilter,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<TxFilter, RawTransaction>
+
+  func makeSendTransactionCall(
+    _ request: RawTransaction,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<RawTransaction, SendResponse>
+
+  func makeGetTaddressTxidsCall(
+    _ request: TransparentAddressBlockFilter,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncServerStreamingCall<TransparentAddressBlockFilter, RawTransaction>
+
+  func makeGetTaddressBalanceCall(
+    _ request: AddressList,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<AddressList, Balance>
+
+  func makeGetTaddressBalanceStreamCall(
+    callOptions: CallOptions?
+  ) -> GRPCAsyncClientStreamingCall<Address, Balance>
+
+  func makeGetMempoolTxCall(
+    _ request: Exclude,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncServerStreamingCall<Exclude, CompactTx>
+
+  func makeGetTreeStateCall(
+    _ request: BlockID,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<BlockID, TreeState>
+
+  func makeGetAddressUtxosCall(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<GetAddressUtxosArg, GetAddressUtxosReplyList>
+
+  func makeGetAddressUtxosStreamCall(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncServerStreamingCall<GetAddressUtxosArg, GetAddressUtxosReply>
+
+  func makeGetLightdInfoCall(
+    _ request: Empty,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Empty, LightdInfo>
+
+  func makePingCall(
+    _ request: Duration,
+    callOptions: CallOptions?
+  ) -> GRPCAsyncUnaryCall<Duration, PingResponse>
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension CompactTxStreamerAsyncClientProtocol {
+  internal static var serviceDescriptor: GRPCServiceDescriptor {
+    return CompactTxStreamerClientMetadata.serviceDescriptor
+  }
+
+  internal var interceptors: CompactTxStreamerClientInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  internal func makeGetLatestBlockCall(
+    _ request: ChainSpec,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<ChainSpec, BlockID> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getLatestBlock.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetLatestBlockInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetBlockCall(
+    _ request: BlockID,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<BlockID, CompactBlock> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getBlock.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetBlockInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetBlockRangeCall(
+    _ request: BlockRange,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncServerStreamingCall<BlockRange, CompactBlock> {
+    return self.makeAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getBlockRange.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetBlockRangeInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetTransactionCall(
+    _ request: TxFilter,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<TxFilter, RawTransaction> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTransaction.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTransactionInterceptors() ?? []
+    )
+  }
+
+  internal func makeSendTransactionCall(
+    _ request: RawTransaction,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<RawTransaction, SendResponse> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.sendTransaction.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeSendTransactionInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetTaddressTxidsCall(
+    _ request: TransparentAddressBlockFilter,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncServerStreamingCall<TransparentAddressBlockFilter, RawTransaction> {
+    return self.makeAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressTxids.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressTxidsInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetTaddressBalanceCall(
+    _ request: AddressList,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<AddressList, Balance> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressBalance.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressBalanceInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetTaddressBalanceStreamCall(
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncClientStreamingCall<Address, Balance> {
+    return self.makeAsyncClientStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressBalanceStream.path,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressBalanceStreamInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetMempoolTxCall(
+    _ request: Exclude,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncServerStreamingCall<Exclude, CompactTx> {
+    return self.makeAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getMempoolTx.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetMempoolTxInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetTreeStateCall(
+    _ request: BlockID,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<BlockID, TreeState> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTreeState.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTreeStateInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetAddressUtxosCall(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<GetAddressUtxosArg, GetAddressUtxosReplyList> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getAddressUtxos.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetAddressUtxosInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetAddressUtxosStreamCall(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncServerStreamingCall<GetAddressUtxosArg, GetAddressUtxosReply> {
+    return self.makeAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getAddressUtxosStream.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetAddressUtxosStreamInterceptors() ?? []
+    )
+  }
+
+  internal func makeGetLightdInfoCall(
+    _ request: Empty,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Empty, LightdInfo> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getLightdInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetLightdInfoInterceptors() ?? []
+    )
+  }
+
+  internal func makePingCall(
+    _ request: Duration,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncUnaryCall<Duration, PingResponse> {
+    return self.makeAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.ping.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makePingInterceptors() ?? []
+    )
+  }
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension CompactTxStreamerAsyncClientProtocol {
+  internal func getLatestBlock(
+    _ request: ChainSpec,
+    callOptions: CallOptions? = nil
+  ) async throws -> BlockID {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getLatestBlock.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetLatestBlockInterceptors() ?? []
+    )
+  }
+
+  internal func getBlock(
+    _ request: BlockID,
+    callOptions: CallOptions? = nil
+  ) async throws -> CompactBlock {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getBlock.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetBlockInterceptors() ?? []
+    )
+  }
+
+  internal func getBlockRange(
+    _ request: BlockRange,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncResponseStream<CompactBlock> {
+    return self.performAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getBlockRange.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetBlockRangeInterceptors() ?? []
+    )
+  }
+
+  internal func getTransaction(
+    _ request: TxFilter,
+    callOptions: CallOptions? = nil
+  ) async throws -> RawTransaction {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTransaction.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTransactionInterceptors() ?? []
+    )
+  }
+
+  internal func sendTransaction(
+    _ request: RawTransaction,
+    callOptions: CallOptions? = nil
+  ) async throws -> SendResponse {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.sendTransaction.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeSendTransactionInterceptors() ?? []
+    )
+  }
+
+  internal func getTaddressTxids(
+    _ request: TransparentAddressBlockFilter,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncResponseStream<RawTransaction> {
+    return self.performAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressTxids.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressTxidsInterceptors() ?? []
+    )
+  }
+
+  internal func getTaddressBalance(
+    _ request: AddressList,
+    callOptions: CallOptions? = nil
+  ) async throws -> Balance {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressBalance.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressBalanceInterceptors() ?? []
+    )
+  }
+
+  internal func getTaddressBalanceStream<RequestStream>(
+    _ requests: RequestStream,
+    callOptions: CallOptions? = nil
+  ) async throws -> Balance where RequestStream: Sequence, RequestStream.Element == Address {
+    return try await self.performAsyncClientStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressBalanceStream.path,
+      requests: requests,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressBalanceStreamInterceptors() ?? []
+    )
+  }
+
+  internal func getTaddressBalanceStream<RequestStream>(
+    _ requests: RequestStream,
+    callOptions: CallOptions? = nil
+  ) async throws -> Balance where RequestStream: AsyncSequence & Sendable, RequestStream.Element == Address {
+    return try await self.performAsyncClientStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTaddressBalanceStream.path,
+      requests: requests,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTaddressBalanceStreamInterceptors() ?? []
+    )
+  }
+
+  internal func getMempoolTx(
+    _ request: Exclude,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncResponseStream<CompactTx> {
+    return self.performAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getMempoolTx.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetMempoolTxInterceptors() ?? []
+    )
+  }
+
+  internal func getTreeState(
+    _ request: BlockID,
+    callOptions: CallOptions? = nil
+  ) async throws -> TreeState {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getTreeState.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetTreeStateInterceptors() ?? []
+    )
+  }
+
+  internal func getAddressUtxos(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions? = nil
+  ) async throws -> GetAddressUtxosReplyList {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getAddressUtxos.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetAddressUtxosInterceptors() ?? []
+    )
+  }
+
+  internal func getAddressUtxosStream(
+    _ request: GetAddressUtxosArg,
+    callOptions: CallOptions? = nil
+  ) -> GRPCAsyncResponseStream<GetAddressUtxosReply> {
+    return self.performAsyncServerStreamingCall(
+      path: CompactTxStreamerClientMetadata.Methods.getAddressUtxosStream.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetAddressUtxosStreamInterceptors() ?? []
+    )
+  }
+
+  internal func getLightdInfo(
+    _ request: Empty,
+    callOptions: CallOptions? = nil
+  ) async throws -> LightdInfo {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.getLightdInfo.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makeGetLightdInfoInterceptors() ?? []
+    )
+  }
+
+  internal func ping(
+    _ request: Duration,
+    callOptions: CallOptions? = nil
+  ) async throws -> PingResponse {
+    return try await self.performAsyncUnaryCall(
+      path: CompactTxStreamerClientMetadata.Methods.ping.path,
+      request: request,
+      callOptions: callOptions ?? self.defaultCallOptions,
+      interceptors: self.interceptors?.makePingInterceptors() ?? []
+    )
+  }
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+internal struct CompactTxStreamerAsyncClient: CompactTxStreamerAsyncClientProtocol {
+  internal var channel: GRPCChannel
+  internal var defaultCallOptions: CallOptions
+  internal var interceptors: CompactTxStreamerClientInterceptorFactoryProtocol?
+
+  internal init(
+    channel: GRPCChannel,
+    defaultCallOptions: CallOptions = CallOptions(),
+    interceptors: CompactTxStreamerClientInterceptorFactoryProtocol? = nil
+  ) {
+    self.channel = channel
+    self.defaultCallOptions = defaultCallOptions
+    self.interceptors = interceptors
+  }
+}
+
+#endif // compiler(>=5.6)
+
+internal protocol CompactTxStreamerClientInterceptorFactoryProtocol: GRPCSendable {
+
+  /// - Returns: Interceptors to use when invoking 'getLatestBlock'.
+  func makeGetLatestBlockInterceptors() -> [ClientInterceptor<ChainSpec, BlockID>]
+
+  /// - Returns: Interceptors to use when invoking 'getBlock'.
+  func makeGetBlockInterceptors() -> [ClientInterceptor<BlockID, CompactBlock>]
+
+  /// - Returns: Interceptors to use when invoking 'getBlockRange'.
+  func makeGetBlockRangeInterceptors() -> [ClientInterceptor<BlockRange, CompactBlock>]
+
+  /// - Returns: Interceptors to use when invoking 'getTransaction'.
+  func makeGetTransactionInterceptors() -> [ClientInterceptor<TxFilter, RawTransaction>]
+
+  /// - Returns: Interceptors to use when invoking 'sendTransaction'.
+  func makeSendTransactionInterceptors() -> [ClientInterceptor<RawTransaction, SendResponse>]
+
+  /// - Returns: Interceptors to use when invoking 'getTaddressTxids'.
+  func makeGetTaddressTxidsInterceptors() -> [ClientInterceptor<TransparentAddressBlockFilter, RawTransaction>]
+
+  /// - Returns: Interceptors to use when invoking 'getTaddressBalance'.
+  func makeGetTaddressBalanceInterceptors() -> [ClientInterceptor<AddressList, Balance>]
+
+  /// - Returns: Interceptors to use when invoking 'getTaddressBalanceStream'.
+  func makeGetTaddressBalanceStreamInterceptors() -> [ClientInterceptor<Address, Balance>]
+
+  /// - Returns: Interceptors to use when invoking 'getMempoolTx'.
+  func makeGetMempoolTxInterceptors() -> [ClientInterceptor<Exclude, CompactTx>]
+
+  /// - Returns: Interceptors to use when invoking 'getTreeState'.
+  func makeGetTreeStateInterceptors() -> [ClientInterceptor<BlockID, TreeState>]
+
+  /// - Returns: Interceptors to use when invoking 'getAddressUtxos'.
+  func makeGetAddressUtxosInterceptors() -> [ClientInterceptor<GetAddressUtxosArg, GetAddressUtxosReplyList>]
+
+  /// - Returns: Interceptors to use when invoking 'getAddressUtxosStream'.
+  func makeGetAddressUtxosStreamInterceptors() -> [ClientInterceptor<GetAddressUtxosArg, GetAddressUtxosReply>]
+
+  /// - Returns: Interceptors to use when invoking 'getLightdInfo'.
+  func makeGetLightdInfoInterceptors() -> [ClientInterceptor<Empty, LightdInfo>]
+
+  /// - Returns: Interceptors to use when invoking 'ping'.
+  func makePingInterceptors() -> [ClientInterceptor<Duration, PingResponse>]
+}
+
+internal enum CompactTxStreamerClientMetadata {
+  internal static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "CompactTxStreamer",
+    fullName: "cash.z.wallet.sdk.rpc.CompactTxStreamer",
+    methods: [
+      CompactTxStreamerClientMetadata.Methods.getLatestBlock,
+      CompactTxStreamerClientMetadata.Methods.getBlock,
+      CompactTxStreamerClientMetadata.Methods.getBlockRange,
+      CompactTxStreamerClientMetadata.Methods.getTransaction,
+      CompactTxStreamerClientMetadata.Methods.sendTransaction,
+      CompactTxStreamerClientMetadata.Methods.getTaddressTxids,
+      CompactTxStreamerClientMetadata.Methods.getTaddressBalance,
+      CompactTxStreamerClientMetadata.Methods.getTaddressBalanceStream,
+      CompactTxStreamerClientMetadata.Methods.getMempoolTx,
+      CompactTxStreamerClientMetadata.Methods.getTreeState,
+      CompactTxStreamerClientMetadata.Methods.getAddressUtxos,
+      CompactTxStreamerClientMetadata.Methods.getAddressUtxosStream,
+      CompactTxStreamerClientMetadata.Methods.getLightdInfo,
+      CompactTxStreamerClientMetadata.Methods.ping,
+    ]
+  )
+
+  internal enum Methods {
+    internal static let getLatestBlock = GRPCMethodDescriptor(
+      name: "GetLatestBlock",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLatestBlock",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getBlock = GRPCMethodDescriptor(
+      name: "GetBlock",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlock",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getBlockRange = GRPCMethodDescriptor(
+      name: "GetBlockRange",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetBlockRange",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getTransaction = GRPCMethodDescriptor(
+      name: "GetTransaction",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTransaction",
+      type: GRPCCallType.unary
+    )
+
+    internal static let sendTransaction = GRPCMethodDescriptor(
+      name: "SendTransaction",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/SendTransaction",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getTaddressTxids = GRPCMethodDescriptor(
+      name: "GetTaddressTxids",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressTxids",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getTaddressBalance = GRPCMethodDescriptor(
+      name: "GetTaddressBalance",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalance",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getTaddressBalanceStream = GRPCMethodDescriptor(
+      name: "GetTaddressBalanceStream",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTaddressBalanceStream",
+      type: GRPCCallType.clientStreaming
+    )
+
+    internal static let getMempoolTx = GRPCMethodDescriptor(
+      name: "GetMempoolTx",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetMempoolTx",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getTreeState = GRPCMethodDescriptor(
+      name: "GetTreeState",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetTreeState",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getAddressUtxos = GRPCMethodDescriptor(
+      name: "GetAddressUtxos",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxos",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getAddressUtxosStream = GRPCMethodDescriptor(
+      name: "GetAddressUtxosStream",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetAddressUtxosStream",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let getLightdInfo = GRPCMethodDescriptor(
+      name: "GetLightdInfo",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/GetLightdInfo",
+      type: GRPCCallType.unary
+    )
+
+    internal static let ping = GRPCMethodDescriptor(
+      name: "Ping",
+      path: "/cash.z.wallet.sdk.rpc.CompactTxStreamer/Ping",
+      type: GRPCCallType.unary
+    )
   }
 }
 
