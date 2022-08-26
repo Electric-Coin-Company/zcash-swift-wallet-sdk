@@ -16,6 +16,13 @@ enum CompactBlockDownloadError: Error {
 Represents what a compact block downloaded should provide to its clients
 */
 public protocol CompactBlockDownloading {
+    
+    /**
+    Downloads and stores the given block range.
+    Blocking
+    */
+    func downloadBlockRange(_ range: CompactBlockRange) throws
+
     /**
     Downloads and stores the given block range.
     Non-Blocking
@@ -45,12 +52,6 @@ public protocol CompactBlockDownloading {
     Non-blocking
     */
     func latestBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
-    
-    /**
-    Downloads and stores the given block range.
-    Blocking
-    */
-    func downloadBlockRange(_ range: CompactBlockRange) throws
     
     /**
     Restore the download progress up to the given height.
@@ -176,18 +177,17 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         _ heightRange: CompactBlockRange,
         completion: @escaping (Error?) -> Void
     ) {
-        lightwalletService.blockRange(heightRange) { [weak self] result in
-            guard let self = self else {
-                return
-            }
-            
-            switch result {
-            case .failure(let error):
-                completion(error)
-            case .success(let compactBlocks):
-                self.storage.write(blocks: compactBlocks) { storeError in
-                    completion(storeError)
+        let stream: AsyncThrowingStream<ZcashCompactBlock, Error> = lightwalletService.blockRange(heightRange)
+        Task {
+            do {
+                var compactBlocks: [ZcashCompactBlock] = []
+                for try await compactBlock in stream {
+                    compactBlocks.append(compactBlock)
                 }
+                try await self.storage.writeAsync(blocks: compactBlocks)
+                completion(nil)
+            } catch {
+                completion(error)
             }
         }
     }
@@ -198,20 +198,25 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     }
     
     func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void) {
-        storage.rewind(to: height) { e in
-            completion(e)
+        Task {
+            do {
+                try await storage.rewindAsync(to: height)
+                completion(nil)
+            } catch {
+                completion(error)
+            }
         }
     }
     
     func lastDownloadedBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        storage.latestHeight { heightResult in
-            switch heightResult {
-            case .failure(let e):
-                result(.failure(CompactBlockDownloadError.generalError(error: e)))
-                return
-            case .success(let height):
-                result(.success(height))
+        Task {
+            do {
+                let latestHeight = try await storage.latestHeightAsync()
+                result(.success(latestHeight))
+            } catch {
+                result(.failure(CompactBlockDownloadError.generalError(error: error)))
             }
+            
         }
     }
     

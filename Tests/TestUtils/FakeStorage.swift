@@ -10,6 +10,18 @@ import Foundation
 @testable import ZcashLightClientKit
 
 class ZcashConsoleFakeStorage: CompactBlockRepository {
+    func latestHeightAsync() async throws -> BlockHeight {
+        latestBlockHeight
+    }
+    
+    func writeAsync(blocks: [ZcashCompactBlock]) async throws {
+        fakeSave(blocks: blocks)
+    }
+    
+    func rewindAsync(to height: BlockHeight) async throws {
+        fakeRewind(to: height)
+    }
+    
     func latestHeight() throws -> Int {
         return self.latestBlockHeight
     }
@@ -29,30 +41,10 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
         self.latestBlockHeight = latestBlockHeight
     }
     
-    func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            result(.success(self.latestBlockHeight))
-        }
-    }
-    
     private func fakeSave(blocks: [ZcashCompactBlock]) {
         blocks.forEach {
             LoggerProxy.debug("saving block \($0)")
             self.latestBlockHeight = $0.height
-        }
-    }
-    
-    func write(blocks: [ZcashCompactBlock], completion: ((Error?) -> Void)?) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            self.fakeSave(blocks: blocks)
-            completion?(nil)
-        }
-    }
-    
-    func rewind(to height: BlockHeight, completion: ((Error?) -> Void)?) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            self.fakeRewind(to: height)
-            completion?(nil)
         }
     }
     

@@ -51,15 +51,20 @@ class BlockDownloaderTests: XCTestCase {
             expect.fulfill()
             XCTAssertNil(error)
             
-            // check what was 'stored'
-            self.storage.latestHeight { result in
-                expect.fulfill()
-                
-                XCTAssertTrue(self.validate(result: result, against: upperRange))
-                
-                self.downloader.lastDownloadedBlockHeight { resultHeight in
+            Task {
+                do {
+                    // check what was 'stored'
+                    let latestHeight = try await self.storage.latestHeightAsync()
                     expect.fulfill()
-                    XCTAssertTrue(self.validate(result: resultHeight, against: upperRange))
+
+                    XCTAssertEqual(latestHeight, upperRange)
+
+                    self.downloader.lastDownloadedBlockHeight { resultHeight in
+                        expect.fulfill()
+                        XCTAssertTrue(self.validate(result: resultHeight, against: upperRange))
+                    }
+                } catch {
+                    XCTFail("testSmallDownloadAsync() shouldn't fail")
                 }
             }
         }

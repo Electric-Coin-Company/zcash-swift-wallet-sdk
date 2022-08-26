@@ -19,7 +19,12 @@ class CompactBlockStorageTests: XCTestCase {
     func testEmptyStorage() {
         XCTAssertEqual(try! compactBlockDao.latestHeight(), BlockHeight.empty())
     }
-    
+
+    func testEmptyStorageAsync() async throws {
+        let latestHeight = try await compactBlockDao.latestHeightAsync()
+        XCTAssertEqual(latestHeight, BlockHeight.empty())
+    }
+
     func testStoreThousandBlocks() {
         let initialHeight = try! compactBlockDao.latestHeight()
         let startHeight = self.network.constants.saplingActivationHeight
@@ -34,6 +39,19 @@ class CompactBlockStorageTests: XCTestCase {
         }
         
         let latestHeight = try! compactBlockDao.latestHeight()
+        XCTAssertNotEqual(initialHeight, latestHeight)
+        XCTAssertEqual(latestHeight, finalHeight)
+    }
+    
+    func testStoreThousandBlocksAsync() async throws {
+        let initialHeight = try! compactBlockDao.latestHeight()
+        let startHeight = self.network.constants.saplingActivationHeight
+        let blockCount = Int(1_000)
+        let finalHeight = startHeight + blockCount
+        
+        try TestDbBuilder.seed(db: compactBlockDao, with: startHeight...finalHeight)
+        
+        let latestHeight = try await compactBlockDao.latestHeightAsync()
         XCTAssertNotEqual(initialHeight, latestHeight)
         XCTAssertEqual(latestHeight, finalHeight)
     }
@@ -61,6 +79,24 @@ class CompactBlockStorageTests: XCTestCase {
         }
     }
     
+    func testStoreOneBlockFromEmptyAsync() async throws {
+        let initialHeight = try await compactBlockDao.latestHeightAsync()
+        guard initialHeight == BlockHeight.empty() else {
+            XCTFail("database not empty, latest height: \(initialHeight)")
+            return
+        }
+        
+        let expectedHeight = BlockHeight(123_456)
+        guard let block = StubBlockCreator.createRandomDataBlock(with: expectedHeight) else {
+            XCTFail("could not create randem block with height: \(expectedHeight)")
+            return
+        }
+        try await compactBlockDao.writeAsync(blocks: [block])
+        
+        let result = try await compactBlockDao.latestHeightAsync()
+        XCTAssertEqual(result, expectedHeight)
+    }
+    
     func testRewindTo() {
         let startHeight = self.network.constants.saplingActivationHeight
         let blockCount = Int(1_000)
@@ -81,5 +117,18 @@ class CompactBlockStorageTests: XCTestCase {
         } catch {
             XCTFail("Rewind latest block failed with error: \(error)")
         }
+    }
+    
+    func testRewindToAsync() async throws {
+        let startHeight = self.network.constants.saplingActivationHeight
+        let blockCount = Int(1_000)
+        let finalHeight = startHeight + blockCount
+        
+        try TestDbBuilder.seed(db: compactBlockDao, with: startHeight...finalHeight)
+        let rewindHeight = BlockHeight(finalHeight - 233)
+        
+        try await compactBlockDao.rewindAsync(to: rewindHeight)
+        let latestHeight = try await compactBlockDao.latestHeightAsync()
+        XCTAssertEqual(latestHeight, rewindHeight - 1)
     }
 }
