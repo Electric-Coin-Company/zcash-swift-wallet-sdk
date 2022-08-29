@@ -52,7 +52,6 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
     private var storage: CompactBlockStorage
     private var service: LightWalletService
     private var done = false
-    private var cancelable: CancellableCall?
     private var cancelableTask: Task<Void, Error>?
     private var startHeight: BlockHeight?
     private var targetHeight: BlockHeight?
@@ -101,59 +100,53 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
         }
         self.startedHandler?()
         
-        do {
-            if self.targetHeight == nil {
-                self.targetHeight = try service.latestBlockHeight()
-            }
-            guard let latestHeight = self.targetHeight else {
-                throw LightWalletServiceError.generalError(message: "missing target height on block stream operation")
-            }
-            let latestDownloaded = try storage.latestHeight()
-            let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
-
-            let stream = service.blockStream(
-                startHeight: startHeight,
-                endHeight: latestHeight
-            )
-
-            cancelableTask = Task {
-                do {
-                    for try await zcashCompactBlock in stream {
-                        try self.cache(zcashCompactBlock, flushCache: false)
-                        let progress = BlockProgress(
-                            startHeight: startHeight,
-                            targetHeight: latestHeight,
-                            progressHeight: zcashCompactBlock.height
-                        )
-                        self.progressDelegate?.progressUpdated(.download(progress))
-                    }
-                    try self.flush()
+        cancelableTask = Task {
+            do {
+                if self.targetHeight == nil {
+                    self.targetHeight = try await service.latestBlockHeightAsync()
+                }
+                guard let latestHeight = self.targetHeight else {
+                    throw LightWalletServiceError.generalError(message: "missing target height on block stream operation")
+                }
+                let latestDownloaded = try await storage.latestHeightAsync()
+                let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
+                
+                let stream = service.blockStream(
+                    startHeight: startHeight,
+                    endHeight: latestHeight
+                )
+                
+                for try await zcashCompactBlock in stream {
+                    try self.cache(zcashCompactBlock, flushCache: false)
+                    let progress = BlockProgress(
+                        startHeight: startHeight,
+                        targetHeight: latestHeight,
+                        progressHeight: zcashCompactBlock.height
+                    )
+                    self.progressDelegate?.progressUpdated(.download(progress))
+                }
+                try self.flush()
+                self.done = true
+            } catch {
+                if let err = error as? LightWalletServiceError, case .userCancelled = err {
                     self.done = true
-                } catch {
-                    if let err = error as? LightWalletServiceError, case .userCancelled = err {
-                        self.done = true
-                    } else {
-                        self.fail(error: error)
-                    }
+                } else {
+                    self.fail(error: error)
                 }
             }
-            
-            while !done && !isCancelled {
-                sleep(1)
-            }
-        } catch {
-            self.fail(error: error)
+        }
+        
+        while !done && !isCancelled {
+            sleep(1)
         }
     }
 
     override func fail(error: Error? = nil) {
-        self.cancelable?.cancel()
         self.cancelableTask?.cancel()
         super.fail(error: error)
     }
     
     override func cancel() {
-        self.cancelable?.cancel()
         self.cancelableTask?.cancel()
         super.cancel()
     }
