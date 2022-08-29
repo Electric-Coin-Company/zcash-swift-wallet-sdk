@@ -14,7 +14,9 @@ class CompactBlockDownloadOperation: ZcashOperation {
     
     private var downloader: CompactBlockDownloading
     private var range: CompactBlockRange
-    
+    private var cancelableTask: Task<Void, Error>?
+    private var done = false
+
     required init(downloader: CompactBlockDownloading, range: CompactBlockRange) {
         self.range = range
         self.downloader = downloader
@@ -28,12 +30,29 @@ class CompactBlockDownloadOperation: ZcashOperation {
             return
         }
         self.startedHandler?()
-        do {
-            try downloader.downloadBlockRange(range)
-        } catch {
-            self.error = error
-            self.fail()
+        
+        cancelableTask = Task {
+            do {
+                try await downloader.downloadBlockRangeAsync(range)
+                self.done = true
+            } catch {
+                self.fail(error: error)
+            }
         }
+        
+        while !done && !isCancelled {
+            sleep(1)
+        }
+    }
+    
+    override func fail(error: Error? = nil) {
+        self.cancelableTask?.cancel()
+        super.fail(error: error)
+    }
+    
+    override func cancel() {
+        self.cancelableTask?.cancel()
+        super.cancel()
     }
 }
 

@@ -66,7 +66,9 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
                 throw FetchUTXOError.clearingFailed(error)
             }
             
-            let utxos = try downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses, startHeight: startHeight)
+            // TODO: will be replaced by new async API, issue 474
+            // https://github.com/zcash/ZcashLightClientKit/issues/474
+            let utxos: [UnspentTransactionOutputEntity] = try downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses, startHeight: startHeight)
             
             let result = storeUTXOs(utxos, in: dataDb)
             
