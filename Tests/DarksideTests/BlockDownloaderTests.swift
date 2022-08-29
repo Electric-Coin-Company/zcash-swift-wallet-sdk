@@ -40,36 +40,23 @@ class BlockDownloaderTests: XCTestCase {
         try? FileManager.default.removeItem(at: cacheDB)
     }
     
-    func testSmallDownloadAsync() {
-        let expect = XCTestExpectation(description: self.description)
-        expect.expectedFulfillmentCount = 3
+    func testSmallDownloadAsync() async {
         let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
         let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange, upperRange))
-        downloader.downloadBlockRange(range) { error in
-            expect.fulfill()
-            XCTAssertNil(error)
+        do {
+            try await downloader.downloadBlockRangeAsync(range)
             
-            Task {
-                do {
-                    // check what was 'stored'
-                    let latestHeight = try await self.storage.latestHeightAsync()
-                    expect.fulfill()
-
-                    XCTAssertEqual(latestHeight, upperRange)
-
-                    self.downloader.lastDownloadedBlockHeight { resultHeight in
-                        expect.fulfill()
-                        XCTAssertTrue(self.validate(result: resultHeight, against: upperRange))
-                    }
-                } catch {
-                    XCTFail("testSmallDownloadAsync() shouldn't fail")
-                }
-            }
+            // check what was 'stored'
+            let latestHeight = try await self.storage.latestHeightAsync()
+            XCTAssertEqual(latestHeight, upperRange)
+            
+            let resultHeight = try await self.downloader.lastDownloadedBlockHeightAsync()
+            XCTAssertEqual(resultHeight, upperRange)
+        } catch {
+            XCTFail("testSmallDownloadAsync() shouldn't fail")
         }
-        
-        wait(for: [expect], timeout: 2)
     }
     
     func testSmallDownload() {
@@ -99,7 +86,7 @@ class BlockDownloaderTests: XCTestCase {
         XCTAssertEqual(currentLatest, upperRange )
     }
     
-    func testFailure() {
+    func testFailure() async {
         let awfulDownloader = CompactBlockDownloader(
             service: AwfulLightWalletService(
                 latestBlockHeight: self.network.constants.saplingActivationHeight + 1000,
@@ -108,18 +95,16 @@ class BlockDownloaderTests: XCTestCase {
             storage: ZcashConsoleFakeStorage()
         )
         
-        let expect = XCTestExpectation(description: self.description)
-        expect.expectedFulfillmentCount = 1
         let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
         let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange, upperRange))
-        
-        awfulDownloader.downloadBlockRange(range) { error in
-            expect.fulfill()
+
+        do {
+            try await awfulDownloader.downloadBlockRangeAsync(range)
+        } catch {
             XCTAssertNotNil(error)
         }
-        wait(for: [expect], timeout: 2)
     }
 }
 

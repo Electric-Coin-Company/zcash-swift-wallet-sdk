@@ -631,7 +631,14 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        blockProcessor.downloader.latestBlockHeight(result: result)
+        Task {
+            do {
+                let latestBlockHeight = try await blockProcessor.downloader.latestBlockHeightAsync()
+                result(.success(latestBlockHeight))
+            } catch {
+                result(.failure(error))
+            }
+        }
     }
     
     public func latestHeight() throws -> BlockHeight {
