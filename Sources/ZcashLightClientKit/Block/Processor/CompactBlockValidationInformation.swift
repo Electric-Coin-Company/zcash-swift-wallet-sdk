@@ -22,7 +22,9 @@ class CompactBlockValidationOperation: ZcashOperation {
     private var cacheDb: URL
     private var dataDb: URL
     private var network: NetworkType
-    
+    private var cancelableTask: Task<Void, Error>?
+    private var done = false
+
     init(
         rustWelding: ZcashRustBackendWelding.Type,
         cacheDb: URL,
@@ -44,23 +46,40 @@ class CompactBlockValidationOperation: ZcashOperation {
 
         self.startedHandler?()
 
-        let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb, networkType: self.network)
-
-        switch result {
-        case 0:
-            let error = CompactBlockValidationError.failedWithError(rustBackend.lastError())
-            self.error = error
-            LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
-            self.fail(error: error)
+        cancelableTask = Task {
+            let result = self.rustBackend.validateCombinedChain(dbCache: cacheDb, dbData: dataDb, networkType: self.network)
             
-        case ZcashRustBackendWeldingConstants.validChain:
-            break
-            
-        default:
-            let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))
-            self.error = error
-            LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
-            self.fail(error: error)
+            switch result {
+            case 0:
+                let error = CompactBlockValidationError.failedWithError(rustBackend.lastError())
+                self.error = error
+                LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
+                self.fail(error: error)
+                
+            case ZcashRustBackendWeldingConstants.validChain:
+                self.done = true
+                break
+                
+            default:
+                let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))
+                self.error = error
+                LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
+                self.fail(error: error)
+            }
         }
+        
+        while !done && !isCancelled {
+            sleep(1)
+        }
+    }
+    
+    override func fail(error: Error? = nil) {
+        self.cancelableTask?.cancel()
+        super.fail(error: error)
+    }
+    
+    override func cancel() {
+        self.cancelableTask?.cancel()
+        super.cancel()
     }
 }
