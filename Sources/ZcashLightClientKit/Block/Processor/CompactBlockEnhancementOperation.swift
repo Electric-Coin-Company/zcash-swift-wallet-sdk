@@ -29,7 +29,9 @@ class CompactBlockEnhancementOperation: ZcashOperation {
     private(set) var network: NetworkType
     private weak var progressDelegate: CompactBlockProgressDelegate?
     private var dataDb: URL
-    
+    private var cancelableTask: Task<Void, Error>?
+    private var done = false
+
     init(
         rustWelding: ZcashRustBackendWelding.Type,
         dataDb: URL,
@@ -58,44 +60,50 @@ class CompactBlockEnhancementOperation: ZcashOperation {
 
         self.startedHandler?()
 
-        // fetch transactions
-        do {
-            guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), !transactions.isEmpty else {
-                LoggerProxy.debug("no transactions detected on range: \(range.printRange)")
-                return
-            }
-            
-            for index in 0 ..< transactions.count {
-                let transaction = transactions[index]
-                var retry = true
-
-                while retry && self.retries < maxRetries {
-                    do {
-                        let confirmedTx = try enhance(transaction: transaction)
-                        retry = false
-                        self.reportProgress(
-                            totalTransactions: transactions.count,
-                            enhanced: index + 1,
-                            txEnhanced: confirmedTx
-                        )
-                    } catch {
-                        self.retries += 1
-                        LoggerProxy.error("could not enhance txId \(transaction.transactionId.toHexStringTxId()) - Error: \(error)")
-                        if retries > maxRetries {
-                            throw error
+        cancelableTask = Task {
+            // fetch transactions
+            do {
+                guard let transactions = try repository.findTransactions(in: self.range, limit: Int.max), !transactions.isEmpty else {
+                    LoggerProxy.debug("no transactions detected on range: \(range.printRange)")
+                    return
+                }
+                
+                for index in 0 ..< transactions.count {
+                    let transaction = transactions[index]
+                    var retry = true
+                    
+                    while retry && self.retries < maxRetries {
+                        do {
+                            let confirmedTx = try await enhance(transaction: transaction)
+                            retry = false
+                            self.reportProgress(
+                                totalTransactions: transactions.count,
+                                enhanced: index + 1,
+                                txEnhanced: confirmedTx
+                            )
+                        } catch {
+                            self.retries += 1
+                            LoggerProxy.error("could not enhance txId \(transaction.transactionId.toHexStringTxId()) - Error: \(error)")
+                            if retries > maxRetries {
+                                throw error
+                            }
                         }
                     }
                 }
+            } catch {
+                LoggerProxy.error("error enhancing transactions! \(error)")
+                self.fail(error: error)
+                return
             }
-        } catch {
-            LoggerProxy.error("error enhancing transactions! \(error)")
-            self.error = error
-            self.fail()
-            return
+            
+            if let handler = self.txFoundHandler, let foundTxs = try? repository.findConfirmedTransactions(in: self.range, offset: 0, limit: Int.max) {
+                handler(foundTxs, self.range)
+            }
+            self.done = true
         }
         
-        if let handler = self.txFoundHandler, let foundTxs = try? repository.findConfirmedTransactions(in: self.range, offset: 0, limit: Int.max) {
-            handler(foundTxs, self.range)
+        while !done && !isCancelled {
+            sleep(1)
         }
     }
     
@@ -112,10 +120,10 @@ class CompactBlockEnhancementOperation: ZcashOperation {
         )
     }
     
-    func enhance(transaction: TransactionEntity) throws -> ConfirmedTransactionEntity {
+    func enhance(transaction: TransactionEntity) async throws -> ConfirmedTransactionEntity {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId())")
         
-        let transaction = try downloader.fetchTransaction(txId: transaction.transactionId)
+        let transaction = try await downloader.fetchTransactionAsync(txId: transaction.transactionId)
 
         let transactionID = transaction.transactionId.toHexStringTxId()
         let block = String(describing: transaction.minedHeight)
@@ -147,6 +155,16 @@ class CompactBlockEnhancementOperation: ZcashOperation {
             throw EnhancementError.txIdNotFound(txId: transaction.transactionId)
         }
         return confirmedTx
+    }
+    
+    override func fail(error: Error? = nil) {
+        self.cancelableTask?.cancel()
+        super.fail(error: error)
+    }
+    
+    override func cancel() {
+        self.cancelableTask?.cancel()
+        super.cancel()
     }
 }
 
