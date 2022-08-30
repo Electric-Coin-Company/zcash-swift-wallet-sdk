@@ -194,10 +194,11 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
     override var isAsynchronous: Bool { false }
     
     private var batch: Int
+    private var done = false
     private var maxRetries: Int
     private var storage: CompactBlockStorage
     private var service: LightWalletService
-    private var cancelable: CancellableCall?
+    private var cancelableTask: Task<Void, Error>?
     private var startHeight: BlockHeight
     private var targetHeight: BlockHeight
 
@@ -229,72 +230,85 @@ class CompactBlockBatchDownloadOperation: ZcashOperation {
             return
         }
         self.startedHandler?()
-        do {
-            let localDownloadedHeight = try self.storage.latestHeight()
-            
-            if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight > startHeight {
-                LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
-                startHeight = localDownloadedHeight + 1
-            }
-            
-            var currentHeight = startHeight
-            self.progressDelegate?.progressUpdated(
-                .download(
-                    BlockProgress(
-                        startHeight: currentHeight,
-                        targetHeight: targetHeight,
-                        progressHeight: currentHeight
-                    )
-                )
-            )
-            
-            while !isCancelled && currentHeight <= targetHeight {
-                var retries = 0
-                var success = true
-                var localError: Error?
-            
-                let range = nextRange(currentHeight: currentHeight, targetHeight: targetHeight)
+        
+        cancelableTask = Task {
+            do {
+                let localDownloadedHeight = try await self.storage.latestHeightAsync()
                 
-                repeat {
-                    do {
-                        let blocks = try service.blockRange(range)
-                        try storage.insert(blocks)
-                        success = true
-                    } catch {
-                        success = false
-                        localError = error
-                        retries += 1
-                    }
-                } while !isCancelled && !success && retries < maxRetries
-
-                if retries >= maxRetries {
-                    throw CompactBlockBatchDownloadOperationError.batchDownloadFailed(range: range, error: localError)
+                if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight > startHeight {
+                    LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
+                    startHeight = localDownloadedHeight + 1
                 }
                 
+                var currentHeight = startHeight
                 self.progressDelegate?.progressUpdated(
                     .download(
                         BlockProgress(
-                            startHeight: startHeight,
+                            startHeight: currentHeight,
                             targetHeight: targetHeight,
-                            progressHeight: range.upperBound
+                            progressHeight: currentHeight
                         )
                     )
                 )
+                
+                while !isCancelled && currentHeight <= targetHeight {
+                    var retries = 0
+                    var success = true
+                    var localError: Error?
+                    
+                    let range = nextRange(currentHeight: currentHeight, targetHeight: targetHeight)
+                    
+                    repeat {
+                        do {
+                            let stream: AsyncThrowingStream<ZcashCompactBlock, Error> = service.blockRange(range)
 
-                currentHeight = range.upperBound + 1
+                            var blocks: [ZcashCompactBlock] = []
+                            for try await compactBlock in stream {
+                                blocks.append(compactBlock)
+                            }
+                            try storage.insert(blocks)
+                            success = true
+                        } catch {
+                            success = false
+                            localError = error
+                            retries += 1
+                        }
+                    } while !isCancelled && !success && retries < maxRetries
+                    
+                    if retries >= maxRetries {
+                        throw CompactBlockBatchDownloadOperationError.batchDownloadFailed(range: range, error: localError)
+                    }
+                    
+                    self.progressDelegate?.progressUpdated(
+                        .download(
+                            BlockProgress(
+                                startHeight: startHeight,
+                                targetHeight: targetHeight,
+                                progressHeight: range.upperBound
+                            )
+                        )
+                    )
+                    
+                    currentHeight = range.upperBound + 1
+                }
+                self.done = true
+            } catch {
+                self.fail(error: error)
             }
-        } catch {
-            self.fail(error: error)
+        }
+        
+        while !done && !isCancelled {
+            sleep(1)
         }
     }
 
     override func fail(error: Error? = nil) {
-        self.cancelable?.cancel()
+        self.cancelableTask?.cancel()
         super.fail(error: error)
     }
 
     override func cancel() {
-        self.cancelable?.cancel()
+        self.cancelableTask?.cancel()
         super.cancel()
     }
 
