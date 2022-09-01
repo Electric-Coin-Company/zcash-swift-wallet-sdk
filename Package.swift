@@ -1,11 +1,11 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.6
 import PackageDescription
 
 let package = Package(
     name: "ZcashLightClientKit",
     platforms: [
         .iOS(.v13),
-        .macOS(.v10_12)
+        .macOS(.v10_15)
     ],
     products: [
         .library(

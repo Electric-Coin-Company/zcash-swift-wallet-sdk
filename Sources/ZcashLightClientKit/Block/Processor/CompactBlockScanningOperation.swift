@@ -125,6 +125,8 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
     private var blockRange: CompactBlockRange
     private var transactionRepository: TransactionRepository
     private var network: NetworkType
+    private var cancelableTask: Task<Void, Error>?
+    private var done = false
 
     private weak var progressDelegate: CompactBlockProgressDelegate?
     
@@ -157,82 +159,94 @@ class CompactBlockBatchScanningOperation: ZcashOperation {
 
         self.startedHandler?()
 
-        do {
-            if batchSize == 0 {
-                let scanStartTime = Date()
-                guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: batchSize, networkType: network) else {
-                    self.scanFailed(self.rustBackend.lastError() ?? ZcashOperationError.unknown)
-                    return
-                }
-                let scanFinishTime = Date()
-                NotificationCenter.default.post(
-                    SDKMetrics.progressReportNotification(
-                        progress: BlockProgress(
-                            startHeight: self.blockRange.lowerBound,
-                            targetHeight: self.blockRange.upperBound,
-                            progressHeight: self.blockRange.upperBound
-                        ),
-                        start: scanStartTime,
-                        end: scanFinishTime,
-                        task: .scanBlocks
-                    )
-                )
-                let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
-                LoggerProxy.debug("Scanned \(blockRange.count) blocks in \(seconds) seconds")
-            } else {
-                let scanStartHeight = try transactionRepository.lastScannedHeight()
-                let targetScanHeight = blockRange.upperBound
-
-                var scannedNewBlocks = false
-                var lastScannedHeight = scanStartHeight
-
-                repeat {
-                    guard !shouldCancel() else {
-                        cancel()
-                        return
-                    }
-                    let previousScannedHeight = lastScannedHeight
+        cancelableTask = Task {
+            do {
+                if batchSize == 0 {
                     let scanStartTime = Date()
-                    guard self.rustBackend.scanBlocks(
-                        dbCache: self.cacheDb,
-                        dbData: self.dataDb,
-                        limit: batchSize,
-                        networkType: network
-                    ) else {
+                    guard self.rustBackend.scanBlocks(dbCache: self.cacheDb, dbData: self.dataDb, limit: batchSize, networkType: network) else {
                         self.scanFailed(self.rustBackend.lastError() ?? ZcashOperationError.unknown)
                         return
                     }
                     let scanFinishTime = Date()
-                    
-                    lastScannedHeight = try transactionRepository.lastScannedHeight()
-                    
-                    scannedNewBlocks = previousScannedHeight != lastScannedHeight
-                    if scannedNewBlocks {
-                        let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
-                        progressDelegate?.progressUpdated(.scan(progress))
-                        NotificationCenter.default.post(
-                            SDKMetrics.progressReportNotification(
-                                progress: progress,
-                                start: scanStartTime,
-                                end: scanFinishTime,
-                                task: .scanBlocks
-                            )
+                    NotificationCenter.default.post(
+                        SDKMetrics.progressReportNotification(
+                            progress: BlockProgress(
+                                startHeight: self.blockRange.lowerBound,
+                                targetHeight: self.blockRange.upperBound,
+                                progressHeight: self.blockRange.upperBound
+                            ),
+                            start: scanStartTime,
+                            end: scanFinishTime,
+                            task: .scanBlocks
                         )
-
-                        let heightCount = lastScannedHeight - previousScannedHeight
-                        let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
-                        LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
-                    }
-                } while !self.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
+                    )
+                    let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
+                    LoggerProxy.debug("Scanned \(blockRange.count) blocks in \(seconds) seconds")
+                } else {
+                    let scanStartHeight = try transactionRepository.lastScannedHeight()
+                    let targetScanHeight = blockRange.upperBound
+                    
+                    var scannedNewBlocks = false
+                    var lastScannedHeight = scanStartHeight
+                    
+                    repeat {
+                        guard !shouldCancel() else {
+                            cancel()
+                            return
+                        }
+                        let previousScannedHeight = lastScannedHeight
+                        let scanStartTime = Date()
+                        guard self.rustBackend.scanBlocks(
+                            dbCache: self.cacheDb,
+                            dbData: self.dataDb,
+                            limit: batchSize,
+                            networkType: network
+                        ) else {
+                            self.scanFailed(self.rustBackend.lastError() ?? ZcashOperationError.unknown)
+                            return
+                        }
+                        let scanFinishTime = Date()
+                        
+                        lastScannedHeight = try transactionRepository.lastScannedHeight()
+                        
+                        scannedNewBlocks = previousScannedHeight != lastScannedHeight
+                        if scannedNewBlocks {
+                            let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
+                            progressDelegate?.progressUpdated(.scan(progress))
+                            NotificationCenter.default.post(
+                                SDKMetrics.progressReportNotification(
+                                    progress: progress,
+                                    start: scanStartTime,
+                                    end: scanFinishTime,
+                                    task: .scanBlocks
+                                )
+                            )
+                            
+                            let heightCount = lastScannedHeight - previousScannedHeight
+                            let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
+                            LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
+                        }
+                    } while !self.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
+                    self.done = true
+                }
+            } catch {
+                scanFailed(error)
             }
-        } catch {
-            scanFailed(error)
+        }
+        
+        while !done && !isCancelled {
+            sleep(1)
         }
     }
     
     func scanFailed(_ error: Error) {
-        self.error = error
+        self.cancelableTask?.cancel()
         LoggerProxy.debug("block scanning failed with error: \(String(describing: self.error))")
-        self.fail()
+        super.fail(error: error)
+    }
+    
+    override func cancel() {
+        self.cancelableTask?.cancel()
+        super.cancel()
     }
 }

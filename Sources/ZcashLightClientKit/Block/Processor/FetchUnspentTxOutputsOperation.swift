@@ -24,7 +24,9 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
     private var startHeight: BlockHeight
     private var network: NetworkType
     private var dataDb: URL
-    
+    private var cancelableTask: Task<Void, Error>?
+    private var done = false
+
     init(
         accountRepository: AccountRepository,
         downloader: CompactBlockDownloading,
@@ -49,30 +51,41 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
 
         self.startedHandler?()
 
-        do {
-            let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
+        cancelableTask = Task {
             do {
-                for tAddress in tAddresses {
-                    guard try self.rustbackend.clearUtxos(
-                        dbData: dataDb,
-                        address: tAddress,
-                        sinceHeight: startHeight - 1,
-                        networkType: network
-                    ) >= 0 else {
-                        throw rustbackend.lastError() ?? RustWeldingError.genericError(message: "attempted to clear utxos but -1 was returned")
+                let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
+                do {
+                    for tAddress in tAddresses {
+                        guard try self.rustbackend.clearUtxos(
+                            dbData: dataDb,
+                            address: tAddress,
+                            sinceHeight: startHeight - 1,
+                            networkType: network
+                        ) >= 0 else {
+                            throw rustbackend.lastError() ?? RustWeldingError.genericError(message: "attempted to clear utxos but -1 was returned")
+                        }
                     }
+                } catch {
+                    throw FetchUTXOError.clearingFailed(error)
                 }
+                
+                var utxos: [UnspentTransactionOutputEntity] = []
+                let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses, startHeight: startHeight)
+                for try await transaction in stream {
+                    utxos.append(transaction)
+                }
+                
+                let result = storeUTXOs(utxos, in: dataDb)
+                
+                self.fetchedUTXOsHandler?(result)
+                self.done = true
             } catch {
-                throw FetchUTXOError.clearingFailed(error)
+                self.fail(error: error)
             }
-            
-            let utxos = try downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses, startHeight: startHeight)
-            
-            let result = storeUTXOs(utxos, in: dataDb)
-            
-            self.fetchedUTXOsHandler?(result)
-        } catch {
-            self.fail(error: error)
+        }
+        
+        while !done && !isCancelled {
+            sleep(1)
         }
     }
     
@@ -98,5 +111,15 @@ class FetchUnspentTxOutputsOperation: ZcashOperation {
         }
 
         return (inserted: refreshed, skipped: skipped)
+    }
+    
+    override func fail(error: Error? = nil) {
+        self.cancelableTask?.cancel()
+        super.fail(error: error)
+    }
+    
+    override func cancel() {
+        self.cancelableTask?.cancel()
+        super.cancel()
     }
 }
