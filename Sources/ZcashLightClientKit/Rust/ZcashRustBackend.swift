@@ -108,7 +108,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             return false
         }
 
-        guard zcashlc_is_valid_sapling_extended_spending_key(key, networkType.networkId) else {
+        guard zcashlc_is_valid_sapling_extended_spending_key([CChar](key.utf8CString), networkType.networkId) else {
             if let error = lastError() {
                 throw error
             }
