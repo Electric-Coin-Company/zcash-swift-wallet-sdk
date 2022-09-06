@@ -755,11 +755,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
 }
 
-private struct UFVK {
-    var account: UInt32
-    var encoding: String
-}
-
 private extension ZcashRustBackend {
     static func throwDataDbError(_ error: RustWeldingError) -> Error {
         if case RustWeldingError.genericError(let message) = error, message.contains("is not empty") {
@@ -783,13 +778,5 @@ extension String {
     */
     func containsCStringNullBytesBeforeStringEnding() -> Bool {
         self.utf8CString.firstIndex(of: 0) != (self.utf8CString.count - 1)
-    }
-}
-
-
-fileprivate extension UnifiedFullViewingKey {
-    init(ufvk: UFVK) {
-        self.account = ufvk.account
-        self.encoding = ufvk.encoding
     }
 }
