@@ -519,7 +519,8 @@ public class SDKSynchronizer: Synchronizer {
         let derivationTool = DerivationTool(networkType: self.network.networkType)
         
         do {
-            let tAddr = try derivationTool.deriveTransparentAddressFromAccountPrivateKey(transparentAccountPrivateKey, index: 0) // TODO: FIX
+            let tAddr = try derivationTool.deriveTransparentAddressFromAccountPrivateKey(transparentAccountPrivateKey, index: 0)
+
             let tBalance = try utxoRepository.balance(address: tAddr.stringEncoded, latestHeight: self.latestDownloadedHeight())
             
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
@@ -528,10 +529,14 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
 
-            // TODO: this should be a UA
-            let zAddr = "fasdfasdfa"
+            // FIXME: Define who's the recipient of a shielding transaction #521
+            // https://github.com/zcash/ZcashLightClientKit/issues/521
+            guard let uAddr = self.getUnifiedAddress(accountIndex: accountIndex) else {
+                resultBlock(.failure(ShieldFundsError.shieldingFailed(underlyingError: KeyEncodingError.invalidEncoding)))
+                return
+            }
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: zAddr, memo: memo, from: 0)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: memo, from: accountIndex)
             
             transactionManager.encodeShieldingTransaction(
                 xprv: transparentAccountPrivateKey,
