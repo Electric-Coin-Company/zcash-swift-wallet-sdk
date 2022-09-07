@@ -31,17 +31,6 @@ struct Account: AccountEntity, Encodable, Decodable {
     var transparentAddress: String
 }
 
-extension Account: UnifiedAddress {
-    var encoding: String {
-        get {
-            address
-        }
-        set {
-            address = newValue
-        }
-    }
-}
-
 extension Account: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(account)

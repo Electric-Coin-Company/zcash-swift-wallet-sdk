@@ -13,8 +13,6 @@ class DerivationToolViewController: UIViewController {
     enum DerivationErrors: Error {
         case couldNotDeriveSpendingKeys(underlyingError: Error)
         case couldNotDeriveViewingKeys(underlyingError: Error)
-        case couldNotDeriveShieldedAddress(underlyingError: Error)
-        case couldNotDeriveTransparentAddress(underlyingError: Error)
         case unknown
     }
 
@@ -113,15 +111,15 @@ class DerivationToolViewController: UIViewController {
             throw DerivationErrors.couldNotDeriveViewingKeys(underlyingError: DerivationErrors.unknown)
         }
         
-        let unifiedAddress = try derivationTool.deriveUnifiedAddress(viewingKey: viewingKey.encoding)
+        let unifiedAddress = try derivationTool.deriveUnifiedAddress(from: viewingKey)
         
         let transparentAddress = try derivationTool.deriveTransparentAddress(seed: seedBytes)
 
         updateLabels(
-            spendingKey: spendingKey,
-            viewingKey: viewingKey.encoding,
-            shieldedAddress: unifiedAddress,
-            transaparentAddress: transparentAddress
+            spendingKey: spendingKey.stringEncoded,
+            viewingKey: viewingKey.stringEncoded,
+            shieldedAddress: unifiedAddress.stringEncoded,
+            transaparentAddress: transparentAddress.stringEncoded
         )
     }
     

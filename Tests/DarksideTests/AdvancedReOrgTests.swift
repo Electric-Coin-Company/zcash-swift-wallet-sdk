@@ -302,7 +302,7 @@ class AdvancedReOrgTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: coordinator.spendingKeys!.first!,
             zatoshi: sendAmount,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test transaction",
             from: 0
         ) { result in
@@ -709,7 +709,7 @@ class AdvancedReOrgTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: Zatoshi(20000),
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in
@@ -1069,7 +1069,7 @@ class AdvancedReOrgTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: Zatoshi(20000),
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in

@@ -169,7 +169,7 @@ class RewindRescanTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: coordinator.spendingKey,
             zatoshi: Zatoshi(1000),
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: nil,
             from: 0
         ) { result in
@@ -270,7 +270,7 @@ class RewindRescanTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: maxBalance,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test send \(self.description) \(Date().description)",
             from: 0
         ) { result in

@@ -10,6 +10,9 @@ import Foundation
 import libzcashlc
 
 class ZcashRustBackend: ZcashRustBackendWelding {
+
+    static let minimumConfirmations: UInt32 = 10
+
     static func lastError() -> RustWeldingError? {
         guard let message = getLastError() else { return nil }
 
@@ -55,7 +58,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
     
-    static func isValidShieldedAddress(_ address: String, networkType: NetworkType) throws -> Bool {
+    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) throws -> Bool {
         guard !address.containsCStringNullBytesBeforeStringEnding() else {
             return false
         }
@@ -85,12 +88,41 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return true
     }
     
-    static func isValidExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool {
+    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool {
         guard !key.containsCStringNullBytesBeforeStringEnding() else {
             return false
         }
         
         guard zcashlc_is_valid_viewing_key([CChar](key.utf8CString), networkType.networkId) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+
+        return true
+    }
+
+    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: NetworkType) throws -> Bool {
+        guard !key.containsCStringNullBytesBeforeStringEnding() else {
+            return false
+        }
+
+        guard zcashlc_is_valid_sapling_extended_spending_key([CChar](key.utf8CString), networkType.networkId) else {
+            if let error = lastError() {
+                throw error
+            }
+            return false
+        }
+
+        return true
+    }
+
+    static func isValidUnifiedAddress(_ address: String, networkType: NetworkType) throws -> Bool {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            return false
+        }
+        guard zcashlc_is_valid_unified_address([CChar](address.utf8CString), networkType.networkId) else {
             if let error = lastError() {
                 throw error
             }
@@ -115,27 +147,39 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return true
     }
     
-    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [String]? {
+    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [SaplingExtendedSpendingKey]? {
         let dbData = dbData.osStr()
-        var capacity = UInt(0)
-        let extsksCStr = zcashlc_init_accounts_table(dbData.0, dbData.1, seed, UInt(seed.count), accounts, &capacity, networkType.networkId)
-        if extsksCStr == nil {
+
+        guard let ffiEncodingKeysPtr = zcashlc_init_accounts_table(
+            dbData.0,
+            dbData.1,
+            seed,
+            UInt(seed.count),
+            accounts,
+            networkType.networkId
+        ) else {
             return nil
         }
         
-        let extsks = UnsafeBufferPointer(start: extsksCStr, count: Int(accounts)).compactMap({ cStr -> String? in
-            guard let str = cStr else { return nil }
-            return String(cString: str)
+        let extsks = UnsafeBufferPointer(
+            start: ffiEncodingKeysPtr.pointee.ptr,
+            count: Int(ffiEncodingKeysPtr.pointee.len)
+        ).compactMap({ encodedKey -> SaplingExtendedSpendingKey in
+            SaplingExtendedSpendingKey(validatedEncoding: String(cString: encodedKey.encoding))
         })
-        zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
+        zcashlc_free_keys(ffiEncodingKeysPtr)
 
         return extsks
     }
     
-    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool {
+    static func initAccountsTable(
+        dbData: URL,
+        ufvks: [UnifiedFullViewingKey],
+        networkType: NetworkType
+    ) throws -> Bool {
         let dbData = dbData.osStr()
         
-        var ffiUfvks: [FFIUnifiedViewingKey] = []
+        var ffiUfvks: [FFIEncodedKey] = []
         for ufvk in ufvks {
             guard !ufvk.encoding.containsCStringNullBytesBeforeStringEnding() else {
                 throw RustWeldingError.malformedStringInput
@@ -149,15 +193,23 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             
             let ufvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: ufvkCStr.count)
             ufvkPtr.initialize(from: ufvkCStr, count: ufvkCStr.count)
-            
-            ffiUfvks.append(FFIUnifiedViewingKey(account_id: ufvk.account, encoding: ufvkPtr))
+
+            ffiUfvks.append(
+                FFIEncodedKey(account_id: ufvk.account, encoding: ufvkPtr)
+            )
         }
         
         var result = false
 
         ffiUfvks.withContiguousMutableStorageIfAvailable { pointer in
-            let slice = UnsafeMutablePointer<FFIUVKBoxedSlice>.allocate(capacity: 1)
-            slice.initialize(to: FFIUVKBoxedSlice(ptr: pointer.baseAddress, len: UInt(pointer.count)))
+            let slice = UnsafeMutablePointer<FFIEncodedKeys>.allocate(capacity: 1)
+
+            slice.initialize(
+                to: FFIEncodedKeys(
+                    ptr: pointer.baseAddress,
+                    len: UInt(pointer.count)
+                )
+            )
             
             result = zcashlc_init_accounts_table_with_keys(dbData.0, dbData.1, slice, networkType.networkId)
             slice.deinitialize(count: 1)
@@ -224,7 +276,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     
     static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
         let dbData = dbData.osStr()
-        return zcashlc_get_verified_balance(dbData.0, dbData.1, account, networkType.networkId)
+        return zcashlc_get_verified_balance(dbData.0, dbData.1, account, networkType.networkId, minimumConfirmations)
     }
     
     static func getVerifiedTransparentBalance(dbData: URL, address: String, networkType: NetworkType) throws -> Int64 {
@@ -238,7 +290,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         let dbData = dbData.osStr()
         
-        return zcashlc_get_verified_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString), networkType.networkId)
+        return zcashlc_get_verified_transparent_balance(dbData.0, dbData.1, [CChar](address.utf8CString), networkType.networkId, minimumConfirmations)
     }
     
     static func getTransparentBalance(dbData: URL, address: String, networkType: NetworkType) throws -> Int64 {
@@ -388,7 +440,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
             outputParamsPath,
             UInt(outputParamsPath.lengthOfBytes(using: .utf8)),
-            networkType.networkId
+            networkType.networkId,
+            minimumConfirmations
         )
     }
     
@@ -397,7 +450,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         xprv: String,
-        extsk: String,
         memo: String?,
         spendParamsPath: String,
         outputParamsPath: String,
@@ -411,7 +463,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             dbData.1,
             account,
             [CChar](xprv.utf8CString),
-            [CChar](extsk.utf8CString),
             [CChar](memoBytes.utf8CString),
             spendParamsPath,
             UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
@@ -421,14 +472,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         )
     }
     
-    static func deriveExtendedFullViewingKey(_ spendingKey: String, networkType: NetworkType) throws -> String? {
-        guard !spendingKey.containsCStringNullBytesBeforeStringEnding() else {
+    static func deriveSaplingExtendedFullViewingKey(_ spendingKey: SaplingExtendedSpendingKey, networkType: NetworkType) throws -> SaplingExtendedFullViewingKey? {
+        guard !spendingKey.stringEncoded.containsCStringNullBytesBeforeStringEnding() else {
             throw RustWeldingError.malformedStringInput
         }
         
         guard
-            let extsk = zcashlc_derive_extended_full_viewing_key(
-                [CChar](spendingKey.utf8CString),
+            let extfvk = zcashlc_derive_extended_full_viewing_key(
+                [CChar](spendingKey.stringEncoded.utf8CString),
                 networkType.networkId
             )
         else {
@@ -437,21 +488,23 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             }
             return nil
         }
-        
-        let derived = String(validatingUTF8: extsk)
-        
-        zcashlc_string_free(extsk)
-        return derived
+
+        defer { zcashlc_string_free(extfvk) }
+
+        guard let derived = String(validatingUTF8: extfvk) else {
+            return nil
+        }
+
+        return SaplingExtendedFullViewingKey(validatedEncoding: derived)
     }
     
-    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]? {
-        var capacity = UInt(0)
+    static func deriveSaplingExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [SaplingExtendedFullViewingKey]? {
+
         guard
-            let extsksCStr = zcashlc_derive_extended_full_viewing_keys(
+            let ffiEncodedKeysPtr = zcashlc_derive_extended_full_viewing_keys(
                 seed,
                 UInt(seed.count),
                 accounts,
-                &capacity,
                 networkType.networkId
             )
         else {
@@ -460,24 +513,27 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             }
             return nil
         }
+
+        defer {
+            zcashlc_free_keys(ffiEncodedKeysPtr)
+        }
         
-        let extsks = UnsafeBufferPointer(start: extsksCStr, count: Int(accounts)).compactMap { cStr -> String? in
-            guard let str = cStr else { return nil }
-            return String(cString: str)
+        let extfvks = UnsafeBufferPointer(
+            start: ffiEncodedKeysPtr.pointee.ptr,
+            count: Int(ffiEncodedKeysPtr.pointee.len)
+        ).compactMap { encodedKey -> SaplingExtendedFullViewingKey in
+            SaplingExtendedFullViewingKey(validatedEncoding: String(cString: encodedKey.encoding))
         }
 
-        zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
-        return extsks
+        return extfvks
     }
     
-    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]? {
-        var capacity = UInt(0)
+    static func deriveSaplingExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [SaplingExtendedSpendingKey]? {
         guard
-            let extsksCStr = zcashlc_derive_extended_spending_keys(
+            let ffiEncodedKeysPtr = zcashlc_derive_extended_spending_keys(
                 seed,
                 UInt(seed.count),
                 accounts,
-                &capacity,
                 networkType.networkId
             )
         else {
@@ -486,13 +542,13 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             }
             return nil
         }
-        
-        let extsks = UnsafeBufferPointer(start: extsksCStr, count: Int(accounts)).compactMap { cStr -> String? in
-            guard let str = cStr else { return nil }
-            return String(cString: str)
+
+        defer { zcashlc_free_keys(ffiEncodedKeysPtr) }
+
+        let extsks = UnsafeBufferPointer(start: ffiEncodedKeysPtr.pointee.ptr, count: Int(ffiEncodedKeysPtr.pointee.len)).compactMap {
+            SaplingExtendedSpendingKey(validatedEncoding: String(cString: $0.encoding))
         }
 
-        zcashlc_vec_string_free(extsksCStr, UInt(accounts), capacity)
 
         return extsks
     }
@@ -503,7 +559,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         networkType: NetworkType
     ) throws -> [UnifiedFullViewingKey] {
         guard
-            let ufvksStruct = zcashlc_derive_unified_full_viewing_keys_from_seed(
+            let ffiEncodedKeysPtr = zcashlc_derive_unified_full_viewing_keys_from_seed(
                 seed,
                 UInt(seed.count),
                 Int32(numberOfAccounts),
@@ -515,10 +571,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             }
             throw RustWeldingError.unableToDeriveKeys
         }
-        
-        let ufvksSize = ufvksStruct.pointee.len
 
-        guard let ufvksArrayPointer = ufvksStruct.pointee.ptr, ufvksSize > 0 else {
+        defer { zcashlc_free_keys(ffiEncodedKeysPtr) }
+
+        let ufvksSize = ffiEncodedKeysPtr.pointee.len
+
+        guard let ufvksArrayPointer = ffiEncodedKeysPtr.pointee.ptr, ufvksSize > 0 else {
             throw RustWeldingError.unableToDeriveKeys
         }
 
@@ -531,10 +589,9 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 throw RustWeldingError.unableToDeriveKeys
             }
             
-            ufvks.append(UFVK(account: UInt32(item), encoding: encoding))
+            ufvks.append(UnifiedFullViewingKey(validatedEncoding: encoding, account: UInt32(item)))
         }
-        
-        zcashlc_free_uvk_array(ufvksStruct)
+
         
         return ufvks
     }
@@ -696,11 +753,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         return branchId
     }
-}
-
-private struct UFVK: UnifiedFullViewingKey {
-    var account: UInt32
-    var encoding: String
 }
 
 private extension ZcashRustBackend {

@@ -37,12 +37,12 @@ class TestCoordinator {
     
     var completionHandler: ((SDKSynchronizer) -> Void)?
     var errorHandler: ((Error?) -> Void)?
-    var spendingKey: String
+    var spendingKey: SaplingExtendedSpendingKey
     var birthday: BlockHeight
     var channelProvider: ChannelProvider
     var synchronizer: SDKSynchronizer
     var service: DarksideWalletService
-    var spendingKeys: [String]?
+    var spendingKeys: [SaplingExtendedSpendingKey]?
     var databases: TemporaryTestDatabases
     let network: ZcashNetwork
     convenience init(
@@ -85,7 +85,7 @@ class TestCoordinator {
     }
     
     required init(
-        spendingKey: String,
+        spendingKey: SaplingExtendedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
@@ -288,13 +288,13 @@ enum TestSynchronizerBuilder {
         storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
-        spendingKey: String,
+        spendingKey: SaplingExtendedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         seed: [UInt8]? = nil,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
+    ) throws -> (spendingKeys: [SaplingExtendedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
@@ -334,7 +334,7 @@ enum TestSynchronizerBuilder {
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [String]?, synchronizer: SDKSynchronizer) {
+    ) throws -> (spendingKeys: [SaplingExtendedSpendingKey]?, synchronizer: SDKSynchronizer) {
         guard
             let spendingKey = try DerivationTool(networkType: network.networkType)
                 .deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1)

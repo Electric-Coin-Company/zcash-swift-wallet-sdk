@@ -14,17 +14,34 @@ transactions through to completion.
 */
 
 protocol OutboundTransactionManager {
-    func initSpend(zatoshi: Zatoshi, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity
+    func initSpend(
+        zatoshi: Zatoshi,
+        toAddress: String,
+        memo: String?,
+        from accountIndex: Int
+    ) throws -> PendingTransactionEntity
 
-    func encodeShieldingTransaction(spendingKey: String, xprv: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
+    func encodeShieldingTransaction(
+        xprv: TransparentAccountPrivKey,
+        pendingTransaction: PendingTransactionEntity,
+        result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
+    )
     
-    func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
+    func encode(
+        spendingKey: SaplingExtendedSpendingKey,
+        pendingTransaction: PendingTransactionEntity,
+        result: @escaping (Result<PendingTransactionEntity, Error>
+    ) -> Void)
     
-    func submit(pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
+    func submit(
+        pendingTransaction: PendingTransactionEntity,
+        result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
+    )
     
-    func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) throws -> PendingTransactionEntity
-    
-    func monitorChanges(byId: Int, observer: Any) // check this out. code smell
+    func applyMinedHeight(
+        pendingTransaction: PendingTransactionEntity,
+        minedHeight: BlockHeight
+    ) throws -> PendingTransactionEntity
     
     /**
     Attempts to Cancel a transaction. Returns true if successful

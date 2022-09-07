@@ -50,10 +50,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             )
             
             _ = try! wallet.initialize(with: DemoAppConfig.seed)
-            var storage = SampleStorage.shared
-            storage!.seed = Data(DemoAppConfig.seed)
-            storage!.privateKey = try! DerivationTool(networkType: kZcashNetwork.networkType)
-                .deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
+           
             self.wallet = wallet
             return wallet
         }
@@ -141,10 +138,6 @@ extension AppDelegate {
         } catch {
             loggerProxy.error("error clearing data db: \(error)")
         }
-        
-        var storage = SampleStorage.shared
-        storage!.seed = nil
-        storage!.privateKey = nil
     }
 }
 

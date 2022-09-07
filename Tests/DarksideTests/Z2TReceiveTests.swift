@@ -104,7 +104,7 @@ class Z2TReceiveTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: coordinator.spendingKeys!.first!,
             zatoshi: sendAmount,
-            toAddress: testRecipientAddress,
+            toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "test transaction",
             from: 0
         ) { result in

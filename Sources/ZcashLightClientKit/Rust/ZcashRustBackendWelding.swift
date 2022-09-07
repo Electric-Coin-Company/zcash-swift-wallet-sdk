@@ -8,7 +8,7 @@
 
 import Foundation
 
-public enum RustWeldingError: Error {
+enum RustWeldingError: Error {
     case genericError(message: String)
     case dataDbInitFailed(message: String)
     case dataDbNotEmpty
@@ -18,7 +18,7 @@ public enum RustWeldingError: Error {
     case unableToDeriveKeys
 }
 
-public enum ZcashRustBackendWeldingConstants {
+enum ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }
 
@@ -31,7 +31,7 @@ public enum DbInitResult {
     case seedRequired
 }
 
-public protocol ZcashRustBackendWelding {
+protocol ZcashRustBackendWelding {
     /**
     gets the latest error if available. Clear the existing error
     */
@@ -49,25 +49,36 @@ public protocol ZcashRustBackendWelding {
     static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: NetworkType) throws -> DbInitResult
     
     /**
-    - Returns: true when the address is valid and shielded. Returns false in any other case
+    - Returns: true when the address is valid. Returns false in any other case
     - Throws: Error when the provided address belongs to another network
     */
-    static func isValidShieldedAddress(_ address: String, networkType: NetworkType) throws -> Bool
+    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) throws -> Bool
     
     /**
     - Returns: true when the address is valid and transparent. false in any other case
     - Throws: Error when the provided address belongs to another network
     */
     static func isValidTransparentAddress(_ address: String, networkType: NetworkType) throws -> Bool
+
+    /// validates whether a string encoded address is a valid Unified Address.
+    /// - Returns: true when the address is valid and transparent. false in any other case
+    /// - Throws: Error when the provided address belongs to another network
+    static func isValidUnifiedAddress(_ address: String, networkType: NetworkType) throws -> Bool
     
     /**
-    - Returns: true when the address is valid and transparent. false in any other case
+    - Returns: `true` when the Sapling Extended Full Viewing Key is valid. `false` in any other case
     - Throws: Error when there's another problem not related to validity of the string in question
     */
-    static func isValidExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool
-    
+    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool
+
+    /// - Returns: `true` when the Sapling Extended Spending Key is valid, false in any other case.
+    /// - Throws: Error when the key is semantically valid  but it belongs to another network
+    /// - parameter key: String encoded Extendeed Spending Key
+    /// - parameter networkType: `NetworkType` signaling testnet or mainnet
+    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: NetworkType) throws -> Bool
+
     /**
-    - Returns: true when the address is valid and a UFVK. false in any other case
+    - Returns: true when the encoded string is a valid UFVK. false in any other case
     - Throws: Error when there's another problem not related to validity of the string in question
     */
     static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) throws -> Bool
@@ -79,7 +90,7 @@ public protocol ZcashRustBackendWelding {
         - seed: byte array of the zip32 seed
         - accounts: how many accounts you want to have
     */
-    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [String]?
+    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [SaplingExtendedSpendingKey]?
     
     /**
     initialize the accounts table from a set of unified full viewing keys
@@ -302,8 +313,7 @@ public protocol ZcashRustBackendWelding {
         - dbCache: URL for the Cache DB
         - dbData: URL for the Data DB
         - account: the account index that will originate the transaction
-        - xprv: transparent account private key for the shielded funds.
-        - extsk: extended spending key string
+        - xprv: transparent account private key for the transparent funds that will be shielded.
         - memo: the memo string for this transaction
         - spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
         - outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
@@ -314,7 +324,6 @@ public protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         xprv: String,
-        extsk: String,
         memo: String?,
         spendParamsPath: String,
         outputParamsPath: String,
@@ -327,8 +336,8 @@ public protocol ZcashRustBackendWelding {
     - Returns: the derived key
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveExtendedFullViewingKey(_ spendingKey: String, networkType: NetworkType) throws -> String?
-    
+    static func deriveSaplingExtendedFullViewingKey(_ spendingKey: SaplingExtendedSpendingKey, networkType: NetworkType) throws -> SaplingExtendedFullViewingKey?
+
     /**
     Derives a set of full viewing keys from a seed
     - Parameter spendingKey: a string containing the spending key
@@ -336,22 +345,22 @@ public protocol ZcashRustBackendWelding {
     - Returns: an array containing the derived keys
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]?
+    static func deriveSaplingExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [SaplingExtendedFullViewingKey]?
     
     /**
-    Derives a set of full viewing keys from a seed
+    Derives a set of Extended Spending Keys from a seed
     - Parameter seed: a string containing the seed
     - Parameter accounts: the number of accounts you want to derive from this seed
     - Returns: an array containing the spending keys
     - Throws: RustBackendError if fatal error occurs
     */
-    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]?
+    static func deriveSaplingExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [SaplingExtendedSpendingKey]?
     
     /**
     Derives a unified address from a seed
     - Parameter seed: an array of bytes of the seed
     - Parameter accountIndex: the index of the account you want the address for
-    - Returns: an optional String containing the Shielded address
+    - Returns: an optional String containing Unified Address
     - Throws: RustBackendError if fatal error occurs
     */
     static func deriveUnifiedAddressFromSeed(seed: [UInt8], accountIndex: Int32, networkType: NetworkType) throws -> String?
@@ -363,13 +372,14 @@ public protocol ZcashRustBackendWelding {
     - Throws: RustBackendError if fatal error occurs
     */
     static func deriveUnifiedAddressFromViewingKey(_  ufvk: String, networkType: NetworkType) throws -> String?
-    
-    /**
-    Derives a shielded address from an Extended Full Viewing Key
-    - Parameter seed: an array of bytes of the seed
-    - Returns: an optional String containing the transparent address
-    - Throws: RustBackendError if fatal error occurs
-    */
+
+
+    /// Derives a transparent address from seed bytes
+    /// - Parameter seed: an array of bytes of the seed
+    /// - Parameter account: account number
+    /// - Parameter index: diversifier index
+    /// - Returns: an optional String containing the transparent address
+    /// - Throws: RustBackendError if fatal error occurs
     static func deriveTransparentAddressFromSeed(seed: [UInt8], account: Int, index: Int, networkType: NetworkType) throws -> String?
     
     /**

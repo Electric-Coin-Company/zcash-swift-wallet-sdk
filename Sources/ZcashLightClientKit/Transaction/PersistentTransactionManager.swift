@@ -65,52 +65,15 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func encodeShieldingTransaction(
-        spendingKey: String,
-        xprv: String,
+        xprv: TransparentAccountPrivKey,
         pendingTransaction: PendingTransactionEntity,
         result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
         queue.async { [weak self] in
             guard let self = self else { return }
 
-            let derivationTool = DerivationTool(networkType: self.network)
-
-            guard
-                let viewingKey = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
-                let uAddr = try? derivationTool.deriveUnifiedAddress(viewingKey: viewingKey)
-            else {
-                result(
-                    .failure(
-                        TransactionManagerError.shieldingEncodingFailed(
-                            pendingTransaction,
-                            reason: "There was an error Deriving your keys"
-                        )
-                    )
-                )
-                return
-            }
-            
-            guard pendingTransaction.toAddress == uAddr else {
-                result(
-                    .failure(
-                        TransactionManagerError.shieldingEncodingFailed(
-                            pendingTransaction,
-                            reason: """
-                                the recipient address does not match your
-                                derived shielded address. Shielding transactions
-                                addresses must match the ones derived from your keys.
-                                This is a serious error. We are not letting you encode
-                                this shielding transaction because it can lead to loss
-                                of funds
-                            """
-                        )
-                    )
-                )
-                return
-            }
             do {
                 let encodedTransaction = try self.encoder.createShieldingTransaction(
-                    spendingKey: spendingKey,
                     tAccountPrivateKey: xprv,
                     memo: pendingTransaction.memo?.asZcashTransactionMemo(),
                     from: pendingTransaction.accountIndex
@@ -140,7 +103,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func encode(
-        spendingKey: String,
+        spendingKey: SaplingExtendedSpendingKey,
         pendingTransaction: PendingTransactionEntity,
         result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
@@ -149,7 +112,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             do {
                 let encodedTransaction = try self.encoder.createTransaction(
                     spendingKey: spendingKey,
-                    zatoshi: pendingTransaction.intValue,
+                    zatoshi: pendingTransaction.value,
                     to: pendingTransaction.toAddress,
                     memo: pendingTransaction.memo?.asZcashTransactionMemo(),
                     from: pendingTransaction.accountIndex
@@ -264,10 +227,6 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 return updatedTx
             }
             .forEach { try self.repository.update($0) }
-    }
-    
-    func monitorChanges(byId: Int, observer: Any) {
-        // TODO: Implement this
     }
     
     func cancel(pendingTransaction: PendingTransactionEntity) -> Bool {

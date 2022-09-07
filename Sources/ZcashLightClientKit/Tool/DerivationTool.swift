@@ -12,7 +12,11 @@ public protocol KeyValidation {
     
     func isValidTransparentAddress(_ tAddress: String) throws -> Bool
     
-    func isValidShieldedAddress(_ zAddress: String) throws -> Bool
+    func isValidSaplingAddress(_ zAddress: String) throws -> Bool
+
+    func isValidSaplingExtendedSpendingKey(_ extsk: String) throws -> Bool
+
+    func isValidUnifiedAddress(_ unifiedAddress: String) throws -> Bool
 }
 
 public protocol KeyDeriving {
@@ -25,7 +29,7 @@ public protocol KeyDeriving {
      
     - Returns: the viewing keys that correspond to the seed, formatted as Strings.
     */
-    func deriveViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [String]
+    func deriveUnifiedFullViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey]
 
     /**
     Given a spending key, return the associated viewing key.
@@ -34,7 +38,7 @@ public protocol KeyDeriving {
     
     - Returns: the viewing key that corresponds to the spending key.
     */
-    func deriveViewingKey(spendingKey: String) throws -> String
+    func deriveViewingKey(spendingKey: SaplingExtendedSpendingKey) throws -> SaplingExtendedFullViewingKey
 
     /**
     Given a seed and a number of accounts, return the associated spending keys.
@@ -45,7 +49,7 @@ public protocol KeyDeriving {
     
     - Returns: the spending keys that correspond to the seed, formatted as Strings.
     */
-    func deriveSpendingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [String]
+    func deriveSpendingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [SaplingExtendedSpendingKey]
     
     /**
     Given a seed and account index, return the associated unified address.
@@ -56,45 +60,31 @@ public protocol KeyDeriving {
      
     - Returns: the address that corresponds to the seed and account index.
     */
-    func deriveUnifiedAddress(seed: [UInt8], accountIndex: Int) throws -> String
+    func deriveUnifiedAddress(seed: [UInt8], accountIndex: Int) throws -> UnifiedAddress
     
-    /**
-    Given a unified viewing key string, return the associated unified address.
-     
-    - Parameter viewingKey: the viewing key to use for deriving the address. The viewing key is tied to
-        a specific account so no account index is required.
-     
-    - Returns: the address that corresponds to the viewing key.
-    */
-    func deriveUnifiedAddress(viewingKey: String) throws -> String
+
+    /// Given a unified full viewing key string, return the associated unified address.
+    ///
+    /// - Parameter ufvk: the viewing key to use for deriving the address. The viewing key is tied to
+    ///     a specific account so no account index is required.
+    ///
+    /// - Returns: the address that corresponds to the viewing key.
+    func deriveUnifiedAddress(from ufvk: UnifiedFullViewingKey) throws -> UnifiedAddress
     
     /**
     Derives a transparent address  from seedbytes, specifying account and index
     */
-    func deriveTransparentAddress(seed: [UInt8], account: Int, index: Int) throws -> String
+    func deriveTransparentAddress(seed: [UInt8], account: Int, index: Int) throws -> TransparentAddress
     
     /**
     Derives the account private key to spend transparent funds from a specific seed and account
     */
-    func deriveTransparentAccountPrivateKey(seed: [UInt8], account: Int) throws -> String
+    func deriveTransparentAccountPrivateKey(seed: [UInt8], account: Int) throws -> TransparentAccountPrivKey
     
     /**
     Derives a transparent address from the given transparent account private key
     */
-    func deriveTransparentAddressFromAccountPrivateKey(_ xprv: String, index: Int) throws -> String
-    
-    func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String
-    
-    /**
-    derives unified full viewing keys from seedbytes, specifying a number of accounts
-    - Returns an array of unified viewing key tuples.
-    */
-    func deriveUnifiedFullViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey]
-    
-    /**
-    derives a Unified Address from a Unified Full Viewing Key
-    */
-    func deriveUnifiedAddressFromUnifiedFullViewingKey(_ ufvk: UnifiedFullViewingKey) throws -> UnifiedAddress
+    func deriveTransparentAddressFromAccountPrivateKey(_ xprv: TransparentAccountPrivKey, index: Int) throws -> TransparentAddress
 }
 
 public enum KeyDerivationErrors: Error {
@@ -104,6 +94,7 @@ public enum KeyDerivationErrors: Error {
 }
 
 public class DerivationTool: KeyDeriving {
+
     var rustwelding: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     
     var networkType: NetworkType
@@ -121,7 +112,7 @@ public class DerivationTool: KeyDeriving {
      
     - Returns: the viewing keys that correspond to the seed, formatted as Strings.
     */
-    public func deriveViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [String] {
+    public func deriveUnifiedFullViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] {
         guard numberOfAccounts > 0, let numberOfAccounts = Int32(exactly: numberOfAccounts) else {
             throw KeyDerivationErrors.invalidInput
         }
@@ -129,16 +120,16 @@ public class DerivationTool: KeyDeriving {
         do {
             let ufvks = try rustwelding.deriveUnifiedFullViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts, networkType: networkType)
 
-            var keys: [String] = []
+            var keys: [UnifiedFullViewingKey] = []
             for ufvk in ufvks {
-                keys.append(ufvk.encoding)
+                keys.append(ufvk)
             }
             return keys
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
-    
+
     /**
     Given a spending key, return the associated viewing key.
     
@@ -146,12 +137,23 @@ public class DerivationTool: KeyDeriving {
     
     - Returns: the viewing key that corresponds to the spending key.
     */
-    public func deriveViewingKey(spendingKey: String) throws -> String {
+    public func deriveViewingKey(spendingKey: SaplingExtendedSpendingKey) throws -> SaplingExtendedFullViewingKey {
         do {
-            guard let key = try rustwelding.deriveExtendedFullViewingKey(spendingKey, networkType: networkType) else {
+            guard let key = try rustwelding.deriveSaplingExtendedFullViewingKey(spendingKey, networkType: networkType) else {
                 throw KeyDerivationErrors.unableToDerive
             }
             return key
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+
+    public func deriveUnifiedFullViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] {
+        guard numberOfAccounts > 0, let numberOfAccounts = Int32(exactly: numberOfAccounts) else {
+            throw KeyDerivationErrors.invalidInput
+        }
+        do {
+            return try rustwelding.deriveUnifiedFullViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts, networkType: networkType)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
@@ -166,12 +168,12 @@ public class DerivationTool: KeyDeriving {
     
     - Returns: the spending keys that correspond to the seed, formatted as Strings.
     */
-    public func deriveSpendingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [String] {
+    public func deriveSpendingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [SaplingExtendedSpendingKey] {
         guard numberOfAccounts > 0, let numberOfAccounts = Int32(exactly: numberOfAccounts) else {
             throw KeyDerivationErrors.invalidInput
         }
         do {
-            guard let keys = try rustwelding.deriveExtendedSpendingKeys(seed: seed, accounts: numberOfAccounts, networkType: networkType) else {
+            guard let keys = try rustwelding.deriveSaplingExtendedSpendingKeys(seed: seed, accounts: numberOfAccounts, networkType: networkType) else {
                 throw KeyDerivationErrors.unableToDerive
             }
             return keys
@@ -189,7 +191,7 @@ public class DerivationTool: KeyDeriving {
      
     - Returns: the address that corresponds to the seed and account index.
     */
-    public func deriveUnifiedAddress(seed: [UInt8], accountIndex: Int) throws -> String {
+    public func deriveUnifiedAddress(seed: [UInt8], accountIndex: Int) throws -> UnifiedAddress {
         guard accountIndex >= 0, let accountIndex = Int32(exactly: accountIndex) else {
             throw KeyDerivationErrors.invalidInput
         }
@@ -198,7 +200,7 @@ public class DerivationTool: KeyDeriving {
             guard let address = try rustwelding.deriveUnifiedAddressFromSeed(seed: seed, accountIndex: accountIndex, networkType: networkType) else {
                 throw KeyDerivationErrors.unableToDerive
             }
-            return address
+            return UnifiedAddress(validatedEncoding: address)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
@@ -212,20 +214,20 @@ public class DerivationTool: KeyDeriving {
      
     - Returns: the address that corresponds to the viewing key.
     */
-    public func deriveUnifiedAddress(viewingKey: String) throws -> String {
+    public func deriveUnifiedAddress(from ufvk: UnifiedFullViewingKey) throws -> UnifiedAddress {
         do {
-            guard let zaddr = try rustwelding.deriveUnifiedAddressFromViewingKey(viewingKey, networkType: networkType) else {
+            guard let stringEncodedUA = try rustwelding.deriveUnifiedAddressFromViewingKey(ufvk.stringEncoded, networkType: networkType) else {
                 throw KeyDerivationErrors.unableToDerive
             }
-            return zaddr
+            return UnifiedAddress(validatedEncoding: stringEncodedUA)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
     
-    public func deriveTransparentAddress(seed: [UInt8], account: Int = 0, index: Int = 0) throws -> String {
+    public func deriveTransparentAddress(seed: [UInt8], account: Int = 0, index: Int = 0) throws -> TransparentAddress {
         do {
-            guard let zaddr = try rustwelding.deriveTransparentAddressFromSeed(
+            guard let taddr = try rustwelding.deriveTransparentAddressFromSeed(
                 seed: seed,
                 account: account,
                 index: index,
@@ -233,54 +235,27 @@ public class DerivationTool: KeyDeriving {
             ) else {
                 throw KeyDerivationErrors.unableToDerive
             }
-            return zaddr
+            return TransparentAddress(validatedEncoding: taddr)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
     
-    public func deriveUnifiedFullViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] {
-        guard numberOfAccounts > 0, let numberOfAccounts = Int32(exactly: numberOfAccounts) else {
-            throw KeyDerivationErrors.invalidInput
-        }
-        do {
-            return try rustwelding.deriveUnifiedFullViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
-    }
-    
-    /**
-    derives a Unified Address from a Unified Full Viewing Key
-    */
+
+    /// derives a Unified Address from a Unified Full Viewing Key
     public func deriveUnifiedAddressFromUnifiedFullViewingKey(_ ufvk: UnifiedFullViewingKey) throws -> UnifiedAddress {
         do {
-            let encoding = try deriveUnifiedAddress(viewingKey: ufvk.encoding)
-            return ConcreteUnifiedAddress(encoding: encoding)
+            return try deriveUnifiedAddress(from: ufvk)
         } catch {
             throw KeyDerivationErrors.unableToDerive
         }
     }
-    
-    public func deriveTransparentAddressFromPublicKey(_ pubkey: String) throws -> String {
-        guard !pubkey.isEmpty else {
-            throw KeyDerivationErrors.invalidInput
-        }
-        
-        do {
-            return try rustwelding.derivedTransparentAddressFromPublicKey(pubkey, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
-    }
-    
-    /**
-    Derives the transparent funds account private key from the given seed
-    - Throws:
-    -  KeyDerivationErrors.derivationError with the underlying error when it fails
-    - KeyDerivationErrors.unableToDerive when there's an unknown error
-    */
-    public func deriveTransparentAccountPrivateKey(seed: [UInt8], account: Int = 0) throws -> String {
+
+    /// Derives the transparent funds account private key from the given seed
+    /// - Throws:
+    /// -  KeyDerivationErrors.derivationError with the underlying error when it fails
+    /// - KeyDerivationErrors.unableToDerive when there's an unknown error
+    public func deriveTransparentAccountPrivateKey(seed: [UInt8], account: Int = 0) throws -> TransparentAccountPrivKey {
         do {
             guard let seedKey = try rustwelding.deriveTransparentAccountPrivateKeyFromSeed(
                 seed: seed,
@@ -289,7 +264,23 @@ public class DerivationTool: KeyDeriving {
             ) else {
                 throw KeyDerivationErrors.unableToDerive
             }
-            return seedKey
+            return TransparentAccountPrivKey(encoding: seedKey)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+
+
+    /// Derives the transparent address from an account private key
+    /// - Throws:
+    ///     - KeyDerivationErrors.derivationError with the underlying error when it fails
+    ///     - KeyDerivationErrors.unableToDerive when there's an unknown error
+    public func deriveTransparentAddressFromAccountPrivateKey(_ xprv: TransparentAccountPrivKey, index: Int) throws -> TransparentAddress {
+        do {
+            guard let tAddr = try rustwelding.deriveTransparentAddressFromAccountPrivateKey(xprv.encoding, index: index, networkType: networkType) else {
+                throw KeyDerivationErrors.unableToDerive
+            }
+            return TransparentAddress(validatedEncoding: tAddr)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
@@ -297,9 +288,17 @@ public class DerivationTool: KeyDeriving {
 }
 
 extension DerivationTool: KeyValidation {
+    public func isValidUnifiedAddress(_ unifiedAddress: String) throws -> Bool {
+        do {
+            return try rustwelding.isValidUnifiedAddress(unifiedAddress, networkType: networkType)
+        } catch {
+            throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+
     public func isValidExtendedViewingKey(_ extvk: String) throws -> Bool {
         do {
-            return try rustwelding.isValidExtendedFullViewingKey(extvk, networkType: networkType)
+            return try rustwelding.isValidSaplingExtendedFullViewingKey(extvk, networkType: networkType)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
@@ -313,32 +312,83 @@ extension DerivationTool: KeyValidation {
         }
     }
     
-    public func isValidShieldedAddress(_ zAddress: String) throws -> Bool {
+    public func isValidSaplingAddress(_ zAddress: String) throws -> Bool {
         do {
-            return try rustwelding.isValidShieldedAddress(zAddress, networkType: networkType)
+            return try rustwelding.isValidSaplingAddress(zAddress, networkType: networkType)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
-    
-    /**
-    Derives the transparent address from an account private key
-    - Throws:
-        - KeyDerivationErrors.derivationError with the underlying error when it fails
-        - KeyDerivationErrors.unableToDerive when there's an unknown error
-    */
-    public func deriveTransparentAddressFromAccountPrivateKey(_ xprv: String, index: Int) throws -> String {
+
+    public func isValidSaplingExtendedSpendingKey(_ extsk: String) throws -> Bool {
         do {
-            guard let tAddr = try rustwelding.deriveTransparentAddressFromAccountPrivateKey(xprv, index: index, networkType: networkType) else {
-                throw KeyDerivationErrors.unableToDerive
-            }
-            return tAddr
+            return try rustwelding.isValidSaplingExtendedSpendingKey(extsk, networkType: networkType)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
 }
 
-private struct ConcreteUnifiedAddress: UnifiedAddress {
-    var encoding: String
+
+extension TransparentAddress {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this.
+    init(validatedEncoding: String) {
+        self.encoding = validatedEncoding
+    }
+}
+
+extension SaplingAddress {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this.
+    init(validatedEncoding: String) {
+        self.encoding = validatedEncoding
+    }
+ }
+
+extension UnifiedAddress {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this..
+    init(validatedEncoding: String) {
+        self.encoding = validatedEncoding
+    }
+}
+
+extension UnifiedFullViewingKey {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this.
+    init(validatedEncoding: String, account: UInt32) {
+        self.encoding = validatedEncoding
+        self.account = account
+    }
+}
+
+
+extension SaplingExtendedFullViewingKey {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this.
+    init(validatedEncoding: String) {
+        self.encoding = validatedEncoding
+    }
+}
+
+
+extension SaplingExtendedSpendingKey {
+    /// This constructor is for internal use for Strings encodings that are assumed to be
+    /// already validated by another function. only for internal use. Unless you are
+    /// constructing an address from a primitive function of the FFI, you probably
+    /// shouldn't be using this.
+    init(validatedEncoding: String) {
+        self.encoding = validatedEncoding
+    }
 }

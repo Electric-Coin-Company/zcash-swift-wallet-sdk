@@ -95,7 +95,7 @@ public protocol Synchronizer {
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress?
+    func getSaplingAddress(accountIndex: Int) -> SaplingAddress?
     
 
     /// Gets the unified address for the given account.
@@ -134,25 +134,23 @@ public protocol Synchronizer {
     /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
     // swiftlint:disable:next function_parameter_count
     func sendToAddress(
-        spendingKey: String,
+        spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
-        toAddress: String,
+        toAddress: Recipient,
         memo: String?,
         from accountIndex: Int,
         resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
     )
 
-    /// Sends zatoshi.
-    /// - Parameter spendingKey: the key that allows spends to occur.
+    /// Shields transparent funds from the given private key into the best shielded pool of the given account.
     /// - Parameter transparentAccountPrivateKey: the key that allows to spend transparent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
     /// - Parameter accountIndex: the optional account id that will be used to shield  your funds to. By default, the first account is used.
     func shieldFunds(
-        spendingKey: String,
-        transparentAccountPrivateKey: String,
+        transparentAccountPrivateKey: TransparentAccountPrivKey,
         memo: String?,
         from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
+        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     )
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
@@ -160,7 +158,6 @@ public protocol Synchronizer {
     /// - Parameter transaction: the transaction to cancel.
     /// - Returns: true when the cancellation request was successful. False when it is too late.
     func cancelSpend(transaction: PendingTransactionEntity) -> Bool
-    
 
     /// all outbound pending transactions that have been sent but are awaiting confirmations
     var pendingTransactions: [PendingTransactionEntity] { get }
@@ -174,7 +171,6 @@ public protocol Synchronizer {
     /// all transactions related to receiving funds
     var receivedTransactions: [ConfirmedTransactionEntity] { get }
     
-
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
@@ -203,7 +199,7 @@ public protocol Synchronizer {
     /// Returns the latests UTXOs for the given address from the specified height on
     func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
 
-    /// Returns the last stored unshielded balance
+    /// Returns the last stored transparent balance
     func getTransparentBalance(accountIndex: Int) throws -> WalletBalance
     
 

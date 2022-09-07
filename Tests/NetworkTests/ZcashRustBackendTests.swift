@@ -53,50 +53,48 @@ class ZcashRustBackendTests: XCTestCase {
     func testDeriveExtendedSpendingKeys() {
         let seed = Array("testreferencealicetestreferencealice".utf8)
         
-        var spendingKeys: [String]?
-        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
+        var spendingKeys: [SaplingExtendedSpendingKey]?
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveSaplingExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
         
         XCTAssertNotNil(spendingKeys)
-        XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
+        XCTAssertEqual(spendingKeys?.count, 1)
     }
     
     func testDeriveExtendedFullViewingKeys() {
         let seed = Array("testreferencealicetestreferencealice".utf8)
         
-        var fullViewingKeys: [String]?
+        var fullViewingKeys: [SaplingExtendedFullViewingKey]?
         XCTAssertNoThrow(
             try {
-                fullViewingKeys = try ZcashRustBackend.deriveExtendedFullViewingKeys(
+                fullViewingKeys = try ZcashRustBackend.deriveSaplingExtendedFullViewingKeys(
                     seed: seed,
-                    accounts: 1,
+                    accounts: 2,
                     networkType: networkType
                 )
             }()
         )
         
         XCTAssertNotNil(fullViewingKeys)
-        XCTAssertFalse(fullViewingKeys?.first?.isEmpty ?? true)
+        XCTAssertEqual(fullViewingKeys?.count, 2)
     }
     
     func testDeriveExtendedFullViewingKey() {
         let seed = Array("testreferencealicetestreferencealice".utf8)
-        var fullViewingKey: String?
+        var fullViewingKey: SaplingExtendedFullViewingKey?
         
-        var spendingKeys: [String]?
-        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
+        var spendingKeys: [SaplingExtendedSpendingKey]?
+        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveSaplingExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
         
         XCTAssertNotNil(spendingKeys)
-        XCTAssertFalse(spendingKeys?.first?.isEmpty ?? true)
         
         guard let spendingKey = spendingKeys?.first else {
             XCTFail("no spending key generated")
             return
         }
         
-        XCTAssertNoThrow(try { fullViewingKey = try ZcashRustBackend.deriveExtendedFullViewingKey(spendingKey, networkType: networkType) }())
+        XCTAssertNoThrow(try { fullViewingKey = try ZcashRustBackend.deriveSaplingExtendedFullViewingKey(spendingKey, networkType: networkType) }())
         
         XCTAssertNotNil(fullViewingKey)
-        XCTAssertFalse(fullViewingKey?.isEmpty ?? true)
     }
     
     func testInitAndScanBlocks() {
@@ -164,12 +162,12 @@ class ZcashRustBackendTests: XCTestCase {
         }
     }
     
-    func testIsValidShieldedAddressTrue() {
+    func testIsValidSaplingAddressTrue() {
         var isValid: Bool?
         
         XCTAssertNoThrow(
             try {
-                isValid = try ZcashRustBackend.isValidShieldedAddress(
+                isValid = try ZcashRustBackend.isValidSaplingAddress(
                     "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc",
                     networkType: networkType
                 )
@@ -183,12 +181,12 @@ class ZcashRustBackendTests: XCTestCase {
         }
     }
     
-    func testIsValidShieldedAddressFalse() {
+    func testIsValidSaplingAddressFalse() {
         var isValid: Bool?
         
         XCTAssertNoThrow(
             try {
-                isValid = try ZcashRustBackend.isValidShieldedAddress(
+                isValid = try ZcashRustBackend.isValidSaplingAddress(
                     "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7",
                     networkType: networkType
                 )

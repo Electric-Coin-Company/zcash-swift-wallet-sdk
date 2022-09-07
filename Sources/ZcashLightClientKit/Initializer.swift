@@ -308,10 +308,10 @@ public class Initializer {
     }
     
     /**
-    checks if the provided address is a valid shielded zAddress
+    checks if the provided address is a valid sapling address
     */
-    public func isValidShieldedAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidShieldedAddress(address, networkType: network.networkType)) ?? false
+    public func isValidSaplingAddress(_ address: String) -> Bool {
+        (try? rustBackend.isValidSaplingAddress(address, networkType: network.networkType)) ?? false
     }
 
     /**
