@@ -1260,18 +1260,27 @@ extension CompactBlockProcessor {
 
 extension CompactBlockProcessor {
     public func getUnifiedAddres(accountIndex: Int) -> UnifiedAddress? {
-        guard let account = try? accountRepository.findBy(account: accountIndex) else {
+        // TODO: perform migrations on the account table to accommodate Unified Address or UFVK to to derive from.
+        guard let address = try? accountRepository.findBy(account: accountIndex)?.address else {
             return nil
         }
-        return UnifiedAddressShim(account: account)
+
+        return try? UnifiedAddress(encoding: address, network: self.config.network.networkType)
     }
     
-    public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
-        try? accountRepository.findBy(account: accountIndex)?.address
+    public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
+        guard let zAddress = try? accountRepository.findBy(account: accountIndex)?.address else {
+            return nil
+        }
+
+        return try? SaplingAddress(encoding: zAddress, network: self.config.network.networkType)
     }
     
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
-        try? accountRepository.findBy(account: accountIndex)?.transparentAddress
+        guard let tAddress = try? accountRepository.findBy(account: accountIndex)?.transparentAddress else { return nil }
+
+        return TransparentAddress(validatedEncoding: tAddress)
+
     }
     
     public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
@@ -1279,20 +1288,6 @@ extension CompactBlockProcessor {
             throw CompactBlockProcessorError.invalidAccount
         }
         return try utxoCacheBalance(tAddress: tAddress)
-    }
-}
-
-private struct UnifiedAddressShim {
-    let account: AccountEntity
-}
-
-extension UnifiedAddressShim: UnifiedAddress {
-    var encoding: String {
-        account.transparentAddress
-    }
-    
-    var zAddress: SaplingShieldedAddress {
-        account.address
     }
 }
 

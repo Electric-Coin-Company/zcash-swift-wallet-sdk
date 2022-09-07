@@ -81,8 +81,34 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+
     static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.DbInitResult {
         .seedRequired
+    }
+
+    static func deriveSaplingAddressFromViewingKey(_ extfvk: ZcashLightClientKit.SaplingExtendedFullViewingKey, networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.SaplingAddress {
+        throw RustWeldingError.unableToDeriveKeys
+    }
+
+    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: ZcashLightClientKit.NetworkType) throws -> Bool {
+        false
+    }
+
+    static func deriveSaplingExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> [ZcashLightClientKit.SaplingExtendedFullViewingKey]? {
+        nil
+    }
+
+    static func isValidUnifiedAddress(_ address: String, networkType: ZcashLightClientKit.NetworkType) throws -> Bool {
+        false
+    }
+
+    static func deriveSaplingExtendedFullViewingKey(_ spendingKey: SaplingExtendedSpendingKey, networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.SaplingExtendedFullViewingKey? {
+        nil
+    }
+
+
+    public func deriveViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] {
+        []
     }
 
     static func clearUtxos(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 {
@@ -144,7 +170,6 @@ class MockRustBackend: ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         xprv: String,
-        extsk: String,
         memo: String?,
         spendParamsPath: String,
         outputParamsPath: String,
@@ -173,7 +198,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func isValidExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool {
+    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) throws -> Bool {
         false
     }
     
@@ -193,11 +218,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         nil
     }
     
-    static func deriveExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]? {
-        nil
-    }
-    
-    static func deriveExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [String]? {
+    static func deriveSaplingExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [SaplingExtendedSpendingKey]? {
         nil
     }
     
@@ -221,7 +242,7 @@ class MockRustBackend: ZcashRustBackendWelding {
     static var mockAcounts = false
     static var mockError: RustWeldingError?
     static var mockLastError: String?
-    static var mockAccounts: [String]?
+    static var mockAccounts: [SaplingExtendedSpendingKey]?
     static var mockAddresses: [String]?
     static var mockBalance: Int64?
     static var mockVerifiedBalance: Int64?
@@ -244,7 +265,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         mockLastError ?? rustBackend.getLastError()
     }
     
-    static func isValidShieldedAddress(_ address: String, networkType: NetworkType) throws -> Bool {
+    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) throws -> Bool {
         true
     }
     
@@ -258,7 +279,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         }
     }
     
-    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [String]? {
+    static func initAccountsTable(dbData: URL, seed: [UInt8], accounts: Int32, networkType: NetworkType) -> [SaplingExtendedSpendingKey]? {
         mockAccounts ?? rustBackend.initAccountsTable(dbData: dbData, seed: seed, accounts: accounts, networkType: networkType)
     }
     

@@ -74,9 +74,10 @@ public extension Notification.Name {
     static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
 }
 
-/// Synchronizer implementation for UIKit and iOS 12+
+/// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
+
     public struct SynchronizerState {
         public var shieldedBalance: WalletBalance
         public var transparentBalance: WalletBalance
@@ -466,21 +467,25 @@ public class SDKSynchronizer: Synchronizer {
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
-        sendToAddress(
-            spendingKey: spendingKey,
-            zatoshi: Zatoshi(zatoshi),
-            toAddress: toAddress,
-            memo: memo,
-            from: accountIndex,
-            resultBlock: resultBlock
-        )
+        do {
+            sendToAddress(
+                spendingKey: try SaplingExtendedSpendingKey(encoding: spendingKey, network: network.networkType),
+                zatoshi: Zatoshi(zatoshi),
+                toAddress: try Recipient(toAddress, network: network.networkType),
+                memo: memo,
+                from: accountIndex,
+                resultBlock: resultBlock
+            )
+        } catch {
+            resultBlock(.failure(SynchronizerError.invalidAccount))
+        }
     }
 
     // swiftlint:disable:next function_parameter_count
     public func sendToAddress(
-        spendingKey: String,
+        spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
-        toAddress: String,
+        toAddress: Recipient,
         memo: String?,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
@@ -492,7 +497,7 @@ public class SDKSynchronizer: Synchronizer {
                     self?.createToAddress(
                         spendingKey: spendingKey,
                         zatoshi: zatoshi,
-                        toAddress: toAddress,
+                        toAddress: toAddress.stringEncoded,
                         memo: memo,
                         from: accountIndex,
                         resultBlock: resultBlock
@@ -505,8 +510,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func shieldFunds(
-        spendingKey: String,
-        transparentAccountPrivateKey: String,
+        transparentAccountPrivateKey: TransparentAccountPrivKey,
         memo: String?,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
@@ -515,21 +519,26 @@ public class SDKSynchronizer: Synchronizer {
         let derivationTool = DerivationTool(networkType: self.network.networkType)
         
         do {
-            let tAddr = try derivationTool.deriveTransparentAddressFromAccountPrivateKey(transparentAccountPrivateKey, index: 0) // TODO: FIX
-            let tBalance = try utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
+            let tAddr = try derivationTool.deriveTransparentAddressFromAccountPrivateKey(transparentAccountPrivateKey, index: 0)
+
+            let tBalance = try utxoRepository.balance(address: tAddr.stringEncoded, latestHeight: self.latestDownloadedHeight())
             
-            // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
+            // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
             guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
                 resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
                 return
             }
-            let viewingKey = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
-            let uAddr = try derivationTool.deriveUnifiedAddress(viewingKey: viewingKey)
+
+            // FIXME: Define who's the recipient of a shielding transaction #521
+            // https://github.com/zcash/ZcashLightClientKit/issues/521
+            guard let uAddr = self.getUnifiedAddress(accountIndex: accountIndex) else {
+                resultBlock(.failure(ShieldFundsError.shieldingFailed(underlyingError: KeyEncodingError.invalidEncoding)))
+                return
+            }
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr, memo: memo, from: 0)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: memo, from: accountIndex)
             
             transactionManager.encodeShieldingTransaction(
-                spendingKey: spendingKey,
                 xprv: transparentAccountPrivateKey,
                 pendingTransaction: shieldingSpend
             ) { [weak self] result in
@@ -560,7 +569,7 @@ public class SDKSynchronizer: Synchronizer {
 
     // swiftlint:disable:next function_parameter_count
     func createToAddress(
-        spendingKey: String,
+        spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
@@ -690,8 +699,8 @@ public class SDKSynchronizer: Synchronizer {
         initializer.getVerifiedBalance(account: accountIndex)
     }
 
-    public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
-        blockProcessor.getShieldedAddress(accountIndex: accountIndex)
+    public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
+        blockProcessor.getSaplingAddress(accountIndex: accountIndex)
     }
     
     public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
@@ -707,7 +716,7 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     /**
-    Returns the last stored unshielded balance
+    Returns the last stored transparent balance
     */
     public func getTransparentBalance(address: String) throws -> WalletBalance {
         do {

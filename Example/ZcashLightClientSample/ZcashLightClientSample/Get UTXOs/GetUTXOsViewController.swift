@@ -27,7 +27,7 @@ class GetUTXOsViewController: UIViewController {
         let tAddress = try! DerivationTool(networkType: kZcashNetwork.networkType)
             .deriveTransparentAddress(seed: DemoAppConfig.seed)
 
-        self.transparentAddressLabel.text = tAddress
+        self.transparentAddressLabel.text = tAddress.stringEncoded
 
         // swiftlint:disable:next force_try
         let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
@@ -40,14 +40,12 @@ class GetUTXOsViewController: UIViewController {
         do {
             let seed = DemoAppConfig.seed
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-            // swiftlint:disable:next force_unwrapping
-            let spendingKey = try derivationTool.deriveSpendingKeys(seed: seed, numberOfAccounts: 1).first!
+
             let transparentSecretKey = try derivationTool.deriveTransparentAccountPrivateKey(seed: seed, account: 0)
 
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
 
             AppDelegate.shared.sharedSynchronizer.shieldFunds(
-                spendingKey: spendingKey,
                 transparentAccountPrivateKey: transparentSecretKey,
                 memo: "shielding is fun!",
                 from: 0,

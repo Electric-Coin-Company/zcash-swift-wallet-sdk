@@ -97,7 +97,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
             // swiftlint:disable:next force_unwrapping
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: Zatoshi(20000),
-            toAddress: self.testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: "this is a test",
             from: 0,
             resultBlock: { result in

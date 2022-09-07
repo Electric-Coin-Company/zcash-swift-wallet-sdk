@@ -84,7 +84,7 @@ class ShieldFundsTests: XCTestCase {
     ///
     func testShieldFunds() throws {
         // 1. load the dataset
-        try coordinator.service.useDataset(from: "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/shielding-dataset/shield-funds/1631000.txt")
+        try coordinator.service.useDataset(from: "https://github.com/zcash-hackworks/darksidewalletd-test-data/blob/master/shield-funds/1631000.txt")
 
         try coordinator.stageBlockCreate(height: birthday + 1, count: 200, nonce: 0)
 
@@ -209,7 +209,6 @@ class ShieldFundsTests: XCTestCase {
 
         // shield the funds
         coordinator.synchronizer.shieldFunds(
-            spendingKey: coordinator.spendingKey,
             transparentAccountPrivateKey: transparentAccountPrivateKey,
             memo: "shield funds",
             from: 0
