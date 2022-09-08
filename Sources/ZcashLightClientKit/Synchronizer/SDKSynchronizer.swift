@@ -458,58 +458,11 @@ public class SDKSynchronizer: Synchronizer {
     
     // MARK: Synchronizer methods
 
-    @available(*, deprecated, message: "This function will be removed soon, use the one receiving a `Zatoshi` value instead")
-    public func sendToAddress(
-        spendingKey: String,
-        zatoshi: Int64,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        do {
-            sendToAddress(
-                spendingKey: try SaplingExtendedSpendingKey(encoding: spendingKey, network: network.networkType),
-                zatoshi: Zatoshi(zatoshi),
-                toAddress: try Recipient(toAddress, network: network.networkType),
-                memo: memo,
-                from: accountIndex,
-                resultBlock: resultBlock
-            )
-        } catch {
-            resultBlock(.failure(SynchronizerError.invalidAccount))
-        }
-    }
-
     // swiftlint:disable:next function_parameter_count
-    @available(*, deprecated, message: "use Memo type instead of Optional<String>")
     public func sendToAddress(
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        do {
-            self.sendToAddress(
-                spendingKey: spendingKey,
-                zatoshi: zatoshi,
-                toAddress: toAddress,
-                memo: try memo.intoMemo(),
-                from: accountIndex,
-                resultBlock: resultBlock
-            )
-        } catch {
-            resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
-        }
-    }
-
-    // swiftlint:disable:next function_parameter_count
-    public func sendToAddress(
-        spendingKey: String,
-        zatoshi: Zatoshi,
-        toAddress: String,
         memo: Memo,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
@@ -534,7 +487,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func shieldFunds(
-        transparentSecretKey: String,
+        transparentAccountPrivateKey: TransparentAccountPrivKey,
         memo: Memo,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
@@ -560,7 +513,7 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: memo, from: accountIndex)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: try memo.asMemoBytes(), from: accountIndex)
             
             transactionManager.encodeShieldingTransaction(
                 xprv: transparentAccountPrivateKey,
@@ -582,28 +535,9 @@ public class SDKSynchronizer: Synchronizer {
                     }
                     
                 case .failure(let error):
-                    resultBlock(.failure(error))
+                    resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }
-        } catch {
-            resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
-        }
-    }
-
-    @available(*, deprecated, message: "use shieldFunds with a Memo type")
-    public func shieldFunds(
-        transparentSecretKey: String,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        do {
-            shieldFunds(
-                transparentSecretKey: transparentSecretKey,
-                memo: try memo.intoMemo(),
-                from: accountIndex,
-                resultBlock: resultBlock
-            )
         } catch {
             resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
         }
@@ -642,7 +576,7 @@ public class SDKSynchronizer: Synchronizer {
                     }
                     
                 case .failure(let error):
-                    resultBlock(.failure(error))
+                    resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }
         } catch {

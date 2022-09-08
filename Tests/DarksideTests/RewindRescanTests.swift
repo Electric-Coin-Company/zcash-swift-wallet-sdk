@@ -271,7 +271,7 @@ class RewindRescanTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: maxBalance,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: try Memo("test send \(self.description) \(Date().description)"),
+            memo: try Memo(string: "test send \(self.description) \(Date().description)"),
             from: 0
         ) { result in
             switch result {

@@ -83,7 +83,7 @@ class BalanceTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: maxBalance,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            try Memo(string: "this is a test"),
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -510,7 +510,7 @@ class BalanceTests: XCTestCase {
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: sendAmount,
-            toAddress: testRecipientAddress,
+            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
             memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
