@@ -160,7 +160,16 @@ protocol ZcashRustBackendWelding {
         - dbData: location of the data db file
         - idNote: note_id of note where the memo is located
     */
+    @available(*, deprecated, message: "This function will be deprecated soon. Use `getReceivedMemo(dbData:idNote:networkType)` instead")
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String?
+
+    /**
+    get received memo from note
+    - Parameters:
+        - dbData: location of the data db file
+        - idNote: note_id of note where the memo is located
+    */
+    static func getReceivedMemo(dbData: URL, idNote: Int64, networkType: NetworkType) -> Memo?
     
     /**
     get sent memo from note
@@ -168,7 +177,16 @@ protocol ZcashRustBackendWelding {
         - dbData: location of the data db file
         - idNote: note_id of note where the memo is located
     */
+    @available(*, deprecated, message: "This function will be deprecated soon. Use `getSentMemo(dbData:idNote:networkType)` instead")
     static func getSentMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String?
+
+    /**
+    get sent memo from note
+    - Parameters:
+        - dbData: location of the data db file
+        - idNote: note_id of note where the memo is located
+    */
+    static func getSentMemo(dbData: URL, idNote: Int64, networkType: NetworkType) -> Memo?
     
     /**
     Checks that the scanned blocks in the data database, when combined with the recent
@@ -301,7 +319,7 @@ protocol ZcashRustBackendWelding {
         extsk: String,
         to address: String,
         value: Int64,
-        memo: String?,
+        memo: MemoBytes,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
@@ -324,7 +342,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         xprv: String,
-        memo: String?,
+        memo: MemoBytes,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType

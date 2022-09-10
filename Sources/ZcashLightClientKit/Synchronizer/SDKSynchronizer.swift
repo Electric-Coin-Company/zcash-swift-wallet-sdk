@@ -458,35 +458,12 @@ public class SDKSynchronizer: Synchronizer {
     
     // MARK: Synchronizer methods
 
-    @available(*, deprecated, message: "This function will be removed soon, use the one reveiving a `Zatoshi` value instead")
-    public func sendToAddress(
-        spendingKey: String,
-        zatoshi: Int64,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        do {
-            sendToAddress(
-                spendingKey: try SaplingExtendedSpendingKey(encoding: spendingKey, network: network.networkType),
-                zatoshi: Zatoshi(zatoshi),
-                toAddress: try Recipient(toAddress, network: network.networkType),
-                memo: memo,
-                from: accountIndex,
-                resultBlock: resultBlock
-            )
-        } catch {
-            resultBlock(.failure(SynchronizerError.invalidAccount))
-        }
-    }
-
     // swiftlint:disable:next function_parameter_count
     public func sendToAddress(
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
-        memo: String?,
+        memo: Memo,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
@@ -508,16 +485,16 @@ public class SDKSynchronizer: Synchronizer {
             }
         }
     }
-    
+
     public func shieldFunds(
         transparentAccountPrivateKey: TransparentAccountPrivKey,
-        memo: String?,
+        memo: Memo,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
         // let's see if there are funds to shield
         let derivationTool = DerivationTool(networkType: self.network.networkType)
-        
+
         do {
             let tAddr = try derivationTool.deriveTransparentAddressFromAccountPrivateKey(transparentAccountPrivateKey, index: 0)
 
@@ -536,7 +513,7 @@ public class SDKSynchronizer: Synchronizer {
                 return
             }
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: memo, from: accountIndex)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: try memo.asMemoBytes(), from: accountIndex)
             
             transactionManager.encodeShieldingTransaction(
                 xprv: transparentAccountPrivateKey,
@@ -558,12 +535,11 @@ public class SDKSynchronizer: Synchronizer {
                     }
                     
                 case .failure(let error):
-                    resultBlock(.failure(error))
+                    resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }
         } catch {
-            resultBlock(.failure(error))
-            return
+            resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
         }
     }
 
@@ -572,7 +548,7 @@ public class SDKSynchronizer: Synchronizer {
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: String,
-        memo: String?,
+        memo: Memo,
         from accountIndex: Int,
         resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
@@ -580,7 +556,7 @@ public class SDKSynchronizer: Synchronizer {
             let spend = try transactionManager.initSpend(
                 zatoshi: zatoshi,
                 toAddress: toAddress,
-                memo: memo,
+                memo: memo.asMemoBytes(),
                 from: accountIndex
             )
             
@@ -600,11 +576,11 @@ public class SDKSynchronizer: Synchronizer {
                     }
                     
                 case .failure(let error):
-                    resultBlock(.failure(error))
+                    resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }
         } catch {
-            resultBlock(.failure(error))
+            resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
         }
     }
     

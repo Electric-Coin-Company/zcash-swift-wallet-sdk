@@ -210,7 +210,7 @@ class ShieldFundsTests: XCTestCase {
         // shield the funds
         coordinator.synchronizer.shieldFunds(
             transparentAccountPrivateKey: transparentAccountPrivateKey,
-            memo: "shield funds",
+            memo: try Memo(string: "shield funds"),
             from: 0
         ) { result in
             switch result {

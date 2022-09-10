@@ -19,6 +19,7 @@ enum TransactionManagerError: Error {
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
+
     var repository: PendingTransactionRepository
     var encoder: TransactionEncoder
     var service: LightWalletService
@@ -41,7 +42,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     func initSpend(
         zatoshi: Zatoshi,
         toAddress: String,
-        memo: String?,
+        memo: MemoBytes,
         from accountIndex: Int
     ) throws -> PendingTransactionEntity {
         guard let insertedTx = try repository.find(
@@ -75,7 +76,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             do {
                 let encodedTransaction = try self.encoder.createShieldingTransaction(
                     tAccountPrivateKey: xprv,
-                    memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                    memoBytes: try pendingTransaction.memo.intoMemoBytes(),
                     from: pendingTransaction.accountIndex
                 )
                 let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
@@ -94,6 +95,14 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 DispatchQueue.main.async {
                     result(.failure(TransactionManagerError.updateFailed(pendingTransaction)))
                 }
+            } catch MemoBytes.Errors.invalidUTF8 {
+                DispatchQueue.main.async {
+                    result(.failure(TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")))
+                }
+            } catch MemoBytes.Errors.tooLong(let length) {
+                DispatchQueue.main.async {
+                    result(.failure(TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo is too long. expected 512 bytes, received \(length)")))
+                }
             } catch {
                 DispatchQueue.main.async {
                     result(.failure(error))
@@ -109,14 +118,17 @@ class PersistentTransactionManager: OutboundTransactionManager {
     ) {
         queue.async { [weak self] in
             guard let self = self else { return }
+
             do {
+                
                 let encodedTransaction = try self.encoder.createTransaction(
                     spendingKey: spendingKey,
                     zatoshi: pendingTransaction.value,
                     to: pendingTransaction.toAddress,
-                    memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                    memoBytes: try pendingTransaction.memo.intoMemoBytes(),
                     from: pendingTransaction.accountIndex
                 )
+
                 let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
 
                 var pending = pendingTransaction

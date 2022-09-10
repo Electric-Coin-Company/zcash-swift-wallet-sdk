@@ -7,7 +7,8 @@
 
 import Foundation
 import SQLite
-struct PendingTransaction: PendingTransactionEntity, Codable {
+struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
+
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
         case accountIndex = "account_index"
@@ -57,7 +58,7 @@ struct PendingTransaction: PendingTransactionEntity, Codable {
             raw: entity.raw,
             id: entity.id,
             value: entity.value,
-            memo: entity.memo,
+            memo: entity.memo == nil ? Data(MemoBytes.empty().bytes) : entity.memo,
             rawTransactionId: entity.raw
         )
     }
@@ -144,8 +145,7 @@ struct PendingTransaction: PendingTransactionEntity, Codable {
 }
 
 extension PendingTransaction {
-    // TODO: Handle Memo
-    init(value: Zatoshi, toAddress: String, memo: String?, account index: Int) {
+    init(value: Zatoshi, toAddress: String, memo: MemoBytes, account index: Int) {
         self = PendingTransaction(
             toAddress: toAddress,
             accountIndex: index,
@@ -160,7 +160,7 @@ extension PendingTransaction {
             raw: nil,
             id: nil,
             value: value,
-            memo: memo?.encodeAsZcashTransactionMemo(),
+            memo: Data(memo.bytes),
             rawTransactionId: nil
         )
     }

@@ -17,7 +17,7 @@ protocol OutboundTransactionManager {
     func initSpend(
         zatoshi: Zatoshi,
         toAddress: String,
-        memo: String?,
+        memo: MemoBytes,
         from accountIndex: Int
     ) throws -> PendingTransactionEntity
 

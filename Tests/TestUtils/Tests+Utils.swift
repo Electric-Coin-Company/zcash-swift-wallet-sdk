@@ -117,6 +117,7 @@ func deleteParametersFromDocuments() throws {
         output: documents.appendingPathComponent("sapling-output.params")
     )
 }
+
 func deleteParamsFrom(spend: URL, output: URL) {
     try? FileManager.default.removeItem(at: spend)
     try? FileManager.default.removeItem(at: output)

@@ -3,7 +3,7 @@ os: osx
 osx_image: xcode13.4
 xcode_project: ./Example/ZcashLightClientSample/ZcashLightClientSample.xcodeproj
 xcode_scheme: ZcashLightClientSample
-xcode_destination: platform=iOS Simulator,OS=15.2,name=iPhone 8
+xcode_destination: platform=iOS Simulator,OS=15.5,name=iPhone 8
 addons:
   homebrew:
     packages:

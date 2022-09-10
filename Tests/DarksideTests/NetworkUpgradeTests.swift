@@ -83,7 +83,7 @@ class NetworkUpgradeTests: XCTestCase {
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "this is a test",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -172,7 +172,7 @@ class NetworkUpgradeTests: XCTestCase {
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "this is a test",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -241,7 +241,7 @@ class NetworkUpgradeTests: XCTestCase {
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "this is a test",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -342,7 +342,7 @@ class NetworkUpgradeTests: XCTestCase {
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "this is a test",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -454,7 +454,7 @@ class NetworkUpgradeTests: XCTestCase {
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: spendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "this is a test",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {

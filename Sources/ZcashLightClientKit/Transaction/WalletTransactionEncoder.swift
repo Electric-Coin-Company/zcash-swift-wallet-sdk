@@ -53,14 +53,14 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memo: String?,
+        memoBytes: MemoBytes,
         from accountIndex: Int
     ) throws -> EncodedTransaction {
         let txId = try createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
             to: address,
-            memo: memo,
+            memoBytes: memoBytes,
             from: accountIndex
         )
         
@@ -83,7 +83,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memo: String?,
+        memoBytes: MemoBytes,
         from accountIndex: Int,
         result: @escaping TransactionEncoderResultBlock
     ) {
@@ -96,7 +96,7 @@ class WalletTransactionEncoder: TransactionEncoder {
                             spendingKey: spendingKey,
                             zatoshi: zatoshi,
                             to: address,
-                            memo: memo,
+                            memoBytes: memoBytes,
                             from: accountIndex
                         )
                     )
@@ -111,7 +111,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memo: String?,
+        memoBytes: MemoBytes,
         from accountIndex: Int
     ) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
@@ -124,7 +124,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             extsk: spendingKey.stringEncoded,
             to: address,
             value: zatoshi.amount,
-            memo: memo,
+            memo: memoBytes,
             spendParamsPath: self.spendParamsURL.path,
             outputParamsPath: self.outputParamsURL.path,
             networkType: networkType
@@ -139,12 +139,12 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     func createShieldingTransaction(
         tAccountPrivateKey: TransparentAccountPrivKey,
-        memo: String?,
+        memoBytes: MemoBytes,
         from accountIndex: Int
     ) throws -> EncodedTransaction {
         let txId = try createShieldingSpend(
             xprv: tAccountPrivateKey.encoding,
-            memo: memo,
+            memo: memoBytes,
             accountIndex: accountIndex
         )
         
@@ -162,7 +162,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
     }
     
-    func createShieldingSpend(xprv: String, memo: String?, accountIndex: Int) throws -> Int {
+    func createShieldingSpend(xprv: String, memo: MemoBytes, accountIndex: Int) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
