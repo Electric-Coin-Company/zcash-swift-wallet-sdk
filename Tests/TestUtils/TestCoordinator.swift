@@ -66,8 +66,8 @@ class TestCoordinator {
         
         guard
             let ufvk = try derivationTool
-                .deriveUnifiedFullViewingKeysFromSeed(
-                    TestSeed().seed(),
+                .deriveUnifiedFullViewingKeys(
+                    seed: TestSeed().seed(),
                     numberOfAccounts: 1
                 )
                 .first
@@ -344,8 +344,7 @@ enum TestSynchronizerBuilder {
         }
         
         guard let uvk = try DerivationTool(networkType: network.networkType)
-            .deriveUnifiedFullViewingKeysFromSeed(seedBytes, numberOfAccounts: 1)
-            .first
+            .deriveUnifiedFullViewingKeys(seed: seedBytes, numberOfAccounts: 1).first
         else {
             throw TestCoordinator.CoordinatorError.builderError
         }

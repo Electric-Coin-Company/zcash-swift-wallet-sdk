@@ -147,17 +147,6 @@ public class DerivationTool: KeyDeriving {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
     }
-
-    public func deriveUnifiedFullViewingKeysFromSeed(_ seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] {
-        guard numberOfAccounts > 0, let numberOfAccounts = Int32(exactly: numberOfAccounts) else {
-            throw KeyDerivationErrors.invalidInput
-        }
-        do {
-            return try rustwelding.deriveUnifiedFullViewingKeyFromSeed(seed, numberOfAccounts: numberOfAccounts, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
-    }
     
     /**
     Given a seed and a number of accounts, return the associated spending keys.
