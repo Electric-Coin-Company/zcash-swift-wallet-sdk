@@ -515,26 +515,17 @@ public class SDKSynchronizer: Synchronizer {
             
             let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: try memo.asMemoBytes(), from: accountIndex)
             
-            transactionManager.encodeShieldingTransaction(
-                xprv: transparentAccountPrivateKey,
-                pendingTransaction: shieldingSpend
-            ) { [weak self] result in
-                guard let self = self else { return }
+            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
+            Task {
+                do {
+                    let transaction = try await transactionManager.encodeShieldingTransaction(
+                        xprv: transparentAccountPrivateKey,
+                        pendingTransaction: shieldingSpend
+                    )
 
-                switch result {
-                case .success(let transaction):
-                    self.transactionManager.submit(pendingTransaction: transaction) { submitResult in
-                        switch submitResult {
-                        case .success(let submittedTx):
-                            resultBlock(.success(submittedTx))
-                        case .failure(let submissionError):
-                            DispatchQueue.main.async {
-                                resultBlock(.failure(submissionError))
-                            }
-                        }
-                    }
-                    
-                case .failure(let error):
+                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+                    resultBlock(.success(submittedTx))
+                } catch {
                     resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }
@@ -560,22 +551,15 @@ public class SDKSynchronizer: Synchronizer {
                 from: accountIndex
             )
             
-            transactionManager.encode(spendingKey: spendingKey, pendingTransaction: spend) { [weak self] result in
-                guard let self = self else { return }
-                switch result {
-                case .success(let transaction):
-                    self.transactionManager.submit(pendingTransaction: transaction) { submitResult in
-                        switch submitResult {
-                        case .success(let submittedTx):
-                            resultBlock(.success(submittedTx))
-                        case .failure(let submissionError):
-                            DispatchQueue.main.async {
-                                resultBlock(.failure(submissionError))
-                            }
-                        }
-                    }
-                    
-                case .failure(let error):
+            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
+            Task {
+                do {
+                    let transaction = try await transactionManager.encode(
+                        pendingTransaction: spend
+                    )
+                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+                    resultBlock(.success(submittedTx))
+                } catch {
                     resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }

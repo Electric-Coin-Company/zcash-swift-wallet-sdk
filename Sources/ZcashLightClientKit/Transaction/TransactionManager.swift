@@ -23,20 +23,17 @@ protocol OutboundTransactionManager {
 
     func encodeShieldingTransaction(
         xprv: TransparentAccountPrivKey,
-        pendingTransaction: PendingTransactionEntity,
-        result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    )
+        pendingTransaction: PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity
     
     func encode(
         spendingKey: SaplingExtendedSpendingKey,
-        pendingTransaction: PendingTransactionEntity,
-        result: @escaping (Result<PendingTransactionEntity, Error>
-    ) -> Void)
+        pendingTransaction: PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity
     
     func submit(
-        pendingTransaction: PendingTransactionEntity,
-        result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    )
+        pendingTransaction: PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity
     
     func applyMinedHeight(
         pendingTransaction: PendingTransactionEntity,
