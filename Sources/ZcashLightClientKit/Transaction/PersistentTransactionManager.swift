@@ -19,7 +19,6 @@ enum TransactionManagerError: Error {
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
-
     var repository: PendingTransactionRepository
     var encoder: TransactionEncoder
     var service: LightWalletService
@@ -88,26 +87,26 @@ class PersistentTransactionManager: OutboundTransactionManager {
             
             return pending
         } catch StorageError.updateFailed {
-            result(.failure(TransactionManagerError.updateFailed(pendingTransaction)))
+            throw TransactionManagerError.updateFailed(pendingTransaction)
         } catch MemoBytes.Errors.invalidUTF8 {
-            result(.failure(TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")))
+            throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")
         } catch MemoBytes.Errors.tooLong(let length) {
-            result(.failure(TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo is too long. expected 512 bytes, received \(length)")))
+            throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo is too long. expected 512 bytes, received \(length)")
         } catch {
-            result(.failure(error))
+            throw error
         }
     }
 
     func encode(
-        spendingKey: String,
+        spendingKey: SaplingExtendedSpendingKey,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
             let encodedTransaction = try self.encoder.createTransaction(
                 spendingKey: spendingKey,
-                zatoshi: pendingTransaction.intValue,
+                zatoshi: pendingTransaction.value,
                 to: pendingTransaction.toAddress,
-                memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                memoBytes: try pendingTransaction.memo.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
             let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)

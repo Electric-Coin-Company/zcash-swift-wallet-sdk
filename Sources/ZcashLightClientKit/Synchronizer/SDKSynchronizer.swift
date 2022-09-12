@@ -555,6 +555,7 @@ public class SDKSynchronizer: Synchronizer {
             Task {
                 do {
                     let transaction = try await transactionManager.encode(
+                        spendingKey: spendingKey,
                         pendingTransaction: spend
                     )
                     let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
