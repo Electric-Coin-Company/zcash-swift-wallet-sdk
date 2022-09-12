@@ -83,7 +83,7 @@ class BalanceTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: maxBalance,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "test send \(self.description) \(Date().description)",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -227,7 +227,7 @@ class BalanceTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: maxBalanceMinusOne,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "test send \(self.description) \(Date().description)",
+            memo: try Memo(string: "\(self.description) \(Date().description)"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -368,7 +368,7 @@ class BalanceTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: maxBalanceMinusOne,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "test send \(self.description) \(Date().description)",
+            memo: try Memo(string: "test send \(self.description) \(Date().description)"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -511,7 +511,7 @@ class BalanceTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: sendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "test send \(self.description) \(Date().description)",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -682,7 +682,7 @@ class BalanceTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: sendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "test send \(self.description) \(Date().description)",
+            memo: try Memo(string: "test send \(self.description) \(Date().description)"),
             from: 0,
             resultBlock: { result in
                 switch result {
@@ -831,7 +831,7 @@ class BalanceTests: XCTestCase {
         /*
         Send
         */
-        let memo = "shielding is fun!"
+        let memo = try Memo(string: "shielding is fun!")
         var pendingTx: PendingTransactionEntity?
         coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKeys,
@@ -892,7 +892,12 @@ class BalanceTests: XCTestCase {
                 */
                 XCTAssertEqual(confirmedTx.value, self.sendAmount)
                 XCTAssertEqual(confirmedTx.toAddress, self.testRecipientAddress)
-                XCTAssertEqual(confirmedTx.memo?.asZcashTransactionMemo(), memo)
+                do {
+                    let confirmedMemo = try confirmedTx.memo.intoMemoBytes().intoMemo()
+                    XCTAssertEqual(confirmedMemo, memo)
+                } catch {
+                    XCTFail("failed retrieving memo from confirmed transaction. Error: \(error.localizedDescription)")
+                }
 
                 guard let transactionId = confirmedTx.rawTransactionId else {
                     XCTFail("no raw transaction id")
@@ -1009,7 +1014,7 @@ class BalanceTests: XCTestCase {
             spendingKey: spendingKey,
             zatoshi: sendAmount,
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "test send \(self.description)",
+            memo: try Memo(string: "test send \(self.description)"),
             from: 0,
             resultBlock: { result in
                 switch result {

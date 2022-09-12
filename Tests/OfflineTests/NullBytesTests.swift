@@ -122,10 +122,20 @@ class NullBytesTests: XCTestCase {
 
         XCTAssertFalse(validZaddr.containsCStringNullBytesBeforeStringEnding())
         XCTAssertTrue(
-            "zs1gqtfu59z20s\09t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp"
+            "zs1gqtfu59z20s\u{0}9t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp"
                 .containsCStringNullBytesBeforeStringEnding()
         )
-        XCTAssertTrue("\0".containsCStringNullBytesBeforeStringEnding())
+        XCTAssertTrue("\u{0}".containsCStringNullBytesBeforeStringEnding())
         XCTAssertFalse("".containsCStringNullBytesBeforeStringEnding())
+    }
+
+    func testTrimTrailingNullBytes() throws {
+        let nullTrailedString = "This Is a memo with text and trailing null bytes\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}"
+
+        let nonNullTrailedString = "This Is a memo with text and trailing null bytes"
+
+        let trimmedString = String(nullTrailedString.reversed().drop(while: { $0 == "\u{0}"}).reversed())
+
+        XCTAssertEqual(trimmedString, nonNullTrailedString)
     }
 }

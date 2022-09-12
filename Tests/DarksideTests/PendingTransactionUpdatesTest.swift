@@ -98,7 +98,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
             spendingKey: self.coordinator.spendingKeys!.first!,
             zatoshi: Zatoshi(20000),
             toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: "this is a test",
+            memo: try Memo(string: "this is a test"),
             from: 0,
             resultBlock: { result in
                 switch result {

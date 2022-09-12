@@ -28,7 +28,7 @@ protocol TransactionEncoder {
     /// - Parameter spendingKey: a `SaplingExtendedSpendingKey` containing the spending key
     /// - Parameter zatoshi: the amount to send in `Zatoshi`
     /// - Parameter to: string containing the recipient address
-    /// - Parameter memo: string containing the memo (optional)
+    /// - Parameter memoBytes: MemoBytes for this transaction
     /// - Parameter accountIndex: index of the account that will be used to send the funds
     ///
     /// - Throws: a TransactionEncoderError
@@ -36,7 +36,7 @@ protocol TransactionEncoder {
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memo: String?,
+        memoBytes: MemoBytes,
         from accountIndex: Int
     ) throws -> EncodedTransaction
     
@@ -50,7 +50,7 @@ protocol TransactionEncoder {
     /// - Parameter spendingKey: a `SaplingExtendedSpendingKey` containing the spending key
     /// - Parameter zatoshi: the amount to send in `Zatoshi`
     /// - Parameter to: string containing the recipient address
-    /// - Parameter memo: string containing the memo (optional)
+    /// - Parameter MemoBytes: string containing the memo (optional)
     /// - Parameter accountIndex: index of the account that will be used to send the funds
     /// - Parameter result: a non escaping closure that receives a Result containing either an EncodedTransaction or a /// TransactionEncoderError
     // swiftlint:disable:next function_parameter_count
@@ -58,7 +58,7 @@ protocol TransactionEncoder {
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memo: String?,
+        memoBytes: MemoBytes,
         from accountIndex: Int,
         result: @escaping TransactionEncoderResultBlock
     )
@@ -69,22 +69,19 @@ protocol TransactionEncoder {
      
     - Parameters:
     - Parameter tAccountPrivateKey: transparent account private key to spend the UTXOs
-    - Parameter memo: string containing the memo (optional)
+    - Parameter memoBytes: containing the memo (optional)
     - Parameter accountIndex: index of the account that will be used to send the funds
-     
     - Throws: a TransactionEncoderError
     */
     func createShieldingTransaction(
         tAccountPrivateKey: TransparentAccountPrivKey,
-        memo: String?,
+        memoBytes: MemoBytes,
         from accountIndex: Int
     ) throws -> EncodedTransaction
-    
-    /**
-    Fetch the Transaction Entity from the encoded representation
-    - Parameter encodedTransaction: The encoded transaction to expand
-    - Returns: a TransactionEntity based on the given Encoded Transaction
-    - Throws: a TransactionEncoderError
-    */
+
+    ///Fetch the Transaction Entity from the encoded representation
+    /// - Parameter encodedTransaction: The encoded transaction to expand
+    /// - Returns: a TransactionEntity based on the given Encoded Transaction
+    /// - Throws: a TransactionEncoderError
     func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity
 }

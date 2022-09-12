@@ -359,25 +359,74 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return WalletBalance(verified: Zatoshi(verified), total: Zatoshi(total))
     }
     
+    @available(*, deprecated, message: "This function will be deprecated soon. Use `getReceivedMemo(dbData:idNote:networkType)` instead")
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {
         let dbData = dbData.osStr()
         
         guard let memoCStr = zcashlc_get_received_memo_as_utf8(dbData.0, dbData.1, idNote, networkType.networkId) else { return  nil }
         
-        let memo = String(validatingUTF8: memoCStr)
-        zcashlc_string_free(memoCStr)
-        return memo
+        defer {
+            zcashlc_string_free(memoCStr)
+        }
+
+        return String(validatingUTF8: memoCStr)
     }
-    
-    static func getSentMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {
+
+    @available(*, deprecated, message: "This function will be deprecated soon. Use `getSentMemo(dbData:idNote:networkType)` instead")
+    static func getSentMemoAsUTF8(
+        dbData: URL,
+        idNote: Int64,
+        networkType: NetworkType
+    ) -> String? {
         let dbData = dbData.osStr()
         
         guard let memoCStr = zcashlc_get_sent_memo_as_utf8(dbData.0, dbData.1, idNote, networkType.networkId) else { return nil }
         
-        let memo = String(validatingUTF8: memoCStr)
-        zcashlc_string_free(memoCStr)
-        return memo
+        defer {
+            zcashlc_string_free(memoCStr)
+        }
+
+        return String(validatingUTF8: memoCStr)
     }
+
+    static func getSentMemo(
+        dbData: URL,
+        idNote: Int64,
+        networkType: NetworkType
+    ) -> Memo? {
+        let dbData = dbData.osStr()
+
+        var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
+        var success = false
+
+        contiguousMemoBytes.withUnsafeMutableBytes{ memoBytePtr in
+            success = zcashlc_get_sent_memo(dbData.0, dbData.1, idNote, memoBytePtr.baseAddress, networkType.networkId)
+        }
+
+        guard success else { return nil }
+
+        return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
+    }
+
+    static func getReceivedMemo(
+        dbData: URL,
+        idNote: Int64,
+        networkType: NetworkType
+    ) -> Memo? {
+        let dbData = dbData.osStr()
+
+        var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
+        var success = false
+
+        contiguousMemoBytes.withUnsafeMutableBufferPointer { memoBytePtr in
+            success = zcashlc_get_received_memo(dbData.0, dbData.1, idNote, memoBytePtr.baseAddress, networkType.networkId)
+        }
+
+        guard success else { return nil }
+
+        return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
+    }
+
     
     static func validateCombinedChain(dbCache: URL, dbData: URL, networkType: NetworkType) -> Int32 {
         let dbCache = dbCache.osStr()
@@ -420,13 +469,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         extsk: String,
         to address: String,
         value: Int64,
-        memo: String?,
+        memo: MemoBytes,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
     ) -> Int64 {
         let dbData = dbData.osStr()
-        let memoBytes = memo ?? ""
         
         return zcashlc_create_to_address(
             dbData.0,
@@ -435,7 +483,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             [CChar](extsk.utf8CString),
             [CChar](address.utf8CString),
             value,
-            [CChar](memoBytes.utf8CString),
+            memo.bytes,
             spendParamsPath,
             UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
             outputParamsPath,
@@ -450,20 +498,19 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         xprv: String,
-        memo: String?,
+        memo: MemoBytes,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
     ) -> Int64 {
         let dbData = dbData.osStr()
-        let memoBytes = memo ?? ""
         
         return zcashlc_shield_funds(
             dbData.0,
             dbData.1,
             account,
             [CChar](xprv.utf8CString),
-            [CChar](memoBytes.utf8CString),
+            memo.bytes,
             spendParamsPath,
             UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
             outputParamsPath,
