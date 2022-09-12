@@ -16,12 +16,12 @@ transactions through to completion.
 protocol OutboundTransactionManager {
     func initSpend(zatoshi: Zatoshi, toAddress: String, memo: String?, from accountIndex: Int) throws -> PendingTransactionEntity
 
-    func encodeShieldingTransaction(spendingKey: String, tsk: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
-    
-    func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
-    
-    func submit(pendingTransaction: PendingTransactionEntity, result: @escaping (Result<PendingTransactionEntity, Error>) -> Void)
-    
+    func encodeShieldingTransaction(spendingKey: String, tsk: String, pendingTransaction: PendingTransactionEntity) async throws -> PendingTransactionEntity
+
+    func encode(spendingKey: String, pendingTransaction: PendingTransactionEntity) async throws -> PendingTransactionEntity
+
+    func submit(pendingTransaction: PendingTransactionEntity) async throws -> PendingTransactionEntity
+
     func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) throws -> PendingTransactionEntity
     
     func monitorChanges(byId: Int, observer: Any) // check this out. code smell
