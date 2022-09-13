@@ -75,6 +75,7 @@ struct SentNote: SentNoteEntity, Codable {
     enum CodingKeys: String, CodingKey {
         case id = "id_note"
         case transactionId = "tx"
+        case outputPool = "output_pool"
         case outputIndex = "output_index"
         case account = "from_account"
         case address
@@ -84,6 +85,7 @@ struct SentNote: SentNoteEntity, Codable {
     
     var id: Int
     var transactionId: Int
+    var outputPool: Int
     var outputIndex: Int
     var account: Int
     var address: String

@@ -49,6 +49,13 @@ class SendViewController: UIViewController {
             fail(error)
         }
     }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+
+        // swiftlint:disable:next force_try
+        try! synchronizer.stop() // Fail on purpose if this throws.
+    }
     
     @objc func viewTapped(_ recognizer: UITapGestureRecognizer) {
         let point = recognizer.location(in: self.view)

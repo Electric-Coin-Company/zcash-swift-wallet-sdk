@@ -68,9 +68,13 @@ class TestDbBuilder {
     static func prePopulatedDataDbURL() -> URL? {
         Bundle.module.url(forResource: "test_data", withExtension: "db")
     }
-    
+
+    static func prePopulatedMainnetDataDbURL() -> URL? {
+        Bundle.module.url(forResource: "ZcashSdk_Data", withExtension: "db")
+    }
+
     static func prepopulatedDataDbProvider() -> ConnectionProvider? {
-        guard let url = Bundle.module.url(forResource: "ZcashSdk_Data", withExtension: "db") else { return nil }
+        guard let url = prePopulatedMainnetDataDbURL() else { return nil }
         let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
 
         return provider

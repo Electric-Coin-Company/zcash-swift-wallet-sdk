@@ -42,9 +42,9 @@ let package = Package(
                 "proto/darkside.proto"
             ],
             resources: [
-                .copy("test_data.db"),
-                .copy("cache.db"),
-                .copy("ZcashSdk_Data.db"),
+                .copy("Resources/test_data.db"),
+                .copy("Resources/cache.db"),
+                .copy("Resources/ZcashSdk_Data.db"),
             ]
         ),
         .testTarget(
