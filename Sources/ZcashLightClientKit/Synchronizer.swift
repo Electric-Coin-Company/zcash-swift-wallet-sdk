@@ -107,40 +107,20 @@ public protocol Synchronizer {
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
     func getTransparentAddress(accountIndex: Int) -> TransparentAddress?
-
-    /// Sends zatoshi.
-    /// - Parameter spendingKey: the key that allows spends to occur.
-    /// - Parameter zatoshi: the amount of zatoshi to send.
-    /// - Parameter toAddress: the recipient's address.
-    /// - Parameter memo: the optional memo to include as part of the transaction.
-    /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
-    @available(*, deprecated, message: "This function will be removed soon, use the one reveiving a `Zatoshi` value instead")
-    // swiftlint:disable:next function_parameter_count
-    func sendToAddress(
-        spendingKey: String,
-        zatoshi: Int64,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
-    )
-
-
+    
     /// Sends zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: the optional memo to include as part of the transaction.
     /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
-    // swiftlint:disable:next function_parameter_count
     func sendToAddress(
         spendingKey: String,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
-    )
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity
 
     /// Sends zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.

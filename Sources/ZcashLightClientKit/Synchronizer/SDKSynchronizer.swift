@@ -455,52 +455,27 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     // MARK: Synchronizer methods
-
-    @available(*, deprecated, message: "This function will be removed soon, use the one reveiving a `Zatoshi` value instead")
-    public func sendToAddress(
-        spendingKey: String,
-        zatoshi: Int64,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        sendToAddress(
-            spendingKey: spendingKey,
-            zatoshi: Zatoshi(zatoshi),
-            toAddress: toAddress,
-            memo: memo,
-            from: accountIndex,
-            resultBlock: resultBlock
-        )
-    }
-
-    // swiftlint:disable:next function_parameter_count
+    
     public func sendToAddress(
         spendingKey: String,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        initializer.downloadParametersIfNeeded { downloadResult in
-            DispatchQueue.main.async { [weak self] in
-                switch downloadResult {
-                case .success:
-                    self?.createToAddress(
-                        spendingKey: spendingKey,
-                        zatoshi: zatoshi,
-                        toAddress: toAddress,
-                        memo: memo,
-                        from: accountIndex,
-                        resultBlock: resultBlock
-                    )
-                case .failure(let error):
-                    resultBlock(.failure(SynchronizerError.parameterMissing(underlyingError: error)))
-                }
-            }
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
+        do {
+            try await initializer.downloadParametersIfNeeded()
+        } catch {
+            throw SynchronizerError.parameterMissing(underlyingError: error)
         }
+
+        return try await createToAddress(
+            spendingKey: spendingKey,
+            zatoshi: zatoshi,
+            toAddress: toAddress,
+            memo: memo,
+            from: accountIndex
+        )
     }
     
     public func shieldFunds(
@@ -547,16 +522,14 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
     }
-
-    // swiftlint:disable:next function_parameter_count
+    
     func createToAddress(
         spendingKey: String,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
         do {
             let spend = try transactionManager.initSpend(
                 zatoshi: zatoshi,
@@ -565,21 +538,14 @@ public class SDKSynchronizer: Synchronizer {
                 from: accountIndex
             )
             
-            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
-            Task {
-                do {
-                    let transaction = try await transactionManager.encode(
-                        spendingKey: spendingKey,
-                        pendingTransaction: spend
-                    )
-                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
-                    resultBlock(.success(submittedTx))
-                } catch {
-                    resultBlock(.failure(error))
-                }
-            }
+            let transaction = try await transactionManager.encode(
+                spendingKey: spendingKey,
+                pendingTransaction: spend
+            )
+            let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+            return submittedTx
         } catch {
-            resultBlock(.failure(error))
+            throw error
         }
     }
     

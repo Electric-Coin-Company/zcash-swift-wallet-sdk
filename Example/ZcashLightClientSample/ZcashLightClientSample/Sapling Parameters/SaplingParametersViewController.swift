@@ -79,25 +79,21 @@ class SaplingParametersViewController: UIViewController {
     @IBAction func download(_ sender: Any) {
         let outputParameter = try! outputParamsURLHelper()
         let spendParameter = try! spendParamsURLHelper()
-        SaplingParameterDownloader.downloadParamsIfnotPresent(
-            spendURL: spendParameter,
-            outputURL: outputParameter,
-            result: { result in
-                DispatchQueue.main.async { [weak self] in
-                    guard let self = self else { return }
-                    switch result {
-                    case .success(let urls):
-                        self.spendPath.text = urls.spend.path
-                        self.outputPath.text = urls.output.path
-                        self.updateColor()
-                        self.updateButtons()
-
-                    case .failure(let error):
-                        self.showError(error)
-                    }
-                }
+        
+        Task { @MainActor in
+            do {
+                let urls = try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+                    spendURL: spendParameter,
+                    outputURL: outputParameter
+                )
+                spendPath.text = urls.spend.path
+                outputPath.text = urls.output.path
+                updateColor()
+                updateButtons()
+            } catch {
+                showError(error)
             }
-        )
+        }
     }
     
     func fileExists(_ path: String) -> Bool {
