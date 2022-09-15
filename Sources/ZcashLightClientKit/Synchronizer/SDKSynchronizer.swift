@@ -194,7 +194,7 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        blockProcessor.stop(cancelTasks: true)
+        blockProcessor.stop()
         self.status = .stopped
     }
     
@@ -639,8 +639,8 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
    
-    public func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
-        self.blockProcessor.refreshUTXOs(tAddress: address, startHeight: height, result: result)
+    public func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs {
+        try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
@@ -856,6 +856,7 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
+            case .unknown: break
             }
         }
         
