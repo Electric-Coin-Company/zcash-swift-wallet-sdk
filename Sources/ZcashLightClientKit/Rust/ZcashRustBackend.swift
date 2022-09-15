@@ -790,6 +790,37 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         
         return tAddr
     }
+
+    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
+        guard !address.containsCStringNullBytesBeforeStringEnding() else {
+            throw RustWeldingError.malformedStringInput
+        }
+
+        var len = UInt(0)
+
+        guard let typecodesPointer =  zcashlc_get_typecodes_for_unified_address_receivers(
+            [CChar](address.utf8CString),
+            &len
+          ),
+            len > 0
+              else {
+            throw RustWeldingError.malformedStringInput
+        }
+
+        var typecodes = [UInt32]()
+
+        for typecodeIndex in 0 ..< Int(len) {
+            let pointer = typecodesPointer.advanced(by: typecodeIndex)
+
+            typecodes.append(pointer.pointee)
+        }
+
+        defer {
+            zcashlc_free_typecodes(typecodesPointer, len)
+        }
+
+        return typecodes
+    }
     
     static func consensusBranchIdFor(height: Int32, networkType: NetworkType) throws -> Int32 {
         let branchId = zcashlc_branch_id_for_height(height, networkType.networkId)

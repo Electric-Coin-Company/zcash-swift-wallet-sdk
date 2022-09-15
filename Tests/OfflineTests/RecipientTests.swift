@@ -15,7 +15,7 @@ final class RecipientTests: XCTestCase {
     let transparentString = "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
 
     func testUnifiedRecipient() throws {
-        let expectedUnifiedAddress = UnifiedAddress(validatedEncoding: uaString)
+        let expectedUnifiedAddress = UnifiedAddress(validatedEncoding: uaString, network: .mainnet)
 
         XCTAssertEqual(try Recipient(uaString, network: .mainnet), .unified(expectedUnifiedAddress))
     }

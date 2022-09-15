@@ -422,6 +422,13 @@ protocol ZcashRustBackendWelding {
     
     static func deriveUnifiedFullViewingKeyFromSeed(_ seed: [UInt8], numberOfAccounts: Int32, networkType: NetworkType) throws -> [UnifiedFullViewingKey]
 
+
+    /// Obtains the available receiver typecodes for the given String encoded Unified Address
+    /// - Parameter address: public key represented as a String
+    /// - Returns  the `[UInt32]` that compose the given UA
+    /// - Throws `RustWeldingError.malformedStringInput` when the UA is either invalid or malformed
+    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32]
+
     /**
     Gets the consensus branch id for the given height
     - Parameter height: the height you what to know the branch id for

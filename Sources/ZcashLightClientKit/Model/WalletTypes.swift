@@ -138,6 +138,34 @@ public struct SaplingAddress: Equatable, StringEncoded {
 }
 
 public struct UnifiedAddress: Equatable, StringEncoded {
+    public enum Errors: Error {
+        case couldNotExtractTypecodes
+    }
+
+    public enum ReceiverTypecodes: Hashable {
+        case p2pkh
+        case p2sh
+        case sapling
+        case orchard
+        case unknown(UInt32)
+
+        init(typecode: UInt32) {
+            switch typecode {
+            case 0x00:
+                self = .p2pkh
+            case 0x01:
+                self = .p2sh
+            case 0x02:
+                self = .sapling
+            case 0x03:
+                self = .orchard
+            default:
+                self = .unknown(typecode)
+            }
+        }
+    }
+
+    var network: NetworkType
     var encoding: String
 
     public var stringEncoded: String { encoding }
@@ -153,7 +181,19 @@ public struct UnifiedAddress: Equatable, StringEncoded {
             throw KeyEncodingError.invalidEncoding
         }
 
+        self.network = network
         self.encoding = encoding
+    }
+
+    /// returns an array of `UnifiedAddress.ReceiverTypecodes` ordered by precedence
+    /// - Throws `UnifiedAddress.Errors.couldNotExtractTypecodes` when the  typecodes
+    /// couldn't be extracted
+    public func availableReceiverTypecodes() throws -> [UnifiedAddress.ReceiverTypecodes] {
+        do {
+            return try DerivationTool(networkType: network).receiverTypecodesFromUnifiedAddress(self)
+        } catch {
+            throw Errors.couldNotExtractTypecodes
+        }
     }
 }
 
