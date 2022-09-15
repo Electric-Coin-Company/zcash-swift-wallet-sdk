@@ -31,7 +31,7 @@ class SyncBlocksViewController: UIViewController {
         // swiftlint:disable:next force_try
         try! wallet.initialize()
         processor = CompactBlockProcessor(initializer: wallet)
-        statusLabel.text = textFor(state: processor?.state ?? .stopped)
+        statusLabel.text = textFor(state: processor?.state.getState() ?? .stopped)
         progressBar.progress = 0
         
         NotificationCenter.default.addObserver(
@@ -70,7 +70,7 @@ class SyncBlocksViewController: UIViewController {
     @IBAction func startStop() {
         guard let processor = processor else { return }
 
-        switch processor.state {
+        switch processor.state.getState() {
         case .stopped:
             startProcessor()
         default:
@@ -92,7 +92,7 @@ class SyncBlocksViewController: UIViewController {
     func stopProcessor() {
         guard let processor = processor else { return }
 
-        processor.stop(cancelTasks: true)
+        processor.stop()
         updateUI()
     }
     
@@ -114,7 +114,7 @@ class SyncBlocksViewController: UIViewController {
     }
     
     func updateUI() {
-        guard let state = processor?.state else { return }
+        guard let state = processor?.state.getState() else { return }
 
         statusLabel.text = textFor(state: state)
         startPause.setTitle(buttonText(for: state), for: .normal)

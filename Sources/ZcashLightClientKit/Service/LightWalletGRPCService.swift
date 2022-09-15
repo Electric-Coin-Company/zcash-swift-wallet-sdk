@@ -369,7 +369,7 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
                     }
                     continuation.finish(throwing: nil)
                 } catch {
-                    continuation.finish(throwing: error)
+                    continuation.finish(throwing: error.mapToServiceError())
                 }
             }
         }
@@ -551,7 +551,7 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
                     }
                     continuation.finish(throwing: nil)
                 } catch {
-                    continuation.finish(throwing: error)
+                    continuation.finish(throwing: error.mapToServiceError())
                 }
             }
         }
@@ -619,7 +619,7 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
                     }
                     continuation.finish(throwing: nil)
                 } catch {
-                    continuation.finish(throwing: error)
+                    continuation.finish(throwing: error.mapToServiceError())
                 }
             }
         }

@@ -1,5 +1,5 @@
 //
-//  DownloadOperationTests.swift
+//  DownloadTests.swift
 //  ZcashLightClientKitTests
 //
 //  Created by Francisco Gindre on 10/16/19.
@@ -12,39 +12,37 @@ import SQLite
 @testable import ZcashLightClientKit
 
 // swiftlint:disable force_try
-class DownloadOperationTests: XCTestCase {
-    var operationQueue = OperationQueue()
+class DownloadTests: XCTestCase {
     var network = ZcashNetworkBuilder.network(for: .testnet)
 
     override func tearDown() {
         super.tearDown()
-        operationQueue.cancelAllOperations()
     }
 
-    func testSingleOperation() {
-        let expect = XCTestExpectation(description: self.description)
-        
+    func testSingleDownload() async throws {
         let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let downloader = CompactBlockDownloader(service: service, storage: storage)
         let blockCount = 100
         let activationHeight = network.constants.saplingActivationHeight
         let range = activationHeight ... activationHeight + blockCount
-        let downloadOperation = CompactBlockDownloadOperation(downloader: downloader, range: range)
         
-        downloadOperation.completionHandler = { finished, cancelled in
-            expect.fulfill()
-            XCTAssertTrue(finished)
-            XCTAssertFalse(cancelled)
+        let processorConfig = CompactBlockProcessor.Configuration.standard(
+            for: network,
+            walletBirthday: network.constants.saplingActivationHeight
+        )
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: ZcashRustBackend.self,
+            config: processorConfig
+        )
+        
+        do {
+            try await compactBlockProcessor.compactBlockDownload(downloader: downloader, range: range)
+        } catch {
+            XCTFail("Download failed with error: \(error)")
         }
-        
-        downloadOperation.errorHandler = { error in
-            XCTFail("Donwload Operation failed with error: \(error)")
-        }
-        
-        operationQueue.addOperation(downloadOperation)
-        
-        wait(for: [expect], timeout: 10)
         
         XCTAssertEqual(try! storage.latestHeight(), range.upperBound)
     }
