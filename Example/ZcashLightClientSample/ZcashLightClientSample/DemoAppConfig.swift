@@ -30,7 +30,7 @@ enum DemoAppConfig {
     }()
     
     static var endpoint: LightWalletEndpoint {
-        return LightWalletEndpoint(address: self.host, port: self.port, secure: true)
+        return LightWalletEndpoint(address: self.host, port: self.port, secure: true, streamingCallTimeoutInMillis: 10 * 60 * 60 * 1000)
     }
 }
 

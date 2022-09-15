@@ -11,12 +11,6 @@ import XCTest
 
 // swiftlint:disable print_function_usage
 class BlockStreamingTest: XCTestCase {
-    var queue: OperationQueue = {
-        let queue = OperationQueue()
-        queue.maxConcurrentOperationCount = 1
-        return queue
-    }()
-
     override func setUpWithError() throws {
         try super.setUpWithError()
         logger = SampleLogger(logLevel: .debug)
@@ -27,7 +21,7 @@ class BlockStreamingTest: XCTestCase {
         try? FileManager.default.removeItem(at: __dataDbURL())
     }
 
-    func testStreamOperation() throws {
+    func testStream() throws {
         let expectation = XCTestExpectation(description: "blockstream expectation")
         
         let service = LightWalletGRPCService(
@@ -61,9 +55,7 @@ class BlockStreamingTest: XCTestCase {
         wait(for: [expectation], timeout: 1000)
     }
     
-    func testStreamOperationCancellation() throws {
-        let expectation = XCTestExpectation(description: "blockstream expectation")
-        
+    func testStreamCancellation() async throws {
         let service = LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
@@ -71,37 +63,38 @@ class BlockStreamingTest: XCTestCase {
             singleCallTimeout: 10000,
             streamingCallTimeout: 10000
         )
+
         let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
-        
         let startHeight = try service.latestBlockHeight() - 100_000
-        let operation = CompactBlockStreamDownloadOperation(
+        let processorConfig = CompactBlockProcessor.Configuration.standard(
+            for: ZcashNetworkBuilder.network(for: .testnet),
+            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
+        )
+
+        let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            blockBufferSize: 10,
-            startHeight: startHeight,
-            progressDelegate: self
+            backend: ZcashRustBackend.self,
+            config: processorConfig
         )
         
-        operation.completionHandler = { _, cancelled in
-            XCTAssert(cancelled)
-            expectation.fulfill()
+        let cancelableTask = Task {
+            do {
+                try await compactBlockProcessor.compactBlockStreamDownload(
+                    blockBufferSize: 10,
+                    startHeight: startHeight
+                )
+                XCTAssertTrue(Task.isCancelled)
+            } catch {
+                XCTFail("failed with error: \(error)")
+            }
         }
         
-        operation.errorHandler = { error in
-            XCTFail("failed with error: \(error)")
-            expectation.fulfill()
-        }
-        
-        queue.addOperation(operation)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: {
-            self.queue.cancelAllOperations()
-        })
-        wait(for: [expectation], timeout: 1000)
+        try await Task.sleep(nanoseconds: 3_000_000_000)
+        cancelableTask.cancel()
     }
     
-    func testStreamOperationTimeout() throws {
-        let expectation = XCTestExpectation(description: "blockstream expectation")
-        let errorExpectation = XCTestExpectation(description: "blockstream error expectation")
+    func testStreamTimeout() async throws {
         let service = LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
@@ -109,49 +102,49 @@ class BlockStreamingTest: XCTestCase {
             singleCallTimeout: 1000,
             streamingCallTimeout: 3000
         )
+
         let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
-        
         let startHeight = try service.latestBlockHeight() - 100_000
-        let operation = CompactBlockStreamDownloadOperation(
+        
+        let processorConfig = CompactBlockProcessor.Configuration.standard(
+            for: ZcashNetworkBuilder.network(for: .testnet),
+            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
+        )
+
+        let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            blockBufferSize: 10,
-            startHeight: startHeight,
-            progressDelegate: self
+            backend: ZcashRustBackend.self,
+            config: processorConfig
         )
         
-        operation.completionHandler = { finished, _ in
-            XCTAssert(finished)
-            
-            expectation.fulfill()
-        }
+        let date = Date()
         
-        operation.errorHandler = { error in
+        do {
+            try await compactBlockProcessor.compactBlockStreamDownload(
+                blockBufferSize: 10,
+                startHeight: startHeight
+            )
+        } catch {
             if let lwdError = error as? LightWalletServiceError {
                 switch lwdError {
                 case .timeOut:
                     XCTAssert(true)
                 default:
-                    XCTFail("LWD Service erro found, but should have been a timeLimit reached Error")
+                    XCTFail("LWD Service error found, but should have been a timeLimit reached Error")
                 }
             } else {
                 XCTFail("Error should have been a timeLimit reached Error")
             }
-            errorExpectation.fulfill()
         }
         
-        queue.addOperation(operation)
-        let date = Date()
-        wait(for: [errorExpectation], timeout: 4)
         let now = Date()
         
         let elapsed = now.timeIntervalSince(date)
         print("took \(elapsed) seconds")
     }
     
-    func testBatchOperation() throws {
-        let expectation = XCTestExpectation(description: "blockbatch expectation")
-        
+    func testBatch() async throws {
         let service = LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
@@ -162,34 +155,29 @@ class BlockStreamingTest: XCTestCase {
         let storage = try TestDbBuilder.diskCompactBlockStorage(at: __dataDbURL() )
         let targetHeight = try service.latestBlockHeight()
         let startHeight = targetHeight - 10_000
-        let operation = CompactBlockBatchDownloadOperation(
+        
+        let processorConfig = CompactBlockProcessor.Configuration.standard(
+            for: ZcashNetworkBuilder.network(for: .testnet),
+            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
+        )
+
+        let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            startHeight: startHeight,
-            targetHeight: targetHeight,
-            progressDelegate: self
+            backend: ZcashRustBackend.self,
+            config: processorConfig
         )
         
-        operation.completionHandler = { _, cancelled in
-            if cancelled {
-                XCTFail("operation cancelled")
-            }
-            expectation.fulfill()
-        }
-        
-        operation.errorHandler = { error in
+        let range = CompactBlockRange(uncheckedBounds: (startHeight, targetHeight))
+        do {
+            try await compactBlockProcessor.compactBlockBatchDownload(range: range)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
             XCTFail("failed with error: \(error)")
-            expectation.fulfill()
         }
-        
-        queue.addOperation(operation)
-        
-        wait(for: [expectation], timeout: 120)
     }
 
-    func testBatchOperationCancellation() throws {
-        let expectation = XCTestExpectation(description: "blockbatch expectation")
-        
+    func testBatchCancellation() async throws {
         let service = LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
@@ -200,36 +188,30 @@ class BlockStreamingTest: XCTestCase {
         let storage = try TestDbBuilder.diskCompactBlockStorage(at: __dataDbURL() )
         let targetHeight = try service.latestBlockHeight()
         let startHeight = targetHeight - 100_000
-        let operation = CompactBlockBatchDownloadOperation(
+        
+        let processorConfig = CompactBlockProcessor.Configuration.standard(
+            for: ZcashNetworkBuilder.network(for: .testnet),
+            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
+        )
+
+        let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            startHeight: startHeight,
-            targetHeight: targetHeight,
-            progressDelegate: self
+            backend: ZcashRustBackend.self,
+            config: processorConfig
         )
         
-        operation.completionHandler = { _, cancelled in
-            XCTAssert(cancelled)
-            expectation.fulfill()
+        let range = CompactBlockRange(uncheckedBounds: (startHeight, targetHeight))
+        let cancelableTask = Task {
+            do {
+                try await compactBlockProcessor.compactBlockBatchDownload(range: range)
+                XCTAssertTrue(Task.isCancelled)
+            } catch {
+                XCTFail("failed with error: \(error)")
+            }
         }
         
-        operation.errorHandler = { error in
-            XCTFail("failed with error: \(error)")
-            expectation.fulfill()
-        }
-        
-        queue.addOperation(operation)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: {
-            self.queue.cancelAllOperations()
-        })
-        wait(for: [expectation], timeout: 1000)
-    }
-}
-
-extension BlockStreamingTest: CompactBlockProgressDelegate {
-    func progressUpdated(_ progress: CompactBlockProgress) {
-        print("progressHeight: \(String(describing: progress.progressHeight))")
-        print("startHeight: \(progress.progress)")
-        print("targetHeight: \(String(describing: progress.targetHeight))")
+        try await Task.sleep(nanoseconds: 3_000_000_000)
+        cancelableTask.cancel()
     }
 }

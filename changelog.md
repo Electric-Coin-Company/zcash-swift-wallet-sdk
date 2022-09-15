@@ -1,3 +1,33 @@
+# 0.16.9-beta
+Checkpoints added:
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1787500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1790000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1792500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1795000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1797500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1800000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1802500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1805000.json
+````
+# 0.16.8-beta
+Checkpoints added:
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1775000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1777500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1780000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1782500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1785000.json
+````
+
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2000000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2010000.json
+````
+
 # 0.16.7-beta
 - [#455] revert queue priority downgrade changes from [#435] (#456)
     

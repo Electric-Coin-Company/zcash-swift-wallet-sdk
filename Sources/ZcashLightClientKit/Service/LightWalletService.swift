@@ -101,49 +101,102 @@ public protocol LightWalletServiceResponse {
 
 extension SendResponse: LightWalletServiceResponse {}
 
-public protocol LightWalletService {
-    /**
-    returns the info for this lightwalletd server (blocking)
-    */
+/// Blocking API - used for the testing purposes
+public protocol LightWalletServiceBlockingAPI {
+    /// Returns the info for this lightwalletd server (blocking)
     func getInfo() throws -> LightWalletdInfo
-    
-    /**
-    returns the info for this lightwalletd server
-    */
-    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void)
 
-    /**
-        Return the latest block height known to the service.
-     
-        - Parameter result: a result containing the height or an Error
-    */
-    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void)
-    
-    /**
-        Return the latest block height known to the service.
-    
-        - Parameter result: a result containing the height or an Error
-    */
+    ///
+    /// Return the latest block height known to the service.
+    /// - Parameter result: a result containing the height or an Error
     func latestBlockHeight() throws -> BlockHeight
 
-    /**
-        Return the given range of blocks.
-      
-            - Parameter range: the inclusive range to fetch.
-                For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
-        Non blocking
-    */
-    func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void )
-    
-    /**
-        Return the given range of blocks.
-         
-            - Parameter range: the inclusive range to fetch.
-                For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
-        blocking
-    */
+    /// Return the given range of blocks.
+    ///
+    /// - Parameter range: the inclusive range to fetch.
+    ///     For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
     func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock]
     
+    
+    /// Submits a raw transaction over lightwalletd. Blocking
+    /// - Parameter spendTransaction: data representing the transaction to be sent
+    /// - Throws: LightWalletServiceError
+    /// - Returns: LightWalletServiceResponse
+    func submit(spendTransaction: Data) throws -> LightWalletServiceResponse
+    
+    /// Gets a transaction by id
+    /// - Parameter txId: data representing the transaction ID
+    /// - Throws: LightWalletServiceError
+    /// - Returns: LightWalletServiceResponse
+    func fetchTransaction(txId: Data) throws -> TransactionEntity
+    
+    func fetchUTXOs(
+        for tAddress: String,
+        height: BlockHeight
+    ) throws -> [UnspentTransactionOutputEntity]
+    
+    func fetchUTXOs(
+        for tAddresses: [String],
+        height: BlockHeight
+    ) throws -> [UnspentTransactionOutputEntity]
+}
+
+public protocol LightWalletServiceNonBlockingAPI {
+    /// Returns the info for this lightwalletd server
+    @available(*, deprecated, message: "This function will be removed soon. Use the `getInfoAsync()` instead.")
+    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void)
+    func getInfoAsync() async throws -> LightWalletdInfo
+
+    ///
+    /// Return the latest block height known to the service.
+    /// - Parameter result: a result containing the height or an Error
+    @available(*, deprecated, message: "This function will be removed soon. Use the `latestBlockHeightAsync()` instead.")
+    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void)
+    func latestBlockHeightAsync() async throws -> BlockHeight
+
+    /// Return the given range of blocks.
+    /// - Parameter range: the inclusive range to fetch.
+    ///     For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
+    @available(*, deprecated, message: "This function will be removed soon. Use the `blockRange(...) -> AsyncThrowingStream<ZcashCompactBlock, Error>` instead.")
+    func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void)
+    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error>
+    
+    /// Submits a raw transaction over lightwalletd. Non-Blocking
+    /// - Parameter spendTransaction: data representing the transaction to be sent
+    /// - Parameter result: escaping closure that takes a result containing either LightWalletServiceResponse or LightWalletServiceError
+    @available(*, deprecated, message: "This function will be removed soon. Use the `submitAsync(spendTransaction: Data)` instead.")
+    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void)
+    func submitAsync(spendTransaction: Data) async throws -> LightWalletServiceResponse
+    
+    /// Gets a transaction by id
+    /// - Parameter txId: data representing the transaction ID
+    /// - Parameter result: handler for the result
+    /// - Throws: LightWalletServiceError
+    /// - Returns: LightWalletServiceResponse
+    @available(*, deprecated, message: "This function will be removed soon. Use the `fetchTransactionAsync(txId: Data)` instead.")
+    func fetchTransaction(
+        txId: Data,
+        result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void
+    )
+    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity
+    
+    @available(*, deprecated, message: "This function will be removed soon. Use the `fetchUTXOs(for tAddress:...) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>` instead.")
+    func fetchUTXOs(
+        for tAddress: String,
+        height: BlockHeight,
+        result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
+    )
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
+    
+    @available(*, deprecated, message: "This function will be removed soon. Use the `fetchUTXOs(for tAddresses:...) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>` instead.")
+    func fetchUTXOs(
+        for tAddresses: [String],
+        height: BlockHeight,
+        result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
+    )
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
+    
+    @available(*, deprecated, message: "This function will be removed soon. Use the `blockStream(...) -> AsyncThrowingStream<ZcashCompactBlock, Error>` instead.")
     @discardableResult
     func blockStream(
         startHeight: BlockHeight,
@@ -153,62 +206,12 @@ public protocol LightWalletService {
         progress: @escaping  (BlockProgress) -> Void
     ) -> CancellableCall
 
-    /**
-    Submits a raw transaction over lightwalletd. Non-Blocking
-    - Parameter spendTransaction: data representing the transaction to be sent
-    - Parameter result: escaping closure that takes a result containing either LightWalletServiceResponse or LightWalletServiceError
-    */
-    func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void)
-    
-    /**
-    Submits a raw transaction over lightwalletd. Blocking
-    - Parameter spendTransaction: data representing the transaction to be sent
-    - Throws: LightWalletServiceError
-    - Returns: LightWalletServiceResponse
-    */
-    func submit(spendTransaction: Data) throws -> LightWalletServiceResponse
-    
-    /**
-    Gets a transaction by id
-    - Parameter txId: data representing the transaction ID
-    - Throws: LightWalletServiceError
-    - Returns: LightWalletServiceResponse
-    */
-    func fetchTransaction(txId: Data) throws -> TransactionEntity
-    
-    /**
-    Gets a transaction by id
-    - Parameter txId: data representing the transaction ID
-    - Parameter result: handler for the result
-    - Throws: LightWalletServiceError
-    - Returns: LightWalletServiceResponse
-    */
-    func fetchTransaction(
-        txId: Data,
-        result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void
-    )
-    
-    func fetchUTXOs(
-        for tAddress: String,
-        height: BlockHeight
-    ) throws -> [UnspentTransactionOutputEntity]
-    
-    func fetchUTXOs(
-        for tAddress: String,
-        height: BlockHeight,
-        result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
-    )
-    
-    func fetchUTXOs(
-        for tAddresses: [String],
-        height: BlockHeight
-    ) throws -> [UnspentTransactionOutputEntity]
-    
-    func fetchUTXOs(
-        for tAddresses: [String],
-        height: BlockHeight,
-        result: @escaping(Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
-    )
-    
+    func blockStream(
+        startHeight: BlockHeight,
+        endHeight: BlockHeight
+    ) -> AsyncThrowingStream<ZcashCompactBlock, Error>
+}
+
+public protocol LightWalletService: LightWalletServiceNonBlockingAPI, LightWalletServiceBlockingAPI {
     func closeConnection()
 }

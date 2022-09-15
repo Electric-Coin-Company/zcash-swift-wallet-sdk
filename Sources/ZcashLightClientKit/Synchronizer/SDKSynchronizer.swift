@@ -194,7 +194,7 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        blockProcessor.stop(cancelTasks: true)
+        blockProcessor.stop()
         self.status = .stopped
     }
     
@@ -515,26 +515,17 @@ public class SDKSynchronizer: Synchronizer {
             
             let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: try memo.asMemoBytes(), from: accountIndex)
             
-            transactionManager.encodeShieldingTransaction(
-                xprv: transparentAccountPrivateKey,
-                pendingTransaction: shieldingSpend
-            ) { [weak self] result in
-                guard let self = self else { return }
+            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
+            Task {
+                do {
+                    let transaction = try await transactionManager.encodeShieldingTransaction(
+                        xprv: transparentAccountPrivateKey,
+                        pendingTransaction: shieldingSpend
+                    )
 
-                switch result {
-                case .success(let transaction):
-                    self.transactionManager.submit(pendingTransaction: transaction) { submitResult in
-                        switch submitResult {
-                        case .success(let submittedTx):
-                            resultBlock(.success(submittedTx))
-                        case .failure(let submissionError):
-                            DispatchQueue.main.async {
-                                resultBlock(.failure(submissionError))
-                            }
-                        }
-                    }
-                    
-                case .failure(let error):
+                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+                    resultBlock(.success(submittedTx))
+                } catch {
                     resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }
@@ -560,22 +551,16 @@ public class SDKSynchronizer: Synchronizer {
                 from: accountIndex
             )
             
-            transactionManager.encode(spendingKey: spendingKey, pendingTransaction: spend) { [weak self] result in
-                guard let self = self else { return }
-                switch result {
-                case .success(let transaction):
-                    self.transactionManager.submit(pendingTransaction: transaction) { submitResult in
-                        switch submitResult {
-                        case .success(let submittedTx):
-                            resultBlock(.success(submittedTx))
-                        case .failure(let submissionError):
-                            DispatchQueue.main.async {
-                                resultBlock(.failure(submissionError))
-                            }
-                        }
-                    }
-                    
-                case .failure(let error):
+            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
+            Task {
+                do {
+                    let transaction = try await transactionManager.encode(
+                        spendingKey: spendingKey,
+                        pendingTransaction: spend
+                    )
+                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+                    resultBlock(.success(submittedTx))
+                } catch {
                     resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
                 }
             }
@@ -617,7 +602,14 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        blockProcessor.downloader.latestBlockHeight(result: result)
+        Task {
+            do {
+                let latestBlockHeight = try await blockProcessor.downloader.latestBlockHeightAsync()
+                result(.success(latestBlockHeight))
+            } catch {
+                result(.failure(error))
+            }
+        }
     }
     
     public func latestHeight() throws -> BlockHeight {
@@ -647,8 +639,8 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
    
-    public func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
-        self.blockProcessor.refreshUTXOs(tAddress: address, startHeight: height, result: result)
+    public func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs {
+        try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
@@ -864,6 +856,7 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
+            case .unknown: break
             }
         }
         
