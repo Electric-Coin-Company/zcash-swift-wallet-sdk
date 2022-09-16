@@ -111,40 +111,57 @@ class CompactBlockStreamDownloadOperation: ZcashOperation {
             let startHeight = max(self.startHeight ?? BlockHeight.empty(), latestDownloaded)
             
             self.cancelable = self.service.blockStream(startHeight: startHeight, endHeight: latestHeight) { [weak self] blockResult in
+                guard let self = self, !self.isCancelled else {
+                    self?.cancel()
+                    return
+                }
+
+
                 switch blockResult {
                 case .success(let result):
                     switch result {
                     case .success:
                         do {
-                            try self?.flush()
-                            self?.done = true
+                            try self.flush()
+                            self.done = true
                         } catch {
-                            self?.fail(error: error)
+                            self.fail(error: error)
                         }
                         return
                     case .error(let e):
-                        self?.fail(error: e)
+                        self.fail(error: e)
                     }
                 case .failure(let e):
                     if case .userCancelled = e {
-                        self?.done = true
+                        self.done = true
                     } else {
-                        self?.fail(error: e)
+                        self.fail(error: e)
                     }
                 }
             } handler: {[weak self] block in
                 guard let self = self else { return }
+                guard !self.isCancelled else {
+                    self.cancel()
+                    return
+                }
                 do {
                     try self.cache(block, flushCache: false)
                 } catch {
                     self.fail(error: error)
                 }
             } progress: { progress in
+                guard !self.isCancelled else {
+                    self.cancel()
+                    return
+                }
                 self.progressDelegate?.progressUpdated(.download(progress))
             }
             
             while !done && !isCancelled {
                 sleep(1)
+            }
+            if isCancelled {
+                self.cancel()
             }
         } catch {
             self.fail(error: error)
