@@ -16,46 +16,29 @@ enum CompactBlockDownloadError: Error {
 Represents what a compact block downloaded should provide to its clients
 */
 public protocol CompactBlockDownloading {
-    /**
-    Downloads and stores the given block range.
-    Non-Blocking
-    */
-    func downloadBlockRange(
-        _ heightRange: CompactBlockRange,
-        completion: @escaping (Error?) -> Void
-    )
-    
-    /**
-    Remove newer blocks and go back to the given height
-    - Parameters:
-        - height: the given height to rewind to
-        - completion: block to be executed after completing rewind
-    */
-    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void)
-    
-    /**
-    returns the height of the latest compact block stored locally
-    BlockHeight.empty() if no blocks are stored yet
-    non-blocking
-    */
-    func lastDownloadedBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
-    
-    /**
-    Returns the last height on the blockchain
-    Non-blocking
-    */
-    func latestBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
     
     /**
     Downloads and stores the given block range.
     Blocking
     */
     func downloadBlockRange(_ range: CompactBlockRange) throws
-    
+
+    /**
+    Downloads and stores the given block range.
+    Non-Blocking
+    */
+    func downloadBlockRangeAsync(_ heightRange: CompactBlockRange) async throws
+
     /**
     Restore the download progress up to the given height.
     */
     func rewind(to height: BlockHeight) throws
+
+    /**
+    Remove newer blocks and go back to the given height
+    - Parameter height: the given height to rewind to
+    */
+    func rewindAsync(to height: BlockHeight) async throws
 
     /**
     Returns the height of the latest compact block stored locally.
@@ -63,12 +46,25 @@ public protocol CompactBlockDownloading {
     Blocking
     */
     func lastDownloadedBlockHeight() throws -> BlockHeight
-    
+
+    /**
+    returns the height of the latest compact block stored locally
+    BlockHeight.empty() if no blocks are stored yet
+    non-blocking
+    */
+    func lastDownloadedBlockHeightAsync() async throws -> BlockHeight
+
     /**
     Returns the latest block height
     Blocking
     */
     func latestBlockHeight() throws -> BlockHeight
+
+    /**
+    Returns the last height on the blockchain
+    Non-blocking
+    */
+    func latestBlockHeightAsync() async throws -> BlockHeight
     
     /**
     Gets the transaction for the Id given
@@ -81,17 +77,30 @@ public protocol CompactBlockDownloading {
     /**
     Gets the transaction for the Id given
     - Parameter txId: Data representing the transaction Id
-    - Parameter result: a handler for the result of the operation
     */
-    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void)
-    
+    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity
+
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
     
+    // TODO: will be removed with the issue 474
+    // https://github.com/zcash/ZcashLightClientKit/issues/474
+    // Use the new API fetchUnspentTransactionOutputs(...) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void)
+
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
     
-    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void)
+    // TODO: will be removed with the issue 474
+    // https://github.com/zcash/ZcashLightClientKit/issues/474
+    // Use the new API fetchUnspentTransactionOutputs(...) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
+    func fetchUnspentTransactionOutputs(
+        tAddresses: [String],
+        startHeight: BlockHeight,
+        result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void
+    )
+
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
     func closeConnection()
 }
@@ -137,6 +146,10 @@ extension CompactBlockDownloader: CompactBlockDownloading {
             }
         }
     }
+            
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight)
+    }
     
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
         try lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
@@ -153,67 +166,53 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         }
     }
     
-    func latestBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        lightwalletService.latestBlockHeight { fetchResult in
-            switch fetchResult {
-            case .failure(let error):
-                result(.failure(error))
-            case .success(let height):
-                result(.success(height))
-            }
-        }
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
+    }
+    
+    func latestBlockHeightAsync() async throws -> BlockHeight {
+        try await lightwalletService.latestBlockHeightAsync()
     }
     
     func latestBlockHeight() throws -> BlockHeight {
         try lightwalletService.latestBlockHeight()
     }
     
-    /**
-    Downloads and stores the given block range.
-    Non-Blocking
-    */
-    func downloadBlockRange(
-        _ heightRange: CompactBlockRange,
-        completion: @escaping (Error?) -> Void
-    ) {
-        lightwalletService.blockRange(heightRange) { [weak self] result in
-            guard let self = self else {
-                return
-            }
-            
-            switch result {
-            case .failure(let error):
-                completion(error)
-            case .success(let compactBlocks):
-                self.storage.write(blocks: compactBlocks) { storeError in
-                    completion(storeError)
-                }
-            }
-        }
-    }
-    
     func downloadBlockRange(_ range: CompactBlockRange) throws {
         let blocks = try lightwalletService.blockRange(range)
         try storage.write(blocks: blocks)
     }
-    
-    func rewind(to height: BlockHeight, completion: @escaping (Error?) -> Void) {
-        storage.rewind(to: height) { e in
-            completion(e)
-        }
-    }
-    
-    func lastDownloadedBlockHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        storage.latestHeight { heightResult in
-            switch heightResult {
-            case .failure(let e):
-                result(.failure(CompactBlockDownloadError.generalError(error: e)))
-                return
-            case .success(let height):
-                result(.success(height))
+
+    func downloadBlockRangeAsync( _ heightRange: CompactBlockRange) async throws {
+        let stream: AsyncThrowingStream<ZcashCompactBlock, Error> = lightwalletService.blockRange(heightRange)
+        do {
+            var compactBlocks: [ZcashCompactBlock] = []
+            for try await compactBlock in stream {
+                compactBlocks.append(compactBlock)
             }
+            try await self.storage.writeAsync(blocks: compactBlocks)
+        } catch {
+            throw error
         }
     }
+    
+    func rewindAsync(to height: BlockHeight) async throws {
+        do {
+            try await storage.rewindAsync(to: height)
+        } catch {
+            throw error
+        }
+    }
+    
+    func lastDownloadedBlockHeightAsync() async throws -> BlockHeight {
+        do {
+            let latestHeight = try await storage.latestHeightAsync()
+            return latestHeight
+        } catch {
+            throw CompactBlockDownloadError.generalError(error: error)
+        }
+    }
+
     
     func rewind(to height: BlockHeight) throws {
         try self.storage.rewind(to: height)
@@ -227,14 +226,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try lightwalletService.fetchTransaction(txId: txId)
     }
     
-    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, Error>) -> Void) {
-        lightwalletService.fetchTransaction(txId: txId) { txResult in
-            switch txResult {
-            case .failure(let error):
-                result(.failure(error))
-            case .success(let transaction):
-                result(.success(transaction))
-            }
-        }
+    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity {
+        try await lightwalletService.fetchTransactionAsync(txId: txId)
     }
 }

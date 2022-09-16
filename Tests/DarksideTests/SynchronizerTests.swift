@@ -109,7 +109,7 @@ final class SynchronizerTests: XCTestCase {
         wait(for: [processorStoppedExpectation,syncStoppedExpectation], timeout: 6, enforceOrder: true)
 
         XCTAssertEqual(coordinator.synchronizer.status, .stopped)
-        XCTAssertEqual(coordinator.synchronizer.blockProcessor.state, .stopped)
+        XCTAssertEqual(coordinator.synchronizer.blockProcessor.state.getState(), .stopped)
     }
 
     func handleError(_ error: Error?) {

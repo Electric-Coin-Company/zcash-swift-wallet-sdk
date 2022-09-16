@@ -11,29 +11,13 @@ import XCTest
 
 // swiftlint:disable force_try type_body_length
 class BlockBatchValidationTests: XCTestCase {
-    var queue: OperationQueue = {
-        let queue = OperationQueue()
-        queue.name = "Test Queue"
-        queue.maxConcurrentOperationCount = 1
-        return queue
-    }()
-
-    override func setUp() {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-        super.setUp()
-    }
-
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
-    }
-
-    func testBranchIdFailure() throws {
+    func testBranchIdFailure() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -59,17 +43,18 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = Int32(0xd34d)
-
-        let operation = FigureNextBatchOperation(downloader: downloader, service: service, config: config, rustBackend: mockRust)
-        let expectation = XCTestExpectation(description: "failure expectation")
-        let startedExpectation = XCTestExpectation(description: "start Expectation")
-
-        operation.startedHandler = {
-            startedExpectation.fulfill()
-        }
-
-        operation.errorHandler = { error in
-            expectation.fulfill()
+        
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: mockRust,
+            config: config
+        )
+        
+        do {
+            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
             switch error {
             case CompactBlockProcessorError.wrongConsensusBranchId:
                 break
@@ -77,19 +62,15 @@ class BlockBatchValidationTests: XCTestCase {
                 XCTFail("Expected CompactBlockProcessorError.wrongConsensusBranchId but found \(error)")
             }
         }
-        queue.addOperations([operation], waitUntilFinished: false)
-        
-        wait(for: [startedExpectation, expectation], timeout: 1, enforceOrder: true)
-        XCTAssertNotNil(operation.error)
-        XCTAssertTrue(operation.isCancelled)
     }
     
-    func testBranchNetworkMismatchFailure() throws {
+    func testBranchNetworkMismatchFailure() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -115,17 +96,18 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
-
-        let operation = FigureNextBatchOperation(downloader: downloader, service: service, config: config, rustBackend: mockRust)
-        let expectation = XCTestExpectation(description: "failure expectation")
-        let startedExpectation = XCTestExpectation(description: "start Expectation")
-
-        operation.startedHandler = {
-            startedExpectation.fulfill()
-        }
-
-        operation.errorHandler = { error in
-            expectation.fulfill()
+        
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: mockRust,
+            config: config
+        )
+        
+        do {
+            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
             switch error {
             case CompactBlockProcessorError.networkMismatch(expected: .mainnet, found: .testnet):
                 break
@@ -133,20 +115,15 @@ class BlockBatchValidationTests: XCTestCase {
                 XCTFail("Expected CompactBlockProcessorError.networkMismatch but found \(error)")
             }
         }
-
-        queue.addOperations([operation], waitUntilFinished: false)
-        
-        wait(for: [startedExpectation, expectation], timeout: 1, enforceOrder: true)
-        XCTAssertNotNil(operation.error)
-        XCTAssertTrue(operation.isCancelled)
     }
     
-    func testBranchNetworkTypeWrongFailure() throws {
+    func testBranchNetworkTypeWrongFailure() async throws {
         let network = ZcashNetworkBuilder.network(for: .testnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -172,17 +149,18 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
-
-        let operation = FigureNextBatchOperation(downloader: downloader, service: service, config: config, rustBackend: mockRust)
-        let expectation = XCTestExpectation(description: "failure expectation")
-        let startedExpectation = XCTestExpectation(description: "start Expectation")
-
-        operation.startedHandler = {
-            startedExpectation.fulfill()
-        }
-
-        operation.errorHandler = { error in
-            expectation.fulfill()
+        
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: mockRust,
+            config: config
+        )
+        
+        do {
+            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
             switch error {
             case CompactBlockProcessorError.generalError:
                 break
@@ -190,20 +168,15 @@ class BlockBatchValidationTests: XCTestCase {
                 XCTFail("Expected CompactBlockProcessorError.generalError but found \(error)")
             }
         }
-
-        queue.addOperations([operation], waitUntilFinished: false)
-        
-        wait(for: [startedExpectation, expectation], timeout: 1, enforceOrder: true)
-        XCTAssertNotNil(operation.error)
-        XCTAssertTrue(operation.isCancelled)
     }
     
-    func testSaplingActivationHeightMismatch() throws {
+    func testSaplingActivationHeightMismatch() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -230,17 +203,18 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
-
-        let operation = FigureNextBatchOperation(downloader: downloader, service: service, config: config, rustBackend: mockRust)
-        let expectation = XCTestExpectation(description: "failure expectation")
-        let startedExpectation = XCTestExpectation(description: "start Expectation")
-
-        operation.startedHandler = {
-            startedExpectation.fulfill()
-        }
-
-        operation.errorHandler = { error in
-            expectation.fulfill()
+        
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: mockRust,
+            config: config
+        )
+        
+        do {
+            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
             switch error {
             case CompactBlockProcessorError.saplingActivationMismatch(
                 expected: network.constants.saplingActivationHeight,
@@ -251,15 +225,9 @@ class BlockBatchValidationTests: XCTestCase {
                 XCTFail("Expected CompactBlockProcessorError.saplingActivationMismatch but found \(error)")
             }
         }
-
-        queue.addOperations([operation], waitUntilFinished: false)
-        
-        wait(for: [startedExpectation, expectation], timeout: 1, enforceOrder: true)
-        XCTAssertNotNil(operation.error)
-        XCTAssertTrue(operation.isCancelled)
     }
     
-    func testResultIsWait() throws {
+    func testResultIsWait() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         
         let expectedLatestHeight = BlockHeight(1210000)
@@ -268,10 +236,11 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
         let expectedStoreLatestHeight = BlockHeight(1220000)
-        let expectedResult = FigureNextBatchOperation.NextState.wait(
+        let expectedResult = CompactBlockProcessor.NextState.wait(
             latestHeight: expectedLatestHeight,
             latestDownloadHeight: expectedLatestHeight
         )
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -298,50 +267,41 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
-
-        let operation = FigureNextBatchOperation(downloader: downloader, service: service, config: config, rustBackend: mockRust)
-        let completedExpectation = XCTestExpectation(description: "completed expectation")
-        let startedExpectation = XCTestExpectation(description: "start Expectation")
-
-        operation.startedHandler = {
-            startedExpectation.fulfill()
-        }
-
-        operation.errorHandler = { error in
+        
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: mockRust,
+            config: config
+        )
+        
+        var nextBatch: CompactBlockProcessor.NextState?
+        do {
+            nextBatch = try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
             XCTFail("this shouldn't happen: \(error)")
         }
-
-        operation.completionHandler = { finished, cancelled in
-            completedExpectation.fulfill()
-            XCTAssertTrue(finished)
-            XCTAssertFalse(cancelled)
-        }
-
-        queue.addOperations([operation], waitUntilFinished: false)
         
-        wait(for: [startedExpectation, completedExpectation], timeout: 1, enforceOrder: true)
-        XCTAssertNil(operation.error)
-        XCTAssertFalse(operation.isCancelled)
-
-        guard let result = operation.result else {
+        guard let _ = nextBatch else {
             XCTFail("result should not be nil")
             return
         }
         
         XCTAssertTrue(
             {
-                switch result {
+                switch nextBatch {
                 case .wait(latestHeight: expectedLatestHeight, latestDownloadHeight: expectedLatestHeight):
                     return true
                 default:
                     return false
                 }
             }(),
-            "Expected \(expectedResult) got: \(result)"
+            "Expected \(expectedResult) got: \(String(describing: nextBatch))"
         )
     }
     
-    func testResultProcessNew() throws {
+    func testResultProcessNew() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
@@ -350,13 +310,14 @@ class BlockBatchValidationTests: XCTestCase {
         )
         let expectedStoreLatestHeight = BlockHeight(1220000)
         let walletBirthday = BlockHeight(1210000)
-        let expectedResult = FigureNextBatchOperation.NextState.processNewBlocks(
+        let expectedResult = CompactBlockProcessor.NextState.processNewBlocks(
             range: CompactBlockProcessor.nextBatchBlockRange(
                 latestHeight: expectedLatestHeight,
                 latestDownloadedHeight: expectedStoreLatestHeight,
                 walletBirthday: walletBirthday
             )
         )
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -383,50 +344,41 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
-
-        let operation = FigureNextBatchOperation(downloader: downloader, service: service, config: config, rustBackend: mockRust)
-        let completedExpectation = XCTestExpectation(description: "completed expectation")
-        let startedExpectation = XCTestExpectation(description: "start Expectation")
-
-        operation.startedHandler = {
-            startedExpectation.fulfill()
-        }
-
-        operation.errorHandler = { _ in
-            XCTFail("this shouldn't happen")
-        }
-
-        operation.completionHandler = { finished, cancelled in
-            completedExpectation.fulfill()
-            XCTAssertTrue(finished)
-            XCTAssertFalse(cancelled)
-        }
-
-        queue.addOperations([operation], waitUntilFinished: false)
         
-        wait(for: [startedExpectation, completedExpectation], timeout: 1, enforceOrder: true)
-        XCTAssertNil(operation.error)
-        XCTAssertFalse(operation.isCancelled)
-
-        guard let result = operation.result else {
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: mockRust,
+            config: config
+        )
+        
+        var nextBatch: CompactBlockProcessor.NextState?
+        do {
+            nextBatch = try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
+            XCTFail("this shouldn't happen: \(error)")
+        }
+        
+        guard let _ = nextBatch else {
             XCTFail("result should not be nil")
             return
         }
         
         XCTAssertTrue(
             {
-                switch result {
+                switch nextBatch {
                 case .processNewBlocks(range: CompactBlockRange(uncheckedBounds: (expectedStoreLatestHeight + 1, expectedLatestHeight))):
                     return true
                 default:
                     return false
                 }
             }(),
-            "Expected \(expectedResult) got: \(result)"
+            "Expected \(expectedResult) got: \(String(describing: nextBatch))"
         )
     }
     
-    func testResultProcessorFinished() throws {
+    func testResultProcessorFinished() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
@@ -435,7 +387,8 @@ class BlockBatchValidationTests: XCTestCase {
         )
         let expectedStoreLatestHeight = BlockHeight(1230000)
         let walletBirthday = BlockHeight(1210000)
-        let expectedResult = FigureNextBatchOperation.NextState.finishProcessing(height: expectedStoreLatestHeight)
+        let expectedResult = CompactBlockProcessor.NextState.finishProcessing(height: expectedStoreLatestHeight)
+        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -462,46 +415,38 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
-
-        let operation = FigureNextBatchOperation(downloader: downloader, service: service, config: config, rustBackend: mockRust)
-        let completedExpectation = XCTestExpectation(description: "completed expectation")
-        let startedExpectation = XCTestExpectation(description: "start Expectation")
-
-        operation.startedHandler = {
-            startedExpectation.fulfill()
-        }
-
-        operation.errorHandler = { _ in
-            XCTFail("this shouldn't happen")
-        }
-
-        operation.completionHandler = { finished, cancelled in
-            completedExpectation.fulfill()
-            XCTAssertTrue(finished)
-            XCTAssertFalse(cancelled)
-        }
-
-        queue.addOperations([operation], waitUntilFinished: false)
         
-        wait(for: [startedExpectation, completedExpectation], timeout: 1, enforceOrder: true)
-        XCTAssertNil(operation.error)
-        XCTAssertFalse(operation.isCancelled)
-
-        guard let result = operation.result else {
+        let compactBlockProcessor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: mockRust,
+            config: config
+        )
+        
+        var nextBatch: CompactBlockProcessor.NextState?
+        do {
+            nextBatch = try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            XCTAssertFalse(Task.isCancelled)
+        } catch {
+            XCTFail("this shouldn't happen: \(error)")
+        }
+        
+        guard let _ = nextBatch else {
             XCTFail("result should not be nil")
             return
         }
         
         XCTAssertTrue(
             {
-                switch result {
+
+                switch nextBatch {
                 case .finishProcessing(height: expectedLatestHeight):
                     return true
                 default:
                     return false
                 }
             }(),
-            "Expected \(expectedResult) got: \(result)"
+            "Expected \(expectedResult) got: \(String(describing: nextBatch))"
         )
     }
 }

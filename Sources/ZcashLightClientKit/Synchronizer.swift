@@ -201,7 +201,7 @@ public protocol Synchronizer {
     
 
     /// Returns the latests UTXOs for the given address from the specified height on
-    func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
+    func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs
 
     /// Returns the last stored unshielded balance
     func getTransparentBalance(accountIndex: Int) throws -> WalletBalance

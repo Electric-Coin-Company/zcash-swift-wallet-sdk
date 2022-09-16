@@ -28,11 +28,9 @@ protocol CompactBlockRepository {
     /**
     Gets the highest block that is currently stored.
     Non-Blocking
-     
-    - Parameter result: closure resulting on either the latest height or an error
     */
-    func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
-    
+    func latestHeightAsync() async throws -> BlockHeight
+
     /**
     Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
     Blocking
@@ -46,10 +44,9 @@ protocol CompactBlockRepository {
     Non-Blocking
     - Parameters:
         - Parameter blocks: array of blocks to be written to storage
-        - Parameter completion: a closure that will be called after storing the blocks
     */
-    func write(blocks: [ZcashCompactBlock], completion: ((Error?) -> Void)?)
-    
+    func writeAsync(blocks: [ZcashCompactBlock]) async throws
+
     /**
     Remove every block above and including the given height.
      
@@ -66,10 +63,7 @@ protocol CompactBlockRepository {
     After this operation, the data store will look the same as one that has not yet stored the given block height.
     Meaning, if max height is 100 block and rewindTo(50) is called, then the highest block remaining will be 49.
 
-    - Parameters:
     - Parameter height: the height to rewind to
-    - Parameter completion: a closure that will be called after storing the blocks
-
     */
-    func rewind(to height: BlockHeight, completion: ((Error?) -> Void)?)
+    func rewindAsync(to height: BlockHeight) async throws
 }
