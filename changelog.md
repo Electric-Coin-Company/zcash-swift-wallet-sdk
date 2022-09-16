@@ -1,3 +1,25 @@
+# 0.16.10-beta
+- [#532] [0.16.x-beta] Download does not stop correctly
+    
+Issue Reported:
+
+When the synchronizer is stopped, the processor does not cancel
+the download correctly. Then when attempting to resume sync, the
+synchronizer is not on `.stopped` and can't be resumed
+
+this doesn't appear to happen in `master` branch that uses
+structured concurrency for operations.
+
+Fix:
+This commit makes sure that the download streamer checks cancelation
+before processing any block, or getting called back to report progress
+
+Checkpoints added:
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1807500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1810000.json
+````
 # 0.16.9-beta
 Checkpoints added:
 Mainnet
