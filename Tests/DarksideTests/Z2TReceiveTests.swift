@@ -109,8 +109,8 @@ class Z2TReceiveTests: XCTestCase {
                 spendingKey: coordinator.spendingKeys!.first!,
                 zatoshi: sendAmount,
                 toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "test transaction"),
-                from: 0)
+                memo: try Memo(string: "test transaction")
+            )
             pendingEntity = pending
             sendExpectation.fulfill()
         } catch {

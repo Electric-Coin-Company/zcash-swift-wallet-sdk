@@ -181,8 +181,8 @@ class RewindRescanTests: XCTestCase {
                 spendingKey: coordinator.spendingKey,
                 zatoshi: Zatoshi(1000),
                 toAddress: testRecipientAddress,
-                memo: .empty,
-                from: 0)
+                memo: .empty
+            )
             XCTAssertEqual(Zatoshi(1000), pendingTx.value)
         } catch {
             XCTFail("sending fail: \(error)")
@@ -284,8 +284,8 @@ class RewindRescanTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: maxBalance,
                 toAddress: testRecipientAddress,
-                memo: try Memo(string: "test send \(self.description) \(Date().description)"),
-                from: 0)
+                memo: try Memo(string: "test send \(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {

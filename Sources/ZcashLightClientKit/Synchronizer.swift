@@ -106,27 +106,24 @@ public protocol Synchronizer {
     func getTransparentAddress(accountIndex: Int) -> TransparentAddress?
     
     /// Sends zatoshi.
-    /// - Parameter spendingKey: the key that allows spends to occur.
+    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: the memo to include as part of the transaction.
-    /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
+    // swiftlint:disable:next function_parameter_count
     func sendToAddress(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
-        memo: Memo,
-        from accountIndex: Int
+        memo: Memo
     ) async throws -> PendingTransactionEntity
 
-    /// Shields transparent funds from the given private key into the best shielded pool of the given account.
-    /// - Parameter transparentAccountPrivateKey: the key that allows to spend transparent funds
+    /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
+    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows to spend transparent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
-    /// - Parameter accountIndex: the optional account id that will be used to shield  your funds to. By default, the first account is used.
     func shieldFunds(
-        transparentAccountPrivateKey: TransparentAccountPrivKey,
-        memo: Memo,
-        from accountIndex: Int
+        spendingKey: UnifiedSpendingKey,
+        memo: Memo
     ) async throws -> PendingTransactionEntity
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
@@ -150,7 +147,6 @@ public protocol Synchronizer {
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
-    
 
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
@@ -165,14 +161,13 @@ public protocol Synchronizer {
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
-    
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking
     func latestHeight() throws -> BlockHeight
 
     /// Returns the latests UTXOs for the given address from the specified height on
-    func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs
+    func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
     /// Returns the last stored transparent balance
     func getTransparentBalance(accountIndex: Int) throws -> WalletBalance
@@ -191,7 +186,7 @@ public protocol Synchronizer {
 
     /// Returns the shielded verified balance (anchor is 10 blocks back)
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
-    
+
 
     /// Stops the synchronizer and rescans the known blocks with the current keys.
     /// - Parameter policy: the rewind policy

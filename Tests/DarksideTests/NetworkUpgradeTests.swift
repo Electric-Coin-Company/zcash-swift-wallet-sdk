@@ -90,8 +90,8 @@ class NetworkUpgradeTests: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: spendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+                )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {
@@ -189,8 +189,8 @@ class NetworkUpgradeTests: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: spendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            s)
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {
@@ -268,8 +268,8 @@ class NetworkUpgradeTests: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: spendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {
@@ -379,8 +379,8 @@ class NetworkUpgradeTests: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: spendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {
@@ -508,8 +508,8 @@ class NetworkUpgradeTests: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: spendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {

@@ -207,14 +207,6 @@ class ShieldFundsTests: XCTestCase {
         // 9. shield the funds
         let shieldFundsExpectation = XCTestExpectation(description: "shield funds")
 
-        let transparentAccountPrivateKey = try DerivationTool(
-                                        networkType: network.networkType
-                                    )
-                                    .deriveTransparentAccountPrivateKey(
-                                        seed: TestSeed().seed(),
-                                        account: 0
-                                    )
-
         shouldContinue = false
 
         var shieldingPendingTx: PendingTransactionEntity?
@@ -223,8 +215,8 @@ class ShieldFundsTests: XCTestCase {
         do {
             let pendingTx = try await coordinator.synchronizer.shieldFunds(
                 transparentAccountPrivateKey: transparentAccountPrivateKey,
-                memo: try Memo(string: "shield funds"),
-                from: 0)
+                memo: try Memo(string: "shield funds")
+            )
             shouldContinue = true
             XCTAssertEqual(pendingTx.value, Zatoshi(10000))
             shieldingPendingTx = pendingTx

@@ -11,10 +11,15 @@ import XCTest
 class DerivationToolMainnetTests: XCTestCase {
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
     var seedData: Data = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
-    let testRecipientAddress = UnifiedAddress(validatedEncoding: "u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj", network: .mainnet) //TODO: Parameterize this from environment
+
+    let testRecipientAddress = UnifiedAddress(validatedEncoding: "u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj") //TODO: Parameterize this from environment
     
-    let expectedSpendingKey = SaplingExtendedSpendingKey(validatedEncoding: "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv")
-    
+    let expectedSpendingKey = UnifiedSpendingKey(
+        network: .mainnet,
+        bytes: Data(base64Encoded: "tNDWwgMg8Tkw4YrTsuDcwFRcaL4E6xllYD/72MAFAWl0ozX9q+ICqQOUcMGPAAAAgGofH2hCmQcNq7zShy1FFKYcENBO+X4tO3z8AlMahG6xOZQS96NqNozvVSf/ZffZxqWY0U8z2mwcJF04DKv/ZQRVzmOebCbHjT1q3PR40S8qy6jNFMmiKUUCprPLexpgB1ziepyEZ9FXROg3qYIwsmhZn3jFyDQ1/00oCXO3K65bln5489aKWhnXnmo/2qoFcmntX15GRdBtUw50Wj6+iAsAQBgnnRntCLIa/wXB4KsvlPe21H9bTk24s27gb5/tIXOZNug65274BKRqcMVddG9ISBGT85GYg0BmOBVSIPt8ZvQ=")!.bytes,
+        account: 0
+    )
+
     let expectedViewingKey = UnifiedFullViewingKey(validatedEncoding: "uview17fme6ux853km45g9ep07djpfzeydxxgm22xpmr7arzxyutlusalgpqlx7suga4ahzywfuwz4jclm00u7g8u65qvvdt45kttnfunvschssg3h3g06txs9ja32vx3xa8dej3unnatgzjvd0vumk37t8es3ludldrtse3q6226ws7eq4q0ywz78nudwpepgdn7jmxz8yvp7k6gxkeynkam0f8aqf9qpeaej55zhkw39x7epayhndul0j4xjttdxxlnwcd09nr8svyx8j0zng0w6scx3m5unpkaqxcm3hslhlfg4caz7r8d4xy9wm7klkg79w7j0uyzec5s3yje20eg946r6rmkf532nfydu26s8q9ua7mwxw2j2ag7hfcuu652gw6uta03vlm05zju3a9rwc4h367kqzfqrcz35pdwdk2a7yqnk850un3ujxcvve45ueajgvtr6dj4ufszgqwdy0aedgmkalx2p7qed2suarwkr35dl0c8dnqp3", account: 0)
     let expectedSaplingExtendedViewingKey = SaplingExtendedFullViewingKey(validatedEncoding: "zxviews1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkysswfhjk79n8l99f2grd26dqg6dy3jcmxsaypxfsu6ara6vsk3x8l544uaksstx9zre879mdg7s9a7zurrx6pf5qg2n323js2s3zlu8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszcq7kwxy")
 
@@ -23,52 +28,43 @@ class DerivationToolMainnetTests: XCTestCase {
     let derivationTool = DerivationTool(networkType: NetworkType.mainnet)
     let expectedTransparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     func testDeriveViewingKeysFromSeed() throws {
-        let accounts: Int = 1
         let seedBytes = [UInt8](seedData)
-        let viewingKeys = try derivationTool.deriveUnifiedFullViewingKeys(seed: seedBytes, numberOfAccounts: accounts)
 
-        XCTAssertEqual(viewingKeys.count, accounts, "the number of viewing keys have to match the number of account requested to derive")
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
-        guard let viewingKey = viewingKeys.first else {
-            XCTFail("no viewing key generated")
-            return
-        }
+        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+
         XCTAssertEqual(expectedViewingKey, viewingKey)
-        
     }
     
     func testDeriveViewingKeyFromSpendingKeys() throws {
-        XCTAssertEqual(expectedSaplingExtendedViewingKey, try derivationTool.deriveViewingKey(spendingKey: expectedSpendingKey))
+        XCTAssertEqual(
+            expectedViewingKey,
+            try derivationTool.deriveUnifiedFullViewingKey(from: expectedSpendingKey)
+        )
     }
     
     func testDeriveSpendingKeysFromSeed() throws {
-        let accounts: Int = 1
         let seedBytes = [UInt8](seedData)
         
-        let spendingKeys = try derivationTool.deriveSpendingKeys(seed: seedBytes, numberOfAccounts: accounts)
-        XCTAssertEqual(spendingKeys.count, accounts, "the number of viewing keys have to match the number of account requested to derive")
-        
-        guard let spendingKey = spendingKeys.first else {
-            XCTFail("no viewing key generated")
-            return
-        }
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+
         XCTAssertEqual(expectedSpendingKey, spendingKey)
 
     }
-    
-    func testDeriveUnifiedAddressFromSeed() throws {
+
+    func testDeriveUnifiedSpendingKeyFromSeed() throws {
+        let account = 0
         let seedBytes = [UInt8](seedData)
-        
-        let unifiedAddress = try derivationTool.deriveUnifiedAddress(seed: seedBytes, accountIndex: 0)
-        XCTAssertEqual(unifiedAddress, testRecipientAddress)
+
+        XCTAssertNoThrow(try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: account))
     }
-    
-    func testDeriveUnifiedAddressFromViewingKey() throws {
-        XCTAssertEqual(try derivationTool.deriveUnifiedAddress(from: expectedViewingKey), testRecipientAddress)
-    }
-    
-    func testDeriveTransparentAddressFromSeed() throws {
-        XCTAssertEqual(try derivationTool.deriveTransparentAddress(seed: [UInt8](seedData)), expectedTransparentAddress)
+
+    func testGetTransparentAddressFromUA() throws {
+        XCTAssertEqual(
+            try DerivationTool.transparentReceiver(from: testRecipientAddress),
+            expectedTransparentAddress
+        )
     }
     
     func testIsValidViewingKey() throws {
@@ -77,33 +73,30 @@ class DerivationToolMainnetTests: XCTestCase {
         XCTAssertFalse(try derivationTool.isValidExtendedViewingKey("zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"))
     }
     
-    func testDeriveTransparentAccountPrivateKeyFromSeed() throws {
-        XCTAssertEqual(try derivationTool.deriveTransparentAccountPrivateKey(seed: [UInt8](seedData)), TransparentAccountPrivKey(encoding: "xprv9yCTU6giJ1qZ1DLC5rc7KMzwY9s8rSRXYqmoAKffAExpUVUKLhcdvN9ERdxjEW8tQq4pxerLKZE3WcNUKZCeX19rVTxpV2msTyNMNiFT3Nw"))
-    }
-    
-    func testDeriveUnifiedKeysFromSeed() throws {
-        let unifiedKeys = try derivationTool.deriveUnifiedFullViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 1)
-        XCTAssertEqual(unifiedKeys.count, 1)
-        
-        XCTAssertEqual(unifiedKeys[0].account, 0)
-        XCTAssertEqual(unifiedKeys[0], expectedViewingKey)
-    }
-    
     func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
-        let unifiedKeys = try derivationTool.deriveUnifiedFullViewingKeysFromSeed([UInt8](seedData), numberOfAccounts: 10)
-        XCTAssertEqual(unifiedKeys.count, 10)
-        
-        XCTAssertEqual(unifiedKeys[0].account, 0)
-        XCTAssertEqual(unifiedKeys[0], expectedViewingKey)
+        let numberOfAccounts: Int = 10
+        let ufvks = try (0 ..< numberOfAccounts)
+            .map({
+                try derivationTool.deriveUnifiedSpendingKey(
+                    seed: [UInt8](seedData),
+                    accountIndex: $0
+                )
+
+            })
+            .map {
+                try derivationTool.deriveUnifiedFullViewingKey(
+                    from: $0
+                )
+            }
+
+        XCTAssertEqual(ufvks.count, numberOfAccounts)
+        XCTAssertEqual(ufvks[0].account, 0)
+        XCTAssertEqual(ufvks[0], expectedViewingKey)
     }
     
     func testShouldFailOnInvalidChecksumAddresses() throws {
         let testAddress = "t14oHp2v54vfmdgQ3v3SNuQga8JKHTNi2a1"
         XCTAssertFalse(try derivationTool.isValidTransparentAddress(testAddress))
-    }
-
-    func testSpendingKeyValidation() throws {
-        XCTAssertTrue(try derivationTool.isValidSaplingExtendedSpendingKey(expectedSpendingKey.stringEncoded))
     }
 
     func testSpendingKeyValidationFailsOnInvalidKey() throws {

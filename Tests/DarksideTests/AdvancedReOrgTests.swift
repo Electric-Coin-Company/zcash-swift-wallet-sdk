@@ -310,8 +310,7 @@ class AdvancedReOrgTests: XCTestCase {
                 spendingKey: coordinator.spendingKeys!.first!,
                 zatoshi: sendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "test transaction"),
-                from: 0
+                memo: try Memo(string: "test transaction")
             )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
@@ -733,8 +732,8 @@ class AdvancedReOrgTests: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {
@@ -1092,17 +1091,10 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         1a. sync to latest height
         */
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { synchronizer in
-                    firstSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
-        }
-
+        try coordinator.sync(completion: { _ in
+            firstSyncExpectation.fulfill()
+        }, error: self.handleError)
+        
         wait(for: [firstSyncExpectation], timeout: 5)
         
         sleep(1)
@@ -1119,8 +1111,8 @@ class AdvancedReOrgTests: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try! Memo(string: "this is a test"),
-                from: 0)
+                memo: try! Memo(string: "this is a test")
+        )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {

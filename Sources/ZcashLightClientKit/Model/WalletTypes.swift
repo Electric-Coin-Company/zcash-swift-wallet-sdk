@@ -14,6 +14,12 @@ public protocol StringEncoded {
     var stringEncoded: String { get }
 }
 
+public struct UnifiedSpendingKey: Equatable, Undescribable {
+    private(set) var network: NetworkType
+    var bytes: [UInt8]
+    public private(set) var account: UInt32
+}
+
 /// Sapling Extended Spending Key
 public struct SaplingExtendedSpendingKey: Equatable, StringEncoded, Undescribable {
     var encoding: String
@@ -165,7 +171,6 @@ public struct UnifiedAddress: Equatable, StringEncoded {
         }
     }
 
-    var network: NetworkType
     var encoding: String
 
     public var stringEncoded: String { encoding }
@@ -181,7 +186,6 @@ public struct UnifiedAddress: Equatable, StringEncoded {
             throw KeyEncodingError.invalidEncoding
         }
 
-        self.network = network
         self.encoding = encoding
     }
 
@@ -190,7 +194,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     /// couldn't be extracted
     public func availableReceiverTypecodes() throws -> [UnifiedAddress.ReceiverTypecodes] {
         do {
-            return try DerivationTool(networkType: network).receiverTypecodesFromUnifiedAddress(self)
+            return try DerivationTool.receiverTypecodesFromUnifiedAddress(self)
         } catch {
             throw Errors.couldNotExtractTypecodes
         }
@@ -231,7 +235,6 @@ public enum Recipient: Equatable, StringEncoded {
         }
     }
 }
-
 
 public struct WalletBalance: Equatable {
     public var verified: Zatoshi

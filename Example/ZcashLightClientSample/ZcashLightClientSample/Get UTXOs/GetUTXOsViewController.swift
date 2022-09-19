@@ -23,14 +23,13 @@ class GetUTXOsViewController: UIViewController {
     }
     
     func updateUI() {
-        // swiftlint:disable:next force_try
-        let tAddress = try! DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveTransparentAddress(seed: DemoAppConfig.seed)
+        let synchronizer = SDKSynchronizer.shared
+        let tAddress = synchronizer.getTransparentAddress(accountIndex: 0)?.stringEncoded ?? "no t-address found"
 
-        self.transparentAddressLabel.text = tAddress.stringEncoded
+        self.transparentAddressLabel.text = tAddress
 
         // swiftlint:disable:next force_try
-        let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
+        let balance = try! synchronizer.getTransparentBalance(accountIndex: 0)
         
         self.totalBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.total.amount))
         self.verifiedBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.verified.amount))
@@ -38,18 +37,16 @@ class GetUTXOsViewController: UIViewController {
     
     @IBAction func shieldFunds(_ sender: Any) {
         do {
-            let seed = DemoAppConfig.seed
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
 
-            let transparentSecretKey = try derivationTool.deriveTransparentAccountPrivateKey(seed: seed, account: 0)
+            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
 
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
 
             Task { @MainActor in
                 let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
                     transparentAccountPrivateKey: transparentSecretKey,
-                    memo: "shielding is fun!",
-                    from: 0
+                    memo: try Memo(string: "shielding is fun!")
                 )
                 KRProgressHUD.dismiss()
                 self.messageLabel.text = "funds shielded \(transaction)"

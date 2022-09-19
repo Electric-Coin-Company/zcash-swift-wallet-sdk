@@ -50,7 +50,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
     
     func createTransaction(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
         memoBytes: MemoBytes,
@@ -80,7 +80,7 @@ class WalletTransactionEncoder: TransactionEncoder {
 
     // swiftlint:disable:next function_parameter_count
     func createTransaction(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
         memoBytes: MemoBytes,
@@ -108,7 +108,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
     
     func createSpend(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
         memoBytes: MemoBytes,
@@ -120,8 +120,7 @@ class WalletTransactionEncoder: TransactionEncoder {
                 
         let txId = rustBackend.createToAddress(
             dbData: self.dataDbURL,
-            account: Int32(accountIndex),
-            extsk: spendingKey.stringEncoded,
+            usk: spendingKey,
             to: address,
             value: zatoshi.amount,
             memo: memoBytes,
@@ -138,12 +137,12 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
     
     func createShieldingTransaction(
-        tAccountPrivateKey: TransparentAccountPrivKey,
+        spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes,
         from accountIndex: Int
     ) throws -> EncodedTransaction {
         let txId = try createShieldingSpend(
-            xprv: tAccountPrivateKey.encoding,
+            spendingKey: spendingKey,
             memo: memoBytes,
             accountIndex: accountIndex
         )
@@ -162,7 +161,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
     }
     
-    func createShieldingSpend(xprv: String, memo: MemoBytes, accountIndex: Int) throws -> Int {
+    func createShieldingSpend(spendingKey: UnifiedSpendingKey, memo: MemoBytes, accountIndex: Int) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
@@ -170,8 +169,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         let txId = rustBackend.shieldFunds(
             dbCache: self.cacheDbURL,
             dbData: self.dataDbURL,
-            account: Int32(accountIndex),
-            xprv: xprv,
+            usk: spendingKey,
             memo: memo,
             spendParamsPath: self.spendParamsURL.path,
             outputParamsPath: self.outputParamsURL.path,

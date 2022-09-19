@@ -9,26 +9,28 @@
 import UIKit
 import ZcashLightClientKit
 class GetAddressViewController: UIViewController {
-    @IBOutlet weak var unifiedAddressLabel: UILabel!
-    @IBOutlet weak var tAddressLabel: UILabel!
-    @IBOutlet weak var spendingKeyLabel: UILabel! // THIS SHOULD BE SUPER SECRET!!!!!
-
-    // THIS SHOULD NEVER BE STORED IN MEMORY
-    // swiftlint:disable:next implicitly_unwrapped_optional
-    var spendingKey: SaplingExtendedSpendingKey!
+    @IBOutlet weak var unifiedAddressLabel: UILabel! // This is your Unified Address
+    @IBOutlet weak var tAddressLabel: UILabel! // this is the transparent receiver of your UA above
+    @IBOutlet weak var saplingAddress: UILabel! // this is the sapling receiver of your UA above
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
 
-        // swiftlint:disable:next force_try force_unwrapping
-        self.spendingKey = try! derivationTool.deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1).first!
+        let synchronizer = SDKSynchronizer.shared
 
-        // Do any additional setup after loading the view.
-        // swiftlint:disable:next line_length
-        unifiedAddressLabel.text = (try? derivationTool.deriveUnifiedAddress(seed: DemoAppConfig.seed, accountIndex: 0))?.stringEncoded ?? "No Addresses found"
-        tAddressLabel.text = (try? derivationTool.deriveTransparentAddress(seed: DemoAppConfig.seed))?.stringEncoded ?? "could not derive t-address"
-        spendingKeyLabel.text = self.spendingKey.stringEncoded
+        guard let uAddress = synchronizer.getUnifiedAddress(accountIndex: 0) else {
+            unifiedAddressLabel.text = "could not derive UA"
+            tAddressLabel.text = "could not derive tAddress"
+            saplingAddress.text = "could not derive zAddress"
+            return
+        }
+
+        // you can either try to extract receivers from the UA itself or request the Synchronizer to do it for you. Certain UAs might not contain all the receivers you expect.
+        unifiedAddressLabel.text = uAddress.stringEncoded
+
+        tAddressLabel.text = uAddress.transparentReceiver()?.stringEncoded ?? "could not extract transparent receiver from UA"
+        saplingAddress.text = uAddress.saplingReceiver()?.stringEncoded ?? "could not extract sapling receiver from UA"
+
         unifiedAddressLabel.addGestureRecognizer(
             UITapGestureRecognizer(
                 target: self,
@@ -44,23 +46,23 @@ class GetAddressViewController: UIViewController {
                 action: #selector(tAddressTapped(_:))
             )
         )
-        spendingKeyLabel.addGestureRecognizer(
+        saplingAddress.addGestureRecognizer(
             UITapGestureRecognizer(
                 target: self,
                 action: #selector(spendingKeyTapped(_:))
             )
         )
-        spendingKeyLabel.isUserInteractionEnabled = true
-        loggerProxy.info("Address: \(String(describing: Initializer.shared.getAddress()))")
+        saplingAddress.isUserInteractionEnabled = true
+        loggerProxy.info("Address: \(String(describing: uAddress))")
     }
 
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
         
-        UIPasteboard.general.string = self.spendingKey.stringEncoded
+        UIPasteboard.general.string = self.saplingAddress.text
         let alert = UIAlertController(
             title: "",
-            message: "Spending Key Copied to clipboard",
+            message: "Sapling Address Copied to clipboard",
             preferredStyle: UIAlertController.Style.alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
@@ -84,8 +86,8 @@ class GetAddressViewController: UIViewController {
     
     @IBAction func tAddressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
-        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveTransparentAddress(seed: DemoAppConfig.seed).stringEncoded
+
+        UIPasteboard.general.string = tAddressLabel.text
 
         let alert = UIAlertController(
             title: "",

@@ -35,7 +35,7 @@ class ZcashRustBackendTests: XCTestCase {
         dataDbHandle.dispose()
     }
     
-    func testInitWithShortSeedAndFail() {
+    func testInitWithShortSeedAndFail() throws {
         let seed = "testreferencealice"
 
         var dbInit: DbInitResult!
@@ -46,58 +46,10 @@ class ZcashRustBackendTests: XCTestCase {
             return
         }
 
-        _ = ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1, networkType: networkType)
-        XCTAssertNotNil(ZcashRustBackend.getLastError())
+       XCTAssertThrowsError(try ZcashRustBackend.createAccount(dbData: dbData!, seed: Array(seed.utf8), networkType: networkType))
     }
-    
-    func testDeriveExtendedSpendingKeys() {
-        let seed = Array("testreferencealicetestreferencealice".utf8)
-        
-        var spendingKeys: [SaplingExtendedSpendingKey]?
-        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveSaplingExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
-        
-        XCTAssertNotNil(spendingKeys)
-        XCTAssertEqual(spendingKeys?.count, 1)
-    }
-    
-    func testDeriveExtendedFullViewingKeys() {
-        let seed = Array("testreferencealicetestreferencealice".utf8)
-        
-        var fullViewingKeys: [SaplingExtendedFullViewingKey]?
-        XCTAssertNoThrow(
-            try {
-                fullViewingKeys = try ZcashRustBackend.deriveSaplingExtendedFullViewingKeys(
-                    seed: seed,
-                    accounts: 2,
-                    networkType: networkType
-                )
-            }()
-        )
-        
-        XCTAssertNotNil(fullViewingKeys)
-        XCTAssertEqual(fullViewingKeys?.count, 2)
-    }
-    
-    func testDeriveExtendedFullViewingKey() {
-        let seed = Array("testreferencealicetestreferencealice".utf8)
-        var fullViewingKey: SaplingExtendedFullViewingKey?
-        
-        var spendingKeys: [SaplingExtendedSpendingKey]?
-        XCTAssertNoThrow(try { spendingKeys = try ZcashRustBackend.deriveSaplingExtendedSpendingKeys(seed: seed, accounts: 1, networkType: networkType) }())
-        
-        XCTAssertNotNil(spendingKeys)
-        
-        guard let spendingKey = spendingKeys?.first else {
-            XCTFail("no spending key generated")
-            return
-        }
-        
-        XCTAssertNoThrow(try { fullViewingKey = try ZcashRustBackend.deriveSaplingExtendedFullViewingKey(spendingKey, networkType: networkType) }())
-        
-        XCTAssertNotNil(fullViewingKey)
-    }
-    
-    func testInitAndScanBlocks() {
+
+    func testInitAndScanBlocks() throws {
         guard let cacheDb = TestDbBuilder.prePopulatedCacheDbURL() else {
             XCTFail("pre populated Db not present")
             return
@@ -105,21 +57,36 @@ class ZcashRustBackendTests: XCTestCase {
         let seed = "testreferencealicetestreferencealice"
 
         var dbInit: DbInitResult!
-        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) }())
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: Array(seed.utf8), networkType: self.networkType) }())
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
             return
         }
-        
+
+
+        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
+        let ufvks = [
+            try DerivationTool(networkType: networkType).deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
+                .deriveFullViewingKey()
+
+        ]
+        guard try ZcashRustBackend.initAccountsTable(dbData: dbData!, ufvks: ufvks, networkType: networkType) else {
+            XCTFail("failed with error: \(String(describing: ZcashRustBackend.lastError()))")
+            return
+        }
+        XCTAssertNotNil(
+            try ZcashRustBackend.createAccount(
+                dbData: dbData!,
+                seed: Array(seed.utf8),
+                networkType: networkType
+            )
+        )
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         
-        XCTAssertNotNil(ZcashRustBackend.initAccountsTable(dbData: dbData!, seed: Array(seed.utf8), accounts: 1, networkType: networkType))
+        let addr = try ZcashRustBackend.getCurrentAddress(dbData: dbData!, account: 0, networkType: networkType)
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        
-        let addr = ZcashRustBackend.getAddress(dbData: dbData!, account: 0, networkType: networkType)
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        XCTAssertEqual(addr, Optional("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"))
+        XCTAssertEqual(addr.saplingReceiver()?.stringEncoded, Optional("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"))
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData, networkType: networkType))
     }
@@ -198,5 +165,75 @@ class ZcashRustBackendTests: XCTestCase {
         } else {
             XCTFail("Failed as invalid")
         }
+    }
+
+    func testListTransparentReceivers() throws {
+        let testVector = [TestVector](TestVector.testVectors![0 ... 2])
+        let network = NetworkType.mainnet
+        let tempDBs = TemporaryDbBuilder.build()
+        let seed = testVector[0].root_seed!
+        let ufvk = try DerivationTool(networkType: network).deriveUnifiedSpendingKey(seed: seed, accountIndex: Int(testVector[0].account)).deriveFullViewingKey()
+
+        XCTAssertEqual(
+            try ZcashRustBackend.initDataDb(
+                dbData: tempDBs.dataDB,
+                seed: seed,
+                networkType: network
+            ),
+            .success
+        )
+
+//        XCTAssertTrue(
+//            try ZcashRustBackend.initAccountsTable(
+//                dbData: tempDBs.dataDB,
+//                ufvks: [ufvk],
+//                networkType: network
+//            )
+//        )
+        XCTAssertNoThrow(
+            try ZcashRustBackend.createAccount(
+                dbData: tempDBs.dataDB,
+                seed: seed,
+                networkType: .mainnet
+            )
+        )
+
+        let expectedReceivers = testVector.map {
+            UnifiedAddress(validatedEncoding: $0.unified_addr!)
+        }
+        .compactMap({ $0.transparentReceiver() })
+
+
+        guard expectedReceivers.count >= 2 else {
+            XCTFail("not enough transparent receivers")
+            return
+        }
+
+        for _ in [0 ... 2] {
+            XCTAssertNoThrow(
+                try ZcashRustBackend.getCurrentAddress(
+                    dbData: tempDBs.dataDB,
+                    account: 0,
+                    networkType: network
+                )
+            )
+
+            XCTAssertNoThrow(
+                try ZcashRustBackend.getNextAvailableAddress(
+                    dbData: tempDBs.dataDB,
+                    account: 0,
+                    networkType: network
+                )
+            )
+        }
+
+        XCTAssertEqual(
+            expectedReceivers,
+            try ZcashRustBackend.listTransparentReceivers(
+                dbData: tempDBs.dataDB,
+                account: 0,
+                networkType: network
+            )
+        )
     }
 }

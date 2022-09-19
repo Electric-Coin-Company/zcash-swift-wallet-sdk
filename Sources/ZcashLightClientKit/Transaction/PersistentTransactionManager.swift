@@ -65,12 +65,12 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func encodeShieldingTransaction(
-        xprv: TransparentAccountPrivKey,
+        spendingKey: UnifiedSpendingKey,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
             let encodedTransaction = try self.encoder.createShieldingTransaction(
-                tAccountPrivateKey: xprv,
+                spendingKey: spendingKey,
                 memoBytes: try pendingTransaction.memo.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
@@ -98,7 +98,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
 
     func encode(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {

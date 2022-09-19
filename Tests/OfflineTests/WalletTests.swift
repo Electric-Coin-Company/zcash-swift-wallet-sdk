@@ -35,7 +35,8 @@ class WalletTests: XCTestCase {
     
     func testWalletInitialization() throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
-        let ufvk = try derivationTool.deriveUnifiedFullViewingKeysFromSeed(seedData.bytes, numberOfAccounts: 1)
+        let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
+            .map( { try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
         let wallet = Initializer(
             cacheDbURL: try __cacheDbURL(),
             dataDbURL: try __dataDbURL(),
@@ -44,7 +45,7 @@ class WalletTests: XCTestCase {
             network: network,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
-            viewingKeys: ufvk,
+            viewingKeys: [ufvk],
             walletBirthday: 663194
         )
         
