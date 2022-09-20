@@ -85,16 +85,21 @@ public protocol KeyDeriving {
     Derives a transparent address from the given transparent account private key
     */
     func deriveTransparentAddressFromAccountPrivateKey(_ xprv: TransparentAccountPrivKey, index: Int) throws -> TransparentAddress
+
+    /// Extracts the `UnifiedAddress.ReceiverTypecodes` from the given `UnifiedAddress`
+    /// - Parameter address: the `UnifiedAddress`
+    /// - Throws
+    func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes]
 }
 
 public enum KeyDerivationErrors: Error {
     case derivationError(underlyingError: Error)
     case unableToDerive
     case invalidInput
+    case invalidUnifiedAddress
 }
 
 public class DerivationTool: KeyDeriving {
-
     var rustwelding: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     
     var networkType: NetworkType
@@ -200,7 +205,7 @@ public class DerivationTool: KeyDeriving {
             guard let address = try rustwelding.deriveUnifiedAddressFromSeed(seed: seed, accountIndex: accountIndex, networkType: networkType) else {
                 throw KeyDerivationErrors.unableToDerive
             }
-            return UnifiedAddress(validatedEncoding: address)
+            return UnifiedAddress(validatedEncoding: address, network: networkType)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
         }
@@ -219,9 +224,18 @@ public class DerivationTool: KeyDeriving {
             guard let stringEncodedUA = try rustwelding.deriveUnifiedAddressFromViewingKey(ufvk.stringEncoded, networkType: networkType) else {
                 throw KeyDerivationErrors.unableToDerive
             }
-            return UnifiedAddress(validatedEncoding: stringEncodedUA)
+            return UnifiedAddress(validatedEncoding: stringEncodedUA, network: networkType)
         } catch {
             throw KeyDerivationErrors.derivationError(underlyingError: error)
+        }
+    }
+
+    public func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes] {
+        do {
+            return try rustwelding.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
+                .map({ UnifiedAddress.ReceiverTypecodes(typecode: $0) })
+        } catch {
+            throw KeyDerivationErrors.invalidUnifiedAddress
         }
     }
     
@@ -355,8 +369,9 @@ extension UnifiedAddress {
     /// already validated by another function. only for internal use. Unless you are
     /// constructing an address from a primitive function of the FFI, you probably
     /// shouldn't be using this..
-    init(validatedEncoding: String) {
+    init(validatedEncoding: String, network: NetworkType) {
         self.encoding = validatedEncoding
+        self.network = network
     }
 }
 

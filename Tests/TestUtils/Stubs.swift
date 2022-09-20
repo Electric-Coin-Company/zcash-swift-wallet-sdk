@@ -81,6 +81,10 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func receiverTypecodesOnUnifiedAddress(_ ua: String) throws -> [UInt32] {
+        []
+    }
+
     static func getReceivedMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) -> ZcashLightClientKit.Memo? {
         nil
     }

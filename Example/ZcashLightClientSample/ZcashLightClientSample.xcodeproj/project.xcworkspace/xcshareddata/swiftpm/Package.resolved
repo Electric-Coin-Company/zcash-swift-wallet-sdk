@@ -33,8 +33,8 @@
         "repositoryURL": "https://github.com/zcash-hackworks/MnemonicSwift.git",
         "state": {
           "branch": null,
-          "revision": "27711179a75a1172d6f04ceb5d86419cf0cba401",
-          "version": "2.1.0"
+          "revision": "716a2c32ac2bbd8a1499ac834077df42b75edc85",
+          "version": "2.2.4"
         }
       },
       {
@@ -69,8 +69,8 @@
         "repositoryURL": "https://github.com/apple/swift-crypto.git",
         "state": {
           "branch": null,
-          "revision": "a8911e0fadc25aef1071d582355bd1037a176060",
-          "version": "2.0.4"
+          "revision": "d9825fa541df64b1a7b182178d61b9a82730d01f",
+          "version": "2.1.0"
         }
       },
       {
