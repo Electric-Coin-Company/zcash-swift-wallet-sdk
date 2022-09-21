@@ -142,7 +142,7 @@ public protocol Synchronizer {
         resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
     )
 
-    /// Sends zatoshi.
+    /// Shields zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.
     /// - Parameter transparentSecretKey: the key that allows to spend transaprent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
@@ -151,9 +151,8 @@ public protocol Synchronizer {
         spendingKey: String,
         transparentSecretKey: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
-    )
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
     /// an option if the transaction has not yet been submitted to the server.

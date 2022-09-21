@@ -9,6 +9,7 @@
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
+
 class ShieldFundsTests: XCTestCase {
     // TODO: Parameterize this from environment?
     // swiftlint:disable:next line_length
@@ -82,7 +83,7 @@ class ShieldFundsTests: XCTestCase {
     /// 15. sync up to the new chain tip
     /// verify that the shielded transactions are confirmed
     ///
-    func testShieldFunds() throws {
+    func testShieldFunds() async throws {
         // 1. load the dataset
         try coordinator.service.useDataset(from: "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/shielding-dataset/shield-funds/1631000.txt")
 
@@ -110,15 +111,19 @@ class ShieldFundsTests: XCTestCase {
         let preTxExpectation = XCTestExpectation(description: "pre receive")
 
         // 3. sync up to that height
-        try coordinator.sync(
-            completion: { synchro in
-                initialVerifiedBalance = synchro.initializer.getVerifiedBalance()
-                initialTotalBalance = synchro.initializer.getBalance()
-                preTxExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+                    initialTotalBalance = synchronizer.initializer.getBalance()
+                    preTxExpectation.fulfill()
+                    shouldContinue = true
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
 
         wait(for: [preTxExpectation], timeout: 10)
 
@@ -149,14 +154,17 @@ class ShieldFundsTests: XCTestCase {
         shouldContinue = false
 
         // 6. Sync and find the UXTO on chain.
-        try coordinator.sync(
-            completion: { synchro in
-                tFundsDetectionExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
-
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    tFundsDetectionExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
         wait(for: [tFundsDetectionExpectation], timeout: 2)
 
         // at this point the balance should be zero for shielded, then zero verified transparent funds
@@ -176,13 +184,17 @@ class ShieldFundsTests: XCTestCase {
         sleep(2)
 
         // 8. sync up to chain tip.
-        try coordinator.sync(
-            completion: { synchro in
-                tFundsConfirmationSyncExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    tFundsConfirmationSyncExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
 
         wait(for: [tFundsConfirmationSyncExpectation], timeout: 5)
 
@@ -209,22 +221,18 @@ class ShieldFundsTests: XCTestCase {
         var shieldingPendingTx: PendingTransactionEntity?
 
         // shield the funds
-        coordinator.synchronizer.shieldFunds(
-            spendingKey: coordinator.spendingKey,
-            transparentSecretKey: transparentSecretKey,
-            memo: "shield funds",
-            from: 0
-        ) { result in
-            switch result {
-            case .failure(let error):
-                XCTFail("Failed With error: \(error.localizedDescription)")
-
-            case .success(let pendingTx):
-                shouldContinue = true
-                XCTAssertEqual(pendingTx.value, Zatoshi(10000))
-                shieldingPendingTx = pendingTx
-            }
+        do {
+            let pendingTx = try await coordinator.synchronizer.shieldFunds(
+                spendingKey: coordinator.spendingKey,
+                transparentSecretKey: transparentSecretKey,
+                memo: "shield funds",
+                from: 0)
+            shouldContinue = true
+            XCTAssertEqual(pendingTx.value, Zatoshi(10000))
+            shieldingPendingTx = pendingTx
             shieldFundsExpectation.fulfill()
+        } catch {
+            XCTFail("Failed With error: \(error.localizedDescription)")
         }
 
         wait(for: [shieldFundsExpectation], timeout: 30)
@@ -264,14 +272,17 @@ class ShieldFundsTests: XCTestCase {
         // 13. sync up to chain tip
         let postShieldSyncExpectation = XCTestExpectation(description: "sync Post shield")
         shouldContinue = false
-        try coordinator.sync(
-            completion: { synchro in
-                postShieldSyncExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
-
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    postShieldSyncExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
         wait(for: [postShieldSyncExpectation], timeout: 3)
 
         guard shouldContinue else { return }
@@ -294,13 +305,17 @@ class ShieldFundsTests: XCTestCase {
         shouldContinue = false
 
         // 15. sync up to the new chain tip
-        try coordinator.sync(
-            completion: { synchro in
-                confirmationExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    confirmationExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
 
         wait(for: [confirmationExpectation], timeout: 5)
 
