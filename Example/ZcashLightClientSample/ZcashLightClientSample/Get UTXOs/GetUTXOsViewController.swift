@@ -46,25 +46,17 @@ class GetUTXOsViewController: UIViewController {
 
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
 
-            AppDelegate.shared.sharedSynchronizer.shieldFunds(
-                spendingKey: spendingKey,
-                transparentSecretKey: transparentSecretKey,
-                memo: "shielding is fun!",
-                from: 0,
-                resultBlock: { result in
-                    DispatchQueue.main.async {
-                        KRProgressHUD.dismiss()
-                        switch result {
-                        case .success(let transaction):
-                            self.messageLabel.text = "funds shielded \(transaction)"
-                        case .failure(let error):
-                            self.messageLabel.text = "Shielding failed: \(error)"
-                        }
-                    }
-                }
-            )
+            Task { @MainActor in
+                let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
+                    spendingKey: spendingKey,
+                    transparentSecretKey: transparentSecretKey,
+                    memo: "shielding is fun!",
+                    from: 0)
+                KRProgressHUD.dismiss()
+                self.messageLabel.text = "funds shielded \(transaction)"
+            }
         } catch {
-            self.messageLabel.text = "Error \(error)"
+            self.messageLabel.text = "Shielding failed \(error)"
         }
     }
 }

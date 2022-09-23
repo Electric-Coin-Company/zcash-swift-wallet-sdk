@@ -507,9 +507,8 @@ public class SDKSynchronizer: Synchronizer {
         spendingKey: String,
         transparentSecretKey: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
         // let's see if there are funds to shield
         let derivationTool = DerivationTool(networkType: self.network.networkType)
         
@@ -519,32 +518,22 @@ public class SDKSynchronizer: Synchronizer {
             
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
             guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
-                resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
-                return
+                throw ShieldFundsError.insuficientTransparentFunds
             }
             let viewingKey = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
             let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
             
             let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: zAddr, memo: memo, from: 0)
             
-            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
-            Task {
-                do {
-                    let transaction = try await transactionManager.encodeShieldingTransaction(
-                        spendingKey: spendingKey,
-                        tsk: transparentSecretKey,
-                        pendingTransaction: shieldingSpend
-                    )
-                    
-                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
-                    resultBlock(.success(submittedTx))
-                } catch {
-                    resultBlock(.failure(error))
-                }
-            }
+            let transaction = try await transactionManager.encodeShieldingTransaction(
+                spendingKey: spendingKey,
+                tsk: transparentSecretKey,
+                pendingTransaction: shieldingSpend
+            )
+            
+            return try await transactionManager.submit(pendingTransaction: transaction)
         } catch {
-            resultBlock(.failure(error))
-            return
+            throw error
         }
     }
 
