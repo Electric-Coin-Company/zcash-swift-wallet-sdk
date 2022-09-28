@@ -11,6 +11,7 @@ import GRPC
 import ZcashLightClientKit
 import XCTest
 import NIO
+import NIOTransportServices
 
 enum Environment {
     static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
@@ -40,8 +41,8 @@ class ChannelProvider {
         let endpoint = LightWalletEndpointBuilder.default
 
         let connectionBuilder = secure ?
-        ClientConnection.usingPlatformAppropriateTLS(for: MultiThreadedEventLoopGroup(numberOfThreads: 1)) :
-        ClientConnection.insecure(group: MultiThreadedEventLoopGroup(numberOfThreads: 1))
+        ClientConnection.usingPlatformAppropriateTLS(for: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default)) :
+        ClientConnection.insecure(group: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default))
 
         let channel = connectionBuilder
             .withKeepalive(
