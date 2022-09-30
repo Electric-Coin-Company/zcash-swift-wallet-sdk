@@ -61,7 +61,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         reorgExpectation.fulfill()
     }
     
-    func testPendingTransactionMinedHeightUpdated() throws {
+    func testPendingTransactionMinedHeightUpdated() async throws {
         /*
         1. create fake chain
         */
@@ -78,10 +78,16 @@ class PendingTransactionUpdatesTest: XCTestCase {
         1a. sync to latest height
         */
         LoggerProxy.info("1a. sync to latest height")
-        try coordinator.sync(completion: { _ in
-            firstSyncExpectation.fulfill()
-        }, error: self.handleError)
-        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    firstSyncExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
         wait(for: [firstSyncExpectation], timeout: 5)
         
         sleep(1)
@@ -93,23 +99,19 @@ class PendingTransactionUpdatesTest: XCTestCase {
         2. send transaction to recipient address
         */
         LoggerProxy.info("2. send transaction to recipient address")
-        coordinator.synchronizer.sendToAddress(
-            // swiftlint:disable:next force_unwrapping
-            spendingKey: self.coordinator.spendingKeys!.first!,
-            zatoshi: Zatoshi(20000),
-            toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: try Memo(string: "this is a test"),
-            from: 0,
-            resultBlock: { result in
-                switch result {
-                case .failure(let e):
-                    self.handleError(e)
-                case .success(let pendingTx):
-                    pendingEntity = pendingTx
-                }
-                sendExpectation.fulfill()
-            }
-        )
+        do {
+            let pendingTx = try await coordinator.synchronizer.sendToAddress(
+                // swiftlint:disable:next force_unwrapping
+                spendingKey: self.coordinator.spendingKeys!.first!,
+                zatoshi: Zatoshi(20000),
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "this is a test"),
+                from: 0)
+            pendingEntity = pendingTx
+            sendExpectation.fulfill()
+        } catch {
+            self.handleError(error)
+        }
         
         wait(for: [sendExpectation], timeout: 11)
         
@@ -167,13 +169,17 @@ class PendingTransactionUpdatesTest: XCTestCase {
         LoggerProxy.info("6. sync to latest height")
         let secondSyncExpectation = XCTestExpectation(description: "after send expectation")
         
-        try coordinator.sync(
-            completion: { _ in
-                secondSyncExpectation.fulfill()
-            },
-            error: self.handleError
-        )
-        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    secondSyncExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+
         wait(for: [secondSyncExpectation], timeout: 5)
         
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 1)
@@ -207,10 +213,17 @@ class PendingTransactionUpdatesTest: XCTestCase {
         */
         LoggerProxy.info("last sync to latest height: \(lastStageHeight)")
         
-        try coordinator.sync(completion: { _ in
-            syncToConfirmExpectation.fulfill()
-        }, error: self.handleError)
-        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    syncToConfirmExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+
         wait(for: [syncToConfirmExpectation], timeout: 6)
         var supposedlyPendingUnexistingTransaction: PendingTransactionEntity?
         

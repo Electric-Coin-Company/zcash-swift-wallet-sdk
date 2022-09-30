@@ -329,48 +329,35 @@ public class Initializer {
         FileManager.default.isReadableFile(atPath: self.outputParamsURL.path)
     }
     
-    func downloadParametersIfNeeded(result: @escaping (Result<Bool, Error>) -> Void) {
+    @discardableResult
+    func downloadParametersIfNeeded() async throws -> Bool {
         let spendParameterPresent = isSpendParameterPresent()
         let outputParameterPresent = isOutputParameterPresent()
         
         if spendParameterPresent && outputParameterPresent {
-            result(.success(true))
-            return
+            return true
         }
         
         let outputURL = self.outputParamsURL
         let spendURL = self.spendParamsURL
         
-        if !outputParameterPresent {
-            SaplingParameterDownloader.downloadOutputParameter(outputURL) { outputResult in
-                switch outputResult {
-                case .failure(let error):
-                    result(.failure(error))
-                case .success:
-                    guard !spendParameterPresent else {
-                        result(.success(false))
-                        return
-                    }
-                    SaplingParameterDownloader.downloadSpendParameter(spendURL) { spendResult in
-                        switch spendResult {
-                        case .failure(let error):
-                            result(.failure(error))
-                        case .success:
-                            result(.success(false))
-                        }
-                    }
-                }
+        do {
+            if !outputParameterPresent && !spendParameterPresent {
+                async let outputURLRequest = SaplingParameterDownloader.downloadOutputParameter(outputURL)
+                async let spendURLRequest = SaplingParameterDownloader.downloadSpendParameter(spendURL)
+                _ = try await [outputURLRequest, spendURLRequest]
+                return false
+            } else if !outputParameterPresent {
+                try await SaplingParameterDownloader.downloadOutputParameter(outputURL)
+                return false
+            } else if !spendParameterPresent {
+                try await SaplingParameterDownloader.downloadSpendParameter(spendURL)
+                return false
             }
-        } else if !spendParameterPresent {
-            SaplingParameterDownloader.downloadSpendParameter(spendURL) { spendResult in
-                switch spendResult {
-                case .failure(let error):
-                    result(.failure(error))
-                case .success:
-                    result(.success(false))
-                }
-            }
+        } catch {
+            throw error
         }
+        return true
     }
 }
 
