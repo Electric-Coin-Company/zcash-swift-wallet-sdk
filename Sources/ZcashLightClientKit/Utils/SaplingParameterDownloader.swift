@@ -15,33 +15,46 @@ public enum SaplingParameterDownloader {
         case failed(error: Error)
     }
     
-    /**
-    Download a Spend parameter from default host and stores it at given URL
-    - Parameters:
-        - at: The destination URL for the download
-        - result: block to handle the download success or error
-    */
-    public static func downloadSpendParameter(_ at: URL, result: @escaping (Result<URL, Error>) -> Void) {
+    /// Download a Spend parameter from default host and stores it at given URL
+    /// - Parameters:
+    ///     - at: The destination URL for the download
+    @discardableResult
+    public static func downloadSpendParameter(_ at: URL) async throws -> URL {
         guard let url = URL(string: spendParamsURLString) else {
-            result(.failure(Errors.invalidURL(url: spendParamsURLString)))
-            return
+            throw Errors.invalidURL(url: spendParamsURLString)
         }
 
-        downloadFileWithRequest(URLRequest(url: url), at: at, result: result)
+        return try await withCheckedThrowingContinuation { continuation in
+            downloadFileWithRequest(URLRequest(url: url), at: at) { result in
+                switch result {
+                case .success(let outputResultURL):
+                    continuation.resume(returning: outputResultURL)
+                case .failure(let outputResultError):
+                    continuation.resume(throwing: outputResultError)
+                }
+            }
+        }
     }
-    /**
-    Download an Output parameter from default host and stores it at given URL
-    - Parameters:
-        - at: The destination URL for the download
-        - result: block to handle the download success or error
-    */
-    public static func downloadOutputParameter(_ at: URL, result: @escaping (Result<URL, Error>) -> Void) {
+    
+    /// Download an Output parameter from default host and stores it at given URL
+    /// - Parameters:
+    ///     - at: The destination URL for the download
+    @discardableResult
+    public static func downloadOutputParameter(_ at: URL) async throws -> URL {
         guard let url = URL(string: outputParamsURLString) else {
-            result(.failure(Errors.invalidURL(url: outputParamsURLString)))
-            return
+            throw Errors.invalidURL(url: outputParamsURLString)
         }
 
-        downloadFileWithRequest(URLRequest(url: url), at: at, result: result)
+        return try await withCheckedThrowingContinuation { continuation in
+            downloadFileWithRequest(URLRequest(url: url), at: at) { result in
+                switch result {
+                case .success(let outputResultURL):
+                    continuation.resume(returning: outputResultURL)
+                case .failure(let outputResultError):
+                    continuation.resume(throwing: outputResultError)
+                }
+            }
+        }
     }
     
     private static func downloadFileWithRequest(_ request: URLRequest, at destination: URL, result: @escaping (Result<URL, Error>) -> Void) {
@@ -61,52 +74,39 @@ public enum SaplingParameterDownloader {
 
         task.resume()
     }
-    /**
-    Downloads the parameters if not present and provides the resulting URLs for both parameters
-    - Parameters:
-        - spendURL: URL to check whether the parameter is already downloaded
-        - outputURL: URL to check whether the parameter is already downloaded
-        - result: block to handle success or error
-    */
+    
+    /// Downloads the parameters if not present and provides the resulting URLs for both parameters
+    /// - Parameters:
+    ///     - spendURL: URL to check whether the parameter is already downloaded
+    ///     - outputURL: URL to check whether the parameter is already downloaded
     public static func downloadParamsIfnotPresent(
         spendURL: URL,
-        outputURL: URL,
-        result: @escaping (Result<(spend: URL, output: URL), Error>) -> Void
-    ) {
-        ensureSpendParameter(at: spendURL) { spendResult in
-            switch spendResult {
-            case .success(let spendResultURL):
-                ensureOutputParameter(at: outputURL) { outputResult in
-                    switch outputResult {
-                    case .success(let outputResultURL):
-                        result(.success((spendResultURL, outputResultURL)))
-                    case .failure(let outputResultError):
-                        result(.failure(Errors.failed(error: outputResultError)))
-                    }
-                }
-            case .failure(let spendResultError):
-                result(.failure(Errors.failed(error: spendResultError)))
-            }
+        outputURL: URL
+    ) async throws -> (spend: URL, output: URL) {
+        do {
+            async let spendResultURL = ensureSpendParameter(at: spendURL)
+            async let outputResultURL = ensureOutputParameter(at: outputURL)
+            
+            let results = try await [spendResultURL, outputResultURL]
+            return (spend: results[0], output: results[1])
+        } catch {
+            throw Errors.failed(error: error)
         }
     }
     
-    static func ensureSpendParameter(at url: URL, result: @escaping (Result<URL, Error>) -> Void) {
+    static func ensureSpendParameter(at url: URL) async throws -> URL {
         if isFilePresent(url: url) {
-            DispatchQueue.global().async {
-                result(.success(url))
-            }
+            return url
         } else {
-            downloadSpendParameter(url, result: result)
+            return try await downloadSpendParameter(url)
         }
     }
     
-    static func ensureOutputParameter(at url: URL, result: @escaping (Result<URL, Error>) -> Void) {
+    static func ensureOutputParameter(at url: URL) async throws -> URL {
         if isFilePresent(url: url) {
-            DispatchQueue.global().async {
-                result(.success(url))
-            }
+            return url
         } else {
-            downloadOutputParameter(url, result: result)
+            return try await downloadOutputParameter(url)
         }
     }
     

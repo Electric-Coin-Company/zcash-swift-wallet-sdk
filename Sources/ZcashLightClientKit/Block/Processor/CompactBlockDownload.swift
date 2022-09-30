@@ -29,6 +29,7 @@ extension CompactBlockProcessor {
             guard let latestHeight = targetHeightInternal else {
                 throw LightWalletServiceError.generalError(message: "missing target height on compactBlockStreamDownload")
             }
+            try Task.checkCancellation()
             let latestDownloaded = try await storage.latestHeightAsync()
             let startHeight = max(startHeight ?? BlockHeight.empty(), latestDownloaded)
 
@@ -38,6 +39,7 @@ extension CompactBlockProcessor {
             )
             
             for try await zcashCompactBlock in stream {
+                try Task.checkCancellation()
                 buffer.append(zcashCompactBlock)
                 if buffer.count >= blockBufferSize {
                     // TODO: writeAsync doesn't make sense here, awaiting it or calling blocking API have the same result and impact

@@ -77,7 +77,6 @@ public extension Notification.Name {
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
-
     public struct SynchronizerState {
         public var shieldedBalance: WalletBalance
         public var transparentBalance: WalletBalance
@@ -457,41 +456,34 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     // MARK: Synchronizer methods
-
-    // swiftlint:disable:next function_parameter_count
+    
     public func sendToAddress(
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        initializer.downloadParametersIfNeeded { downloadResult in
-            DispatchQueue.main.async { [weak self] in
-                switch downloadResult {
-                case .success:
-                    self?.createToAddress(
-                        spendingKey: spendingKey,
-                        zatoshi: zatoshi,
-                        toAddress: toAddress.stringEncoded,
-                        memo: memo,
-                        from: accountIndex,
-                        resultBlock: resultBlock
-                    )
-                case .failure(let error):
-                    resultBlock(.failure(SynchronizerError.parameterMissing(underlyingError: error)))
-                }
-            }
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
+        do {
+            try await initializer.downloadParametersIfNeeded()
+        } catch {
+            throw SynchronizerError.parameterMissing(underlyingError: error)
         }
-    }
 
+        return try await createToAddress(
+            spendingKey: spendingKey,
+            zatoshi: zatoshi,
+            toAddress: toAddress.stringEncoded,
+            memo: memo,
+            from: accountIndex
+        )
+    }
+    
     public func shieldFunds(
         transparentAccountPrivateKey: TransparentAccountPrivKey,
         memo: Memo,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
         // let's see if there are funds to shield
         let derivationTool = DerivationTool(networkType: self.network.networkType)
 
@@ -502,47 +494,36 @@ public class SDKSynchronizer: Synchronizer {
             
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
             guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
-                resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
-                return
+                throw ShieldFundsError.insuficientTransparentFunds
             }
 
             // FIXME: Define who's the recipient of a shielding transaction #521
             // https://github.com/zcash/ZcashLightClientKit/issues/521
             guard let uAddr = self.getUnifiedAddress(accountIndex: accountIndex) else {
-                resultBlock(.failure(ShieldFundsError.shieldingFailed(underlyingError: KeyEncodingError.invalidEncoding)))
-                return
+                throw ShieldFundsError.shieldingFailed(underlyingError: KeyEncodingError.invalidEncoding)
             }
             
             let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: try memo.asMemoBytes(), from: accountIndex)
             
             // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
-            Task {
-                do {
-                    let transaction = try await transactionManager.encodeShieldingTransaction(
-                        xprv: transparentAccountPrivateKey,
-                        pendingTransaction: shieldingSpend
-                    )
+            let transaction = try await transactionManager.encodeShieldingTransaction(
+                xprv: transparentAccountPrivateKey,
+                pendingTransaction: shieldingSpend
+            )
 
-                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
-                    resultBlock(.success(submittedTx))
-                } catch {
-                    resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
-                }
-            }
+            return try await transactionManager.submit(pendingTransaction: transaction)
         } catch {
-            resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
+            throw error
         }
     }
 
-    // swiftlint:disable:next function_parameter_count
     func createToAddress(
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: Memo,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
         do {
             let spend = try transactionManager.initSpend(
                 zatoshi: zatoshi,
@@ -551,21 +532,14 @@ public class SDKSynchronizer: Synchronizer {
                 from: accountIndex
             )
             
-            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
-            Task {
-                do {
-                    let transaction = try await transactionManager.encode(
-                        spendingKey: spendingKey,
-                        pendingTransaction: spend
-                    )
-                    let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
-                    resultBlock(.success(submittedTx))
-                } catch {
-                    resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
-                }
-            }
+            let transaction = try await transactionManager.encode(
+                spendingKey: spendingKey,
+                pendingTransaction: spend
+            )
+            let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+            return submittedTx
         } catch {
-            resultBlock(.failure(SynchronizerError.uncategorized(underlyingError: error)))
+            throw error
         }
     }
     

@@ -69,7 +69,7 @@ class Z2TReceiveTests: XCTestCase {
         self.foundTransactionsExpectation.fulfill()
     }
     
-    func testFoundTransactions() throws {
+    func testFoundTransactions() async throws {
         subscribeToFoundTransactions()
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
@@ -85,42 +85,42 @@ class Z2TReceiveTests: XCTestCase {
         /*
         3. sync up to received_Tx_height
         */
-        try coordinator.sync(
-            completion: { _ in
-                preTxExpectation.fulfill()
-            },
-            error: self.handleError
-        )
-        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    preTxExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
         wait(for: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
         
         let sendExpectation = XCTestExpectation(description: "sendToAddress")
         var pendingEntity: PendingTransactionEntity?
-        var error: Error?
+        var testError: Error?
         let sendAmount = Zatoshi(10000)
         /*
         4. create transaction
         */
-        coordinator.synchronizer.sendToAddress(
-            spendingKey: coordinator.spendingKeys!.first!,
-            zatoshi: sendAmount,
-            toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
-            memo: try Memo(string: "test transaction"),
-            from: 0
-        ) { result in
-            switch result {
-            case .success(let pending):
-                pendingEntity = pending
-            case .failure(let e):
-                error = e
-            }
+        do {
+            let pending = try await coordinator.synchronizer.sendToAddress(
+                spendingKey: coordinator.spendingKeys!.first!,
+                zatoshi: sendAmount,
+                toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "test transaction"),
+                from: 0)
+            pendingEntity = pending
             sendExpectation.fulfill()
+        } catch {
+            testError = error
         }
 
         wait(for: [sendExpectation], timeout: 12)
         
         guard pendingEntity != nil else {
-            XCTFail("error sending to address. Error: \(String(describing: error))")
+            XCTFail("error sending to address. Error: \(String(describing: testError))")
             return
         }
         
@@ -154,13 +154,20 @@ class Z2TReceiveTests: XCTestCase {
         */
         let sentTxSyncExpectation = XCTestExpectation(description: "sent tx sync expectation")
         
-        try coordinator.sync(completion: { synchronizer in
-            let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
-            XCTAssertEqual(pMinedHeight, sentTxHeight)
-            
-            sentTxSyncExpectation.fulfill()
-        }, error: self.handleError)
-        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
+                    XCTAssertEqual(pMinedHeight, sentTxHeight)
+                    
+                    sentTxSyncExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+
         wait(for: [sentTxSyncExpectation, foundTransactionsExpectation], timeout: 5)
     }
     

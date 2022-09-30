@@ -104,22 +104,20 @@ public protocol Synchronizer {
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
     func getTransparentAddress(accountIndex: Int) -> TransparentAddress?
-
+    
     /// Sends zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: the memo to include as part of the transaction.
     /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
-    // swiftlint:disable:next function_parameter_count
     func sendToAddress(
         spendingKey: SaplingExtendedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo,
-        from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
-    )
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity
 
     /// Shields transparent funds from the given private key into the best shielded pool of the given account.
     /// - Parameter transparentAccountPrivateKey: the key that allows to spend transparent funds
@@ -128,9 +126,8 @@ public protocol Synchronizer {
     func shieldFunds(
         transparentAccountPrivateKey: TransparentAccountPrivKey,
         memo: Memo,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    )
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
     /// an option if the transaction has not yet been submitted to the server.

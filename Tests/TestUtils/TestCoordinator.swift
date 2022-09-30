@@ -35,7 +35,7 @@ class TestCoordinator {
         case url(urlString: String, startHeigth: BlockHeight)
     }
     
-    var completionHandler: ((SDKSynchronizer) -> Void)?
+    var completionHandler: ((SDKSynchronizer) throws -> Void)?
     var errorHandler: ((Error?) -> Void)?
     var spendingKey: SaplingExtendedSpendingKey
     var birthday: BlockHeight
@@ -157,7 +157,7 @@ class TestCoordinator {
         try service.applyStaged(nextLatestHeight: height)
     }
     
-    func sync(completion: @escaping (SDKSynchronizer) -> Void, error: @escaping (Error?) -> Void) throws {
+    func sync(completion: @escaping (SDKSynchronizer) throws -> Void, error: @escaping (Error?) -> Void) throws {
         self.completionHandler = completion
         self.errorHandler = error
         
@@ -181,7 +181,7 @@ class TestCoordinator {
             LoggerProxy.debug("WARNING: notification received after synchronizer was stopped")
             return
         }
-        self.completionHandler?(self.synchronizer)
+        try? self.completionHandler?(self.synchronizer)
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {
