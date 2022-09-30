@@ -214,7 +214,7 @@ class ShieldFundsTests: XCTestCase {
         // shield the funds
         do {
             let pendingTx = try await coordinator.synchronizer.shieldFunds(
-                transparentAccountPrivateKey: transparentAccountPrivateKey,
+                spendingKey: coordinator.spendingKey,
                 memo: try Memo(string: "shield funds")
             )
             shouldContinue = true

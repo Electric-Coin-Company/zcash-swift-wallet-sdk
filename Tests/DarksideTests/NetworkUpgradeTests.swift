@@ -190,7 +190,7 @@ class NetworkUpgradeTests: XCTestCase {
                 zatoshi: spendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "this is a test")
-            s)
+            )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {

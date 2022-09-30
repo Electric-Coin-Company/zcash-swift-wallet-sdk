@@ -161,12 +161,12 @@ class TestCoordinator {
         self.errorHandler?(notification.userInfo?[SDKSynchronizer.NotificationKeys.error] as? Error)
     }
     
-    @objc func synchronizerSynced(_ notification: Notification) {
+    @objc func synchronizerSynced(_ notification: Notification) throws {
         if case .stopped = self.synchronizer.status {
             LoggerProxy.debug("WARNING: notification received after synchronizer was stopped")
             return
         }
-        try? self.completionHandler?(self.synchronizer)
+        try self.completionHandler?(self.synchronizer)
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {

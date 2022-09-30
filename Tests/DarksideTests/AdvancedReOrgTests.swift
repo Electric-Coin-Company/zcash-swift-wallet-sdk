@@ -1095,7 +1095,7 @@ class AdvancedReOrgTests: XCTestCase {
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
         
-        wait(for: [firstSyncExpectation], timeout: 5)
+        wait(for: [firstSyncExpectation], timeout: 10)
         
         sleep(1)
         let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()

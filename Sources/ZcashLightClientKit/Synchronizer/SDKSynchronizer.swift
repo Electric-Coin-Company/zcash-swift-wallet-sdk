@@ -461,8 +461,7 @@ public class SDKSynchronizer: Synchronizer {
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
-        memo: Memo,
-        from accountIndex: Int
+        memo: Memo
     ) async throws -> PendingTransactionEntity {
         do {
             try await initializer.downloadParametersIfNeeded()
