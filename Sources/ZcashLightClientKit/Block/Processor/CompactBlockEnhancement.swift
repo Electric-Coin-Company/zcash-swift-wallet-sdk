@@ -41,7 +41,9 @@ extension CompactBlockProcessor {
         }
         
         guard rustBackend.decryptAndStoreTransaction(dbData: config.dataDb, txBytes: rawBytes, minedHeight: Int32(minedHeight), networkType: config.network.networkType) else {
-            throw EnhancementError.decryptError(error: rustBackend.lastError())
+            throw EnhancementError.decryptError(
+                error: rustBackend.lastError() ?? .genericError(message: "`decryptAndStoreTransaction` failed. No message available")
+            )
         }
         
         guard let confirmedTx = try transactionRepository.findConfirmedTransactionBy(rawId: transaction.transactionId) else {

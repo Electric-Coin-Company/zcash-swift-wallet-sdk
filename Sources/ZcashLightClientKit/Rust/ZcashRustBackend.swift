@@ -29,7 +29,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard result >= 0 else {
-           throw lastError()
+           throw lastError() ?? .genericError(message: "No error message available")
         }
         return result
     }
@@ -44,7 +44,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             UInt(seed.count),
             networkType.networkId
         ) else {
-            throw lastError()
+            throw lastError() ?? .genericError(message: "No error message available")
         }
 
         defer { zcashlc_free_binary_key(ffiBinaryKeyPtr) }
@@ -115,7 +115,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         defer { zcashlc_free_binary_key(binaryKeyPtr) }
 
         guard let binaryKey = binaryKeyPtr?.pointee else {
-            throw lastError()
+            throw lastError() ?? .genericError(message: "No error message available")
         }
 
         return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
@@ -139,7 +139,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             account,
             networkType.networkId
         ) else {
-            throw lastError()
+            throw lastError() ?? .genericError(message: "No error message available")
         }
 
         defer { zcashlc_string_free(addressCStr) }
@@ -179,7 +179,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             account,
             networkType.networkId
         ) else {
-            throw lastError()
+            throw lastError() ?? .genericError(message: "No error message available")
         }
 
         defer { zcashlc_string_free(addressCStr) }
@@ -323,11 +323,11 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         )
     }
     
-    static func lastError() -> RustWeldingError {
+    static func lastError() -> RustWeldingError? {
         defer { zcashlc_clear_last_error() }
 
         guard let message = getLastError() else {
-            return RustWeldingError.dataDbInitFailed(message: "Unknown Error")
+            return nil
         }
 
         if message.contains("couldn't load Sapling spend parameters") {
@@ -375,7 +375,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         case 1:
             return DbInitResult.seedRequired
         default:
-            throw throwDataDbError(lastError())
+            throw throwDataDbError(lastError() ?? .genericError(message: "No error message found"))
         }
     }
     
@@ -505,7 +505,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             [CChar](saplingTree.utf8CString),
             networkType.networkId
         ) != 0 else {
-            throw lastError()
+            throw lastError() ?? .genericError(message: "No error message available")
         }
     }
 
@@ -522,7 +522,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             account,
             networkType.networkId
         ) else {
-            throw lastError()
+            throw lastError() ?? .genericError(message: "No error message available")
         }
 
         defer { zcashlc_free_keys(encodedKeysPtr) }
@@ -559,7 +559,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             Int32(height),
             networkType.networkId
         ) else {
-            throw lastError()
+            throw lastError() ?? .genericError(message: "No error message available")
         }
 
         return true
@@ -618,7 +618,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                     UInt(spendingKey.bytes.count),
                     networkType.networkId
                 ) else {
-                throw lastError()
+                throw lastError() ?? .genericError(message: "No error message available")
             }
 
             return extfvk

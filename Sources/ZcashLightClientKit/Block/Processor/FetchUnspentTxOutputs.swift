@@ -38,7 +38,7 @@ extension CompactBlockProcessor {
                         sinceHeight: config.walletBirthday - 1,
                         networkType: config.network.networkType
                     ) >= 0 else {
-                        throw rustBackend.lastError()
+                        throw rustBackend.lastError() ?? .genericError(message: "clearUtxos failed. no error message available")
                     }
                 }
             } catch {

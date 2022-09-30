@@ -263,7 +263,7 @@ class MockRustBackend: ZcashRustBackendWelding {
     static var rustBackend = ZcashRustBackend.self
     static var consensusBranchID: Int32?
     
-    static func lastError() -> RustWeldingError {
+    static func lastError() -> RustWeldingError? {
         mockError ?? rustBackend.lastError()
     }
     

@@ -246,7 +246,8 @@ protocol ZcashRustBackendWelding {
     static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress?
 
     /// gets the latest error if available. Clear the existing error
-    static func lastError() -> RustWeldingError
+    ///  - Returns a `RustWeldingError` if exists
+    static func lastError() -> RustWeldingError?
 
     /// gets the latest error message from librustzcash. Does not clear existing error
     static func getLastError() -> String?
