@@ -69,6 +69,10 @@ public class DerivationTool: KeyDeriving {
         try rustwelding.getTransparentReceiver(for: unifiedAddress)
     }
 
+    public static func getAddressMetadata(_ addr: String) -> AddressMetadata? {
+        rustwelding.getAddressMetadata(addr)
+    }
+
     /// Given a spending key, return the associated viewing key.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` from which to derive the `UnifiedFullViewingKey` from.
     /// - Returns: the viewing key that corresponds to the spending key.
@@ -103,6 +107,16 @@ public class DerivationTool: KeyDeriving {
         } catch {
             throw KeyDerivationErrors.invalidUnifiedAddress
         }
+    }
+}
+
+public struct AddressMetadata {
+    var networkType: NetworkType
+    var addressType: AddressType
+
+    public init(network: NetworkType, addrType: AddressType) {
+        self.networkType = network
+        self.addressType = addrType
     }
 }
 

@@ -6,6 +6,12 @@
 //
 
 import Foundation
+
+public enum PendingTransactionRecipient: Equatable {
+    case address(Recipient)
+    case internalAccount(UInt32)
+}
+
 /**
 Represents a sent transaction that has not been confirmed yet on the blockchain
 */
@@ -13,7 +19,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
     /**
     recipient address
     */
-    var toAddress: String { get }
+    var recipient: PendingTransactionRecipient { get }
 
     /**
     index of the account from which the funds were sent

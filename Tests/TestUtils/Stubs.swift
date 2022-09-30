@@ -55,6 +55,10 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
+    static func getAddressMetadata(_ address: String) -> ZcashLightClientKit.AddressMetadata? {
+        nil
+    }
+    
     static func clearUtxos(dbData: URL, address: ZcashLightClientKit.TransparentAddress, sinceHeight: ZcashLightClientKit.BlockHeight, networkType: ZcashLightClientKit.NetworkType) throws -> Int32 {
         0
     }

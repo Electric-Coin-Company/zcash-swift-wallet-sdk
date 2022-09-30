@@ -1,6 +1,6 @@
 //
 //  WalletTypes.swift
-//  
+//
 //
 //  Created by Francisco Gindre on 4/6/21.
 //
@@ -94,6 +94,34 @@ public struct SaplingExtendedFullViewingKey: Equatable, StringEncoded, Undescrib
     }
 }
 
+public enum AddressType: Equatable {
+    case p2pkh
+    case p2sh
+    case sapling
+    case unified
+    
+    var id: UInt32 {
+        switch self {
+        case .p2pkh:  return 0
+        case .p2sh:  return 1
+        case .sapling: return 2
+        case .unified: return 3
+        }
+    }
+}
+
+extension AddressType {
+    static func forId(_ id: UInt32) -> AddressType? {
+        switch id {
+        case 0: return .p2pkh
+        case 1: return .p2sh
+        case 2: return .sapling
+        case 3: return .unified
+        default: return nil
+        }
+    }
+}
+
 /// A Transparent Address that can be encoded as a String
 ///
 /// Transactions sent to this address are totally visible in the public
@@ -121,7 +149,7 @@ public struct TransparentAddress: Equatable, StringEncoded {
 /// Represents a Sapling receiver address. Comonly called zAddress.
 /// This address corresponds to the Zcash Sapling shielded pool.
 /// Although this it is fully functional, we encourage developers to
-/// choose `UnifiedAddress` before Sapling or Transparent ones. 
+/// choose `UnifiedAddress` before Sapling or Transparent ones.
 public struct SaplingAddress: Equatable, StringEncoded {
     var encoding: String
 
@@ -232,6 +260,18 @@ public enum Recipient: Equatable, StringEncoded {
             self = .transparent(transparent)
         } else {
             throw KeyEncodingError.invalidEncoding
+        }
+    }
+    
+    static func forEncodedAddress(encoded: String) -> (Recipient, NetworkType)? {
+        return DerivationTool.getAddressMetadata(encoded).map { m in
+            switch m.addressType {
+            case .p2pkh: return (.transparent(TransparentAddress(validatedEncoding: encoded)),
+                m.networkType)
+            case .p2sh:  return (.transparent(TransparentAddress(validatedEncoding: encoded)), m.networkType)
+            case .sapling: return (.sapling(SaplingAddress(validatedEncoding: encoded)), m.networkType)
+            case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded)), m.networkType)
+            }
         }
     }
 }

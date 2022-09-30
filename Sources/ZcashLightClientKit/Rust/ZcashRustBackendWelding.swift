@@ -261,6 +261,10 @@ protocol ZcashRustBackendWelding {
         networkType: NetworkType
     ) throws -> DbInitResult
 
+    /// Returns the network and address type for the given Zcash address string,
+    /// if the string represents a valid Zcash address.
+    static func getAddressMetadata(_ address: String) -> AddressMetadata? 
+
     /// Validates the if the given string is a valid Sapling Address
     /// - Parameter address: UTF-8 encoded String to validate
     /// - Parameter networkType: network type of this key

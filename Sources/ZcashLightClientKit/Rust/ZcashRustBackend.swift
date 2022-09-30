@@ -10,6 +10,7 @@ import Foundation
 import libzcashlc
 
 class ZcashRustBackend: ZcashRustBackendWelding {
+
     static let minimumConfirmations: UInt32 = 10
 
     static func createAccount(dbData: URL, seed: [UInt8], networkType: NetworkType) throws -> UnifiedSpendingKey {
@@ -316,6 +317,26 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return RustWeldingError.genericError(message: message)
     }
 
+    static func getAddressMetadata(_ address: String) -> AddressMetadata? {
+        var networkId: UInt32 = 0
+        var addrId: UInt32 = 0
+        guard zcashlc_get_address_metadata(
+            [CChar](address.utf8CString),
+            &networkId,
+            &addrId
+        ) else {
+            return nil
+        }
+        
+        guard let network = NetworkType.forNetworkId(networkId),
+              let addrType = AddressType.forId(addrId)
+        else {
+            return nil
+        }
+                    
+        return AddressMetadata(network: network, addrType: addrType)
+    }
+    
     static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress? {
         guard let transparentCStr = zcashlc_get_transparent_receiver_for_unified_address(
             [CChar](uAddr.encoding.utf8CString)

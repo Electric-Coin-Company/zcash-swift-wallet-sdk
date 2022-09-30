@@ -12,7 +12,7 @@ import XCTest
 // swiftlint:disable force_try force_unwrapping implicitly_unwrapped_optional
 class PendingTransactionRepositoryTests: XCTestCase {
     let dbUrl = try! TestDbBuilder.pendingTransactionsDbURL()
-    let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
+    let recipient = SaplingAddress(validatedEncoding: "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6")
 
     var pendingRepository: PendingTransactionRepository!
 
@@ -51,7 +51,7 @@ class PendingTransactionRepositoryTests: XCTestCase {
         
         XCTAssertEqual(transaction.accountIndex, expected.accountIndex)
         XCTAssertEqual(transaction.value, expected.value)
-        XCTAssertEqual(transaction.toAddress, expected.toAddress)
+        XCTAssertEqual(transaction.recipient, expected.recipient)
     }
     
     func testFindById() {
@@ -155,7 +155,7 @@ class PendingTransactionRepositoryTests: XCTestCase {
         
         XCTAssertEqual(updatedTransaction.encodeAttempts, oldEncodeAttempts + 1)
         XCTAssertEqual(updatedTransaction.submitAttempts, oldSubmitAttempts + 5)
-        XCTAssertEqual(updatedTransaction.toAddress, stored!.toAddress)
+        XCTAssertEqual(updatedTransaction.recipient, stored!.recipient)
     }
     
     func createAndStoreMockedTransaction(with value: Zatoshi = Zatoshi(1000)) -> PendingTransactionEntity {
@@ -175,6 +175,6 @@ class PendingTransactionRepositoryTests: XCTestCase {
     }
     
     private func mockTransaction(with value: Zatoshi = Zatoshi(1000)) -> PendingTransactionEntity {
-        PendingTransaction(value: value, toAddress: recipientAddress, memo: .empty(), account: 0)
+        PendingTransaction(value: value, recipient: .address(.sapling(recipient)), memo: .empty(), account: 0)
     }
 }

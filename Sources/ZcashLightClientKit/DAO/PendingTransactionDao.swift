@@ -11,6 +11,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
 
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
+        case toInternalAccount = "to_internal"
         case accountIndex = "account_index"
         case minedHeight = "mined_height"
         case expiryHeight = "expiry_height"
@@ -27,7 +28,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         case rawTransactionId = "txid"
     }
     
-    var toAddress: String
+    var recipient: PendingTransactionRecipient
     var accountIndex: Int
     var minedHeight: BlockHeight
     var expiryHeight: BlockHeight
@@ -45,7 +46,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
 
     static func from(entity: PendingTransactionEntity) -> PendingTransaction {
         PendingTransaction(
-            toAddress: entity.toAddress,
+            recipient: entity.recipient,
             accountIndex: entity.accountIndex,
             minedHeight: entity.minedHeight,
             expiryHeight: entity.expiryHeight,
@@ -64,7 +65,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     }
 
     init(
-        toAddress: String,
+        recipient: PendingTransactionRecipient,
         accountIndex: Int,
         minedHeight: BlockHeight,
         expiryHeight: BlockHeight,
@@ -80,7 +81,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         memo: Data?,
         rawTransactionId: Data?
     ) {
-        self.toAddress = toAddress
+        self.recipient = recipient
         self.accountIndex = accountIndex
         self.minedHeight = minedHeight
         self.expiryHeight = expiryHeight
@@ -100,7 +101,18 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        self.toAddress = try container.decode(String.self, forKey: .toAddress)
+        let toAddress: String? = try container.decodeIfPresent(String.self, forKey: .toAddress)
+        let toInternalAccount: UInt32? = try container.decode(UInt32.self, forKey: .toInternalAccount)
+        
+        switch (toAddress, toInternalAccount) {
+        case let (.some(address), nil):
+            self.recipient = .address(Recipient.forEncodedAddress(encoded: address)!.0)
+        case let (nil, .some(accountId)):
+            self.recipient = .internalAccount(accountId)
+        default:
+            throw StorageError.malformedEntity(fields: ["toAddress", "toInternalAccount"])
+        }
+
         self.accountIndex = try container.decode(Int.self, forKey: .accountIndex)
         self.minedHeight = try container.decode(BlockHeight.self, forKey: .minedHeight)
         self.expiryHeight = try container.decode(BlockHeight.self, forKey: .expiryHeight)
@@ -122,7 +134,18 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
-        try container.encode(self.toAddress, forKey: .toAddress)
+        var toAddress: String?
+        var accountId: UInt32?
+        switch (self.recipient) {
+        case .address(let recipient):
+            toAddress = recipient.stringEncoded
+        case .internalAccount(let acct):
+            accountId = acct
+        default:
+            break
+        }
+        try container.encode(toAddress, forKey: .toAddress)
+        try container.encode(accountId, forKey: .toInternalAccount)
         try container.encode(self.accountIndex, forKey: .accountIndex)
         try container.encode(self.minedHeight, forKey: .minedHeight)
         try container.encode(self.expiryHeight, forKey: .expiryHeight)
@@ -145,9 +168,9 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
 }
 
 extension PendingTransaction {
-    init(value: Zatoshi, toAddress: String, memo: MemoBytes, account index: Int) {
+    init(value: Zatoshi, recipient: PendingTransactionRecipient, memo: MemoBytes, account index: Int) {
         self = PendingTransaction(
-            toAddress: toAddress,
+            recipient: recipient,
             accountIndex: index,
             minedHeight: -1,
             expiryHeight: -1,
@@ -169,6 +192,7 @@ extension PendingTransaction {
 class PendingTransactionSQLDAO: PendingTransactionRepository {
     enum TableColumns {
         static var toAddress = Expression<String>("to_address")
+        static var toInternalAccount = Expression<String>("to_internal")
         static var accountIndex = Expression<Int>("account_index")
         static var minedHeight = Expression<Int?>("mined_height")
         static var expiryHeight = Expression<Int?>("expiry_height")
@@ -197,6 +221,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         let statement = table.create(ifNotExists: true) { createdTable in
             createdTable.column(TableColumns.id, primaryKey: .autoincrement)
             createdTable.column(TableColumns.toAddress)
+            createdTable.column(TableColumns.toInternalAccount)
             createdTable.column(TableColumns.accountIndex)
             createdTable.column(TableColumns.minedHeight)
             createdTable.column(TableColumns.expiryHeight)
