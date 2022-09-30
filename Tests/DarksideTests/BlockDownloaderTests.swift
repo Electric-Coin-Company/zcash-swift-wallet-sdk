@@ -46,7 +46,7 @@ class BlockDownloaderTests: XCTestCase {
         
         let range = CompactBlockRange(uncheckedBounds: (lowerRange, upperRange))
         do {
-            try await downloader.downloadBlockRangeAsync(range)
+            try await downloader.downloadBlockRange(range)
             
             // check what was 'stored'
             let latestHeight = try await self.storage.latestHeightAsync()
@@ -57,33 +57,6 @@ class BlockDownloaderTests: XCTestCase {
         } catch {
             XCTFail("testSmallDownloadAsync() shouldn't fail")
         }
-    }
-    
-    func testSmallDownload() {
-        let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
-        let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
-        
-        let range = CompactBlockRange(uncheckedBounds: (lowerRange, upperRange))
-        var latest: BlockHeight = 0
-        
-        do {
-            latest = try downloader.lastDownloadedBlockHeight()
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-        
-        XCTAssertEqual(latest, BlockHeight.empty())
-        XCTAssertNoThrow(try downloader.downloadBlockRange(range))
-        
-        var currentLatest: BlockHeight = 0
-        do {
-            currentLatest = try downloader.lastDownloadedBlockHeight()
-        } catch {
-            XCTFail("latest block failed")
-            return
-        }
-
-        XCTAssertEqual(currentLatest, upperRange )
     }
     
     func testFailure() async {
@@ -101,7 +74,7 @@ class BlockDownloaderTests: XCTestCase {
         let range = CompactBlockRange(uncheckedBounds: (lowerRange, upperRange))
 
         do {
-            try await awfulDownloader.downloadBlockRangeAsync(range)
+            try await awfulDownloader.downloadBlockRange(range)
         } catch {
             XCTAssertNotNil(error)
         }

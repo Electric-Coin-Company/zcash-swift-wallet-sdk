@@ -18,7 +18,7 @@ extension CompactBlockProcessor {
     private func enhance(transaction: TransactionEntity) async throws -> ConfirmedTransactionEntity {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId())")
         
-        let transaction = try await downloader.fetchTransactionAsync(txId: transaction.transactionId)
+        let transaction = try await downloader.fetchTransaction(txId: transaction.transactionId)
 
         let transactionID = transaction.transactionId.toHexStringTxId()
         let block = String(describing: transaction.minedHeight)

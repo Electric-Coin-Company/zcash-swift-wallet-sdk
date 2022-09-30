@@ -33,19 +33,12 @@ protocol CompactBlockRepository {
 
     /**
     Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
-    Blocking
-    - Parameter blocks: the compact blocks that will be written to storage
-    - Throws: an error when there's a failure
-    */
-    func write(blocks: [ZcashCompactBlock]) throws
-    
-    /**
-    Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
     Non-Blocking
     - Parameters:
         - Parameter blocks: array of blocks to be written to storage
+        - Throws: an error when there's a failure
     */
-    func writeAsync(blocks: [ZcashCompactBlock]) async throws
+    func write(blocks: [ZcashCompactBlock]) async throws
 
     /**
     Remove every block above and including the given height.

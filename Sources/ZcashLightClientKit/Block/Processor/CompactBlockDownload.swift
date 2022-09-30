@@ -42,8 +42,7 @@ extension CompactBlockProcessor {
                 try Task.checkCancellation()
                 buffer.append(zcashCompactBlock)
                 if buffer.count >= blockBufferSize {
-                    // TODO: writeAsync doesn't make sense here, awaiting it or calling blocking API have the same result and impact
-                    try storage.write(blocks: buffer)
+                    try await storage.write(blocks: buffer)
                     buffer.removeAll(keepingCapacity: true)
                 }
                 
@@ -54,8 +53,7 @@ extension CompactBlockProcessor {
                 )
                 notifyProgress(.download(progress))
             }
-            // TODO: writeAsync doesn't make sense here, awaiting it or calling blocking API have the same result and impact
-            try storage.write(blocks: buffer)
+            try await storage.write(blocks: buffer)
             buffer.removeAll(keepingCapacity: true)
         } catch {
             guard let err = error as? LightWalletServiceError, case .userCancelled = err else {
@@ -73,7 +71,7 @@ extension CompactBlockProcessor {
         try Task.checkCancellation()
         
         do {
-            try await downloader.downloadBlockRangeAsync(range)
+            try await downloader.downloadBlockRange(range)
         } catch {
             throw error
         }

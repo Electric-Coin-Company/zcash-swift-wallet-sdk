@@ -598,31 +598,23 @@ public class CompactBlockProcessor {
     }
 
     func validateServer(completionBlock: @escaping (() -> Void)) {
-        self.service.getInfo(result: { [weak self] result in
-            guard let self = self else { return }
-            
-            switch result {
-            case .success(let info):
-                DispatchQueue.main.async { [weak self] in
-                    guard let self = self else { return }
-                    do {
-                        try Self.validateServerInfo(
-                            info,
-                            saplingActivation: self.config.saplingActivation,
-                            localNetwork: self.config.network,
-                            rustBackend: self.rustBackend
-                        )
-                        completionBlock()
-                    } catch {
-                        self.severeFailure(error)
-                    }
-                }
-            case .failure(let error):
+        Task { @MainActor in
+            do {
+                let info = try await self.service.getInfo()
+                try Self.validateServerInfo(
+                    info,
+                    saplingActivation: self.config.saplingActivation,
+                    localNetwork: self.config.network,
+                    rustBackend: self.rustBackend
+                )
+                completionBlock()
+            } catch let error as LightWalletServiceError {
                 self.severeFailure(error.mapToProcessorError())
+            } catch {
+                self.severeFailure(error)
             }
-        })
+        }
     }
-
     
     /// Processes new blocks on the given range based on the configuration set for this instance
     func processNewBlocks(range: CompactBlockRange) {
@@ -1182,51 +1174,39 @@ extension CompactBlockProcessor {
             rustBackend: ZcashRustBackendWelding.Type
         ) async throws -> NextState {
             let task = Task(priority: .userInitiated) {
-                // TODO: refactor to async call, issue 463, PR 493
-                // https://github.com/zcash/ZcashLightClientKit/issues/463
-                try nextState(
-                    service: service,
-                    downloader: downloader,
-                    config: config,
-                    rustBackend: rustBackend
-                )
+                do {
+                    let info = try await service.getInfo()
+                    
+                    try CompactBlockProcessor.validateServerInfo(
+                        info,
+                        saplingActivation: config.saplingActivation,
+                        localNetwork: config.network,
+                        rustBackend: rustBackend
+                    )
+                    
+                    // get latest block height
+                    let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday, try downloader.lastDownloadedBlockHeight())
+                    
+                    let latestBlockheight = try service.latestBlockHeight()
+                    
+                    if latestDownloadedBlockHeight < latestBlockheight {
+                        return NextState.processNewBlocks(
+                            range: CompactBlockProcessor.nextBatchBlockRange(
+                                latestHeight: latestBlockheight,
+                                latestDownloadedHeight: latestDownloadedBlockHeight,
+                                walletBirthday: config.walletBirthday
+                            )
+                        )
+                    } else if latestBlockheight == latestDownloadedBlockHeight {
+                        return .finishProcessing(height: latestBlockheight)
+                    }
+                    
+                    return .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestBlockheight)
+                } catch {
+                    throw error
+                }
             }
             return try await task.value
-        }
-        
-        static func nextState(
-            service: LightWalletService,
-            downloader: CompactBlockDownloading,
-            config: Configuration,
-            rustBackend: ZcashRustBackendWelding.Type
-        ) throws -> NextState {
-            let info = try service.getInfo()
-            
-            try CompactBlockProcessor.validateServerInfo(
-                info,
-                saplingActivation: config.saplingActivation,
-                localNetwork: config.network,
-                rustBackend: rustBackend
-            )
-            
-            // get latest block height
-            let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday, try downloader.lastDownloadedBlockHeight())
-            
-            let latestBlockheight = try service.latestBlockHeight()
-            
-            if latestDownloadedBlockHeight < latestBlockheight {
-                return .processNewBlocks(
-                    range: CompactBlockProcessor.nextBatchBlockRange(
-                        latestHeight: latestBlockheight,
-                        latestDownloadedHeight: latestDownloadedBlockHeight,
-                        walletBirthday: config.walletBirthday
-                    )
-                )
-            } else if latestBlockheight == latestDownloadedBlockHeight {
-                return .finishProcessing(height: latestBlockheight)
-            }
-                
-            return .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestBlockheight)
         }
     }
 }
