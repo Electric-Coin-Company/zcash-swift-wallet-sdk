@@ -18,30 +18,6 @@ public enum TransactionEncoderError: Error {
 }
 
 protocol TransactionEncoder {
-
-    /// Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
-    /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
-    /// double-bangs for things).
-    /// Blocking
-    ///
-    /// - Parameters:
-    /// - Parameter spendingKey: a `UnifiedSpendingKey` containing the spending key
-    /// - Parameter zatoshi: the amount to send in `Zatoshi`
-    /// - Parameter to: string containing the recipient address
-    /// - Parameter memoBytes: MemoBytes for this transaction
-    /// - Parameter accountIndex: index of the account that will be used to send the funds
-    ///
-    /// - Throws: a TransactionEncoderError
-    /// 
-    func createTransaction(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        to address: String,
-        memoBytes: MemoBytes,
-        from accountIndex: Int
-    ) throws -> EncodedTransaction
-    
-
     /// Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
     /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
     /// double-bangs for things).
@@ -76,7 +52,7 @@ protocol TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes,
         from accountIndex: Int
-    ) throws -> EncodedTransaction
+    ) async throws -> EncodedTransaction
 
     ///Fetch the Transaction Entity from the encoded representation
     /// - Parameter encodedTransaction: The encoded transaction to expand

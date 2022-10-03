@@ -129,8 +129,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
     }
-    
-    func createShieldingSpend(spendingKey: String, tsk: String, memo: String?, accountIndex: Int) throws -> Int {
+    func createShieldingSpend(spendingKey: UnifiedSpendingKey, memo: MemoBytes, accountIndex: Int) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
