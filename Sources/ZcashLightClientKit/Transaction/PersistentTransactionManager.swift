@@ -179,7 +179,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 throw TransactionManagerError.internalInconsistency(storedTx)
             }
             
-            let response = try self.service.submit(spendTransaction: raw)
+            let response = try await self.service.submit(spendTransaction: raw)
             let transaction = try self.update(transaction: storedTx, on: response)
             
             guard response.errorCode >= 0 else {

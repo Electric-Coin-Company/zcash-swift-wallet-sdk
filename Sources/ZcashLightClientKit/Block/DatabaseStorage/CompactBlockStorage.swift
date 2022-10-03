@@ -91,12 +91,8 @@ extension CompactBlockStorage: CompactBlockRepository {
         }
         return try await task.value
     }
-
-    func write(blocks: [ZcashCompactBlock]) throws {
-        try insert(blocks)
-    }
     
-    func writeAsync(blocks: [ZcashCompactBlock]) async throws {
+    func write(blocks: [ZcashCompactBlock]) async throws {
         let task = Task(priority: .userInitiated) {
             try insert(blocks)
         }

@@ -189,11 +189,11 @@ public class LightWalletGRPCService {
     }
 }
 
-// MARK: - LightWalletServiceBlockingAPI
+// MARK: - LightWalletService
 
-extension LightWalletGRPCService: LightWalletServiceBlockingAPI {
-    public func getInfo() throws -> LightWalletdInfo {
-        try compactTxStreamer.getLightdInfo(Empty()).response.wait()
+extension LightWalletGRPCService: LightWalletService {
+    public func getInfo() async throws -> LightWalletdInfo {
+        try await compactTxStreamerAsync.getLightdInfo(Empty())
     }
     
     public func latestBlockHeight() throws -> BlockHeight {
@@ -202,161 +202,13 @@ extension LightWalletGRPCService: LightWalletServiceBlockingAPI {
         }
         return height
     }
-    
-    public func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
-        var blocks: [CompactBlock] = []
-        
-        let response = compactTxStreamer.getBlockRange(
-            range.blockRange(),
-            handler: { blocks.append($0) }
-        )
-        
-        let status = try response.status.wait()
 
-        switch status.code {
-        case .ok:
-            return blocks.asZcashCompactBlocks()
-        default:
-            throw LightWalletServiceError.mapCode(status)
-        }
-    }
-    
-    public func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
-        let rawTx = RawTransaction.with { raw in
-            raw.data = spendTransaction
-        }
-        do {
-            return try compactTxStreamer.sendTransaction(rawTx).response.wait()
-        } catch {
-            throw error.mapToServiceError()
-        }
-    }
-    
-    public func fetchTransaction(txId: Data) throws -> TransactionEntity {
-        var txFilter = TxFilter()
-        txFilter.hash = txId
-        
-        do {
-            let rawTx = try compactTxStreamer.getTransaction(txFilter).response.wait()
-            
-            return TransactionBuilder.createTransactionEntity(txId: txId, rawTransaction: rawTx)
-        } catch {
-            throw error.mapToServiceError()
-        }
-    }
-    
-    public func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        let arg = GetAddressUtxosArg.with { utxoArgs in
-            utxoArgs.addresses = [tAddress]
-            utxoArgs.startHeight = UInt64(height)
-        }
-        do {
-            return try self.compactTxStreamer.getAddressUtxos(arg).response.wait().addressUtxos.map { reply in
-                UTXO(
-                    id: nil,
-                    address: tAddress,
-                    prevoutTxId: reply.txid,
-                    prevoutIndex: Int(reply.index),
-                    script: reply.script,
-                    valueZat: Int(reply.valueZat),
-                    height: Int(reply.height),
-                    spentInTx: nil
-                )
-            }
-        } catch {
-            throw error.mapToServiceError()
-        }
-    }
-    
-    public func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        guard !tAddresses.isEmpty else {
-            return [] // FIXME: throw a real error
-        }
-        
-        var utxos: [UnspentTransactionOutputEntity] = []
-        
-        let arg = GetAddressUtxosArg.with { utxoArgs in
-            utxoArgs.addresses = tAddresses
-            utxoArgs.startHeight = UInt64(height)
-        }
-        utxos.append(
-            contentsOf:
-            try self.compactTxStreamer.getAddressUtxos(arg).response.wait().addressUtxos.map { reply in
-            UTXO(
-                id: nil,
-                address: reply.address,
-                prevoutTxId: reply.txid,
-                prevoutIndex: Int(reply.index),
-                script: reply.script,
-                valueZat: Int(reply.valueZat),
-                height: Int(reply.height),
-                spentInTx: nil
-                )
-            }
-        )
-       
-        return utxos
-    }
-}
-
-// MARK: - LightWalletServiceNonBlockingAPI
-
-extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
-    public func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
-        compactTxStreamer.getLightdInfo(Empty()).response.whenComplete { completionResult in
-            switch completionResult {
-            case .success(let info):
-                result(.success(info))
-            case .failure(let error):
-                result(.failure(error.mapToServiceError()))
-            }
-        }
-    }
-    
-    public func getInfoAsync() async throws -> LightWalletdInfo {
-        try await compactTxStreamerAsync.getLightdInfo(Empty())
-    }
-    
-    public func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
-        let response = compactTxStreamer.getLatestBlock(ChainSpec()).response
-        
-        response.whenSuccessBlocking(onto: queue) { blockID in
-            guard let blockHeight = Int(exactly: blockID.height) else {
-                result(.failure(LightWalletServiceError.generalError(message: "error creating blockheight from BlockID \(blockID)")))
-                return
-            }
-            result(.success(blockHeight))
-        }
-        
-        response.whenFailureBlocking(onto: queue) { error in
-            result(.failure(error.mapToServiceError()))
-        }
-    }
-    
     public func latestBlockHeightAsync() async throws -> BlockHeight {
-        try await BlockHeight(compactTxStreamerAsync.getLatestBlock(ChainSpec()).height)
-    }
-
-    public func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
-        queue.async { [weak self] in
-            guard let self = self else { return }
-
-            var blocks: [CompactBlock] = []
-            let response = self.compactTxStreamer.getBlockRange(range.blockRange(), handler: { blocks.append($0) })
-
-            do {
-                let status = try response.status.wait()
-                switch status.code {
-                case .ok:
-                    result(.success(blocks.asZcashCompactBlocks()))
-                    
-                default:
-                    result(.failure(.mapCode(status)))
-                }
-            } catch {
-                result(.failure(error.mapToServiceError()))
-            }
+        let blockID = try await compactTxStreamerAsync.getLatestBlock(ChainSpec())
+        guard let blockHeight = Int(exactly: blockID.height) else {
+            throw LightWalletServiceError.generalError(message: "error creating blockheight from BlockID \(blockID)")
         }
+        return blockHeight
     }
     
     public func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
@@ -376,48 +228,16 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
         }
     }
     
-    public func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
+    public func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
         do {
-            let transaction = try RawTransaction(serializedData: spendTransaction)
-            let response = self.compactTxStreamer.sendTransaction(transaction).response
-            
-            response.whenComplete { responseResult in
-                switch responseResult {
-                case .failure(let error):
-                    result(.failure(LightWalletServiceError.sentFailed(error: error)))
-                case .success(let success):
-                    result(.success(success))
-                }
-            }
-        } catch {
-            result(.failure(error.mapToServiceError()))
-        }
-    }
-    
-    public func submitAsync(spendTransaction: Data) async throws -> LightWalletServiceResponse {
-        do {
-            let transaction = try RawTransaction(serializedData: spendTransaction)
+            let transaction = RawTransaction.with { $0.data = spendTransaction }
             return try await compactTxStreamerAsync.sendTransaction(transaction)
         } catch {
             throw LightWalletServiceError.sentFailed(error: error)
         }
     }
     
-    public func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
-        var txFilter = TxFilter()
-        txFilter.hash = txId
-        
-        compactTxStreamer.getTransaction(txFilter).response.whenComplete { response in
-            switch response {
-            case .failure(let error):
-                result(.failure(error.mapToServiceError()))
-            case .success(let rawTx):
-                result(.success(TransactionBuilder.createTransactionEntity(txId: txId, rawTransaction: rawTx)))
-            }
-        }
-    }
-    
-    public func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity {
+    public func fetchTransaction(txId: Data) async throws -> TransactionEntity {
         var txFilter = TxFilter()
         txFilter.hash = txId
         
@@ -475,52 +295,6 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
 
     public func fetchUTXOs(
         for tAddresses: [String],
-        height: BlockHeight,
-        result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
-    ) {
-        guard !tAddresses.isEmpty else {
-            return result(.success([])) // FIXME: throw a real error
-        }
-        
-        var utxos: [UnspentTransactionOutputEntity] = []
-        self.queue.async { [weak self] in
-            guard let self = self else { return }
-            let args = GetAddressUtxosArg.with { utxoArgs in
-                utxoArgs.addresses = tAddresses
-                utxoArgs.startHeight = UInt64(height)
-            }
-            do {
-                let response = try self.compactTxStreamer.getAddressUtxosStream(args) { reply in
-                    utxos.append(
-                        UTXO(
-                            id: nil,
-                            address: reply.address,
-                            prevoutTxId: reply.txid,
-                            prevoutIndex: Int(reply.index),
-                            script: reply.script,
-                            valueZat: Int(reply.valueZat),
-                            height: Int(reply.height),
-                            spentInTx: nil
-                        )
-                    )
-                }
-                .status
-                .wait()
-
-                switch response.code {
-                case .ok:
-                    result(.success(utxos))
-                default:
-                    result(.failure(.mapCode(response)))
-                }
-            } catch {
-                result(.failure(error.mapToServiceError()))
-            }
-        }
-    }
-    
-    public func fetchUTXOs(
-        for tAddresses: [String],
         height: BlockHeight
     ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
         guard !tAddresses.isEmpty else {
@@ -558,48 +332,6 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
         }
     }
     
-    @discardableResult
-    public func blockStream(
-        startHeight: BlockHeight,
-        endHeight: BlockHeight,
-        result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void,
-        handler: @escaping (ZcashCompactBlock) -> Void,
-        progress: @escaping  (BlockProgress) -> Void
-    ) -> CancellableCall {
-        let future = compactTxStreamer.getBlockRange(
-            BlockRange(
-                startHeight: startHeight,
-                endHeight: endHeight
-            ),
-            callOptions: Self.callOptions(timeLimit: self.streamingCallTimeout),
-            handler: { compactBlock in
-                handler(ZcashCompactBlock(compactBlock: compactBlock))
-                progress(
-                    BlockProgress(
-                        startHeight: startHeight,
-                        targetHeight: endHeight,
-                        progressHeight: BlockHeight(compactBlock.height)
-                    )
-                )
-            }
-        )
-        
-        future.status.whenComplete { completionResult in
-            switch completionResult {
-            case .success(let status):
-                switch status.code {
-                case .ok:
-                    result(.success(GRPCResult.success))
-                default:
-                    result(.failure(LightWalletServiceError.mapCode(status)))
-                }
-            case .failure(let error):
-                result(.failure(LightWalletServiceError.genericError(error: error)))
-            }
-        }
-        return future
-    }
-    
     public func blockStream(
         startHeight: BlockHeight,
         endHeight: BlockHeight
@@ -625,9 +357,7 @@ extension LightWalletGRPCService: LightWalletServiceNonBlockingAPI {
             }
         }
     }
-}
 
-extension LightWalletGRPCService: LightWalletService {
     public func closeConnection() {
         _ = channel.close()
     }

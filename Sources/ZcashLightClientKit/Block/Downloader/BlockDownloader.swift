@@ -16,18 +16,11 @@ enum CompactBlockDownloadError: Error {
 Represents what a compact block downloaded should provide to its clients
 */
 public protocol CompactBlockDownloading {
-    
-    /**
-    Downloads and stores the given block range.
-    Blocking
-    */
-    func downloadBlockRange(_ range: CompactBlockRange) throws
-
     /**
     Downloads and stores the given block range.
     Non-Blocking
     */
-    func downloadBlockRangeAsync(_ heightRange: CompactBlockRange) async throws
+    func downloadBlockRange(_ heightRange: CompactBlockRange) async throws
 
     /**
     Restore the download progress up to the given height.
@@ -69,36 +62,10 @@ public protocol CompactBlockDownloading {
     /**
     Gets the transaction for the Id given
     - Parameter txId: Data representing the transaction Id
-    - Returns: a transaction entity with the requested transaction
-    - Throws: An error if the fetch failed
     */
-    func fetchTransaction(txId: Data) throws -> TransactionEntity
-    
-    /**
-    Gets the transaction for the Id given
-    - Parameter txId: Data representing the transaction Id
-    */
-    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity
-
-    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
-    
-    // TODO: will be removed with the issue 474
-    // https://github.com/zcash/ZcashLightClientKit/issues/474
-    // Use the new API fetchUnspentTransactionOutputs(...) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
-    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void)
+    func fetchTransaction(txId: Data) async throws -> TransactionEntity
 
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
-    
-    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity]
-    
-    // TODO: will be removed with the issue 474
-    // https://github.com/zcash/ZcashLightClientKit/issues/474
-    // Use the new API fetchUnspentTransactionOutputs(...) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
-    func fetchUnspentTransactionOutputs(
-        tAddresses: [String],
-        startHeight: BlockHeight,
-        result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void
-    )
 
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
@@ -127,43 +94,9 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     func closeConnection() {
         lightwalletService.closeConnection()
     }
-    
-    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        try lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight)
-    }
-    
-    func fetchUnspentTransactionOutputs(
-        tAddresses: [String],
-        startHeight: BlockHeight,
-        result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void
-    ) {
-        lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight) { fetchResult in
-            switch fetchResult {
-            case .success(let utxos):
-                result(.success(utxos))
-            case .failure(let error):
-                result(.failure(error))
-            }
-        }
-    }
             
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
         lightwalletService.fetchUTXOs(for: tAddresses, height: startHeight)
-    }
-    
-    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        try lightwalletService.fetchUTXOs(for: tAddress, height: startHeight)
-    }
-    
-    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
-        lightwalletService.fetchUTXOs(for: tAddress, height: startHeight) { fetchResult in
-            switch fetchResult {
-            case .success(let utxos):
-                result(.success(utxos))
-            case .failure(let error):
-                result(.failure(error))
-            }
-        }
     }
     
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
@@ -177,20 +110,15 @@ extension CompactBlockDownloader: CompactBlockDownloading {
     func latestBlockHeight() throws -> BlockHeight {
         try lightwalletService.latestBlockHeight()
     }
-    
-    func downloadBlockRange(_ range: CompactBlockRange) throws {
-        let blocks = try lightwalletService.blockRange(range)
-        try storage.write(blocks: blocks)
-    }
 
-    func downloadBlockRangeAsync( _ heightRange: CompactBlockRange) async throws {
+    func downloadBlockRange( _ heightRange: CompactBlockRange) async throws {
         let stream: AsyncThrowingStream<ZcashCompactBlock, Error> = lightwalletService.blockRange(heightRange)
         do {
             var compactBlocks: [ZcashCompactBlock] = []
             for try await compactBlock in stream {
                 compactBlocks.append(compactBlock)
             }
-            try await self.storage.writeAsync(blocks: compactBlocks)
+            try await self.storage.write(blocks: compactBlocks)
         } catch {
             throw error
         }
@@ -213,7 +141,6 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         }
     }
 
-    
     func rewind(to height: BlockHeight) throws {
         try self.storage.rewind(to: height)
     }
@@ -222,11 +149,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try self.storage.latestHeight()
     }
     
-    func fetchTransaction(txId: Data) throws -> TransactionEntity {
-        try lightwalletService.fetchTransaction(txId: txId)
-    }
-    
-    func fetchTransactionAsync(txId: Data) async throws -> TransactionEntity {
-        try await lightwalletService.fetchTransactionAsync(txId: txId)
+    func fetchTransaction(txId: Data) async throws -> TransactionEntity {
+        try await lightwalletService.fetchTransaction(txId: txId)
     }
 }
