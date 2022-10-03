@@ -10,6 +10,7 @@ import Foundation
 import GRPC
 import NIO
 import NIOHPACK
+import NIOTransportServices
 
 public typealias Channel = GRPC.GRPCChannel
 
@@ -127,8 +128,8 @@ public class LightWalletGRPCService {
         self.singleCallTimeout = TimeLimit.timeout(.milliseconds(singleCallTimeout))
 
         let connectionBuilder = secure ?
-        ClientConnection.usingPlatformAppropriateTLS(for: MultiThreadedEventLoopGroup(numberOfThreads: 1)) :
-        ClientConnection.insecure(group: MultiThreadedEventLoopGroup(numberOfThreads: 1))
+        ClientConnection.usingPlatformAppropriateTLS(for: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default)) :
+        ClientConnection.insecure(group: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default))
 
         let channel = connectionBuilder
             .withConnectivityStateDelegate(connectionManager, executingOn: queue)
