@@ -1091,10 +1091,18 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         1a. sync to latest height
         */
-        try coordinator.sync(completion: { _ in
-            firstSyncExpectation.fulfill()
-        }, error: self.handleError)
-        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    
+                    continuation.resume()
+                    firstSyncExpectation.fulfill()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+
         wait(for: [firstSyncExpectation], timeout: 10)
         
         sleep(1)
