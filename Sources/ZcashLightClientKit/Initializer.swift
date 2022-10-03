@@ -179,21 +179,20 @@ public class Initializer {
         self.walletBirthday = walletBirthday
         self.network = network
     }
-    
-    /**
-    Initialize the wallet with the given seed and return the related private keys for each
-    account specified or null if the wallet was previously initialized and block data exists on
-    disk. When this method returns null, that signals that the wallet will need to retrieve the
-    private keys from its own secure storage. In other words, the private keys are only given out
-    once for each set of database files. Subsequent calls to [initialize] will only load the Rust
-    library and return null.
-     
-    'compactBlockCache.db' and 'transactionData.db' files are created by this function (if they
-    do not already exist). These files can be given a prefix for scenarios where multiple wallets
 
-    - Parameters:
-        - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
-    */
+    /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
+    /// database migrations. most of the times the seed won't be needed. If they do and are
+    /// not provided this will fail with `InitializationResult.seedRequired`. It could
+    /// be the case that this method is invoked by a wallet that does not contain the seed phrase
+    /// and is view-only, or by a wallet that does have the seed but the process does not have the
+    /// consent of the OS to fetch the keys from the secure storage, like on background tasks.
+    ///
+    /// 'cache.db' and 'data.db' files are created by this function (if they
+    /// do not already exist). These files can be given a prefix for scenarios where multiple wallets
+    ///
+    /// - Parameter seed: ZIP-32 Seed bytes for the wallet that will be initialized
+    /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
+    /// `InitializerError.accountInitFailed` if the account table can't be initialized. 
     public func initialize(with seed: [UInt8]?) throws -> InitializationResult {
         do {
             try storage.createTable()
@@ -245,26 +244,9 @@ public class Initializer {
         } catch {
             throw rustBackend.lastError() ?? InitializerError.accountInitFailed
         }
-        
-        let migrationManager = MigrationManager(
-            cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
-            pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
-            networkType: self.network.networkType
-        )
-        
-        try migrationManager.performMigration(ufvks: viewingKeys)
 
         return .success
     }
-    
-    /**
-    get address from the given account index
-    - Parameter account:  the index of the account
-    */
-    public func getAddress(index account: Int = 0) -> String? {
-        try? accountRepository.findBy(account: account)?.address
-    }
-
 
     /// get (unverified) balance from the given account index
     /// - Parameter account: the index of the account

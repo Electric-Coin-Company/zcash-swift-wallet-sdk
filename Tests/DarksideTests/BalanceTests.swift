@@ -91,8 +91,8 @@ class BalanceTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: maxBalance,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -249,8 +249,8 @@ class BalanceTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: maxBalanceMinusOne,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "\(self.description) \(Date().description)"),
-                from: 0)
+                memo: try Memo(string: "\(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -406,8 +406,8 @@ class BalanceTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: maxBalanceMinusOne,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "test send \(self.description) \(Date().description)"),
-                from: 0)
+                memo: try Memo(string: "test send \(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -566,8 +566,8 @@ class BalanceTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -749,8 +749,8 @@ class BalanceTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "test send \(self.description) \(Date().description)"),
-                from: 0)
+                memo: try Memo(string: "test send \(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -915,8 +915,8 @@ class BalanceTests: XCTestCase {
                 spendingKey: spendingKeys,
                 zatoshi: sendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: memo,
-                from: 0)
+                memo: memo
+            )
             pendingTx = transaction
             sendExpectation.fulfill()
         } catch {
@@ -1090,8 +1090,8 @@ class BalanceTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "test send \(self.description)"),
-                from: 0)
+                memo: try Memo(string: "test send \(self.description)")
+            )
             pendingTx = pending
         } catch {
             // balance should be the same as before sending if transaction failed

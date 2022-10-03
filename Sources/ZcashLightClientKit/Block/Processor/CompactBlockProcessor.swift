@@ -536,7 +536,6 @@ public class CompactBlockProcessor {
     Stops the CompactBlockProcessor
 
     Note: retry count is reset
-    - Parameter cancelTasks: cancel the pending tasks. Defaults to true
     */
     public func stop() {
         self.backoffTimer?.invalidate()
@@ -557,7 +556,11 @@ public class CompactBlockProcessor {
 
         let lastDownloaded = try downloader.lastDownloadedBlockHeight()
         let height = Int32(height ?? lastDownloaded)
-        let nearestHeight = rustBackend.getNearestRewindHeight(dbData: config.dataDb, height: height, networkType: self.config.network.networkType)
+        let nearestHeight = rustBackend.getNearestRewindHeight(
+            dbData: config.dataDb,
+            height: height,
+            networkType: self.config.network.networkType
+        )
 
         guard nearestHeight > 0 else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(
@@ -1013,52 +1016,51 @@ extension CompactBlockProcessor.State: Equatable {
     }
 }
 
-// Transparent stuff
-
 extension CompactBlockProcessor {
-    public func utxoCacheBalance(tAddress: String) throws -> WalletBalance {
-        try rustBackend.downloadedUtxoBalance(dbData: config.dataDb, address: tAddress, networkType: config.network.networkType)
-    }
-}
-
-extension CompactBlockProcessor {
-    public func getUnifiedAddres(accountIndex: Int) -> UnifiedAddress? {
-        // TODO: perform migrations on the account table to accommodate Unified Address or UFVK to to derive from.
-        guard let address = try? accountRepository.findBy(account: accountIndex)?.address else {
-            return nil
-        }
-
-        return try? UnifiedAddress(encoding: address, network: self.config.network.networkType)
+    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
+        try? rustBackend.getCurrentAddress(
+            dbData: config.dataDb,
+            account: Int32(accountIndex),
+            networkType: config.network.networkType
+        )
     }
     
     public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
-        guard let zAddress = try? accountRepository.findBy(account: accountIndex)?.address else {
-            return nil
-        }
-
-        return try? SaplingAddress(encoding: zAddress, network: self.config.network.networkType)
+        getUnifiedAddress(accountIndex: accountIndex)?.saplingReceiver()
     }
     
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
-        guard let tAddress = try? accountRepository.findBy(account: accountIndex)?.transparentAddress else { return nil }
-
-        return TransparentAddress(validatedEncoding: tAddress)
-
+        getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
     
     public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
-        guard let tAddress = try? accountRepository.findBy(account: accountIndex)?.transparentAddress else {
+        guard accountIndex >= 0 else {
             throw CompactBlockProcessorError.invalidAccount
         }
-        return try utxoCacheBalance(tAddress: tAddress)
+
+        return WalletBalance(
+            verified: Zatoshi(
+                try rustBackend.getVerifiedTransparentBalance(
+                    dbData: config.dataDb,
+                    account: Int32(accountIndex),
+                    networkType: config.network.networkType)
+                ),
+            total: Zatoshi(
+                try rustBackend.getTransparentBalance(
+                    dbData: config.dataDb,
+                    account: Int32(accountIndex),
+                    networkType: config.network.networkType
+                )
+            )
+        )
     }
 }
 
 extension CompactBlockProcessor {
-    func refreshUTXOs(tAddress: String, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
+    func refreshUTXOs(tAddress: TransparentAddress, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
         let dataDb = self.config.dataDb
         
-        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddress: tAddress, startHeight: startHeight)
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddress: tAddress.stringEncoded, startHeight: startHeight)
         var utxos: [UnspentTransactionOutputEntity] = []
         
         do {

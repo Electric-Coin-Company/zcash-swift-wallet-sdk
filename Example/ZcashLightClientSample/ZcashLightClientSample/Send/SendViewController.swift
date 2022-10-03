@@ -9,6 +9,7 @@
 import UIKit
 import ZcashLightClientKit
 import KRProgressHUD
+
 class SendViewController: UIViewController {
     @IBOutlet weak var addressLabel: UILabel!
     @IBOutlet weak var amountLabel: UILabel!
@@ -213,8 +214,15 @@ class SendViewController: UIViewController {
             loggerProxy.warn("WARNING: Form is invalid")
             return
         }
-        // swiftlint:disable:next line_length force_try
-        guard let spendingKey = try! DerivationTool(networkType: kZcashNetwork.networkType).deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1).first else {
+
+        guard let spendingKey = try? DerivationTool(
+            networkType: kZcashNetwork.networkType
+        )
+            .deriveUnifiedSpendingKey(
+                seed: DemoAppConfig.seed,
+                accountIndex: 0
+            )
+        else {
             loggerProxy.error("NO SPENDING KEY")
             return
         }
@@ -226,9 +234,9 @@ class SendViewController: UIViewController {
                 let pendingTransaction = try await synchronizer.sendToAddress(
                     spendingKey: spendingKey,
                     zatoshi: zec,
-                    toAddress: recipient,
-                    memo: !self.memoField.text.isEmpty ? self.memoField.text : nil,
-                    from: 0
+                    // swiftlint:disable:next force_try
+                    toAddress: try! Recipient(recipient, network: kZcashNetwork.networkType),
+                    memo: try! self.memoField.text.asMemo()
                 )
                 KRProgressHUD.dismiss()
                 loggerProxy.info("transaction created: \(pendingTransaction)")
@@ -361,6 +369,17 @@ extension SDKSynchronizer {
 
         case .error(let e):
             return "Error: \(e.localizedDescription)"
+        }
+    }
+}
+
+extension Optional where Wrapped == String {
+    func asMemo() throws -> Memo {
+        switch self {
+        case .some(let string):
+            return try Memo(string: string)
+        case .none:
+            return .empty
         }
     }
 }

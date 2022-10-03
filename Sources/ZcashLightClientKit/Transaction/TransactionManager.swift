@@ -22,12 +22,12 @@ protocol OutboundTransactionManager {
     ) throws -> PendingTransactionEntity
 
     func encodeShieldingTransaction(
-        xprv: TransparentAccountPrivKey,
+        spendingKey: UnifiedSpendingKey,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity
     
     func encode(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity
     

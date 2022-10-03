@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0D1BE4512581585C00F78BE3 /* DerivationToolViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */; };
 		0D1BE47F2581937100F78BE3 /* GetUTXOsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */; };
 		0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
@@ -33,7 +32,6 @@
 		0DA1C4C627D11D9500E5006E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
 		0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
 		0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */; };
-		0DA1C4C927D11D9500E5006E /* DerivationToolViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */; };
 		0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
 		0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
@@ -72,7 +70,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DerivationToolViewController.swift; sourceTree = "<group>"; };
 		0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetUTXOsViewController.swift; sourceTree = "<group>"; };
 		0D49A18B241698A800CC0649 /* SampleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLogger.swift; sourceTree = "<group>"; };
 		0D4EBA302396CFD70041B507 /* SendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewController.swift; sourceTree = "<group>"; };
@@ -143,14 +140,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0D1BE44F2581583D00F78BE3 /* Derivation Tool */ = {
-			isa = PBXGroup;
-			children = (
-				0D1BE4502581585C00F78BE3 /* DerivationToolViewController.swift */,
-			);
-			path = "Derivation Tool";
-			sourceTree = "<group>";
-		};
 		0D1BE47D2581933C00F78BE3 /* Get UTXOs */ = {
 			isa = PBXGroup;
 			children = (
@@ -227,7 +216,6 @@
 			children = (
 				0D76121426B1D5D7001CA417 /* Constants */,
 				0D1BE47D2581933C00F78BE3 /* Get UTXOs */,
-				0D1BE44F2581583D00F78BE3 /* Derivation Tool */,
 				0D6CE8BB252E3C1A0005D707 /* Sapling Parameters */,
 				0DBF8F9323A80F0E0010B85F /* Transaction Detail */,
 				0DF53E6523A438BA00D7249C /* Paginated Transactions */,
@@ -530,7 +518,6 @@
 				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
 				0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */,
 				0D1BE47F2581937100F78BE3 /* GetUTXOsViewController.swift in Sources */,
-				0D1BE4512581585C00F78BE3 /* DerivationToolViewController.swift in Sources */,
 				0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */,
 				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
 				0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */,
@@ -562,7 +549,6 @@
 				0DA1C4C627D11D9500E5006E /* AppDelegate.swift in Sources */,
 				0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */,
 				0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */,
-				0DA1C4C927D11D9500E5006E /* DerivationToolViewController.swift in Sources */,
 				0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */,
 				0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */,
 				0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */,

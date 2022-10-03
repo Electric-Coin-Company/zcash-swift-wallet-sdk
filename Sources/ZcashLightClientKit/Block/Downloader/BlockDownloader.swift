@@ -212,7 +212,6 @@ extension CompactBlockDownloader: CompactBlockDownloading {
             throw CompactBlockDownloadError.generalError(error: error)
         }
     }
-
     
     func rewind(to height: BlockHeight) throws {
         try self.storage.rewind(to: height)

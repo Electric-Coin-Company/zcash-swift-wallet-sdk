@@ -17,9 +17,19 @@ extension CompactBlockProcessor {
         try Task.checkCancellation()
         
         setState(.fetching)
-        
+
         do {
-            let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
+            let tAddresses = try accountRepository.getAll()
+                .map { $0.account }
+                .map {
+                    try rustBackend.listTransparentReceivers(
+                        dbData: config.dataDb,
+                        account: Int32($0),
+                        networkType: config.network.networkType
+                    )
+                }
+                .flatMap({ $0 })
+
             do {
                 for tAddress in tAddresses {
                     guard try rustBackend.clearUtxos(
@@ -28,19 +38,19 @@ extension CompactBlockProcessor {
                         sinceHeight: config.walletBirthday - 1,
                         networkType: config.network.networkType
                     ) >= 0 else {
-                        throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "attempted to clear utxos but -1 was returned")
+                        throw rustBackend.lastError() ?? .genericError(message: "clearUtxos failed. no error message available")
                     }
                 }
             } catch {
                 throw FetchUTXOError.clearingFailed(error)
             }
-            
+
             var utxos: [UnspentTransactionOutputEntity] = []
-            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses, startHeight: config.walletBirthday)
+            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses.map { $0.stringEncoded }, startHeight: config.walletBirthday)
             for try await transaction in stream {
                 utxos.append(transaction)
             }
-            
+
             var refreshed: [UnspentTransactionOutputEntity] = []
             var skipped: [UnspentTransactionOutputEntity] = []
 
@@ -62,13 +72,13 @@ extension CompactBlockProcessor {
             }
 
             let result = (inserted: refreshed, skipped: skipped)
-            
+
             NotificationCenter.default.post(
                 name: .blockProcessorStoredUTXOs,
                 object: self,
                 userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs: result]
             )
-            
+
             if Task.isCancelled {
                 LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
             } else {

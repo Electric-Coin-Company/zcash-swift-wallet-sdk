@@ -37,12 +37,12 @@ class TestCoordinator {
     
     var completionHandler: ((SDKSynchronizer) throws -> Void)?
     var errorHandler: ((Error?) -> Void)?
-    var spendingKey: SaplingExtendedSpendingKey
+    var spendingKey: UnifiedSpendingKey
     var birthday: BlockHeight
     var channelProvider: ChannelProvider
     var synchronizer: SDKSynchronizer
     var service: DarksideWalletService
-    var spendingKeys: [SaplingExtendedSpendingKey]?
+    var spendingKeys: [UnifiedSpendingKey]?
     var databases: TemporaryTestDatabases
     let network: ZcashNetwork
     convenience init(
@@ -53,28 +53,13 @@ class TestCoordinator {
     ) throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
-        guard
-            let spendingKey = try derivationTool
-                .deriveSpendingKeys(
-                    seed: TestSeed().seed(),
-                    numberOfAccounts: 1
-                )
-                .first
-        else {
-            throw CoordinatorError.builderError
-        }
-        
-        guard
-            let ufvk = try derivationTool
-                .deriveUnifiedFullViewingKeysFromSeed(
-                    TestSeed().seed(),
-                    numberOfAccounts: 1
-                )
-                .first
-        else {
-            throw CoordinatorError.builderError
-        }
-        
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
+            seed: TestSeed().seed(),
+            accountIndex: 0
+        )
+
+        let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+
         try self.init(
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
@@ -85,7 +70,7 @@ class TestCoordinator {
     }
     
     required init(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
@@ -176,12 +161,12 @@ class TestCoordinator {
         self.errorHandler?(notification.userInfo?[SDKSynchronizer.NotificationKeys.error] as? Error)
     }
     
-    @objc func synchronizerSynced(_ notification: Notification) {
+    @objc func synchronizerSynced(_ notification: Notification) throws {
         if case .stopped = self.synchronizer.status {
             LoggerProxy.debug("WARNING: notification received after synchronizer was stopped")
             return
         }
-        try? self.completionHandler?(self.synchronizer)
+        try self.completionHandler?(self.synchronizer)
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {
@@ -288,13 +273,13 @@ enum TestSynchronizerBuilder {
         storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         seed: [UInt8]? = nil,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [SaplingExtendedSpendingKey]?, synchronizer: SDKSynchronizer) {
+    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
@@ -334,21 +319,13 @@ enum TestSynchronizerBuilder {
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [SaplingExtendedSpendingKey]?, synchronizer: SDKSynchronizer) {
-        guard
-            let spendingKey = try DerivationTool(networkType: network.networkType)
-                .deriveSpendingKeys(seed: seedBytes, numberOfAccounts: 1)
-                .first
-        else {
-            throw TestCoordinator.CoordinatorError.builderError
-        }
+    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
+        let spendingKey = try DerivationTool(networkType: network.networkType)
+                .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+
         
-        guard let uvk = try DerivationTool(networkType: network.networkType)
-            .deriveUnifiedFullViewingKeysFromSeed(seedBytes, numberOfAccounts: 1)
-            .first
-        else {
-            throw TestCoordinator.CoordinatorError.builderError
-        }
+        let uvk = try DerivationTool(networkType: network.networkType)
+            .deriveUnifiedFullViewingKey(from: spendingKey)
 
         return try build(
             rustBackend: rustBackend,

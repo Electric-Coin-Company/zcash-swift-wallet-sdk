@@ -62,8 +62,24 @@ class TransactionEnhancementTests: XCTestCase {
         
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        
-        _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1, networkType: network.networkType)
+
+        let ufvks = [
+            try DerivationTool(networkType: network.networkType)
+                .deriveUnifiedSpendingKey(seed: TestSeed().seed(), accountIndex: 0)
+                .map{
+                    try DerivationTool(networkType: network.networkType)
+                        .deriveUnifiedFullViewingKey(from: $0)
+                }
+
+        ]
+        guard try rustBackend.initAccountsTable(
+            dbData: processorConfig.dataDb,
+            ufvks: ufvks,
+            networkType: network.networkType
+        ) else {
+            XCTFail("Failed to init accounts table error: " + String(describing: rustBackend.getLastError()))
+            return
+        }
         
         let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
 

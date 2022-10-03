@@ -105,8 +105,8 @@ class PendingTransactionUpdatesTest: XCTestCase {
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
                 toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test"),
-                from: 0)
+                memo: try Memo(string: "this is a test")
+            )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {

@@ -109,6 +109,8 @@ class BlockScanTests: XCTestCase {
     }
     
     func testScanValidateDownload() async throws {
+        let seed = "testreferencealicetestreferencealice"
+
         logger = SampleLogger(logLevel: .debug)
         
         NotificationCenter.default.addObserver(
@@ -123,10 +125,18 @@ class BlockScanTests: XCTestCase {
             return
         }
 
-        let uvks = try DerivationTool(networkType: .testnet).deriveUnifiedFullViewingKeys(seed: TestSeed().seed(), numberOfAccounts: 1)
+        let derivationTool = DerivationTool(networkType: .testnet)
+        let ufvk = try derivationTool
+            .deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
+            .map { try derivationTool.deriveUnifiedFullViewingKey(from: $0) }
 
-        guard try self.rustWelding.initAccountsTable(dbData: self.dataDbURL, ufvks: uvks, networkType: network.networkType) else {
-            XCTFail("failed to init account table")
+
+        guard try self.rustWelding.initAccountsTable(
+            dbData: self.dataDbURL,
+            ufvks: [ufvk],
+            networkType: network.networkType
+        ) else {
+            XCTFail("failed to init account table. error: \(self.rustWelding.getLastError() ?? "no error found")")
             return
         }
         

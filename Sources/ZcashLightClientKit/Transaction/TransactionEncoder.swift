@@ -25,15 +25,16 @@ protocol TransactionEncoder {
     /// Blocking
     ///
     /// - Parameters:
-    /// - Parameter spendingKey: a `SaplingExtendedSpendingKey` containing the spending key
+    /// - Parameter spendingKey: a `UnifiedSpendingKey` containing the spending key
     /// - Parameter zatoshi: the amount to send in `Zatoshi`
     /// - Parameter to: string containing the recipient address
     /// - Parameter memoBytes: MemoBytes for this transaction
     /// - Parameter accountIndex: index of the account that will be used to send the funds
     ///
     /// - Throws: a TransactionEncoderError
+    /// 
     func createTransaction(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
         memoBytes: MemoBytes,
@@ -55,7 +56,7 @@ protocol TransactionEncoder {
     /// - Parameter result: a non escaping closure that receives a Result containing either an EncodedTransaction or a /// TransactionEncoderError
     // swiftlint:disable:next function_parameter_count
     func createTransaction(
-        spendingKey: SaplingExtendedSpendingKey,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
         memoBytes: MemoBytes,
@@ -68,13 +69,13 @@ protocol TransactionEncoder {
     Blocking
      
     - Parameters:
-    - Parameter tAccountPrivateKey: transparent account private key to spend the UTXOs
+    - Parameter spendingKey: `UnifiedSpendingKey` to spend the UTXOs
     - Parameter memoBytes: containing the memo (optional)
     - Parameter accountIndex: index of the account that will be used to send the funds
     - Throws: a TransactionEncoderError
     */
     func createShieldingTransaction(
-        tAccountPrivateKey: TransparentAccountPrivKey,
+        spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes,
         from accountIndex: Int
     ) throws -> EncodedTransaction
