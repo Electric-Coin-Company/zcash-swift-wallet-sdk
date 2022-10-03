@@ -21,9 +21,7 @@ class BlockStreamingTest: XCTestCase {
         try? FileManager.default.removeItem(at: __dataDbURL())
     }
 
-    func testStream() throws {
-        let expectation = XCTestExpectation(description: "blockstream expectation")
-        
+    func testStream() async throws {
         let service = LightWalletGRPCService(
             host: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
@@ -36,23 +34,19 @@ class BlockStreamingTest: XCTestCase {
         
         let startHeight = latestHeight - 100_000
         var blocks: [ZcashCompactBlock] = []
-        service.blockStream(startHeight: startHeight, endHeight: latestHeight) { result in
-            expectation.fulfill()
-            switch result {
-            case .success(let status):
-                XCTAssertEqual(GRPCResult.success, status)
-            case .failure(let error):
-                XCTFail("failed with error: \(error)")
+        let stream = service.blockStream(startHeight: startHeight, endHeight: latestHeight)
+        
+        do {
+            for try await compactBlock in stream {
+                print("received block \(compactBlock.height)")
+                blocks.append(compactBlock)
+                print("progressHeight: \(compactBlock.height)")
+                print("startHeight: \(startHeight)")
+                print("targetHeight: \(latestHeight)")
             }
-        } handler: { compactBlock in
-            print("received block \(compactBlock.height)")
-            blocks.append(compactBlock)
-        } progress: { progressReport in
-            print("progressHeight: \(progressReport.progressHeight)")
-            print("startHeight: \(progressReport.startHeight)")
-            print("targetHeight: \(progressReport.targetHeight)")
+        } catch {
+            XCTFail("failed with error: \(error)")
         }
-        wait(for: [expectation], timeout: 1000)
     }
     
     func testStreamCancellation() async throws {
