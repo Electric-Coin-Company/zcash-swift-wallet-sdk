@@ -96,12 +96,12 @@ class TestDbBuilder {
         return ReceivedNotesSQLDAO(dbProvider: provider)
     }
         
-    static func seed(db: CompactBlockRepository, with blockRange: CompactBlockRange) throws {
+    static func seed(db: CompactBlockRepository, with blockRange: CompactBlockRange) async throws {
         guard let blocks = StubBlockCreator.createBlockRange(blockRange) else {
             throw TestBuilderError.generalError
         }
         
-        try db.write(blocks: blocks)
+        try await db.write(blocks: blocks)
     }
 }
 

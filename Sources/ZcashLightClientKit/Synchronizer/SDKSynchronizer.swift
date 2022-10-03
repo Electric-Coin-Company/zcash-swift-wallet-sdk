@@ -584,29 +584,23 @@ public class SDKSynchronizer: Synchronizer {
         try blockProcessor.downloader.latestBlockHeight()
     }
     
-    public func latestUTXOs(address: String, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
+    public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
         guard initializer.isValidTransparentAddress(address) else {
-            result(.failure(SynchronizerError.generalError(message: "invalid t-address")))
-            return
+            throw SynchronizerError.generalError(message: "invalid t-address")
         }
         
-        initializer.lightWalletService.fetchUTXOs(
-            for: address,
-            height: network.constants.saplingActivationHeight
-        ) { [weak self] fetchResult in
-            guard let self = self else { return }
-            switch fetchResult {
-            case .success(let utxos):
-                do {
-                    try self.utxoRepository.clearAll(address: address)
-                    try self.utxoRepository.store(utxos: utxos)
-                    result(.success(utxos))
-                } catch {
-                    result(.failure(SynchronizerError.generalError(message: "\(error)")))
-                }
-            case .failure(let error):
-                result(.failure(SynchronizerError.connectionFailed(message: error)))
+        let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
+        
+        do {
+            var utxos: [UnspentTransactionOutputEntity] = []
+            for try await transactionEntity in stream {
+                utxos.append(transactionEntity)
             }
+            try self.utxoRepository.clearAll(address: address)
+            try self.utxoRepository.store(utxos: utxos)
+            return utxos
+        } catch {
+            throw SynchronizerError.generalError(message: "\(error)")
         }
     }
    

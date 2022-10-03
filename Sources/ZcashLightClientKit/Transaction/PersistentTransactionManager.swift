@@ -69,7 +69,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
-            let encodedTransaction = try self.encoder.createShieldingTransaction(
+            let encodedTransaction = try await self.encoder.createShieldingTransaction(
                 spendingKey: spendingKey,
                 memoBytes: try pendingTransaction.memo.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
@@ -102,7 +102,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
-            let encodedTransaction = try self.encoder.createTransaction(
+            let encodedTransaction = try await self.encoder.createTransaction(
                 spendingKey: spendingKey,
                 zatoshi: pendingTransaction.value,
                 to: pendingTransaction.toAddress,
@@ -155,7 +155,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 throw TransactionManagerError.internalInconsistency(storedTx)
             }
             
-            let response = try self.service.submit(spendTransaction: raw)
+            let response = try await self.service.submit(spendTransaction: raw)
             let transaction = try self.update(transaction: storedTx, on: response)
             
             guard response.errorCode >= 0 else {

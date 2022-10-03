@@ -48,21 +48,19 @@ protocol TransactionEncoder {
     /// Non-blocking
     ///
     /// - Parameters:
-    /// - Parameter spendingKey: a `SaplingExtendedSpendingKey` containing the spending key
+    /// - Parameter spendingKey: a `UnifiedSpendingKey` containing the spending key
     /// - Parameter zatoshi: the amount to send in `Zatoshi`
     /// - Parameter to: string containing the recipient address
     /// - Parameter MemoBytes: string containing the memo (optional)
     /// - Parameter accountIndex: index of the account that will be used to send the funds
-    /// - Parameter result: a non escaping closure that receives a Result containing either an EncodedTransaction or a /// TransactionEncoderError
     // swiftlint:disable:next function_parameter_count
     func createTransaction(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
         memoBytes: MemoBytes,
-        from accountIndex: Int,
-        result: @escaping TransactionEncoderResultBlock
-    )
+        from accountIndex: Int
+    ) async throws -> EncodedTransaction
     
     /**
     Creates a transaction that will attempt to shield transparent funds that are present on the cacheDB .throwing an exception whenever things are missing. When the provided wallet implementation doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using double-bangs for things).

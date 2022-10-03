@@ -10,7 +10,6 @@ import Foundation
 class WalletTransactionEncoder: TransactionEncoder {
     var rustBackend: ZcashRustBackendWelding.Type
     var repository: TransactionRepository
-    var queue: DispatchQueue
 
     private var outputParamsURL: URL
     private var spendParamsURL: URL
@@ -34,7 +33,6 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
         self.networkType = networkType
-        self.queue = DispatchQueue(label: "wallet.transaction.encoder.serial.queue")
     }
     
     convenience init(initializer: Initializer) {
@@ -55,7 +53,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes,
         from accountIndex: Int
-    ) throws -> EncodedTransaction {
+    ) async throws -> EncodedTransaction {
         let txId = try createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
@@ -75,35 +73,6 @@ class WalletTransactionEncoder: TransactionEncoder {
             return EncodedTransaction(transactionId: transaction.transactionId, raw: transaction.raw)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
-        }
-    }
-
-    // swiftlint:disable:next function_parameter_count
-    func createTransaction(
-        spendingKey: UnifiedSpendingKey,
-        zatoshi: Zatoshi,
-        to address: String,
-        memoBytes: MemoBytes,
-        from accountIndex: Int,
-        result: @escaping TransactionEncoderResultBlock
-    ) {
-        queue.async { [weak self] in
-            guard let self = self else { return }
-            do {
-                result(
-                    .success(
-                        try self.createTransaction(
-                            spendingKey: spendingKey,
-                            zatoshi: zatoshi,
-                            to: address,
-                            memoBytes: memoBytes,
-                            from: accountIndex
-                        )
-                    )
-                )
-            } catch {
-                result(.failure(error))
-            }
         }
     }
     
@@ -140,7 +109,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes,
         from accountIndex: Int
-    ) throws -> EncodedTransaction {
+    ) async throws -> EncodedTransaction {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
             memo: memoBytes,
@@ -161,7 +130,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
     }
     
-    func createShieldingSpend(spendingKey: UnifiedSpendingKey, memo: MemoBytes, accountIndex: Int) throws -> Int {
+    func createShieldingSpend(spendingKey: String, tsk: String, memo: String?, accountIndex: Int) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
