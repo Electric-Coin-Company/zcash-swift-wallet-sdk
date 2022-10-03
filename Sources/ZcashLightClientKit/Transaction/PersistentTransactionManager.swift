@@ -96,7 +96,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         }
         
         do {
-            let encodedTransaction = try self.encoder.createShieldingTransaction(
+            let encodedTransaction = try await self.encoder.createShieldingTransaction(
                 spendingKey: spendingKey,
                 tSecretKey: tsk,
                 memo: pendingTransaction.memo?.asZcashTransactionMemo(),
@@ -126,7 +126,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
-            let encodedTransaction = try self.encoder.createTransaction(
+            let encodedTransaction = try await self.encoder.createTransaction(
                 spendingKey: spendingKey,
                 zatoshi: pendingTransaction.intValue,
                 to: pendingTransaction.toAddress,
