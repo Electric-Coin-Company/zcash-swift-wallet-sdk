@@ -45,7 +45,7 @@ class GetUTXOsViewController: UIViewController {
 
             Task { @MainActor in
                 let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
-                    transparentAccountPrivateKey: transparentSecretKey,
+                    spendingKey: usk,
                     memo: try Memo(string: "shielding is fun!")
                 )
                 KRProgressHUD.dismiss()
