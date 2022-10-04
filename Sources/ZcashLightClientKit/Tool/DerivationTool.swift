@@ -8,15 +8,15 @@
 import Foundation
 
 public protocol KeyValidation {
-    func isValidExtendedViewingKey(_ extvk: String) throws -> Bool
+    func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool
     
-    func isValidTransparentAddress(_ tAddress: String) throws -> Bool
+    func isValidTransparentAddress(_ tAddress: String) -> Bool
     
-    func isValidSaplingAddress(_ zAddress: String) throws -> Bool
+    func isValidSaplingAddress(_ zAddress: String) -> Bool
 
-    func isValidSaplingExtendedSpendingKey(_ extsk: String) throws -> Bool
+    func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool
 
-    func isValidUnifiedAddress(_ unifiedAddress: String) throws -> Bool
+    func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool
 }
 
 public protocol KeyDeriving {
@@ -107,44 +107,24 @@ public class DerivationTool: KeyDeriving {
 }
 
 extension DerivationTool: KeyValidation {
-    public func isValidUnifiedAddress(_ unifiedAddress: String) throws -> Bool {
-        do {
-            return try DerivationTool.rustwelding.isValidUnifiedAddress(unifiedAddress, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
+    public func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool {
+        DerivationTool.rustwelding.isValidUnifiedFullViewingKey(ufvk, networkType: networkType)
     }
 
-    public func isValidExtendedViewingKey(_ extvk: String) throws -> Bool {
-        do {
-            return try DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(extvk, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
+    public func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool {
+        DerivationTool.rustwelding.isValidUnifiedAddress(unifiedAddress, networkType: networkType)
     }
     
-    public func isValidTransparentAddress(_ tAddress: String) throws -> Bool {
-        do {
-            return try DerivationTool.rustwelding.isValidTransparentAddress(tAddress, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
+    public func isValidTransparentAddress(_ tAddress: String) -> Bool {
+        DerivationTool.rustwelding.isValidTransparentAddress(tAddress, networkType: networkType)
     }
     
-    public func isValidSaplingAddress(_ zAddress: String) throws -> Bool {
-        do {
-            return try DerivationTool.rustwelding.isValidSaplingAddress(zAddress, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
+    public func isValidSaplingAddress(_ zAddress: String) -> Bool {
+        DerivationTool.rustwelding.isValidSaplingAddress(zAddress, networkType: networkType)
     }
 
-    public func isValidSaplingExtendedSpendingKey(_ extsk: String) throws -> Bool {
-        do {
-            return try DerivationTool.rustwelding.isValidSaplingExtendedSpendingKey(extsk, networkType: networkType)
-        } catch {
-            throw KeyDerivationErrors.derivationError(underlyingError: error)
-        }
+    public func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool {
+        DerivationTool.rustwelding.isValidSaplingExtendedSpendingKey(extsk, networkType: networkType)
     }
 }
 
