@@ -92,79 +92,39 @@ class ZcashRustBackendTests: XCTestCase {
     }
     
     func testIsValidTransparentAddressFalse() {
-        var isValid: Bool?
-        
-        XCTAssertNoThrow(
-            try {
-                isValid = try ZcashRustBackend.isValidTransparentAddress(
-                    "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc",
-                    networkType: networkType
-                )
-            }()
+        XCTAssertFalse(
+            ZcashRustBackend.isValidTransparentAddress(
+                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc",
+                networkType: networkType
+            )
         )
-        
-        if let valid = isValid {
-            XCTAssertFalse(valid)
-        } else {
-            XCTFail("Failed as invalid")
-        }
     }
     
     func testIsValidTransparentAddressTrue() {
-        var isValid: Bool?
-        
-        XCTAssertNoThrow(
-            try {
-                isValid = try ZcashRustBackend.isValidTransparentAddress(
-                    "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7",
-                    networkType: networkType
-                )
-            }()
+        XCTAssertTrue(
+            ZcashRustBackend.isValidTransparentAddress(
+                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7",
+                networkType: networkType
+            )
         )
-        
-        if let valid = isValid {
-            XCTAssertTrue(valid)
-        } else {
-            XCTFail("Failed as invalid")
-        }
     }
     
     func testIsValidSaplingAddressTrue() {
-        var isValid: Bool?
-        
-        XCTAssertNoThrow(
-            try {
-                isValid = try ZcashRustBackend.isValidSaplingAddress(
-                    "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc",
-                    networkType: networkType
-                )
-            }()
+        XCTAssertTrue(
+            ZcashRustBackend.isValidSaplingAddress(
+                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc",
+                networkType: networkType
+            )
         )
-        
-        if let valid = isValid {
-            XCTAssertTrue(valid)
-        } else {
-            XCTFail("Failed as invalid")
-        }
     }
     
     func testIsValidSaplingAddressFalse() {
-        var isValid: Bool?
-        
-        XCTAssertNoThrow(
-            try {
-                isValid = try ZcashRustBackend.isValidSaplingAddress(
-                    "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7",
-                    networkType: networkType
-                )
-            }()
+        XCTAssertFalse(
+            ZcashRustBackend.isValidSaplingAddress(
+                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7",
+                networkType: networkType
+            )
         )
-        
-        if let valid = isValid {
-            XCTAssertFalse(valid)
-        } else {
-            XCTFail("Failed as invalid")
-        }
     }
 
     func testListTransparentReceivers() throws {
@@ -172,7 +132,6 @@ class ZcashRustBackendTests: XCTestCase {
         let network = NetworkType.mainnet
         let tempDBs = TemporaryDbBuilder.build()
         let seed = testVector[0].root_seed!
-        let ufvk = try DerivationTool(networkType: network).deriveUnifiedSpendingKey(seed: seed, accountIndex: Int(testVector[0].account)).deriveFullViewingKey()
 
         XCTAssertEqual(
             try ZcashRustBackend.initDataDb(
@@ -183,13 +142,6 @@ class ZcashRustBackendTests: XCTestCase {
             .success
         )
 
-//        XCTAssertTrue(
-//            try ZcashRustBackend.initAccountsTable(
-//                dbData: tempDBs.dataDB,
-//                ufvks: [ufvk],
-//                networkType: network
-//            )
-//        )
         XCTAssertNoThrow(
             try ZcashRustBackend.createAccount(
                 dbData: tempDBs.dataDB,

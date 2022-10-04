@@ -67,10 +67,10 @@ class DerivationToolMainnetTests: XCTestCase {
         )
     }
     
-    func testIsValidViewingKey() throws {
-        XCTAssertTrue(try derivationTool.isValidExtendedViewingKey("zxviews1q0dm7hkzqqqqpqplzv3f50rl4vay8uy5zg9e92f62lqg6gzu63rljety32xy5tcyenzuu3n386ws772nm6tp4sads8n37gff6nxmyz8dn9keehmapk0spc6pzx5uxepgu52xnwzxxnuja5tv465t9asppnj3eqncu3s7g3gzg5x8ss4ypkw08xwwyj7ky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"))
+    func testIsValidViewingKey() {
+        XCTAssertTrue( DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey("zxviews1q0dm7hkzqqqqpqplzv3f50rl4vay8uy5zg9e92f62lqg6gzu63rljety32xy5tcyenzuu3n386ws772nm6tp4sads8n37gff6nxmyz8dn9keehmapk0spc6pzx5uxepgu52xnwzxxnuja5tv465t9asppnj3eqncu3s7g3gzg5x8ss4ypkw08xwwyj7ky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7", networkType: .mainnet))
         
-        XCTAssertFalse(try derivationTool.isValidExtendedViewingKey("zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"))
+        XCTAssertFalse( DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey("zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7", networkType: .mainnet))
     }
     
     func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
