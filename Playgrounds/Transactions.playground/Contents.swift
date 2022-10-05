@@ -137,6 +137,41 @@ struct SentTransaction {
     var raw: Data
     var value: Zatoshi // sent_total does not make sense if there's no other value that's subtotal
     var fee: Zatoshi // MISSING VALUE: FEE
+    var recipient: Recipient // MISSING VALUE: recipient, who is this transaction for?
     var memoCount: Int
     var blocktime: TimeInterval
+}
+
+
+
+/**
+ FOR REFERENCE: This is the detail model ECC Wallet uses
+ */
+struct DetailModel: Identifiable {
+
+    enum Status {
+        case paid(success: Bool)
+        case received
+    }
+    var id: String
+    var zAddress: String?
+    var date: Date
+    var amount: Zatoshi
+    var status: Status
+    var shielded: Bool = true
+    var memo: String? = nil
+    var minedHeight: Int = -1
+    var expirationHeight: Int = -1
+//    var title: String {
+//
+//        switch status {
+//        case .paid(let success):
+//            return success ? "You paid \(zAddress?.shortZaddress ?? "Unknown")" : "Unsent Transaction"
+//        case .received:
+//            return "\(zAddress?.shortZaddress ?? "Unknown") paid you"
+//        }
+//    }
+//    
+//    var subtitle: String
+
 }
