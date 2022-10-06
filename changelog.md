@@ -1,3 +1,16 @@
+# 0.16.11-beta
+Checkpoints added:
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1812500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1815000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1817500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1820000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1822500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1825000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1827500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1830000.json
+````
 # 0.16.10-beta
 - [#532] [0.16.x-beta] Download does not stop correctly
     
