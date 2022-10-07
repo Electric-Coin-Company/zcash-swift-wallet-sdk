@@ -91,7 +91,7 @@ class BlockScanTests: XCTestCase {
                 range: range
             )
             XCTAssertFalse(Task.isCancelled)
-            try compactBlockProcessor.compactBlockScanning(
+            try await compactBlockProcessor.compactBlockScanning(
                 rustWelding: rustWelding,
                 cacheDb: cacheDbURL,
                 dataDb: dataDbURL,

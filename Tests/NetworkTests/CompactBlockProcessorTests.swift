@@ -96,7 +96,7 @@ class CompactBlockProcessorTests: XCTestCase {
         }
     }
     
-    private func startProcessing() {
+    private func startProcessing() async {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
@@ -107,11 +107,15 @@ class CompactBlockProcessorTests: XCTestCase {
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
         
-        XCTAssertNoThrow(try processor.start())
+        do {
+            try await processor.start()
+        } catch {
+            XCTFail("shouldn't fail")
+        }
     }
     
-    func testStartNotifiesSuscriptors() {
-        startProcessing()
+    func testStartNotifiesSuscriptors() async {
+        await startProcessing()
    
         wait(
             for: [
@@ -125,7 +129,7 @@ class CompactBlockProcessorTests: XCTestCase {
         )
     }
     
-    func testProgressNotifications() {
+    func testProgressNotifications() async {
         let expectedUpdates = expectedBatches(
             currentHeight: processorConfig.walletBirthday,
             targetHeight: mockLatestHeight,
@@ -133,7 +137,7 @@ class CompactBlockProcessorTests: XCTestCase {
         )
         updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
         
-        startProcessing()
+        await startProcessing()
         wait(for: [updatedNotificationExpectation], timeout: 300)
     }
     
@@ -189,23 +193,23 @@ class CompactBlockProcessorTests: XCTestCase {
         )
     }
     
-    func testDetermineLowerBoundPastBirthday() {
+    func testDetermineLowerBoundPastBirthday() async {
         let errorHeight = 781_906
         
         let walletBirthday = 781_900
         
-        let result = processor.determineLowerBound(errorHeight: errorHeight, consecutiveErrors: 1, walletBirthday: walletBirthday)
+        let result = await processor.determineLowerBound(errorHeight: errorHeight, consecutiveErrors: 1, walletBirthday: walletBirthday)
         let expected = 781_886
         
         XCTAssertEqual(result, expected)
     }
     
-    func testDetermineLowerBound() {
+    func testDetermineLowerBound() async {
         let errorHeight = 781_906
         
         let walletBirthday = 780_900
         
-        let result = processor.determineLowerBound(errorHeight: errorHeight, consecutiveErrors: 0, walletBirthday: walletBirthday)
+        let result = await processor.determineLowerBound(errorHeight: errorHeight, consecutiveErrors: 0, walletBirthday: walletBirthday)
         let expected = 781_896
         
         XCTAssertEqual(result, expected)

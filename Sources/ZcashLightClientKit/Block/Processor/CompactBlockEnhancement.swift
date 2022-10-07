@@ -56,8 +56,8 @@ extension CompactBlockProcessor {
         try Task.checkCancellation()
         
         LoggerProxy.debug("Started Enhancing range: \(range)")
-        setState(.enhancing)
-        
+        state = .enhancing
+
         let blockRange = range.blockRange()
         var retries = 0
         let maxRetries = 5
