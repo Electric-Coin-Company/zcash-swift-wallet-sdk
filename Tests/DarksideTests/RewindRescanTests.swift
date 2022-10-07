@@ -64,7 +64,7 @@ class RewindRescanTests: XCTestCase {
         XCTFail("Failed with error: \(testError)")
     }
     
-    func testBirthdayRescan() throws {
+    func testBirthdayRescan() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
@@ -86,7 +86,7 @@ class RewindRescanTests: XCTestCase {
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to birthday
-        try coordinator.synchronizer.rewind(.birthday)
+        try await coordinator.synchronizer.rewind(.birthday)
         
         // assert that after the new height is
         XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
@@ -145,7 +145,7 @@ class RewindRescanTests: XCTestCase {
             height: Int32(targetHeight),
             networkType: network.networkType
         )
-        try coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
+        try await coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
         
         guard rewindHeight > 0 else {
             XCTFail("get nearest height failed error: \(ZcashRustBackend.getLastError() ?? "null")")
@@ -190,7 +190,7 @@ class RewindRescanTests: XCTestCase {
         wait(for: [sendExpectation], timeout: 15)
     }
 
-    func testRescanToTransaction() throws {
+    func testRescanToTransaction() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
@@ -216,7 +216,7 @@ class RewindRescanTests: XCTestCase {
             return
         }
 
-        try coordinator.synchronizer.rewind(.transaction(transaction.transactionEntity))
+        try await coordinator.synchronizer.rewind(.transaction(transaction.transactionEntity))
         
         // assert that after the new height is
         XCTAssertEqual(
@@ -363,7 +363,7 @@ class RewindRescanTests: XCTestCase {
         
         // rewind 5 blocks prior to sending
         
-        try coordinator.synchronizer.rewind(.height(blockheight: sentTxHeight - 5))
+        try await coordinator.synchronizer.rewind(.height(blockheight: sentTxHeight - 5))
         
         guard
             let pendingEntity = try coordinator.synchronizer.allPendingTransactions()

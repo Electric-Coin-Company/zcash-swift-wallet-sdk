@@ -33,7 +33,9 @@ class SendViewController: UIViewController {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
         // swiftlint:disable:next force_try
-        try! synchronizer.prepare()
+        Task { @MainActor in
+            try! await synchronizer.prepare()
+        }
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
@@ -41,12 +43,14 @@ class SendViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        do {
-            try synchronizer.start(retry: false)
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-        } catch {
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-            fail(error)
+        Task { @MainActor in
+            do {
+                try await synchronizer.start(retry: false)
+                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+            } catch {
+                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+                fail(error)
+            }
         }
     }
     

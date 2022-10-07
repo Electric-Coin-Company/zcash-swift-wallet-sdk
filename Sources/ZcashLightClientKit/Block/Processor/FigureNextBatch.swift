@@ -7,7 +7,7 @@
 
 import Foundation
 
-extension CompactBlockProcessor {
+public extension CompactBlockProcessor {
     enum NextState {
         case finishProcessing(height: BlockHeight)
         case processNewBlocks(range: CompactBlockRange)

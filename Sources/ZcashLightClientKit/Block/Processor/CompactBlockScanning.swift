@@ -12,7 +12,7 @@ extension CompactBlockProcessor {
     func compactBlockBatchScanning(range: CompactBlockRange) async throws {
         try Task.checkCancellation()
         
-        setState(.scanning)
+        state = .scanning
         let batchSize = UInt32(config.scanningBatchSize)
         
         do {
@@ -24,7 +24,7 @@ extension CompactBlockProcessor {
                     throw error
                 }
                 let scanFinishTime = Date()
-                NotificationCenter.default.post(
+                NotificationCenter.default.mainThreadPostNotification(
                     SDKMetrics.progressReportNotification(
                         progress: BlockProgress(
                             startHeight: range.lowerBound,
@@ -68,7 +68,7 @@ extension CompactBlockProcessor {
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
                         notifyProgress(.scan(progress))
-                        NotificationCenter.default.post(
+                        NotificationCenter.default.mainThreadPostNotification(
                             SDKMetrics.progressReportNotification(
                                 progress: progress,
                                 start: scanStartTime,
@@ -83,7 +83,7 @@ extension CompactBlockProcessor {
                     }
                 } while !Task.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
                 if Task.isCancelled {
-                    setState(.stopped)
+                    state = .stopped
                     LoggerProxy.debug("Warning: compactBlockBatchScanning cancelled")
                 }
             }

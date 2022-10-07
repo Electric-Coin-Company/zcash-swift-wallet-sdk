@@ -127,7 +127,7 @@ class CompactBlockReorgTests: XCTestCase {
         }
     }
     
-    private func startProcessing() {
+    private func startProcessing() async {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
@@ -139,11 +139,15 @@ class CompactBlockReorgTests: XCTestCase {
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
         reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
         
-        XCTAssertNoThrow(try processor.start())
+        do {
+            try await processor.start()
+        } catch {
+            XCTFail("shouldn't fail")
+        }
     }
     
-    func testNotifiesReorg() {
-        startProcessing()
+    func testNotifiesReorg() async {
+        await startProcessing()
 
         wait(
             for: [

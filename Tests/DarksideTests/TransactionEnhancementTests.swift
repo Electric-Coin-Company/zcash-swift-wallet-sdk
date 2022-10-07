@@ -110,7 +110,7 @@ class TransactionEnhancementTests: XCTestCase {
         NotificationCenter.default.removeObserver(self)
     }
     
-    private func startProcessing() throws {
+    private func startProcessing() async throws {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
@@ -120,17 +120,17 @@ class TransactionEnhancementTests: XCTestCase {
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
 
-        try processor.start()
+        try await processor.start()
     }
     
-    func testBasicEnhacement() throws {
+    func testBasicEnhacement() async throws {
         let targetLatestHeight = BlockHeight(663250)
         let walletBirthday = Checkpoint.birthday(with: 663151, network: network).height
         
-        try basicEnhancementTest(latestHeight: targetLatestHeight, walletBirthday: walletBirthday)
+        try await basicEnhancementTest(latestHeight: targetLatestHeight, walletBirthday: walletBirthday)
     }
     
-    func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) throws {
+    func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) async throws {
         do {
             try darksideWalletService.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
             try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue)
@@ -157,7 +157,7 @@ class TransactionEnhancementTests: XCTestCase {
         download and sync blocks from walletBirthday to firstLatestHeight
         */
         do {
-            try startProcessing()
+            try await startProcessing()
         } catch {
             XCTFail("Error: \(error)")
         }

@@ -83,7 +83,7 @@ class AdvancedReOrgTests: XCTestCase {
     10. sync up to received_Tx_height + 3
     11. verify that balance equals initial balance + tx amount
     */
-    func testReOrgChangesInboundTxMinedHeight() throws {
+    func testReOrgChangesInboundTxMinedHeight() async throws {
         hookToReOrgNotification()
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         var shouldContinue = false
@@ -101,16 +101,23 @@ class AdvancedReOrgTests: XCTestCase {
         
         var synchronizer: SDKSynchronizer?
         
-        try coordinator.sync(
-            completion: { synchro in
-                synchronizer = synchro
-                initialVerifiedBalance = synchro.initializer.getVerifiedBalance()
-                initialTotalBalance = synchro.initializer.getBalance()
-                preTxExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(
+                    completion: { synchro in
+                        synchronizer = synchro
+                        initialVerifiedBalance = synchro.initializer.getVerifiedBalance()
+                        initialTotalBalance = synchro.initializer.getBalance()
+                        preTxExpectation.fulfill()
+                        shouldContinue = true
+                        continuation.resume()
+                    },
+                    error: self.handleError
+                )
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
         
         wait(for: [preTxExpectation], timeout: 10)
         
@@ -132,12 +139,20 @@ class AdvancedReOrgTests: XCTestCase {
         var receivedTxTotalBalance = Zatoshi(-1)
         var receivedTxVerifiedBalance = Zatoshi(-1)
         
-        try coordinator.sync(completion: { synchro in
-            synchronizer = synchro
-            receivedTxVerifiedBalance = synchro.initializer.getVerifiedBalance()
-            receivedTxTotalBalance = synchro.initializer.getBalance()
-            receivedTxExpectation.fulfill()
-        }, error: self.handleError)
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchro in
+                    synchronizer = synchro
+                    receivedTxVerifiedBalance = synchro.initializer.getVerifiedBalance()
+                    receivedTxTotalBalance = synchro.initializer.getBalance()
+                    receivedTxExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
+            
         sleep(2)
         wait(for: [receivedTxExpectation], timeout: 10)
         
@@ -196,11 +211,21 @@ class AdvancedReOrgTests: XCTestCase {
         var afterReorgTxTotalBalance = Zatoshi(-1)
         var afterReorgTxVerifiedBalance = Zatoshi(-1)
         
-        try coordinator.sync(completion: { synchronizer in
-            afterReorgTxTotalBalance = synchronizer.initializer.getBalance()
-            afterReorgTxVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
-            reorgSyncexpectation.fulfill()
-        }, error: self.handleError(_:))
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(
+                    completion: { synchronizer in
+                        afterReorgTxTotalBalance = synchronizer.initializer.getBalance()
+                        afterReorgTxVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+                        reorgSyncexpectation.fulfill()
+                        continuation.resume()
+                    },
+                    error: self.handleError
+                )
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
         
         /*
         8. assert that reorg happened at received_Tx_height
@@ -224,11 +249,22 @@ class AdvancedReOrgTests: XCTestCase {
         
         try coordinator.applyStaged(blockheight: reorgedTxheight + 1)
         sleep(3)
-        try coordinator.sync(completion: { synchronizer in
-            finalReorgTxTotalBalance = synchronizer.initializer.getBalance()
-            finalReorgTxVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
-            finalsyncExpectation.fulfill()
-        }, error: self.handleError(_:))
+        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(
+                    completion: { synchronizer in
+                        finalReorgTxTotalBalance = synchronizer.initializer.getBalance()
+                        finalReorgTxVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+                        finalsyncExpectation.fulfill()
+                        continuation.resume()
+                    },
+                    error: self.handleError
+                )
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
         
         wait(for: [finalsyncExpectation], timeout: 5)
         sleep(3)
@@ -1239,7 +1275,7 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), initialTotalBalance)
     }
     
-    func testLongSync() throws {
+    func testLongSync() async throws {
         hookToReOrgNotification()
         
         /*
@@ -1258,21 +1294,31 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         sync to latest height
         */
-        try coordinator.sync(completion: { _ in
-            firstSyncExpectation.fulfill()
-        }, error: { error in
-            _ = try? self.coordinator.stop()
-            firstSyncExpectation.fulfill()
-            guard let testError = error else {
-                XCTFail("failed with nil error")
-                return
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(
+                    completion: { _ in
+                        firstSyncExpectation.fulfill()
+                        continuation.resume()
+                    }, error: { error in
+                        _ = try? self.coordinator.stop()
+                        firstSyncExpectation.fulfill()
+                        guard let testError = error else {
+                            XCTFail("failed with nil error")
+                            return
+                        }
+                        XCTFail("Failed with error: \(testError)")
+                    }
+                )
+            } catch {
+                continuation.resume(throwing: error)
             }
-            XCTFail("Failed with error: \(testError)")
-        })
+        }
         
         wait(for: [firstSyncExpectation], timeout: 500)
         
-        XCTAssertEqual(try coordinator.synchronizer.latestDownloadedHeight(), birthday + fullSyncLength)
+        let latestDownloadedHeight = try await coordinator.synchronizer.latestDownloadedHeight()
+        XCTAssertEqual(latestDownloadedHeight, birthday + fullSyncLength)
     }
     
     func handleError(_ error: Error?) {

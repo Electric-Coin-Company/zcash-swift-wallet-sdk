@@ -16,8 +16,8 @@ extension CompactBlockProcessor {
     func fetchUnspentTxOutputs(range: CompactBlockRange) async throws {
         try Task.checkCancellation()
         
-        setState(.fetching)
-        
+        state = .fetching
+
         do {
             let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
             do {
@@ -64,7 +64,7 @@ extension CompactBlockProcessor {
 
             let result = (inserted: refreshed, skipped: skipped)
             
-            NotificationCenter.default.post(
+            NotificationCenter.default.mainThreadPost(
                 name: .blockProcessorStoredUTXOs,
                 object: self,
                 userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs: result]
@@ -73,7 +73,7 @@ extension CompactBlockProcessor {
             if Task.isCancelled {
                 LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
             } else {
-                processBatchFinished(range: range)
+                await processBatchFinished(range: range)
             }
         } catch {
             throw error
