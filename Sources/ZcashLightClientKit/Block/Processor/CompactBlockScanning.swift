@@ -11,7 +11,6 @@ import Foundation
 extension CompactBlockProcessor {
     func compactBlockBatchScanning(range: CompactBlockRange) async throws {
         try Task.checkCancellation()
-        
         state = .scanning
 
         // TODO: remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
@@ -69,7 +68,6 @@ extension CompactBlockProcessor {
                     scannedNewBlocks = previousScannedHeight != lastScannedHeight
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
-                        notifyProgress(.scan(progress))
                         NotificationCenter.default.mainThreadPostNotification(
                             SDKMetrics.progressReportNotification(
                                 progress: progress,

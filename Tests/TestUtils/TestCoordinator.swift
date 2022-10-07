@@ -123,8 +123,8 @@ class TestCoordinator {
     
     func stop() throws {
         synchronizer.stop()
-        self.completionHandler = nil
-        self.errorHandler = nil
+        completionHandler = nil
+        errorHandler = nil
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
@@ -233,6 +233,7 @@ extension TestCoordinator {
                 cacheDb: config.cacheDb,
                 dataDb: config.dataDb,
                 downloadBatchSize: config.downloadBatchSize,
+                maxReorgSize: 10,
                 retries: config.retries,
                 maxBackoffInterval: config.maxBackoffInterval,
                 rewindDistance: config.rewindDistance,

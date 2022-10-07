@@ -139,12 +139,8 @@ class TransactionEnhancementTests: XCTestCase {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
-        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
         stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-        startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
-        startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
-
         txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
         idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
         await processor.start()
@@ -186,9 +182,6 @@ class TransactionEnhancementTests: XCTestCase {
 
         wait(
             for: [
-                downloadStartedExpect,
-                startedValidatingNotificationExpectation,
-                startedScanningNotificationExpectation,
                 txFoundNotificationExpectation,
                 idleNotificationExpectation
             ],
