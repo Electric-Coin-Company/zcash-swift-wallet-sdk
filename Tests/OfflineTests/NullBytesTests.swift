@@ -17,7 +17,7 @@ class NullBytesTests: XCTestCase {
         let validZaddr = "zs1gqtfu59z20s9t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp"
         let zAddrWithNullBytes = "\(validZaddr)\0something else that makes the address invalid"
         
-        XCTAssertFalse(try ZcashRustBackend.isValidSaplingAddress(zAddrWithNullBytes, networkType: networkType))
+        XCTAssertFalse(ZcashRustBackend.isValidSaplingAddress(zAddrWithNullBytes, networkType: networkType))
     }
     
     func testTaddrNullBytes() throws {
@@ -25,7 +25,7 @@ class NullBytesTests: XCTestCase {
         let validTAddr = "t1J5pTRzJi7j8Xw9VJTrPxPEkaigr69gKVT"
         let tAddrWithNullBytes = "\(validTAddr)\0fasdfasdf"
 
-        XCTAssertFalse(try ZcashRustBackend.isValidTransparentAddress(tAddrWithNullBytes, networkType: networkType))
+        XCTAssertFalse(ZcashRustBackend.isValidTransparentAddress(tAddrWithNullBytes, networkType: networkType))
     }
     
     func testInitAccountTableNullBytes() throws {
@@ -60,7 +60,7 @@ class NullBytesTests: XCTestCase {
             case .invalidInput:
                 XCTAssertTrue(true)
             default:
-                XCTFail("expected \(RustWeldingError.invalidInput) and got \(rustError)")
+                XCTFail("expected \(String(describing: RustWeldingError.invalidInput)) and got \(rustError)")
             }
         }
         
@@ -84,7 +84,7 @@ class NullBytesTests: XCTestCase {
             case .invalidInput:
                 XCTAssertTrue(true)
             default:
-                XCTFail("expected \(RustWeldingError.invalidInput) and got \(rustError)")
+                XCTFail("expected \(String(describing: RustWeldingError.invalidInput)) and got \(rustError)")
             }
         }
     }

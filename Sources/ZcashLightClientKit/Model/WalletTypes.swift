@@ -98,7 +98,7 @@ public struct SaplingExtendedFullViewingKey: Equatable, StringEncoded, Undescrib
 ///
 /// Transactions sent to this address are totally visible in the public
 /// ledger. See "Multiple transaction types" in https://z.cash/technology/
-public struct TransparentAddress: Equatable, StringEncoded {
+public struct TransparentAddress: Equatable, StringEncoded, Comparable {
     var encoding: String
 
     public var stringEncoded: String { encoding }
@@ -115,6 +115,10 @@ public struct TransparentAddress: Equatable, StringEncoded {
         }
 
         self.encoding = encoding
+    }
+
+    public static func < (lhs: TransparentAddress, rhs: TransparentAddress) -> Bool {
+        return lhs.encoding < rhs.encoding
     }
 }
 

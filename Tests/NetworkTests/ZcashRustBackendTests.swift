@@ -142,13 +142,15 @@ class ZcashRustBackendTests: XCTestCase {
             .success
         )
 
+        var usk: UnifiedSpendingKey?;
         XCTAssertNoThrow(
-            try ZcashRustBackend.createAccount(
+            usk = try ZcashRustBackend.createAccount(
                 dbData: tempDBs.dataDB,
                 seed: seed,
-                networkType: .mainnet
+                networkType: network
             )
         )
+        XCTAssertEqual(usk?.account, 0)
 
         let expectedReceivers = testVector.map {
             UnifiedAddress(validatedEncoding: $0.unified_addr!)
@@ -156,13 +158,17 @@ class ZcashRustBackendTests: XCTestCase {
         .compactMap({ $0.transparentReceiver() })
 
 
+        let expectedUAs = testVector.map{
+            UnifiedAddress(validatedEncoding: $0.unified_addr!)
+        }
+
         guard expectedReceivers.count >= 2 else {
             XCTFail("not enough transparent receivers")
             return
         }
-
-        for _ in [0 ... 2] {
-            XCTAssertNoThrow(
+        var uAddresses = [UnifiedAddress]()
+        for i in (0 ... 2) {
+            uAddresses.append(
                 try ZcashRustBackend.getCurrentAddress(
                     dbData: tempDBs.dataDB,
                     account: 0,
@@ -170,22 +176,37 @@ class ZcashRustBackendTests: XCTestCase {
                 )
             )
 
-            XCTAssertNoThrow(
-                try ZcashRustBackend.getNextAvailableAddress(
+            if (i < 2) {
+                _ = try ZcashRustBackend.getNextAvailableAddress(
                     dbData: tempDBs.dataDB,
                     account: 0,
                     networkType: network
                 )
-            )
+            }
         }
 
-        XCTAssertEqual(
-            expectedReceivers,
-            try ZcashRustBackend.listTransparentReceivers(
+        uAddresses.append(
+            try ZcashRustBackend.getCurrentAddress(
                 dbData: tempDBs.dataDB,
                 account: 0,
                 networkType: network
             )
+        )
+
+        XCTAssertEqual(
+            uAddresses,
+            expectedUAs
+        )
+
+        let actualReceivers = try ZcashRustBackend.listTransparentReceivers(
+            dbData: tempDBs.dataDB,
+            account: 0,
+            networkType: network
+        )
+
+        XCTAssertEqual(
+            expectedReceivers.sorted(),
+            actualReceivers.sorted()
         )
     }
 }
