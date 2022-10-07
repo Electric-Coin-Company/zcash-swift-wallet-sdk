@@ -14,10 +14,12 @@ extension CompactBlockProcessor {
         case failedWithError(_ error: Error?)
     }
 
+    enum CompactBlockValidationNextBatchError: Error {
+        case validationFailedRequestNextBatch
+    }
+
     func compactBlockValidation() async throws {
         try Task.checkCancellation()
-        
-        state = .validating
 
         let result = rustBackend.validateCombinedChain(dbCache: config.cacheDb, dbData: config.dataDb, networkType: config.network.networkType)
         
@@ -25,7 +27,7 @@ extension CompactBlockProcessor {
             switch result {
             case 0:
                 let error = CompactBlockValidationError.failedWithError(rustBackend.lastError())
-                LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
+                LoggerProxy.debug("block validation failed with error: \(String(describing: error))")
                 throw error
                 
             case ZcashRustBackendWeldingConstants.validChain:
@@ -38,7 +40,7 @@ extension CompactBlockProcessor {
                 
             default:
                 let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))
-                LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
+                LoggerProxy.debug("block validation failed with error: \(String(describing: error))")
                 throw error
             }
         } catch {
@@ -51,6 +53,7 @@ extension CompactBlockProcessor {
             case .validationFailed(let height):
                 LoggerProxy.debug("chain validation at height: \(height)")
                 await validationFailed(at: height)
+                throw CompactBlockValidationNextBatchError.validationFailedRequestNextBatch
             case .failedWithError(let err):
                 guard let validationFailure = err else {
                     LoggerProxy.error("validation failed without a specific error")

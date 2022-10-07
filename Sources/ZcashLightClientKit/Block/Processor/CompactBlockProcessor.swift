@@ -56,49 +56,48 @@ public enum CompactBlockProcessorNotificationKey {
 }
 
 public enum CompactBlockProgress {
-    case download(_ progress: BlockProgress)
-    case validate
-    case scan(_ progress: BlockProgress)
-    case enhance(_ progress: EnhancementStreamProgress)
-    case fetch
-    
+    /// `.blockProgress` consists of downloading, storing, validating and scanning the blocks. Covers first 90% of the overall progress.
+    case blockProgress(BlockProgress)
+    /// When `.blockProgress` is done the enhancing continues and 8% is reserved for it (90-98).
+    case enhancementStreamProgress(EnhancementStreamProgress)
+    /// `.customValue` represents last 2% (98-100), reserved for the fetching UTXOs which is an atomic operation.
+    /// It can also be used for the testing purposes because it can represent any progress value from 0-100%.
+    case customValue(Float)
+
     public var progress: Float {
         switch self {
-        case .download(let blockProgress), .scan(let blockProgress):
-            return blockProgress.progress
-        case .enhance(let enhancementProgress):
-            return enhancementProgress.progress
-        default:
-            return 0
+        case .blockProgress(let blockProgress):
+            return blockProgress.progress * 0.9
+        case .enhancementStreamProgress(let enhancementStreamProgress):
+            return enhancementStreamProgress.progress * 0.08 + 0.9
+        case .customValue(let value):
+            return value
         }
     }
     
     public var progressHeight: BlockHeight? {
         switch self {
-        case .download(let blockProgress), .scan(let blockProgress):
+        case .blockProgress(let blockProgress):
             return blockProgress.progressHeight
-        case .enhance(let enhancementProgress):
-            return enhancementProgress.lastFoundTransaction?.minedHeight
-        default:
+        case .enhancementStreamProgress(let enhancementStreamProgress):
+            return enhancementStreamProgress.lastFoundTransaction?.minedHeight
+        case .customValue:
             return 0
         }
     }
     
     public var blockDate: Date? {
-        if case .enhance(let enhancementProgress) = self, let time = enhancementProgress.lastFoundTransaction?.blockTimeInSeconds {
+        if case .enhancementStreamProgress(let enhancementStreamProgress) = self, let time = enhancementStreamProgress.lastFoundTransaction?.blockTimeInSeconds {
             return Date(timeIntervalSince1970: time)
         }
-        
         return nil
     }
     
     public var targetHeight: BlockHeight? {
-        switch self {
-        case .download(let blockProgress), .scan(let blockProgress):
+        if case .blockProgress(let blockProgress) = self {
             return blockProgress.targetHeight
-        default:
-            return nil
         }
+        return nil
     }
 }
 
@@ -138,19 +137,9 @@ public extension Notification.Name {
     static let blockProcessorStatusChanged = Notification.Name(rawValue: "CompactBlockProcessorStatusChanged")
 
     /**
-    Notification sent when a compact block processor starts downloading
+    Notification sent when a compact block processor starts syncing
     */
-
-    static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
-    /**
-    Notification sent when the compact block processor starts validating the chain state
-    */
-
-    static let blockProcessorStartedValidating = Notification.Name(rawValue: "CompactBlockProcessorStartedValidating")
-    /**
-    Notification sent when the compact block processor starts scanning blocks from the cache
-    */
-    static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
+    static let blockProcessorStartedSyncing = Notification.Name(rawValue: "CompactBlockProcessorStartedSyncing")
     
     /**
     Notification sent when the compact block processor stop() method is called
@@ -198,11 +187,7 @@ public extension Notification.Name {
     */
     static let blockProcessorStoredUTXOs = Notification.Name(rawValue: "CompactBlockProcessorStoredUTXOs")
     
-    static let blockProcessorStartedEnhancing = Notification.Name(rawValue: "CompactBlockProcessorStartedEnhancing")
-    
     static let blockProcessorEnhancementProgress = Notification.Name("CompactBlockProcessorEnhancementProgress")
-    
-    static let blockProcessorStartedFetching = Notification.Name(rawValue: "CompactBlockProcessorStartedFetching")
     
     /**
     Notification sent when the grpc service connection detects a change. Query the user info object  for status change details `currentConnectivityStatus` for current and previous with `previousConnectivityStatus`
@@ -210,6 +195,42 @@ public extension Notification.Name {
     static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
 }
 
+/// Processing of the blocks in parallel is handled by this Actor.
+actor BlockParallelProcessingHandler {
+    var isProcessing = false
+    var needsNextBatch = false
+    var processingHeight: BlockHeight = 0
+    var taskPool = 0
+    
+    func updateIsProcessing(_ processing: Bool) {
+        isProcessing = processing
+    }
+
+    func updateNeedsNextBatch(_ nextBatch: Bool) {
+        needsNextBatch = nextBatch
+    }
+
+    func updateProcessingHeight(_ newHeight: BlockHeight) {
+        processingHeight = newHeight
+    }
+
+    func resetTaskPool() {
+        taskPool = 0
+    }
+
+    func incrementTaskPool() {
+        taskPool += 1
+    }
+
+    func decrementTaskPool() {
+        taskPool -= 1
+    }
+    
+    func reset() {
+        taskPool = 0
+        needsNextBatch = false
+    }
+}
 
 /// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
 /// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
@@ -222,8 +243,10 @@ public actor CompactBlockProcessor {
     public struct Configuration {
         public var cacheDb: URL
         public var dataDb: URL
-        public var downloadBatchSize = ZcashSDK.DefaultDownloadBatch
+        public var downloadBatchSize = ZcashSDK.DefaultDownloadBatch == 0 ? 100 : ZcashSDK.DefaultDownloadBatch
         public var scanningBatchSize = ZcashSDK.DefaultScanningBatch
+        public var tasksInParallel = ZcashSDK.tasksInParallel
+        public var maxReorgSize = ZcashSDK.maxReorgSize
         public var retries = ZcashSDK.defaultRetries
         public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
         public var rewindDistance = ZcashSDK.defaultRewindDistance
@@ -240,6 +263,7 @@ public actor CompactBlockProcessor {
             cacheDb: URL,
             dataDb: URL,
             downloadBatchSize: Int,
+            maxReorgSize: Int,
             retries: Int,
             maxBackoffInterval: TimeInterval,
             rewindDistance: Int,
@@ -251,6 +275,7 @@ public actor CompactBlockProcessor {
             self.dataDb = dataDb
             self.network = network
             self.downloadBatchSize = downloadBatchSize
+            self.maxReorgSize = maxReorgSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
@@ -274,32 +299,12 @@ public actor CompactBlockProcessor {
         /**
         connected and downloading blocks
         */
-        case downloading
-        
+        case syncing
+
         /**
         was doing something but was paused
         */
         case stopped
-
-        /**
-        processor is validating
-        */
-        case validating
-
-        /**
-        processor is scanning
-        */
-        case scanning
-        
-        /**
-        Processor is Enhancing transactions
-        */
-        case enhancing
-        
-        /**
-        fetching utxos
-        */
-        case fetching
 
         /**
         was processing but erred
@@ -312,12 +317,16 @@ public actor CompactBlockProcessor {
         case synced
     }
     
+    let parallelHandler = BlockParallelProcessingHandler()
+    
     public internal(set) var state: State = .stopped {
         didSet {
             transitionState(from: oldValue, to: self.state)
         }
     }
     
+    let processingLock = NSLock()
+
     var config: Configuration {
         willSet {
             self.stop()
@@ -429,6 +438,10 @@ public actor CompactBlockProcessor {
         cancelableTask?.cancel()
     }
 
+    func cancelTask() {
+        cancelableTask?.cancel()
+    }
+    
     static func validateServerInfo(
         _ info: LightWalletdInfo,
         saplingActivation: BlockHeight,
@@ -517,7 +530,7 @@ public actor CompactBlockProcessor {
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
 
-        cancelableTask?.cancel()
+        cancelTask()
 
         self.retryAttempts = 0
     }
@@ -589,27 +602,123 @@ public actor CompactBlockProcessor {
     
     /// Processes new blocks on the given range based on the configuration set for this instance
     func processNewBlocks(range: CompactBlockRange) async {
+        /// Barrier ensuring `processNewBlocks` is safe to call again.
+        /// The next run of this method is allowed only when Tasks from the previous
+        /// run are canceled and finished work.
+        while await parallelHandler.isProcessing {
+            await Task.yield()
+        }
+        await parallelHandler.updateIsProcessing(true)
+        await parallelHandler.reset()
+        await parallelHandler.updateProcessingHeight(range.lowerBound)
+
         self.foundBlocks = true
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
+
+        state = .syncing
+        let downloadBatchSize = config.downloadBatchSize
+        let tasksInParallel = config.tasksInParallel
         
         cancelableTask = Task(priority: .userInitiated) {
             do {
-                try await compactBlockStreamDownload(
-                    blockBufferSize: config.downloadBufferSize,
-                    startHeight: range.lowerBound,
-                    targetHeight: range.upperBound
-                )
-                try await compactBlockValidation()
-                try await compactBlockBatchScanning(range: range)
+                let wholeRange = range.upperBound - range.lowerBound
+                let steps = wholeRange / downloadBatchSize
+                
+                let _ = try await withThrowingTaskGroup(of: Void.self, returning: Void.self) { [self] taskGroup in
+                    for i in 0...steps {
+                        /// Barrier ensuring only `tasksInParallel` number of tasks run in parallel.
+                        /// Once the value is hit, the next Task starts after some Task finishes the processing.
+                        while await parallelHandler.taskPool >= tasksInParallel {
+                            try Task.checkCancellation()
+                            await Task.yield()
+                        }
+                        await parallelHandler.incrementTaskPool()
+                        
+                        let internalDownloadBatchSize: Int
+                        let internalHeightStart = i * downloadBatchSize
+                        if internalHeightStart + downloadBatchSize < wholeRange + 1 {
+                            internalDownloadBatchSize = downloadBatchSize
+                        } else {
+                            internalDownloadBatchSize = wholeRange - internalHeightStart + 1
+                        }
+                        
+                        let processRange = CompactBlockRange(
+                            uncheckedBounds: (
+                                range.lowerBound + internalHeightStart,
+                                range.lowerBound + internalHeightStart + internalDownloadBatchSize - 1
+                            )
+                        )
+                        
+                        taskGroup.addTask { [self] in
+                            do {
+                                try Task.checkCancellation()
+                                var buffer = try await compactBlockStreamDownload(
+                                    blockBufferSize: config.downloadBufferSize,
+                                    startHeight: processRange.lowerBound,
+                                    targetHeight: processRange.upperBound
+                                )
+
+                                /// Barrier ensuring order processing. Only the Task that is supposed to run store, valid and scan is
+                                /// allowed to continue. The other Tasks wait till it's their time. The synchronization value is the
+                                /// `processingHeight` of the range. Once Task finishes, it increments the `processingHeight`
+                                /// which unblocks next Task. This way we make processing in order + sequentually done.
+                                while await parallelHandler.processingHeight != processRange.lowerBound {
+                                    try Task.checkCancellation()
+                                    await Task.yield()
+                                }
+                                
+                                try Task.checkCancellation()
+                                try await storeCompactBlocks(buffer: buffer)
+                                buffer?.removeAll()
+                                
+                                try Task.checkCancellation()
+                                try await compactBlockValidation()
+                                
+                                try Task.checkCancellation()
+                                try await compactBlockBatchScanning(range: processRange)
+                                
+                                try Task.checkCancellation()
+                                try await storage.deleteCachedBlocks(processRange, keepCountOfLatestBlocks: config.maxReorgSize)
+                                
+                                try Task.checkCancellation()
+                                await parallelHandler.updateProcessingHeight(processRange.upperBound + 1)
+                                await parallelHandler.decrementTaskPool()
+
+                                let progress = BlockProgress(startHeight: range.lowerBound, targetHeight: range.upperBound, progressHeight: processRange.upperBound)
+                                await notifyProgress(.blockProgress(progress))
+                            } catch {
+                                await parallelHandler.decrementTaskPool()
+                                if error is CompactBlockValidationNextBatchError {
+                                    await parallelHandler.updateNeedsNextBatch(true)
+                                }
+                                throw error
+                            }
+                        }
+                    }
+                }
+                
+                try Task.checkCancellation()
                 try await compactBlockEnhancement(range: range)
+                
+                try Task.checkCancellation()
                 try await fetchUnspentTxOutputs(range: range)
-                //state = .stopped
+                
+                await parallelHandler.updateIsProcessing(false)
+
+                await nextBatch()
             } catch {
                 if !(Task.isCancelled) {
                     await fail(error)
                 } else {
                     state = .stopped
+                }
+                
+                await parallelHandler.updateIsProcessing(false)
+                
+                if await parallelHandler.needsNextBatch {
+                    await parallelHandler.updateNeedsNextBatch(false)
+                    await nextBatch()
                 }
             }
         }
@@ -656,7 +765,7 @@ public actor CompactBlockProcessor {
     }
 
     func severeFailure(_ error: Error) {
-        cancelableTask?.cancel()
+        cancelTask()
         LoggerProxy.error("show stoppper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
@@ -668,7 +777,7 @@ public actor CompactBlockProcessor {
     func fail(_ error: Error) async {
         // todo specify: failure
         LoggerProxy.error("\(error)")
-        cancelableTask?.cancel()
+        cancelTask()
         self.retryAttempts += 1
         self.processingError = error
         switch self.state {
@@ -684,7 +793,7 @@ public actor CompactBlockProcessor {
     }
 
     func retryProcessing(range: CompactBlockRange) async {
-        cancelableTask?.cancel()
+        cancelTask()
         // update retries
         self.retryAttempts += 1
         self.processingError = nil
@@ -736,7 +845,6 @@ public actor CompactBlockProcessor {
     }
 
     private func nextBatch() async {
-        state = .downloading
         do {
             let nextState = try await NextStateHelper.nextStateAsync(
                 service: self.service,
@@ -769,8 +877,8 @@ public actor CompactBlockProcessor {
 
     internal func validationFailed(at height: BlockHeight) async {
         // cancel all Tasks
-        cancelableTask?.cancel()
-
+        cancelTask()
+        
         // register latest failure
         self.lastChainValidationFailure = height
         self.consecutiveChainValidationErrors += 1
@@ -800,7 +908,7 @@ public actor CompactBlockProcessor {
             )
             
             // process next batch
-            await self.nextBatch()
+            //await self.nextBatch()
         } catch {
             await self.fail(error)
         }
@@ -820,7 +928,7 @@ public actor CompactBlockProcessor {
             return
         }
         
-        await nextBatch()
+        //await nextBatch()
     }
     
     private func processingFinished(height: BlockHeight) async {
@@ -847,13 +955,13 @@ public actor CompactBlockProcessor {
                     guard let self = self else { return }
                     if await self.shouldStart {
                         LoggerProxy.debug(
-                                """
-                                Timer triggered: Starting compact Block processor!.
-                                Processor State: \(await self.state)
-                                latestHeight: \(await self.latestBlockHeight)
-                                attempts: \(await self.retryAttempts)
-                                lowerbound: \(String(describing: await self.lowerBoundHeight))
-                                """
+                            """
+                            Timer triggered: Starting compact Block processor!.
+                            Processor State: \(await self.state)
+                            latestHeight: \(await self.latestBlockHeight)
+                            attempts: \(await self.retryAttempts)
+                            lowerbound: \(String(describing: await self.lowerBoundHeight))
+                            """
                         )
                         await self.start()
                     } else if await self.maxAttemptsReached {
@@ -882,23 +990,15 @@ public actor CompactBlockProcessor {
         )
         
         switch newValue {
-        case .downloading:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedDownloading, object: self)
+        case .syncing:
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedSyncing, object: self)
         case .synced:
             // transition to this state is handled by `processingFinished(height: BlockHeight)`
             break
         case .error(let err):
             notifyError(err)
-        case .scanning:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedScanning, object: self)
         case .stopped:
             NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStopped, object: self)
-        case .validating:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedValidating, object: self)
-        case .enhancing:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
-        case .fetching:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedFetching, object: self)
         }
     }
 
@@ -955,14 +1055,10 @@ extension CompactBlockProcessor.State: Equatable {
     public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
         switch  (lhs, rhs) {
         case
-            (.downloading, .downloading),
-            (.scanning, .scanning),
-            (.validating, .validating),
+            (.syncing, .syncing),
             (.stopped, .stopped),
             (.error, .error),
-            (.synced, .synced),
-            (.enhancing, enhancing),
-            (.fetching, .fetching):
+            (.synced, .synced):
             return true
         default:
             return false

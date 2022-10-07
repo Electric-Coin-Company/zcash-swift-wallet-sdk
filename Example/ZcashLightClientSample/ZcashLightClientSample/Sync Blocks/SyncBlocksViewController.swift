@@ -131,7 +131,7 @@ class SyncBlocksViewController: UIViewController {
     
     func buttonText(for state: CompactBlockProcessor.State) -> String {
         switch state {
-        case .downloading, .scanning, .validating:
+        case .syncing:
             return "Pause"
         case .stopped:
             return "Start"
@@ -139,31 +139,19 @@ class SyncBlocksViewController: UIViewController {
             return "Retry"
         case .synced:
             return "Chill!"
-        case .enhancing:
-            return "Enhance"
-        case .fetching:
-            return "fetch"
         }
     }
     
     func textFor(state: CompactBlockProcessor.State) -> String {
         switch state {
-        case .downloading:
-            return "Downloading ⛓"
+        case .syncing:
+            return "Syncing ⛓"
         case .error:
             return "error 💔"
-        case .scanning:
-            return "Scanning Blocks 🤖"
         case .stopped:
             return "Stopped 🚫"
-        case .validating:
-            return "Validating chain 🕵️‍♀️"
         case .synced:
             return "Synced 😎"
-        case .enhancing:
-            return "Enhancing 🤖"
-        case .fetching:
-            return "Fetching UTXOs"
         }
     }
 }

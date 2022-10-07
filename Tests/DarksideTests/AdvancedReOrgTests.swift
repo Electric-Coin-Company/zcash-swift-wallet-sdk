@@ -488,19 +488,19 @@ class AdvancedReOrgTests: XCTestCase {
             preReorgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
-        
+
         wait(for: [firstSyncExpectation], timeout: 10)
-        
+
         /*
         trigger reorg
         */
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txIndexChangeAfter))
         try coordinator.applyStaged(blockheight: 663200)
-        
+
         sleep(1)
-        
+
         let afterReorgSync = XCTestExpectation(description: "after reorg sync")
-        
+
         var postReorgTotalBalance = Zatoshi.zero
         var postReorgVerifiedBalance = Zatoshi.zero
         try coordinator.sync(completion: { synchronizer in
@@ -508,9 +508,9 @@ class AdvancedReOrgTests: XCTestCase {
             postReorgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
             afterReorgSync.fulfill()
         }, error: self.handleError)
-        
+
         wait(for: [reorgExpectation, afterReorgSync], timeout: 30)
-        
+
         XCTAssertEqual(postReorgVerifiedBalance, preReorgVerifiedBalance)
         XCTAssertEqual(postReorgTotalBalance, preReorgTotalBalance)
     }

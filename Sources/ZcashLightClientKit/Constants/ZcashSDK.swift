@@ -77,7 +77,10 @@ public enum ZcashSDK {
     /// Default batch size for downloading blocks for the compact block processor. This value was changed due to
     /// full blocks causing block download memory usage significantly and also timeouts on grpc calls.
     /// this value is subject to change in the future.
-    public static var DefaultDownloadBatch = 10
+    public static var DefaultDownloadBatch = 100
+    
+    /// Default number of Tasks running in parallel and downloading block ranges.
+    public static var tasksInParallel = 10
 
     /// Default batch size for scanning blocks for the compact block processor
     public static var DefaultScanningBatch = 100

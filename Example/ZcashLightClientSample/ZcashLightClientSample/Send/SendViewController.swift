@@ -329,17 +329,13 @@ extension SendViewController: UITextViewDelegate {
 extension SDKSynchronizer {
     static func textFor(state: SyncStatus) -> String {
         switch state {
-        case .downloading(let progress):
-            return "Downloading \(progress.progressHeight)/\(progress.targetHeight)"
-
-        case .enhancing(let enhanceProgress):
-            return "Enhancing tx \(enhanceProgress.enhancedTransactions) of \(enhanceProgress.totalTransactions)"
-
-        case .fetching:
-            return "fetching UTXOs"
-
-        case .scanning(let scanProgress):
-            return "Scanning: \(scanProgress.progressHeight)/\(scanProgress.targetHeight)"
+        case .syncing(let blockProcessorProgress):
+            if case .blockProgress(let blockProgress) = blockProcessorProgress {
+                return "Syncing \(blockProgress.progressHeight)/\(blockProgress.targetHeight)"
+            } else if case .enhancementStreamProgress(let enhancementStreamProgress) = blockProcessorProgress {
+                return "Syncing \(enhancementStreamProgress.progress)"
+            }
+            return "Syncing"
 
         case .disconnected:
             return "disconnected 💔"
@@ -352,9 +348,6 @@ extension SDKSynchronizer {
 
         case .unprepared:
             return "Unprepared 😅"
-
-        case .validating:
-            return "Validating"
 
         case .error(let e):
             return "Error: \(e.localizedDescription)"

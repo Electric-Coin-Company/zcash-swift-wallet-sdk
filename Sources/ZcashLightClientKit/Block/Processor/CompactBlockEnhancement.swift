@@ -56,7 +56,6 @@ extension CompactBlockProcessor {
         try Task.checkCancellation()
         
         LoggerProxy.debug("Started Enhancing range: \(range)")
-        state = .enhancing
 
         let blockRange = range.blockRange()
         var retries = 0
@@ -79,7 +78,7 @@ extension CompactBlockProcessor {
                         let confirmedTx = try await enhance(transaction: transaction)
                         retry = false
                         notifyProgress(
-                            .enhance(
+                            .enhancementStreamProgress(
                                 EnhancementStreamProgress(
                                     totalTransactions: transactions.count,
                                     enhancedTransactions: index + 1,
