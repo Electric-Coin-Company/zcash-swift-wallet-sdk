@@ -124,8 +124,6 @@ class PendingTransactionRepositoryTests: XCTestCase {
     }
     
     func testUpdate() {
-        let newAccountIndex = 1
-        let newValue = Zatoshi(123_456)
         let transaction = createAndStoreMockedTransaction()
 
         guard let id = transaction.id else {
@@ -141,9 +139,12 @@ class PendingTransactionRepositoryTests: XCTestCase {
             XCTFail("failed to store tx")
             return
         }
+
+        let oldEncodeAttempts = stored!.encodeAttempts
+        let oldSubmitAttempts = stored!.submitAttempts
         
-        stored!.accountIndex = newAccountIndex
-        stored!.value = newValue
+        stored!.encodeAttempts += 1
+        stored!.submitAttempts += 5
         
         XCTAssertNoThrow(try pendingRepository.update(stored!))
         
@@ -152,8 +153,8 @@ class PendingTransactionRepositoryTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(updatedTransaction.value, newValue)
-        XCTAssertEqual(updatedTransaction.accountIndex, newAccountIndex)
+        XCTAssertEqual(updatedTransaction.encodeAttempts, oldEncodeAttempts + 1)
+        XCTAssertEqual(updatedTransaction.submitAttempts, oldSubmitAttempts + 5)
         XCTAssertEqual(updatedTransaction.toAddress, stored!.toAddress)
     }
     

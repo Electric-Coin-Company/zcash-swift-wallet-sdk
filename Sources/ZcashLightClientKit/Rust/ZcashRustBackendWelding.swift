@@ -31,23 +31,6 @@ public enum DbInitResult {
 }
 
 protocol ZcashRustBackendWelding {
-    /// clears the cached utxos for the given address from the specified height on for the
-    /// provided addresses. This will clear all UTXOs for the address from the database.
-    /// if there are unspent funds, the balance will be zero after clearing up UTXOs,
-    /// needing to put them back again to restore the balance (if they weren't spent)
-    /// - Parameters:
-    ///   - dbData: location of the data db file
-    ///   - address: the address of the UTXO
-    ///   - sinceheight: clear the UXTOs from that address on
-    ///   - networkType: network type of this key
-    /// - Returns: the amount of UTXOs cleared or -1 on error
-    static func clearUtxos(
-        dbData: URL,
-        address: TransparentAddress,
-        sinceHeight: BlockHeight,
-        networkType: NetworkType
-    ) throws -> Int32
-
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
     /// account identifiers known, to the wallet database.
     ///

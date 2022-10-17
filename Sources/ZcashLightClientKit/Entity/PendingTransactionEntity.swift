@@ -13,12 +13,12 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
     /**
     recipient address
     */
-    var toAddress: String { get set }
+    var toAddress: String { get }
 
     /**
     index of the account from which the funds were sent
     */
-    var accountIndex: Int { get set }
+    var accountIndex: Int { get }
     
     /**
     height which the block was mined at.
@@ -34,7 +34,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
     /**
     value is 1 if the transaction was cancelled
     */
-    var cancelled: Int { get set }
+    var cancelled: Int { get }
 
     /**
     how many times this transaction encoding was attempted
@@ -61,7 +61,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
      
     - Note: represented in timeIntervalySince1970
     */
-    var createTime: TimeInterval { get set }
+    var createTime: TimeInterval { get }
     
     /**
     Checks whether this transaction is the same as the given transaction
