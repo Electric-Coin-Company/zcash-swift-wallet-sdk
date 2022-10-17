@@ -210,6 +210,27 @@ public extension Notification.Name {
     static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
 }
 
+/// Processing of the blocks in parallel is handled by this Actor.
+actor BlockParallelProcessingHandler {
+    var processingHeight: BlockHeight
+    var downloadPool = 0
+    
+    init(processingHeight: BlockHeight) {
+        self.processingHeight = processingHeight
+    }
+    
+    func updateHeight(_ newHeight: BlockHeight) {
+        processingHeight = newHeight
+    }
+
+    func incrementDownloadPool() {
+        downloadPool += 1
+    }
+
+    func decrementDownloadPool() {
+        downloadPool -= 1
+    }
+}
 
 /// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
 /// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
@@ -224,6 +245,7 @@ public actor CompactBlockProcessor {
         public var dataDb: URL
         public var downloadBatchSize = ZcashSDK.DefaultDownloadBatch
         public var scanningBatchSize = ZcashSDK.DefaultScanningBatch
+        public var downloadsInParallel = ZcashSDK.downloadsInParallel
         public var retries = ZcashSDK.defaultRetries
         public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
         public var rewindDistance = ZcashSDK.defaultRewindDistance
@@ -318,6 +340,10 @@ public actor CompactBlockProcessor {
         }
     }
     
+//    var isAllowedToProcess = 0
+    
+    let processingLock = NSLock()
+
     var config: Configuration {
         willSet {
             self.stop()
@@ -594,24 +620,129 @@ public actor CompactBlockProcessor {
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         
-        cancelableTask = Task(priority: .userInitiated) {
-            do {
-                try await compactBlockStreamDownload(
-                    blockBufferSize: config.downloadBufferSize,
-                    startHeight: range.lowerBound,
-                    targetHeight: range.upperBound
-                )
-                try await compactBlockValidation()
-                try await compactBlockBatchScanning(range: range)
-                try await compactBlockEnhancement(range: range)
-                try await fetchUnspentTxOutputs(range: range)
-            } catch {
-                if error is CancellationError {
+        let startTime = Date().timeIntervalSince1970
+        print("_PARALLEL processNewBlocks STARTED ------------------------------------------------------ \(range) \(startTime)")
+        
+        if true {
+            let downloadBatchSize = config.downloadBatchSize
+            let downloadsInParallel = config.downloadsInParallel
+            let parallelHandler = BlockParallelProcessingHandler(processingHeight: range.lowerBound)
+            
+            cancelableTask = Task(priority: .userInitiated) {
+                do {
+                    let wholeRange = range.upperBound - range.lowerBound
+                    let steps = wholeRange / downloadBatchSize
+
+                    for i in 0...steps {
+                        let internalDownloadBatchSize: Int
+                        let internalHeightStart = i * downloadBatchSize
+                        if internalHeightStart + downloadBatchSize < wholeRange + 1 {
+                            internalDownloadBatchSize = downloadBatchSize
+                        } else {
+                            internalDownloadBatchSize = wholeRange - internalHeightStart + 1
+                        }
+
+                        let processRange = CompactBlockRange(
+                            uncheckedBounds: (
+                                range.lowerBound + internalHeightStart,
+                                range.lowerBound + internalHeightStart + internalDownloadBatchSize - 1
+                            )
+                        )
+                        
+                        do {
+                            /// Barrier ensuring only `downloadsInParallel` number of downloads run in parallel.
+                            /// Once the value is hit, the next download starts after some Task processes store, validate + scan.
+                            while await parallelHandler.downloadPool >= downloadsInParallel {
+                                try Task.checkCancellation()
+                                await Task.yield()
+                            }
+                            
+                            await parallelHandler.incrementDownloadPool()
+                            
+                            try Task.checkCancellation()
+                            var buffer = try await compactBlockStreamDownload(
+                                blockBufferSize: config.downloadBufferSize,
+                                startHeight: processRange.lowerBound,
+                                targetHeight: processRange.upperBound
+                            )
+                            
+  //                          print("_PARALLEL processRange \(processRange)")
+                            
+                            /// Barrier ensuring order processing. Only the Task that is supposed to run store, valid and scan is
+                            /// allowed to continue. The other Tasks wait till it's their time. The synchronization value is the
+                            /// `processingHeight` of the range. Once Task finishes, it increments the `processingHeight`
+                            /// which unblocks next Task. This way we make processing in order + sequentually done.
+                            while await parallelHandler.processingHeight != processRange.lowerBound {
+                                try Task.checkCancellation()
+                                await Task.yield()
+                            }
+
+//                            print("_PARALLEL processRange DONE \(processRange)")
+
+                            try Task.checkCancellation()
+                            try await storeCompactBlocks(buffer: buffer)
+                            buffer?.removeAll()
+
+                            try Task.checkCancellation()
+                            try await compactBlockValidation()
+
+                            try Task.checkCancellation()
+                            try await compactBlockBatchScanning(range: processRange)
+                            //print("_PARALLEL scanned \(processRange.upperBound)")
+
+                            try Task.checkCancellation()
+                            await parallelHandler.updateHeight(processRange.upperBound + 1)
+                            await parallelHandler.decrementDownloadPool()
+                            // TODO: removing from the cache - SQL (hold last 100!)
+                        } catch {
+                            throw error
+                        }
+                    }
                     
+                    /// Barrier that holds the parent Task till the Tasks for the download, store, valid and scan operations end.
+                    /// The synchronization mechanism is the `processingHeight`, when the value is exactly 1 block above
+                    /// the requested range, it means the whole range was successfully processed, otherwise some failure happened
+                    /// and the whole parent Task is canceled.
+                    while await parallelHandler.processingHeight != range.upperBound + 1 {
+                        try Task.checkCancellation()
+                        await Task.yield()
+                    }
+//                    let endTime2 = Date().timeIntervalSince1970
+//                    print("_PARALLEL processNewBlocks2 END <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< \(range) \(endTime2 - startTime)s")
+
+                    try Task.checkCancellation()
+                    try await compactBlockEnhancement(range: range)
+                    try Task.checkCancellation()
+                    try await fetchUnspentTxOutputs(range: range)
+                    let endTime = Date().timeIntervalSince1970
+                    print("_PARALLEL processNewBlocks END <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< \(range) \(endTime - startTime)s")
+                } catch {
+                    if !(Task.isCancelled) {
+                        await fail(error)
+                    }
+                    return
                 }
-                
-                if !(Task.isCancelled) {
-                    await fail(error)
+            }
+        } else {
+            cancelableTask = Task(priority: .userInitiated) {
+                do {
+                    var buffer = try await compactBlockStreamDownload(
+                        blockBufferSize: config.downloadBufferSize,
+                        startHeight: range.lowerBound,
+                        targetHeight: range.upperBound
+                    )
+                    try await storeCompactBlocks(buffer: buffer)
+                    buffer?.removeAll()
+                    try await compactBlockValidation()
+                    try await compactBlockBatchScanning(range: range)
+                    try await compactBlockEnhancement(range: range)
+                    try await fetchUnspentTxOutputs(range: range)
+                    let endTime = Date().timeIntervalSince1970
+                    print("_PARALLEL processNewBlocks END <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< \(range) \(endTime - startTime)s")
+                } catch {
+                    if !(Task.isCancelled) {
+                        await fail(error)
+                    }
                 }
             }
         }
@@ -628,7 +759,7 @@ public actor CompactBlockProcessor {
         var userInfo: [AnyHashable: Any] = [:]
         userInfo[CompactBlockProcessorNotificationKey.progress] = progress
 
-        LoggerProxy.debug("progress: \(progress)")
+        //LoggerProxy.debug("progress: \(progress)")
         
         NotificationCenter.default.mainThreadPost(
             name: Notification.Name.blockProcessorUpdated,

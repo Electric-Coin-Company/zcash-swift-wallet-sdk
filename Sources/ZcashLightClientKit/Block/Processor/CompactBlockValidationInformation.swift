@@ -25,35 +25,35 @@ extension CompactBlockProcessor {
             switch result {
             case 0:
                 let error = CompactBlockValidationError.failedWithError(rustBackend.lastError())
-                LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
+                //LoggerProxy.debug("block validation failed with error: \(String(describing: error))")
                 throw error
                 
             case ZcashRustBackendWeldingConstants.validChain:
                 if Task.isCancelled {
                     state = .stopped
-                    LoggerProxy.debug("Warning: compactBlockValidation cancelled")
+                    //LoggerProxy.debug("Warning: compactBlockValidation cancelled")
                 }
-                LoggerProxy.debug("validateChainFinished")
+                //LoggerProxy.debug("validateChainFinished")
                 break
                 
             default:
                 let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))
-                LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
+                //LoggerProxy.debug("block validation failed with error: \(String(describing: error))")
                 throw error
             }
         } catch {
             guard let validationError = error as? CompactBlockValidationError else {
-                LoggerProxy.error("Warning: compactBlockValidation returning generic error: \(error)")
+                //LoggerProxy.error("Warning: compactBlockValidation returning generic error: \(error)")
                 return
             }
             
             switch validationError {
             case .validationFailed(let height):
-                LoggerProxy.debug("chain validation at height: \(height)")
+                //LoggerProxy.debug("chain validation at height: \(height)")
                 await validationFailed(at: height)
             case .failedWithError(let err):
                 guard let validationFailure = err else {
-                    LoggerProxy.error("validation failed without a specific error")
+                    //LoggerProxy.error("validation failed without a specific error")
                     await self.fail(CompactBlockProcessorError.generalError(message: "validation failed without a specific error"))
                     return
                 }

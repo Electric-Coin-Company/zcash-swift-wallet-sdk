@@ -57,7 +57,7 @@ extension CompactBlockProcessor {
                         networkType: config.network.networkType
                     ) ? refreshed.append(utxo) : skipped.append(utxo)
                 } catch {
-                    LoggerProxy.error("failed to put utxo - error: \(error)")
+                    //LoggerProxy.error("failed to put utxo - error: \(error)")
                     skipped.append(utxo)
                 }
             }
@@ -71,7 +71,7 @@ extension CompactBlockProcessor {
             )
             
             if Task.isCancelled {
-                LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
+                //LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
             } else {
                 await processBatchFinished(range: range)
             }

@@ -9,11 +9,16 @@
 import Foundation
 
 extension CompactBlockProcessor {
+    func storeCompactBlocks(buffer: [ZcashCompactBlock]?) async throws {
+        guard let buffer else { return }
+        try await storage.write(blocks: buffer)
+    }
+    
     func compactBlockStreamDownload(
         blockBufferSize: Int,
         startHeight: BlockHeight? = nil,
         targetHeight: BlockHeight? = nil
-    ) async throws {
+    ) async throws -> [ZcashCompactBlock]? {
         try Task.checkCancellation()
         
         state = .downloading
@@ -41,10 +46,11 @@ extension CompactBlockProcessor {
             for try await zcashCompactBlock in stream {
                 try Task.checkCancellation()
                 buffer.append(zcashCompactBlock)
-                if buffer.count >= blockBufferSize {
-                    try await storage.write(blocks: buffer)
-                    buffer.removeAll(keepingCapacity: true)
-                }
+                // TODO: needs to be removed!!!
+//                if buffer.count >= blockBufferSize {
+//                    try await storage.write(blocks: buffer)
+//                    buffer.removeAll(keepingCapacity: true)
+//                }
                 
                 let progress = BlockProgress(
                     startHeight: startHeight,
@@ -53,13 +59,14 @@ extension CompactBlockProcessor {
                 )
                 notifyProgress(.download(progress))
             }
-            try await storage.write(blocks: buffer)
-            buffer.removeAll(keepingCapacity: true)
+            return buffer
         } catch {
             guard let err = error as? LightWalletServiceError, case .userCancelled = err else {
                 throw error
             }
         }
+        
+        return nil
     }
 }
 
@@ -98,7 +105,7 @@ extension CompactBlockProcessor {
             let localDownloadedHeight = try await self.storage.latestHeightAsync()
             
             if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight > startHeight {
-                LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
+                //LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
                 startHeight = localDownloadedHeight + 1
             }
             
