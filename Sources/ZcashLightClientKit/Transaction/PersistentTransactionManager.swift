@@ -8,7 +8,7 @@
 import Foundation
 
 enum TransactionManagerError: Error {
-    case couldNotCreateSpend(recipient: Recipient, account: Int, zatoshi: Zatoshi)
+    case couldNotCreateSpend(recipient: PendingTransactionRecipient, account: Int, zatoshi: Zatoshi)
     case encodingFailed(PendingTransactionEntity)
     case updateFailed(PendingTransactionEntity)
     case notPending(PendingTransactionEntity)
@@ -41,7 +41,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     
     func initSpend(
         zatoshi: Zatoshi,
-        recipient: Recipient,
+        recipient: PendingTransactionRecipient,
         memo: MemoBytes,
         from accountIndex: Int
     ) throws -> PendingTransactionEntity {
@@ -49,7 +49,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             by: try repository.create(
                 PendingTransaction(
                     value: zatoshi,
-                    recipient: .address(recipient),
+                    recipient: recipient,
                     memo: memo,
                     account: accountIndex
                 )
