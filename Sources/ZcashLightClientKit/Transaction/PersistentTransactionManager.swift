@@ -269,9 +269,7 @@ enum OutboundTransactionManagerBuilder {
 
 enum PendingTransactionRepositoryBuilder {
     static func build(initializer: Initializer) throws -> PendingTransactionRepository {
-        let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
-        try dao.createrTableIfNeeded()
-        return dao
+        PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
     }
 }
 

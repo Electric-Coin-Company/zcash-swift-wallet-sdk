@@ -19,8 +19,10 @@ class PendingTransactionRepositoryTests: XCTestCase {
     override func setUp() {
         super.setUp()
         cleanUpDb()
-        let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: try! TestDbBuilder.pendingTransactionsDbURL().absoluteString))
-        try! dao.createrTableIfNeeded()
+        let pendingDbProvider = SimpleConnectionProvider(path: try! TestDbBuilder.pendingTransactionsDbURL().absoluteString)
+        let dao = PendingTransactionSQLDAO(dbProvider: pendingDbProvider)
+        let migrations = try! MigrationManager(cacheDbConnection: InMemoryDbProvider(), pendingDbConnection: pendingDbProvider, networkType: .testnet)
+        try! migrations.performMigration(ufvks: [])
         pendingRepository = dao
     }
     
