@@ -78,7 +78,7 @@ struct SentNote: SentNoteEntity, Codable {
         case outputPool = "output_pool"
         case outputIndex = "output_index"
         case account = "from_account"
-        case address
+        case address = "to_address"
         case value
         case memo
     }
@@ -131,7 +131,7 @@ class SentNotesSQLDAO: SentNotesRepository {
         //                sent_notes.tx as transactionId,
 //                sent_notes.output_index as outputIndex,
 //                sent_notes.account as account,
-//                sent_notes.address as address,
+//                sent_notes.to_address as address,
 //                sent_notes.value as value,
 //                sent_notes.memo as memo
 //            FROM sent_note JOIN transactions

@@ -115,7 +115,7 @@ extension TransactionSQLDAO {
                         transactions.txid           AS rawTransactionId,
                         transactions.expiry_height  AS expiryHeight,
                         transactions.raw            AS raw,
-                        sent_notes.address          AS toAddress,
+                        sent_notes.to_address       AS toAddress,
                         sent_notes.value            AS value,
                         sent_notes.memo             AS memo,
                         sent_notes.id_note          AS noteId,
@@ -184,7 +184,7 @@ extension TransactionSQLDAO {
                     transactions.txid           AS rawTransactionId,
                     transactions.expiry_height  AS expiryHeight,
                     transactions.raw            AS raw,
-                    sent_notes.address          AS toAddress,
+                    sent_notes.to_address       AS toAddress,
                         CASE
                             WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                             ELSE received_notes.value
@@ -205,8 +205,8 @@ extension TransactionSQLDAO {
                         ON transactions.id_tx = sent_notes.tx
                     LEFT JOIN blocks
                         ON transactions.block = blocks.height
-                WHERE (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                OR sent_notes.address IS NOT NULL
+                WHERE (sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                OR sent_notes.to_address IS NOT NULL
                 ORDER  BY ( minedheight IS NOT NULL ),
                     minedheight DESC,
                     blocktimeinseconds DESC,
@@ -231,7 +231,7 @@ extension TransactionSQLDAO {
                     transactions.txid            AS rawTransactionId,
                     transactions.expiry_height   AS expiryHeight,
                     transactions.raw             AS raw,
-                    sent_notes.address           AS toAddress,
+                    sent_notes.to_address        AS toAddress,
                     CASE
                         WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                         ELSE received_notes.value
@@ -253,8 +253,8 @@ extension TransactionSQLDAO {
                     LEFT JOIN blocks
                         ON transactions.block = blocks.height
                 WHERE (\(fromTransaction.blockTimeInSeconds), \(fromTransaction.transactionIndex)) > (blocktimeinseconds, transactionIndex) AND
-                    (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                    OR sent_notes.address IS NOT NULL
+                    (sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                    OR sent_notes.to_address IS NOT NULL
                 ORDER  BY ( minedheight IS NOT NULL ),
                     minedheight DESC,
                     blocktimeinseconds DESC,
@@ -297,7 +297,7 @@ extension TransactionSQLDAO {
                     transactions.txid           AS rawTransactionId,
                     transactions.expiry_height  AS expiryHeight,
                     transactions.raw            AS raw,
-                    sent_notes.address          AS toAddress,
+                    sent_notes.to_address       AS toAddress,
                     CASE
                         WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                         ELSE received_notes.value
@@ -320,8 +320,8 @@ extension TransactionSQLDAO {
                         ON transactions.block = blocks.height
                 WHERE (\(range.start.height) <= minedheight
                     AND minedheight <= \(range.end.height)) AND
-                    (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                    OR sent_notes.address IS NOT NULL
+                    (sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                    OR sent_notes.to_address IS NOT NULL
                 ORDER  BY ( minedheight IS NOT NULL ),
                     minedheight DESC,
                     blocktimeinseconds DESC,
@@ -342,7 +342,7 @@ extension TransactionSQLDAO {
                         transactions.txid           AS rawTransactionId,
                         transactions.expiry_height  AS expiryHeight,
                         transactions.raw            AS raw,
-                        sent_notes.address          AS toAddress,
+                        sent_notes.to_address       AS toAddress,
                         CASE
                             WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                             ELSE received_notes.value
@@ -365,8 +365,8 @@ extension TransactionSQLDAO {
                             ON transactions.block = blocks.height
                     WHERE minedheight >= 0
                         AND rawTransactionId == \(Blob(bytes: rawId.bytes)) AND
-                            (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                        OR sent_notes.address IS NOT NULL
+                            (sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                        OR sent_notes.to_address IS NOT NULL
                     LIMIT 1
                 """
             )
