@@ -152,7 +152,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
             accountId = Int(acct)
         }
 
-        try container.encode(toAddress, forKey: .toAddress)
+        try container.encodeIfPresent(toAddress, forKey: .toAddress)
         try container.encodeIfPresent(accountId, forKey: .toInternalAccount)
         try container.encode(self.accountIndex, forKey: .accountIndex)
         try container.encode(self.minedHeight, forKey: .minedHeight)
