@@ -293,14 +293,14 @@ public class Initializer {
     checks if the provided address is a valid sapling address
     */
     public func isValidSaplingAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidSaplingAddress(address, networkType: network.networkType)) ?? false
+        rustBackend.isValidSaplingAddress(address, networkType: network.networkType)
     }
 
     /**
     checks if the provided address is a transparent zAddress
     */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidTransparentAddress(address, networkType: network.networkType)) ?? false
+        rustBackend.isValidTransparentAddress(address, networkType: network.networkType)
     }
     
     func isSpendParameterPresent() -> Bool {

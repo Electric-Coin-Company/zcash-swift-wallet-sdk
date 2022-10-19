@@ -94,15 +94,15 @@ class DerivationToolMainnetTests: XCTestCase {
         XCTAssertEqual(ufvks[0], expectedViewingKey)
     }
     
-    func testShouldFailOnInvalidChecksumAddresses() throws {
+    func testShouldFailOnInvalidChecksumAddresses() {
         let testAddress = "t14oHp2v54vfmdgQ3v3SNuQga8JKHTNi2a1"
-        XCTAssertFalse(try derivationTool.isValidTransparentAddress(testAddress))
+        XCTAssertFalse(derivationTool.isValidTransparentAddress(testAddress))
     }
 
     func testSpendingKeyValidationFailsOnInvalidKey() throws {
         let wrongSpendingKey = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vvZzZzZz"
 
-        XCTAssertFalse(try derivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey))
+        XCTAssertFalse(derivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey))
     }
     // TODO: Address encoding does not catch this test https://github.com/zcash/ZcashLightClientKit/issues/509
 //    func testSpendingKeyValidationThrowsWhenWrongNetwork() throws {
