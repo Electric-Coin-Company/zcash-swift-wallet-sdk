@@ -102,13 +102,13 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         let toAddress: String? = try container.decodeIfPresent(String.self, forKey: .toAddress)
-        let toInternalAccount: UInt32? = try container.decode(UInt32.self, forKey: .toInternalAccount)
+        let toInternalAccount: Int? = try container.decodeIfPresent(Int.self, forKey: .toInternalAccount)
         
         switch (toAddress, toInternalAccount) {
         case let (.some(address), nil):
             self.recipient = .address(Recipient.forEncodedAddress(encoded: address)!.0)
         case let (nil, .some(accountId)):
-            self.recipient = .internalAccount(accountId)
+            self.recipient = .internalAccount(UInt32(accountId))
         default:
             throw StorageError.malformedEntity(fields: ["toAddress", "toInternalAccount"])
         }
@@ -135,14 +135,12 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         var container = encoder.container(keyedBy: CodingKeys.self)
 
         var toAddress: String?
-        var accountId: UInt32?
+        var accountId: Int?
         switch (self.recipient) {
         case .address(let recipient):
             toAddress = recipient.stringEncoded
         case .internalAccount(let acct):
-            accountId = acct
-        default:
-            break
+            accountId = Int(acct)
         }
         try container.encode(toAddress, forKey: .toAddress)
         try container.encode(accountId, forKey: .toInternalAccount)

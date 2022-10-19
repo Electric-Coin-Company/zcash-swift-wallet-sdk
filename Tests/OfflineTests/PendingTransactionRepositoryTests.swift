@@ -20,10 +20,9 @@ class PendingTransactionRepositoryTests: XCTestCase {
         super.setUp()
         cleanUpDb()
         let pendingDbProvider = SimpleConnectionProvider(path: try! TestDbBuilder.pendingTransactionsDbURL().absoluteString)
-        let dao = PendingTransactionSQLDAO(dbProvider: pendingDbProvider)
         let migrations = try! MigrationManager(cacheDbConnection: InMemoryDbProvider(), pendingDbConnection: pendingDbProvider, networkType: .testnet)
         try! migrations.performMigration()
-        pendingRepository = dao
+        pendingRepository = PendingTransactionSQLDAO(dbProvider: pendingDbProvider)
     }
     
     override func tearDown() {
