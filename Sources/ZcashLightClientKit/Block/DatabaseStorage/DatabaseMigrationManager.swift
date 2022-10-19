@@ -36,7 +36,7 @@ class MigrationManager {
         self.network = networkType
     }
 
-    func performMigration(ufvks: [UnifiedFullViewingKey]) throws {
+    func performMigration() throws {
         try migrateCacheDb()
         try migratePendingDb()
     }
@@ -84,60 +84,62 @@ private extension MigrationManager {
             createdTable.column(PendingTransactionSQLDAO.TableColumns.memo)
         }
 
-        try pendingDb.connection().transaction {
-            try pendingDb.connection().run(statement);
-            try self.pendingDb.connection().setUserVersion(PendingDbMigration.v1.rawValue);
+        try pendingDb.connection().transaction(.immediate) {
+            try pendingDb.connection().execute(statement);
+            try pendingDb.connection().setUserVersion(PendingDbMigration.v1.rawValue);
         }
     }
 
     func migratePendingDbV2() throws {
-        let statement =
-            """
-            ALTER TABLE pending_transactions RENAME TO pending_transactions_old;
+        try pendingDb.connection().transaction(.immediate) {
+            let statement =
+                """
+                ALTER TABLE pending_transactions RENAME TO pending_transactions_old;
 
-            CREATE TABLE pending_transactions(
-                id              INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                to_address      TEXT,
-                to_internal     INTEGER,
-                account_index   INTEGER NOT NULL,
-                mined_height    INTEGER,
-                expiry_height   INTEGER,
-                cancelled       INTEGER,
-                encode_attempts INTEGER DEFAULT (0),
-                error_message   TEXT,
-                error_code      INTEGER,
-                submit_attempts INTEGER DEFAULT (0),
-                create_time     REAL,
-                txid            BLOB,
-                value           INTEGER NOT NULL,
-                raw             BLOB,
-                memo            BLOB
-            );
+                CREATE TABLE pending_transactions(
+                    id              INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    to_address      TEXT,
+                    to_internal     INTEGER,
+                    account_index   INTEGER NOT NULL,
+                    mined_height    INTEGER,
+                    expiry_height   INTEGER,
+                    cancelled       INTEGER,
+                    encode_attempts INTEGER DEFAULT (0),
+                    error_message   TEXT,
+                    error_code      INTEGER,
+                    submit_attempts INTEGER DEFAULT (0),
+                    create_time     REAL,
+                    txid            BLOB,
+                    value           INTEGER NOT NULL,
+                    raw             BLOB,
+                    memo            BLOB
+                );
 
-            INSERT INTO pending_transactions
-            SELECT
-                id,
-                to_address,
-                NULL,
-                account_index,
-                mined_height,
-                expiry_height,
-                cancelled,
-                encode_attempts,
-                error_message,
-                error_code,
-                submit_attempts,
-                create_time,
-                txid,
-                value,
-                raw,
-                memo
-            FROM pending_transactions_old;
-            """
+                INSERT INTO pending_transactions
+                SELECT
+                    id,
+                    to_address,
+                    NULL,
+                    account_index,
+                    mined_height,
+                    expiry_height,
+                    cancelled,
+                    encode_attempts,
+                    error_message,
+                    error_code,
+                    submit_attempts,
+                    create_time,
+                    txid,
+                    value,
+                    raw,
+                    memo
+                FROM pending_transactions_old;
 
-        try pendingDb.connection().transaction {
-            try pendingDb.connection().run(statement);
-            try self.pendingDb.connection().setUserVersion(PendingDbMigration.v2.rawValue);
+                DROP TABLE pending_transactions_old
+                """
+
+            try pendingDb.connection().execute(statement);
+            try pendingDb.connection().setUserVersion(PendingDbMigration.v2.rawValue);
         }
     }
 
@@ -167,6 +169,6 @@ extension Connection {
     }
 
     func setUserVersion(_ version: Int32) throws {
-        try run("PRAGMA user_version = \(version)")
+        try execute("PRAGMA user_version = \(version)")
     }
 }
