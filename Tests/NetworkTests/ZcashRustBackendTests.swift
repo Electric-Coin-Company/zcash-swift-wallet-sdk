@@ -188,4 +188,14 @@ class ZcashRustBackendTests: XCTestCase {
             )
         )
     }
+
+    func testGetMetadataFromAddress() throws {
+
+        let recipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
+
+        let metadata = ZcashRustBackend.getAddressMetadata(recipientAddress)
+
+        XCTAssertEqual(metadata?.networkType, .mainnet)
+        XCTAssertEqual(metadata?.addressType, .sapling)
+    }
 }

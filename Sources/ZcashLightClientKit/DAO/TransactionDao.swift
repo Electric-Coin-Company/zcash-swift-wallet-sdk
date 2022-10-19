@@ -17,6 +17,7 @@ struct Transaction: TransactionEntity, Decodable {
         case expiryHeight = "expiry_height"
         case minedHeight = "block"
         case raw
+        case fee
     }
     
     var id: Int?
@@ -26,6 +27,7 @@ struct Transaction: TransactionEntity, Decodable {
     var expiryHeight: BlockHeight?
     var minedHeight: BlockHeight?
     var raw: Data?
+    var fee: Zatoshi?
 }
 
 struct ConfirmedTransaction: ConfirmedTransactionEntity {
@@ -40,6 +42,7 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
     var value: Zatoshi
     var memo: Data?
     var rawTransactionId: Data?
+    var fee: Zatoshi?
 }
 
 class TransactionSQLDAO: TransactionRepository {
@@ -51,6 +54,7 @@ class TransactionSQLDAO: TransactionRepository {
         static var expiryHeight = Expression<Int?>(Transaction.CodingKeys.expiryHeight.rawValue)
         static var minedHeight = Expression<Int?>(Transaction.CodingKeys.minedHeight.rawValue)
         static var raw = Expression<Blob?>(Transaction.CodingKeys.raw.rawValue)
+        static var fee = Expression<Zatoshi?>(Transaction.CodingKeys.fee.rawValue)
     }
 
     var dbProvider: ConnectionProvider
@@ -119,7 +123,8 @@ extension TransactionSQLDAO {
                         sent_notes.value            AS value,
                         sent_notes.memo             AS memo,
                         sent_notes.id_note          AS noteId,
-                        blocks.time                 AS blockTimeInSeconds
+                        blocks.time                 AS blockTimeInSeconds,
+                        transactions.fee            AS fee
                     FROM    transactions
                         INNER JOIN sent_notes
                             ON transactions.id_tx = sent_notes.tx
@@ -153,7 +158,8 @@ extension TransactionSQLDAO {
                     received_notes.value   AS value,
                     received_notes.memo    AS memo,
                     received_notes.id_note AS noteId,
-                    blocks.time            AS blockTimeInSeconds
+                    blocks.time            AS blockTimeInSeconds,
+                    transactions.fee       AS fee
 
                 FROM    transactions
                     LEFT JOIN received_notes
@@ -197,7 +203,8 @@ extension TransactionSQLDAO {
                             WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                             ELSE received_notes.id_note
                     end                          AS noteId,
-                    blocks.time                  AS blockTimeInSeconds
+                    blocks.time                  AS blockTimeInSeconds,
+                    transactions.fee             AS fee
                 FROM  transactions
                     LEFT JOIN received_notes
                         ON transactions.id_tx = received_notes.tx
@@ -244,7 +251,8 @@ extension TransactionSQLDAO {
                         WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                         ELSE received_notes.id_note
                     end                          AS noteId,
-                    blocks.time                  AS blockTimeInSeconds
+                    blocks.time                  AS blockTimeInSeconds,
+                    transactions.fee             AS fee
                 FROM    transactions
                     LEFT JOIN received_notes
                         ON transactions.id_tx = received_notes.tx
@@ -274,7 +282,8 @@ extension TransactionSQLDAO {
                     transactions.tx_index       AS transactionIndex,
                     transactions.txid           AS rawTransactionId,
                     transactions.expiry_height  AS expiryHeight,
-                    transactions.raw            AS raw
+                    transactions.raw            AS raw,
+                    transactions.fee            AS fee
                 FROM   transactions
                 WHERE  \(range.start.height) <= minedheight
                 AND minedheight <= \(range.end.height)
@@ -310,7 +319,8 @@ extension TransactionSQLDAO {
                         WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                         ELSE received_notes.id_note
                     end                         AS noteId,
-                    blocks.time                 AS blockTimeInSeconds
+                    blocks.time                 AS blockTimeInSeconds,
+                    transactions.fee            AS fee
                 FROM   transactions
                     LEFT JOIN received_notes
                         ON transactions.id_tx = received_notes.tx
@@ -355,7 +365,8 @@ extension TransactionSQLDAO {
                             WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                             ELSE received_notes.id_note
                         end                          AS noteId,
-                        blocks.time                  AS blockTimeInSeconds
+                        blocks.time                  AS blockTimeInSeconds,
+                        transactions.fee             AS fee
                     FROM    transactions
                         LEFT JOIN received_notes
                             ON transactions.id_tx = received_notes.tx

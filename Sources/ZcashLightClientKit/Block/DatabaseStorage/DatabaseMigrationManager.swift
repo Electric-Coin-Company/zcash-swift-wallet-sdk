@@ -82,6 +82,7 @@ private extension MigrationManager {
             createdTable.column(PendingTransactionSQLDAO.TableColumns.value)
             createdTable.column(PendingTransactionSQLDAO.TableColumns.raw)
             createdTable.column(PendingTransactionSQLDAO.TableColumns.memo)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.fee)
         }
 
         try pendingDb.connection().transaction(.immediate) {
@@ -112,7 +113,8 @@ private extension MigrationManager {
                     txid            BLOB,
                     value           INTEGER NOT NULL,
                     raw             BLOB,
-                    memo            BLOB
+                    memo            BLOB,
+                    fee             INTEGER
                 );
 
                 INSERT INTO pending_transactions
@@ -132,7 +134,8 @@ private extension MigrationManager {
                     txid,
                     value,
                     raw,
-                    memo
+                    memo,
+                    NULL
                 FROM pending_transactions_old;
 
                 DROP TABLE pending_transactions_old

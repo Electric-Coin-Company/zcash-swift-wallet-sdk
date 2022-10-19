@@ -188,7 +188,8 @@ public extension PendingTransactionEntity {
             transactionIndex: -1,
             expiryHeight: self.expiryHeight,
             minedHeight: self.minedHeight,
-            raw: self.raw
+            raw: self.raw,
+            fee: self.fee
         )
     }
 }
@@ -205,7 +206,8 @@ public extension ConfirmedTransactionEntity {
             transactionIndex: self.transactionIndex,
             expiryHeight: self.expiryHeight,
             minedHeight: self.minedHeight,
-            raw: self.raw
+            raw: self.raw,
+            fee: self.fee
         )
     }
 }

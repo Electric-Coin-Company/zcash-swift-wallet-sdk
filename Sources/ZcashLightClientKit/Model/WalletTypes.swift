@@ -280,7 +280,7 @@ public struct WalletBalance: Equatable {
     public var verified: Zatoshi
     public var total: Zatoshi
 
-    public init(verified: Zatoshi, total: Zatoshi) {
+    public init(verified: Zatoshi, total: Zatoshi) {    
         self.verified = verified
         self.total = total
     }

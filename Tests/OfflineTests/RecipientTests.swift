@@ -31,4 +31,16 @@ final class RecipientTests: XCTestCase {
 
         XCTAssertEqual(try Recipient(transparentString, network: .mainnet), .transparent(expectedTransparentAddress))
     }
+
+    func testRecipentFromEncoding() throws {
+        let address = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
+
+        let recipient = Recipient.forEncodedAddress(
+            encoded: address
+        )
+
+        XCTAssertEqual(recipient?.0, .sapling(SaplingAddress(validatedEncoding: address)))
+        XCTAssertEqual(recipient?.1, .mainnet)
+
+    }
 }

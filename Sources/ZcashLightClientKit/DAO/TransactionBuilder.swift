@@ -21,6 +21,7 @@ enum TransactionBuilder {
         case memo
         case noteId
         case blockTimeInSeconds
+        case fee
     }
     
     enum ReceivedColumns: Int {
@@ -33,6 +34,7 @@ enum TransactionBuilder {
         case memo
         case noteId
         case blockTimeInSeconds
+        case fee
     }
     
     enum TransactionEntityColumns: Int {
@@ -42,6 +44,7 @@ enum TransactionBuilder {
         case txid
         case expiryHeight
         case raw
+        case fee
     }
     
     static func createTransactionEntity(txId: Data, rawTransaction: RawTransaction) -> TransactionEntity {
@@ -52,7 +55,8 @@ enum TransactionBuilder {
             transactionIndex: nil,
             expiryHeight: nil,
             minedHeight: Int(exactly: rawTransaction.height),
-            raw: rawTransaction.data
+            raw: rawTransaction.data,
+            fee: nil
         )
     }
     
@@ -73,7 +77,8 @@ enum TransactionBuilder {
             transactionIndex: bindings[TransactionEntityColumns.txIndex.rawValue] as? Int,
             expiryHeight: bindings[TransactionEntityColumns.expiryHeight.rawValue] as? Int,
             minedHeight: bindings[TransactionEntityColumns.minedHeight.rawValue] as? Int,
-            raw: rawData
+            raw: rawData,
+            fee: (bindings[TransactionEntityColumns.fee.rawValue] as? Int?)?.flatMap({ Zatoshi(Int64($0)) })
         )
     }
     
@@ -110,7 +115,7 @@ enum TransactionBuilder {
         if let txIdBlob = bindings[ConfirmedColumns.rawTransactionId.rawValue] as? Blob {
             transactionId = Data(blob: txIdBlob)
         }
-        
+
         return ConfirmedTransaction(
             toAddress: toAddress,
             expiryHeight: expiryHeight,
@@ -122,7 +127,8 @@ enum TransactionBuilder {
             id: Int(id),
             value: Zatoshi(value),
             memo: memo,
-            rawTransactionId: transactionId
+            rawTransactionId: transactionId,
+            fee: (bindings[ConfirmedColumns.fee.rawValue] as? Int).map({ Zatoshi(Int64($0)) })
         )
     }
     
@@ -163,7 +169,8 @@ enum TransactionBuilder {
             id: Int(id),
             value: Zatoshi(value),
             memo: memo,
-            rawTransactionId: transactionId
+            rawTransactionId: transactionId,
+            fee: (bindings[ReceivedColumns.fee.rawValue] as? Int).map({ Zatoshi(Int64($0)) })
         )
     }
 }
