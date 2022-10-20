@@ -19,8 +19,8 @@ class MigrationManager {
         case v2 = 2
     }
 
-    static let latestCacheDbMigration: CacheDbMigration = CacheDbMigration.none
-    static let latestPendingDbMigration: PendingDbMigration = PendingDbMigration.v2
+    static let nextCacheDbMigration: CacheDbMigration = CacheDbMigration.none
+    static let nextPendingDbMigration: PendingDbMigration = PendingDbMigration.v2
 
     var cacheDb: ConnectionProvider
     var pendingDb: ConnectionProvider
@@ -44,20 +44,23 @@ class MigrationManager {
 
 private extension MigrationManager {
     func migratePendingDb() throws {
+        // getUserVersion returns a default value of zero for an unmigrated database.
         let currentPendingDbVersion = try pendingDb.connection().getUserVersion()
 
         LoggerProxy.debug(
             "Attempting to perform migration for pending Db - currentVersion: \(currentPendingDbVersion)." +
-            "Latest version is: \(Self.latestPendingDbMigration.rawValue - 1)"
+            "Latest version is: \(Self.nextPendingDbMigration.rawValue - 1)"
         )
 
-        for v in (currentPendingDbVersion...Self.latestPendingDbMigration.rawValue) {
+        for v in (currentPendingDbVersion..<Self.nextPendingDbMigration.rawValue) {
             switch PendingDbMigration(rawValue: v) {
             case .some(.none):
                 try migratePendingDbV1()
             case .some(.v1):
                 try migratePendingDbV2()
             case .some(.v2):
+                // we have no migrations to run after v2; this case should ordinarily be 
+                // unreachable due to the bound on the loop.
                 break
             case nil:
                 throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(v).")
@@ -147,18 +150,23 @@ private extension MigrationManager {
     }
 
     func migrateCacheDb() throws {
+        // getUserVersion returns a default value of zero for an unmigrated database.
         let currentCacheDbVersion = try cacheDb.connection().getUserVersion()
 
         LoggerProxy.debug(
             "Attempting to perform migration for cache Db - currentVersion: \(currentCacheDbVersion)." +
-            "Latest version is: \(Self.latestCacheDbMigration.rawValue)"
+            "Latest version is: \(Self.nextCacheDbMigration.rawValue)"
         )
 
-        if currentCacheDbVersion < Self.latestCacheDbMigration.rawValue {
-            // perform no migration just adjust the version number
-            try self.cacheDb.connection().setUserVersion(CacheDbMigration.none.rawValue)
-        } else {
-            LoggerProxy.debug("Cache Db - no migration needed")
+        for v in (currentCacheDbVersion..<Self.nextCacheDbMigration.rawValue) {
+            switch CacheDbMigration(rawValue: v) {
+            case .some(.none):
+                // we have no migrations to run; this case should ordinarily be 
+                // unreachable due to the bound on the loop.
+                break
+            case nil:
+                throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(v).")
+            }
         }
     }
 }
