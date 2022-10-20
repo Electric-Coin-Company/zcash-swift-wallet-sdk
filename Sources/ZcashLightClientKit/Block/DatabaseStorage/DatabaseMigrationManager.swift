@@ -20,7 +20,7 @@ class MigrationManager {
     }
 
     static let latestCacheDbMigration: CacheDbMigration = CacheDbMigration.none
-    static let latestPendingDbMigration: PendingDbMigration = PendingDbMigration.v1
+    static let latestPendingDbMigration: PendingDbMigration = PendingDbMigration.v2
 
     var cacheDb: ConnectionProvider
     var pendingDb: ConnectionProvider
