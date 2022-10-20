@@ -15,7 +15,7 @@ class TransactionRepositoryTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        transactionRepository = TestDbBuilder.transactionRepository()
+        transactionRepository = try! TestDbBuilder.transactionRepository()
     }
     
     override func tearDown() {

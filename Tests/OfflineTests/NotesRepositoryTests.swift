@@ -16,8 +16,8 @@ class NotesRepositoryTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        sentNotesRepository = TestDbBuilder.sentNotesRepository()
-        receivedNotesRepository = TestDbBuilder.receivedNotesRepository()
+        sentNotesRepository = try! TestDbBuilder.sentNotesRepository()
+        receivedNotesRepository = try! TestDbBuilder.receivedNotesRepository()
     }
     
     override func tearDown() {
