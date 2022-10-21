@@ -15,6 +15,7 @@ class TransactionRepositoryTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
+
         transactionRepository = try! TestDbBuilder.transactionRepository()
     }
     
@@ -46,14 +47,14 @@ class TransactionRepositoryTests: XCTestCase {
         }
         
         XCTAssertEqual(transaction.id, 10)
-        XCTAssertEqual(transaction.minedHeight, 652812)
+        XCTAssertEqual(transaction.minedHeight, 663942)
         XCTAssertEqual(transaction.transactionIndex, 5)
     }
     
     func testFindByTxId() {
         var transaction: TransactionEntity?
-        
-        let id = Data(fromHexEncodedString: "0BAFC5B83F5B39A5270144ECD98DBC65115055927EDDA8FF20F081FFF13E4780")!
+
+        let id = Data(fromHexEncodedString: "01af48bcc4e9667849a073b8b5c539a0fc19de71aac775377929dc6567a36eff")!
         
         XCTAssertNoThrow(
             try { transaction = try self.transactionRepository.findBy(rawId: id) }()
@@ -64,9 +65,9 @@ class TransactionRepositoryTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(transaction.id, 10)
-        XCTAssertEqual(transaction.minedHeight, 652812)
-        XCTAssertEqual(transaction.transactionIndex, 5)
+        XCTAssertEqual(transaction.id, 8)
+        XCTAssertEqual(transaction.minedHeight, 663922)
+        XCTAssertEqual(transaction.transactionIndex, 1)
     }
     
     func testFindAllSentTransactions() {
@@ -77,7 +78,7 @@ class TransactionRepositoryTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(txs.count, 0)
+        XCTAssertEqual(txs.count, 13)
     }
     
     func testFindAllReceivedTransactions() {
@@ -88,7 +89,7 @@ class TransactionRepositoryTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(txs.count, 27)
+        XCTAssertEqual(txs.count, 7)
     }
     
     func testFindAllTransactions() {
@@ -99,7 +100,7 @@ class TransactionRepositoryTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(txs.count, 27)
+        XCTAssertEqual(txs.count, 20)
     }
     
     func testFindAllPerformance() {
@@ -134,8 +135,8 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllFromSlice() throws {
-        let limit = 1
-        let start = 0
+        let limit = 4
+        let start = 7
         guard
             let transactions = try self.transactionRepository.findAll(offset: 0, limit: Int.max),
             let allFromNil = try self.transactionRepository.findAll(from: transactions[start], limit: limit)

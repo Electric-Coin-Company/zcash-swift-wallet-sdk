@@ -137,7 +137,9 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         self.value = Zatoshi(zatoshiValue)
         self.memo = try container.decodeIfPresent(Data.self, forKey: .memo)
         self.rawTransactionId = try container.decodeIfPresent(Data.self, forKey: .rawTransactionId)
-        self.fee = try container.decodeIfPresent(Zatoshi.self, forKey: .fee)
+        if let feeValue = try container.decodeIfPresent(Int64.self, forKey: .fee) {
+            self.fee = Zatoshi(feeValue)
+        }
     }
     
     func encode(to encoder: Encoder) throws {
@@ -168,7 +170,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         try container.encode(self.value.amount, forKey: .value)
         try container.encodeIfPresent(self.memo, forKey: .memo)
         try container.encodeIfPresent(self.rawTransactionId, forKey: .rawTransactionId)
-        try container.encodeIfPresent(self.fee, forKey: .fee)
+        try container.encodeIfPresent(self.fee?.amount, forKey: .fee)
     }
     
     func isSameTransactionId<T>(other: T) -> Bool where T: RawIdentifiable {
