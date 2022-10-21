@@ -27,7 +27,7 @@ class TransactionRepositoryTests: XCTestCase {
         var count: Int?
         XCTAssertNoThrow(try { count = try self.transactionRepository.countAll() }())
         XCTAssertNotNil(count)
-        XCTAssertEqual(count, 27)
+        XCTAssertEqual(count, 21)
     }
     
     func testCountUnmined() {
@@ -134,8 +134,8 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllFromSlice() throws {
-        let limit = 4
-        let start = 7
+        let limit = 1
+        let start = 0
         guard
             let transactions = try self.transactionRepository.findAll(offset: 0, limit: Int.max),
             let allFromNil = try self.transactionRepository.findAll(from: transactions[start], limit: limit)
@@ -156,15 +156,15 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllFromLastSlice() throws {
-        let limit = 10
-        let start = 20
+        let limit = 5
+        let start = 15
         guard
             let transactions = try self.transactionRepository.findAll(offset: 0, limit: Int.max),
             let allFromNil = try self.transactionRepository.findAll(from: transactions[start], limit: limit)
         else {
             return XCTFail("find all failed")
         }
-        
+
         let slice = transactions[start + 1 ..< transactions.count]
         XCTAssertEqual(slice.count, allFromNil.count)
         for transaction in slice {

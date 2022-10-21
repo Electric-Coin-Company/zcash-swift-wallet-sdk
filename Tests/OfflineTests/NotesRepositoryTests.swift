@@ -29,12 +29,12 @@ class NotesRepositoryTests: XCTestCase {
     func testSentCount() {
         var count: Int?
         XCTAssertNoThrow(try { count = try sentNotesRepository.count() }())
-        XCTAssertEqual(count, 0)
+        XCTAssertEqual(count, 13)
     }
     
     func testReceivedCount() {
         var count: Int?
         XCTAssertNoThrow(try { count = try receivedNotesRepository.count() }())
-        XCTAssertEqual(count, 27)
+        XCTAssertEqual(count, 22)
     }
 }

@@ -44,7 +44,9 @@ let package = Package(
             resources: [
                 .copy("Resources/test_data.db"),
                 .copy("Resources/cache.db"),
-                .copy("Resources/ZcashSdk_Data.db"),
+                .copy("Resources/darkside_caches.db"),
+                .copy("Resources/darkside_data.db"),
+                .copy("Resources/darkside_pending.db")
             ]
         ),
         .testTarget(

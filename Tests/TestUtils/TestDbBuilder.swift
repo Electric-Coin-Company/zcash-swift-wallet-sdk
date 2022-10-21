@@ -70,13 +70,20 @@ class TestDbBuilder {
     }
 
     static func prePopulatedMainnetDataDbURL() -> URL? {
-        Bundle.module.url(forResource: "ZcashSdk_Data", withExtension: "db")
+        Bundle.module.url(forResource: "darkside_data", withExtension: "db")
     }
 
     static func prepopulatedDataDbProvider() throws -> ConnectionProvider? {
         guard let url = prePopulatedMainnetDataDbURL() else { return nil }
+
         let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
-        let initResult = try ZcashRustBackend.initDataDb(dbData: url, seed: nil, networkType: NetworkType.testnet)
+
+        let initResult = try ZcashRustBackend.initDataDb(
+            dbData: url,
+            seed: TestSeed().seed(),
+            networkType: .mainnet
+        )
+        
         switch (initResult) {
             case .success: return provider
             case .seedRequired:
