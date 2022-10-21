@@ -468,11 +468,11 @@ public class SDKSynchronizer: Synchronizer {
         } catch {
             throw SynchronizerError.parameterMissing(underlyingError: error)
         }
-
+        
         return try await createToAddress(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
-            toAddress: toAddress.stringEncoded,
+            recipient: toAddress,
             memo: memo
         )
     }
@@ -492,13 +492,7 @@ public class SDKSynchronizer: Synchronizer {
                 throw ShieldFundsError.insuficientTransparentFunds
             }
 
-            // FIXME: Define who's the recipient of a shielding transaction #521
-            // https://github.com/zcash/ZcashLightClientKit/issues/521
-            guard let uAddr = self.getUnifiedAddress(accountIndex: accountIndex) else {
-                throw ShieldFundsError.shieldingFailed(underlyingError: KeyEncodingError.invalidEncoding)
-            }
-            
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: uAddr.stringEncoded, memo: try memo.asMemoBytes(), from: accountIndex)
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, recipient: .internalAccount(spendingKey.account), memo: try memo.asMemoBytes(), from: accountIndex)
             
             // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
             let transaction = try await transactionManager.encodeShieldingTransaction(
@@ -515,13 +509,13 @@ public class SDKSynchronizer: Synchronizer {
     func createToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
-        toAddress: String,
+        recipient: Recipient,
         memo: Memo
     ) async throws -> PendingTransactionEntity {
         do {
             let spend = try transactionManager.initSpend(
                 zatoshi: zatoshi,
-                toAddress: toAddress,
+                recipient: .address(recipient),
                 memo: memo.asMemoBytes(),
                 from: Int(spendingKey.account)
             )

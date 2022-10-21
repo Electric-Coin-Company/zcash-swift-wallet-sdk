@@ -70,29 +70,40 @@ class TestDbBuilder {
     }
 
     static func prePopulatedMainnetDataDbURL() -> URL? {
-        Bundle.module.url(forResource: "ZcashSdk_Data", withExtension: "db")
+        Bundle.module.url(forResource: "darkside_data", withExtension: "db")
     }
 
-    static func prepopulatedDataDbProvider() -> ConnectionProvider? {
+    static func prepopulatedDataDbProvider() throws -> ConnectionProvider? {
         guard let url = prePopulatedMainnetDataDbURL() else { return nil }
+
         let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
 
-        return provider
+        let initResult = try ZcashRustBackend.initDataDb(
+            dbData: url,
+            seed: TestSeed().seed(),
+            networkType: .mainnet
+        )
+        
+        switch (initResult) {
+            case .success: return provider
+            case .seedRequired:
+                throw StorageError.migrationFailedWithMessage(message: "Seed value required to initialize the wallet database")
+        }
     }
     
-    static func transactionRepository() -> TransactionRepository? {
-        guard let provider = prepopulatedDataDbProvider() else { return nil }
+    static func transactionRepository() throws -> TransactionRepository? {
+        guard let provider = try prepopulatedDataDbProvider() else { return nil }
         
         return TransactionSQLDAO(dbProvider: provider)
     }
     
-    static func sentNotesRepository() -> SentNotesRepository? {
-        guard let provider = prepopulatedDataDbProvider() else { return nil }
+    static func sentNotesRepository() throws -> SentNotesRepository? {
+        guard let provider = try prepopulatedDataDbProvider() else { return nil }
         return SentNotesSQLDAO(dbProvider: provider)
     }
     
-    static func receivedNotesRepository() -> ReceivedNoteRepository? {
-        guard let provider = prepopulatedDataDbProvider() else { return nil }
+    static func receivedNotesRepository() throws -> ReceivedNoteRepository? {
+        guard let provider = try prepopulatedDataDbProvider() else { return nil }
         return ReceivedNotesSQLDAO(dbProvider: provider)
     }
         

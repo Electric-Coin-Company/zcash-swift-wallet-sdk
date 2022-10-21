@@ -1059,14 +1059,6 @@ extension CompactBlockProcessor {
             for try await utxo in stream {
                 utxos.append(utxo)
             }
-            guard try rustBackend.clearUtxos(
-                dbData: dataDb,
-                address: tAddress,
-                sinceHeight: startHeight - 1,
-                networkType: self.config.network.networkType
-            ) >= 0 else {
-                throw CompactBlockProcessorError.generalError(message: "attempted to clear utxos but -1 was returned")
-            }
             return storeUTXOs(utxos, in: dataDb)
         } catch {
             throw mapError(error)

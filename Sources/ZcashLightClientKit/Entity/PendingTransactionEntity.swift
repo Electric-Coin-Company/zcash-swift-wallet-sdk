@@ -6,6 +6,12 @@
 //
 
 import Foundation
+
+public enum PendingTransactionRecipient: Equatable {
+    case address(Recipient)
+    case internalAccount(UInt32)
+}
+
 /**
 Represents a sent transaction that has not been confirmed yet on the blockchain
 */
@@ -13,12 +19,12 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
     /**
     recipient address
     */
-    var toAddress: String { get set }
+    var recipient: PendingTransactionRecipient { get }
 
     /**
     index of the account from which the funds were sent
     */
-    var accountIndex: Int { get set }
+    var accountIndex: Int { get }
     
     /**
     height which the block was mined at.
@@ -34,7 +40,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
     /**
     value is 1 if the transaction was cancelled
     */
-    var cancelled: Int { get set }
+    var cancelled: Int { get }
 
     /**
     how many times this transaction encoding was attempted
@@ -61,7 +67,7 @@ public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTrans
      
     - Note: represented in timeIntervalySince1970
     */
-    var createTime: TimeInterval { get set }
+    var createTime: TimeInterval { get }
     
     /**
     Checks whether this transaction is the same as the given transaction
@@ -182,7 +188,8 @@ public extension PendingTransactionEntity {
             transactionIndex: -1,
             expiryHeight: self.expiryHeight,
             minedHeight: self.minedHeight,
-            raw: self.raw
+            raw: self.raw,
+            fee: self.fee
         )
     }
 }
@@ -199,7 +206,8 @@ public extension ConfirmedTransactionEntity {
             transactionIndex: self.transactionIndex,
             expiryHeight: self.expiryHeight,
             minedHeight: self.minedHeight,
-            raw: self.raw
+            raw: self.raw,
+            fee: self.fee
         )
     }
 }

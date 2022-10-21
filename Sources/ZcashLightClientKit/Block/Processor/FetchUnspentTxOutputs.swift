@@ -30,21 +30,6 @@ extension CompactBlockProcessor {
                 }
                 .flatMap({ $0 })
 
-            do {
-                for tAddress in tAddresses {
-                    guard try rustBackend.clearUtxos(
-                        dbData: config.dataDb,
-                        address: tAddress,
-                        sinceHeight: config.walletBirthday - 1,
-                        networkType: config.network.networkType
-                    ) >= 0 else {
-                        throw rustBackend.lastError() ?? .genericError(message: "clearUtxos failed. no error message available")
-                    }
-                }
-            } catch {
-                throw FetchUTXOError.clearingFailed(error)
-            }
-
             var utxos: [UnspentTransactionOutputEntity] = []
             let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses.map { $0.stringEncoded }, startHeight: config.walletBirthday)
             for try await transaction in stream {

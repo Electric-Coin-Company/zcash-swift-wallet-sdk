@@ -10,29 +10,8 @@ import Foundation
 import libzcashlc
 
 class ZcashRustBackend: ZcashRustBackendWelding {
+
     static let minimumConfirmations: UInt32 = 10
-
-    static func clearUtxos(
-        dbData: URL,
-        address: TransparentAddress,
-        sinceHeight: BlockHeight,
-        networkType: NetworkType
-    ) throws -> Int32 {
-        let dbData = dbData.osStr()
-
-        let result = zcashlc_clear_utxos(
-            dbData.0,
-            dbData.1,
-            [CChar](address.stringEncoded.utf8CString),
-            Int32(sinceHeight),
-            networkType.networkId
-        )
-
-        guard result >= 0 else {
-           throw lastError() ?? .genericError(message: "No error message available")
-        }
-        return result
-    }
 
     static func createAccount(dbData: URL, seed: [UInt8], networkType: NetworkType) throws -> UnifiedSpendingKey {
         let dbData = dbData.osStr()
@@ -69,7 +48,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             zcashlc_create_to_address(
                 dbData.0,
                 dbData.1,
-                Int32(usk.account),
                 uskPtr.baseAddress,
                 UInt(usk.bytes.count),
                 [CChar](address.utf8CString),
@@ -339,6 +317,26 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return RustWeldingError.genericError(message: message)
     }
 
+    static func getAddressMetadata(_ address: String) -> AddressMetadata? {
+        var networkId: UInt32 = 0
+        var addrId: UInt32 = 0
+        guard zcashlc_get_address_metadata(
+            [CChar](address.utf8CString),
+            &networkId,
+            &addrId
+        ) else {
+            return nil
+        }
+        
+        guard let network = NetworkType.forNetworkId(networkId),
+              let addrType = AddressType.forId(addrId)
+        else {
+            return nil
+        }
+                    
+        return AddressMetadata(network: network, addrType: addrType)
+    }
+    
     static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress? {
         guard let transparentCStr = zcashlc_get_transparent_receiver_for_unified_address(
             [CChar](uAddr.encoding.utf8CString)
@@ -597,7 +595,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             zcashlc_shield_funds(
                 dbData.0,
                 dbData.1,
-                Int32(usk.account),
                 uskBuffer.baseAddress,
                 UInt(usk.bytes.count),
                 memo.bytes,

@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.8.0"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.13.0"),
-        .package(name:"libzcashlc", url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", branch: "bin/librustzcash_0_7")
+        .package(name:"libzcashlc", url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", revision: "0059f090e655667f9ee5ed3306bd87ca78c7711a")
     ],
     targets: [
         .target(
@@ -44,7 +44,9 @@ let package = Package(
             resources: [
                 .copy("Resources/test_data.db"),
                 .copy("Resources/cache.db"),
-                .copy("Resources/ZcashSdk_Data.db"),
+                .copy("Resources/darkside_caches.db"),
+                .copy("Resources/darkside_data.db"),
+                .copy("Resources/darkside_pending.db")
             ]
         ),
         .testTarget(

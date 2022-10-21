@@ -12,16 +12,17 @@ import XCTest
 // swiftlint:disable force_try force_unwrapping implicitly_unwrapped_optional
 class PendingTransactionRepositoryTests: XCTestCase {
     let dbUrl = try! TestDbBuilder.pendingTransactionsDbURL()
-    let recipientAddress = "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6"
+    let recipient = SaplingAddress(validatedEncoding: "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6")
 
     var pendingRepository: PendingTransactionRepository!
 
     override func setUp() {
         super.setUp()
         cleanUpDb()
-        let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: try! TestDbBuilder.pendingTransactionsDbURL().absoluteString))
-        try! dao.createrTableIfNeeded()
-        pendingRepository = dao
+        let pendingDbProvider = SimpleConnectionProvider(path: try! TestDbBuilder.pendingTransactionsDbURL().absoluteString)
+        let migrations = try! MigrationManager(cacheDbConnection: InMemoryDbProvider(), pendingDbConnection: pendingDbProvider, networkType: .testnet)
+        try! migrations.performMigration()
+        pendingRepository = PendingTransactionSQLDAO(dbProvider: pendingDbProvider)
     }
     
     override func tearDown() {
@@ -51,7 +52,7 @@ class PendingTransactionRepositoryTests: XCTestCase {
         
         XCTAssertEqual(transaction.accountIndex, expected.accountIndex)
         XCTAssertEqual(transaction.value, expected.value)
-        XCTAssertEqual(transaction.toAddress, expected.toAddress)
+        XCTAssertEqual(transaction.recipient, expected.recipient)
     }
     
     func testFindById() {
@@ -124,8 +125,6 @@ class PendingTransactionRepositoryTests: XCTestCase {
     }
     
     func testUpdate() {
-        let newAccountIndex = 1
-        let newValue = Zatoshi(123_456)
         let transaction = createAndStoreMockedTransaction()
 
         guard let id = transaction.id else {
@@ -141,9 +140,12 @@ class PendingTransactionRepositoryTests: XCTestCase {
             XCTFail("failed to store tx")
             return
         }
+
+        let oldEncodeAttempts = stored!.encodeAttempts
+        let oldSubmitAttempts = stored!.submitAttempts
         
-        stored!.accountIndex = newAccountIndex
-        stored!.value = newValue
+        stored!.encodeAttempts += 1
+        stored!.submitAttempts += 5
         
         XCTAssertNoThrow(try pendingRepository.update(stored!))
         
@@ -152,9 +154,9 @@ class PendingTransactionRepositoryTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(updatedTransaction.value, newValue)
-        XCTAssertEqual(updatedTransaction.accountIndex, newAccountIndex)
-        XCTAssertEqual(updatedTransaction.toAddress, stored!.toAddress)
+        XCTAssertEqual(updatedTransaction.encodeAttempts, oldEncodeAttempts + 1)
+        XCTAssertEqual(updatedTransaction.submitAttempts, oldSubmitAttempts + 5)
+        XCTAssertEqual(updatedTransaction.recipient, stored!.recipient)
     }
     
     func createAndStoreMockedTransaction(with value: Zatoshi = Zatoshi(1000)) -> PendingTransactionEntity {
@@ -174,6 +176,6 @@ class PendingTransactionRepositoryTests: XCTestCase {
     }
     
     private func mockTransaction(with value: Zatoshi = Zatoshi(1000)) -> PendingTransactionEntity {
-        PendingTransaction(value: value, toAddress: recipientAddress, memo: .empty(), account: 0)
+        PendingTransaction(value: value, recipient: .address(.sapling(recipient)), memo: .empty(), account: 0)
     }
 }

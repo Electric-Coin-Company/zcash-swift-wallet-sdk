@@ -93,6 +93,8 @@ public protocol AbstractTransaction {
     data containing the memo if any
     */
     var memo: Data? { get set }
+
+    var fee: Zatoshi? { get set }
 }
 
 /**

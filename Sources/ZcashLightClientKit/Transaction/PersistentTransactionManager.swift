@@ -8,7 +8,7 @@
 import Foundation
 
 enum TransactionManagerError: Error {
-    case couldNotCreateSpend(toAddress: String, account: Int, zatoshi: Zatoshi)
+    case couldNotCreateSpend(recipient: PendingTransactionRecipient, account: Int, zatoshi: Zatoshi)
     case encodingFailed(PendingTransactionEntity)
     case updateFailed(PendingTransactionEntity)
     case notPending(PendingTransactionEntity)
@@ -16,6 +16,7 @@ enum TransactionManagerError: Error {
     case internalInconsistency(PendingTransactionEntity)
     case submitFailed(PendingTransactionEntity, errorCode: Int)
     case shieldingEncodingFailed(PendingTransactionEntity, reason: String)
+    case cannotEncodeInternalTx(PendingTransactionEntity)
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
@@ -40,7 +41,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     
     func initSpend(
         zatoshi: Zatoshi,
-        toAddress: String,
+        recipient: PendingTransactionRecipient,
         memo: MemoBytes,
         from accountIndex: Int
     ) throws -> PendingTransactionEntity {
@@ -48,14 +49,14 @@ class PersistentTransactionManager: OutboundTransactionManager {
             by: try repository.create(
                 PendingTransaction(
                     value: zatoshi,
-                    toAddress: toAddress,
+                    recipient: recipient,
                     memo: memo,
                     account: accountIndex
                 )
             )
         ) else {
             throw TransactionManagerError.couldNotCreateSpend(
-                toAddress: toAddress,
+                recipient: recipient,
                 account: accountIndex,
                 zatoshi: zatoshi
             )
@@ -102,10 +103,18 @@ class PersistentTransactionManager: OutboundTransactionManager {
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
+            var toAddress: String?
+            switch (pendingTransaction.recipient) {
+                case .address(let addr):
+                    toAddress = addr.stringEncoded
+                case .internalAccount(_):
+                    throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
+            }
+
             let encodedTransaction = try await self.encoder.createTransaction(
                 spendingKey: spendingKey,
                 zatoshi: pendingTransaction.value,
-                to: pendingTransaction.toAddress,
+                to: toAddress!,
                 memoBytes: try pendingTransaction.memo.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
@@ -260,9 +269,7 @@ enum OutboundTransactionManagerBuilder {
 
 enum PendingTransactionRepositoryBuilder {
     static func build(initializer: Initializer) throws -> PendingTransactionRepository {
-        let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
-        try dao.createrTableIfNeeded()
-        return dao
+        PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
     }
 }
 
