@@ -1,3 +1,16 @@
+# 0.16.12-beta
+Checkpoints added:
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1832500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1835000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1837500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1840000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1842500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1845000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1847500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1850000.json
+````        
 # 0.16.11-beta
 Checkpoints added:
 Mainnet
