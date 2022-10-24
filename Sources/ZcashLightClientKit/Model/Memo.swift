@@ -225,13 +225,8 @@ extension Optional where WrappedType == String {
     }
 }
 
-extension Optional where WrappedType == Data {
-    func intoMemoBytes() throws -> MemoBytes {
-        switch self {
-        case .none:
-            return .empty()
-        case .some(let data):
-            return try .init(bytes: data.bytes)
-        }
+extension Data {
+    func intoMemoBytes() throws -> MemoBytes? {
+        try .init(bytes: self.bytes)
     }
 }

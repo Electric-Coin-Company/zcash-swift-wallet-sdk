@@ -10,7 +10,6 @@ import Foundation
 import libzcashlc
 
 class ZcashRustBackend: ZcashRustBackendWelding {
-
     static let minimumConfirmations: UInt32 = 10
 
     static func createAccount(dbData: URL, seed: [UInt8], networkType: NetworkType) throws -> UnifiedSpendingKey {
@@ -37,14 +36,14 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         usk: UnifiedSpendingKey,
         to address: String,
         value: Int64,
-        memo: MemoBytes,
+        memo: MemoBytes?,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
     ) -> Int64 {
         let dbData = dbData.osStr()
 
-        return usk.bytes.withUnsafeBufferPointer{ uskPtr in
+        return usk.bytes.withUnsafeBufferPointer { uskPtr in
             zcashlc_create_to_address(
                 dbData.0,
                 dbData.1,
@@ -52,7 +51,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 UInt(usk.bytes.count),
                 [CChar](address.utf8CString),
                 value,
-                memo.bytes,
+                memo?.bytes,
                 spendParamsPath,
                 UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                 outputParamsPath,
@@ -584,7 +583,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         dbCache: URL,
         dbData: URL,
         usk: UnifiedSpendingKey,
-        memo: MemoBytes,
+        memo: MemoBytes?,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
@@ -597,7 +596,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 dbData.1,
                 uskBuffer.baseAddress,
                 UInt(usk.bytes.count),
-                memo.bytes,
+                memo?.bytes,
                 spendParamsPath,
                 UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                 outputParamsPath,

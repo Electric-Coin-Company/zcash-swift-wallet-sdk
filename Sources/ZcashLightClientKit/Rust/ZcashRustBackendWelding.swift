@@ -62,7 +62,7 @@ protocol ZcashRustBackendWelding {
     /// - Parameter usk: `UnifiedSpendingKey` for the account that controls the funds to be spent.
     /// - Parameter to: recipient address
     /// - Parameter value: transaction amount in Zatoshi
-    /// - Parameter memo: the `Memo` for this transaction
+    /// - Parameter memo: the `MemoBytes` for this transaction. pass `nil` when sending to transparent receivers
     /// - Parameter spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
     /// - Parameter outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
     /// - Parameter networkType: network type of this key
@@ -71,7 +71,7 @@ protocol ZcashRustBackendWelding {
         usk: UnifiedSpendingKey,
         to address: String,
         value: Int64,
-        memo: MemoBytes,
+        memo: MemoBytes?,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
@@ -451,7 +451,7 @@ protocol ZcashRustBackendWelding {
         dbCache: URL,
         dbData: URL,
         usk: UnifiedSpendingKey,
-        memo: MemoBytes,
+        memo: MemoBytes?,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType

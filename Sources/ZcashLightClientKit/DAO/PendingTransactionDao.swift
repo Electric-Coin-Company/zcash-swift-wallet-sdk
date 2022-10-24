@@ -61,7 +61,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
             raw: entity.raw,
             id: entity.id,
             value: entity.value,
-            memo: entity.memo == nil ? Data(MemoBytes.empty().bytes) : entity.memo,
+            memo: entity.memo,
             rawTransactionId: entity.raw,
             fee: entity.fee
         )
@@ -179,7 +179,13 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
 }
 
 extension PendingTransaction {
-    init(value: Zatoshi, recipient: PendingTransactionRecipient, memo: MemoBytes, account index: Int) {
+    init(value: Zatoshi, recipient: PendingTransactionRecipient, memo: MemoBytes?, account index: Int) {
+        var memoData: Data?
+
+        if let memo = memo {
+            memoData = Data(memo.bytes)
+        }
+
         self = PendingTransaction(
             recipient: recipient,
             accountIndex: index,
@@ -194,7 +200,7 @@ extension PendingTransaction {
             raw: nil,
             id: nil,
             value: value,
-            memo: Data(memo.bytes),
+            memo: memoData,
             rawTransactionId: nil,
             fee: nil
         )
