@@ -42,7 +42,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     func initSpend(
         zatoshi: Zatoshi,
         recipient: PendingTransactionRecipient,
-        memo: MemoBytes,
+        memo: MemoBytes?,
         from accountIndex: Int
     ) throws -> PendingTransactionEntity {
         guard let insertedTx = try repository.find(
@@ -72,7 +72,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         do {
             let encodedTransaction = try await self.encoder.createShieldingTransaction(
                 spendingKey: spendingKey,
-                memoBytes: try pendingTransaction.memo.intoMemoBytes(),
+                memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
             let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
@@ -115,7 +115,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 spendingKey: spendingKey,
                 zatoshi: pendingTransaction.value,
                 to: toAddress!,
-                memoBytes: try pendingTransaction.memo.intoMemoBytes(),
+                memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
             let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)

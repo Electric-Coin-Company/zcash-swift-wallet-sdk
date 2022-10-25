@@ -34,7 +34,7 @@ protocol TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memoBytes: MemoBytes,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction
     
@@ -50,7 +50,7 @@ protocol TransactionEncoder {
     */
     func createShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
-        memoBytes: MemoBytes,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction
 

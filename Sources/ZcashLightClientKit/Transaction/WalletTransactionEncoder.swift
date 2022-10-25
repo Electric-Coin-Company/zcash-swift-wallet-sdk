@@ -51,7 +51,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memoBytes: MemoBytes,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction {
         let txId = try createSpend(
@@ -80,7 +80,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         to address: String,
-        memoBytes: MemoBytes,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
@@ -107,7 +107,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     func createShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
-        memoBytes: MemoBytes,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction {
         let txId = try createShieldingSpend(
@@ -129,7 +129,11 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
     }
-    func createShieldingSpend(spendingKey: UnifiedSpendingKey, memo: MemoBytes, accountIndex: Int) throws -> Int {
+    func createShieldingSpend(
+        spendingKey: UnifiedSpendingKey,
+        memo: MemoBytes?,
+        accountIndex: Int
+    ) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }

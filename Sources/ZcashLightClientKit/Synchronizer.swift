@@ -109,13 +109,13 @@ public protocol Synchronizer {
     /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
-    /// - Parameter memo: the memo to include as part of the transaction.
+    /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
     // swiftlint:disable:next function_parameter_count
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
-        memo: Memo
+        memo: Memo?
     ) async throws -> PendingTransactionEntity
 
     /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.

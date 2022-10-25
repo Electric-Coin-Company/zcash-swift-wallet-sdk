@@ -461,14 +461,19 @@ public class SDKSynchronizer: Synchronizer {
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         toAddress: Recipient,
-        memo: Memo
+        memo: Memo?
     ) async throws -> PendingTransactionEntity {
         do {
             try await initializer.downloadParametersIfNeeded()
         } catch {
             throw SynchronizerError.parameterMissing(underlyingError: error)
         }
-        
+
+        if case Recipient.transparent = toAddress,
+           memo != nil {
+            throw SynchronizerError.generalError(message: "Memos can't be sent to transparent addresses.")
+        }
+
         return try await createToAddress(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
@@ -510,13 +515,13 @@ public class SDKSynchronizer: Synchronizer {
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
         recipient: Recipient,
-        memo: Memo
+        memo: Memo?
     ) async throws -> PendingTransactionEntity {
         do {
             let spend = try transactionManager.initSpend(
                 zatoshi: zatoshi,
                 recipient: .address(recipient),
-                memo: memo.asMemoBytes(),
+                memo: memo?.asMemoBytes(),
                 from: Int(spendingKey.account)
             )
             
