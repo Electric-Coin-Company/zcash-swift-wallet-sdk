@@ -267,12 +267,18 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         let dbData = dbData.osStr()
-        return zcashlc_get_total_transparent_balance_for_account(
+        let balance = zcashlc_get_total_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
             account
         )
+
+        guard balance >= 0 else {
+            throw throwDataDbError(lastError() ?? .genericError(message: "Error getting Total Transparent balance from account \(account)"))
+        }
+
+        return balance
     }
 
     static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
