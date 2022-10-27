@@ -78,9 +78,8 @@ class BlockStreamingTest: XCTestCase {
                     blockBufferSize: 10,
                     startHeight: startHeight
                 )
-                XCTAssertTrue(Task.isCancelled)
             } catch {
-                XCTFail("failed with error: \(error)")
+                XCTAssertTrue(Task.isCancelled)
             }
         }
         
