@@ -111,11 +111,12 @@ class CompactBlockProcessorTests: XCTestCase {
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
-        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
+        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
         
         XCTAssertNoThrow(try processor.start())
     }
-    
+
+    // FIXME: disabled see https://github.com/zcash/ZcashLightClientKit/issues/590
     func testStartNotifiesSuscriptors() {
         startProcessing()
    
@@ -127,10 +128,11 @@ class CompactBlockProcessorTests: XCTestCase {
                 idleNotificationExpectation
             ],
             timeout: 30,
-            enforceOrder: true
+            enforceOrder: false
         )
     }
-    
+
+    // FIXME: disabled see https://github.com/zcash/ZcashLightClientKit/issues/590
     func testProgressNotifications() {
         let expectedUpdates = expectedBatches(
             currentHeight: processorConfig.walletBirthday,

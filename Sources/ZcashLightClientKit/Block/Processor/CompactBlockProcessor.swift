@@ -870,6 +870,11 @@ public class CompactBlockProcessor {
         )
         setState(.synced)
         setTimer()
+        NotificationCenter.default.post(
+            name: Notification.Name.blockProcessorIdle,
+            object: self,
+            userInfo: nil
+        )
     }
     
     private func setTimer() {

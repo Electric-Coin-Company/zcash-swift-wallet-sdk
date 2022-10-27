@@ -9,7 +9,7 @@
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
-
+// FIXME: disabled until https://github.com/zcash/ZcashLightClientKit/issues/587 fixed
 class ShieldFundsTests: XCTestCase {
     // TODO: Parameterize this from environment?
     // swiftlint:disable:next line_length
