@@ -185,13 +185,6 @@ class ZcashRustBackendTests: XCTestCase {
             }
         }
 
-        uAddresses.append(
-            try ZcashRustBackend.getCurrentAddress(
-                dbData: tempDBs.dataDB,
-                account: 0,
-                networkType: network
-            )
-        )
 
         XCTAssertEqual(
             uAddresses,

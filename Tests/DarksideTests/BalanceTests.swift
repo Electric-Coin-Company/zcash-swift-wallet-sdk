@@ -962,7 +962,7 @@ class BalanceTests: XCTestCase {
                     */
                     XCTAssertEqual(confirmedTx.value, self.sendAmount)
                     XCTAssertEqual(confirmedTx.toAddress, self.testRecipientAddress)
-                    let confirmedMemo = try confirmedTx.memo.intoMemoBytes().intoMemo()
+                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
                     XCTAssertEqual(confirmedMemo, memo)
 
                     guard let transactionId = confirmedTx.rawTransactionId else {

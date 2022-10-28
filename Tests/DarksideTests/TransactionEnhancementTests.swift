@@ -63,6 +63,8 @@ class TransactionEnhancementTests: XCTestCase {
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
 
+        let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
+        
         let ufvks = [
             try DerivationTool(networkType: network.networkType)
                 .deriveUnifiedSpendingKey(seed: TestSeed().seed(), accountIndex: 0)
@@ -81,7 +83,7 @@ class TransactionEnhancementTests: XCTestCase {
             return
         }
         
-        let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
+
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
@@ -143,26 +145,23 @@ class TransactionEnhancementTests: XCTestCase {
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
 
+        txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
+        idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
         try processor.start()
     }
     
     func testBasicEnhacement() throws {
-        let targetLatestHeight = BlockHeight(663250)
-        let walletBirthday = Checkpoint.birthday(with: 663151, network: network).height
+        let targetLatestHeight = BlockHeight(663200)
         
-        try basicEnhancementTest(latestHeight: targetLatestHeight, walletBirthday: walletBirthday)
-    }
-    
-    func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) throws {
         do {
-            try darksideWalletService.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
-            try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue)
-            try darksideWalletService.applyStaged(nextLatestHeight: 663200)
+            try FakeChainBuilder.buildChain(darksideWallet: darksideWalletService, branchID: branchID, chainName: chainName)
+
+            try darksideWalletService.applyStaged(nextLatestHeight: targetLatestHeight)
         } catch {
             XCTFail("Error: \(error)")
             return
         }
-      
+
         sleep(3)
 
         /**
@@ -175,7 +174,7 @@ class TransactionEnhancementTests: XCTestCase {
             XCTFail("Error: \(error)")
             return
         }
-        
+
         /**
         download and sync blocks from walletBirthday to firstLatestHeight
         */

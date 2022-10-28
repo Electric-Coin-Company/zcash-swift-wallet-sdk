@@ -255,14 +255,7 @@ public class SDKSynchronizer: Synchronizer {
             name: Notification.Name.blockProcessorFailed,
             object: processor
         )
-        
-        center.addObserver(
-            self,
-            selector: #selector(processorIdle(_:)),
-            name: Notification.Name.blockProcessorIdle,
-            object: processor
-        )
-        
+
         center.addObserver(
             self,
             selector: #selector(processorFinished(_:)),
@@ -432,13 +425,6 @@ public class SDKSynchronizer: Synchronizer {
                 )
                 self.status = .error(SynchronizerError.generalError(message: "This is strange. processorFailed Call received no error message"))
             }
-        }
-    }
-    
-    @objc func processorIdle(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-        guard let self = self else { return }
-            self.status = .disconnected
         }
     }
     
