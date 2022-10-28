@@ -1,3 +1,5 @@
+# 0.16-13-beta
+- [#597] SDK does not build with SQLite 0.14
 # 0.16.12-beta
 Checkpoints added:
 Mainnet
