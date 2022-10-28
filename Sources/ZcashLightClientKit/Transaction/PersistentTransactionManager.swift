@@ -67,167 +67,129 @@ class PersistentTransactionManager: OutboundTransactionManager {
     func encodeShieldingTransaction(
         spendingKey: String,
         tsk: String,
-        pendingTransaction: PendingTransactionEntity,
-        result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        queue.async { [weak self] in
-            guard let self = self else { return }
-
-            let derivationTool = DerivationTool(networkType: self.network)
-
-            guard
-                let viewingKey = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
-                let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
-            else {
-                result(
-                    .failure(
-                        TransactionManagerError.shieldingEncodingFailed(
-                            pendingTransaction,
-                            reason: "There was an error Deriving your keys"
-                        )
-                    )
-                )
-                return
-            }
+        pendingTransaction: PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity {
+        let derivationTool = DerivationTool(networkType: self.network)
+        
+        guard
+            let viewingKey = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
+            let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
+        else {
+            throw TransactionManagerError.shieldingEncodingFailed(
+                pendingTransaction,
+                reason: "There was an error Deriving your keys"
+            )
+        }
+        
+        guard pendingTransaction.toAddress == zAddr else {
+            throw TransactionManagerError.shieldingEncodingFailed(
+                pendingTransaction,
+                reason: """
+                            the recipient address does not match your
+                            derived shielded address. Shielding transactions
+                            addresses must match the ones derived from your keys.
+                            This is a serious error. We are not letting you encode
+                            this shielding transaction because it can lead to loss
+                            of funds
+                        """
+            )
+        }
+        
+        do {
+            let encodedTransaction = try await self.encoder.createShieldingTransaction(
+                spendingKey: spendingKey,
+                tSecretKey: tsk,
+                memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                from: pendingTransaction.accountIndex
+            )
+            let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
             
-            guard pendingTransaction.toAddress == zAddr else {
-                result(
-                    .failure(
-                        TransactionManagerError.shieldingEncodingFailed(
-                            pendingTransaction,
-                            reason: """
-                                the recipient address does not match your
-                                derived shielded address. Shielding transactions
-                                addresses must match the ones derived from your keys.
-                                This is a serious error. We are not letting you encode
-                                this shielding transaction because it can lead to loss
-                                of funds
-                            """
-                        )
-                    )
-                )
-                return
-            }
-            do {
-                let encodedTransaction = try self.encoder.createShieldingTransaction(
-                    spendingKey: spendingKey,
-                    tSecretKey: tsk,
-                    memo: pendingTransaction.memo?.asZcashTransactionMemo(),
-                    from: pendingTransaction.accountIndex
-                )
-                let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
-
-                var pending = pendingTransaction
-                pending.encodeAttempts += 1
-                pending.raw = encodedTransaction.raw
-                pending.rawTransactionId = encodedTransaction.transactionId
-                pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
-                pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
-
-                try self.repository.update(pending)
-
-                result(.success(pending))
-            } catch StorageError.updateFailed {
-                DispatchQueue.main.async {
-                    result(.failure(TransactionManagerError.updateFailed(pendingTransaction)))
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    result(.failure(error))
-                }
-            }
+            var pending = pendingTransaction
+            pending.encodeAttempts += 1
+            pending.raw = encodedTransaction.raw
+            pending.rawTransactionId = encodedTransaction.transactionId
+            pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
+            pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
+            
+            try self.repository.update(pending)
+            
+            return pending
+        } catch StorageError.updateFailed {
+            throw TransactionManagerError.updateFailed(pendingTransaction)
+        } catch {
+            throw error
         }
     }
     
     func encode(
         spendingKey: String,
-        pendingTransaction: PendingTransactionEntity,
-        result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        queue.async { [weak self] in
-            guard let self = self else { return }
+        pendingTransaction: PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity {
+        do {
+            let encodedTransaction = try await self.encoder.createTransaction(
+                spendingKey: spendingKey,
+                zatoshi: pendingTransaction.intValue,
+                to: pendingTransaction.toAddress,
+                memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                from: pendingTransaction.accountIndex
+            )
+            let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
+            
+            var pending = pendingTransaction
+            pending.encodeAttempts += 1
+            pending.raw = encodedTransaction.raw
+            pending.rawTransactionId = encodedTransaction.transactionId
+            pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
+            pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
+            
+            try self.repository.update(pending)
+            
+            return pending
+        } catch StorageError.updateFailed {
+            throw TransactionManagerError.updateFailed(pendingTransaction)
+        } catch {
             do {
-                let encodedTransaction = try self.encoder.createTransaction(
-                    spendingKey: spendingKey,
-                    zatoshi: pendingTransaction.intValue,
-                    to: pendingTransaction.toAddress,
-                    memo: pendingTransaction.memo?.asZcashTransactionMemo(),
-                    from: pendingTransaction.accountIndex
-                )
-                let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
-
-                var pending = pendingTransaction
-                pending.encodeAttempts += 1
-                pending.raw = encodedTransaction.raw
-                pending.rawTransactionId = encodedTransaction.transactionId
-                pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
-                pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
-
-                try self.repository.update(pending)
-
-                result(.success(pending))
-            } catch StorageError.updateFailed {
-                DispatchQueue.main.async {
-                    result(.failure(TransactionManagerError.updateFailed(pendingTransaction)))
-                }
+                try self.updateOnFailure(transaction: pendingTransaction, error: error)
             } catch {
-                do {
-                    try self.updateOnFailure(transaction: pendingTransaction, error: error)
-                } catch {
-                    DispatchQueue.main.async {
-                        result(.failure(TransactionManagerError.updateFailed(pendingTransaction)))
-                    }
-                }
-                DispatchQueue.main.async {
-                    result(.failure(error))
-                }
+                throw TransactionManagerError.updateFailed(pendingTransaction)
             }
+            throw error
         }
     }
     
     func submit(
-        pendingTransaction: PendingTransactionEntity,
-        result: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
+        pendingTransaction: PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity {
         guard let txId = pendingTransaction.id else {
-            result(.failure(TransactionManagerError.notPending(pendingTransaction)))// this transaction is not stored
-            return
+            throw TransactionManagerError.notPending(pendingTransaction) // this transaction is not stored
         }
         
-        queue.async { [weak self] in
-            guard let self = self else { return }
-            
-            do {
-                guard let storedTx = try self.repository.find(by: txId) else {
-                    result(.failure(TransactionManagerError.notPending(pendingTransaction)))
-                    return
-                }
-                
-                guard !storedTx.isCancelled  else {
-                    LoggerProxy.debug("ignoring cancelled transaction \(storedTx)")
-                    result(.failure(TransactionManagerError.cancelled(storedTx)))
-                    return
-                }
-                
-                guard let raw = storedTx.raw else {
-                    LoggerProxy.debug("INCONSISTENCY: attempt to send pending transaction \(txId) that has not raw data")
-                    result(.failure(TransactionManagerError.internalInconsistency(storedTx)))
-                    return
-                }
-
-                let response = try self.service.submit(spendTransaction: raw)
-                let transaction = try self.update(transaction: storedTx, on: response)
-
-                guard response.errorCode >= 0 else {
-                    result(.failure(TransactionManagerError.submitFailed(transaction, errorCode: Int(response.errorCode))))
-                    return
-                }
-                
-                result(.success(transaction))
-            } catch {
-                try? self.updateOnFailure(transaction: pendingTransaction, error: error)
-                result(.failure(error))
+        do {
+            guard let storedTx = try self.repository.find(by: txId) else {
+                throw TransactionManagerError.notPending(pendingTransaction)
             }
+            
+            guard !storedTx.isCancelled  else {
+                LoggerProxy.debug("ignoring cancelled transaction \(storedTx)")
+                throw TransactionManagerError.cancelled(storedTx)
+            }
+            
+            guard let raw = storedTx.raw else {
+                LoggerProxy.debug("INCONSISTENCY: attempt to send pending transaction \(txId) that has not raw data")
+                throw TransactionManagerError.internalInconsistency(storedTx)
+            }
+            
+            let response = try await self.service.submit(spendTransaction: raw)
+            let transaction = try self.update(transaction: storedTx, on: response)
+            
+            guard response.errorCode >= 0 else {
+                throw TransactionManagerError.submitFailed(transaction, errorCode: Int(response.errorCode))
+            }
+            
+            return transaction
+        } catch {
+            try? self.updateOnFailure(transaction: pendingTransaction, error: error)
+            throw error
         }
     }
     

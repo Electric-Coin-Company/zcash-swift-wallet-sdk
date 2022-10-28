@@ -32,8 +32,10 @@ class SendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
-        // swiftlint:disable:next force_try
-        try! synchronizer.prepare()
+        Task { @MainActor in
+            // swiftlint:disable:next force_try
+            try! await synchronizer.prepare()
+        }
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
@@ -41,12 +43,14 @@ class SendViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        do {
-            try synchronizer.start(retry: false)
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-        } catch {
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-            fail(error)
+        Task { @MainActor in
+            do {
+                try await synchronizer.start(retry: false)
+                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+            } catch {
+                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+                fail(error)
+            }
         }
     }
     
@@ -214,26 +218,20 @@ class SendViewController: UIViewController {
         
         KRProgressHUD.show()
         
-        synchronizer.sendToAddress(
-            spendingKey: address,
-            zatoshi: zec,
-            toAddress: recipient,
-            memo: !self.memoField.text.isEmpty ? self.memoField.text : nil,
-            from: 0
-        ) {  [weak self] result in
-            DispatchQueue.main.async {
+        Task { @MainActor in
+            do {
+                let pendingTransaction = try await synchronizer.sendToAddress(
+                    spendingKey: address,
+                    zatoshi: zec,
+                    toAddress: recipient,
+                    memo: !self.memoField.text.isEmpty ? self.memoField.text : nil,
+                    from: 0
+                )
                 KRProgressHUD.dismiss()
-            }
-
-            switch result {
-            case .success(let pendingTransaction):
                 loggerProxy.info("transaction created: \(pendingTransaction)")
-                
-            case .failure(let error):
-                DispatchQueue.main.async {
-                    self?.fail(error)
-                    loggerProxy.error("SEND FAILED: \(error)")
-                }
+            } catch {
+                fail(error)
+                loggerProxy.error("SEND FAILED: \(error)")
             }
         }
     }

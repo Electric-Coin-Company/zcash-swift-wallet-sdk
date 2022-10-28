@@ -29,11 +29,13 @@ class GetUTXOsViewController: UIViewController {
 
         self.transparentAddressLabel.text = tAddress
 
-        // swiftlint:disable:next force_try
-        let balance = try! AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
-        
-        self.totalBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.total.amount))
-        self.verifiedBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.verified.amount))
+        Task { @MainActor in
+            // swiftlint:disable:next force_try
+            let balance = try! await AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
+            
+            self.totalBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.total.amount))
+            self.verifiedBalanceLabel.text = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: balance.verified.amount))
+        }
     }
     
     @IBAction func shieldFunds(_ sender: Any) {
@@ -46,25 +48,17 @@ class GetUTXOsViewController: UIViewController {
 
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
 
-            AppDelegate.shared.sharedSynchronizer.shieldFunds(
-                spendingKey: spendingKey,
-                transparentSecretKey: transparentSecretKey,
-                memo: "shielding is fun!",
-                from: 0,
-                resultBlock: { result in
-                    DispatchQueue.main.async {
-                        KRProgressHUD.dismiss()
-                        switch result {
-                        case .success(let transaction):
-                            self.messageLabel.text = "funds shielded \(transaction)"
-                        case .failure(let error):
-                            self.messageLabel.text = "Shielding failed: \(error)"
-                        }
-                    }
-                }
-            )
+            Task { @MainActor in
+                let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
+                    spendingKey: spendingKey,
+                    transparentSecretKey: transparentSecretKey,
+                    memo: "shielding is fun!",
+                    from: 0)
+                KRProgressHUD.dismiss()
+                self.messageLabel.text = "funds shielded \(transaction)"
+            }
         } catch {
-            self.messageLabel.text = "Error \(error)"
+            self.messageLabel.text = "Shielding failed \(error)"
         }
     }
 }

@@ -33,7 +33,7 @@ class WalletTests: XCTestCase {
         }
     }
     
-    func testWalletInitialization() throws {
+    func testWalletInitialization() async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
         let uvk = try derivationTool.deriveUnifiedViewingKeysFromSeed(seedData.bytes, numberOfAccounts: 1)
         let wallet = Initializer(
@@ -49,7 +49,11 @@ class WalletTests: XCTestCase {
         )
         
         let synchronizer = try SDKSynchronizer(initializer: wallet)
-        XCTAssertNoThrow(try synchronizer.prepare())
+        do {
+            try await synchronizer.prepare()
+        } catch {
+            XCTFail("shouldn't fail here")
+        }
         
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
         XCTAssertNoThrow( try FileManager.default.removeItem(at: dbData!) )

@@ -16,6 +16,7 @@ enum DemoAppConfig {
     static var birthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 935000 : 1386000
     
     static var seed = try! Mnemonic.deterministicSeedBytes(from: "live combine flight accident slow soda mind bright absent bid hen shy decade biology amazing mix enlist ensure biology rhythm snap duty soap armor")
+    
     static var address: String {
         "\(host):\(port)"
     }
@@ -30,7 +31,7 @@ enum DemoAppConfig {
     }()
     
     static var endpoint: LightWalletEndpoint {
-        return LightWalletEndpoint(address: self.host, port: self.port, secure: true)
+        return LightWalletEndpoint(address: self.host, port: self.port, secure: true, streamingCallTimeoutInMillis: 10 * 60 * 60 * 1000)
     }
 }
 

@@ -80,7 +80,7 @@ public protocol Synchronizer {
 
     /// prepares this initializer to operate. Initializes the internal state with the given
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
-    func prepare() throws
+    func prepare() async throws
 
     ///Starts this synchronizer within the given scope.
     ///
@@ -95,54 +95,34 @@ public protocol Synchronizer {
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress?
+    func getShieldedAddress(accountIndex: Int) async -> SaplingShieldedAddress?
     
 
     /// Gets the unified address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress?
+    func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress?
 
     /// Gets the transparent address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getTransparentAddress(accountIndex: Int) -> TransparentAddress?
-
-    /// Sends zatoshi.
-    /// - Parameter spendingKey: the key that allows spends to occur.
-    /// - Parameter zatoshi: the amount of zatoshi to send.
-    /// - Parameter toAddress: the recipient's address.
-    /// - Parameter memo: the optional memo to include as part of the transaction.
-    /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
-    @available(*, deprecated, message: "This function will be removed soon, use the one reveiving a `Zatoshi` value instead")
-    // swiftlint:disable:next function_parameter_count
-    func sendToAddress(
-        spendingKey: String,
-        zatoshi: Int64,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
-    )
-
-
+    func getTransparentAddress(accountIndex: Int) async -> TransparentAddress?
+    
     /// Sends zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: the optional memo to include as part of the transaction.
     /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
-    // swiftlint:disable:next function_parameter_count
     func sendToAddress(
         spendingKey: String,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
-    )
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity
 
-    /// Sends zatoshi.
+    /// Shields zatoshi.
     /// - Parameter spendingKey: the key that allows spends to occur.
     /// - Parameter transparentSecretKey: the key that allows to spend transaprent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
@@ -151,9 +131,8 @@ public protocol Synchronizer {
         spendingKey: String,
         transparentSecretKey: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (_ result: Result<PendingTransactionEntity, Error>) -> Void
-    )
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
     /// an option if the transaction has not yet been submitted to the server.
@@ -188,7 +167,7 @@ public protocol Synchronizer {
     func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
 
     /// Returns the latest downloaded height from the compact block cache
-    func latestDownloadedHeight() throws -> BlockHeight
+    func latestDownloadedHeight() async throws -> BlockHeight
     
 
     /// Returns the latest block height from the provided Lightwallet endpoint
@@ -197,14 +176,14 @@ public protocol Synchronizer {
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking
-    func latestHeight() throws -> BlockHeight
+    func latestHeight() async throws -> BlockHeight
     
 
     /// Returns the latests UTXOs for the given address from the specified height on
-    func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void)
+    func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs
 
     /// Returns the last stored unshielded balance
-    func getTransparentBalance(accountIndex: Int) throws -> WalletBalance
+    func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance
     
 
     /// Returns the shielded total balance (includes verified and unverified balance)
@@ -228,7 +207,7 @@ public protocol Synchronizer {
     /// - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
     /// - Throws rewindError for other errors
     /// - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
-    func rewind(_ policy: RewindPolicy) throws
+    func rewind(_ policy: RewindPolicy) async throws
 }
 
 public enum SyncStatus: Equatable {

@@ -10,7 +10,6 @@ import Foundation
 class WalletTransactionEncoder: TransactionEncoder {
     var rustBackend: ZcashRustBackendWelding.Type
     var repository: TransactionRepository
-    var queue: DispatchQueue
 
     private var outputParamsURL: URL
     private var spendParamsURL: URL
@@ -34,7 +33,6 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
         self.networkType = networkType
-        self.queue = DispatchQueue(label: "wallet.transaction.encoder.serial.queue")
     }
     
     convenience init(initializer: Initializer) {
@@ -55,7 +53,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         to address: String,
         memo: String?,
         from accountIndex: Int
-    ) throws -> EncodedTransaction {
+    ) async throws -> EncodedTransaction {
         let txId = try createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
@@ -75,35 +73,6 @@ class WalletTransactionEncoder: TransactionEncoder {
             return EncodedTransaction(transactionId: transaction.transactionId, raw: transaction.raw)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
-        }
-    }
-
-    // swiftlint:disable:next function_parameter_count
-    func createTransaction(
-        spendingKey: String,
-        zatoshi: Int,
-        to address: String,
-        memo: String?,
-        from accountIndex: Int,
-        result: @escaping TransactionEncoderResultBlock
-    ) {
-        queue.async { [weak self] in
-            guard let self = self else { return }
-            do {
-                result(
-                    .success(
-                        try self.createTransaction(
-                            spendingKey: spendingKey,
-                            zatoshi: zatoshi,
-                            to: address,
-                            memo: memo,
-                            from: accountIndex
-                        )
-                    )
-                )
-            } catch {
-                result(.failure(error))
-            }
         }
     }
     
@@ -136,7 +105,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         tSecretKey: String,
         memo: String?,
         from accountIndex: Int
-    ) throws -> EncodedTransaction {
+    ) async throws -> EncodedTransaction {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
             tsk: tSecretKey,
@@ -155,18 +124,6 @@ class WalletTransactionEncoder: TransactionEncoder {
             return EncodedTransaction(transactionId: transaction.transactionId, raw: transaction.raw)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
-        }
-    }
-    
-    func createShieldingTransaction(
-        spendingKey: String,
-        tSecretKey: String,
-        memo: String?,
-        from accountIndex: Int,
-        result: @escaping TransactionEncoderResultBlock
-    ) {
-        queue.async {
-            result(.failure(RustWeldingError.genericError(message: "not implemented")))
         }
     }
     

@@ -9,6 +9,7 @@
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
+
 class ShieldFundsTests: XCTestCase {
     // TODO: Parameterize this from environment?
     // swiftlint:disable:next line_length
@@ -82,7 +83,7 @@ class ShieldFundsTests: XCTestCase {
     /// 15. sync up to the new chain tip
     /// verify that the shielded transactions are confirmed
     ///
-    func testShieldFunds() throws {
+    func testShieldFunds() async throws {
         // 1. load the dataset
         try coordinator.service.useDataset(from: "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/shielding-dataset/shield-funds/1631000.txt")
 
@@ -92,7 +93,7 @@ class ShieldFundsTests: XCTestCase {
         var shouldContinue = false
         var initialTotalBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
-        var initialTransparentBalance: WalletBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        var initialTransparentBalance: WalletBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         let utxo = try GetAddressUtxosReply(jsonString: """
                                                     {
@@ -110,15 +111,19 @@ class ShieldFundsTests: XCTestCase {
         let preTxExpectation = XCTestExpectation(description: "pre receive")
 
         // 3. sync up to that height
-        try coordinator.sync(
-            completion: { synchro in
-                initialVerifiedBalance = synchro.initializer.getVerifiedBalance()
-                initialTotalBalance = synchro.initializer.getBalance()
-                preTxExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+                    initialTotalBalance = synchronizer.initializer.getBalance()
+                    preTxExpectation.fulfill()
+                    shouldContinue = true
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
 
         wait(for: [preTxExpectation], timeout: 10)
 
@@ -130,7 +135,7 @@ class ShieldFundsTests: XCTestCase {
         // at this point the balance should be all zeroes for transparent and shielded funds
         XCTAssertEqual(initialTotalBalance, Zatoshi.zero)
         XCTAssertEqual(initialVerifiedBalance, Zatoshi.zero)
-        initialTransparentBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        initialTransparentBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         XCTAssertEqual(initialTransparentBalance.total, .zero)
         XCTAssertEqual(initialTransparentBalance.verified, .zero)
@@ -149,19 +154,22 @@ class ShieldFundsTests: XCTestCase {
         shouldContinue = false
 
         // 6. Sync and find the UXTO on chain.
-        try coordinator.sync(
-            completion: { synchro in
-                tFundsDetectionExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
-
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    tFundsDetectionExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
         wait(for: [tFundsDetectionExpectation], timeout: 2)
 
         // at this point the balance should be zero for shielded, then zero verified transparent funds
         // and 10000 zatoshi of total (not verified) transparent funds.
-        let tFundsDetectedBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let tFundsDetectedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         XCTAssertEqual(tFundsDetectedBalance.total, Zatoshi(10000))
         XCTAssertEqual(tFundsDetectedBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
@@ -176,18 +184,22 @@ class ShieldFundsTests: XCTestCase {
         sleep(2)
 
         // 8. sync up to chain tip.
-        try coordinator.sync(
-            completion: { synchro in
-                tFundsConfirmationSyncExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    tFundsConfirmationSyncExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
 
         wait(for: [tFundsConfirmationSyncExpectation], timeout: 5)
 
         // the transparent funds should be 10000 zatoshis both total and verified
-        let confirmedTFundsBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let confirmedTFundsBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         XCTAssertEqual(confirmedTFundsBalance.total, Zatoshi(10000))
         XCTAssertEqual(confirmedTFundsBalance.verified, Zatoshi(10000))
@@ -209,29 +221,25 @@ class ShieldFundsTests: XCTestCase {
         var shieldingPendingTx: PendingTransactionEntity?
 
         // shield the funds
-        coordinator.synchronizer.shieldFunds(
-            spendingKey: coordinator.spendingKey,
-            transparentSecretKey: transparentSecretKey,
-            memo: "shield funds",
-            from: 0
-        ) { result in
-            switch result {
-            case .failure(let error):
-                XCTFail("Failed With error: \(error.localizedDescription)")
-
-            case .success(let pendingTx):
-                shouldContinue = true
-                XCTAssertEqual(pendingTx.value, Zatoshi(10000))
-                shieldingPendingTx = pendingTx
-            }
+        do {
+            let pendingTx = try await coordinator.synchronizer.shieldFunds(
+                spendingKey: coordinator.spendingKey,
+                transparentSecretKey: transparentSecretKey,
+                memo: "shield funds",
+                from: 0)
+            shouldContinue = true
+            XCTAssertEqual(pendingTx.value, Zatoshi(10000))
+            shieldingPendingTx = pendingTx
             shieldFundsExpectation.fulfill()
+        } catch {
+            XCTFail("Failed With error: \(error.localizedDescription)")
         }
 
         wait(for: [shieldFundsExpectation], timeout: 30)
 
         guard shouldContinue else { return }
 
-        let postShieldingBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let postShieldingBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
         // when funds are shielded the UTXOs should be marked as spend and not shown on the balance.
         // now balance should be zero shielded, zero transaparent.
         // verify that the balance has been marked as spent regardless of confirmation
@@ -264,14 +272,17 @@ class ShieldFundsTests: XCTestCase {
         // 13. sync up to chain tip
         let postShieldSyncExpectation = XCTestExpectation(description: "sync Post shield")
         shouldContinue = false
-        try coordinator.sync(
-            completion: { synchro in
-                postShieldSyncExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
-
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    postShieldSyncExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
         wait(for: [postShieldSyncExpectation], timeout: 3)
 
         guard shouldContinue else { return }
@@ -279,7 +290,7 @@ class ShieldFundsTests: XCTestCase {
         // Now it should verify that the balance has been shielded. The resulting balance should be zero
         // transparent funds and `10000 - fee` total shielded funds,  zero verified shielded funds.
         // Fees at the time of writing the tests are 1000 zatoshi as defined on ZIP-313
-        let postShieldingShieldedBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let postShieldingShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         XCTAssertEqual(postShieldingShieldedBalance.total, Zatoshi(10000)) //FIXME: this should be zero
         XCTAssertEqual(postShieldingShieldedBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
@@ -294,13 +305,17 @@ class ShieldFundsTests: XCTestCase {
         shouldContinue = false
 
         // 15. sync up to the new chain tip
-        try coordinator.sync(
-            completion: { synchro in
-                confirmationExpectation.fulfill()
-                shouldContinue = true
-            },
-            error: self.handleError
-        )
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(completion: { synchronizer in
+                    shouldContinue = true
+                    confirmationExpectation.fulfill()
+                    continuation.resume()
+                }, error: self.handleError)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
 
         wait(for: [confirmationExpectation], timeout: 5)
 
@@ -312,7 +327,7 @@ class ShieldFundsTests: XCTestCase {
         XCTAssertNotNil(clearedTransaction)
 
         XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), Zatoshi(9000))
-        let postShieldingConfirmationShieldedBalance = try coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        let postShieldingConfirmationShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
         XCTAssertEqual(postShieldingConfirmationShieldedBalance.total, .zero)
         XCTAssertEqual(postShieldingConfirmationShieldedBalance.verified, .zero)
 

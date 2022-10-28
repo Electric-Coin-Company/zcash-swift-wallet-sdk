@@ -85,39 +85,24 @@ extension CompactBlockStorage: CompactBlockRepository {
         try latestBlockHeight()
     }
     
-    func latestHeight(result: @escaping (Swift.Result<BlockHeight, Error>) -> Void) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                result(.success(try self.latestBlockHeight()))
-            } catch {
-                result(.failure(error))
-            }
+    func latestHeightAsync() async throws -> BlockHeight {
+        let task = Task(priority: .userInitiated) {
+            try latestBlockHeight()
         }
+        return try await task.value
     }
     
-    func write(blocks: [ZcashCompactBlock]) throws {
-        try insert(blocks)
-    }
-    
-    func write(blocks: [ZcashCompactBlock], completion: ((Error?) -> Void)?) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                try self.insert(blocks)
-                completion?(nil)
-            } catch {
-                completion?(error)
-            }
+    func write(blocks: [ZcashCompactBlock]) async throws {
+        let task = Task(priority: .userInitiated) {
+            try insert(blocks)
         }
+        try await task.value
     }
-    
-    func rewind(to height: BlockHeight, completion: ((Error?) -> Void)?) {
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                try self.rewind(to: height)
-                completion?(nil)
-            } catch {
-                completion?(error)
-            }
+
+    func rewindAsync(to height: BlockHeight) async throws {
+        let task = Task(priority: .userInitiated) {
+            try rewind(to: height)
         }
+        try await task.value
     }
 }

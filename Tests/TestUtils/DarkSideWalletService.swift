@@ -58,92 +58,23 @@ class DarksideWalletService: LightWalletService {
         self.init(endpoint: LightWalletEndpointBuilder.default)
     }
 
-    @discardableResult
-    func blockStream(
-        startHeight: BlockHeight,
-        endHeight: BlockHeight,
-        result: @escaping (Result<GRPCResult, LightWalletServiceError>) -> Void,
-        handler: @escaping (ZcashCompactBlock) -> Void,
-        progress: @escaping (BlockProgress) -> Void
-    ) -> CancellableCall {
-        return service.blockStream(
-            startHeight: startHeight,
-            endHeight: endHeight,
-            result: result,
-            handler: handler,
-            progress: progress
-        )
+    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        service.blockStream(startHeight: startHeight, endHeight: endHeight)
     }
-
-    func getInfo() throws -> LightWalletdInfo {
-        try service.getInfo()
-    }
-
-    func getInfo(result: @escaping (Result<LightWalletdInfo, LightWalletServiceError>) -> Void) {
-        service.getInfo(result: result)
-    }
-
+    
     func closeConnection() {
     }
 
-    func fetchUTXOs(for tAddress: String, height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        return []
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        service.fetchUTXOs(for: tAddress, height: height)
     }
-
-    func fetchUTXOs(
-        for tAddress: String,
-        height: BlockHeight,
-        result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
-    ) {
-        service.fetchUTXOs(for: tAddress, height: height, result: result)
-    }
-
-    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) throws -> [UnspentTransactionOutputEntity] {
-        try service.fetchUTXOs(for: tAddresses, height: height)
-    }
-
-    func fetchUTXOs(
-        for tAddresses: [String],
-        height: BlockHeight,
-        result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>) -> Void
-    ) {
-        service.fetchUTXOs(for: tAddresses, height: height, result: result)
-    }
-
-
-    func fetchTransaction(txId: Data) throws -> TransactionEntity {
-        try service.fetchTransaction(txId: txId)
-    }
-
-    func fetchTransaction(txId: Data, result: @escaping (Result<TransactionEntity, LightWalletServiceError>) -> Void) {
-        service.fetchTransaction(txId: txId, result: result)
-    }
-
-    func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
-        service.latestBlockHeight(result: result)
+    
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        service.fetchUTXOs(for: tAddresses, height: height)
     }
 
     func latestBlockHeight() throws -> BlockHeight {
         try service.latestBlockHeight()
-    }
-
-    func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
-        service.blockRange(range, result: result)
-    }
-
-    func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
-        try service.blockRange(range)
-    }
-
-    /**
-    Darskside lightwalletd should do a fake submission, by sending over the tx, retrieving it and including it in a new block
-    */
-    func submit(spendTransaction: Data, result: @escaping (Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
-        service.submit(spendTransaction: spendTransaction, result: result)
-    }
-
-    func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
-        try service.submit(spendTransaction: spendTransaction)
     }
 
     func useDataset(_ datasetUrl: String) throws {
@@ -221,6 +152,27 @@ class DarksideWalletService: LightWalletService {
 
     func clearAddedUTXOs() throws {
         _ = try darksideService.clearAddressUtxo(Empty(), callOptions: nil).response.wait()
+    }
+    
+    func getInfo() async throws -> LightWalletdInfo {
+        try await service.getInfo()
+    }
+
+    func latestBlockHeightAsync() async throws -> BlockHeight {
+        try service.latestBlockHeight()
+    }
+    
+    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        service.blockRange(range)
+    }
+    
+    /// Darskside lightwalletd should do a fake submission, by sending over the tx, retrieving it and including it in a new block
+    func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+        try await service.submit(spendTransaction: spendTransaction)
+    }
+    
+    func fetchTransaction(txId: Data) async throws -> TransactionEntity {
+        try await service.fetchTransaction(txId: txId)
     }
 }
 

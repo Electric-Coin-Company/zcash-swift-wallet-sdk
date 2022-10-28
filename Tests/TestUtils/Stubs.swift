@@ -17,48 +17,26 @@ class AwfulLightWalletService: MockLightWalletService {
         throw LightWalletServiceError.criticalError
     }
     
-    override func blockRange(_ range: CompactBlockRange) throws -> [ZcashCompactBlock] {
+    override func latestBlockHeightAsync() async throws -> BlockHeight {
         throw LightWalletServiceError.invalidBlock
     }
     
-    override func latestBlockHeight(result: @escaping (Result<BlockHeight, LightWalletServiceError>) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            result(.failure(LightWalletServiceError.invalidBlock))
-        }
+    override func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        AsyncThrowingStream { continuation in continuation.finish(throwing: LightWalletServiceError.invalidBlock) }
     }
-    
-    override func blockRange(_ range: CompactBlockRange, result: @escaping (Result<[ZcashCompactBlock], LightWalletServiceError>) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            result(.failure(LightWalletServiceError.invalidBlock))
-        }
-    }
-    
-    override func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            result(.failure(LightWalletServiceError.invalidBlock))
-        }
-    }
-       
-    /**
-    Submits a raw transaction over lightwalletd. Blocking
-    */
-    override func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
+
+    /// Submits a raw transaction over lightwalletd.
+    override func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
         throw LightWalletServiceError.invalidBlock
     }
 }
 
-class SlightlyBadLightWalletService: MockLightWalletService {
-    override func submit(spendTransaction: Data, result: @escaping(Result<LightWalletServiceResponse, LightWalletServiceError>) -> Void) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            result(.success(LightWalletServiceMockResponse.error))
-        }
-    }
+extension LightWalletServiceMockResponse: Error { }
 
-    /**
-    Submits a raw transaction over lightwalletd. Blocking
-    */
-    override func submit(spendTransaction: Data) throws -> LightWalletServiceResponse {
-        LightWalletServiceMockResponse.error
+class SlightlyBadLightWalletService: MockLightWalletService {
+    /// Submits a raw transaction over lightwalletd.
+    override func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+        throw LightWalletServiceMockResponse.error
     }
 }
 

@@ -38,54 +38,35 @@ class LightWalletServiceTests: XCTestCase {
 //        wait(for: [expect], timeout: 20)
 //    }
     
-    func testHundredBlocks() {
-        let expect = XCTestExpectation(description: self.description)
+    func testHundredBlocks() async throws {
         let count = 99
         let lowerRange: BlockHeight = network.constants.saplingActivationHeight
         let upperRange: BlockHeight = network.constants.saplingActivationHeight + count
         let blockRange = lowerRange ... upperRange
         
-        service.blockRange(blockRange) { result in
-            expect.fulfill()
-            switch result {
-            case .failure(let error):
-                XCTFail("failed with error \(error)")
-                
-            case .success(let blocks):
-                XCTAssertEqual(blocks.count, blockRange.count)
-                XCTAssertEqual(blocks[0].height, lowerRange)
-                XCTAssertEqual(blocks.last!.height, upperRange)
-            }
+        var blocks: [ZcashCompactBlock] = []
+        for try await block in service.blockRange(blockRange) {
+            blocks.append(block)
         }
-        
-        wait(for: [expect], timeout: 10)
+        XCTAssertEqual(blocks.count, blockRange.count)
+        XCTAssertEqual(blocks[0].height, lowerRange)
+        XCTAssertEqual(blocks.last!.height, upperRange)
     }
     
-    func testSyncBlockRange() {
+    func testSyncBlockRange() async throws {
         let lowerRange: BlockHeight = network.constants.saplingActivationHeight
         let upperRange: BlockHeight = network.constants.saplingActivationHeight + 99
         let blockRange = lowerRange ... upperRange
-        
-        do {
-            let blocks = try service.blockRange(blockRange)
-            XCTAssertEqual(blocks.count, blockRange.count)
-        } catch {
-            XCTFail("\(error)")
+
+        var blocks: [ZcashCompactBlock] = []
+        for try await block in service.blockRange(blockRange) {
+            blocks.append(block)
         }
+        XCTAssertEqual(blocks.count, blockRange.count)
     }
     
-    func testLatestBlock() {
-        let expect = XCTestExpectation(description: self.description)
-        service.latestBlockHeight { result in
-            expect.fulfill()
-            switch result {
-            case .failure(let e):
-                XCTFail("error: \(e)")
-            case .success(let height):
-                XCTAssertTrue(height > self.network.constants.saplingActivationHeight)
-            }
-        }
-        
-        wait(for: [expect], timeout: 10)
+    func testLatestBlock() async throws {
+        let height = try await service.latestBlockHeightAsync()
+        XCTAssertTrue(height > self.network.constants.saplingActivationHeight)
     }
 }

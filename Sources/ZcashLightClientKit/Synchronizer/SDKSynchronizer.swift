@@ -151,17 +151,19 @@ public class SDKSynchronizer: Synchronizer {
     
     deinit {
         NotificationCenter.default.removeObserver(self)
-        self.blockProcessor.stop()
+        Task { [blockProcessor] in
+            await blockProcessor.stop()
+        }
     }
     
-    public func initialize() throws {
+    public func initialize() async throws {
         try self.initializer.initialize()
-        try self.blockProcessor.setStartHeight(initializer.walletBirthday)
+        try await self.blockProcessor.setStartHeight(initializer.walletBirthday)
     }
     
-    public func prepare() throws {
+    public func prepare() async throws {
         try self.initializer.initialize()
-        try self.blockProcessor.setStartHeight(initializer.walletBirthday)
+        try await self.blockProcessor.setStartHeight(initializer.walletBirthday)
         self.status = .disconnected
     }
 
@@ -177,10 +179,8 @@ public class SDKSynchronizer: Synchronizer {
             return
 
         case .stopped, .synced, .disconnected, .error:
-            do {
-                try blockProcessor.start(retry: retry)
-            } catch {
-                throw mapError(error)
+            Task {
+                await blockProcessor.start(retry: retry)
             }
         }
     }
@@ -192,8 +192,10 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
         
-        blockProcessor.stop(cancelTasks: true)
-        self.status = .stopped
+        Task(priority: .high) {
+            await blockProcessor.stop()
+            self.status = .stopped
+        }
     }
     
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
@@ -314,7 +316,7 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         let currentState = ConnectionState(current)
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: .synchronizerConnectionStateChanged,
             object: self,
             userInfo: [
@@ -336,7 +338,7 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
 
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: .synchronizerFoundTransactions,
             object: self,
             userInfo: [
@@ -455,117 +457,70 @@ public class SDKSynchronizer: Synchronizer {
     }
     
     // MARK: Synchronizer methods
-
-    @available(*, deprecated, message: "This function will be removed soon, use the one reveiving a `Zatoshi` value instead")
-    public func sendToAddress(
-        spendingKey: String,
-        zatoshi: Int64,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        sendToAddress(
-            spendingKey: spendingKey,
-            zatoshi: Zatoshi(zatoshi),
-            toAddress: toAddress,
-            memo: memo,
-            from: accountIndex,
-            resultBlock: resultBlock
-        )
-    }
-
-    // swiftlint:disable:next function_parameter_count
+    
     public func sendToAddress(
         spendingKey: String,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
-        initializer.downloadParametersIfNeeded { downloadResult in
-            DispatchQueue.main.async { [weak self] in
-                switch downloadResult {
-                case .success:
-                    self?.createToAddress(
-                        spendingKey: spendingKey,
-                        zatoshi: zatoshi,
-                        toAddress: toAddress,
-                        memo: memo,
-                        from: accountIndex,
-                        resultBlock: resultBlock
-                    )
-                case .failure(let error):
-                    resultBlock(.failure(SynchronizerError.parameterMissing(underlyingError: error)))
-                }
-            }
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
+        do {
+            try await initializer.downloadParametersIfNeeded()
+        } catch {
+            throw SynchronizerError.parameterMissing(underlyingError: error)
         }
+
+        return try await createToAddress(
+            spendingKey: spendingKey,
+            zatoshi: zatoshi,
+            toAddress: toAddress,
+            memo: memo,
+            from: accountIndex
+        )
     }
     
     public func shieldFunds(
         spendingKey: String,
         transparentSecretKey: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
         // let's see if there are funds to shield
         let derivationTool = DerivationTool(networkType: self.network.networkType)
         
         do {
             let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
-            let tBalance = try utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
+            let tBalance = try await utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
             
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
             guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
-                resultBlock(.failure(ShieldFundsError.insuficientTransparentFunds))
-                return
+                throw ShieldFundsError.insuficientTransparentFunds
             }
             let viewingKey = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
             let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
             
             let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: zAddr, memo: memo, from: 0)
             
-            transactionManager.encodeShieldingTransaction(
+            let transaction = try await transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
                 tsk: transparentSecretKey,
                 pendingTransaction: shieldingSpend
-            ) { [weak self] result in
-                guard let self = self else { return }
-
-                switch result {
-                case .success(let transaction):
-                    self.transactionManager.submit(pendingTransaction: transaction) { submitResult in
-                        switch submitResult {
-                        case .success(let submittedTx):
-                            resultBlock(.success(submittedTx))
-                        case .failure(let submissionError):
-                            DispatchQueue.main.async {
-                                resultBlock(.failure(submissionError))
-                            }
-                        }
-                    }
-                    
-                case .failure(let error):
-                    resultBlock(.failure(error))
-                }
-            }
+            )
+            
+            return try await transactionManager.submit(pendingTransaction: transaction)
         } catch {
-            resultBlock(.failure(error))
-            return
+            throw error
         }
     }
-
-    // swiftlint:disable:next function_parameter_count
+    
     func createToAddress(
         spendingKey: String,
         zatoshi: Zatoshi,
         toAddress: String,
         memo: String?,
-        from accountIndex: Int,
-        resultBlock: @escaping (Result<PendingTransactionEntity, Error>) -> Void
-    ) {
+        from accountIndex: Int
+    ) async throws -> PendingTransactionEntity {
         do {
             let spend = try transactionManager.initSpend(
                 zatoshi: zatoshi,
@@ -574,27 +529,14 @@ public class SDKSynchronizer: Synchronizer {
                 from: accountIndex
             )
             
-            transactionManager.encode(spendingKey: spendingKey, pendingTransaction: spend) { [weak self] result in
-                guard let self = self else { return }
-                switch result {
-                case .success(let transaction):
-                    self.transactionManager.submit(pendingTransaction: transaction) { submitResult in
-                        switch submitResult {
-                        case .success(let submittedTx):
-                            resultBlock(.success(submittedTx))
-                        case .failure(let submissionError):
-                            DispatchQueue.main.async {
-                                resultBlock(.failure(submissionError))
-                            }
-                        }
-                    }
-                    
-                case .failure(let error):
-                    resultBlock(.failure(error))
-                }
-            }
+            let transaction = try await transactionManager.encode(
+                spendingKey: spendingKey,
+                pendingTransaction: spend
+            )
+            let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+            return submittedTx
         } catch {
-            resultBlock(.failure(error))
+            throw error
         }
     }
     
@@ -626,43 +568,47 @@ public class SDKSynchronizer: Synchronizer {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
     }
     
-    public func latestDownloadedHeight() throws -> BlockHeight {
-        try blockProcessor.downloader.lastDownloadedBlockHeight()
+    public func latestDownloadedHeight() async throws -> BlockHeight {
+        try await blockProcessor.downloader.lastDownloadedBlockHeight()
     }
     
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
-        blockProcessor.downloader.latestBlockHeight(result: result)
-    }
-    
-    public func latestHeight() throws -> BlockHeight {
-        try blockProcessor.downloader.latestBlockHeight()
-    }
-    
-    public func latestUTXOs(address: String, result: @escaping (Result<[UnspentTransactionOutputEntity], Error>) -> Void) {
-        guard initializer.isValidTransparentAddress(address) else {
-            result(.failure(SynchronizerError.generalError(message: "invalid t-address")))
-            return
-        }
-        
-        initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight) { [weak self] fetchResult in
-            guard let self = self else { return }
-            switch fetchResult {
-            case .success(let utxos):
-                do {
-                    try self.utxoRepository.clearAll(address: address)
-                    try self.utxoRepository.store(utxos: utxos)
-                    result(.success(utxos))
-                } catch {
-                    result(.failure(SynchronizerError.generalError(message: "\(error)")))
-                }
-            case .failure(let error):
-                result(.failure(SynchronizerError.connectionFailed(message: error)))
+        Task {
+            do {
+                let latestBlockHeight = try await blockProcessor.downloader.latestBlockHeightAsync()
+                result(.success(latestBlockHeight))
+            } catch {
+                result(.failure(error))
             }
         }
     }
+    
+    public func latestHeight() async throws -> BlockHeight {
+        try await blockProcessor.downloader.latestBlockHeight()
+    }
+    
+    public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
+        guard initializer.isValidTransparentAddress(address) else {
+            throw SynchronizerError.generalError(message: "invalid t-address")
+        }
+        
+        let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
+        
+        do {
+            var utxos: [UnspentTransactionOutputEntity] = []
+            for try await transactionEntity in stream {
+                utxos.append(transactionEntity)
+            }
+            try self.utxoRepository.clearAll(address: address)
+            try self.utxoRepository.store(utxos: utxos)
+            return utxos
+        } catch {
+            throw SynchronizerError.generalError(message: "\(error)")
+        }
+    }
    
-    public func refreshUTXOs(address: String, from height: BlockHeight, result: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
-        self.blockProcessor.refreshUTXOs(tAddress: address, startHeight: height, result: result)
+    public func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs {
+        try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
@@ -682,34 +628,34 @@ public class SDKSynchronizer: Synchronizer {
         initializer.getVerifiedBalance(account: accountIndex)
     }
 
-    public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
-        blockProcessor.getShieldedAddress(accountIndex: accountIndex)
+    public func getShieldedAddress(accountIndex: Int) async -> SaplingShieldedAddress? {
+        await blockProcessor.getShieldedAddress(accountIndex: accountIndex)
     }
     
-    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
-        blockProcessor.getUnifiedAddres(accountIndex: accountIndex)
+    public func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress? {
+        await blockProcessor.getUnifiedAddres(accountIndex: accountIndex)
     }
     
-    public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
-        blockProcessor.getTransparentAddress(accountIndex: accountIndex)
+    public func getTransparentAddress(accountIndex: Int) async -> TransparentAddress? {
+        await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
     
-    public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
-        try blockProcessor.getTransparentBalance(accountIndex: accountIndex)
+    public func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
+        try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
     }
     
     /**
     Returns the last stored unshielded balance
     */
-    public func getTransparentBalance(address: String) throws -> WalletBalance {
+    public func getTransparentBalance(address: String) async throws -> WalletBalance {
         do {
-            return try self.blockProcessor.utxoCacheBalance(tAddress: address)
+            return try await self.blockProcessor.utxoCacheBalance(tAddress: address)
         } catch {
             throw SynchronizerError.uncategorized(underlyingError: error)
         }
     }
     
-    public func rewind(_ policy: RewindPolicy) throws {
+    public func rewind(_ policy: RewindPolicy) async throws {
         self.stop()
         
         var height: BlockHeight?
@@ -719,7 +665,7 @@ public class SDKSynchronizer: Synchronizer {
             break
 
         case .birthday:
-            let birthday = self.blockProcessor.config.walletBirthday
+            let birthday = await self.blockProcessor.config.walletBirthday
             height = birthday
             
         case .height(let rewindHeight):
@@ -733,7 +679,7 @@ public class SDKSynchronizer: Synchronizer {
         }
         
         do {
-            let rewindHeight = try self.blockProcessor.rewindTo(height)
+            let rewindHeight = try await self.blockProcessor.rewindTo(height)
             try self.transactionManager.handleReorg(at: rewindHeight)
         } catch {
             throw SynchronizerError.rewindError(underlyingError: error)
@@ -747,11 +693,11 @@ public class SDKSynchronizer: Synchronizer {
         userInfo[NotificationKeys.blockHeight] = progress.progressHeight
 
         self.status = SyncStatus(progress)
-        NotificationCenter.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: userInfo)
+        NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: userInfo)
     }
     
     private func notifyStatusChange(newValue: SyncStatus, oldValue: SyncStatus) {
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: .synchronizerStatusWillUpdate,
             object: self,
             userInfo:
@@ -765,38 +711,40 @@ public class SDKSynchronizer: Synchronizer {
     private func notify(status: SyncStatus) {
         switch status {
         case .disconnected:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerDisconnected, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerDisconnected, object: self)
         case .stopped:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerStopped, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerStopped, object: self)
         case .synced:
-            NotificationCenter.default.post(
-                name: Notification.Name.synchronizerSynced,
-                object: self,
-                userInfo: [
-                    SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
-                    SDKSynchronizer.NotificationKeys.synchronizerState: SynchronizerState(
-                        shieldedBalance: WalletBalance(
-                            verified: initializer.getVerifiedBalance(),
-                            total: initializer.getBalance()
-                        ),
-                        transparentBalance: (try? self.getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
-                        syncStatus: status,
-                        latestScannedHeight: self.latestScannedHeight
-                    )
-                ]
-            )
+            Task {
+                NotificationCenter.default.mainThreadPost(
+                    name: Notification.Name.synchronizerSynced,
+                    object: self,
+                    userInfo: [
+                        SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
+                        SDKSynchronizer.NotificationKeys.synchronizerState: SynchronizerState(
+                            shieldedBalance: WalletBalance(
+                                verified: initializer.getVerifiedBalance(),
+                                total: initializer.getBalance()
+                            ),
+                            transparentBalance: (try? await self.getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
+                            syncStatus: status,
+                            latestScannedHeight: self.latestScannedHeight
+                        )
+                    ]
+                )
+            }
         case .unprepared:
             break
         case .downloading:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerDownloading, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerDownloading, object: self)
         case .validating:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerValidating, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerValidating, object: self)
         case .scanning:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerScanning, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerScanning, object: self)
         case .enhancing:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerEnhancing, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerEnhancing, object: self)
         case .fetching:
-            NotificationCenter.default.post(name: Notification.Name.synchronizerFetching, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerFetching, object: self)
         case .error(let e):
             self.notifyFailure(e)
         }
@@ -838,7 +786,7 @@ public class SDKSynchronizer: Synchronizer {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
-            NotificationCenter.default.post(
+            NotificationCenter.default.mainThreadPost(
                 name: Notification.Name.synchronizerMinedTransaction,
                 object: self,
                 userInfo: [NotificationKeys.minedTransaction: transaction]
@@ -878,6 +826,7 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
+            case .unknown: break
             }
         }
         
@@ -887,7 +836,7 @@ public class SDKSynchronizer: Synchronizer {
     private func notifyFailure(_ error: Error) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
-            NotificationCenter.default.post(
+            NotificationCenter.default.mainThreadPost(
                 name: Notification.Name.synchronizerFailed,
                 object: self,
                 userInfo: [NotificationKeys.error: self.mapError(error)]
