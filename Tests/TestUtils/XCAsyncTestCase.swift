@@ -9,28 +9,8 @@
 ///
 import Foundation
 import XCTest
-class XCAsyncTestCase: XCTestCase {
 
-    func asyncSetUpWithError() async throws {
-        fatalError("Must override")
-    }
-
-    func asyncTearDownWithError() async throws {
-        fatalError("Must override")
-    }
-
-    override func setUpWithError() throws {
-        wait {
-            try await self.asyncSetUpWithError()
-        }
-    }
-
-    override func tearDownWithError() throws {
-        wait {
-            try await self.asyncTearDownWithError()
-        }
-    }
-
+extension XCTestCase {
     func wait(asyncBlock: @escaping (() async throws -> Void)) {
         let semaphore = DispatchSemaphore(value: 0)
         Task.init {

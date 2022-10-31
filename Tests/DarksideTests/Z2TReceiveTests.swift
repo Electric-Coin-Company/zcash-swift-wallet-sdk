@@ -30,22 +30,20 @@ class Z2TReceiveTests: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-
-        Task{ @MainActor [self] in
-            coordinator = try await TestCoordinator(
-                seed: seedPhrase,
-                walletBirthday: birthday,
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday: self.birthday,
                 channelProvider: ChannelProvider(),
-                network: network
+                network: self.network
             )
-        }
 
-        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+            try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        }
     }
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-
         NotificationCenter.default.removeObserver(self)
 
         try coordinator.stop()

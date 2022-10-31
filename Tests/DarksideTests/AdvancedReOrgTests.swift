@@ -11,7 +11,7 @@ import XCTest
 
 // swiftlint:disable implicitly_unwrapped_optional force_unwrapping type_body_length
 //@MainActor
-class AdvancedReOrgTests: XCAsyncTestCase {
+class AdvancedReOrgTests: XCTestCase {
     // TODO: Parameterize this from environment?
     // swiftlint:disable:next line_length
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
@@ -32,17 +32,21 @@ class AdvancedReOrgTests: XCAsyncTestCase {
     let chainName = "main"
     let network = DarksideWalletDNetwork()
 
-    override func asyncSetUpWithError() async throws {
-        self.coordinator = try await TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
-            channelProvider: ChannelProvider(),
-            network: network
-        )
-        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: seedPhrase,
+                walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
+                channelProvider: ChannelProvider(),
+                network: network
+            )
+            try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        }
     }
     
-    override func asyncTearDownWithError() async throws {
+    override func tearDownWithError() throws {
+        super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)

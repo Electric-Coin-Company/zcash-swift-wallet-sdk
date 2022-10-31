@@ -83,8 +83,6 @@ class TransactionEnhancementTests: XCTestCase {
             return
         }
         
-
-
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
             return
@@ -150,7 +148,7 @@ class TransactionEnhancementTests: XCTestCase {
         await processor.start()
     }
     
-    func testBasicEnhacement() async throws {
+    func testBasicEnhancement() async throws {
         let targetLatestHeight = BlockHeight(663200)
         
         do {

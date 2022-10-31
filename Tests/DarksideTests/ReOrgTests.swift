@@ -47,29 +47,28 @@ class ReOrgTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleReOrgNotification(_:)),
-            name: Notification.Name.blockProcessorHandledReOrg,
-            object: nil
-        )
-
-        Task{ @MainActor [self] in
-            coordinator = try await TestCoordinator(
-                seed: seedPhrase,
-                walletBirthday: birthday,
-                channelProvider: ChannelProvider(),
-                network: network
+        wait { [self] in
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(self.handleReOrgNotification(_:)),
+                name: Notification.Name.blockProcessorHandledReOrg,
+                object: nil
             )
-        }
 
-        try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
-        try coordinator.resetBlocks(dataset: .default)
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday: self.birthday,
+                channelProvider: ChannelProvider(),
+                network: self.network
+            )
+
+            try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
+
+            try self.coordinator.resetBlocks(dataset: .default)
+        }
     }
 
     override func tearDownWithError() throws {
-        try super.tearDownWithError()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)

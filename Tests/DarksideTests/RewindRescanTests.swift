@@ -34,20 +34,20 @@ class RewindRescanTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        Task{ @MainActor [self] in
+        wait { [self] in
             self.coordinator = try await TestCoordinator(
-                seed: seedPhrase,
-                walletBirthday: birthday,
+                seed: self.seedPhrase,
+                walletBirthday: self.birthday,
                 channelProvider: ChannelProvider(),
-                network: network
+                network: self.network
             )
+
+            try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
         }
-        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-
         NotificationCenter.default.removeObserver(self)
 
         try coordinator.stop()

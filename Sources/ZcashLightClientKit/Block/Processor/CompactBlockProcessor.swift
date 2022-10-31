@@ -318,6 +318,7 @@ public actor CompactBlockProcessor {
         }
     }
     
+    private var needsToStartScanningWhenStopped = false
     var config: Configuration {
         willSet {
             self.stop()
@@ -500,6 +501,7 @@ public actor CompactBlockProcessor {
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .downloading, .validating, .scanning, .enhancing, .fetching:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
+                self.needsToStartScanningWhenStopped = true
             }
             return
         }
@@ -596,7 +598,7 @@ public actor CompactBlockProcessor {
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         
-        cancelableTask = Task(priority: .userInitiated) { [weak self] in
+        cancelableTask = Task(priority: .userInitiated) {
             do {
                 try await compactBlockStreamDownload(
                     blockBufferSize: config.downloadBufferSize,
@@ -607,12 +609,14 @@ public actor CompactBlockProcessor {
                 try await compactBlockBatchScanning(range: range)
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
-                //state = .stopped
             } catch {
                 if !(Task.isCancelled) {
                     await fail(error)
                 } else {
                     state = .stopped
+                    if needsToStartScanningWhenStopped {
+                        await nextBatch()
+                    }
                 }
             }
         }
@@ -837,7 +841,7 @@ public actor CompactBlockProcessor {
         )
         state = .synced
         await setTimer()
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: Notification.Name.blockProcessorIdle,
             object: self,
             userInfo: nil

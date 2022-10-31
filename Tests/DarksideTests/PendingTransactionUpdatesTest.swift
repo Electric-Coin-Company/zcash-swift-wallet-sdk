@@ -31,20 +31,19 @@ class PendingTransactionUpdatesTest: XCTestCase {
     let network = DarksideWalletDNetwork()
     override func setUpWithError() throws {
         try super.setUpWithError()
-        Task{ @MainActor in
-            coordinator = try await TestCoordinator(
-                seed: seedPhrase,
-                walletBirthday: birthday,
+        wait {
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday: self.birthday,
                 channelProvider: ChannelProvider(),
-                network: network
+                network: self.network
             )
-        }
 
-        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+            try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        }
     }
     
     override func tearDownWithError() throws {
-        try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
