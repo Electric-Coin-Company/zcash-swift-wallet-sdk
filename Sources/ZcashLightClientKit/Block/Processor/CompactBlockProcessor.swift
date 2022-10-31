@@ -337,6 +337,26 @@ public class CompactBlockProcessor {
     
     public internal(set) var state = ThreadSafeState()
 
+    /// This will be gone when processor becomes actor.
+    public class ThreadSafeNeedsToStartScanning {
+        private var needsToStartScanning = false
+        let lock = NSLock()
+
+        func set(_ newValue: Bool) {
+            lock.lock()
+            defer { lock.unlock() }
+            needsToStartScanning = newValue
+        }
+
+        public func get() -> Bool {
+            lock.lock()
+            defer { lock.unlock() }
+            return needsToStartScanning
+        }
+    }
+
+    private let needsToStartScanningWhenStopped = ThreadSafeNeedsToStartScanning()
+
     var config: Configuration {
         willSet {
             self.stop()
@@ -523,8 +543,9 @@ public class CompactBlockProcessor {
                 // max attempts have been reached
                 LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
-            default:
+            case .downloading, .validating, .scanning, .enhancing, .fetching:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
+                needsToStartScanningWhenStopped.set(true)
             }
             return
         }
@@ -544,7 +565,6 @@ public class CompactBlockProcessor {
         cancelableTask?.cancel()
 
         self.retryAttempts = 0
-        setState(.stopped)
     }
 
     /**
@@ -625,7 +645,7 @@ public class CompactBlockProcessor {
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         
-        cancelableTask = Task(priority: .userInitiated) {
+        cancelableTask = Task(priority: .userInitiated) { [weak self] in
             do {
                 try await compactBlockStreamDownload(
                     blockBufferSize: config.downloadBufferSize,
@@ -637,11 +657,12 @@ public class CompactBlockProcessor {
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
             } catch {
-                if error is CancellationError {
-                    
-                }
-                
-                if !(Task.isCancelled) {
+                if Task.isCancelled {
+                    setState(.stopped)
+                    if self?.needsToStartScanningWhenStopped.get() ?? false {
+                        self?.nextBatch()
+                    }
+                } else {
                     fail(error)
                 }
             }
