@@ -33,13 +33,13 @@ class SendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
+        self.view.addGestureRecognizer(tapRecognizer)
+        setUp()
         Task { @MainActor in
             // swiftlint:disable:next force_try
             try! await synchronizer.prepare()
         }
-        let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
-        self.view.addGestureRecognizer(tapRecognizer)
-        setUp()
     }
     
     override func viewDidAppear(_ animated: Bool) {
