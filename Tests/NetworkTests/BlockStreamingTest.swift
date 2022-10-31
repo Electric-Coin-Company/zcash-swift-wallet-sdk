@@ -79,7 +79,7 @@ class BlockStreamingTest: XCTestCase {
                     startHeight: startHeight
                 )
             } catch {
-                XCTAssertNotNil(error as? CancellationError)
+                XCTAssertTrue(Task.isCancelled)
             }
         }
         

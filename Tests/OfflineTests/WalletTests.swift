@@ -33,7 +33,7 @@ class WalletTests: XCTestCase {
         }
     }
     
-    func testWalletInitialization() throws {
+    func testWalletInitialization() async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
         let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
             .map( { try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
@@ -50,14 +50,15 @@ class WalletTests: XCTestCase {
         )
         
         let synchronizer = try SDKSynchronizer(initializer: wallet)
-
-        var dbInit: Initializer.InitializationResult!
-
-        XCTAssertNoThrow(try { dbInit = try synchronizer.prepare(with: nil) }())
-
-        guard case .success = dbInit else {
+        do {
+            try await synchronizer.prepare()
+            
+            guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
             return
+        }
+        } catch {
+            XCTFail("shouldn't fail here")
         }
         
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)

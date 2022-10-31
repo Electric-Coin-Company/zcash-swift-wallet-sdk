@@ -12,7 +12,7 @@ extension CompactBlockProcessor {
     func compactBlockBatchScanning(range: CompactBlockRange) async throws {
         try Task.checkCancellation()
         
-        setState(.scanning)
+        state = .scanning
 
         // TODO: remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
         let batchSize = scanBatchSize(for: range, network: self.config.network.networkType)
@@ -26,7 +26,7 @@ extension CompactBlockProcessor {
                     throw error
                 }
                 let scanFinishTime = Date()
-                NotificationCenter.default.post(
+                NotificationCenter.default.mainThreadPostNotification(
                     SDKMetrics.progressReportNotification(
                         progress: BlockProgress(
                             startHeight: range.lowerBound,
@@ -70,7 +70,7 @@ extension CompactBlockProcessor {
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
                         notifyProgress(.scan(progress))
-                        NotificationCenter.default.post(
+                        NotificationCenter.default.mainThreadPostNotification(
                             SDKMetrics.progressReportNotification(
                                 progress: progress,
                                 start: scanStartTime,
@@ -83,9 +83,11 @@ extension CompactBlockProcessor {
                         let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
                         LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
                     }
+                    
+                    await Task.yield()
                 } while !Task.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
                 if Task.isCancelled {
-                    setState(.stopped)
+                    state = .stopped
                     LoggerProxy.debug("Warning: compactBlockBatchScanning cancelled")
                 }
             }

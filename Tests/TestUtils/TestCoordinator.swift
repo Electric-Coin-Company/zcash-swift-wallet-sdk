@@ -186,6 +186,12 @@ class TestCoordinator {
     }
 }
 
+extension CompactBlockProcessor {
+    public func setConfig(_ config: Configuration) {
+        self.config = config
+    }
+}
+
 extension TestCoordinator {
     func resetBlocks(dataset: DarksideData) throws {
         switch dataset {
@@ -219,19 +225,25 @@ extension TestCoordinator {
     }
     
     func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {
-        let config = self.synchronizer.blockProcessor.config
-        
-        self.synchronizer.blockProcessor.config = CompactBlockProcessor.Configuration(
-            cacheDb: config.cacheDb,
-            dataDb: config.dataDb,
-            downloadBatchSize: config.downloadBatchSize,
-            retries: config.retries,
-            maxBackoffInterval: config.maxBackoffInterval,
-            rewindDistance: config.rewindDistance,
-            walletBirthday: config.walletBirthday,
-            saplingActivation: config.saplingActivation,
-            network: config.network
-        )
+        Task {
+            await self.synchronizer.blockProcessor.stop()
+            let config = await self.synchronizer.blockProcessor.config
+            
+            let newConfig = CompactBlockProcessor.Configuration(
+                cacheDb: config.cacheDb,
+                dataDb: config.dataDb,
+                downloadBatchSize: config.downloadBatchSize,
+                retries: config.retries,
+                maxBackoffInterval: config.maxBackoffInterval,
+                rewindDistance: config.rewindDistance,
+                walletBirthday: config.walletBirthday,
+                saplingActivation: config.saplingActivation,
+                network: config.network
+            )
+            
+            await self.synchronizer.blockProcessor.setConfig(newConfig)
+        }
+
         try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)
     }
     
@@ -295,7 +307,7 @@ enum TestSynchronizerBuilder {
         )
 
         let synchronizer = try SDKSynchronizer(initializer: initializer)
-        if case .seedRequired = try synchronizer.prepare(with: seed) {
+        if case .seedRequired = try await synchronizer.prepare(with: seed) {
             throw TestCoordinator.CoordinatorError.seedRequiredForMigration
         }
         

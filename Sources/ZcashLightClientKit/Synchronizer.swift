@@ -79,7 +79,7 @@ public protocol Synchronizer {
 
     /// prepares this initializer to operate. Initializes the internal state with the given
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
-    func prepare(with seed: [UInt8]?) throws -> Initializer.InitializationResult
+    func prepare(with seed: [UInt8]?) async throws -> Initializer.InitializationResult
 
     ///Starts this synchronizer within the given scope.
     ///
@@ -98,12 +98,12 @@ public protocol Synchronizer {
     /// Gets the unified address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress?
+    func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress?
 
     /// Gets the transparent address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getTransparentAddress(accountIndex: Int) -> TransparentAddress?
+    func getTransparentAddress(accountIndex: Int) async -> TransparentAddress?
     
     /// Sends zatoshi.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
@@ -156,7 +156,7 @@ public protocol Synchronizer {
     func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
 
     /// Returns the latest downloaded height from the compact block cache
-    func latestDownloadedHeight() throws -> BlockHeight
+    func latestDownloadedHeight() async throws -> BlockHeight
     
 
     /// Returns the latest block height from the provided Lightwallet endpoint
@@ -164,13 +164,14 @@ public protocol Synchronizer {
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking
-    func latestHeight() throws -> BlockHeight
+    func latestHeight() async throws -> BlockHeight
+    
 
     /// Returns the latests UTXOs for the given address from the specified height on
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
     /// Returns the last stored transparent balance
-    func getTransparentBalance(accountIndex: Int) throws -> WalletBalance
+    func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance
 
     /// Returns the shielded total balance (includes verified and unverified balance)
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
@@ -193,7 +194,7 @@ public protocol Synchronizer {
     /// - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
     /// - Throws rewindError for other errors
     /// - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
-    func rewind(_ policy: RewindPolicy) throws
+    func rewind(_ policy: RewindPolicy) async throws
 }
 
 public enum SyncStatus: Equatable {

@@ -31,7 +31,9 @@ class SyncBlocksViewController: UIViewController {
         // swiftlint:disable:next force_try
         _ = try! wallet.initialize(with: DemoAppConfig.seed)
         processor = CompactBlockProcessor(initializer: wallet)
-        statusLabel.text = textFor(state: processor?.state.getState() ?? .stopped)
+        Task { @MainActor in
+            statusLabel.text = textFor(state: await processor?.state ?? .stopped)
+        }
         progressBar.progress = 0
         
         NotificationCenter.default.addObserver(
@@ -47,14 +49,16 @@ class SyncBlocksViewController: UIViewController {
          
         NotificationCenter.default.removeObserver(self)
         guard let processor = self.processor else { return }
-        processor.stop()
+        Task {
+            await processor.stop()
+        }
     }
     
     @objc func processorNotification(_ notification: Notification) {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             guard self.processor != nil else { return }
             
-            self.updateUI()
+            await self.updateUI()
             
             switch notification.name {
             case let not where not == Notification.Name.blockProcessorUpdated:
@@ -70,30 +74,28 @@ class SyncBlocksViewController: UIViewController {
     @IBAction func startStop() {
         guard let processor = processor else { return }
 
-        switch processor.state.getState() {
-        case .stopped:
-            startProcessor()
-        default:
-            stopProcessor()
+        Task { @MainActor in
+            switch await processor.state {
+            case .stopped:
+                await startProcessor()
+            default:
+                await stopProcessor()
+            }
         }
     }
     
-    func startProcessor() {
+    func startProcessor() async {
         guard let processor = processor else { return }
 
-        do {
-            try processor.start()
-            updateUI()
-        } catch {
-            fail(error: error)
-        }
+        await processor.start()
+        await updateUI()
     }
     
-    func stopProcessor() {
+    func stopProcessor() async {
         guard let processor = processor else { return }
 
-        processor.stop()
-        updateUI()
+        await processor.stop()
+        await updateUI()
     }
     
     func fail(error: Error) {
@@ -110,11 +112,13 @@ class SyncBlocksViewController: UIViewController {
         )
         
         self.present(alert, animated: true, completion: nil)
-        updateUI()
+        Task { @MainActor in
+            await updateUI()
+        }
     }
     
-    func updateUI() {
-        guard let state = processor?.state.getState() else { return }
+    func updateUI() async {
+        guard let state = await processor?.state else { return }
 
         statusLabel.text = textFor(state: state)
         startPause.setTitle(buttonText(for: state), for: .normal)

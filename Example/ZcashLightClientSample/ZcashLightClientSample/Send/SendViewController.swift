@@ -33,8 +33,10 @@ class SendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
-        // swiftlint:disable:next force_try
-        _ = try! synchronizer.prepare(with: DemoAppConfig.seed)
+        Task { @MainActor in
+            // swiftlint:disable:next force_try
+            try! await synchronizer.prepare()
+        }
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
@@ -42,20 +44,15 @@ class SendViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        do {
-            try synchronizer.start(retry: false)
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-        } catch {
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-            fail(error)
+        Task { @MainActor in
+            do {
+                try await synchronizer.start(retry: false)
+                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+            } catch {
+                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+                fail(error)
+            }
         }
-    }
-
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-
-        // swiftlint:disable:next force_try
-        try! synchronizer.stop() // Fail on purpose if this throws.
     }
     
     @objc func viewTapped(_ recognizer: UITapGestureRecognizer) {

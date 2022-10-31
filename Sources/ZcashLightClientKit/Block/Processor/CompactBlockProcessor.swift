@@ -103,7 +103,7 @@ public enum CompactBlockProgress {
 }
 
 protocol EnhancementStreamDelegate: AnyObject {
-    func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress)
+    func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress) async
 }
 
 public protocol EnhancementProgress {
@@ -213,7 +213,7 @@ public extension Notification.Name {
 
 /// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
 /// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
-public class CompactBlockProcessor {
+public actor CompactBlockProcessor {
 
     /// Compact Block Processor configuration
     ///
@@ -312,51 +312,12 @@ public class CompactBlockProcessor {
         case synced
     }
     
-    // TODO: this isn't an Actor even though it looks like a good candidate, the reason:
-    // `state` lives in both sync and async environments. An Actor is demanding async context only
-    // so we can't take the advantage unless we encapsulate all `state` reads/writes to async context.
-    // Therefore solution with class + lock works for us butr eventually will be replaced.
-    // The future of CompactBlockProcessor is an actor (we won't need to encapsulate the state separately), issue 523,
-    // https://github.com/zcash/ZcashLightClientKit/issues/523
-    public class ThreadSafeState {
-        private var state: State = .stopped
-        let lock = NSLock()
-        
-        func setState(_ newState: State) {
-            lock.lock()
-            defer { lock.unlock() }
-            state = newState
-        }
-        
-        public func getState() -> State {
-            lock.lock()
-            defer { lock.unlock() }
-            return state
+    public internal(set) var state: State = .stopped {
+        didSet {
+            transitionState(from: oldValue, to: self.state)
         }
     }
     
-    public internal(set) var state = ThreadSafeState()
-
-    /// This will be gone when processor becomes actor.
-    public class ThreadSafeNeedsToStartScanning {
-        private var needsToStartScanning = false
-        let lock = NSLock()
-
-        func set(_ newValue: Bool) {
-            lock.lock()
-            defer { lock.unlock() }
-            needsToStartScanning = newValue
-        }
-
-        public func get() -> Bool {
-            lock.lock()
-            defer { lock.unlock() }
-            return needsToStartScanning
-        }
-    }
-
-    private let needsToStartScanningWhenStopped = ThreadSafeNeedsToStartScanning()
-
     var config: Configuration {
         willSet {
             self.stop()
@@ -368,7 +329,7 @@ public class CompactBlockProcessor {
     }
 
     var shouldStart: Bool {
-        switch self.state.getState() {
+        switch self.state {
         case .stopped, .synced, .error:
             return !maxAttemptsReached
         default:
@@ -406,7 +367,7 @@ public class CompactBlockProcessor {
     ///  - storage: concrete implementation of `CompactBlockStorage` protocol
     ///  - backend: a class that complies to `ZcashRustBackendWelding`
     ///  - config: `Configuration` struct for this processor
-    convenience init(
+    init(
         service: LightWalletService,
         storage: CompactBlockStorage,
         backend: ZcashRustBackendWelding.Type,
@@ -427,7 +388,7 @@ public class CompactBlockProcessor {
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    public convenience init(initializer: Initializer) {
+    public init(initializer: Initializer) {
         self.init(
             service: initializer.lightWalletService,
             storage: initializer.storage,
@@ -466,12 +427,6 @@ public class CompactBlockProcessor {
     
     deinit {
         cancelableTask?.cancel()
-    }
-
-    func setState(_ newState: State) {
-        let oldValue = state.getState()
-        state.setState(newState)
-        transitionState(from: oldValue, to: newState)
     }
 
     static func validateServerInfo(
@@ -520,7 +475,7 @@ public class CompactBlockProcessor {
     /// triggers the blockProcessorStartedDownloading notification
     ///
     /// - Important: subscribe to the notifications before calling this method
-    public func start(retry: Bool = false) throws {
+    public func start(retry: Bool = false) async {
         if retry {
             self.retryAttempts = 0
             self.processingError = nil
@@ -529,12 +484,12 @@ public class CompactBlockProcessor {
         }
 
         guard shouldStart else {
-            switch self.state.getState() {
+            switch self.state {
             case .error(let e):
                 // max attempts have been reached
                 LoggerProxy.info("max retry attempts reached with error: \(e)")
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
-                setState(.stopped)
+                state = .stopped
             case .stopped:
                 // max attempts have been reached
                 LoggerProxy.info("max retry attempts reached")
@@ -550,7 +505,7 @@ public class CompactBlockProcessor {
             return
         }
 
-        self.nextBatch()
+        await self.nextBatch()
     }
 
     /**
@@ -571,7 +526,7 @@ public class CompactBlockProcessor {
     Rewinds to provided height.
     If nil is provided, it will rescan to nearest height (quick rescan)
     */
-    public func rewindTo(_ height: BlockHeight?) throws -> BlockHeight {
+    public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
         self.stop()
 
         let lastDownloaded = try downloader.lastDownloadedBlockHeight()
@@ -586,7 +541,7 @@ public class CompactBlockProcessor {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(
                 message: "unknown error getting nearest rewind height for height: \(height)"
             )
-            fail(error)
+            await fail(error)
             throw error
         }
 
@@ -594,7 +549,7 @@ public class CompactBlockProcessor {
         let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
         guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
-            fail(error)
+            await fail(error)
             throw error
         }
 
@@ -611,7 +566,7 @@ public class CompactBlockProcessor {
     - Throws CompactBlockProcessorError.invalidConfiguration if block height is invalid or if processor is already started
     */
     func setStartHeight(_ startHeight: BlockHeight) throws {
-        guard self.state.getState() == .stopped, startHeight >= config.network.constants.saplingActivationHeight else {
+        guard self.state == .stopped, startHeight >= config.network.constants.saplingActivationHeight else {
             throw CompactBlockProcessorError.invalidConfiguration
         }
 
@@ -620,27 +575,24 @@ public class CompactBlockProcessor {
         self.config = config
     }
 
-    func validateServer(completionBlock: @escaping (() -> Void)) {
-        Task { @MainActor in
-            do {
-                let info = try await self.service.getInfo()
-                try Self.validateServerInfo(
-                    info,
-                    saplingActivation: self.config.saplingActivation,
-                    localNetwork: self.config.network,
-                    rustBackend: self.rustBackend
-                )
-                completionBlock()
-            } catch let error as LightWalletServiceError {
-                self.severeFailure(error.mapToProcessorError())
-            } catch {
-                self.severeFailure(error)
-            }
+    func validateServer() async {
+        do {
+            let info = try await self.service.getInfo()
+            try Self.validateServerInfo(
+                info,
+                saplingActivation: self.config.saplingActivation,
+                localNetwork: self.config.network,
+                rustBackend: self.rustBackend
+            )
+        } catch let error as LightWalletServiceError {
+            self.severeFailure(error.mapToProcessorError())
+        } catch {
+            self.severeFailure(error)
         }
     }
     
     /// Processes new blocks on the given range based on the configuration set for this instance
-    func processNewBlocks(range: CompactBlockRange) {
+    func processNewBlocks(range: CompactBlockRange) async {
         self.foundBlocks = true
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
@@ -656,14 +608,12 @@ public class CompactBlockProcessor {
                 try await compactBlockBatchScanning(range: range)
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
+                //state = .stopped
             } catch {
-                if Task.isCancelled {
-                    setState(.stopped)
-                    if self?.needsToStartScanningWhenStopped.get() ?? false {
-                        self?.nextBatch()
-                    }
+                if !(Task.isCancelled) {
+                    await fail(error)
                 } else {
-                    fail(error)
+                    state = .stopped
                 }
             }
         }
@@ -682,7 +632,7 @@ public class CompactBlockProcessor {
 
         LoggerProxy.debug("progress: \(progress)")
         
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: Notification.Name.blockProcessorUpdated,
             object: self,
             userInfo: userInfo
@@ -690,7 +640,7 @@ public class CompactBlockProcessor {
     }
     
     func notifyTransactions(_ txs: [ConfirmedTransactionEntity], in range: BlockRange) {
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: .blockProcessorFoundTransactions,
             object: self,
             userInfo: [
@@ -715,29 +665,29 @@ public class CompactBlockProcessor {
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error
-        setState(.error(error))
+        state = .error(error)
         self.notifyError(error)
     }
 
-    func fail(_ error: Error) {
+    func fail(_ error: Error) async {
         // todo specify: failure
         LoggerProxy.error("\(error)")
         cancelableTask?.cancel()
         self.retryAttempts += 1
         self.processingError = error
-        switch self.state.getState() {
+        switch self.state {
         case .error:
             notifyError(error)
         default:
             break
         }
-        setState(.error(error))
+        state = .error(error)
         guard self.maxAttemptsReached else { return }
         // don't set a new timer if there are no more attempts.
-        self.setTimer()
+        await self.setTimer()
     }
 
-    func retryProcessing(range: CompactBlockRange) {
+    func retryProcessing(range: CompactBlockRange) async {
         cancelableTask?.cancel()
         // update retries
         self.retryAttempts += 1
@@ -752,10 +702,9 @@ public class CompactBlockProcessor {
             try downloader.rewind(to: max(range.lowerBound, self.config.walletBirthday))
 
             // process next batch
-            // processNewBlocks(range: Self.nextBatchBlockRange(latestHeight: latestBlockHeight, latestDownloadedHeight: try downloader.lastDownloadedBlockHeight(), walletBirthday: config.walletBirthday))
-            nextBatch()
+            await nextBatch()
         } catch {
-            self.fail(error)
+            await self.fail(error)
         }
     }
 
@@ -790,41 +739,39 @@ public class CompactBlockProcessor {
         }
     }
 
-    private func nextBatch() {
-        setState(.downloading)
-        Task { @MainActor [self] in
-            do {
-                let nextState = try await NextStateHelper.nextStateAsync(
-                    service: self.service,
-                    downloader: self.downloader,
-                    config: self.config,
-                    rustBackend: self.rustBackend
+    private func nextBatch() async {
+        state = .downloading
+        do {
+            let nextState = try await NextStateHelper.nextStateAsync(
+                service: self.service,
+                downloader: self.downloader,
+                config: self.config,
+                rustBackend: self.rustBackend
+            )
+            switch nextState {
+            case .finishProcessing(let height):
+                self.latestBlockHeight = height
+                await self.processingFinished(height: height)
+            case .processNewBlocks(let range):
+                self.latestBlockHeight = range.upperBound
+                self.lowerBoundHeight = range.lowerBound
+                await self.processNewBlocks(range: range)
+            case let .wait(latestHeight, latestDownloadHeight):
+                // Lightwalletd might be syncing
+                self.lowerBoundHeight = latestDownloadHeight
+                self.latestBlockHeight = latestHeight
+                LoggerProxy.info(
+                    "Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight)" +
+                    "while latest blockheight is reported at: \(latestHeight)"
                 )
-                switch nextState {
-                case .finishProcessing(let height):
-                    self.latestBlockHeight = height
-                    self.processingFinished(height: height)
-                case .processNewBlocks(let range):
-                    self.latestBlockHeight = range.upperBound
-                    self.lowerBoundHeight = range.lowerBound
-                    self.processNewBlocks(range: range)
-                case let .wait(latestHeight, latestDownloadHeight):
-                    // Lightwalletd might be syncing
-                    self.lowerBoundHeight = latestDownloadHeight
-                    self.latestBlockHeight = latestHeight
-                    LoggerProxy.info(
-                        "Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight)" +
-                        "while latest blockheight is reported at: \(latestHeight)"
-                    )
-                    self.processingFinished(height: latestDownloadHeight)
-                }
-            } catch {
-                self.severeFailure(error)
+                await self.processingFinished(height: latestDownloadHeight)
             }
+        } catch {
+            self.severeFailure(error)
         }
     }
 
-    internal func validationFailed(at height: BlockHeight) {
+    internal func validationFailed(at height: BlockHeight) async {
         // cancel all Tasks
         cancelableTask?.cancel()
 
@@ -840,7 +787,7 @@ public class CompactBlockProcessor {
         )
 
         guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network.networkType) else {
-            fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
+            await fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }
         
@@ -848,7 +795,7 @@ public class CompactBlockProcessor {
             try downloader.rewind(to: rewindHeight)
             
             // notify reorg
-            NotificationCenter.default.post(
+            NotificationCenter.default.mainThreadPost(
                 name: Notification.Name.blockProcessorHandledReOrg,
                 object: self,
                 userInfo: [
@@ -857,15 +804,15 @@ public class CompactBlockProcessor {
             )
             
             // process next batch
-            self.nextBatch()
+            await self.nextBatch()
         } catch {
-            self.fail(error)
+            await self.fail(error)
         }
     }
 
-    internal func processBatchFinished(range: CompactBlockRange) {
+    internal func processBatchFinished(range: CompactBlockRange) async {
         guard processingError == nil else {
-            retryProcessing(range: range)
+            await retryProcessing(range: range)
             return
         }
         
@@ -873,15 +820,15 @@ public class CompactBlockProcessor {
         consecutiveChainValidationErrors = 0
         
         guard !range.isEmpty else {
-            processingFinished(height: range.upperBound)
+            await processingFinished(height: range.upperBound)
             return
         }
         
-        nextBatch()
+        await nextBatch()
     }
     
-    private func processingFinished(height: BlockHeight) {
-        NotificationCenter.default.post(
+    private func processingFinished(height: BlockHeight) async {
+        NotificationCenter.default.mainThreadPost(
             name: Notification.Name.blockProcessorFinished,
             object: self,
             userInfo: [
@@ -889,8 +836,8 @@ public class CompactBlockProcessor {
                 CompactBlockProcessorNotificationKey.foundBlocks: self.foundBlocks
             ]
         )
-        setState(.synced)
-        setTimer()
+        state = .synced
+        await setTimer()
         NotificationCenter.default.post(
             name: Notification.Name.blockProcessorIdle,
             object: self,
@@ -898,31 +845,29 @@ public class CompactBlockProcessor {
         )
     }
     
-    private func setTimer() {
+    private func setTimer() async {
         let interval = self.config.blockPollInterval
         self.backoffTimer?.invalidate()
         let timer = Timer(
             timeInterval: interval,
             repeats: true,
             block: { [weak self] _ in
-                guard let self = self else { return }
-                do {
-                    if self.shouldStart {
+                Task { [self] in
+                    guard let self = self else { return }
+                    if await self.shouldStart {
                         LoggerProxy.debug(
-                            """
-                            Timer triggered: Starting compact Block processor!.
-                            Processor State: \(self.state)
-                            latestHeight: \(self.latestBlockHeight)
-                            attempts: \(self.retryAttempts)
-                            lowerbound: \(String(describing: self.lowerBoundHeight))
-                            """
+                                """
+                                Timer triggered: Starting compact Block processor!.
+                                Processor State: \(await self.state)
+                                latestHeight: \(await self.latestBlockHeight)
+                                attempts: \(await self.retryAttempts)
+                                lowerbound: \(String(describing: await self.lowerBoundHeight))
+                                """
                         )
-                        try self.start()
-                    } else if self.maxAttemptsReached {
-                        self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
+                        await self.start()
+                    } else if await self.maxAttemptsReached {
+                        await self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
                     }
-                } catch {
-                    self.fail(error)
                 }
             }
         )
@@ -936,7 +881,7 @@ public class CompactBlockProcessor {
             return
         }
 
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: .blockProcessorStatusChanged,
             object: self,
             userInfo: [
@@ -947,27 +892,27 @@ public class CompactBlockProcessor {
         
         switch newValue {
         case .downloading:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedDownloading, object: self)
         case .synced:
             // transition to this state is handled by `processingFinished(height: BlockHeight)`
             break
         case .error(let err):
             notifyError(err)
         case .scanning:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedScanning, object: self)
         case .stopped:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStopped, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStopped, object: self)
         case .validating:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedValidating, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedValidating, object: self)
         case .enhancing:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
         case .fetching:
-            NotificationCenter.default.post(name: Notification.Name.blockProcessorStartedFetching, object: self)
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedFetching, object: self)
         }
     }
 
     private func notifyError(_ err: Error) {
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: Notification.Name.blockProcessorFailed,
             object: self,
             userInfo: [CompactBlockProcessorNotificationKey.error: mapError(err)]
@@ -1055,6 +1000,9 @@ extension CompactBlockProcessor {
         guard accountIndex >= 0 else {
             throw CompactBlockProcessorError.invalidAccount
         }
+        return try utxoCacheBalance(tAddress: tAddress)
+    }
+}
 
         return WalletBalance(
             verified: Zatoshi(
@@ -1171,7 +1119,7 @@ extension CompactBlockProcessorError: LocalizedError {
 
 extension CompactBlockProcessor: EnhancementStreamDelegate {
     func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress) {
-        NotificationCenter.default.post(
+        NotificationCenter.default.mainThreadPost(
             name: .blockProcessorEnhancementProgress,
             object: self,
             userInfo: [CompactBlockProcessorNotificationKey.enhancementProgress: progress]
