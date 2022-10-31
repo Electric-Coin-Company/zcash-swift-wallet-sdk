@@ -93,7 +93,7 @@ public protocol Synchronizer {
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getSaplingAddress(accountIndex: Int) -> SaplingAddress?
+    func getSaplingAddress(accountIndex: Int) async -> SaplingAddress?
 
     /// Gets the unified address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.

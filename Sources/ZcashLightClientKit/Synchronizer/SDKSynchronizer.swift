@@ -627,10 +627,10 @@ public class SDKSynchronizer: Synchronizer {
 
     /// Returns the last stored transparent balance
     public func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
-        try blockProcessor.getTransparentBalance(accountIndex: accountIndex)
+        try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
     }
     
-    public func rewind(_ policy: RewindPolicy) throws {
+    public func rewind(_ policy: RewindPolicy) async throws {
         self.stop()
         
         var height: BlockHeight?

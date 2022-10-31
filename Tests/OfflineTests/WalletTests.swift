@@ -51,12 +51,10 @@ class WalletTests: XCTestCase {
         
         let synchronizer = try SDKSynchronizer(initializer: wallet)
         do {
-            try await synchronizer.prepare()
-            
-            guard case .success = dbInit else {
-            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
-            return
-        }
+            guard case .success = try await synchronizer.prepare(with: seedData.bytes) else {
+                XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
+                return
+            }
         } catch {
             XCTFail("shouldn't fail here")
         }

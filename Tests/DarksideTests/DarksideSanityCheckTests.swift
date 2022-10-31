@@ -33,12 +33,14 @@ class DarksideSanityCheckTests: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider(),
-            network: network
-        )
+        Task { @MainActor [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: seedPhrase,
+                walletBirthday: birthday,
+                channelProvider: ChannelProvider(),
+                network: network
+            )
+        }
         try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
         try coordinator.resetBlocks(dataset: .default)
     }

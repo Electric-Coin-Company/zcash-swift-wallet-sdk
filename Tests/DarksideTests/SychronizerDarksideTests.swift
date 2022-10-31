@@ -34,12 +34,14 @@ class SychronizerDarksideTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider(),
-            network: network
-        )
+        Task{ @MainActor [self] in
+            coordinator = try await TestCoordinator(
+                seed: seedPhrase,
+                walletBirthday: birthday,
+                channelProvider: ChannelProvider(),
+                network: network
+            )
+        }
         try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     

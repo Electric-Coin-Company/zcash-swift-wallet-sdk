@@ -147,10 +147,10 @@ class TransactionEnhancementTests: XCTestCase {
 
         txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
         idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
-        try await processor.start()
+        await processor.start()
     }
     
-    func testBasicEnhacement() throws {
+    func testBasicEnhacement() async throws {
         let targetLatestHeight = BlockHeight(663200)
         
         do {

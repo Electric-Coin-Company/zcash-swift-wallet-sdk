@@ -500,7 +500,6 @@ public actor CompactBlockProcessor {
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .downloading, .validating, .scanning, .enhancing, .fetching:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
-                needsToStartScanningWhenStopped.set(true)
             }
             return
         }
@@ -1000,9 +999,6 @@ extension CompactBlockProcessor {
         guard accountIndex >= 0 else {
             throw CompactBlockProcessorError.invalidAccount
         }
-        return try utxoCacheBalance(tAddress: tAddress)
-    }
-}
 
         return WalletBalance(
             verified: Zatoshi(

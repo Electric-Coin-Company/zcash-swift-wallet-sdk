@@ -50,7 +50,7 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
         network: ZcashNetwork
-    ) throws {
+    ) async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
         let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
@@ -60,7 +60,7 @@ class TestCoordinator {
 
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
-        try self.init(
+        await try self.init(
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
@@ -75,7 +75,7 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
         network: ZcashNetwork
-    ) throws {
+    ) async throws {
         self.spendingKey = spendingKey
         self.birthday = walletBirthday
         self.channelProvider = channelProvider
@@ -93,7 +93,7 @@ class TestCoordinator {
         let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
         try storage.createTable()
         
-        let buildResult = try TestSynchronizerBuilder.build(
+        let buildResult = try await TestSynchronizerBuilder.build(
             rustBackend: ZcashRustBackend.self,
             lowerBoundHeight: self.birthday,
             cacheDbURL: databases.cacheDB,
@@ -291,7 +291,7 @@ enum TestSynchronizerBuilder {
         network: ZcashNetwork,
         seed: [UInt8]? = nil,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
+    ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
@@ -331,7 +331,7 @@ enum TestSynchronizerBuilder {
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
+    ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let spendingKey = try DerivationTool(networkType: network.networkType)
                 .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
@@ -339,7 +339,7 @@ enum TestSynchronizerBuilder {
         let uvk = try DerivationTool(networkType: network.networkType)
             .deriveUnifiedFullViewingKey(from: spendingKey)
 
-        return try build(
+        return try await build(
             rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
             cacheDbURL: cacheDbURL,
