@@ -1,5 +1,8 @@
-# Unified Spending Keys 
-
+# 0.17.0-alpha.2
+- [#579] Fix database lock
+- [#592] Fix various tests and deleted some that are not useful anymore
+- [#581] getTransparentBalanceForAccount error not handled
+# 0.17.0-alpha.1
 ## Changes to Demo APP
 The demo application now uses the SDKSynchronizer to create addresses and
 shield funds. 
