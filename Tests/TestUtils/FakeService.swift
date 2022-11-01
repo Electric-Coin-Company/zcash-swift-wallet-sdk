@@ -25,18 +25,18 @@ class MockLightWalletService: LightWalletService {
     var queue = DispatchQueue(label: "mock service queue")
 
     func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        AsyncThrowingStream { _ in }
+        service.blockStream(startHeight: startHeight, endHeight: endHeight)
     }
 
     func closeConnection() {
     }
 
     func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        AsyncThrowingStream { _ in }
+        service.fetchUTXOs(for: tAddress, height: height)
     }
 
     func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
-        AsyncThrowingStream { _ in }
+        service.fetchUTXOs(for: tAddresses, height: height)
     }
     
     private var service: LightWalletService

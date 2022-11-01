@@ -85,8 +85,6 @@ class TransactionEnhancementTests: XCTestCase {
             return
         }
         
-
-
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
             return
@@ -137,7 +135,7 @@ class TransactionEnhancementTests: XCTestCase {
         NotificationCenter.default.removeObserver(self)
     }
     
-    private func startProcessing() throws {
+    private func startProcessing() async throws {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
@@ -149,10 +147,10 @@ class TransactionEnhancementTests: XCTestCase {
 
         txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
         idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
-        try processor.start()
+        await processor.start()
     }
     
-    func testBasicEnhacement() throws {
+    func testBasicEnhancement() async throws {
         let targetLatestHeight = BlockHeight(663200)
         
         do {
@@ -181,7 +179,7 @@ class TransactionEnhancementTests: XCTestCase {
         download and sync blocks from walletBirthday to firstLatestHeight
         */
         do {
-            try startProcessing()
+            try await startProcessing()
         } catch {
             XCTFail("Error: \(error)")
         }

@@ -50,7 +50,7 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
         network: ZcashNetwork
-    ) throws {
+    ) async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
         let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
@@ -60,7 +60,7 @@ class TestCoordinator {
 
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
-        try self.init(
+        await try self.init(
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
@@ -75,7 +75,7 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
         network: ZcashNetwork
-    ) throws {
+    ) async throws {
         self.spendingKey = spendingKey
         self.birthday = walletBirthday
         self.channelProvider = channelProvider
@@ -93,7 +93,7 @@ class TestCoordinator {
         let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
         try storage.createTable()
         
-        let buildResult = try TestSynchronizerBuilder.build(
+        let buildResult = try await TestSynchronizerBuilder.build(
             rustBackend: ZcashRustBackend.self,
             lowerBoundHeight: self.birthday,
             cacheDbURL: databases.cacheDB,
@@ -186,6 +186,12 @@ class TestCoordinator {
     }
 }
 
+extension CompactBlockProcessor {
+    public func setConfig(_ config: Configuration) {
+        self.config = config
+    }
+}
+
 extension TestCoordinator {
     func resetBlocks(dataset: DarksideData) throws {
         switch dataset {
@@ -219,19 +225,25 @@ extension TestCoordinator {
     }
     
     func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {
-        let config = self.synchronizer.blockProcessor.config
-        
-        self.synchronizer.blockProcessor.config = CompactBlockProcessor.Configuration(
-            cacheDb: config.cacheDb,
-            dataDb: config.dataDb,
-            downloadBatchSize: config.downloadBatchSize,
-            retries: config.retries,
-            maxBackoffInterval: config.maxBackoffInterval,
-            rewindDistance: config.rewindDistance,
-            walletBirthday: config.walletBirthday,
-            saplingActivation: config.saplingActivation,
-            network: config.network
-        )
+        Task {
+            await self.synchronizer.blockProcessor.stop()
+            let config = await self.synchronizer.blockProcessor.config
+            
+            let newConfig = CompactBlockProcessor.Configuration(
+                cacheDb: config.cacheDb,
+                dataDb: config.dataDb,
+                downloadBatchSize: config.downloadBatchSize,
+                retries: config.retries,
+                maxBackoffInterval: config.maxBackoffInterval,
+                rewindDistance: config.rewindDistance,
+                walletBirthday: config.walletBirthday,
+                saplingActivation: config.saplingActivation,
+                network: config.network
+            )
+            
+            await self.synchronizer.blockProcessor.setConfig(newConfig)
+        }
+
         try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)
     }
     
@@ -279,7 +291,7 @@ enum TestSynchronizerBuilder {
         network: ZcashNetwork,
         seed: [UInt8]? = nil,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
+    ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
@@ -295,7 +307,7 @@ enum TestSynchronizerBuilder {
         )
 
         let synchronizer = try SDKSynchronizer(initializer: initializer)
-        if case .seedRequired = try synchronizer.prepare(with: seed) {
+        if case .seedRequired = try await synchronizer.prepare(with: seed) {
             throw TestCoordinator.CoordinatorError.seedRequiredForMigration
         }
         
@@ -319,7 +331,7 @@ enum TestSynchronizerBuilder {
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
+    ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let spendingKey = try DerivationTool(networkType: network.networkType)
                 .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
@@ -327,7 +339,7 @@ enum TestSynchronizerBuilder {
         let uvk = try DerivationTool(networkType: network.networkType)
             .deriveUnifiedFullViewingKey(from: spendingKey)
 
-        return try build(
+        return try await build(
             rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
             cacheDbURL: cacheDbURL,

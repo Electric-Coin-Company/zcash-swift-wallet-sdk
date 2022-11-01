@@ -16,7 +16,7 @@ extension CompactBlockProcessor {
     ) async throws {
         try Task.checkCancellation()
         
-        setState(.downloading)
+        state = .downloading
         
         var buffer: [ZcashCompactBlock] = []
         var targetHeightInternal: BlockHeight?

@@ -31,6 +31,8 @@ class BlockDownloaderTests: XCTestCase {
         
         try FakeChainBuilder.buildChain(darksideWallet: darksideWalletService, branchID: branchID, chainName: chainName)
         try darksideWalletService.applyStaged(nextLatestHeight: 663250)
+
+        sleep(2)
     }
     
     override func tearDown() {
