@@ -17,7 +17,7 @@ extension CompactBlockProcessor {
     func compactBlockValidation() async throws {
         try Task.checkCancellation()
         
-        setState(.validating)
+        state = .validating
 
         let result = rustBackend.validateCombinedChain(dbCache: config.cacheDb, dbData: config.dataDb, networkType: config.network.networkType)
         
@@ -30,7 +30,7 @@ extension CompactBlockProcessor {
                 
             case ZcashRustBackendWeldingConstants.validChain:
                 if Task.isCancelled {
-                    setState(.stopped)
+                    state = .stopped
                     LoggerProxy.debug("Warning: compactBlockValidation cancelled")
                 }
                 LoggerProxy.debug("validateChainFinished")
@@ -50,11 +50,11 @@ extension CompactBlockProcessor {
             switch validationError {
             case .validationFailed(let height):
                 LoggerProxy.debug("chain validation at height: \(height)")
-                validationFailed(at: height)
+                await validationFailed(at: height)
             case .failedWithError(let err):
                 guard let validationFailure = err else {
                     LoggerProxy.error("validation failed without a specific error")
-                    self.fail(CompactBlockProcessorError.generalError(message: "validation failed without a specific error"))
+                    await self.fail(CompactBlockProcessorError.generalError(message: "validation failed without a specific error"))
                     return
                 }
                 

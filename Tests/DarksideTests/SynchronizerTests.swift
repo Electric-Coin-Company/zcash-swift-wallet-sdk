@@ -34,13 +34,16 @@ final class SynchronizerTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
-            channelProvider: ChannelProvider(),
-            network: network
-        )
-        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday:self.birthday + 50, //don't use an exact birthday, users never do.
+                channelProvider: ChannelProvider(),
+                network: self.network
+            )
+
+            try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        }
     }
 
     override func tearDownWithError() throws {
@@ -67,7 +70,7 @@ final class SynchronizerTests: XCTestCase {
         reorgExpectation.fulfill()
     }
 
-    func testSynchronizerStops() throws {
+    func testSynchronizerStops() async throws {
         hookToReOrgNotification()
 
         /*
@@ -102,14 +105,14 @@ final class SynchronizerTests: XCTestCase {
             XCTFail("Failed with error: \(testError)")
         })
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            self.coordinator.synchronizer.stop()
-        }
+        try await Task.sleep(nanoseconds: 5_000_000_000)
+        self.coordinator.synchronizer.stop()
 
-        wait(for: [processorStoppedExpectation,syncStoppedExpectation], timeout: 6, enforceOrder: true)
+        wait(for: [syncStoppedExpectation, processorStoppedExpectation], timeout: 6, enforceOrder: true)
 
         XCTAssertEqual(coordinator.synchronizer.status, .stopped)
-        XCTAssertEqual(coordinator.synchronizer.blockProcessor.state.getState(), .stopped)
+        let state = await coordinator.synchronizer.blockProcessor.state
+        XCTAssertEqual(state, .stopped)
     }
 
     func handleError(_ error: Error?) {

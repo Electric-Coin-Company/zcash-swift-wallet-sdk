@@ -1,149 +1,151 @@
 {
-  "pins" : [
-    {
-      "identity" : "grpc-swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/grpc/grpc-swift.git",
-      "state" : {
-        "revision" : "466cc881f1760ed8c0e685900ed62dab7846a571",
-        "version" : "1.8.0"
+  "object": {
+    "pins": [
+      {
+        "package": "grpc-swift",
+        "repositoryURL": "https://github.com/grpc/grpc-swift.git",
+        "state": {
+          "branch": null,
+          "revision": "466cc881f1760ed8c0e685900ed62dab7846a571",
+          "version": "1.8.0"
+        }
+      },
+      {
+        "package": "KRActivityIndicatorView",
+        "repositoryURL": "https://github.com/krimpedance/KRActivityIndicatorView.git",
+        "state": {
+          "branch": null,
+          "revision": "bcb0e841d6de0cd343a32bd5056580a56d06c0bc",
+          "version": "3.0.7"
+        }
+      },
+      {
+        "package": "KRProgressHUD",
+        "repositoryURL": "https://github.com/krimpedance/KRProgressHUD.git",
+        "state": {
+          "branch": null,
+          "revision": "265142816d8f8ea93840accaf4ac7c49998e77c2",
+          "version": "3.4.7"
+        }
+      },
+      {
+        "package": "MnemonicSwift",
+        "repositoryURL": "https://github.com/zcash-hackworks/MnemonicSwift.git",
+        "state": {
+          "branch": null,
+          "revision": "27711179a75a1172d6f04ceb5d86419cf0cba401",
+          "version": "2.1.0"
+        }
+      },
+      {
+        "package": "NotificationBubbles",
+        "repositoryURL": "https://github.com/pacu/NotificationBubbles.git",
+        "state": {
+          "branch": null,
+          "revision": "ae6d47f3a415c9eec5daa8e04d040c0e68654f00",
+          "version": "1.0.0"
+        }
+      },
+      {
+        "package": "PaginatedTableView",
+        "repositoryURL": "https://github.com/dh-ecc/PaginatedTableView",
+        "state": {
+          "branch": "master",
+          "revision": "a3fd9f079d6c9ac3095ee3ef2369a68c29ba04db",
+          "version": null
+        }
+      },
+      {
+        "identity" : "sqlite.swift",
+        "kind" : "remoteSourceControl",
+        "location" : "https://github.com/stephencelis/SQLite.swift.git",
+        "state" : {
+          "revision" : "60a65015f6402b7c34b9a924f755ca0a73afeeaa",
+          "version" : "0.13.1"
+        }
+      },
+      {
+        "package": "swift-crypto",
+        "repositoryURL": "https://github.com/apple/swift-crypto.git",
+        "state": {
+          "branch": null,
+          "revision": "a8911e0fadc25aef1071d582355bd1037a176060",
+          "version": "2.0.4"
+        }
+      },
+      {
+        "package": "swift-log",
+        "repositoryURL": "https://github.com/apple/swift-log.git",
+        "state": {
+          "branch": null,
+          "revision": "5d66f7ba25daf4f94100e7022febf3c75e37a6c7",
+          "version": "1.4.2"
+        }
+      },
+      {
+        "package": "swift-nio",
+        "repositoryURL": "https://github.com/apple/swift-nio.git",
+        "state": {
+          "branch": null,
+          "revision": "51c3fc2e4a0fcdf4a25089b288dd65b73df1b0ef",
+          "version": "2.37.0"
+        }
+      },
+      {
+        "package": "swift-nio-extras",
+        "repositoryURL": "https://github.com/apple/swift-nio-extras.git",
+        "state": {
+          "branch": null,
+          "revision": "f73ca5ee9c6806800243f1ac415fcf82de9a4c91",
+          "version": "1.10.2"
+        }
+      },
+      {
+        "package": "swift-nio-http2",
+        "repositoryURL": "https://github.com/apple/swift-nio-http2.git",
+        "state": {
+          "branch": null,
+          "revision": "108ac15087ea9b79abb6f6742699cf31de0e8772",
+          "version": "1.22.0"
+        }
+      },
+      {
+        "package": "swift-nio-ssl",
+        "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
+        "state": {
+          "branch": null,
+          "revision": "52a486ff6de9bc3e26bf634c5413c41c5fa89ca5",
+          "version": "2.17.2"
+        }
+      },
+      {
+        "package": "swift-nio-transport-services",
+        "repositoryURL": "https://github.com/apple/swift-nio-transport-services.git",
+        "state": {
+          "branch": null,
+          "revision": "8ab824b140d0ebcd87e9149266ddc353e3705a3e",
+          "version": "1.11.4"
+        }
+      },
+      {
+        "package": "SwiftProtobuf",
+        "repositoryURL": "https://github.com/apple/swift-protobuf.git",
+        "state": {
+          "branch": null,
+          "revision": "e1499bc69b9040b29184f7f2996f7bab467c1639",
+          "version": "1.19.0"
+        }
+      },
+      {
+        "identity" : "zcash-light-client-ffi",
+        "kind" : "remoteSourceControl",
+        "location" : "https://github.com/zcash-hackworks/zcash-light-client-ffi",
+        "state" : {
+          "revision" : "4043e011f4d6a39b7671d48ca4a54c0085603b76",
+          "version" : "0.1.0-beta.1"
+        }
       }
-    },
-    {
-      "identity" : "kractivityindicatorview",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/krimpedance/KRActivityIndicatorView.git",
-      "state" : {
-        "revision" : "bcb0e841d6de0cd343a32bd5056580a56d06c0bc",
-        "version" : "3.0.7"
-      }
-    },
-    {
-      "identity" : "krprogresshud",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/krimpedance/KRProgressHUD.git",
-      "state" : {
-        "revision" : "265142816d8f8ea93840accaf4ac7c49998e77c2",
-        "version" : "3.4.7"
-      }
-    },
-    {
-      "identity" : "mnemonicswift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zcash-hackworks/MnemonicSwift.git",
-      "state" : {
-        "revision" : "716a2c32ac2bbd8a1499ac834077df42b75edc85",
-        "version" : "2.2.4"
-      }
-    },
-    {
-      "identity" : "notificationbubbles",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pacu/NotificationBubbles.git",
-      "state" : {
-        "revision" : "ae6d47f3a415c9eec5daa8e04d040c0e68654f00",
-        "version" : "1.0.0"
-      }
-    },
-    {
-      "identity" : "paginatedtableview",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/dh-ecc/PaginatedTableView",
-      "state" : {
-        "branch" : "master",
-        "revision" : "a3fd9f079d6c9ac3095ee3ef2369a68c29ba04db"
-      }
-    },
-    {
-      "identity" : "sqlite.swift",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/stephencelis/SQLite.swift.git",
-      "state" : {
-        "revision" : "60a65015f6402b7c34b9a924f755ca0a73afeeaa",
-        "version" : "0.13.1"
-      }
-    },
-    {
-      "identity" : "swift-crypto",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-crypto.git",
-      "state" : {
-        "revision" : "d9825fa541df64b1a7b182178d61b9a82730d01f",
-        "version" : "2.1.0"
-      }
-    },
-    {
-      "identity" : "swift-log",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-log.git",
-      "state" : {
-        "revision" : "5d66f7ba25daf4f94100e7022febf3c75e37a6c7",
-        "version" : "1.4.2"
-      }
-    },
-    {
-      "identity" : "swift-nio",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio.git",
-      "state" : {
-        "revision" : "51c3fc2e4a0fcdf4a25089b288dd65b73df1b0ef",
-        "version" : "2.37.0"
-      }
-    },
-    {
-      "identity" : "swift-nio-extras",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-extras.git",
-      "state" : {
-        "revision" : "f73ca5ee9c6806800243f1ac415fcf82de9a4c91",
-        "version" : "1.10.2"
-      }
-    },
-    {
-      "identity" : "swift-nio-http2",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-http2.git",
-      "state" : {
-        "revision" : "108ac15087ea9b79abb6f6742699cf31de0e8772",
-        "version" : "1.22.0"
-      }
-    },
-    {
-      "identity" : "swift-nio-ssl",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-ssl.git",
-      "state" : {
-        "revision" : "52a486ff6de9bc3e26bf634c5413c41c5fa89ca5",
-        "version" : "2.17.2"
-      }
-    },
-    {
-      "identity" : "swift-nio-transport-services",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-nio-transport-services.git",
-      "state" : {
-        "revision" : "8ab824b140d0ebcd87e9149266ddc353e3705a3e",
-        "version" : "1.11.4"
-      }
-    },
-    {
-      "identity" : "swift-protobuf",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-protobuf.git",
-      "state" : {
-        "revision" : "e1499bc69b9040b29184f7f2996f7bab467c1639",
-        "version" : "1.19.0"
-      }
-    },
-    {
-      "identity" : "zcash-light-client-ffi",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/zcash-hackworks/zcash-light-client-ffi",
-      "state" : {
-        "revision" : "4043e011f4d6a39b7671d48ca4a54c0085603b76",
-        "version" : "0.1.0-beta.1"
-      }
-    }
-  ],
-  "version" : 2
+    ]
+  },
+  "version": 1
 }
