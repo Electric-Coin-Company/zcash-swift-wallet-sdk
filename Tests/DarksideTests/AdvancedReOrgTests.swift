@@ -46,7 +46,7 @@ class AdvancedReOrgTests: XCTestCase {
     }
     
     override func tearDownWithError() throws {
-        super.tearDownWithError()
+        try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
