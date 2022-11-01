@@ -13,10 +13,9 @@ Wrapper for the Rust backend. This class basically represents all the Rust-walle
 capabilities and the supporting data required to exercise those abilities.
 */
 public enum InitializerError: Error {
-    case cacheDbInitFailed
-    case dataDbInitFailed
-    case accountInitFailed
-    case falseStart
+    case cacheDbInitFailed(Error)
+    case dataDbInitFailed(Error)
+    case accountInitFailed(Error)
     case invalidViewingKey(key: String)
 }
 
@@ -197,7 +196,7 @@ public class Initializer {
         do {
             try storage.createTable()
         } catch {
-            throw InitializerError.cacheDbInitFailed
+            throw InitializerError.cacheDbInitFailed(error)
         }
         
         do {
@@ -205,7 +204,7 @@ public class Initializer {
                 return .seedRequired
             }
         } catch {
-            throw InitializerError.dataDbInitFailed
+            throw InitializerError.dataDbInitFailed(error)
         }
 
         let checkpoint = Checkpoint.birthday(with: self.walletBirthday, network: network)
@@ -221,7 +220,7 @@ public class Initializer {
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
-            throw InitializerError.dataDbInitFailed
+            throw InitializerError.dataDbInitFailed(error)
         }
         self.walletBirthday = checkpoint.height
         
@@ -230,19 +229,17 @@ public class Initializer {
         lowerBoundHeight = max(walletBirthday, lastDownloaded)
  
         do {
-            guard try rustBackend.initAccountsTable(
+            try rustBackend.initAccountsTable(
                 dbData: dataDbURL,
                 ufvks: viewingKeys,
                 networkType: network.networkType
-            ) else {
-                throw rustBackend.lastError() ?? InitializerError.accountInitFailed
-            }
+            )
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch RustWeldingError.malformedStringInput {
             throw RustWeldingError.malformedStringInput
         } catch {
-            throw rustBackend.lastError() ?? InitializerError.accountInitFailed
+            throw InitializerError.accountInitFailed(error)
         }
 
         let migrationManager = MigrationManager(
@@ -369,5 +366,21 @@ enum CompactBlockProcessorBuilder {
             repository: transactionRepository,
             accountRepository: accountRepository
         )
+    }
+}
+
+
+extension InitializerError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .invalidViewingKey:
+            return "The provided viewing key is invalid"
+        case .cacheDbInitFailed(let error):
+            return "cacheDb Init failed with error: \(error.localizedDescription)"
+        case .dataDbInitFailed(let error):
+            return "dataDb init failed with error: \(error.localizedDescription)"
+        case .accountInitFailed(let error):
+            return "account table init failed with error: \(error.localizedDescription)"
+        }
     }
 }

@@ -245,7 +245,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         ufvks: [UnifiedFullViewingKey],
         networkType: NetworkType
-    ) throws -> Bool
+    ) throws
 
     /// initializes the data db. This will performs any migrations needed on the sqlite file
     /// provided. Some migrations might need that callers provide the seed bytes.
