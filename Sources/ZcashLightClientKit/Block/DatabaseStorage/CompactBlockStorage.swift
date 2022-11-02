@@ -14,26 +14,24 @@ protocol ConnectionProvider {
 }
 
 class CompactBlockStorage: CompactBlockDAO {
+    private enum TableColums {
+        static let height = Expression<Int64>("height")
+        static let data = Expression<Blob>("data")
+    }
+
+    private let table = Table("compactblocks")
+
     var dbProvider: ConnectionProvider
     
     init(connectionProvider: ConnectionProvider) {
         dbProvider = connectionProvider
     }
-    
-    private func compactBlocksTable() -> Table {
-        Table("compactblocks")
-    }
-    private func heightColumn() -> Expression<Int64> {
-        Expression<Int64>("height")
-    }
-    private func dataColumn() -> Expression<Blob> {
-        Expression<Blob>("data")
-    }
+
     func createTable() throws {
         do {
-            let compactBlocks = compactBlocksTable()
-            let height = heightColumn()
-            let data = dataColumn()
+            let compactBlocks = table
+            let height = TableColums.height
+            let data = TableColums.data
             
             let db = try dbProvider.connection()
          
@@ -50,21 +48,31 @@ class CompactBlockStorage: CompactBlockDAO {
     }
     
     func insert(_ block: ZcashCompactBlock) throws {
-        try dbProvider.connection().run(compactBlocksTable().insert(block))
+        try dbProvider.connection().run(table.insert(block))
     }
     
     func insert(_ blocks: [ZcashCompactBlock]) throws {
-        let compactBlocks = compactBlocksTable()
         let db = try dbProvider.connection()
         try db.transaction(.immediate) {
             for block in blocks {
-                try db.run(compactBlocks.insert(block))
+                try db.run(table.insert(block))
             }
         }
     }
     
+    func deleteCachedBlocks(_ range: CompactBlockRange, keepCountOfLatestBlocks: Int) async throws {
+        let task = Task(priority: .userInitiated) {
+            let maxBlockHeightToKeep = range.upperBound - keepCountOfLatestBlocks
+            guard maxBlockHeightToKeep > 0 else { return }
+
+            let blocksDelete = table.filter(TableColums.height < Int64(maxBlockHeightToKeep))
+            try dbProvider.connection().run(blocksDelete.delete())
+        }
+        try await task.value
+    }
+    
     func latestBlockHeight() throws -> BlockHeight {
-        guard let maxHeight = try dbProvider.connection().scalar(compactBlocksTable().select(heightColumn().max)) else {
+        guard let maxHeight = try dbProvider.connection().scalar(table.select(TableColums.height.max)) else {
             return BlockHeight.empty()
         }
         
@@ -76,7 +84,7 @@ class CompactBlockStorage: CompactBlockDAO {
     }
     
     func rewind(to height: BlockHeight) throws {
-        try dbProvider.connection().run(compactBlocksTable().filter(heightColumn() >= Int64(height)).delete())
+        try dbProvider.connection().run(table.filter(TableColums.height >= Int64(height)).delete())
     }
 }
 

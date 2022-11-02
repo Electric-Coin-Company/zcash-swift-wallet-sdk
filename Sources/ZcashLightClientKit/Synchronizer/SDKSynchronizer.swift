@@ -39,6 +39,9 @@ public extension Notification.Name {
     /// Posted when the synchronizer starts syncing
     static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
 
+    /// Posted when synchronizer starts processing blocks
+    static let synchronizerProcessing = Notification.Name("SDKSyncronizerProcessing")
+
     /// Posted when synchronizer starts downloading blocks
     static let synchronizerDownloading = Notification.Name("SDKSyncronizerDownloading")
 
@@ -174,7 +177,7 @@ public class SDKSynchronizer: Synchronizer {
         case .unprepared:
             throw SynchronizerError.notPrepared
 
-        case .downloading, .validating, .scanning, .enhancing, .fetching:
+        case .syncing:
             LoggerProxy.warn("warning: synchronizer started when already started")
             return
 
@@ -207,42 +210,7 @@ public class SDKSynchronizer: Synchronizer {
             name: Notification.Name.blockProcessorUpdated,
             object: processor
         )
-        
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedDownloading(_:)),
-            name: Notification.Name.blockProcessorStartedDownloading,
-            object: processor
-        )
-        
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedValidating(_:)),
-            name: Notification.Name.blockProcessorStartedValidating,
-            object: processor
-        )
-        
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedScanning(_:)),
-            name: Notification.Name.blockProcessorStartedScanning,
-            object: processor
-        )
-        
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedEnhancing(_:)),
-            name: Notification.Name.blockProcessorStartedEnhancing,
-            object: processor
-        )
-        
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedFetching(_:)),
-            name: Notification.Name.blockProcessorStartedFetching,
-            object: processor
-        )
-        
+                
         center.addObserver(
             self,
             selector: #selector(processorStopped(_:)),
@@ -377,41 +345,7 @@ public class SDKSynchronizer: Synchronizer {
     
         self.notify(progress: progress)
     }
-    
-    @objc func processorStartedDownloading(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self, self.status != .downloading(.nullProgress) else { return }
-            self.status = .downloading(.nullProgress)
-        }
-    }
-    
-    @objc func processorStartedValidating(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self, self.status != .validating else { return }
-            self.status = .validating
-        }
-    }
-    
-    @objc func processorStartedScanning(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self, self.status != .scanning(.nullProgress) else { return }
-            self.status = .scanning(.nullProgress)
-        }
-    }
-    @objc func processorStartedEnhancing(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self, self.status != .enhancing(NullEnhancementProgress()) else { return }
-            self.status = .enhancing(NullEnhancementProgress())
-        }
-    }
-    
-    @objc func processorStartedFetching(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self, self.status != .fetching else { return }
-            self.status = .fetching
-        }
-    }
-    
+        
     @objc func processorStopped(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
             guard let self = self, self.status != .stopped else { return }
@@ -735,20 +669,13 @@ public class SDKSynchronizer: Synchronizer {
             }
         case .unprepared:
             break
-        case .downloading:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerDownloading, object: self)
-        case .validating:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerValidating, object: self)
-        case .scanning:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerScanning, object: self)
-        case .enhancing:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerEnhancing, object: self)
-        case .fetching:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerFetching, object: self)
+        case .syncing:
+            NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerSyncing, object: self)
         case .error(let e):
             self.notifyFailure(e)
         }
     }
+    
     // MARK: book keeping
     
     private func updateMinedTransactions() throws {

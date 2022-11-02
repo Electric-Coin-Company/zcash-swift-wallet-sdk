@@ -11,8 +11,7 @@ import Foundation
 extension CompactBlockProcessor {
     func compactBlockBatchScanning(range: CompactBlockRange) async throws {
         try Task.checkCancellation()
-        
-        state = .scanning
+
         let batchSize = UInt32(config.scanningBatchSize)
         
         do {
@@ -67,7 +66,6 @@ extension CompactBlockProcessor {
                     scannedNewBlocks = previousScannedHeight != lastScannedHeight
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
-                        notifyProgress(.scan(progress))
                         NotificationCenter.default.mainThreadPostNotification(
                             SDKMetrics.progressReportNotification(
                                 progress: progress,

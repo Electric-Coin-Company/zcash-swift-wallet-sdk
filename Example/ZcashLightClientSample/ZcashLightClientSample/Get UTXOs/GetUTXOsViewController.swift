@@ -53,7 +53,8 @@ class GetUTXOsViewController: UIViewController {
                     spendingKey: spendingKey,
                     transparentSecretKey: transparentSecretKey,
                     memo: "shielding is fun!",
-                    from: 0)
+                    from: 0
+                )
                 KRProgressHUD.dismiss()
                 self.messageLabel.text = "funds shielded \(transaction)"
             }

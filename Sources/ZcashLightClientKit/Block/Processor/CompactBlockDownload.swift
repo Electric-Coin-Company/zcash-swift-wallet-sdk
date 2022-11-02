@@ -9,14 +9,17 @@
 import Foundation
 
 extension CompactBlockProcessor {
+    func storeCompactBlocks(buffer: [ZcashCompactBlock]?) async throws {
+        guard let buffer else { return }
+        try await storage.write(blocks: buffer)
+    }
+    
     func compactBlockStreamDownload(
         blockBufferSize: Int,
         startHeight: BlockHeight? = nil,
         targetHeight: BlockHeight? = nil
-    ) async throws {
+    ) async throws -> [ZcashCompactBlock]? {
         try Task.checkCancellation()
-        
-        state = .downloading
         
         var buffer: [ZcashCompactBlock] = []
         var targetHeightInternal: BlockHeight?
@@ -41,25 +44,15 @@ extension CompactBlockProcessor {
             for try await zcashCompactBlock in stream {
                 try Task.checkCancellation()
                 buffer.append(zcashCompactBlock)
-                if buffer.count >= blockBufferSize {
-                    try await storage.write(blocks: buffer)
-                    buffer.removeAll(keepingCapacity: true)
-                }
-                
-                let progress = BlockProgress(
-                    startHeight: startHeight,
-                    targetHeight: latestHeight,
-                    progressHeight: zcashCompactBlock.height
-                )
-                notifyProgress(.download(progress))
             }
-            try await storage.write(blocks: buffer)
-            buffer.removeAll(keepingCapacity: true)
+            return buffer
         } catch {
             guard let err = error as? LightWalletServiceError, case .userCancelled = err else {
                 throw error
             }
         }
+        
+        return nil
     }
 }
 
@@ -103,16 +96,7 @@ extension CompactBlockProcessor {
             }
             
             var currentHeight = startHeight
-            notifyProgress(
-                .download(
-                    BlockProgress(
-                        startHeight: currentHeight,
-                        targetHeight: targetHeight,
-                        progressHeight: currentHeight
-                    )
-                )
-            )
-            
+
             while !Task.isCancelled && currentHeight <= targetHeight {
                 var retries = 0
                 var success = true
@@ -140,17 +124,7 @@ extension CompactBlockProcessor {
                 if retries >= maxRetries {
                     throw CompactBlockBatchDownloadError.batchDownloadFailed(range: range, error: localError)
                 }
-                
-                notifyProgress(
-                    .download(
-                        BlockProgress(
-                            startHeight: startHeight,
-                            targetHeight: targetHeight,
-                            progressHeight: range.upperBound
-                        )
-                    )
-                )
-                
+                                
                 currentHeight = range.upperBound + 1
             }
         } catch {
