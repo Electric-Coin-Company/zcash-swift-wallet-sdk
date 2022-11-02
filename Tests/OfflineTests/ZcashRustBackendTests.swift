@@ -71,10 +71,13 @@ class ZcashRustBackendTests: XCTestCase {
                 .deriveFullViewingKey()
 
         ]
-        guard try ZcashRustBackend.initAccountsTable(dbData: dbData!, ufvks: ufvks, networkType: networkType) else {
+        do {
+            try ZcashRustBackend.initAccountsTable(dbData: dbData!, ufvks: ufvks, networkType: networkType)
+        } catch {
             XCTFail("failed with error: \(String(describing: ZcashRustBackend.lastError()))")
             return
         }
+        
         XCTAssertNotNil(
             try ZcashRustBackend.createAccount(
                 dbData: dbData!,

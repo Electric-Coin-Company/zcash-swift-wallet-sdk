@@ -131,11 +131,13 @@ class BlockScanTests: XCTestCase {
             .map { try derivationTool.deriveUnifiedFullViewingKey(from: $0) }
 
 
-        guard try self.rustWelding.initAccountsTable(
-            dbData: self.dataDbURL,
-            ufvks: [ufvk],
-            networkType: network.networkType
-        ) else {
+        do {
+            try self.rustWelding.initAccountsTable(
+                dbData: self.dataDbURL,
+                ufvks: [ufvk],
+                networkType: network.networkType
+            )
+        } catch {
             XCTFail("failed to init account table. error: \(self.rustWelding.getLastError() ?? "no error found")")
             return
         }

@@ -434,7 +434,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         dbData: URL,
         ufvks: [UnifiedFullViewingKey],
         networkType: NetworkType
-    ) throws -> Bool {
+    ) throws {
         let dbData = dbData.osStr()
         
         var ffiUfvks = [FFIEncodedKey]()
@@ -470,14 +470,16 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 networkType.networkId
             )
         }
-        
+
         defer {
             for ufvk in ffiUfvks {
                 ufvk.encoding.deallocate()
             }
         }
-        
-        return result
+
+        guard result else {
+            throw lastError() ?? .genericError(message: "`initAccountsTable` failed with unknown error")
+        }
     }
     
     // swiftlint:disable function_parameter_count
@@ -730,3 +732,28 @@ extension UnsafeMutablePointer where Pointee == UInt8 {
     }
 }
     
+
+extension RustWeldingError: LocalizedError {
+    var errorDescription: String? {
+        switch self {
+        case .genericError(let message):
+            return "RustWeldingError generic error: \(message)"
+        case .dataDbInitFailed(let message):
+            return "`RustWeldingError.dataDbInitFailed` with message: \(message)"
+        case .dataDbNotEmpty:
+            return "`.DataDbNotEmpty`. This is usually not an error."
+        case .invalidInput(let message):
+            return "`RustWeldingError.invalidInput` with message: \(message)"
+        case .malformedStringInput:
+            return "`.malformedStringInput` Called a function with a malformed string input."
+        case .invalidRewind:
+            return "`.invalidRewind` called the rewind API with an arbitrary height that is not valid."
+        case .noConsensusBranchId(let branchId):
+            return "`.noConsensusBranchId` number \(branchId)"
+        case .saplingSpendParametersNotFound:
+            return "`.saplingSpendParametersNotFound` sapling parameters not present at specified URL"
+        case .unableToDeriveKeys:
+            return "`.unableToDeriveKeys` the requested keys could not be derived from the source provided"
+        }
+    }
+}

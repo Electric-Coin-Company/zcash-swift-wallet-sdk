@@ -74,11 +74,13 @@ class TransactionEnhancementTests: XCTestCase {
                 }
 
         ]
-        guard try rustBackend.initAccountsTable(
-            dbData: processorConfig.dataDb,
-            ufvks: ufvks,
-            networkType: network.networkType
-        ) else {
+        do {
+            try rustBackend.initAccountsTable(
+                dbData: processorConfig.dataDb,
+                ufvks: ufvks,
+                networkType: network.networkType
+            )
+        } catch {
             XCTFail("Failed to init accounts table error: " + String(describing: rustBackend.getLastError()))
             return
         }
