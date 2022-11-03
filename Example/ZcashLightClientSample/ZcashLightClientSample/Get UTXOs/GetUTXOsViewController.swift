@@ -24,11 +24,12 @@ class GetUTXOsViewController: UIViewController {
     
     func updateUI() {
         let synchronizer = SDKSynchronizer.shared
-        let tAddress = synchronizer.getTransparentAddress(accountIndex: 0)?.stringEncoded ?? "no t-address found"
-
-        self.transparentAddressLabel.text = tAddress
 
         Task { @MainActor in
+            let tAddress = await synchronizer.getTransparentAddress(accountIndex: 0)?.stringEncoded ?? "no t-address found"
+
+            self.transparentAddressLabel.text = tAddress
+            
             // swiftlint:disable:next force_try
             let balance = try! await AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
             

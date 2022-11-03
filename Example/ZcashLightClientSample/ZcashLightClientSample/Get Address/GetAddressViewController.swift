@@ -18,42 +18,44 @@ class GetAddressViewController: UIViewController {
 
         let synchronizer = SDKSynchronizer.shared
 
-        guard let uAddress = synchronizer.getUnifiedAddress(accountIndex: 0) else {
-            unifiedAddressLabel.text = "could not derive UA"
-            tAddressLabel.text = "could not derive tAddress"
-            saplingAddress.text = "could not derive zAddress"
-            return
+        Task { @MainActor in
+            guard let uAddress = await synchronizer.getUnifiedAddress(accountIndex: 0) else {
+                unifiedAddressLabel.text = "could not derive UA"
+                tAddressLabel.text = "could not derive tAddress"
+                saplingAddress.text = "could not derive zAddress"
+                return
+            }
+
+            // you can either try to extract receivers from the UA itself or request the Synchronizer to do it for you. Certain UAs might not contain all the receivers you expect.
+            unifiedAddressLabel.text = uAddress.stringEncoded
+
+            tAddressLabel.text = uAddress.transparentReceiver()?.stringEncoded ?? "could not extract transparent receiver from UA"
+            saplingAddress.text = uAddress.saplingReceiver()?.stringEncoded ?? "could not extract sapling receiver from UA"
+
+            unifiedAddressLabel.addGestureRecognizer(
+                UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(addressTapped(_:))
+                )
+            )
+            unifiedAddressLabel.isUserInteractionEnabled = true
+
+            tAddressLabel.isUserInteractionEnabled = true
+            tAddressLabel.addGestureRecognizer(
+                UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(tAddressTapped(_:))
+                )
+            )
+            saplingAddress.addGestureRecognizer(
+                UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(spendingKeyTapped(_:))
+                )
+            )
+            saplingAddress.isUserInteractionEnabled = true
+            loggerProxy.info("Address: \(String(describing: uAddress))")
         }
-
-        // you can either try to extract receivers from the UA itself or request the Synchronizer to do it for you. Certain UAs might not contain all the receivers you expect.
-        unifiedAddressLabel.text = uAddress.stringEncoded
-
-        tAddressLabel.text = uAddress.transparentReceiver()?.stringEncoded ?? "could not extract transparent receiver from UA"
-        saplingAddress.text = uAddress.saplingReceiver()?.stringEncoded ?? "could not extract sapling receiver from UA"
-
-        unifiedAddressLabel.addGestureRecognizer(
-            UITapGestureRecognizer(
-                target: self,
-                action: #selector(addressTapped(_:))
-            )
-        )
-        unifiedAddressLabel.isUserInteractionEnabled = true
-        
-        tAddressLabel.isUserInteractionEnabled = true
-        tAddressLabel.addGestureRecognizer(
-            UITapGestureRecognizer(
-                target: self,
-                action: #selector(tAddressTapped(_:))
-            )
-        )
-        saplingAddress.addGestureRecognizer(
-            UITapGestureRecognizer(
-                target: self,
-                action: #selector(spendingKeyTapped(_:))
-            )
-        )
-        saplingAddress.isUserInteractionEnabled = true
-        loggerProxy.info("Address: \(String(describing: uAddress))")
     }
 
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
