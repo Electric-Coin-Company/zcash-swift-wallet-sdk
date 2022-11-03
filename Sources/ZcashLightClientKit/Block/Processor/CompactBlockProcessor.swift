@@ -601,6 +601,8 @@ public actor CompactBlockProcessor {
         await parallelHandler.reset()
         await parallelHandler.updateProcessingHeight(range.lowerBound)
 
+        let resourcesUsage = ResourcesUsageChecker()
+
         self.foundBlocks = true
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
@@ -676,7 +678,12 @@ public actor CompactBlockProcessor {
 
                                 let progress = BlockProgress(startHeight: range.lowerBound, targetHeight: range.upperBound, progressHeight: processRange.upperBound)
                                 await notifyProgress(.blockProgress(progress))
+
+                                resourcesUsage.printUsage()
+
                             } catch {
+                                resourcesUsage.printUsage()
+
                                 await parallelHandler.decrementTaskPool()
                                 if error is CompactBlockValidationNextBatchError {
                                     await parallelHandler.updateNeedsNextBatch(true)
