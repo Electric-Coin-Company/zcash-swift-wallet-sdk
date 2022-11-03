@@ -12,7 +12,7 @@ extension CompactBlockProcessor {
     func compactBlockBatchScanning(range: CompactBlockRange) async throws {
         try Task.checkCancellation()
 
-        let batchSize = UInt32(config.scanningBatchSize)
+        let batchSize = UInt32(processingBatchSize(for: range, network: config.network.networkType))
         
         do {
             if batchSize == 0 {

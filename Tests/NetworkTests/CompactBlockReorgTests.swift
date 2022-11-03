@@ -20,8 +20,7 @@ class CompactBlockReorgTests: XCTestCase {
     var downloadStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
-    var startedScanningNotificationExpectation: XCTestExpectation!
-    var startedValidatingNotificationExpectation: XCTestExpectation!
+    var blockProcessorSyncingExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
@@ -67,12 +66,7 @@ class CompactBlockReorgTests: XCTestCase {
         downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
-        startedValidatingNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedValidatingNotificationExpectation"
-        )
-        startedScanningNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedScanningNotificationExpectation"
-        )
+        blockProcessorSyncingExpectation = XCTestExpectation(description: "\(self.description) blockProcessorUpdated")
         idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
         reorgNotificationExpectation = XCTestExpectation(description: "\(self.description) reorgNotificationExpectation")
         
@@ -98,8 +92,7 @@ class CompactBlockReorgTests: XCTestCase {
         downloadStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()
         updatedNotificationExpectation.unsubscribeFromNotifications()
-        startedScanningNotificationExpectation.unsubscribeFromNotifications()
-        startedValidatingNotificationExpectation.unsubscribeFromNotifications()
+        blockProcessorSyncingExpectation.unsubscribeFromNotifications()
         idleNotificationExpectation.unsubscribeFromNotifications()
         reorgNotificationExpectation.unsubscribeFromNotifications()
         NotificationCenter.default.removeObserver(self)
@@ -131,19 +124,14 @@ class CompactBlockReorgTests: XCTestCase {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
-        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
+        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedSyncing, object: processor)
+        blockProcessorSyncingExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
         stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-        startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
-        startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
         reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
         
-        do {
-            try await processor.start()
-        } catch {
-            XCTFail("shouldn't fail")
-        }
+        await processor.start()
     }
     
     func testNotifiesReorg() async {
@@ -152,8 +140,7 @@ class CompactBlockReorgTests: XCTestCase {
         wait(
             for: [
                 downloadStartedExpect,
-                startedValidatingNotificationExpectation,
-                startedScanningNotificationExpectation,
+                blockProcessorSyncingExpectation,
                 reorgNotificationExpectation,
                 idleNotificationExpectation
             ],

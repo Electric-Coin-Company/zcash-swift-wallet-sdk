@@ -35,10 +35,11 @@ extension CompactBlockProcessor {
             
             var utxos: [UnspentTransactionOutputEntity] = []
             let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses, startHeight: config.walletBirthday)
+
             for try await transaction in stream {
                 utxos.append(transaction)
             }
-            
+
             var refreshed: [UnspentTransactionOutputEntity] = []
             var skipped: [UnspentTransactionOutputEntity] = []
 

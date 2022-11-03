@@ -20,8 +20,7 @@ class CompactBlockProcessorTests: XCTestCase {
     var downloadStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
-    var startedScanningNotificationExpectation: XCTestExpectation!
-    var startedValidatingNotificationExpectation: XCTestExpectation!
+    var blockProcessorSyncingExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
@@ -59,12 +58,7 @@ class CompactBlockProcessorTests: XCTestCase {
         downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
-        startedValidatingNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedValidatingNotificationExpectation"
-        )
-        startedScanningNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedScanningNotificationExpectation"
-        )
+        blockProcessorSyncingExpectation = XCTestExpectation(description: "\(self.description) blockProcessorUpdated")
         idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
         NotificationCenter.default.addObserver(
             self,
@@ -81,8 +75,7 @@ class CompactBlockProcessorTests: XCTestCase {
         downloadStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()
         updatedNotificationExpectation.unsubscribeFromNotifications()
-        startedScanningNotificationExpectation.unsubscribeFromNotifications()
-        startedValidatingNotificationExpectation.unsubscribeFromNotifications()
+        blockProcessorSyncingExpectation.unsubscribeFromNotifications()
         idleNotificationExpectation.unsubscribeFromNotifications()
         NotificationCenter.default.removeObserver(self)
     }
@@ -100,18 +93,13 @@ class CompactBlockProcessorTests: XCTestCase {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
-        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
+        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedSyncing, object: processor)
+        blockProcessorSyncingExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
         stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-        startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
-        startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
         
-        do {
-            try await processor.start()
-        } catch {
-            XCTFail("shouldn't fail")
-        }
+        await processor.start()
     }
     
     func testStartNotifiesSuscriptors() async {
@@ -120,8 +108,7 @@ class CompactBlockProcessorTests: XCTestCase {
         wait(
             for: [
                 downloadStartedExpect,
-                startedValidatingNotificationExpectation,
-                startedScanningNotificationExpectation,
+                blockProcessorSyncingExpectation,
                 idleNotificationExpectation
             ],
             timeout: 30,

@@ -9,50 +9,64 @@
 import Foundation
 
 extension CompactBlockProcessor {
+
+    class BlocksDownloadStream {
+
+        let stream: AsyncThrowingStream<ZcashCompactBlock, Error>
+        var iterator: AsyncThrowingStream<ZcashCompactBlock, Error>.Iterator
+
+        init(stream: AsyncThrowingStream<ZcashCompactBlock, Error>) {
+            self.stream = stream
+            self.iterator = stream.makeAsyncIterator()
+        }
+
+        func nextBlock() async throws -> ZcashCompactBlock? {
+            return try await iterator.next()
+        }
+    }
+
+    func compactBlocksDownloadStream(
+        startHeight: BlockHeight? = nil,
+        targetHeight: BlockHeight? = nil
+    ) async throws -> BlocksDownloadStream {
+        try Task.checkCancellation()
+
+        var targetHeightInternal: BlockHeight? = targetHeight
+        if targetHeight == nil {
+            targetHeightInternal = try await service.latestBlockHeightAsync()
+        }
+        guard let latestHeight = targetHeightInternal else {
+            throw LightWalletServiceError.generalError(message: "missing target height on compactBlockStreamDownload")
+        }
+        try Task.checkCancellation()
+        let latestDownloaded = try await storage.latestHeightAsync()
+        let startHeight = max(startHeight ?? BlockHeight.empty(), latestDownloaded)
+
+        let stream = service.blockStream(
+            startHeight: startHeight,
+            endHeight: latestHeight
+        )
+
+        return BlocksDownloadStream(stream: stream)
+    }
+
+    func readBlocks(from stream: BlocksDownloadStream, at range: CompactBlockRange) async throws -> [ZcashCompactBlock] {
+        var buffer: [ZcashCompactBlock] = []
+        for _ in stride(from: range.lowerBound, to: range.upperBound + 1, by: 1) {
+            try Task.checkCancellation()
+            if let block = try await stream.nextBlock() {
+                buffer.append(block)
+            } else {
+                break
+            }
+        }
+
+        return buffer
+    }
+
     func storeCompactBlocks(buffer: [ZcashCompactBlock]?) async throws {
         guard let buffer else { return }
         try await storage.write(blocks: buffer)
-    }
-    
-    func compactBlockStreamDownload(
-        blockBufferSize: Int,
-        startHeight: BlockHeight? = nil,
-        targetHeight: BlockHeight? = nil
-    ) async throws -> [ZcashCompactBlock]? {
-        try Task.checkCancellation()
-        
-        var buffer: [ZcashCompactBlock] = []
-        var targetHeightInternal: BlockHeight?
-        
-        do {
-            targetHeightInternal = targetHeight
-            if targetHeight == nil {
-                targetHeightInternal = try await service.latestBlockHeightAsync()
-            }
-            guard let latestHeight = targetHeightInternal else {
-                throw LightWalletServiceError.generalError(message: "missing target height on compactBlockStreamDownload")
-            }
-            try Task.checkCancellation()
-            let latestDownloaded = try await storage.latestHeightAsync()
-            let startHeight = max(startHeight ?? BlockHeight.empty(), latestDownloaded)
-
-            let stream = service.blockStream(
-                startHeight: startHeight,
-                endHeight: latestHeight
-            )
-            
-            for try await zcashCompactBlock in stream {
-                try Task.checkCancellation()
-                buffer.append(zcashCompactBlock)
-            }
-            return buffer
-        } catch {
-            guard let err = error as? LightWalletServiceError, case .userCancelled = err else {
-                throw error
-            }
-        }
-        
-        return nil
     }
 }
 

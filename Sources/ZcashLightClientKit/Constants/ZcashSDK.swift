@@ -71,7 +71,7 @@ public enum ZcashSDK {
 
     /// Default size of batches of blocks to request from the compact block service. Which was used both for scanning and downloading.
     /// consider basing your code assumptions on `DefaultDownloadBatch` and `DefaultScanningBatch` instead.
-    @available(*, deprecated, message: "this value is being deprecated in favor of `DefaultDownloadBatch` and `DefaultScanningBatch`")
+    @available(*, deprecated, message: "this value is being deprecated in favor of `DefaultDownloadBatch`")
     public static var DefaultBatchSize = 100
 
     /// Default batch size for downloading blocks for the compact block processor. This value was changed due to
@@ -81,9 +81,6 @@ public enum ZcashSDK {
     
     /// Default number of Tasks running in parallel and downloading block ranges.
     public static var tasksInParallel = 10
-
-    /// Default batch size for scanning blocks for the compact block processor
-    public static var DefaultScanningBatch = 100
 
     /// Default amount of time, in in seconds, to poll for new blocks. Typically, this should be about half the average
     /// block time.
