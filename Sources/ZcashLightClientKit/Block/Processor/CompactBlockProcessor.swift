@@ -244,7 +244,6 @@ public actor CompactBlockProcessor {
         public var cacheDb: URL
         public var dataDb: URL
         public var downloadBatchSize = ZcashSDK.DefaultDownloadBatch == 0 ? 100 : ZcashSDK.DefaultDownloadBatch
-        public var scanningBatchSize = ZcashSDK.DefaultScanningBatch
         public var tasksInParallel = ZcashSDK.tasksInParallel
         public var maxReorgSize = ZcashSDK.maxReorgSize
         public var retries = ZcashSDK.defaultRetries
@@ -511,7 +510,7 @@ public actor CompactBlockProcessor {
                 // max attempts have been reached
                 LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
-            case .downloading, .validating, .scanning, .enhancing, .fetching:
+            case .syncing:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
                 self.`needsToStartScanningWhenStopped` = true
             }
@@ -601,21 +600,24 @@ public actor CompactBlockProcessor {
         await parallelHandler.reset()
         await parallelHandler.updateProcessingHeight(range.lowerBound)
 
-        let resourcesUsage = ResourcesUsageChecker()
-
         self.foundBlocks = true
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
 
         state = .syncing
-        let downloadBatchSize = config.downloadBatchSize
+        let downloadBatchSize = processingBatchSize(for: range, network: config.network.networkType)
         let tasksInParallel = config.tasksInParallel
         
         cancelableTask = Task(priority: .userInitiated) {
             do {
                 let wholeRange = range.upperBound - range.lowerBound
                 let steps = wholeRange / downloadBatchSize
-                
+
+                let downloadStream = try await compactBlocksDownloadStream(
+                    startHeight: range.lowerBound,
+                    targetHeight: range.upperBound
+                )
+
                 let _ = try await withThrowingTaskGroup(of: Void.self, returning: Void.self) { [self] taskGroup in
                     for i in 0...steps {
                         /// Barrier ensuring only `tasksInParallel` number of tasks run in parallel.
@@ -644,11 +646,6 @@ public actor CompactBlockProcessor {
                         taskGroup.addTask { [self] in
                             do {
                                 try Task.checkCancellation()
-                                var buffer = try await compactBlockStreamDownload(
-                                    blockBufferSize: config.downloadBufferSize,
-                                    startHeight: processRange.lowerBound,
-                                    targetHeight: processRange.upperBound
-                                )
 
                                 /// Barrier ensuring order processing. Only the Task that is supposed to run store, valid and scan is
                                 /// allowed to continue. The other Tasks wait till it's their time. The synchronization value is the
@@ -658,10 +655,11 @@ public actor CompactBlockProcessor {
                                     try Task.checkCancellation()
                                     await Task.yield()
                                 }
-                                
+
+                                let buffer = try await readBlocks(from: downloadStream, at: processRange)
+
                                 try Task.checkCancellation()
                                 try await storeCompactBlocks(buffer: buffer)
-                                buffer?.removeAll()
                                 
                                 try Task.checkCancellation()
                                 try await compactBlockValidation()
@@ -678,12 +676,7 @@ public actor CompactBlockProcessor {
 
                                 let progress = BlockProgress(startHeight: range.lowerBound, targetHeight: range.upperBound, progressHeight: processRange.upperBound)
                                 await notifyProgress(.blockProgress(progress))
-
-                                resourcesUsage.printUsage()
-
                             } catch {
-                                resourcesUsage.printUsage()
-
                                 await parallelHandler.decrementTaskPool()
                                 if error is CompactBlockValidationNextBatchError {
                                     await parallelHandler.updateNeedsNextBatch(true)
@@ -721,6 +714,18 @@ public actor CompactBlockProcessor {
                 }
             }
         }
+    }
+
+    // FIXME [#576]
+    func processingBatchSize(for range: CompactBlockRange, network: NetworkType) -> Int {
+        guard network == .mainnet else {
+            return config.downloadBatchSize
+        }
+        if range.lowerBound > 1_600_000 {
+            return 5
+        }
+
+        return config.downloadBatchSize
     }
     
     func calculateProgress(start: BlockHeight, current: BlockHeight, latest: BlockHeight) -> Float {
@@ -927,8 +932,6 @@ public actor CompactBlockProcessor {
             await processingFinished(height: range.upperBound)
             return
         }
-        
-        //await nextBatch()
     }
     
     private func processingFinished(height: BlockHeight) async {

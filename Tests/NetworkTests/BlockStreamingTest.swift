@@ -74,10 +74,15 @@ class BlockStreamingTest: XCTestCase {
         
         let cancelableTask = Task {
             do {
-                try await compactBlockProcessor.compactBlockStreamDownload(
-                    blockBufferSize: 10,
-                    startHeight: startHeight
+                let targetHeight = try await service.latestBlockHeightAsync()
+                let range = CompactBlockRange(uncheckedBounds: (lower: startHeight, upper: targetHeight))
+
+                let blocksStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+                    startHeight: startHeight,
+                    targetHeight: targetHeight
                 )
+                let blocks = try await compactBlockProcessor.readBlocks(from: blocksStream, at: range)
+                try await compactBlockProcessor.storeCompactBlocks(buffer: blocks)
             } catch {
                 XCTAssertTrue(Task.isCancelled)
             }
@@ -114,10 +119,15 @@ class BlockStreamingTest: XCTestCase {
         let date = Date()
         
         do {
-            try await compactBlockProcessor.compactBlockStreamDownload(
-                blockBufferSize: 10,
-                startHeight: startHeight
+            let targetHeight = try await service.latestBlockHeightAsync()
+            let range = CompactBlockRange(uncheckedBounds: (lower: startHeight, upper: targetHeight))
+
+            let blocksStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+                startHeight: startHeight,
+                targetHeight: targetHeight
             )
+            let blocks = try await compactBlockProcessor.readBlocks(from: blocksStream, at: range)
+            try await compactBlockProcessor.storeCompactBlocks(buffer: blocks)
         } catch {
             if let lwdError = error as? LightWalletServiceError {
                 switch lwdError {

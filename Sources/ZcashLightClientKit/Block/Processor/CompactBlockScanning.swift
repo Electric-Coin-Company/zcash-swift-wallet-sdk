@@ -11,10 +11,8 @@ import Foundation
 extension CompactBlockProcessor {
     func compactBlockBatchScanning(range: CompactBlockRange) async throws {
         try Task.checkCancellation()
-        state = .scanning
 
-        // TODO: remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
-        let batchSize = scanBatchSize(for: range, network: self.config.network.networkType)
+        let batchSize = UInt32(processingBatchSize(for: range, network: config.network.networkType))
         
         do {
             if batchSize == 0 {
@@ -93,17 +91,6 @@ extension CompactBlockProcessor {
             LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
             throw error
         }
-    }
-
-    fileprivate func scanBatchSize(for range: CompactBlockRange, network: NetworkType) -> UInt32 {
-        guard network == .mainnet else {
-            return UInt32(config.scanningBatchSize)
-        }
-        if range.lowerBound > 1_600_000 {
-            return 5
-        }
-
-        return UInt32(config.scanningBatchSize)
     }
 }
 

@@ -161,7 +161,7 @@ class BlockScanTests: XCTestCase {
             walletBirthday: network.constants.saplingActivationHeight,
             network: network
         )
-        processorConfig.scanningBatchSize = 1000
+        processorConfig.downloadBatchSize = 1000
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
@@ -175,11 +175,12 @@ class BlockScanTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.compactBlockStreamDownload(
-                blockBufferSize: 10,
+            let blocksStream = try await compactBlockProcessor.compactBlocksDownloadStream(
                 startHeight: range.lowerBound,
                 targetHeight: range.upperBound
             )
+            let blocks = try await compactBlockProcessor.readBlocks(from: blocksStream, at: range)
+            try await compactBlockProcessor.storeCompactBlocks(buffer: blocks)
             XCTAssertFalse(Task.isCancelled)
             
             try await compactBlockProcessor.compactBlockValidation()
