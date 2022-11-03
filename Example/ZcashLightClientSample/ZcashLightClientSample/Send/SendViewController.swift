@@ -38,7 +38,7 @@ class SendViewController: UIViewController {
         setUp()
         Task { @MainActor in
             // swiftlint:disable:next force_try
-            try! await synchronizer.prepare()
+            try! await synchronizer.prepare(with: DemoAppConfig.seed)
         }
     }
     
