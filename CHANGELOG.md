@@ -1,3 +1,6 @@
+# 0.17.0-alpha.4
+- point to libzcashlc 0.1.0-beta.2
+
 # 0.17.0-alpha.3
 - [#602] Improve error logging for InitializerError and RustWeldingError
 
