@@ -552,10 +552,6 @@ public class SDKSynchronizer: Synchronizer {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
     }
     
-    public func latestDownloadedHeight() async throws -> BlockHeight {
-        try await blockProcessor.downloader.lastDownloadedBlockHeight()
-    }
-    
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         Task {
             do {

@@ -600,6 +600,8 @@ public actor CompactBlockProcessor {
         
         cancelableTask = Task(priority: .userInitiated) {
             do {
+                try storage.createTable()
+
                 try await compactBlockStreamDownload(
                     blockBufferSize: config.downloadBufferSize,
                     startHeight: range.lowerBound,
@@ -609,7 +611,11 @@ public actor CompactBlockProcessor {
                 try await compactBlockBatchScanning(range: range)
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
+                try removeCacheDB()
+
             } catch {
+                LoggerProxy.error("Sync failed with error: \(error)")
+
                 if !(Task.isCancelled) {
                     await fail(error)
                 } else {
@@ -749,7 +755,8 @@ public actor CompactBlockProcessor {
                 service: self.service,
                 downloader: self.downloader,
                 config: self.config,
-                rustBackend: self.rustBackend
+                rustBackend: self.rustBackend,
+                transactionRepository: transactionRepository
             )
             switch nextState {
             case .finishProcessing(let height):
@@ -846,6 +853,12 @@ public actor CompactBlockProcessor {
             object: self,
             userInfo: nil
         )
+    }
+
+    private func removeCacheDB() throws {
+        storage.closeDBConnection()
+        try FileManager.default.removeItem(at: config.cacheDb)
+        try storage.createTable()
     }
     
     private func setTimer() async {
@@ -1133,7 +1146,8 @@ extension CompactBlockProcessor {
             service: LightWalletService,
             downloader: CompactBlockDownloading,
             config: Configuration,
-            rustBackend: ZcashRustBackendWelding.Type
+            rustBackend: ZcashRustBackendWelding.Type,
+            transactionRepository: TransactionRepository
         ) async throws -> NextState {
             let task = Task(priority: .userInitiated) {
                 do {
@@ -1145,9 +1159,9 @@ extension CompactBlockProcessor {
                         localNetwork: config.network,
                         rustBackend: rustBackend
                     )
-                    
+
                     // get latest block height
-                    let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday, try downloader.lastDownloadedBlockHeight())
+                    let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday, try transactionRepository.lastScannedHeight())
                     
                     let latestBlockheight = try service.latestBlockHeight()
                     

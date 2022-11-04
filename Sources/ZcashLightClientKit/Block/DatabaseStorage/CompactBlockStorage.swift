@@ -11,6 +11,7 @@ import SQLite
 
 protocol ConnectionProvider {
     func connection() throws -> Connection
+    func close()
 }
 
 class CompactBlockStorage: CompactBlockDAO {
@@ -29,6 +30,11 @@ class CompactBlockStorage: CompactBlockDAO {
     private func dataColumn() -> Expression<Blob> {
         Expression<Blob>("data")
     }
+
+    func closeDBConnection() {
+        dbProvider.close()
+    }
+
     func createTable() throws {
         do {
             let compactBlocks = compactBlocksTable()

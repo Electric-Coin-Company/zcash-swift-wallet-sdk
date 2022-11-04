@@ -25,7 +25,8 @@ extension CompactBlockProcessor {
                 service: service,
                 downloader: downloader,
                 config: config,
-                rustBackend: rustBackend
+                rustBackend: rustBackend,
+                transactionRepository: transactionRepository
             )
         } catch {
             throw error

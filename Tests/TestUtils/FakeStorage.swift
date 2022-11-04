@@ -25,7 +25,7 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
     func latestHeight() throws -> Int {
         return self.latestBlockHeight
     }
-    
+
     func rewind(to height: BlockHeight) throws {
         fakeRewind(to: height)
     }

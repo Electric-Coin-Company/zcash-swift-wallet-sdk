@@ -60,7 +60,7 @@ class TestCoordinator {
 
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
-        await try self.init(
+        try await self.init(
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
