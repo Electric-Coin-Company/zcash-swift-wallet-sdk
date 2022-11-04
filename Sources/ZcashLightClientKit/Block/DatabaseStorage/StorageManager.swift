@@ -70,4 +70,8 @@ class SimpleConnectionProvider: ConnectionProvider {
         }
         return conn
     }
+
+    func close() {
+        self.db = nil
+    }
 }

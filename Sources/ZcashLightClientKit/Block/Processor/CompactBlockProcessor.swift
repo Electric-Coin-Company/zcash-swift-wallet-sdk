@@ -598,11 +598,17 @@ public actor CompactBlockProcessor {
                         targetHeight: range.upperBound
                     )
                 }
+
+                try storage.createTable()
+
                 try await compactBlockValidation()
                 try await compactBlockBatchScanning(range: range)
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
+                try await removeCacheDB()
             } catch {
+                LoggerProxy.error("Sync failed with error: \(error)")
+
                 if !(Task.isCancelled) {
                     await fail(error)
                 } else {
@@ -840,6 +846,30 @@ public actor CompactBlockProcessor {
             object: self,
             userInfo: nil
         )
+    }
+
+    private func removeCacheDB() async throws {
+        let latestBlock: ZcashCompactBlock
+        do {
+            latestBlock = try storage.latestBlock()
+        } catch let error {
+            // If we don't have anything downloaded we don't need to remove DB and we also don't want to throw error and error out whole sync process.
+            if let err = error as? StorageError, case .latestBlockNotFound = err {
+                return
+            } else {
+                throw error
+            }
+        }
+
+        storage.closeDBConnection()
+        try FileManager.default.removeItem(at: config.cacheDb)
+        try storage.createTable()
+
+        // Latest downloaded block needs to be preserved because after the sync process is interrupted it must be correctly resumed. And for that
+        // we need correct information which was downloaded as latest.
+        try await storage.write(blocks: [latestBlock])
+
+        LoggerProxy.info("Cache removed")
     }
     
     private func setTimer() async {
@@ -1142,8 +1172,6 @@ extension CompactBlockProcessor {
                     )
 
                     let lastDownloadedBlockHeight = try downloader.lastDownloadedBlockHeight()
-                    let lastScannedHeight = try transactionRepository.lastScannedHeight()
-
                     let latestBlockheight = try service.latestBlockHeight()
 
                     // Syncing process can be interrupted in any phase. And here it must be detected in which phase is syncing process.
@@ -1153,7 +1181,7 @@ extension CompactBlockProcessor {
                         latestDownloadedBlockHeight = max(config.walletBirthday, lastDownloadedBlockHeight)
                     } else {
                         // Here all the blocks are downloaded and last scan height should be then used to compute processing range.
-                        latestDownloadedBlockHeight = max(config.walletBirthday, lastScannedHeight)
+                        latestDownloadedBlockHeight = max(config.walletBirthday, try transactionRepository.lastScannedHeight())
                     }
 
                     
