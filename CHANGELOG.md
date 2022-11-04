@@ -1,3 +1,5 @@
+# 0.17.0-alpha.5
+- point to libzcashlc 0.1.0-beta.3. This fixes an issue spending change notes 
 # 0.17.0-alpha.4
 - point to libzcashlc 0.1.0-beta.2
 
