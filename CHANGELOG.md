@@ -1,3 +1,30 @@
+# 0.17.0-beta.rc1
+- Added Checkpoints
+
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1852500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1855000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1857500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1860000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1862500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1865000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1867500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1870000.json
+````
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2020000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2030000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2040000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2050000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2060000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2070000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2080000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2090000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2100000.json
+````
+
 # 0.17.0-alpha.5
 - point to libzcashlc 0.1.0-beta.3. This fixes an issue spending change notes 
 # 0.17.0-alpha.4
