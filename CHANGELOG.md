@@ -1,3 +1,42 @@
+# Summary of 0.17.0-beta
+
+- [#321] Validate UA
+- [#384] Adopt Type Safe Memos in the FFI and SDK
+- [#355] Update lib.rs to lastest librustzcash master
+- [#373] Demo App shows ZEC balances in scientific notation
+- [#380] One of the initAccountsTable() is dead code (except for tests) 
+- [#374] XCTest don't load Resources from the module's bundle
+- [#375] User can't go twice in a row to SendFundsViewController
+- [#490] Rebase long dated PRs on top of the feature branches
+- [#510] Change references of Shielded address to Sapling Address
+- [#511] Derivation functions should only return a single resul
+- [#512] Remove derivation of t-address from pubkey
+- [#520] Use UA Test Vector for Recipient Test
+- [#544] Change Demo App to use USK and new rolling addresses
+- [#602] Improve error logging for InitializerError and RustWeldingError
+- [#579] Fix database lock
+- [#595] Update Travis to use Xcode 14
+- [#592] Fix various tests and deleted some that are not useful anymore
+- [#523] Make a CompactBlockProcessor an Actor
+- [#593] Fix testSmallDownloadAsync test
+- [#577] Fix: reduce batch size when reaching increased load part of the chain
+- [#575] make Memo and MemoBytes parameters nullable so they can be omitted 
+when sending to transparent receivers.
+- commit `1979e41` Fix pre populated Db to have transactions from darksidewalletd seed
+- commit `a483537` Ensure that the persisted test database has had migrations applied.
+- commit `1273d30` Clarify & make regular how migrations are applied.
+- commit `78856c6` Fix: successive launches of the application fail because the closed range of the migrations to apply would be invalid (lower range > that upper range)
+- commit `7847a71` Fix incorrect encoding of optional strings in PendingTransaction.
+- commit `789cf01` Add Fee field to Transaction, ConfirmedTransaction, ReceivedTransactions and Pen dingTransactions. Update Notes DAOs with new fields
+- commit `849083f` Fix UInt32 conversions to SQL in PendingTransactionDao
+- commit `fae15ce` Fix sent_notes.to_address column reference.
+- commit `23f1f5d` Merge pull request #562 from zcash/fix_UnifiedTypecodesTests
+- commit `30a9c06` Replace `db.run` with `db.execute` to fix migration issues
+- commit `0fbf90d` Add migration to re-create pending_transactions table with nullable columns.
+- commit `36932a2` Use PendingTransactionEntity.internalAccount for shielding.
+- commit `f5d7aa0` Modify PendingTransactionEntity to be able to represent internal shielding tx.
+- [#561] Fix unified typecodes tests
+- [#530] Implement ability to extract available typecodes from UA
 # 0.17.0-beta.rc1
 - Added Checkpoints
 
