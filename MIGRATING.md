@@ -71,4 +71,13 @@ public extension UnifiedAddress {
 `func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) throws -> UnifiedSpendingKey`
 `public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) throws -> UnifiedFullViewingKey`
 
+## Notes on Structured Concurrency
+
+`CompactBlockProcessor` is now an Swift Actor. This makes it more robust and have its own
+async environment. 
+
+SDK Clients will likely be affected by some `async` methods on `SDKSynchronizer`. 
+
+We recommend clients that don't support structured concurrency features, to work around this by  surrounding the these function calls either in @MainActor contexts either by marking callers as @MainActor or launching tasks on that actor with `Task { @MainActor in ... }` 
+
 
