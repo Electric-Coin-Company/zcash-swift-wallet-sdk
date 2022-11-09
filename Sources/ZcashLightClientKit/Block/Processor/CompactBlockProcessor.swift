@@ -560,21 +560,6 @@ public actor CompactBlockProcessor {
         self.lowerBoundHeight = try? downloader.lastDownloadedBlockHeight()
         return BlockHeight(rewindHeight)
     }
-    /**
-    changes the wallet birthday in configuration. Use this method when wallet birthday is not available and the processor can't be lazy initialized.
-    - Note: this does not rewind your chain state
-    - Parameter startHeight: the wallet birthday for this compact block processor
-    - Throws CompactBlockProcessorError.invalidConfiguration if block height is invalid or if processor is already started
-    */
-    func setStartHeight(_ startHeight: BlockHeight) throws {
-        guard self.state == .stopped, startHeight >= config.network.constants.saplingActivationHeight else {
-            throw CompactBlockProcessorError.invalidConfiguration
-        }
-
-        var config = self.config
-        config.walletBirthday = startHeight
-        self.config = config
-    }
 
     func validateServer() async {
         do {
