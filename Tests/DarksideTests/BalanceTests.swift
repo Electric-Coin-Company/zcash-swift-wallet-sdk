@@ -30,13 +30,16 @@ class BalanceTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider(),
-            network: network
-        )
-        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday: self.birthday,
+                channelProvider: ChannelProvider(),
+                network: self.network
+            )
+
+            try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        }
     }
     
     /**
@@ -90,9 +93,9 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: maxBalance,
-                toAddress: testRecipientAddress,
-                memo: "test send \(self.description) \(Date().description)",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "this is a test")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -248,9 +251,9 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: maxBalanceMinusOne,
-                toAddress: testRecipientAddress,
-                memo: "test send \(self.description) \(Date().description)",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "\(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -405,9 +408,9 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: maxBalanceMinusOne,
-                toAddress: testRecipientAddress,
-                memo: "test send \(self.description) \(Date().description)",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "test send \(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -565,9 +568,9 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
-                toAddress: testRecipientAddress,
-                memo: "test send \(self.description) \(Date().description)",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "this is a test")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -748,9 +751,9 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
-                toAddress: testRecipientAddress,
-                memo: "test send \(self.description) \(Date().description)",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "test send \(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
@@ -908,15 +911,15 @@ class BalanceTests: XCTestCase {
         /*
         Send
         */
-        let memo = "shielding is fun!"
+        let memo = try Memo(string: "shielding is fun!")
         var pendingTx: PendingTransactionEntity?
         do {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKeys,
                 zatoshi: sendAmount,
-                toAddress: testRecipientAddress,
-                memo: memo,
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: memo
+            )
             pendingTx = transaction
             sendExpectation.fulfill()
         } catch {
@@ -962,7 +965,8 @@ class BalanceTests: XCTestCase {
                     */
                     XCTAssertEqual(confirmedTx.value, self.sendAmount)
                     XCTAssertEqual(confirmedTx.toAddress, self.testRecipientAddress)
-                    XCTAssertEqual(confirmedTx.memo?.asZcashTransactionMemo(), memo)
+                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
+                    XCTAssertEqual(confirmedMemo, memo)
 
                     guard let transactionId = confirmedTx.rawTransactionId else {
                         XCTFail("no raw transaction id")
@@ -1088,9 +1092,9 @@ class BalanceTests: XCTestCase {
             let pending = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
-                toAddress: testRecipientAddress,
-                memo: "test send \(self.description)",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "test send \(self.description)")
+            )
             pendingTx = pending
         } catch {
             // balance should be the same as before sending if transaction failed

@@ -9,7 +9,7 @@
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
-
+// FIXME: disabled until https://github.com/zcash/ZcashLightClientKit/issues/587 fixed
 class ShieldFundsTests: XCTestCase {
     // TODO: Parameterize this from environment?
     // swiftlint:disable:next line_length
@@ -30,12 +30,14 @@ class ShieldFundsTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider(),
-            network: network
-        )
+        Task { @MainActor [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: seedPhrase,
+                walletBirthday: birthday,
+                channelProvider: ChannelProvider(),
+                network: network
+            )
+        }
         try coordinator.reset(saplingActivation: birthday, branchID: self.branchID, chainName: self.chainName)
         try coordinator.service.clearAddedUTXOs()
     }
@@ -85,7 +87,7 @@ class ShieldFundsTests: XCTestCase {
     ///
     func testShieldFunds() async throws {
         // 1. load the dataset
-        try coordinator.service.useDataset(from: "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/shielding-dataset/shield-funds/1631000.txt")
+        try coordinator.service.useDataset(from: "https://github.com/zcash-hackworks/darksidewalletd-test-data/blob/master/shield-funds/1631000.txt")
 
         try coordinator.stageBlockCreate(height: birthday + 1, count: 200, nonce: 0)
 
@@ -207,15 +209,6 @@ class ShieldFundsTests: XCTestCase {
         // 9. shield the funds
         let shieldFundsExpectation = XCTestExpectation(description: "shield funds")
 
-        let transparentSecretKey = try DerivationTool(
-                                        networkType: network.networkType
-                                    )
-                                    .deriveTransparentPrivateKey(
-                                        seed: TestSeed().seed(),
-                                        account: 0,
-                                        index: 0
-                                    )
-
         shouldContinue = false
 
         var shieldingPendingTx: PendingTransactionEntity?
@@ -224,9 +217,8 @@ class ShieldFundsTests: XCTestCase {
         do {
             let pendingTx = try await coordinator.synchronizer.shieldFunds(
                 spendingKey: coordinator.spendingKey,
-                transparentSecretKey: transparentSecretKey,
-                memo: "shield funds",
-                from: 0)
+                memo: try Memo(string: "shield funds")
+            )
             shouldContinue = true
             XCTAssertEqual(pendingTx.value, Zatoshi(10000))
             shieldingPendingTx = pendingTx

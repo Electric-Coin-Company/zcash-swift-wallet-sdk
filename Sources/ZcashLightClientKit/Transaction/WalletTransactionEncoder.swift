@@ -48,17 +48,17 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
     
     func createTransaction(
-        spendingKey: String,
-        zatoshi: Int,
+        spendingKey: UnifiedSpendingKey,
+        zatoshi: Zatoshi,
         to address: String,
-        memo: String?,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction {
         let txId = try createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
             to: address,
-            memo: memo,
+            memoBytes: memoBytes,
             from: accountIndex
         )
         
@@ -76,18 +76,23 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
     }
     
-    func createSpend(spendingKey: String, zatoshi: Int, to address: String, memo: String?, from accountIndex: Int) throws -> Int {
+    func createSpend(
+        spendingKey: UnifiedSpendingKey,
+        zatoshi: Zatoshi,
+        to address: String,
+        memoBytes: MemoBytes?,
+        from accountIndex: Int
+    ) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
                 
         let txId = rustBackend.createToAddress(
             dbData: self.dataDbURL,
-            account: Int32(accountIndex),
-            extsk: spendingKey,
+            usk: spendingKey,
             to: address,
-            value: Int64(zatoshi),
-            memo: memo,
+            value: zatoshi.amount,
+            memo: memoBytes,
             spendParamsPath: self.spendParamsURL.path,
             outputParamsPath: self.outputParamsURL.path,
             networkType: networkType
@@ -101,15 +106,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     }
     
     func createShieldingTransaction(
-        spendingKey: String,
-        tSecretKey: String,
-        memo: String?,
+        spendingKey: UnifiedSpendingKey,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
-            tsk: tSecretKey,
-            memo: memo,
+            memo: memoBytes,
             accountIndex: accountIndex
         )
         
@@ -126,8 +129,11 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
     }
-    
-    func createShieldingSpend(spendingKey: String, tsk: String, memo: String?, accountIndex: Int) throws -> Int {
+    func createShieldingSpend(
+        spendingKey: UnifiedSpendingKey,
+        memo: MemoBytes?,
+        accountIndex: Int
+    ) throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
@@ -135,9 +141,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         let txId = rustBackend.shieldFunds(
             dbCache: self.cacheDbURL,
             dbData: self.dataDbURL,
-            account: Int32(accountIndex),
-            tsk: tsk,
-            extsk: spendingKey,
+            usk: spendingKey,
             memo: memo,
             spendParamsPath: self.spendParamsURL.path,
             outputParamsPath: self.outputParamsURL.path,

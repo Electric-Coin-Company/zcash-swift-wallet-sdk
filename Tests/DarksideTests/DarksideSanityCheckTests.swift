@@ -33,14 +33,17 @@ class DarksideSanityCheckTests: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider(),
-            network: network
-        )
-        try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
-        try coordinator.resetBlocks(dataset: .default)
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday: self.birthday,
+                channelProvider: ChannelProvider(),
+                network: self.network
+            )
+
+            try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
+            try self.coordinator.resetBlocks(dataset: .default)
+        }
     }
     
     override func tearDownWithError() throws {
@@ -74,7 +77,7 @@ class DarksideSanityCheckTests: XCTestCase {
         
         wait(for: [syncExpectation], timeout: 5)
         
-        let blocksDao = BlockSQLDAO(dbProvider: SimpleConnectionProvider(path: coordinator.databases.dataDB.absoluteString, readonly: true))
+        let blocksDao = BlockSQLDAO(dbProvider: SimpleConnectionProvider(path: coordinator.databases.dataDB.absoluteString, readonly: false))
         
         let firstBlock = try blocksDao.block(at: expectedFirstBlock.height)
         let lastBlock = try blocksDao.block(at: expectedLastBlock.height)

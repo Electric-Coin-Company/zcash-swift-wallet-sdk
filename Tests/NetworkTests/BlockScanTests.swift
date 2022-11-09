@@ -17,11 +17,7 @@ class BlockScanTests: XCTestCase {
 
     var cacheDbURL: URL!
     var dataDbURL: URL!
-
-    var uvk = UVFakeKey(
-        extfvk: "zxviewtestsapling1qw88ayg8qqqqpqyhg7jnh9mlldejfqwu46pm40ruwstd8znq3v3l4hjf33qcu2a5e36katshcfhcxhzgyfugj2lkhmt40j45cv38rv3frnghzkxcx73k7m7afw9j7ujk7nm4dx5mv02r26umxqgar7v3x390w2h3crqqgjsjly7jy4vtwzrmustm5yudpgcydw7x78awca8wqjvkqj8p8e3ykt7lrgd7xf92fsfqjs5vegfsja4ekzpfh5vtccgvs5747xqm6qflmtqpr8s9u", // swiftlint:disable:this line_length
-        extpub: "02075a7f5f7507d64022dad5954849f216b0f1b09b2d588be663d8e7faeb5aaf61"
-    )
+    var saplingExtendedKey = SaplingExtendedFullViewingKey(validatedEncoding: "zxviewtestsapling1qw88ayg8qqqqpqyhg7jnh9mlldejfqwu46pm40ruwstd8znq3v3l4hjf33qcu2a5e36katshcfhcxhzgyfugj2lkhmt40j45cv38rv3frnghzkxcx73k7m7afw9j7ujk7nm4dx5mv02r26umxqgar7v3x390w2h3crqqgjsjly7jy4vtwzrmustm5yudpgcydw7x78awca8wqjvkqj8p8e3ykt7lrgd7xf92fsfqjs5vegfsja4ekzpfh5vtccgvs5747xqm6qflmtqpr8s9u")
 
     var walletBirthDay = Checkpoint.birthday(
         with: 1386000,
@@ -56,7 +52,7 @@ class BlockScanTests: XCTestCase {
     func testSingleDownloadAndScan() async throws {
         logger = SampleLogger(logLevel: .debug)
 
-        XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, networkType: network.networkType))
+        XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType))
 
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let service = LightWalletGRPCService(
@@ -113,6 +109,8 @@ class BlockScanTests: XCTestCase {
     }
     
     func testScanValidateDownload() async throws {
+        let seed = "testreferencealicetestreferencealice"
+
         logger = SampleLogger(logLevel: .debug)
         
         NotificationCenter.default.addObserver(
@@ -122,10 +120,25 @@ class BlockScanTests: XCTestCase {
             object: nil
         )
         
-        try self.rustWelding.initDataDb(dbData: dataDbURL, networkType: network.networkType)
-        
-        guard try self.rustWelding.initAccountsTable(dbData: self.dataDbURL, uvks: [uvk], networkType: network.networkType) else {
-            XCTFail("failed to init account table")
+        guard try self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType) == .success else {
+            XCTFail("Seed should not be required for this test")
+            return
+        }
+
+        let derivationTool = DerivationTool(networkType: .testnet)
+        let ufvk = try derivationTool
+            .deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
+            .map { try derivationTool.deriveUnifiedFullViewingKey(from: $0) }
+
+
+        do {
+            try self.rustWelding.initAccountsTable(
+                dbData: self.dataDbURL,
+                ufvks: [ufvk],
+                networkType: network.networkType
+            )
+        } catch {
+            XCTFail("failed to init account table. error: \(self.rustWelding.getLastError() ?? "no error found")")
             return
         }
         
@@ -187,9 +200,4 @@ class BlockScanTests: XCTestCase {
             }
         }
     }
-}
-
-struct UVFakeKey: UnifiedViewingKey {
-    var extfvk: ExtendedFullViewingKey
-    var extpub: ExtendedPublicKey
 }

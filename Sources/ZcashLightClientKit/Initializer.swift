@@ -13,10 +13,9 @@ Wrapper for the Rust backend. This class basically represents all the Rust-walle
 capabilities and the supporting data required to exercise those abilities.
 */
 public enum InitializerError: Error {
-    case cacheDbInitFailed
-    case dataDbInitFailed
-    case accountInitFailed
-    case falseStart
+    case cacheDbInitFailed(Error)
+    case dataDbInitFailed(Error)
+    case accountInitFailed(Error)
     case invalidViewingKey(key: String)
 }
 
@@ -61,6 +60,12 @@ The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Ru
 functionality, related to processing blocks.
 */
 public class Initializer {
+
+    public enum InitializationResult {
+        case success
+        case seedRequired
+    }
+
     private(set) var rustBackend: ZcashRustBackendWelding.Type
     private(set) var alias: String
     private(set) var endpoint: LightWalletEndpoint
@@ -77,7 +82,7 @@ public class Initializer {
     private(set) var storage: CompactBlockStorage
     private(set) var downloader: CompactBlockDownloader
     private(set) var network: ZcashNetwork
-    private(set) public var viewingKeys: [UnifiedViewingKey]
+    private(set) public var viewingKeys: [UnifiedFullViewingKey]
     /// The effective birthday of the wallet based on the height provided when initializing
     /// and the checkpoints available on this SDK
     private(set) public var walletBirthday: BlockHeight
@@ -100,7 +105,7 @@ public class Initializer {
         network: ZcashNetwork,
         spendParamsURL: URL,
         outputParamsURL: URL,
-        viewingKeys: [UnifiedViewingKey],
+        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
@@ -149,7 +154,7 @@ public class Initializer {
         storage: CompactBlockStorage,
         spendParamsURL: URL,
         outputParamsURL: URL,
-        viewingKeys: [UnifiedViewingKey],
+        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
@@ -173,34 +178,33 @@ public class Initializer {
         self.walletBirthday = walletBirthday
         self.network = network
     }
-    
-    /**
-    Initialize the wallet with the given seed and return the related private keys for each
-    account specified or null if the wallet was previously initialized and block data exists on
-    disk. When this method returns null, that signals that the wallet will need to retrieve the
-    private keys from its own secure storage. In other words, the private keys are only given out
-    once for each set of database files. Subsequent calls to [initialize] will only load the Rust
-    library and return null.
-     
-    'compactBlockCache.db' and 'transactionData.db' files are created by this function (if they
-    do not already exist). These files can be given a prefix for scenarios where multiple wallets
 
-    - Parameters:
-        - viewingKeys: Extended Full Viewing Keys to initialize the DBs with
-    */
-    public func initialize() throws {
+    /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
+    /// database migrations. most of the times the seed won't be needed. If they do and are
+    /// not provided this will fail with `InitializationResult.seedRequired`. It could
+    /// be the case that this method is invoked by a wallet that does not contain the seed phrase
+    /// and is view-only, or by a wallet that does have the seed but the process does not have the
+    /// consent of the OS to fetch the keys from the secure storage, like on background tasks.
+    ///
+    /// 'cache.db' and 'data.db' files are created by this function (if they
+    /// do not already exist). These files can be given a prefix for scenarios where multiple wallets
+    ///
+    /// - Parameter seed: ZIP-32 Seed bytes for the wallet that will be initialized
+    /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
+    /// `InitializerError.accountInitFailed` if the account table can't be initialized. 
+    public func initialize(with seed: [UInt8]?) throws -> InitializationResult {
         do {
             try storage.createTable()
         } catch {
-            throw InitializerError.cacheDbInitFailed
+            throw InitializerError.cacheDbInitFailed(error)
         }
         
         do {
-            try rustBackend.initDataDb(dbData: dataDbURL, networkType: network.networkType)
-        } catch RustWeldingError.dataDbNotEmpty {
-            // this is fine
+            if case .seedRequired = try rustBackend.initDataDb(dbData: dataDbURL, seed: seed, networkType: network.networkType) {
+                return .seedRequired
+            }
         } catch {
-            throw InitializerError.dataDbInitFailed
+            throw InitializerError.dataDbInitFailed(error)
         }
 
         let checkpoint = Checkpoint.birthday(with: self.walletBirthday, network: network)
@@ -216,7 +220,7 @@ public class Initializer {
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch {
-            throw InitializerError.dataDbInitFailed
+            throw InitializerError.dataDbInitFailed(error)
         }
         self.walletBirthday = checkpoint.height
         
@@ -225,37 +229,29 @@ public class Initializer {
         lowerBoundHeight = max(walletBirthday, lastDownloaded)
  
         do {
-            guard try rustBackend.initAccountsTable(
+            try rustBackend.initAccountsTable(
                 dbData: dataDbURL,
-                uvks: viewingKeys,
+                ufvks: viewingKeys,
                 networkType: network.networkType
-            ) else {
-                throw rustBackend.lastError() ?? InitializerError.accountInitFailed
-            }
+            )
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
+        } catch RustWeldingError.malformedStringInput {
+            throw RustWeldingError.malformedStringInput
         } catch {
-            throw rustBackend.lastError() ?? InitializerError.accountInitFailed
+            throw InitializerError.accountInitFailed(error)
         }
-        
+
         let migrationManager = MigrationManager(
             cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
-            dataDbConnection: SimpleConnectionProvider(path: dataDbURL.path),
             pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
             networkType: self.network.networkType
         )
-        
-        try migrationManager.performMigration(uvks: viewingKeys)
-    }
-    
-    /**
-    get address from the given account index
-    - Parameter account:  the index of the account
-    */
-    public func getAddress(index account: Int = 0) -> String? {
-        try? accountRepository.findBy(account: account)?.address
-    }
 
+        try migrationManager.performMigration()
+
+        return .success
+    }
 
     /// get (unverified) balance from the given account index
     /// - Parameter account: the index of the account
@@ -299,17 +295,17 @@ public class Initializer {
     }
     
     /**
-    checks if the provided address is a valid shielded zAddress
+    checks if the provided address is a valid sapling address
     */
-    public func isValidShieldedAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidShieldedAddress(address, networkType: network.networkType)) ?? false
+    public func isValidSaplingAddress(_ address: String) -> Bool {
+        rustBackend.isValidSaplingAddress(address, networkType: network.networkType)
     }
 
     /**
     checks if the provided address is a transparent zAddress
     */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        (try? rustBackend.isValidTransparentAddress(address, networkType: network.networkType)) ?? false
+        rustBackend.isValidTransparentAddress(address, networkType: network.networkType)
     }
     
     func isSpendParameterPresent() -> Bool {
@@ -370,5 +366,21 @@ enum CompactBlockProcessorBuilder {
             repository: transactionRepository,
             accountRepository: accountRepository
         )
+    }
+}
+
+
+extension InitializerError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .invalidViewingKey:
+            return "The provided viewing key is invalid"
+        case .cacheDbInitFailed(let error):
+            return "cacheDb Init failed with error: \(error.localizedDescription)"
+        case .dataDbInitFailed(let error):
+            return "dataDb init failed with error: \(error.localizedDescription)"
+        case .accountInitFailed(let error):
+            return "account table init failed with error: \(error.localizedDescription)"
+        }
     }
 }

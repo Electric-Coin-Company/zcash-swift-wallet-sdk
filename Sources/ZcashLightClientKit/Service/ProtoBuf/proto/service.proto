@@ -32,7 +32,8 @@ message TxFilter {
 }
 
 // RawTransaction contains the complete transaction data. It also optionally includes 
-// the block height in which the transaction was included.
+// the block height in which the transaction was included, or, when returned
+// by GetMempoolStream(), the latest block height.
 message RawTransaction {
     bytes data = 1;     // exact data returned by Zcash 'getrawtransaction'
     uint64 height = 2;  // height that the transaction was mined (or -1)
@@ -163,6 +164,10 @@ service CompactTxStreamer {
     // match a shortened txid, they are all sent (none is excluded). Transactions
     // in the exclude list that don't exist in the mempool are ignored.
     rpc GetMempoolTx(Exclude) returns (stream CompactTx) {}
+
+    // Return a stream of current Mempool transactions. This will keep the output stream open while
+    // there are mempool transactions. It will close the returned stream when a new block is mined.
+    rpc GetMempoolStream(Empty) returns (stream RawTransaction) {}
 
     // GetTreeState returns the note commitment tree state corresponding to the given block.
     // See section 3.7 of the Zcash protocol specification. It returns several other useful

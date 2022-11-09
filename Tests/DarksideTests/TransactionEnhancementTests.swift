@@ -62,9 +62,34 @@ class TransactionEnhancementTests: XCTestCase {
         
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
+
+        let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
         
-        _ = rustBackend.initAccountsTable(dbData: processorConfig.dataDb, seed: TestSeed().seed(), accounts: 1, networkType: network.networkType)
-        _ = try rustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: network.networkType)
+        let ufvks = [
+            try DerivationTool(networkType: network.networkType)
+                .deriveUnifiedSpendingKey(seed: TestSeed().seed(), accountIndex: 0)
+                .map{
+                    try DerivationTool(networkType: network.networkType)
+                        .deriveUnifiedFullViewingKey(from: $0)
+                }
+
+        ]
+        do {
+            try rustBackend.initAccountsTable(
+                dbData: processorConfig.dataDb,
+                ufvks: ufvks,
+                networkType: network.networkType
+            )
+        } catch {
+            XCTFail("Failed to init accounts table error: " + String(describing: rustBackend.getLastError()))
+            return
+        }
+        
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
+            return
+        }
+
         _ = try rustBackend.initBlocksTable(
             dbData: processorConfig.dataDb,
             height: Int32(birthday.height),
@@ -120,26 +145,23 @@ class TransactionEnhancementTests: XCTestCase {
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
 
-        try await processor.start()
+        txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
+        idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
+        await processor.start()
     }
     
-    func testBasicEnhacement() async throws {
-        let targetLatestHeight = BlockHeight(663250)
-        let walletBirthday = Checkpoint.birthday(with: 663151, network: network).height
+    func testBasicEnhancement() async throws {
+        let targetLatestHeight = BlockHeight(663200)
         
-        try await basicEnhancementTest(latestHeight: targetLatestHeight, walletBirthday: walletBirthday)
-    }
-    
-    func basicEnhancementTest(latestHeight: BlockHeight, walletBirthday: BlockHeight) async throws {
         do {
-            try darksideWalletService.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
-            try darksideWalletService.useDataset(DarksideDataset.beforeReOrg.rawValue)
-            try darksideWalletService.applyStaged(nextLatestHeight: 663200)
+            try FakeChainBuilder.buildChain(darksideWallet: darksideWalletService, branchID: branchID, chainName: chainName)
+
+            try darksideWalletService.applyStaged(nextLatestHeight: targetLatestHeight)
         } catch {
             XCTFail("Error: \(error)")
             return
         }
-      
+
         sleep(3)
 
         /**
@@ -152,7 +174,7 @@ class TransactionEnhancementTests: XCTestCase {
             XCTFail("Error: \(error)")
             return
         }
-        
+
         /**
         download and sync blocks from walletBirthday to firstLatestHeight
         */

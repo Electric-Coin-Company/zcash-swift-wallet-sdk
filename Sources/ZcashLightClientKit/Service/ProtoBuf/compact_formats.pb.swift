@@ -81,19 +81,21 @@ struct CompactTx {
   var fee: UInt32 = 0
 
   /// inputs
-  var spends: [CompactSpend] = []
+  var spends: [CompactSaplingSpend] = []
 
   /// outputs
-  var outputs: [CompactOutput] = []
+  var outputs: [CompactSaplingOutput] = []
+
+  var actions: [CompactOrchardAction] = []
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
 }
 
-/// CompactSpend is a Sapling Spend Description as described in 7.3 of the Zcash
+/// CompactSaplingSpend is a Sapling Spend Description as described in 7.3 of the Zcash
 /// protocol specification.
-struct CompactSpend {
+struct CompactSaplingSpend {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -108,7 +110,7 @@ struct CompactSpend {
 
 /// output is a Sapling Output Description as described in section 7.4 of the
 /// Zcash protocol spec. Total size is 948.
-struct CompactOutput {
+struct CompactSaplingOutput {
   // SwiftProtobuf.Message conformance is added in an extension below. See the
   // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
   // methods supported on all messages.
@@ -119,7 +121,31 @@ struct CompactOutput {
   /// ephemeral public key
   var epk: Data = SwiftProtobuf.Internal.emptyData
 
-  /// ciphertext and zkproof
+  /// first 52 bytes of ciphertext
+  var ciphertext: Data = SwiftProtobuf.Internal.emptyData
+
+  var unknownFields = SwiftProtobuf.UnknownStorage()
+
+  init() {}
+}
+
+/// https://github.com/zcash/zips/blob/main/zip-0225.rst#orchard-action-description-orchardaction
+/// (but not all fields are needed)
+struct CompactOrchardAction {
+  // SwiftProtobuf.Message conformance is added in an extension below. See the
+  // `Message` and `Message+*Additions` files in the SwiftProtobuf library for
+  // methods supported on all messages.
+
+  /// [32] The nullifier of the input note
+  var nullifier: Data = SwiftProtobuf.Internal.emptyData
+
+  /// [32] The x-coordinate of the note commitment for the output note
+  var cmx: Data = SwiftProtobuf.Internal.emptyData
+
+  /// [32] An encoding of an ephemeral Pallas public key
+  var ephemeralKey: Data = SwiftProtobuf.Internal.emptyData
+
+  /// [52] The note plaintext component of the encCiphertext field
   var ciphertext: Data = SwiftProtobuf.Internal.emptyData
 
   var unknownFields = SwiftProtobuf.UnknownStorage()
@@ -204,6 +230,7 @@ extension CompactTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
     3: .same(proto: "fee"),
     4: .same(proto: "spends"),
     5: .same(proto: "outputs"),
+    6: .same(proto: "actions"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -214,6 +241,7 @@ extension CompactTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
       case 3: try decoder.decodeSingularUInt32Field(value: &self.fee)
       case 4: try decoder.decodeRepeatedMessageField(value: &self.spends)
       case 5: try decoder.decodeRepeatedMessageField(value: &self.outputs)
+      case 6: try decoder.decodeRepeatedMessageField(value: &self.actions)
       default: break
       }
     }
@@ -235,6 +263,9 @@ extension CompactTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
     if !self.outputs.isEmpty {
       try visitor.visitRepeatedMessageField(value: self.outputs, fieldNumber: 5)
     }
+    if !self.actions.isEmpty {
+      try visitor.visitRepeatedMessageField(value: self.actions, fieldNumber: 6)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -244,13 +275,14 @@ extension CompactTx: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementation
     if lhs.fee != rhs.fee {return false}
     if lhs.spends != rhs.spends {return false}
     if lhs.outputs != rhs.outputs {return false}
+    if lhs.actions != rhs.actions {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension CompactSpend: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".CompactSpend"
+extension CompactSaplingSpend: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".CompactSaplingSpend"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "nf"),
   ]
@@ -271,15 +303,15 @@ extension CompactSpend: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementat
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: CompactSpend, rhs: CompactSpend) -> Bool {
+  static func ==(lhs: CompactSaplingSpend, rhs: CompactSaplingSpend) -> Bool {
     if lhs.nf != rhs.nf {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }
 }
 
-extension CompactOutput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
-  static let protoMessageName: String = _protobuf_package + ".CompactOutput"
+extension CompactSaplingOutput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".CompactSaplingOutput"
   static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
     1: .same(proto: "cmu"),
     2: .same(proto: "epk"),
@@ -310,9 +342,56 @@ extension CompactOutput: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementa
     try unknownFields.traverse(visitor: &visitor)
   }
 
-  static func ==(lhs: CompactOutput, rhs: CompactOutput) -> Bool {
+  static func ==(lhs: CompactSaplingOutput, rhs: CompactSaplingOutput) -> Bool {
     if lhs.cmu != rhs.cmu {return false}
     if lhs.epk != rhs.epk {return false}
+    if lhs.ciphertext != rhs.ciphertext {return false}
+    if lhs.unknownFields != rhs.unknownFields {return false}
+    return true
+  }
+}
+
+extension CompactOrchardAction: SwiftProtobuf.Message, SwiftProtobuf._MessageImplementationBase, SwiftProtobuf._ProtoNameProviding {
+  static let protoMessageName: String = _protobuf_package + ".CompactOrchardAction"
+  static let _protobuf_nameMap: SwiftProtobuf._NameMap = [
+    1: .same(proto: "nullifier"),
+    2: .same(proto: "cmx"),
+    3: .same(proto: "ephemeralKey"),
+    4: .same(proto: "ciphertext"),
+  ]
+
+  mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+    while let fieldNumber = try decoder.nextFieldNumber() {
+      switch fieldNumber {
+      case 1: try decoder.decodeSingularBytesField(value: &self.nullifier)
+      case 2: try decoder.decodeSingularBytesField(value: &self.cmx)
+      case 3: try decoder.decodeSingularBytesField(value: &self.ephemeralKey)
+      case 4: try decoder.decodeSingularBytesField(value: &self.ciphertext)
+      default: break
+      }
+    }
+  }
+
+  func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
+    if !self.nullifier.isEmpty {
+      try visitor.visitSingularBytesField(value: self.nullifier, fieldNumber: 1)
+    }
+    if !self.cmx.isEmpty {
+      try visitor.visitSingularBytesField(value: self.cmx, fieldNumber: 2)
+    }
+    if !self.ephemeralKey.isEmpty {
+      try visitor.visitSingularBytesField(value: self.ephemeralKey, fieldNumber: 3)
+    }
+    if !self.ciphertext.isEmpty {
+      try visitor.visitSingularBytesField(value: self.ciphertext, fieldNumber: 4)
+    }
+    try unknownFields.traverse(visitor: &visitor)
+  }
+
+  static func ==(lhs: CompactOrchardAction, rhs: CompactOrchardAction) -> Bool {
+    if lhs.nullifier != rhs.nullifier {return false}
+    if lhs.cmx != rhs.cmx {return false}
+    if lhs.ephemeralKey != rhs.ephemeralKey {return false}
     if lhs.ciphertext != rhs.ciphertext {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true

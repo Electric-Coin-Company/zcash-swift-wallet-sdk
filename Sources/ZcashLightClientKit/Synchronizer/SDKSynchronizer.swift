@@ -74,7 +74,7 @@ public extension Notification.Name {
     static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
 }
 
-/// Synchronizer implementation for UIKit and iOS 12+
+/// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
     public struct SynchronizerState {
@@ -156,16 +156,17 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
-    public func initialize() async throws {
-        try self.initializer.initialize()
-        try await self.blockProcessor.setStartHeight(initializer.walletBirthday)
-    }
-    
-    public func prepare() async throws {
-        try self.initializer.initialize()
+    public func prepare(with seed: [UInt8]?) async throws -> Initializer.InitializationResult {
+        if case .seedRequired = try self.initializer.initialize(with: seed) {
+            return .seedRequired
+        }
+
         try await self.blockProcessor.setStartHeight(initializer.walletBirthday)
         self.status = .disconnected
+
+        return .success
     }
+
 
     /// Starts the synchronizer
     /// - Throws: CompactBlockProcessorError when failures occur
@@ -256,14 +257,7 @@ public class SDKSynchronizer: Synchronizer {
             name: Notification.Name.blockProcessorFailed,
             object: processor
         )
-        
-        center.addObserver(
-            self,
-            selector: #selector(processorIdle(_:)),
-            name: Notification.Name.blockProcessorIdle,
-            object: processor
-        )
-        
+
         center.addObserver(
             self,
             selector: #selector(processorFinished(_:)),
@@ -436,13 +430,6 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
-    @objc func processorIdle(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-        guard let self = self else { return }
-            self.status = .disconnected
-        }
-    }
-    
     @objc func processorFinished(_ notification: Notification) {
         // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories see: https://github.com/zcash/ZcashLightClientKit/issues/450
         if let blockHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.latestScannedBlockHeight] as? BlockHeight {
@@ -459,11 +446,10 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: Synchronizer methods
     
     public func sendToAddress(
-        spendingKey: String,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int
+        toAddress: Recipient,
+        memo: Memo?
     ) async throws -> PendingTransactionEntity {
         do {
             try await initializer.downloadParametersIfNeeded()
@@ -471,62 +457,60 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.parameterMissing(underlyingError: error)
         }
 
+        if case Recipient.transparent = toAddress,
+           memo != nil {
+            throw SynchronizerError.generalError(message: "Memos can't be sent to transparent addresses.")
+        }
+
         return try await createToAddress(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
-            toAddress: toAddress,
-            memo: memo,
-            from: accountIndex
+            recipient: toAddress,
+            memo: memo
         )
     }
     
     public func shieldFunds(
-        spendingKey: String,
-        transparentSecretKey: String,
-        memo: String?,
-        from accountIndex: Int
+        spendingKey: UnifiedSpendingKey,
+        memo: Memo
     ) async throws -> PendingTransactionEntity {
         // let's see if there are funds to shield
-        let derivationTool = DerivationTool(networkType: self.network.networkType)
-        
+        let accountIndex = Int(spendingKey.account)
         do {
-            let tAddr = try derivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey)
-            let tBalance = try await utxoRepository.balance(address: tAddr, latestHeight: self.latestDownloadedHeight())
+
+            let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
             
-            // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
+            // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
             guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
                 throw ShieldFundsError.insuficientTransparentFunds
             }
-            let viewingKey = try derivationTool.deriveViewingKey(spendingKey: spendingKey)
-            let zAddr = try derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
+
+            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, recipient: .internalAccount(spendingKey.account), memo: try memo.asMemoBytes(), from: accountIndex)
             
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, toAddress: zAddr, memo: memo, from: 0)
-            
+            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
             let transaction = try await transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
-                tsk: transparentSecretKey,
                 pendingTransaction: shieldingSpend
             )
-            
+
             return try await transactionManager.submit(pendingTransaction: transaction)
         } catch {
             throw error
         }
     }
-    
+
     func createToAddress(
-        spendingKey: String,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int
+        recipient: Recipient,
+        memo: Memo?
     ) async throws -> PendingTransactionEntity {
         do {
             let spend = try transactionManager.initSpend(
                 zatoshi: zatoshi,
-                toAddress: toAddress,
-                memo: memo,
-                from: accountIndex
+                recipient: .address(recipient),
+                memo: memo?.asMemoBytes(),
+                from: Int(spendingKey.account)
             )
             
             let transaction = try await transactionManager.encode(
@@ -607,7 +591,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
    
-    public func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs {
+    public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
         try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
@@ -628,31 +612,22 @@ public class SDKSynchronizer: Synchronizer {
         initializer.getVerifiedBalance(account: accountIndex)
     }
 
-    public func getShieldedAddress(accountIndex: Int) async -> SaplingShieldedAddress? {
-        await blockProcessor.getShieldedAddress(accountIndex: accountIndex)
+    public func getSaplingAddress(accountIndex: Int) async -> SaplingAddress? {
+        await blockProcessor.getSaplingAddress(accountIndex: accountIndex)
     }
     
     public func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress? {
-        await blockProcessor.getUnifiedAddres(accountIndex: accountIndex)
+        await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
     }
     
     public func getTransparentAddress(accountIndex: Int) async -> TransparentAddress? {
         await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
-    
+
+
+    /// Returns the last stored transparent balance
     public func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
         try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
-    }
-    
-    /**
-    Returns the last stored unshielded balance
-    */
-    public func getTransparentBalance(address: String) async throws -> WalletBalance {
-        do {
-            return try await self.blockProcessor.utxoCacheBalance(tAddress: address)
-        } catch {
-            throw SynchronizerError.uncategorized(underlyingError: error)
-        }
     }
     
     public func rewind(_ policy: RewindPolicy) async throws {

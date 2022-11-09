@@ -318,6 +318,7 @@ public actor CompactBlockProcessor {
         }
     }
     
+    private var needsToStartScanningWhenStopped = false
     var config: Configuration {
         willSet {
             self.stop()
@@ -498,8 +499,9 @@ public actor CompactBlockProcessor {
                 // max attempts have been reached
                 LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
-            default:
+            case .downloading, .validating, .scanning, .enhancing, .fetching:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
+                self.`needsToStartScanningWhenStopped` = true
             }
             return
         }
@@ -511,7 +513,6 @@ public actor CompactBlockProcessor {
     Stops the CompactBlockProcessor
 
     Note: retry count is reset
-    - Parameter cancelTasks: cancel the pending tasks. Defaults to true
     */
     public func stop() {
         self.backoffTimer?.invalidate()
@@ -531,7 +532,11 @@ public actor CompactBlockProcessor {
 
         let lastDownloaded = try downloader.lastDownloadedBlockHeight()
         let height = Int32(height ?? lastDownloaded)
-        let nearestHeight = rustBackend.getNearestRewindHeight(dbData: config.dataDb, height: height, networkType: self.config.network.networkType)
+        let nearestHeight = rustBackend.getNearestRewindHeight(
+            dbData: config.dataDb,
+            height: height,
+            networkType: self.config.network.networkType
+        )
 
         guard nearestHeight > 0 else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(
@@ -604,12 +609,14 @@ public actor CompactBlockProcessor {
                 try await compactBlockBatchScanning(range: range)
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
-                //state = .stopped
             } catch {
                 if !(Task.isCancelled) {
                     await fail(error)
                 } else {
                     state = .stopped
+                    if needsToStartScanningWhenStopped {
+                        await nextBatch()
+                    }
                 }
             }
         }
@@ -834,6 +841,11 @@ public actor CompactBlockProcessor {
         )
         state = .synced
         await setTimer()
+        NotificationCenter.default.mainThreadPost(
+            name: Notification.Name.blockProcessorIdle,
+            object: self,
+            userInfo: nil
+        )
     }
     
     private func setTimer() async {
@@ -970,70 +982,56 @@ extension CompactBlockProcessor.State: Equatable {
     }
 }
 
-// Transparent stuff
-
 extension CompactBlockProcessor {
-    public func utxoCacheBalance(tAddress: String) throws -> WalletBalance {
-        try rustBackend.downloadedUtxoBalance(dbData: config.dataDb, address: tAddress, networkType: config.network.networkType)
-    }
-}
-
-extension CompactBlockProcessor {
-    public func getUnifiedAddres(accountIndex: Int) -> UnifiedAddress? {
-        guard let account = try? accountRepository.findBy(account: accountIndex) else {
-            return nil
-        }
-        return UnifiedAddressShim(account: account)
+    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
+        try? rustBackend.getCurrentAddress(
+            dbData: config.dataDb,
+            account: Int32(accountIndex),
+            networkType: config.network.networkType
+        )
     }
     
-    public func getShieldedAddress(accountIndex: Int) -> SaplingShieldedAddress? {
-        try? accountRepository.findBy(account: accountIndex)?.address
+    public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
+        getUnifiedAddress(accountIndex: accountIndex)?.saplingReceiver()
     }
     
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
-        try? accountRepository.findBy(account: accountIndex)?.transparentAddress
+        getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
     
     public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
-        guard let tAddress = try? accountRepository.findBy(account: accountIndex)?.transparentAddress else {
+        guard accountIndex >= 0 else {
             throw CompactBlockProcessorError.invalidAccount
         }
-        return try utxoCacheBalance(tAddress: tAddress)
-    }
-}
 
-private struct UnifiedAddressShim {
-    let account: AccountEntity
-}
-
-extension UnifiedAddressShim: UnifiedAddress {
-    var tAddress: TransparentAddress {
-        account.transparentAddress
-    }
-    
-    var zAddress: SaplingShieldedAddress {
-        account.address
+        return WalletBalance(
+            verified: Zatoshi(
+                try rustBackend.getVerifiedTransparentBalance(
+                    dbData: config.dataDb,
+                    account: Int32(accountIndex),
+                    networkType: config.network.networkType)
+                ),
+            total: Zatoshi(
+                try rustBackend.getTransparentBalance(
+                    dbData: config.dataDb,
+                    account: Int32(accountIndex),
+                    networkType: config.network.networkType
+                )
+            )
+        )
     }
 }
 
 extension CompactBlockProcessor {
-    func refreshUTXOs(tAddress: String, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
+    func refreshUTXOs(tAddress: TransparentAddress, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
         let dataDb = self.config.dataDb
         
-        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddress: tAddress, startHeight: startHeight)
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddress: tAddress.stringEncoded, startHeight: startHeight)
         var utxos: [UnspentTransactionOutputEntity] = []
         
         do {
             for try await utxo in stream {
                 utxos.append(utxo)
-            }
-            guard try rustBackend.clearUtxos(
-                dbData: dataDb,
-                address: tAddress,
-                sinceHeight: startHeight - 1,
-                networkType: self.config.network.networkType
-            ) >= 0 else {
-                throw CompactBlockProcessorError.generalError(message: "attempted to clear utxos but -1 was returned")
             }
             return storeUTXOs(utxos, in: dataDb)
         } catch {
@@ -1048,7 +1046,6 @@ extension CompactBlockProcessor {
             do {
                 try self.rustBackend.putUnspentTransparentOutput(
                     dbData: dataDb,
-                    address: utxo.address,
                     txid: utxo.txid.bytes,
                     index: utxo.index,
                     script: utxo.script.bytes,

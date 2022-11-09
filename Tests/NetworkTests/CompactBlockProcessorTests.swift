@@ -55,7 +55,13 @@ class CompactBlockProcessorTests: XCTestCase {
             backend: ZcashRustBackend.self,
             config: processorConfig
         )
-        try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: .testnet)
+        let dbInit = try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+
+        guard case .success = dbInit else {
+            XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
+            return
+        }
+        
         downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
@@ -105,7 +111,7 @@ class CompactBlockProcessorTests: XCTestCase {
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
         startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
-        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
+        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
         
         do {
             try await processor.start()
@@ -113,7 +119,8 @@ class CompactBlockProcessorTests: XCTestCase {
             XCTFail("shouldn't fail")
         }
     }
-    
+
+    // FIXME: disabled see https://github.com/zcash/ZcashLightClientKit/issues/590
     func testStartNotifiesSuscriptors() async {
         await startProcessing()
    
@@ -125,10 +132,11 @@ class CompactBlockProcessorTests: XCTestCase {
                 idleNotificationExpectation
             ],
             timeout: 30,
-            enforceOrder: true
+            enforceOrder: false
         )
     }
-    
+
+    // FIXME: disabled see https://github.com/zcash/ZcashLightClientKit/issues/590
     func testProgressNotifications() async {
         let expectedUpdates = expectedBatches(
             currentHeight: processorConfig.walletBirthday,

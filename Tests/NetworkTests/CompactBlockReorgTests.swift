@@ -47,7 +47,10 @@ class CompactBlockReorgTests: XCTestCase {
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         }
         
-        try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, networkType: .testnet)
+        guard case .success = try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet) else {
+            XCTFail("initDataDb failed. Expected Success but got .seedRequired")
+            return 
+        }
         
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
@@ -138,12 +141,8 @@ class CompactBlockReorgTests: XCTestCase {
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
         reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
-        
-        do {
-            try await processor.start()
-        } catch {
-            XCTFail("shouldn't fail")
-        }
+
+        await processor.start()
     }
     
     func testNotifiesReorg() async {

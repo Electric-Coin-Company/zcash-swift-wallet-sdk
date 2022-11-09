@@ -31,6 +31,14 @@ extension NetworkType {
         default:        return nil
         }
     }
+    
+    static func forNetworkId(_ id: UInt32) -> NetworkType? {
+        switch id {
+        case 1: return .mainnet
+        case 0: return .testnet
+        default: return nil
+        }
+    }
 }
 
 public enum ZcashNetworkBuilder {

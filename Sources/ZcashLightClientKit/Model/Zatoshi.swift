@@ -89,3 +89,20 @@ public extension NSDecimalNumber {
         self.roundedZec.stringValue
     }
 }
+
+
+extension Zatoshi: Codable {
+    enum CodingKeys: String, CodingKey {
+        case amount
+    }
+
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        self.amount = try values.decode(Int64.self, forKey: .amount)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.amount, forKey: .amount)
+    }
+}

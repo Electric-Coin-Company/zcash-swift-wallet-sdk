@@ -9,58 +9,62 @@
 import UIKit
 import ZcashLightClientKit
 class GetAddressViewController: UIViewController {
-    @IBOutlet weak var zAddressLabel: UILabel!
-    @IBOutlet weak var tAddressLabel: UILabel!
-    @IBOutlet weak var spendingKeyLabel: UILabel! // THIS SHOULD BE SUPER SECRET!!!!!
-    
+    @IBOutlet weak var unifiedAddressLabel: UILabel! // This is your Unified Address
+    @IBOutlet weak var tAddressLabel: UILabel! // this is the transparent receiver of your UA above
+    @IBOutlet weak var saplingAddress: UILabel! // this is the sapling receiver of your UA above
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-        // Do any additional setup after loading the view.
-        
-        zAddressLabel.text = (try? derivationTool.deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)) ?? "No Addresses found"
-        tAddressLabel.text = (try? derivationTool.deriveTransparentAddress(seed: DemoAppConfig.seed)) ?? "could not derive t-address"
-        spendingKeyLabel.text = SampleStorage.shared.privateKey ?? "No Spending Key found"
-        zAddressLabel.addGestureRecognizer(
-            UITapGestureRecognizer(
-                target: self,
-                action: #selector(addressTapped(_:))
+
+        let synchronizer = SDKSynchronizer.shared
+
+        Task { @MainActor in
+            guard let uAddress = await synchronizer.getUnifiedAddress(accountIndex: 0) else {
+                unifiedAddressLabel.text = "could not derive UA"
+                tAddressLabel.text = "could not derive tAddress"
+                saplingAddress.text = "could not derive zAddress"
+                return
+            }
+
+            // you can either try to extract receivers from the UA itself or request the Synchronizer to do it for you. Certain UAs might not contain all the receivers you expect.
+            unifiedAddressLabel.text = uAddress.stringEncoded
+
+            tAddressLabel.text = uAddress.transparentReceiver()?.stringEncoded ?? "could not extract transparent receiver from UA"
+            saplingAddress.text = uAddress.saplingReceiver()?.stringEncoded ?? "could not extract sapling receiver from UA"
+
+            unifiedAddressLabel.addGestureRecognizer(
+                UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(addressTapped(_:))
+                )
             )
-        )
-        zAddressLabel.isUserInteractionEnabled = true
-        
-        tAddressLabel.isUserInteractionEnabled = true
-        tAddressLabel.addGestureRecognizer(
-            UITapGestureRecognizer(
-                target: self,
-                action: #selector(tAddressTapped(_:))
+            unifiedAddressLabel.isUserInteractionEnabled = true
+
+            tAddressLabel.isUserInteractionEnabled = true
+            tAddressLabel.addGestureRecognizer(
+                UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(tAddressTapped(_:))
+                )
             )
-        )
-        spendingKeyLabel.addGestureRecognizer(
-            UITapGestureRecognizer(
-                target: self,
-                action: #selector(spendingKeyTapped(_:))
+            saplingAddress.addGestureRecognizer(
+                UITapGestureRecognizer(
+                    target: self,
+                    action: #selector(spendingKeyTapped(_:))
+                )
             )
-        )
-        spendingKeyLabel.isUserInteractionEnabled = true
-        loggerProxy.info("Address: \(String(describing: Initializer.shared.getAddress()))")
-        // NOTE: NEVER LOG YOUR PRIVATE KEYS IN REAL LIFE
-        // swiftlint:disable:next print_function_usage
-        print("Spending Key: \(SampleStorage.shared.privateKey ?? "No Spending Key found")")
+            saplingAddress.isUserInteractionEnabled = true
+            loggerProxy.info("Address: \(String(describing: uAddress))")
+        }
     }
 
     @IBAction func spendingKeyTapped(_ gesture: UIGestureRecognizer) {
-        guard let key = SampleStorage.shared.privateKey else {
-            loggerProxy.warn("nothing to copy")
-            return
-        }
-        
         loggerProxy.event("copied to clipboard")
         
-        UIPasteboard.general.string = key
+        UIPasteboard.general.string = self.saplingAddress.text
         let alert = UIAlertController(
             title: "",
-            message: "Spending Key Copied to clipboard",
+            message: "Sapling Address Copied to clipboard",
             preferredStyle: UIAlertController.Style.alert
         )
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
@@ -70,8 +74,7 @@ class GetAddressViewController: UIViewController {
     @IBAction func addressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
 
-        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveShieldedAddress(seed: DemoAppConfig.seed, accountIndex: 0)
+        UIPasteboard.general.string = unifiedAddressLabel.text
 
         let alert = UIAlertController(
             title: "",
@@ -85,8 +88,8 @@ class GetAddressViewController: UIViewController {
     
     @IBAction func tAddressTapped(_ gesture: UIGestureRecognizer) {
         loggerProxy.event("copied to clipboard")
-        UIPasteboard.general.string = try? DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveTransparentAddress(seed: DemoAppConfig.seed)
+
+        UIPasteboard.general.string = tAddressLabel.text
 
         let alert = UIAlertController(
             title: "",

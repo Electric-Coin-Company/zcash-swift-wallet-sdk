@@ -31,16 +31,18 @@ class AdvancedReOrgTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
-    
+
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
-            channelProvider: ChannelProvider(),
-            network: network
-        )
-        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: seedPhrase,
+                walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
+                channelProvider: ChannelProvider(),
+                network: network
+            )
+            try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        }
     }
     
     override func tearDownWithError() throws {
@@ -67,22 +69,21 @@ class AdvancedReOrgTests: XCTestCase {
         reorgExpectation.fulfill()
     }
     
-    /*
-    pre-condition: know balances before tx at received_Tx_height arrives
-    1. Setup w/ default dataset
-    2. applyStaged(received_Tx_height)
-    3. sync up to received_Tx_height
-    3a. verify that balance is previous balance + tx amount
-    4. get that transaction hex encoded data
-    5. stage 5 empty blocks w/heights received_Tx_height to received_Tx_height + 3
-    6. stage tx at received_Tx_height + 3
-    6a. applyheight(received_Tx_height + 1)
-    7. sync to received_Tx_height + 1
-    8. assert that reorg happened at received_Tx_height
-    9. verify that balance equals initial balance
-    10. sync up to received_Tx_height + 3
-    11. verify that balance equals initial balance + tx amount
-    */
+
+    /// pre-condition: know balances before tx at received_Tx_height arrives
+    /// 1. Setup w/ default dataset
+    /// 2. applyStaged(received_Tx_height)
+    /// 3. sync up to received_Tx_height
+    /// 3a. verify that balance is previous balance + tx amount
+    /// 4. get that transaction hex encoded data
+    /// 5. stage 5 empty blocks w/heights received_Tx_height to received_Tx_height + 3
+    /// 6. stage tx at received_Tx_height + 3
+    /// 6a. applyheight(received_Tx_height + 1)
+    /// 7. sync to received_Tx_height + 1
+    /// 8. assert that reorg happened at received_Tx_height
+    /// 9. verify that balance equals initial balance
+    /// 10. sync up to received_Tx_height + 3
+    /// 11. verify that balance equals initial balance + tx amount
     func testReOrgChangesInboundTxMinedHeight() async throws {
         hookToReOrgNotification()
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
@@ -279,32 +280,31 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(initialTotalBalance + receivedTx.value, finalReorgTxTotalBalance)
     }
     
-    /**
-    An outbound, unconfirmed transaction in a specific block changes height in the event of a reorg
-     
-     
-    The wallet handles this change, reflects it appropriately in local storage, and funds remain spendable post confirmation.
-     
-    Pre-conditions:
-    - Wallet has spendable funds
-     
-    1. Setup w/ default dataset
-    2. applyStaged(received_Tx_height)
-    3. sync up to received_Tx_height
-    4. create transaction
-    5. stage 10 empty blocks
-    6. submit tx at sentTxHeight
-    6a. getIncomingTx
-    6b. stageTransaction(sentTx, sentTxHeight)
-    6c. applyheight(sentTxHeight + 1 )
-    7. sync to  sentTxHeight + 2
-    8. stage sentTx and otherTx at sentTxheight
-    9. applyStaged(sentTx + 2)
-    10. sync up to received_Tx_height + 2
-    11. verify that the sent tx is mined and balance is correct
-    12. applyStaged(sentTx + 10)
-    13. verify that there's no more pending transaction
-    */
+
+    /// An outbound, unconfirmed transaction in a specific block changes height in the event of a reorg
+    ///
+    ///
+    /// The wallet handles this change, reflects it appropriately in local storage, and funds remain spendable post confirmation.
+    ///
+    /// Pre-conditions:
+    /// - Wallet has spendable funds
+    ///
+    /// 1. Setup w/ default dataset
+    /// 2. applyStaged(received_Tx_height)
+    /// 3. sync up to received_Tx_height
+    /// 4. create transaction
+    /// 5. stage 10 empty blocks
+    /// 6. submit tx at sentTxHeight
+    ///   a. getIncomingTx
+    ///   b. stageTransaction(sentTx, sentTxHeight)
+    ///   c. applyheight(sentTxHeight + 1 )
+    /// 7. sync to  sentTxHeight + 2
+    /// 8. stage sentTx and otherTx at sentTxheight
+    /// 9. applyStaged(sentTx + 2)
+    /// 10. sync up to received_Tx_height + 2
+    /// 11. verify that the sent tx is mined and balance is correct
+    /// 12. applyStaged(sentTx + 10)
+    /// 13. verify that there's no more pending transaction
     func testReorgChangesOutboundTxIndex() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
@@ -347,9 +347,8 @@ class AdvancedReOrgTests: XCTestCase {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: coordinator.spendingKeys!.first!,
                 zatoshi: sendAmount,
-                toAddress: testRecipientAddress,
-                memo: "test transaction",
-                from: 0
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "test transaction")
             )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
@@ -579,17 +578,16 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(afterReOrgVerifiedBalance, initialVerifiedBalance)
     }
     
-    /**
-    Steps:
-    1.  sync up to an incoming transaction (incomingTxHeight + 1)
-    1a. save balances
-    2. stage 4 blocks from incomingTxHeight - 1 with different nonce
-    3. stage otherTx at incomingTxHeight
-    4. stage incomingTx at incomingTxHeight
-    5. applyHeight(incomingHeight + 3)
-    6. sync to latest height
-    7. check that balances still match
-    */
+
+    /// Steps:
+    /// 1.  sync up to an incoming transaction (incomingTxHeight + 1)
+    /// 1a. save balances
+    /// 2. stage 4 blocks from incomingTxHeight - 1 with different nonce
+    /// 3. stage otherTx at incomingTxHeight
+    /// 4. stage incomingTx at incomingTxHeight
+    /// 5. applyHeight(incomingHeight + 3)
+    /// 6. sync to latest height
+    /// 7. check that balances still match
     func testReOrgChangesInboundTxIndexInBlock() throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
@@ -706,33 +704,30 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), initialBalance)
         XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), initialVerifiedBalance)
     }
-    
-    /**
-    A Re Org occurs and changes the height of an outbound transaction
-    Pre-condition: Wallet has funds
-     
-    Steps:
-    1. create fake chain
-    1a. sync to latest height
-    2. send transaction to recipient address
-    3. getIncomingTransaction
-    4. stage transaction at sentTxHeight
-    5. applyHeight(sentTxHeight)
-    6. sync to latest height
-    6a. verify that there's a pending transaction with a mined height of sentTxHeight
-    7. stage 15  blocks from sentTxHeight
-    7. a stage sent tx to sentTxHeight + 2
-    8. applyHeight(sentTxHeight + 1) to cause a 1 block reorg
-    9. sync to latest height
-    10. verify that there's a pending transaction with -1 mined height
-    11. applyHeight(sentTxHeight + 2)
-    11a. sync to latest height
-    12. verify that there's a pending transaction with a mined height of sentTxHeight + 2
-    13. apply height(sentTxHeight + 15)
-    14. sync to latest height
-    15. verify that there's no pending transaction and that the tx is displayed on the sentTransactions collection
-     
-    */
+
+    /// A Re Org occurs and changes the height of an outbound transaction
+    /// Pre-condition: Wallet has funds
+    ///
+    /// Steps:
+    /// 1. create fake chain
+    /// 1a. sync to latest height
+    /// 2. send transaction to recipient address
+    /// 3. getIncomingTransaction
+    /// 4. stage transaction at sentTxHeight
+    /// 5. applyHeight(sentTxHeight)
+    /// 6. sync to latest height
+    /// 6a. verify that there's a pending transaction with a mined height of sentTxHeight
+    /// 7. stage 15  blocks from sentTxHeight
+    /// 7. a stage sent tx to sentTxHeight + 2
+    /// 8. applyHeight(sentTxHeight + 1) to cause a 1 block reorg
+    /// 9. sync to latest height
+    /// 10. verify that there's a pending transaction with -1 mined height
+    /// 11. applyHeight(sentTxHeight + 2)
+    /// 11a. sync to latest height
+    /// 12. verify that there's a pending transaction with a mined height of sentTxHeight + 2
+    /// 13. apply height(sentTxHeight + 15)
+    /// 14. sync to latest height
+    /// 15. verify that there's no pending transaction and that the tx is displayed on the sentTransactions collection
     func testReOrgChangesOutboundTxMinedHeight() async throws {
         hookToReOrgNotification()
 
@@ -774,9 +769,9 @@ class AdvancedReOrgTests: XCTestCase {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
-                toAddress: self.testRecipientAddress,
-                memo: "this is a test",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try Memo(string: "this is a test")
+            )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {
@@ -977,21 +972,20 @@ class AdvancedReOrgTests: XCTestCase {
         )
     }
 
-    /**
-    Uses the zcash-hackworks data set.
 
-    A Re Org occurs at 663195, and sweeps an Inbound Tx that appears later on the chain.
-    Steps:
-    1. reset dlwd
-    2. load blocks from txHeightReOrgBefore
-    3. applyStaged(663195)
-    4. sync to latest height
-    5. get balances
-    6. load blocks from dataset txHeightReOrgBefore
-    7. apply stage 663200
-    8. sync to latest height
-    9. verify that the balance is equal to the one before the reorg
-    */
+    /// Uses the zcash-hackworks data set.
+
+    /// A Re Org occurs at 663195, and sweeps an Inbound Tx that appears later on the chain.
+    /// Steps:
+    /// 1. reset dlwd
+    /// 2. load blocks from txHeightReOrgBefore
+    /// 3. applyStaged(663195)
+    /// 4. sync to latest height
+    /// 5. get balances
+    /// 6. load blocks from dataset txHeightReOrgBefore
+    /// 7. apply stage 663200
+    /// 8. sync to latest height
+    /// 9. verify that the balance is equal to the one before the reorg
     func testReOrgChangesInboundMinedHeight() throws {
         try coordinator.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         sleep(2)
@@ -1038,16 +1032,14 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssert(afterReOrgTxHeight > initialTxHeight)
     }
 
-    /**
-    Re Org removes incoming transaction and is never mined
-    Steps:
-    1. sync prior to incomingTxHeight - 1 to get balances there
-    2. sync to latest height
-    3. cause reorg
-    4. sync to latest height
-    5. verify that reorg Happened at reorgHeight
-    6. verify that balances match initial balances
-    */
+    /// Re Org removes incoming transaction and is never mined
+    /// Steps:
+    /// 1. sync prior to incomingTxHeight - 1 to get balances there
+    /// 2. sync to latest height
+    /// 3. cause reorg
+    /// 4. sync to latest height
+    /// 5. verify that reorg Happened at reorgHeight
+    /// 6. verify that balances match initial balances
     func testReOrgRemovesIncomingTxForever() throws {
         hookToReOrgNotification()
         try coordinator.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
@@ -1107,21 +1099,19 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
     }
     
-    /**
-    Transaction was included in a block, and then is not included in a block after a reorg, and expires.
-    Steps:
-    1. create fake chain
-    1a. sync to latest height
-    2. send transaction to recipient address
-    3. getIncomingTransaction
-    4. stage transaction at sentTxHeight
-    5. applyHeight(sentTxHeight)
-    6. sync to latest height
-    6a. verify that there's a pending transaction with a mined height of sentTxHeight
-    7. stage 15 blocks from sentTxHeigth to cause a reorg
-    8. sync to latest height
-    9. verify that there's an expired transaction as a pending transaction
-    */
+    /// Transaction was included in a block, and then is not included in a block after a reorg, and expires.
+    /// Steps:
+    /// 1. create fake chain
+    /// 1a. sync to latest height
+    /// 2. send transaction to recipient address
+    /// 3. getIncomingTransaction
+    /// 4. stage transaction at sentTxHeight
+    /// 5. applyHeight(sentTxHeight)
+    /// 6. sync to latest height
+    /// 6a. verify that there's a pending transaction with a mined height of sentTxHeight
+    /// 7. stage 15 blocks from sentTxHeigth to cause a reorg
+    /// 8. sync to latest height
+    /// 9. verify that there's an expired transaction as a pending transaction
     func testReOrgRemovesOutboundTxAndIsNeverMined() async throws {
         hookToReOrgNotification()
         
@@ -1142,15 +1132,16 @@ class AdvancedReOrgTests: XCTestCase {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(completion: { synchronizer in
-                    firstSyncExpectation.fulfill()
+                    
                     continuation.resume()
+                    firstSyncExpectation.fulfill()
                 }, error: self.handleError)
             } catch {
                 continuation.resume(throwing: error)
             }
         }
 
-        wait(for: [firstSyncExpectation], timeout: 5)
+        wait(for: [firstSyncExpectation], timeout: 10)
         
         sleep(1)
         let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
@@ -1165,9 +1156,9 @@ class AdvancedReOrgTests: XCTestCase {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
-                toAddress: self.testRecipientAddress,
-                memo: "this is a test",
-                from: 0)
+                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                memo: try! Memo(string: "this is a test")
+        )
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {

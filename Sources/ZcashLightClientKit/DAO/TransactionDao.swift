@@ -8,7 +8,7 @@
 import Foundation
 import SQLite
 
-struct Transaction: TransactionEntity, Decodable {
+struct Transaction: TransactionEntity {
     enum CodingKeys: String, CodingKey {
         case id = "id_tx"
         case transactionId = "txid"
@@ -17,6 +17,7 @@ struct Transaction: TransactionEntity, Decodable {
         case expiryHeight = "expiry_height"
         case minedHeight = "block"
         case raw
+        case fee
     }
     
     var id: Int?
@@ -26,6 +27,36 @@ struct Transaction: TransactionEntity, Decodable {
     var expiryHeight: BlockHeight?
     var minedHeight: BlockHeight?
     var raw: Data?
+    var fee: Zatoshi?
+}
+
+extension Transaction: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decodeIfPresent(Int.self, forKey: .id)
+        self.transactionId = try container.decode(Data.self, forKey: .transactionId)
+        self.created = try container.decodeIfPresent(String.self, forKey: .created)
+        self.transactionIndex = try container.decodeIfPresent(Int.self, forKey: .transactionIndex)
+        self.expiryHeight = try container.decodeIfPresent(BlockHeight.self, forKey: .expiryHeight)
+        self.minedHeight = try container.decodeIfPresent(BlockHeight.self, forKey: .minedHeight)
+        self.raw = try container.decodeIfPresent(Data.self, forKey: .raw)
+        
+        if let fee = try container.decodeIfPresent(Int64.self, forKey: .fee) {
+            self.fee = Zatoshi(fee)
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(self.id, forKey: .id)
+        try container.encode(self.transactionId, forKey: .transactionId)
+        try container.encodeIfPresent(self.created, forKey: .created)
+        try container.encodeIfPresent(self.transactionIndex, forKey: .transactionIndex)
+        try container.encodeIfPresent(self.expiryHeight, forKey: .expiryHeight)
+        try container.encodeIfPresent(self.minedHeight, forKey: .minedHeight)
+        try container.encodeIfPresent(self.raw, forKey: .raw)
+        try container.encodeIfPresent(self.fee?.amount, forKey: .fee)
+    }
 }
 
 struct ConfirmedTransaction: ConfirmedTransactionEntity {
@@ -40,6 +71,7 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
     var value: Zatoshi
     var memo: Data?
     var rawTransactionId: Data?
+    var fee: Zatoshi?
 }
 
 class TransactionSQLDAO: TransactionRepository {
@@ -51,6 +83,7 @@ class TransactionSQLDAO: TransactionRepository {
         static var expiryHeight = Expression<Int?>(Transaction.CodingKeys.expiryHeight.rawValue)
         static var minedHeight = Expression<Int?>(Transaction.CodingKeys.minedHeight.rawValue)
         static var raw = Expression<Blob?>(Transaction.CodingKeys.raw.rawValue)
+        static var fee = Expression<Zatoshi?>(Transaction.CodingKeys.fee.rawValue)
     }
 
     var dbProvider: ConnectionProvider
@@ -115,11 +148,12 @@ extension TransactionSQLDAO {
                         transactions.txid           AS rawTransactionId,
                         transactions.expiry_height  AS expiryHeight,
                         transactions.raw            AS raw,
-                        sent_notes.address          AS toAddress,
+                        sent_notes.to_address       AS toAddress,
                         sent_notes.value            AS value,
                         sent_notes.memo             AS memo,
                         sent_notes.id_note          AS noteId,
-                        blocks.time                 AS blockTimeInSeconds
+                        blocks.time                 AS blockTimeInSeconds,
+                        transactions.fee            AS fee
                     FROM    transactions
                         INNER JOIN sent_notes
                             ON transactions.id_tx = sent_notes.tx
@@ -153,7 +187,8 @@ extension TransactionSQLDAO {
                     received_notes.value   AS value,
                     received_notes.memo    AS memo,
                     received_notes.id_note AS noteId,
-                    blocks.time            AS blockTimeInSeconds
+                    blocks.time            AS blockTimeInSeconds,
+                    transactions.fee       AS fee
 
                 FROM    transactions
                     LEFT JOIN received_notes
@@ -184,7 +219,7 @@ extension TransactionSQLDAO {
                     transactions.txid           AS rawTransactionId,
                     transactions.expiry_height  AS expiryHeight,
                     transactions.raw            AS raw,
-                    sent_notes.address          AS toAddress,
+                    sent_notes.to_address       AS toAddress,
                         CASE
                             WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                             ELSE received_notes.value
@@ -197,7 +232,8 @@ extension TransactionSQLDAO {
                             WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                             ELSE received_notes.id_note
                     end                          AS noteId,
-                    blocks.time                  AS blockTimeInSeconds
+                    blocks.time                  AS blockTimeInSeconds,
+                    transactions.fee             AS fee
                 FROM  transactions
                     LEFT JOIN received_notes
                         ON transactions.id_tx = received_notes.tx
@@ -205,8 +241,8 @@ extension TransactionSQLDAO {
                         ON transactions.id_tx = sent_notes.tx
                     LEFT JOIN blocks
                         ON transactions.block = blocks.height
-                WHERE (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                OR sent_notes.address IS NOT NULL
+                WHERE (sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                OR sent_notes.to_address IS NOT NULL
                 ORDER  BY ( minedheight IS NOT NULL ),
                     minedheight DESC,
                     blocktimeinseconds DESC,
@@ -231,7 +267,7 @@ extension TransactionSQLDAO {
                     transactions.txid            AS rawTransactionId,
                     transactions.expiry_height   AS expiryHeight,
                     transactions.raw             AS raw,
-                    sent_notes.address           AS toAddress,
+                    sent_notes.to_address        AS toAddress,
                     CASE
                         WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                         ELSE received_notes.value
@@ -244,7 +280,8 @@ extension TransactionSQLDAO {
                         WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                         ELSE received_notes.id_note
                     end                          AS noteId,
-                    blocks.time                  AS blockTimeInSeconds
+                    blocks.time                  AS blockTimeInSeconds,
+                    transactions.fee             AS fee
                 FROM    transactions
                     LEFT JOIN received_notes
                         ON transactions.id_tx = received_notes.tx
@@ -253,8 +290,8 @@ extension TransactionSQLDAO {
                     LEFT JOIN blocks
                         ON transactions.block = blocks.height
                 WHERE (\(fromTransaction.blockTimeInSeconds), \(fromTransaction.transactionIndex)) > (blocktimeinseconds, transactionIndex) AND
-                    (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                    OR sent_notes.address IS NOT NULL
+                    ((sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                    OR sent_notes.to_address IS NOT NULL)
                 ORDER  BY ( minedheight IS NOT NULL ),
                     minedheight DESC,
                     blocktimeinseconds DESC,
@@ -274,7 +311,8 @@ extension TransactionSQLDAO {
                     transactions.tx_index       AS transactionIndex,
                     transactions.txid           AS rawTransactionId,
                     transactions.expiry_height  AS expiryHeight,
-                    transactions.raw            AS raw
+                    transactions.raw            AS raw,
+                    transactions.fee            AS fee
                 FROM   transactions
                 WHERE  \(range.start.height) <= minedheight
                 AND minedheight <= \(range.end.height)
@@ -297,7 +335,7 @@ extension TransactionSQLDAO {
                     transactions.txid           AS rawTransactionId,
                     transactions.expiry_height  AS expiryHeight,
                     transactions.raw            AS raw,
-                    sent_notes.address          AS toAddress,
+                    sent_notes.to_address       AS toAddress,
                     CASE
                         WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                         ELSE received_notes.value
@@ -310,7 +348,8 @@ extension TransactionSQLDAO {
                         WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                         ELSE received_notes.id_note
                     end                         AS noteId,
-                    blocks.time                 AS blockTimeInSeconds
+                    blocks.time                 AS blockTimeInSeconds,
+                    transactions.fee            AS fee
                 FROM   transactions
                     LEFT JOIN received_notes
                         ON transactions.id_tx = received_notes.tx
@@ -320,8 +359,8 @@ extension TransactionSQLDAO {
                         ON transactions.block = blocks.height
                 WHERE (\(range.start.height) <= minedheight
                     AND minedheight <= \(range.end.height)) AND
-                    (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                    OR sent_notes.address IS NOT NULL
+                    (sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                    OR sent_notes.to_address IS NOT NULL
                 ORDER  BY ( minedheight IS NOT NULL ),
                     minedheight DESC,
                     blocktimeinseconds DESC,
@@ -342,7 +381,7 @@ extension TransactionSQLDAO {
                         transactions.txid           AS rawTransactionId,
                         transactions.expiry_height  AS expiryHeight,
                         transactions.raw            AS raw,
-                        sent_notes.address          AS toAddress,
+                        sent_notes.to_address       AS toAddress,
                         CASE
                             WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
                             ELSE received_notes.value
@@ -355,7 +394,8 @@ extension TransactionSQLDAO {
                             WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
                             ELSE received_notes.id_note
                         end                          AS noteId,
-                        blocks.time                  AS blockTimeInSeconds
+                        blocks.time                  AS blockTimeInSeconds,
+                        transactions.fee             AS fee
                     FROM    transactions
                         LEFT JOIN received_notes
                             ON transactions.id_tx = received_notes.tx
@@ -365,8 +405,8 @@ extension TransactionSQLDAO {
                             ON transactions.block = blocks.height
                     WHERE minedheight >= 0
                         AND rawTransactionId == \(Blob(bytes: rawId.bytes)) AND
-                            (sent_notes.address IS NULL AND received_notes.is_change != 1)
-                        OR sent_notes.address IS NOT NULL
+                            (sent_notes.to_address IS NULL AND received_notes.is_change != 1)
+                        OR sent_notes.to_address IS NOT NULL
                     LIMIT 1
                 """
             )

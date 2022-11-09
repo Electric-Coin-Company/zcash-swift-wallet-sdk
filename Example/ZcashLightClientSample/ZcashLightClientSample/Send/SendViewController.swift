@@ -9,6 +9,7 @@
 import UIKit
 import ZcashLightClientKit
 import KRProgressHUD
+
 class SendViewController: UIViewController {
     @IBOutlet weak var addressLabel: UILabel!
     @IBOutlet weak var amountLabel: UILabel!
@@ -32,13 +33,13 @@ class SendViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
-        Task { @MainActor in
-            // swiftlint:disable:next force_try
-            try! await synchronizer.prepare()
-        }
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
+        Task { @MainActor in
+            // swiftlint:disable:next force_try
+            try! await synchronizer.prepare(with: DemoAppConfig.seed)
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -154,7 +155,7 @@ class SendViewController: UIViewController {
         guard let addr = self.addressTextField.text else {
             return false
         }
-        return wallet.isValidShieldedAddress(addr) || wallet.isValidTransparentAddress(addr)
+        return wallet.isValidSaplingAddress(addr) || wallet.isValidTransparentAddress(addr)
     }
     
     @IBAction func maxFundsValueChanged(_ sender: Any) {
@@ -210,9 +211,16 @@ class SendViewController: UIViewController {
             loggerProxy.warn("WARNING: Form is invalid")
             return
         }
-        
-        guard let address = SampleStorage.shared.privateKey else {
-            loggerProxy.error("NO ADDRESS")
+
+        guard let spendingKey = try? DerivationTool(
+            networkType: kZcashNetwork.networkType
+        )
+            .deriveUnifiedSpendingKey(
+                seed: DemoAppConfig.seed,
+                accountIndex: 0
+            )
+        else {
+            loggerProxy.error("NO SPENDING KEY")
             return
         }
         
@@ -221,11 +229,11 @@ class SendViewController: UIViewController {
         Task { @MainActor in
             do {
                 let pendingTransaction = try await synchronizer.sendToAddress(
-                    spendingKey: address,
+                    spendingKey: spendingKey,
                     zatoshi: zec,
-                    toAddress: recipient,
-                    memo: !self.memoField.text.isEmpty ? self.memoField.text : nil,
-                    from: 0
+                    // swiftlint:disable:next force_try
+                    toAddress: try! Recipient(recipient, network: kZcashNetwork.networkType),
+                    memo: try! self.memoField.text.asMemo()
                 )
                 KRProgressHUD.dismiss()
                 loggerProxy.info("transaction created: \(pendingTransaction)")
@@ -358,6 +366,17 @@ extension SDKSynchronizer {
 
         case .error(let e):
             return "Error: \(e.localizedDescription)"
+        }
+    }
+}
+
+extension Optional where Wrapped == String {
+    func asMemo() throws -> Memo {
+        switch self {
+        case .some(let string):
+            return try Memo(string: string)
+        case .none:
+            return .empty
         }
     }
 }

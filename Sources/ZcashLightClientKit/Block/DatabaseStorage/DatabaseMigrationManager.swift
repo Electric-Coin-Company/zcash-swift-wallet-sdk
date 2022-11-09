@@ -9,201 +9,164 @@ import Foundation
 import SQLite
 
 class MigrationManager {
-    enum DataDbMigrations: Int32 {
-        case none = 0
-        case version1 = 1
-    }
-    
-    enum CacheDbMigration: Int32 {
-        case none = 0
-    }
-    
-    enum PendingDbMigration: Int32 {
+    enum CacheDbMigration: Int32, CaseIterable {
         case none = 0
     }
 
-    static let latestDataDbMigrationVersion: Int32 = DataDbMigrations.version1.rawValue
-    static let latestCacheDbMigrationVersion: Int32 = CacheDbMigration.none.rawValue
-    static let latestPendingDbMigrationVersion: Int32 = PendingDbMigration.none.rawValue
-    
+    enum PendingDbMigration: Int32, CaseIterable {
+        case none = 0
+        case v1 = 1
+        case v2 = 2
+    }
+
+    static let nextCacheDbMigration: CacheDbMigration = CacheDbMigration.none
+    static let nextPendingDbMigration: PendingDbMigration = PendingDbMigration.v2
+
     var cacheDb: ConnectionProvider
-    var dataDb: ConnectionProvider
     var pendingDb: ConnectionProvider
     var network: NetworkType
 
     init(
         cacheDbConnection: ConnectionProvider,
-        dataDbConnection: ConnectionProvider,
         pendingDbConnection: ConnectionProvider,
         networkType: NetworkType
     ) {
         self.cacheDb = cacheDbConnection
-        self.dataDb = dataDbConnection
         self.pendingDb = pendingDbConnection
         self.network = networkType
     }
 
-    func performMigration(uvks: [UnifiedViewingKey]) throws {
-        try migrateDataDb(uvks: uvks)
+    func performMigration() throws {
         try migrateCacheDb()
         try migratePendingDb()
-    }
-
-    func performVersion1Migration(viewingKeys: [UnifiedViewingKey]) throws {
-        LoggerProxy.debug("Starting migration version 1 from viewing Keys")
-        let db = try self.dataDb.connection()
-       
-        let placeholder = "deriveMe"
-        let migrationStatement =
-            """
-                BEGIN TRANSACTION;
-                PRAGMA foreign_keys = OFF;
-                DROP TABLE utxos;
-                CREATE TABLE IF NOT EXISTS utxos(
-                    id_utxo INTEGER PRIMARY KEY,
-                    address TEXT NOT NULL,
-                    prevout_txid BLOB NOT NULL,
-                    prevout_idx INTEGER NOT NULL,
-                    script BLOB NOT NULL,
-                    value_zat INTEGER NOT NULL,
-                    height INTEGER NOT NULL,
-                    spent_in_tx INTEGER,
-                    FOREIGN KEY (spent_in_tx) REFERENCES transactions(id_tx),
-                    CONSTRAINT tx_outpoint UNIQUE (prevout_txid, prevout_idx)
-                );
-
-                CREATE TABLE IF NOT EXISTS accounts_new (
-                    account INTEGER PRIMARY KEY,
-                    extfvk TEXT NOT NULL,
-                    address TEXT NOT NULL,
-                    transparent_address TEXT NOT NULL
-                );
-
-                INSERT INTO accounts_new SELECT account, extfvk, address, '\(placeholder)' FROM accounts;
-                DROP TABLE accounts;
-
-                ALTER TABLE accounts_new RENAME TO accounts;
-
-                PRAGMA user_version = 1;
-                PRAGMA foreign_keys = ON;
-                COMMIT TRANSACTION;
-            """
-        LoggerProxy.debug("db.execute(\"\(migrationStatement)\")")
-        try db.execute(migrationStatement)
-            
-        LoggerProxy.debug("db.run() succeeded")
-        
-        // derive transparent (shielding) addresses
-        let accountsDao = AccountSQDAO(dbProvider: self.dataDb)
-        
-        let accounts = try accountsDao.getAll()
-        
-        guard !accounts.isEmpty else {
-            LoggerProxy.debug("no existing accounts found while performing this migration")
-            return
-        }
-        
-        guard accounts.count == viewingKeys.count else {
-            let message = """
-                Number of accounts found and viewing keys provided don't match.
-                Found \(accounts.count) account(s) and there were \(viewingKeys.count) Viewing key(s) provided.
-                """
-            LoggerProxy.debug(message)
-            throw StorageError.migrationFailedWithMessage(message: message)
-        }
-
-        let derivationTool = DerivationTool(networkType: self.network)
-        
-        for tuple in zip(accounts, viewingKeys) {
-            let tAddr = try derivationTool.deriveTransparentAddressFromPublicKey(tuple.1.extpub)
-            var account = tuple.0
-            account.transparentAddress = tAddr
-            try accountsDao.update(account)
-        }
-        
-        // sanity check
-        guard try accountsDao.getAll().first(where: { $0.transparentAddress == placeholder }) == nil else {
-            LoggerProxy.error("Accounts Migration performed but the transparent addresses were not derived")
-            throw StorageError.migrationFailed(underlyingError: KeyDerivationErrors.unableToDerive)
-        }
-    }
-
-    func performVersion1Migration(_ seedBytes: [UInt8]) throws {
-        LoggerProxy.debug("Starting migration version 1")
-        
-        // derive transparent (shielding) addresses
-        let accountsDao = AccountSQDAO(dbProvider: self.dataDb)
-        
-        let accounts = try accountsDao.getAll()
-        
-        guard !accounts.isEmpty else {
-            LoggerProxy.debug("no existing accounts found while performing this migration")
-            return
-        }
-        
-        let derivationTool = DerivationTool(networkType: self.network)
-        
-        let uvks = try derivationTool.deriveUnifiedViewingKeysFromSeed(seedBytes, numberOfAccounts: accounts.count)
-        
-        try performVersion1Migration(viewingKeys: uvks)
     }
 }
 
 private extension MigrationManager {
     func migratePendingDb() throws {
+        // getUserVersion returns a default value of zero for an unmigrated database.
         let currentPendingDbVersion = try pendingDb.connection().getUserVersion()
 
         LoggerProxy.debug(
             "Attempting to perform migration for pending Db - currentVersion: \(currentPendingDbVersion)." +
-            "Latest version is: \(Self.latestPendingDbMigrationVersion)"
+            "Latest version is: \(Self.nextPendingDbMigration.rawValue - 1)"
         )
 
-        if currentPendingDbVersion < Self.latestPendingDbMigrationVersion {
-            // perform no migration just adjust the version number
-            try self.cacheDb.connection().setUserVersion(PendingDbMigration.none.rawValue)
-        } else {
-            LoggerProxy.debug("PendingDb Db - no migration needed")
+        for v in (currentPendingDbVersion..<Self.nextPendingDbMigration.rawValue) {
+            switch PendingDbMigration(rawValue: v) {
+            case .some(.none):
+                try migratePendingDbV1()
+            case .some(.v1):
+                try migratePendingDbV2()
+            case .some(.v2):
+                // we have no migrations to run after v2; this case should ordinarily be 
+                // unreachable due to the bound on the loop.
+                break
+            case nil:
+                throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(v).")
+            }
+        }
+    }
+
+    func migratePendingDbV1() throws {
+        let statement = PendingTransactionSQLDAO.table.create(ifNotExists: true) { createdTable in
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.id, primaryKey: .autoincrement)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.toAddress)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.accountIndex)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.minedHeight)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.expiryHeight)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.cancelled)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.encodeAttempts, defaultValue: 0)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.errorMessage)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.errorCode)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.submitAttempts, defaultValue: 0)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.createTime)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.rawTransactionId)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.value)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.raw)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.memo)
+            createdTable.column(PendingTransactionSQLDAO.TableColumns.fee)
+        }
+
+        try pendingDb.connection().transaction(.immediate) {
+            try pendingDb.connection().execute(statement);
+            try pendingDb.connection().setUserVersion(PendingDbMigration.v1.rawValue);
+        }
+    }
+
+    func migratePendingDbV2() throws {
+        try pendingDb.connection().transaction(.immediate) {
+            let statement =
+                """
+                ALTER TABLE pending_transactions RENAME TO pending_transactions_old;
+
+                CREATE TABLE pending_transactions(
+                    id              INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    to_address      TEXT,
+                    to_internal     INTEGER,
+                    account_index   INTEGER NOT NULL,
+                    mined_height    INTEGER,
+                    expiry_height   INTEGER,
+                    cancelled       INTEGER,
+                    encode_attempts INTEGER DEFAULT (0),
+                    error_message   TEXT,
+                    error_code      INTEGER,
+                    submit_attempts INTEGER DEFAULT (0),
+                    create_time     REAL,
+                    txid            BLOB,
+                    value           INTEGER NOT NULL,
+                    raw             BLOB,
+                    memo            BLOB,
+                    fee             INTEGER
+                );
+
+                INSERT INTO pending_transactions
+                SELECT
+                    id,
+                    to_address,
+                    NULL,
+                    account_index,
+                    mined_height,
+                    expiry_height,
+                    cancelled,
+                    encode_attempts,
+                    error_message,
+                    error_code,
+                    submit_attempts,
+                    create_time,
+                    txid,
+                    value,
+                    raw,
+                    memo,
+                    NULL
+                FROM pending_transactions_old;
+
+                DROP TABLE pending_transactions_old
+                """
+
+            try pendingDb.connection().execute(statement);
+            try pendingDb.connection().setUserVersion(PendingDbMigration.v2.rawValue);
         }
     }
 
     func migrateCacheDb() throws {
+        // getUserVersion returns a default value of zero for an unmigrated database.
         let currentCacheDbVersion = try cacheDb.connection().getUserVersion()
 
         LoggerProxy.debug(
             "Attempting to perform migration for cache Db - currentVersion: \(currentCacheDbVersion)." +
-            "Latest version is: \(Self.latestCacheDbMigrationVersion)"
+            "Latest version is: \(Self.nextCacheDbMigration.rawValue)"
         )
 
-        if currentCacheDbVersion < Self.latestCacheDbMigrationVersion {
-            // perform no migration just adjust the version number
-            try self.cacheDb.connection().setUserVersion(CacheDbMigration.none.rawValue)
-        } else {
-            LoggerProxy.debug("Cache Db - no migration needed")
-        }
-    }
-
-    func migrateDataDb(uvks: [UnifiedViewingKey]) throws {
-        let currentDataDbVersion = try dataDb.connection().getUserVersion()
-        LoggerProxy.debug(
-            "Attempting to perform migration for data Db - currentVersion: \(currentDataDbVersion)." +
-            "Latest version is: \(Self.latestDataDbMigrationVersion)"
-        )
-
-        if currentDataDbVersion < Self.latestDataDbMigrationVersion {
-            for dbVersion in (currentDataDbVersion + 1) ... Self.latestDataDbMigrationVersion {
-                guard let version = DataDbMigrations.init(rawValue: dbVersion) else {
-                    LoggerProxy.error("failed to determine migration version")
-                    throw StorageError.invalidMigrationVersion(version: dbVersion)
-                }
-                switch version {
-                case .version1:
-                    try performVersion1Migration(viewingKeys: uvks)
-                case .none:
-                    break
-                }
+        for v in (currentCacheDbVersion..<Self.nextCacheDbMigration.rawValue) {
+            switch CacheDbMigration(rawValue: v) {
+            case .some(.none):
+                // we have no migrations to run; this case should ordinarily be 
+                // unreachable due to the bound on the loop.
+                break
+            case nil:
+                throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(v).")
             }
-        } else {
-            LoggerProxy.debug("Data Db - no migration needed")
         }
     }
 }
@@ -215,8 +178,8 @@ extension Connection {
         }
         return Int32(version)
     }
-    
+
     func setUserVersion(_ version: Int32) throws {
-        try run("PRAGMA user_version = \(version)")
+        try execute("PRAGMA user_version = \(version)")
     }
 }

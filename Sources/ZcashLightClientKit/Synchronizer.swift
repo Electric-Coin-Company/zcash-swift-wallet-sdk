@@ -76,11 +76,10 @@ public protocol Synchronizer {
 
     /// reflects current connection state to LightwalletEndpoint
     var connectionState: ConnectionState { get }
-    
 
     /// prepares this initializer to operate. Initializes the internal state with the given
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
-    func prepare() async throws
+    func prepare(with seed: [UInt8]?) async throws -> Initializer.InitializationResult
 
     ///Starts this synchronizer within the given scope.
     ///
@@ -90,13 +89,11 @@ public protocol Synchronizer {
 
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
     func stop() throws
-    
 
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getShieldedAddress(accountIndex: Int) async -> SaplingShieldedAddress?
-    
+    func getSaplingAddress(accountIndex: Int) async -> SaplingAddress?
 
     /// Gets the unified address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
@@ -109,29 +106,24 @@ public protocol Synchronizer {
     func getTransparentAddress(accountIndex: Int) async -> TransparentAddress?
     
     /// Sends zatoshi.
-    /// - Parameter spendingKey: the key that allows spends to occur.
+    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
-    /// - Parameter memo: the optional memo to include as part of the transaction.
-    /// - Parameter accountIndex: the optional account id to use. By default, the first account is used.
+    /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
+    // swiftlint:disable:next function_parameter_count
     func sendToAddress(
-        spendingKey: String,
+        spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
-        toAddress: String,
-        memo: String?,
-        from accountIndex: Int
+        toAddress: Recipient,
+        memo: Memo?
     ) async throws -> PendingTransactionEntity
 
-    /// Shields zatoshi.
-    /// - Parameter spendingKey: the key that allows spends to occur.
-    /// - Parameter transparentSecretKey: the key that allows to spend transaprent funds
+    /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
+    /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows to spend transparent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
-    /// - Parameter accountIndex: the optional account id that will be used to shield  your funds to. By default, the first account is used.
     func shieldFunds(
-        spendingKey: String,
-        transparentSecretKey: String,
-        memo: String?,
-        from accountIndex: Int
+        spendingKey: UnifiedSpendingKey,
+        memo: Memo
     ) async throws -> PendingTransactionEntity
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
@@ -139,7 +131,6 @@ public protocol Synchronizer {
     /// - Parameter transaction: the transaction to cancel.
     /// - Returns: true when the cancellation request was successful. False when it is too late.
     func cancelSpend(transaction: PendingTransactionEntity) -> Bool
-    
 
     /// all outbound pending transactions that have been sent but are awaiting confirmations
     var pendingTransactions: [PendingTransactionEntity] { get }
@@ -153,11 +144,9 @@ public protocol Synchronizer {
     /// all transactions related to receiving funds
     var receivedTransactions: [ConfirmedTransactionEntity] { get }
     
-
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
-    
 
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
@@ -172,7 +161,6 @@ public protocol Synchronizer {
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
-    
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking
@@ -180,11 +168,10 @@ public protocol Synchronizer {
     
 
     /// Returns the latests UTXOs for the given address from the specified height on
-    func refreshUTXOs(address: String, from height: BlockHeight) async throws -> RefreshedUTXOs
+    func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
-    /// Returns the last stored unshielded balance
+    /// Returns the last stored transparent balance
     func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance
-    
 
     /// Returns the shielded total balance (includes verified and unverified balance)
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
@@ -200,7 +187,7 @@ public protocol Synchronizer {
 
     /// Returns the shielded verified balance (anchor is 10 blocks back)
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
-    
+
 
     /// Stops the synchronizer and rescans the known blocks with the current keys.
     /// - Parameter policy: the rewind policy
@@ -220,22 +207,18 @@ public enum SyncStatus: Equatable {
     /// Indicates that this Synchronizer is actively downloading new blocks from the server.
     case downloading(_ status: BlockProgress)
 
-
     /// Indicates that this Synchronizer is actively validating new blocks that were downloaded
     /// from the server. Blocks need to be verified before they are scanned. This confirms that
     /// each block is chain-sequential, thereby detecting missing blocks and reorgs.
     case validating
 
-
     /// Indicates that this Synchronizer is actively scanning new valid blocks that were
     /// downloaded from the server.
     case scanning(_ progress: BlockProgress)
 
-
     /// Indicates that this Synchronizer is actively enhancing newly scanned blocks
     /// with additional transaction details, fetched from the server.
     case enhancing(_ progress: EnhancementProgress)
-
 
     /// fetches the transparent balance and stores it locally
     case fetching
@@ -244,10 +227,8 @@ public enum SyncStatus: Equatable {
     /// When set, a UI element may want to turn green.
     case synced
 
-
     /// Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
     case stopped
-
 
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     /// When set, a UI element may want to turn red.
@@ -272,14 +253,12 @@ public enum SyncStatus: Equatable {
     }
 }
 
-
 /// Kind of transactions handled by a Synchronizer
 public enum TransactionKind {
     case sent
     case received
     case all
 }
-
 
 /// Type of rewind available
 ///     -birthday: rewinds the local state to this wallet's birthday

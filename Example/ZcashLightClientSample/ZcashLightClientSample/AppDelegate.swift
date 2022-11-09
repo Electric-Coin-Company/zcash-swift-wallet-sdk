@@ -33,8 +33,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let wallet = wallet {
             return wallet
         } else {
-            let unifiedViewingKeys = try! DerivationTool(networkType: kZcashNetwork.networkType)
-                .deriveUnifiedViewingKeysFromSeed(DemoAppConfig.seed, numberOfAccounts: 1)
+            let ufvk = try! DerivationTool(networkType: kZcashNetwork.networkType)
+                .deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
+                .deriveFullViewingKey()
 
             let wallet = Initializer(
                 cacheDbURL: try! cacheDbURLHelper(),
@@ -44,16 +45,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 network: kZcashNetwork,
                 spendParamsURL: try! spendParamsURLHelper(),
                 outputParamsURL: try! outputParamsURLHelper(),
-                viewingKeys: unifiedViewingKeys,
+                viewingKeys: [ufvk],
                 walletBirthday: DemoAppConfig.birthdayHeight,
                 loggerProxy: loggerProxy
             )
             
-            try! wallet.initialize()
-            var storage = SampleStorage.shared
-            storage!.seed = Data(DemoAppConfig.seed)
-            storage!.privateKey = try! DerivationTool(networkType: kZcashNetwork.networkType)
-                .deriveSpendingKeys(seed: DemoAppConfig.seed, numberOfAccounts: 1)[0]
+            _ = try! wallet.initialize(with: DemoAppConfig.seed)
+           
             self.wallet = wallet
             return wallet
         }
@@ -141,10 +139,6 @@ extension AppDelegate {
         } catch {
             loggerProxy.error("error clearing data db: \(error)")
         }
-        
-        var storage = SampleStorage.shared
-        storage!.seed = nil
-        storage!.privateKey = nil
     }
 }
 

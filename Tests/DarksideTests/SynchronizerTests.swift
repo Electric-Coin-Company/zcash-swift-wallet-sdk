@@ -34,13 +34,16 @@ final class SynchronizerTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
-            channelProvider: ChannelProvider(),
-            network: network
-        )
-        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday:self.birthday + 50, //don't use an exact birthday, users never do.
+                channelProvider: ChannelProvider(),
+                network: self.network
+            )
+
+            try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        }
     }
 
     override func tearDownWithError() throws {

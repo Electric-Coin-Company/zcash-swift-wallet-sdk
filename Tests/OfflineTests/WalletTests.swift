@@ -35,7 +35,8 @@ class WalletTests: XCTestCase {
     
     func testWalletInitialization() async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
-        let uvk = try derivationTool.deriveUnifiedViewingKeysFromSeed(seedData.bytes, numberOfAccounts: 1)
+        let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
+            .map( { try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
         let wallet = Initializer(
             cacheDbURL: try __cacheDbURL(),
             dataDbURL: try __dataDbURL(),
@@ -44,13 +45,16 @@ class WalletTests: XCTestCase {
             network: network,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
-            viewingKeys: uvk,
+            viewingKeys: [ufvk],
             walletBirthday: 663194
         )
         
         let synchronizer = try SDKSynchronizer(initializer: wallet)
         do {
-            try await synchronizer.prepare()
+            guard case .success = try await synchronizer.prepare(with: seedData.bytes) else {
+                XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
+                return
+            }
         } catch {
             XCTFail("shouldn't fail here")
         }

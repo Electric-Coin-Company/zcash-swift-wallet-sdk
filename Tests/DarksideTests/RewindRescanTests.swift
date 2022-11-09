@@ -9,14 +9,15 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable type_body_length implicitly_unwrapped_optional
+// FIXME: disabled until this is resolved https://github.com/zcash/ZcashLightClientKit/issues/586
+// swiftlint:disable type_body_length implicitly_unwrapped_optional force_try
 class RewindRescanTests: XCTestCase {
     // TODO: Parameterize this from environment?
     // swiftlint:disable:next line_length
     let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
     // TODO: Parameterize this from environment
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
+    let testRecipientAddress = try! Recipient("zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a", network: .mainnet)
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let branchID = "2bb40e60"
@@ -33,20 +34,20 @@ class RewindRescanTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        wait { [self] in
+            self.coordinator = try await TestCoordinator(
+                seed: self.seedPhrase,
+                walletBirthday: self.birthday,
+                channelProvider: ChannelProvider(),
+                network: self.network
+            )
 
-        coordinator = try TestCoordinator(
-            seed: seedPhrase,
-            walletBirthday: birthday,
-            channelProvider: ChannelProvider(),
-            network: network
-        )
-
-        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+            try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        }
     }
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-
         NotificationCenter.default.removeObserver(self)
 
         try coordinator.stop()
@@ -181,8 +182,8 @@ class RewindRescanTests: XCTestCase {
                 spendingKey: coordinator.spendingKey,
                 zatoshi: Zatoshi(1000),
                 toAddress: testRecipientAddress,
-                memo: nil,
-                from: 0)
+                memo: .empty
+            )
             XCTAssertEqual(Zatoshi(1000), pendingTx.value)
         } catch {
             XCTFail("sending fail: \(error)")
@@ -284,8 +285,8 @@ class RewindRescanTests: XCTestCase {
                 spendingKey: spendingKey,
                 zatoshi: maxBalance,
                 toAddress: testRecipientAddress,
-                memo: "test send \(self.description) \(Date().description)",
-                from: 0)
+                memo: try Memo(string: "test send \(self.description) \(Date().description)")
+            )
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {

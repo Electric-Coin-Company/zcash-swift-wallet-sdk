@@ -21,6 +21,7 @@ struct ReceivedNote: ReceivedNoteEntity, Codable {
         case value
         case memo
         case spent
+        case tx
     }
     var id: Int
     var diversifier: Data
@@ -33,6 +34,7 @@ struct ReceivedNote: ReceivedNoteEntity, Codable {
     var value: Int
     var memo: Data?
     var spent: Int?
+    var tx: Int
 }
 
 class ReceivedNotesSQLDAO: ReceivedNoteRepository {
@@ -75,18 +77,22 @@ struct SentNote: SentNoteEntity, Codable {
     enum CodingKeys: String, CodingKey {
         case id = "id_note"
         case transactionId = "tx"
+        case outputPool = "output_pool"
         case outputIndex = "output_index"
-        case account = "from_account"
-        case address
+        case fromAccount = "from_account"
+        case toAddress = "to_address"
+        case toAccount = "to_account"
         case value
         case memo
     }
     
     var id: Int
     var transactionId: Int
+    var outputPool: Int
     var outputIndex: Int
-    var account: Int
-    var address: String
+    var fromAccount: Int
+    var toAddress: String
+    var toAccount: Int
     var value: Int
     var memo: Data?
 }
@@ -124,19 +130,5 @@ class SentNotesSQLDAO: SentNotesRepository {
                 try row.decode()
             }
             .first
-        //        try dbProvider.connection().run("""
-        //            SELECT sent_notes.id_note as id,
-        //                sent_notes.tx as transactionId,
-//                sent_notes.output_index as outputIndex,
-//                sent_notes.account as account,
-//                sent_notes.address as address,
-//                sent_notes.value as value,
-//                sent_notes.memo as memo
-//            FROM sent_note JOIN transactions
-//            WHERE sent_note.tx = transactions.id_tx AND
-//                    transactions.txid = \(Blob(bytes: byRawTransactionId.bytes))
-//            """).map({ row -> SentNoteEntity in
-//                try row.decode()
-//            }).first
     }
 }

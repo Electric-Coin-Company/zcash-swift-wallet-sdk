@@ -23,13 +23,13 @@ class GetUTXOsViewController: UIViewController {
     }
     
     func updateUI() {
-        // swiftlint:disable:next force_try
-        let tAddress = try! DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveTransparentAddress(seed: DemoAppConfig.seed)
-
-        self.transparentAddressLabel.text = tAddress
+        let synchronizer = SDKSynchronizer.shared
 
         Task { @MainActor in
+            let tAddress = await synchronizer.getTransparentAddress(accountIndex: 0)?.stringEncoded ?? "no t-address found"
+
+            self.transparentAddressLabel.text = tAddress
+            
             // swiftlint:disable:next force_try
             let balance = try! await AppDelegate.shared.sharedSynchronizer.getTransparentBalance(accountIndex: 0)
             
@@ -40,20 +40,17 @@ class GetUTXOsViewController: UIViewController {
     
     @IBAction func shieldFunds(_ sender: Any) {
         do {
-            let seed = DemoAppConfig.seed
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-            // swiftlint:disable:next force_unwrapping
-            let spendingKey = try derivationTool.deriveSpendingKeys(seed: seed, numberOfAccounts: 1).first!
-            let transparentSecretKey = try derivationTool.deriveTransparentPrivateKey(seed: seed)
+
+            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
 
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
 
             Task { @MainActor in
                 let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
-                    spendingKey: spendingKey,
-                    transparentSecretKey: transparentSecretKey,
-                    memo: "shielding is fun!",
-                    from: 0)
+                    spendingKey: usk,
+                    memo: try Memo(string: "shielding is fun!")
+                )
                 KRProgressHUD.dismiss()
                 self.messageLabel.text = "funds shielded \(transaction)"
             }

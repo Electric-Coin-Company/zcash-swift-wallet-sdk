@@ -18,26 +18,23 @@ public enum TransactionEncoderError: Error {
 }
 
 protocol TransactionEncoder {
-    /**
-    Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
-    doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
-    double-bangs for things).
-    Blocking
-     
-    - Parameters:
-    - Parameter spendingKey: a string containing the spending key
-    - Parameter zatoshi: the amount to send in zatoshis
-    - Parameter to: string containing the recipient address
-    - Parameter memo: string containing the memo (optional)
-    - Parameter accountIndex: index of the account that will be used to send the funds
-     
-    - Throws: a TransactionEncoderError
-    */
+    /// Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
+    /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
+    /// double-bangs for things).
+    /// Non-blocking
+    ///
+    /// - Parameters:
+    /// - Parameter spendingKey: a `UnifiedSpendingKey` containing the spending key
+    /// - Parameter zatoshi: the amount to send in `Zatoshi`
+    /// - Parameter to: string containing the recipient address
+    /// - Parameter MemoBytes: string containing the memo (optional)
+    /// - Parameter accountIndex: index of the account that will be used to send the funds
+    // swiftlint:disable:next function_parameter_count
     func createTransaction(
-        spendingKey: String,
-        zatoshi: Int,
+        spendingKey: UnifiedSpendingKey,
+        zatoshi: Zatoshi,
         to address: String,
-        memo: String?,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction
     
@@ -46,25 +43,20 @@ protocol TransactionEncoder {
     Blocking
      
     - Parameters:
-    - Parameter spendingKey: a string containing the spending key
-    - Parameter tSecretKey: transparent secret key to spend the UTXOs
-    - Parameter memo: string containing the memo (optional)
+    - Parameter spendingKey: `UnifiedSpendingKey` to spend the UTXOs
+    - Parameter memoBytes: containing the memo (optional)
     - Parameter accountIndex: index of the account that will be used to send the funds
-     
     - Throws: a TransactionEncoderError
     */
     func createShieldingTransaction(
-        spendingKey: String,
-        tSecretKey: String,
-        memo: String?,
+        spendingKey: UnifiedSpendingKey,
+        memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> EncodedTransaction
-    
-    /**
-    Fetch the Transaction Entity from the encoded representation
-    - Parameter encodedTransaction: The encoded transaction to expand
-    - Returns: a TransactionEntity based on the given Encoded Transaction
-    - Throws: a TransactionEncoderError
-    */
+
+    ///Fetch the Transaction Entity from the encoded representation
+    /// - Parameter encodedTransaction: The encoded transaction to expand
+    /// - Returns: a TransactionEntity based on the given Encoded Transaction
+    /// - Throws: a TransactionEncoderError
     func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity
 }

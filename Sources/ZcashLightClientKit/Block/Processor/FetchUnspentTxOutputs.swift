@@ -19,28 +19,23 @@ extension CompactBlockProcessor {
         state = .fetching
 
         do {
-            let tAddresses = try accountRepository.getAll().map({ $0.transparentAddress })
-            do {
-                for tAddress in tAddresses {
-                    guard try rustBackend.clearUtxos(
+            let tAddresses = try accountRepository.getAll()
+                .map { $0.account }
+                .map {
+                    try rustBackend.listTransparentReceivers(
                         dbData: config.dataDb,
-                        address: tAddress,
-                        sinceHeight: config.walletBirthday - 1,
+                        account: Int32($0),
                         networkType: config.network.networkType
-                    ) >= 0 else {
-                        throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "attempted to clear utxos but -1 was returned")
-                    }
+                    )
                 }
-            } catch {
-                throw FetchUTXOError.clearingFailed(error)
-            }
-            
+                .flatMap({ $0 })
+
             var utxos: [UnspentTransactionOutputEntity] = []
-            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses, startHeight: config.walletBirthday)
+            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses.map { $0.stringEncoded }, startHeight: config.walletBirthday)
             for try await transaction in stream {
                 utxos.append(transaction)
             }
-            
+
             var refreshed: [UnspentTransactionOutputEntity] = []
             var skipped: [UnspentTransactionOutputEntity] = []
 
@@ -48,7 +43,6 @@ extension CompactBlockProcessor {
                 do {
                     try rustBackend.putUnspentTransparentOutput(
                         dbData: config.dataDb,
-                        address: utxo.address,
                         txid: utxo.txid.bytes,
                         index: utxo.index,
                         script: utxo.script.bytes,
@@ -69,7 +63,7 @@ extension CompactBlockProcessor {
                 object: self,
                 userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs: result]
             )
-            
+
             if Task.isCancelled {
                 LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
             } else {

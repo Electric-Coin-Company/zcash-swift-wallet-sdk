@@ -9,63 +9,29 @@ import Foundation
 
 protocol AccountEntity {
     var account: Int { get set }
-    var extfvk: String { get set }
-    var address: String { get set }
-    var transparentAddress: String { get set }
+    var ufvk: String { get set }
 }
 
 struct Account: AccountEntity, Encodable, Decodable {
     enum CodingKeys: String, CodingKey {
         case account
-        case extfvk
-        case address
-        case transparentAddress = "transparent_address"
+        case ufvk
     }
     
     var account: Int
-    
-    var extfvk: String
-    
-    var address: String
-    
-    var transparentAddress: String
-}
-
-extension Account: UnifiedAddress {
-    var tAddress: TransparentAddress {
-        get {
-            transparentAddress
-        }
-        set {
-            transparentAddress = newValue
-        }
-    }
-    
-    var zAddress: SaplingShieldedAddress {
-        get {
-            address
-        }
-        // swiftlint:disable unused_setter_value
-        set {
-            address = transparentAddress
-        }
-    }
+    var ufvk: String
 }
 
 extension Account: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(account)
-        hasher.combine(extfvk)
-        hasher.combine(address)
-        hasher.combine(transparentAddress)
+        hasher.combine(ufvk)
     }
     
     static func == (lhs: Self, rhs: Self) -> Bool {
         guard
             lhs.account == rhs.account,
-            lhs.extfvk == rhs.extfvk,
-            lhs.address == rhs.address,
-            lhs.transparentAddress == rhs.transparentAddress
+            lhs.ufvk == rhs.ufvk
         else { return false }
         
         return true
@@ -75,7 +41,6 @@ extension Account: Hashable {
 protocol AccountRepository {
     func getAll() throws -> [AccountEntity]
     func findBy(account: Int) throws -> AccountEntity?
-    func findBy(address: String) throws -> AccountEntity?
     func update(_ account: AccountEntity) throws
 }
 
@@ -84,9 +49,7 @@ import SQLite
 class AccountSQDAO: AccountRepository {
     enum TableColums {
         static let account = Expression<Int>("account")
-        static let extfvk = Expression<String>("extfvk")
-        static let address = Expression<String>("address")
-        static let transparentAddress = Expression<String>("transparent_address")
+        static let extfvk = Expression<String>("ufvk")
     }
 
     let table = Table("accounts")
@@ -107,11 +70,6 @@ class AccountSQDAO: AccountRepository {
     
     func findBy(account: Int) throws -> AccountEntity? {
         let query = table.filter(TableColums.account == account).limit(1)
-        return try dbProvider.connection().prepare(query).map({ try $0.decode() as Account }).first
-    }
-    
-    func findBy(address: String) throws -> AccountEntity? {
-        let query = table.filter(TableColums.address == address).limit(1)
         return try dbProvider.connection().prepare(query).map({ try $0.decode() as Account }).first
     }
     
@@ -170,21 +128,7 @@ class CachingAccountDao: AccountRepository {
 
         return acc
     }
-    
-    func findBy(address: String) throws -> AccountEntity? {
-        if !cache.isEmpty, let account = cache.values.first(where: { $0.address == address }) {
-            return account
-        }
         
-        guard let account = try dao.findBy(address: address) else {
-            return nil
-        }
-
-        cache[account.account] = account
-        
-        return account
-    }
-    
     func update(_ account: AccountEntity) throws {
         try dao.update(account)
     }

@@ -8,7 +8,7 @@
 import Foundation
 
 enum TransactionManagerError: Error {
-    case couldNotCreateSpend(toAddress: String, account: Int, zatoshi: Zatoshi)
+    case couldNotCreateSpend(recipient: PendingTransactionRecipient, account: Int, zatoshi: Zatoshi)
     case encodingFailed(PendingTransactionEntity)
     case updateFailed(PendingTransactionEntity)
     case notPending(PendingTransactionEntity)
@@ -16,6 +16,7 @@ enum TransactionManagerError: Error {
     case internalInconsistency(PendingTransactionEntity)
     case submitFailed(PendingTransactionEntity, errorCode: Int)
     case shieldingEncodingFailed(PendingTransactionEntity, reason: String)
+    case cannotEncodeInternalTx(PendingTransactionEntity)
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
@@ -40,22 +41,22 @@ class PersistentTransactionManager: OutboundTransactionManager {
     
     func initSpend(
         zatoshi: Zatoshi,
-        toAddress: String,
-        memo: String?,
+        recipient: PendingTransactionRecipient,
+        memo: MemoBytes?,
         from accountIndex: Int
     ) throws -> PendingTransactionEntity {
         guard let insertedTx = try repository.find(
             by: try repository.create(
                 PendingTransaction(
                     value: zatoshi,
-                    toAddress: toAddress,
+                    recipient: recipient,
                     memo: memo,
                     account: accountIndex
                 )
             )
         ) else {
             throw TransactionManagerError.couldNotCreateSpend(
-                toAddress: toAddress,
+                recipient: recipient,
                 account: accountIndex,
                 zatoshi: zatoshi
             )
@@ -65,41 +66,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func encodeShieldingTransaction(
-        spendingKey: String,
-        tsk: String,
+        spendingKey: UnifiedSpendingKey,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
-        let derivationTool = DerivationTool(networkType: self.network)
-        
-        guard
-            let viewingKey = try? derivationTool.deriveViewingKey(spendingKey: spendingKey),
-            let zAddr = try? derivationTool.deriveShieldedAddress(viewingKey: viewingKey)
-        else {
-            throw TransactionManagerError.shieldingEncodingFailed(
-                pendingTransaction,
-                reason: "There was an error Deriving your keys"
-            )
-        }
-        
-        guard pendingTransaction.toAddress == zAddr else {
-            throw TransactionManagerError.shieldingEncodingFailed(
-                pendingTransaction,
-                reason: """
-                            the recipient address does not match your
-                            derived shielded address. Shielding transactions
-                            addresses must match the ones derived from your keys.
-                            This is a serious error. We are not letting you encode
-                            this shielding transaction because it can lead to loss
-                            of funds
-                        """
-            )
-        }
-        
         do {
             let encodedTransaction = try await self.encoder.createShieldingTransaction(
                 spendingKey: spendingKey,
-                tSecretKey: tsk,
-                memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
             let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
@@ -116,25 +89,37 @@ class PersistentTransactionManager: OutboundTransactionManager {
             return pending
         } catch StorageError.updateFailed {
             throw TransactionManagerError.updateFailed(pendingTransaction)
+        } catch MemoBytes.Errors.invalidUTF8 {
+            throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")
+        } catch MemoBytes.Errors.tooLong(let length) {
+            throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo is too long. expected 512 bytes, received \(length)")
         } catch {
             throw error
         }
     }
-    
+
     func encode(
-        spendingKey: String,
+        spendingKey: UnifiedSpendingKey,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
+            var toAddress: String?
+            switch (pendingTransaction.recipient) {
+                case .address(let addr):
+                    toAddress = addr.stringEncoded
+                case .internalAccount(_):
+                    throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
+            }
+
             let encodedTransaction = try await self.encoder.createTransaction(
                 spendingKey: spendingKey,
-                zatoshi: pendingTransaction.intValue,
-                to: pendingTransaction.toAddress,
-                memo: pendingTransaction.memo?.asZcashTransactionMemo(),
+                zatoshi: pendingTransaction.value,
+                to: toAddress!,
+                memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
             let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
-            
+
             var pending = pendingTransaction
             pending.encodeAttempts += 1
             pending.raw = encodedTransaction.raw
@@ -228,10 +213,6 @@ class PersistentTransactionManager: OutboundTransactionManager {
             .forEach { try self.repository.update($0) }
     }
     
-    func monitorChanges(byId: Int, observer: Any) {
-        // TODO: Implement this
-    }
-    
     func cancel(pendingTransaction: PendingTransactionEntity) -> Bool {
         guard let id = pendingTransaction.id else { return false }
         
@@ -288,9 +269,7 @@ enum OutboundTransactionManagerBuilder {
 
 enum PendingTransactionRepositoryBuilder {
     static func build(initializer: Initializer) throws -> PendingTransactionRepository {
-        let dao = PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
-        try dao.createrTableIfNeeded()
-        return dao
+        PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
     }
 }
 
