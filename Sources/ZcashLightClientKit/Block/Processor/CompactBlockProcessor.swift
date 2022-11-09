@@ -635,7 +635,7 @@ public actor CompactBlockProcessor {
 
         LoggerProxy.debug("progress: \(progress)")
         
-        NotificationCenter.default.mainThreadPost(
+        NotificationCenter.default.post(
             name: Notification.Name.blockProcessorUpdated,
             object: self,
             userInfo: userInfo
