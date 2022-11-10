@@ -46,7 +46,7 @@ class SendViewController: UIViewController {
         super.viewDidAppear(animated)
         Task { @MainActor in
             do {
-                try await synchronizer.start(retry: false)
+                try synchronizer.start(retry: false)
                 self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
             } catch {
                 self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)

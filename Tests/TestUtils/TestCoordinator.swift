@@ -60,7 +60,7 @@ class TestCoordinator {
 
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
-        await try self.init(
+        try await self.init(
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
@@ -307,7 +307,7 @@ enum TestSynchronizerBuilder {
         )
 
         let synchronizer = try SDKSynchronizer(initializer: initializer)
-        if case .seedRequired = try await synchronizer.prepare(with: seed) {
+        if case .seedRequired = try synchronizer.prepare(with: seed) {
             throw TestCoordinator.CoordinatorError.seedRequiredForMigration
         }
         

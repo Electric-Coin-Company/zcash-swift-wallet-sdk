@@ -113,6 +113,9 @@ public class SDKSynchronizer: Synchronizer {
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
 
+    private var synchronizerStopped: (() -> Void)?
+    private var resumeOnForeground = false
+
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) throws {
@@ -214,6 +217,26 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.stop()
             self.status = .stopped
         }
+    }
+
+    public func applicationDidEnterBackground(resumeOnForeground: Bool, synchronizerStopped: @escaping () -> Void) {
+        switch status {
+        case .unprepared, .synced, .stopped, .disconnected, .error:
+            self.resumeOnForeground = false
+            synchronizerStopped()
+
+        case .downloading, .validating, .scanning, .fetching, .enhancing:
+            self.resumeOnForeground = resumeOnForeground
+            self.synchronizerStopped = synchronizerStopped
+            stop()
+        }
+    }
+
+    public func applicationWillEnterForeground() throws {
+        guard resumeOnForeground else { return }
+        resumeOnForeground = false
+        LoggerProxy.info("Starting sync after returning to foreground.")
+        try start()
     }
     
     private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
@@ -425,6 +448,12 @@ public class SDKSynchronizer: Synchronizer {
     
     @objc func processorStopped(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
+            if let synchronizerStopped = self?.synchronizerStopped {
+                LoggerProxy.info("Synchronizer stopped syncing. Ending background work.")
+                synchronizerStopped()
+                self?.synchronizerStopped = nil
+            }
+
             guard let self = self, self.status != .stopped else { return }
             self.status = .stopped
         }

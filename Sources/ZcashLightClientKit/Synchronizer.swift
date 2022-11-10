@@ -90,6 +90,23 @@ public protocol Synchronizer {
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
     func stop() throws
 
+    /// Call this when application did enter background. Synchronizer stops it's work.
+    ///
+    /// Synchronizer need some time to stop a work. So before calling this method use `UIApplication.shared.beginBackgroundTask` to request some
+    /// background execution time from operating system.
+    ///
+    /// - Parameters:
+    ///   - resumeSyncWhenAppGoesToForeground: Indicates if sync process should automatically start after app goes back to foreground. To support
+    ///                                        this call `applicationWillEnterForeground` when app will enter foreground.
+    ///   - backgroundWorkFinished: Closure is called when synchronizer finally stops.
+    func applicationDidEnterBackground(resumeOnForeground: Bool, synchronizerStopped: @escaping () -> Void)
+
+    /// Call this when application will enter foreground.
+    ///
+    /// When syncing process was previously interrupted by calling `applicationDidEnterBackground` with `resumeSyncWhenAppGoesToForeground` parameter
+    /// set to `true` then this method starts syncing process. Otherwise nothing happens.
+    func applicationWillEnterForeground() throws
+
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect

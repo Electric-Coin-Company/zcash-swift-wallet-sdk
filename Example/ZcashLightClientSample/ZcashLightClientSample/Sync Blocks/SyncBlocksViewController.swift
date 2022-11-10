@@ -6,6 +6,7 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
 import UIKit
 import ZcashLightClientKit
 
@@ -19,83 +20,91 @@ class SyncBlocksViewController: UIViewController {
     @IBOutlet weak var progressLabel: UILabel!
     @IBOutlet weak var startPause: UIButton!
 
-    // swiftlint:disable:next implicitly_unwrapped_optional
-    private var processor: CompactBlockProcessor!
+    let synchronizer = AppDelegate.shared.sharedSynchronizer
+
+    var notificationCancellables: [AnyCancellable] = []
+
+    deinit {
+        notificationCancellables.forEach { $0.cancel() }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Do any additional setup after loading the view.
-        
-        let wallet = Initializer.shared
-        // swiftlint:disable:next force_try
-        _ = try! wallet.initialize(with: DemoAppConfig.seed)
-        processor = CompactBlockProcessor(initializer: wallet)
-        Task { @MainActor in
-            statusLabel.text = textFor(state: await processor?.state ?? .stopped)
-        }
+        statusLabel.text = textFor(state: synchronizer.status)
         progressBar.progress = 0
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(processorNotification(_:)),
-            name: nil,
-            object: processor
-        )
+
+        let center = NotificationCenter.default
+        let subscribeToNotifications: [Notification.Name] = [
+            .synchronizerStarted,
+            .synchronizerProgressUpdated,
+            .synchronizerStatusWillUpdate,
+            .synchronizerSynced,
+            .synchronizerStopped,
+            .synchronizerDisconnected,
+            .synchronizerSyncing,
+            .synchronizerDownloading,
+            .synchronizerValidating,
+            .synchronizerScanning,
+            .synchronizerEnhancing,
+            .synchronizerFetching,
+            .synchronizerFailed
+        ]
+
+        for notificationName in subscribeToNotifications {
+            center.publisher(for: notificationName)
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] notification in self?.processorNotification(notification) }
+                .store(in: &notificationCancellables)
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-         
-        NotificationCenter.default.removeObserver(self)
-        guard let processor = self.processor else { return }
-        Task {
-            await processor.stop()
-        }
+
+        notificationCancellables.forEach { $0.cancel() }
+        synchronizer.stop()
     }
     
     @objc func processorNotification(_ notification: Notification) {
-        Task { @MainActor in
-            guard self.processor != nil else { return }
-            
-            await self.updateUI()
-            
-            switch notification.name {
-            case let not where not == Notification.Name.blockProcessorUpdated:
-                guard let progress = notification.userInfo?[CompactBlockProcessorNotificationKey.progress] as? CompactBlockProgress else { return }
-                self.progressBar.progress = progress.progress
-                self.progressLabel.text = "\(progress.progress)%"
-            default:
-                return
-            }
+        self.updateUI()
+
+        switch notification.name {
+        case let not where not == Notification.Name.synchronizerProgressUpdated:
+            guard let progress = notification.userInfo?[SDKSynchronizer.NotificationKeys.progress] as? CompactBlockProgress else { return }
+            self.progressBar.progress = progress.progress
+            self.progressLabel.text = "\(Int(floor(progress.progress * 100)))%"
+        default:
+            return
         }
     }
     
     @IBAction func startStop() {
-        guard let processor = processor else { return }
-
         Task { @MainActor in
-            switch await processor.state {
-            case .stopped:
-                await startProcessor()
-            default:
-                await stopProcessor()
-            }
+            await doStartStop()
         }
     }
-    
-    func startProcessor() async {
-        guard let processor = processor else { return }
 
-        await processor.start()
-        await updateUI()
-    }
-    
-    func stopProcessor() async {
-        guard let processor = processor else { return }
+    func doStartStop() async {
+        switch synchronizer.status {
+        case .stopped, .unprepared:
+            do {
+                if synchronizer.status == .unprepared {
+                    _ = try synchronizer.prepare(with: DemoAppConfig.seed)
+                }
 
-        await processor.stop()
-        await updateUI()
+                try synchronizer.start()
+                updateUI()
+            } catch {
+                loggerProxy.error("Can't start synchronizer: \(error)")
+                updateUI()
+            }
+        default:
+            synchronizer.stop()
+            updateUI()
+        }
+
+        updateUI()
     }
     
     func fail(error: Error) {
@@ -112,30 +121,28 @@ class SyncBlocksViewController: UIViewController {
         )
         
         self.present(alert, animated: true, completion: nil)
-        Task { @MainActor in
-            await updateUI()
-        }
+        updateUI()
     }
     
-    func updateUI() async {
-        guard let state = await processor?.state else { return }
+    func updateUI() {
+        let state = synchronizer.status
 
         statusLabel.text = textFor(state: state)
         startPause.setTitle(buttonText(for: state), for: .normal)
-        if case CompactBlockProcessor.State.synced = state {
+        if case SyncStatus.synced = state {
             startPause.isEnabled = false
         } else {
             startPause.isEnabled = true
         }
     }
     
-    func buttonText(for state: CompactBlockProcessor.State) -> String {
+    func buttonText(for state: SyncStatus) -> String {
         switch state {
         case .downloading, .scanning, .validating:
             return "Pause"
         case .stopped:
             return "Start"
-        case .error:
+        case .error, .unprepared, .disconnected:
             return "Retry"
         case .synced:
             return "Chill!"
@@ -146,7 +153,7 @@ class SyncBlocksViewController: UIViewController {
         }
     }
     
-    func textFor(state: CompactBlockProcessor.State) -> String {
+    func textFor(state: SyncStatus) -> String {
         switch state {
         case .downloading:
             return "Downloading ⛓"
@@ -164,6 +171,10 @@ class SyncBlocksViewController: UIViewController {
             return "Enhancing 🤖"
         case .fetching:
             return "Fetching UTXOs"
+        case .unprepared:
+            return "Unprepared"
+        case .disconnected:
+            return "Disconnected"
         }
     }
 }

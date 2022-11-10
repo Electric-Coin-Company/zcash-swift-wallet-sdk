@@ -115,6 +115,55 @@ final class SynchronizerTests: XCTestCase {
         XCTAssertEqual(state, .stopped)
     }
 
+    func testSynchronizerStopsWhenAppDidEnterBackround() async throws {
+        hookToReOrgNotification()
+
+        /*
+         1. create fake chain
+         */
+        let fullSyncLength = 100_000
+
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: fullSyncLength)
+
+        try coordinator.applyStaged(blockheight: birthday + fullSyncLength)
+
+        sleep(10)
+
+        let syncStoppedExpectation = XCTestExpectation(description: "SynchronizerStopped Expectation")
+        syncStoppedExpectation.subscribe(to: .synchronizerStopped, object: nil)
+
+        let processorStoppedExpectation = XCTestExpectation(description: "ProcessorStopped Expectation")
+        processorStoppedExpectation.subscribe(to: .blockProcessorStopped, object: nil)
+
+        let stoppedClosureCalledExpectation = XCTestExpectation(description: "SynchronizerStoppedWhenGoesBackground Expectation")
+
+        /*
+         sync to latest height
+         */
+        try coordinator.sync(completion: { _ in
+            XCTFail("Sync should have stopped")
+        }, error: { error in
+            _ = try? self.coordinator.stop()
+
+            guard let testError = error else {
+                XCTFail("failed with nil error")
+                return
+            }
+            XCTFail("Failed with error: \(testError)")
+        })
+
+        try await Task.sleep(nanoseconds: 5_000_000_000)
+        self.coordinator.synchronizer.applicationDidEnterBackground(resumeOnForeground: false) {
+            stoppedClosureCalledExpectation.fulfill()
+        }
+
+        wait(for: [syncStoppedExpectation, processorStoppedExpectation, stoppedClosureCalledExpectation], timeout: 6, enforceOrder: true)
+
+        XCTAssertEqual(coordinator.synchronizer.status, .stopped)
+        let state = await coordinator.synchronizer.blockProcessor.state
+        XCTAssertEqual(state, .stopped)
+    }
+
     func handleError(_ error: Error?) {
         _ = try? coordinator.stop()
         guard let testError = error else {

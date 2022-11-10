@@ -6,9 +6,11 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
+import MnemonicSwift
+import NotificationBubbles
 import UIKit
 import ZcashLightClientKit
-import NotificationBubbles
 
 var loggerProxy = SampleLogger(logLevel: .debug)
 
@@ -18,6 +20,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     private var wallet: Initializer?
     private var synchronizer: SDKSynchronizer?
+    
+    var taskIdentifier: UIBackgroundTaskIdentifier = .invalid
+    var shouldStartSyncOnAppForeground = false
     
     var sharedSynchronizer: SDKSynchronizer {
         if let sync = synchronizer {
@@ -98,10 +103,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func applicationDidEnterBackground(_ application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+
+        startBackgroundWork(on: application)
     }
     
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+        do {
+            try sharedSynchronizer.applicationWillEnterForeground()
+        } catch {
+            loggerProxy.error("Failed to start synchronisation after coming to foreground. \(error)")
+        }
     }
     
     func applicationDidBecomeActive(_ application: UIApplication) {
@@ -112,6 +124,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 }
+
+// MARK: - Background
+
+extension AppDelegate {
+    func startBackgroundWork(on application: UIApplication) {
+        guard taskIdentifier == .invalid else { return }
+
+        self.taskIdentifier = application.beginBackgroundTask(
+            withName: "ZcashLightClientKit.SDKSynchronizer",
+            expirationHandler: { [weak self] in
+                loggerProxy.info("BackgroundTask Expiration Handler Called")
+                self?.endBackgroundWork()
+            }
+        )
+
+        sharedSynchronizer.applicationDidEnterBackground(resumeOnForeground: true) { [weak self] in
+            self?.endBackgroundWork()
+        }
+    }
+
+    @objc func endBackgroundWork() {
+        UIApplication.shared.endBackgroundTask(taskIdentifier)
+        taskIdentifier = .invalid
+    }
+}
+
+// MARK: - Misc
 
 /**
 The functions below are convenience functions for THIS SAMPLE APP.
