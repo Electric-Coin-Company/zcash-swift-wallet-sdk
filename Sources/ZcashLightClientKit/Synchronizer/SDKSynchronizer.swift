@@ -683,6 +683,25 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
     
+    fileprivate func notifyStateUpdate() async {
+        NotificationCenter.default.post(
+            name: Notification.Name.synchronizerSynced,
+            object: self,
+            userInfo: [
+                SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
+                SDKSynchronizer.NotificationKeys.synchronizerState: SynchronizerState(
+                    shieldedBalance: WalletBalance(
+                        verified: initializer.getVerifiedBalance(),
+                        total: initializer.getBalance()
+                    ),
+                    transparentBalance: (try? await self.getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
+                    syncStatus: status,
+                    latestScannedHeight: self.latestScannedHeight
+                )
+            ]
+        )
+    }
+
     private func notify(status: SyncStatus) {
         switch status {
         case .disconnected:
@@ -691,22 +710,7 @@ public class SDKSynchronizer: Synchronizer {
             NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerStopped, object: self)
         case .synced:
             Task {
-                NotificationCenter.default.mainThreadPost(
-                    name: Notification.Name.synchronizerSynced,
-                    object: self,
-                    userInfo: [
-                        SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
-                        SDKSynchronizer.NotificationKeys.synchronizerState: SynchronizerState(
-                            shieldedBalance: WalletBalance(
-                                verified: initializer.getVerifiedBalance(),
-                                total: initializer.getBalance()
-                            ),
-                            transparentBalance: (try? await self.getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
-                            syncStatus: status,
-                            latestScannedHeight: self.latestScannedHeight
-                        )
-                    ]
-                )
+                await notifyStateUpdate()
             }
         case .unprepared:
             break
