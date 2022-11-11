@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import Combine
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
@@ -132,6 +133,55 @@ class SychronizerDarksideTests: XCTestCase {
         
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
+
+    func testLastStates() throws {
+
+        var disposeBag = [AnyCancellable]()
+
+        var states = [SDKSynchronizer.SynchronizerState]()
+
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
+        let receivedTxHeight: BlockHeight = 663188
+
+        try coordinator.applyStaged(blockheight: receivedTxHeight + 1)
+
+        sleep(2)
+        let preTxExpectation = XCTestExpectation(description: "pre receive")
+
+        coordinator.synchronizer.lastState
+            .receive(on: DispatchQueue.main)
+            .sink { state in
+                states.append(state)
+            }
+            .store(in: &disposeBag)
+
+        try coordinator.sync(completion: { _ in
+            preTxExpectation.fulfill()
+        }, error: self.handleError)
+
+        wait(for: [preTxExpectation], timeout: 5)
+
+        XCTAssertEqual(states, [
+            SDKSynchronizer.SynchronizerState(
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .unprepared,
+                latestScannedHeight: self.birthday
+            ),
+            SDKSynchronizer.SynchronizerState(
+                shieldedBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: SyncStatus.disconnected,
+                latestScannedHeight: 663150
+            ),
+            SDKSynchronizer.SynchronizerState(
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: SyncStatus.synced,
+                latestScannedHeight: 663189
+            )
+        ])
+    }
     
     @objc func handleFoundTransactions(_ notification: Notification) {
         guard
@@ -150,5 +200,12 @@ class SychronizerDarksideTests: XCTestCase {
             return
         }
         XCTFail("Failed with error: \(testError)")
+    }
+}
+
+
+extension Zatoshi: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        "Zatoshi(\(self.amount))"
     }
 }

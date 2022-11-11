@@ -7,17 +7,12 @@
 //
 
 import Foundation
+import Combine
 
 public extension Notification.Name {
-    /// Notification is posted whenever transactions are updated
-    ///
-    /// - Important: not yet posted
-    static let transactionsUpdated = Notification.Name("SDKSyncronizerTransactionUpdated")
-    
-
     /// Posted when the synchronizer is started.
+    /// - note: Query userInfo object for `NotificationKeys.synchronizerState`
     static let synchronizerStarted = Notification.Name("SDKSyncronizerStarted")
-    
 
     /// Posted when there are progress updates.
     ///
@@ -77,7 +72,7 @@ public extension Notification.Name {
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
-    public struct SynchronizerState {
+    public struct SynchronizerState: Equatable {
         public var shieldedBalance: WalletBalance
         public var transparentBalance: WalletBalance
         public var syncStatus: SyncStatus
@@ -112,6 +107,8 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState
     public private(set) var network: ZcashNetwork
+    public private(set) var lastState: CurrentValueSubject<SynchronizerState,Never>
+
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
@@ -144,8 +141,18 @@ public class SDKSynchronizer: Synchronizer {
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
-        self.latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
+        let lastscannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
+        self.latestScannedHeight = lastscannedHeight
         self.network = initializer.network
+        self.lastState = CurrentValueSubject(
+            SynchronizerState(
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .unprepared,
+                latestScannedHeight: lastscannedHeight
+            )
+        )
+
         self.subscribeToProcessorNotifications(blockProcessor)
     }
     
@@ -180,6 +187,17 @@ public class SDKSynchronizer: Synchronizer {
 
         case .stopped, .synced, .disconnected, .error:
             Task {
+                let state = await snapshotState()
+                lastState.send(state)
+
+                NotificationCenter.default.mainThreadPost(
+                    name: .synchronizerStarted,
+                    object: self,
+                    userInfo: [
+                        NotificationKeys.synchronizerState : state
+                    ]
+                )
+
                 await blockProcessor.start(retry: retry)
             }
         }
@@ -680,7 +698,20 @@ public class SDKSynchronizer: Synchronizer {
                 ]
         )
     }
-    
+
+
+    fileprivate func snapshotState() async -> SDKSynchronizer.SynchronizerState {
+        return SynchronizerState(
+            shieldedBalance: WalletBalance(
+                verified: initializer.getVerifiedBalance(),
+                total: initializer.getBalance()
+            ),
+            transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
+            syncStatus: status,
+            latestScannedHeight: self.latestScannedHeight
+        )
+    }
+
     private func notify(status: SyncStatus) {
         switch status {
         case .disconnected:
@@ -689,20 +720,15 @@ public class SDKSynchronizer: Synchronizer {
             NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerStopped, object: self)
         case .synced:
             Task {
+                let state = await self.snapshotState()
+                self.lastState.send(state)
+                
                 NotificationCenter.default.mainThreadPost(
                     name: Notification.Name.synchronizerSynced,
                     object: self,
                     userInfo: [
                         SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
-                        SDKSynchronizer.NotificationKeys.synchronizerState: SynchronizerState(
-                            shieldedBalance: WalletBalance(
-                                verified: initializer.getVerifiedBalance(),
-                                total: initializer.getBalance()
-                            ),
-                            transparentBalance: (try? await self.getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
-                            syncStatus: status,
-                            latestScannedHeight: self.latestScannedHeight
-                        )
+                        SDKSynchronizer.NotificationKeys.synchronizerState: state
                     ]
                 )
             }
