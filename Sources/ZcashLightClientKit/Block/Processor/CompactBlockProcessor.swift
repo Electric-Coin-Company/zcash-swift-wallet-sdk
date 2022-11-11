@@ -593,18 +593,26 @@ public actor CompactBlockProcessor {
     }
     
     /// Processes new blocks on the given range based on the configuration set for this instance
-    func processNewBlocks(range: CompactBlockRange) async {
+    func processNewBlocks(range: CompactBlockRange, latestBlockHeight: BlockHeight) async {
         self.foundBlocks = true
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         
         cancelableTask = Task(priority: .userInitiated) {
             do {
-                try await compactBlockStreamDownload(
-                    blockBufferSize: config.downloadBufferSize,
-                    startHeight: range.lowerBound,
-                    targetHeight: range.upperBound
-                )
+                let lastDownloadedBlockHeight = try downloader.lastDownloadedBlockHeight()
+
+                // It may happen that sync process is interrupted in scanning phase. And then when sync process is resumed we already have
+                // blocks downloaded.
+                //
+                // Therefore we want to skip downloading in case that we already have everything downloaded.
+                if lastDownloadedBlockHeight < latestBlockHeight {
+                    try await compactBlockStreamDownload(
+                        blockBufferSize: config.downloadBufferSize,
+                        startHeight: range.lowerBound,
+                        targetHeight: range.upperBound
+                    )
+                }
                 try await compactBlockValidation()
                 try await compactBlockBatchScanning(range: range)
                 try await compactBlockEnhancement(range: range)
@@ -748,6 +756,7 @@ public actor CompactBlockProcessor {
             let nextState = try await NextStateHelper.nextStateAsync(
                 service: self.service,
                 downloader: self.downloader,
+                transactionRepository: transactionRepository,
                 config: self.config,
                 rustBackend: self.rustBackend
             )
@@ -755,10 +764,10 @@ public actor CompactBlockProcessor {
             case .finishProcessing(let height):
                 self.latestBlockHeight = height
                 await self.processingFinished(height: height)
-            case .processNewBlocks(let range):
+            case .processNewBlocks(let range, let latestBlockHeight):
                 self.latestBlockHeight = range.upperBound
                 self.lowerBoundHeight = range.lowerBound
-                await self.processNewBlocks(range: range)
+                await self.processNewBlocks(range: range, latestBlockHeight: latestBlockHeight)
             case let .wait(latestHeight, latestDownloadHeight):
                 // Lightwalletd might be syncing
                 self.lowerBoundHeight = latestDownloadHeight
@@ -1132,6 +1141,7 @@ extension CompactBlockProcessor {
         static func nextStateAsync(
             service: LightWalletService,
             downloader: CompactBlockDownloading,
+            transactionRepository: TransactionRepository,
             config: Configuration,
             rustBackend: ZcashRustBackendWelding.Type
         ) async throws -> NextState {
@@ -1145,11 +1155,22 @@ extension CompactBlockProcessor {
                         localNetwork: config.network,
                         rustBackend: rustBackend
                     )
-                    
-                    // get latest block height
-                    let latestDownloadedBlockHeight: BlockHeight = max(config.walletBirthday, try downloader.lastDownloadedBlockHeight())
-                    
+
+                    let lastDownloadedBlockHeight = try downloader.lastDownloadedBlockHeight()
+                    let lastScannedHeight = try transactionRepository.lastScannedHeight()
+
                     let latestBlockheight = try service.latestBlockHeight()
+
+                    // Syncing process can be interrupted in any phase. And here it must be detected in which phase is syncing process.
+                    let latestDownloadedBlockHeight: BlockHeight
+                    // This means that there are some blocks that are not downloaded yet.
+                    if lastDownloadedBlockHeight < latestBlockheight {
+                        latestDownloadedBlockHeight = max(config.walletBirthday, lastDownloadedBlockHeight)
+                    } else {
+                        // Here all the blocks are downloaded and last scan height should be then used to compute processing range.
+                        latestDownloadedBlockHeight = max(config.walletBirthday, lastScannedHeight)
+                    }
+
                     
                     if latestDownloadedBlockHeight < latestBlockheight {
                         return NextState.processNewBlocks(
@@ -1157,7 +1178,8 @@ extension CompactBlockProcessor {
                                 latestHeight: latestBlockheight,
                                 latestDownloadedHeight: latestDownloadedBlockHeight,
                                 walletBirthday: config.walletBirthday
-                            )
+                            ),
+                            latestBlockHeight: latestBlockheight
                         )
                     } else if latestBlockheight == latestDownloadedBlockHeight {
                         return .finishProcessing(height: latestBlockheight)
