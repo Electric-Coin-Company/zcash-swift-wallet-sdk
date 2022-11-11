@@ -106,6 +106,9 @@ public class SDKSynchronizer: Synchronizer {
             notifyStatusChange(newValue: newValue, oldValue: status)
         }
     }
+
+    /// Gives you current state. You can expect that balance values will be 0 before sychronisation doesn't finish.
+    public private(set) var state: SynchronizerState
     public private(set) var progress: Float = 0.0
     public private(set) var blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
@@ -147,6 +150,18 @@ public class SDKSynchronizer: Synchronizer {
         self.latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
         self.network = initializer.network
         self.subscribeToProcessorNotifications(blockProcessor)
+        state = SynchronizerState(
+            shieldedBalance: WalletBalance(
+                verified: Zatoshi(0),
+                total: Zatoshi(0)
+            ),
+            transparentBalance: WalletBalance(
+                verified: Zatoshi(0),
+                total: Zatoshi(0)
+            ),
+            syncStatus: status,
+            latestScannedHeight: latestScannedHeight
+        )
     }
     
     deinit {
@@ -478,7 +493,7 @@ public class SDKSynchronizer: Synchronizer {
         let accountIndex = Int(spendingKey.account)
         do {
 
-            let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
+            let tBalance = try getTransparentBalance(accountIndex: accountIndex)
             
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
             guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
@@ -624,10 +639,9 @@ public class SDKSynchronizer: Synchronizer {
         await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
 
-
     /// Returns the last stored transparent balance
-    public func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
-        try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
+    public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
+        return try initializer.getTransparentBalance(accountIndex: accountIndex)
     }
     
     public func rewind(_ policy: RewindPolicy) async throws {
@@ -691,20 +705,22 @@ public class SDKSynchronizer: Synchronizer {
             NotificationCenter.default.mainThreadPost(name: Notification.Name.synchronizerStopped, object: self)
         case .synced:
             Task {
+                state = SynchronizerState(
+                    shieldedBalance: WalletBalance(
+                        verified: initializer.getVerifiedBalance(),
+                        total: initializer.getBalance()
+                    ),
+                    transparentBalance: (try? getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
+                    syncStatus: status,
+                    latestScannedHeight: self.latestScannedHeight
+                )
+
                 NotificationCenter.default.mainThreadPost(
                     name: Notification.Name.synchronizerSynced,
                     object: self,
                     userInfo: [
                         SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
-                        SDKSynchronizer.NotificationKeys.synchronizerState: SynchronizerState(
-                            shieldedBalance: WalletBalance(
-                                verified: initializer.getVerifiedBalance(),
-                                total: initializer.getBalance()
-                            ),
-                            transparentBalance: (try? await self.getTransparentBalance(accountIndex: 0)) ?? WalletBalance.zero,
-                            syncStatus: status,
-                            latestScannedHeight: self.latestScannedHeight
-                        )
+                        SDKSynchronizer.NotificationKeys.synchronizerState: state
                     ]
                 )
             }
@@ -793,8 +809,6 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.uncategorized(underlyingError: underlyingError)
             case .criticalError:
                 return SynchronizerError.criticalError
-            case .invalidAccount:
-                return SynchronizerError.invalidAccount
             case .wrongConsensusBranchId:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .networkMismatch:

@@ -26,7 +26,6 @@ public enum CompactBlockProcessorError: Error {
     case maxAttemptsReached(attempts: Int)
     case unspecifiedError(underlyingError: Error)
     case criticalError
-    case invalidAccount
     case wrongConsensusBranchId(expectedLocally: ConsensusBranchID, found: ConsensusBranchID)
     case networkMismatch(expected: NetworkType, found: NetworkType)
     case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
@@ -1007,28 +1006,6 @@ extension CompactBlockProcessor {
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
-    
-    public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
-        guard accountIndex >= 0 else {
-            throw CompactBlockProcessorError.invalidAccount
-        }
-
-        return WalletBalance(
-            verified: Zatoshi(
-                try rustBackend.getVerifiedTransparentBalance(
-                    dbData: config.dataDb,
-                    account: Int32(accountIndex),
-                    networkType: config.network.networkType)
-                ),
-            total: Zatoshi(
-                try rustBackend.getTransparentBalance(
-                    dbData: config.dataDb,
-                    account: Int32(accountIndex),
-                    networkType: config.network.networkType
-                )
-            )
-        )
-    }
 }
 
 extension CompactBlockProcessor {
@@ -1087,8 +1064,6 @@ extension CompactBlockProcessorError: LocalizedError {
             return "Error Processing Blocks - \(message)"
         case let .grpcError(statusCode, message):
             return "Error on gRPC - Status Code: \(statusCode) - Message: \(message)"
-        case .invalidAccount:
-            return "Invalid Account"
         case .invalidConfiguration:
             return "CompactBlockProcessor was started with an Invalid Configuration"
         case .maxAttemptsReached(let attempts):

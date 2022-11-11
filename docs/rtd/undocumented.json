@@ -114,13 +114,6 @@
     },
     {
       "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/Sources/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
-      "line": 29,
-      "symbol": "CompactBlockProcessorError.invalidAccount",
-      "symbol_kind": "source.lang.swift.decl.enumelement",
-      "warning": "undocumented"
-    },
-    {
-      "file": "/Users/pacu/Repos/ECC/ZcashLightClientKit/Sources/ZcashLightClientKit/Block/Processor/CompactBlockProcessor.swift",
       "line": 30,
       "symbol": "CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally:found:)",
       "symbol_kind": "source.lang.swift.decl.enumelement",

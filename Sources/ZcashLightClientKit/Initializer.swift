@@ -293,6 +293,24 @@ public class Initializer {
             )
         )
     }
+
+    public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
+        return WalletBalance(
+            verified: Zatoshi(
+                try rustBackend.getVerifiedTransparentBalance(
+                    dbData: dataDbURL,
+                    account: Int32(accountIndex),
+                    networkType: network.networkType)
+            ),
+            total: Zatoshi(
+                try rustBackend.getTransparentBalance(
+                    dbData: dataDbURL,
+                    account: Int32(accountIndex),
+                    networkType: network.networkType
+                )
+            )
+        )
+    }
     
     /**
     checks if the provided address is a valid sapling address
