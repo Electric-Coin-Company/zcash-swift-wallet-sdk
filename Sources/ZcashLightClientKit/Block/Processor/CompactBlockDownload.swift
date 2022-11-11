@@ -30,7 +30,7 @@ extension CompactBlockProcessor {
                 throw LightWalletServiceError.generalError(message: "missing target height on compactBlockStreamDownload")
             }
             try Task.checkCancellation()
-            let latestDownloaded = try await storage.latestHeightAsync()
+            let latestDownloaded = try storage.latestBlockHeight()
             let startHeight = max(startHeight ?? BlockHeight.empty(), latestDownloaded)
 
             let stream = service.blockStream(

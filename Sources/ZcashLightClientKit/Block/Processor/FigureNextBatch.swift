@@ -10,7 +10,7 @@ import Foundation
 extension CompactBlockProcessor {
     enum NextState {
         case finishProcessing(height: BlockHeight)
-        case processNewBlocks(range: CompactBlockRange)
+        case processNewBlocks(range: CompactBlockRange, latestBlockHeight: BlockHeight)
         case wait(latestHeight: BlockHeight, latestDownloadHeight: BlockHeight)
     }
     
@@ -24,6 +24,7 @@ extension CompactBlockProcessor {
             return try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
                 downloader: downloader,
+                transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: rustBackend
             )
