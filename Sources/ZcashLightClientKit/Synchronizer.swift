@@ -7,7 +7,7 @@
 //
 
 import Foundation
-
+import Combine
 
 /// Represents errors thrown by a Synchronizer
 public enum SynchronizerError: Error {
@@ -73,6 +73,9 @@ public protocol Synchronizer {
 
     /// Value representing the Status of this Synchronizer. As the status changes, it will be also notified
     var status: SyncStatus { get }
+
+    /// A value subject reporting the sync status
+    var statusSubject: CurrentValueSubject<SyncStatus, Never> { get }
 
     /// reflects current connection state to LightwalletEndpoint
     var connectionState: ConnectionState { get }
