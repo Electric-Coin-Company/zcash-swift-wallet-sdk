@@ -113,11 +113,7 @@ class CompactBlockProcessorTests: XCTestCase {
         startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
         idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
         
-        do {
-            try await processor.start()
-        } catch {
-            XCTFail("shouldn't fail")
-        }
+        await processor.start()
     }
 
     // FIXME: disabled see https://github.com/zcash/ZcashLightClientKit/issues/590

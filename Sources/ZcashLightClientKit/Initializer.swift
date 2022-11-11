@@ -384,3 +384,15 @@ extension InitializerError: LocalizedError {
         }
     }
 }
+
+
+/// Synchronous helpers that support clients that don't use structured concurrency yet
+extension Initializer {
+    func getCurrentAddress(accountIndex: Int) -> UnifiedAddress? {
+        try? self.rustBackend.getCurrentAddress(
+            dbData: self.dataDbURL,
+            account: Int32(accountIndex),
+            networkType: self.network.networkType
+        )
+    }
+}

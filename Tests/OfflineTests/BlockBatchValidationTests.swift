@@ -315,7 +315,8 @@ class BlockBatchValidationTests: XCTestCase {
                 latestHeight: expectedLatestHeight,
                 latestDownloadedHeight: expectedStoreLatestHeight,
                 walletBirthday: walletBirthday
-            )
+            ),
+            latestBlockHeight: expectedLatestHeight
         )
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
@@ -368,7 +369,7 @@ class BlockBatchValidationTests: XCTestCase {
         XCTAssertTrue(
             {
                 switch nextBatch {
-                case .processNewBlocks(range: CompactBlockRange(uncheckedBounds: (expectedStoreLatestHeight + 1, expectedLatestHeight))):
+                case .processNewBlocks(range: CompactBlockRange(uncheckedBounds: (expectedStoreLatestHeight + 1, expectedLatestHeight)), latestBlockHeight: expectedLatestHeight):
                     return true
                 default:
                     return false

@@ -156,12 +156,11 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     
-    public func prepare(with seed: [UInt8]?) async throws -> Initializer.InitializationResult {
+    public func prepare(with seed: [UInt8]?) throws -> Initializer.InitializationResult {
         if case .seedRequired = try self.initializer.initialize(with: seed) {
             return .seedRequired
         }
 
-        try await self.blockProcessor.setStartHeight(initializer.walletBirthday)
         self.status = .disconnected
 
         return .success
@@ -624,7 +623,6 @@ public class SDKSynchronizer: Synchronizer {
         await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
 
-
     /// Returns the last stored transparent balance
     public func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
         try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
@@ -836,6 +834,21 @@ extension SDKSynchronizer {
     public var receivedTransactions: [ConfirmedTransactionEntity] {
         (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
     }
+}
+
+extension SDKSynchronizer {
+    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
+        self.initializer.getCurrentAddress(accountIndex: accountIndex)
+    }
+
+    public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
+        self.getUnifiedAddress(accountIndex: accountIndex)?.saplingReceiver()
+    }
+
+    public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
+        self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
+    }
+
 }
 
 import GRPC
