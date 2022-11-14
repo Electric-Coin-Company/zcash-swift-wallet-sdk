@@ -20,6 +20,7 @@ class PagedTransactionRepositoryTests: XCTestCase {
             unminedCount: 5,
             receivedCount: 150,
             sentCount: 100,
+            scannedHeight: 1000000,
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
         pagedTransactionRepository = PagedTransactionDAO(repository: transactionRepository)

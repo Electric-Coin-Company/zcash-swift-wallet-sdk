@@ -240,9 +240,10 @@ class BlockBatchValidationTests: XCTestCase {
             latestHeight: expectedLatestHeight,
             latestDownloadHeight: expectedLatestHeight
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
+
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
@@ -252,6 +253,14 @@ class BlockBatchValidationTests: XCTestCase {
             rewindDistance: 100,
             walletBirthday: 1210000,
             saplingActivation: network.constants.saplingActivationHeight,
+            network: network
+        )
+
+        let transactionRepository = MockTransactionRepository(
+            unminedCount: 0,
+            receivedCount: 0,
+            sentCount: 0,
+            scannedHeight: expectedStoreLatestHeight,
             network: network
         )
 
@@ -267,17 +276,17 @@ class BlockBatchValidationTests: XCTestCase {
         
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
-        
-        let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            backend: mockRust,
-            config: config
-        )
+
         
         var nextBatch: CompactBlockProcessor.NextState?
         do {
-            nextBatch = try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+                service: service,
+                downloader: downloader,
+                transactionRepository: transactionRepository,
+                config: config,
+                rustBackend: mockRust
+            )
             XCTAssertFalse(Task.isCancelled)
         } catch {
             XCTFail("this shouldn't happen: \(error)")
@@ -318,7 +327,7 @@ class BlockBatchValidationTests: XCTestCase {
             ),
             latestBlockHeight: expectedLatestHeight
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
@@ -330,6 +339,14 @@ class BlockBatchValidationTests: XCTestCase {
             rewindDistance: 100,
             walletBirthday: walletBirthday,
             saplingActivation: network.constants.saplingActivationHeight,
+            network: network
+        )
+
+        let transactionRepository = MockTransactionRepository(
+            unminedCount: 0,
+            receivedCount: 0,
+            sentCount: 0,
+            scannedHeight: expectedStoreLatestHeight,
             network: network
         )
 
@@ -346,16 +363,15 @@ class BlockBatchValidationTests: XCTestCase {
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
         
-        let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            backend: mockRust,
-            config: config
-        )
-        
         var nextBatch: CompactBlockProcessor.NextState?
         do {
-            nextBatch = try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+                service: service,
+                downloader: downloader,
+                transactionRepository: transactionRepository,
+                config: config,
+                rustBackend: mockRust
+            )
             XCTAssertFalse(Task.isCancelled)
         } catch {
             XCTFail("this shouldn't happen: \(error)")
@@ -404,6 +420,14 @@ class BlockBatchValidationTests: XCTestCase {
             network: network
         )
 
+        let transactionRepository = MockTransactionRepository(
+            unminedCount: 0,
+            receivedCount: 0,
+            sentCount: 0,
+            scannedHeight: expectedStoreLatestHeight,
+            network: network
+        )
+
         var info = LightdInfo()
         info.blockHeight = UInt64(expectedLatestHeight)
         info.branch = "d34db33f"
@@ -417,16 +441,16 @@ class BlockBatchValidationTests: XCTestCase {
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
         
-        let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            backend: mockRust,
-            config: config
-        )
-        
         var nextBatch: CompactBlockProcessor.NextState?
         do {
-            nextBatch = try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+                service: service,
+                downloader: downloader,
+                transactionRepository: transactionRepository,
+                config: config,
+                rustBackend: mockRust
+            )
+
             XCTAssertFalse(Task.isCancelled)
         } catch {
             XCTFail("this shouldn't happen: \(error)")

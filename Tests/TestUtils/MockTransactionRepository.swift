@@ -17,6 +17,7 @@ class MockTransactionRepository {
     var unminedCount: Int
     var receivedCount: Int
     var sentCount: Int
+    var scannedHeight: BlockHeight
     var transactions: [ConfirmedTransactionEntity] = []
     var reference: [Kind] = []
     var sentTransactions: [ConfirmedTransaction] = []
@@ -31,11 +32,13 @@ class MockTransactionRepository {
         unminedCount: Int,
         receivedCount: Int,
         sentCount: Int,
+        scannedHeight: BlockHeight,
         network: ZcashNetwork
     ) {
         self.unminedCount = unminedCount
         self.receivedCount = receivedCount
         self.sentCount = sentCount
+        self.scannedHeight = scannedHeight
         self.network = network
     }
 
@@ -169,7 +172,7 @@ extension MockTransactionRepository: TransactionRepository {
     }
 
     func lastScannedHeight() throws -> BlockHeight {
-        return 700000
+        return scannedHeight
     }
 
     func isInitialized() throws -> Bool {
