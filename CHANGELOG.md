@@ -37,6 +37,21 @@ when sending to transparent receivers.
 - commit `f5d7aa0` Modify PendingTransactionEntity to be able to represent internal shielding tx.
 - [#561] Fix unified typecodes tests
 - [#530] Implement ability to extract available typecodes from UA
+
+- Added Checkpoints
+
+Mainnet 
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1872500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1875000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1877500.json
+````
+
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2110000.json
+````
+
 # 0.17.0-beta.rc1
 - Added Checkpoints
 
