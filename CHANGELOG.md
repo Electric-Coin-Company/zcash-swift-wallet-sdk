@@ -45,6 +45,7 @@ Mainnet
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1872500.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1875000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1877500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1880000.json
 ````
 
 Testnet

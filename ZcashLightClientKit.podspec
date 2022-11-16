@@ -21,7 +21,7 @@ Pod::Spec.new do |s|
     s.ios.deployment_target = '13.0'
     s.dependency 'gRPC-Swift', '~> 1.8.0'
     s.dependency 'SQLite.swift', '~> 0.13.0' 
-    s.dependency 'libzcashlc', '0.1.0-beta.3'
+    s.dependency 'libzcashlc', '0.1.0'
     s.static_framework = true
 
 end
