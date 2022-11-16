@@ -11,7 +11,7 @@ import libzcashlc
 
 class ZcashRustBackend: ZcashRustBackendWelding {
     static let minimumConfirmations: UInt32 = 10
-
+    static let useZIP317Fees = false
     static func createAccount(dbData: URL, seed: [UInt8], networkType: NetworkType) throws -> UnifiedSpendingKey {
         let dbData = dbData.osStr()
 
@@ -57,7 +57,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 outputParamsPath,
                 UInt(outputParamsPath.lengthOfBytes(using: .utf8)),
                 networkType.networkId,
-                minimumConfirmations
+                minimumConfirmations,
+                useZIP317Fees
             )
         }
     }
@@ -609,7 +610,8 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                 outputParamsPath,
                 UInt(outputParamsPath.lengthOfBytes(using: .utf8)),
-                networkType.networkId
+                networkType.networkId,
+                useZIP317Fees
             )
         }
     }
