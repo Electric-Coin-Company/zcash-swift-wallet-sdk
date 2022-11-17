@@ -20,9 +20,8 @@ extension ZcashCompactBlock: Encodable { }
 
 protocol CompactBlockRepository {
     /**
-    Gets the highest block that is currently stored.
+    Gets the height of the highest block that is currently stored.
     */
-    
     func latestHeight() throws -> BlockHeight
     
     /**
@@ -30,6 +29,11 @@ protocol CompactBlockRepository {
     Non-Blocking
     */
     func latestHeightAsync() async throws -> BlockHeight
+
+    /**
+     Gets the block with the highest height that is currently stored.
+     */
+    func latestBlock() throws -> ZcashCompactBlock
 
     /**
     Write the given blocks to this store, which may be anything from an in-memory cache to a DB.

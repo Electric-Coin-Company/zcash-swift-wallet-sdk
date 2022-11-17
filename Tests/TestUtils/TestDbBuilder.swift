@@ -116,17 +116,25 @@ class TestDbBuilder {
     }
 }
 
-struct InMemoryDbProvider: ConnectionProvider {
+class InMemoryDbProvider: ConnectionProvider {
     var readonly: Bool
-    var conn: Connection
+    var conn: Connection?
 
     init(readonly: Bool = false) throws {
         self.readonly = readonly
-        self.conn = try Connection(.inMemory, readonly: readonly)
     }
     
     func connection() throws -> Connection {
-        self.conn
+        guard let conn else {
+            let newConnection = try Connection(.inMemory, readonly: readonly)
+            self.conn = newConnection
+            return newConnection
+        }
+        return conn
+    }
+
+    func close() {
+        self.conn = nil
     }
 }
 

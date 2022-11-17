@@ -11,6 +11,7 @@ import SQLite
 
 protocol ConnectionProvider {
     func connection() throws -> Connection
+    func close()
 }
 
 class CompactBlockStorage: CompactBlockDAO {
@@ -29,6 +30,11 @@ class CompactBlockStorage: CompactBlockDAO {
     private func dataColumn() -> Expression<Blob> {
         Expression<Blob>("data")
     }
+
+    func closeDBConnection() {
+        dbProvider.close()
+    }
+
     func createTable() throws {
         do {
             let compactBlocks = compactBlocksTable()
@@ -90,6 +96,21 @@ extension CompactBlockStorage: CompactBlockRepository {
             try latestBlockHeight()
         }
         return try await task.value
+    }
+
+    func latestBlock() throws -> ZcashCompactBlock {
+        let dataColumn = self.dataColumn()
+        let heightColumn = self.heightColumn()
+        let query = compactBlocksTable()
+            .select(dataColumn, heightColumn)
+            .order(heightColumn.desc)
+            .limit(1)
+
+        guard let blockData = try dbProvider.connection().prepare(query).first(where: { _ in return true }) else {
+            throw StorageError.latestBlockNotFound
+        }
+
+        return ZcashCompactBlock(height: Int(blockData[heightColumn]), data: Data(blob: blockData[dataColumn]))
     }
     
     func write(blocks: [ZcashCompactBlock]) async throws {

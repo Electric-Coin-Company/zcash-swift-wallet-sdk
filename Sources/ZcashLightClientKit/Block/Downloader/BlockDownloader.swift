@@ -58,7 +58,7 @@ public protocol CompactBlockDownloading {
     Non-blocking
     */
     func latestBlockHeightAsync() async throws -> BlockHeight
-    
+
     /**
     Gets the transaction for the Id given
     - Parameter txId: Data representing the transaction Id

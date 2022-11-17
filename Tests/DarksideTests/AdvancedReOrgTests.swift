@@ -1308,8 +1308,8 @@ class AdvancedReOrgTests: XCTestCase {
         
         wait(for: [firstSyncExpectation], timeout: 500)
         
-        let latestDownloadedHeight = try await coordinator.synchronizer.latestDownloadedHeight()
-        XCTAssertEqual(latestDownloadedHeight, birthday + fullSyncLength)
+        let latestScannedHeight = coordinator.synchronizer.latestScannedHeight
+        XCTAssertEqual(latestScannedHeight, birthday + fullSyncLength)
     }
     
     func handleError(_ error: Error?) {

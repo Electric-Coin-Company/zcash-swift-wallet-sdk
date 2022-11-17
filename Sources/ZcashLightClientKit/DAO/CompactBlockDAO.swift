@@ -9,6 +9,8 @@
 import Foundation
 
 protocol CompactBlockDAO {
+    func closeDBConnection()
+    
     func createTable() throws
     
     func insert(_ block: ZcashCompactBlock) throws
