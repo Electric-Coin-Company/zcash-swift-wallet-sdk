@@ -33,6 +33,19 @@ public enum Memo: Equatable {
 }
 
 public extension Memo {
+    /// Use this function to know the size of this text in memo bytes.
+    /// - Parameter memotext: the string you want to turn into a
+    /// a memo.
+    /// - Returns: the size of this string in bytes using UTF-8 encoding.
+    /// - note: According to ZIP-302, memos have a length limit of 512 bytes.
+    /// Attempting to create a memo that exceeds that capacity will
+    /// throw an error.
+    static func length(for memoText: String) -> Int {
+        memoText.lengthOfBytes(using: .utf8)
+    }
+}
+
+public extension Memo {
     func asMemoBytes() throws -> MemoBytes {
         switch self {
         case .empty:
