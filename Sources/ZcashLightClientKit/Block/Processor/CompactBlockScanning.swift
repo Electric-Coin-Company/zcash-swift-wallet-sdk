@@ -26,7 +26,7 @@ extension CompactBlockProcessor {
                     throw error
                 }
                 let scanFinishTime = Date()
-                NotificationCenter.default.mainThreadPostNotification(
+                NotificationSender.default.post(notification:
                     SDKMetrics.progressReportNotification(
                         progress: BlockProgress(
                             startHeight: range.lowerBound,
@@ -70,7 +70,7 @@ extension CompactBlockProcessor {
                     if scannedNewBlocks {
                         let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
                         notifyProgress(.scan(progress))
-                        NotificationCenter.default.mainThreadPostNotification(
+                        NotificationSender.default.post(notification:
                             SDKMetrics.progressReportNotification(
                                 progress: progress,
                                 start: scanStartTime,
