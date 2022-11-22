@@ -220,6 +220,20 @@ class Zip302MemoTests: XCTestCase {
     func testUnpaddedRawBytesWhenThereIsNoPadding() throws {
         XCTAssertEqual(Self.fullMemoBytes.unpaddedRawBytes(), Self.fullMemoBytes)
     }
+
+    func testMemoLenght1CharTooLong () {
+        let tooLongString = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo but it's now a bit too long"
+
+        XCTAssertEqual(Memo.length(for: tooLongString), 513)
+    }
+
+    func testTextIsVisibleFitButExceedsLimit() {
+        let tooLongStringThatVisiblyFits = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooong. Visibly fit, but it exceeds the byte limit. 👩‍👩‍👧‍👧"
+        XCTAssertEqual(MemoBytes.capacity, tooLongStringThatVisiblyFits.count) // this assertion proves that the count of visible characters is within the limit
+        XCTAssertTrue(Memo.length(for: tooLongStringThatVisiblyFits) > MemoBytes.capacity)
+
+        XCTAssertEqual(Memo.length(for: tooLongStringThatVisiblyFits), 536)
+    }
 }
 
 
