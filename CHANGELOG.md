@@ -1,3 +1,8 @@
+# 0.17.1-alpha.1
+- [#616] Download Stream generates too many updates on the main thread
+
+> **WARNING**: Notifications from SDK are no longer delivered on main thread.
+
 # Summary of 0.17.0-beta
 
 - [#321] Validate UA

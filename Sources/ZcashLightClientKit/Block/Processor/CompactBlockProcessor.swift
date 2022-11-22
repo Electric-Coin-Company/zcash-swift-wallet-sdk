@@ -633,8 +633,8 @@ public actor CompactBlockProcessor {
         userInfo[CompactBlockProcessorNotificationKey.progress] = progress
 
         LoggerProxy.debug("progress: \(progress)")
-        
-        NotificationCenter.default.mainThreadPost(
+
+        NotificationSender.default.post(
             name: Notification.Name.blockProcessorUpdated,
             object: self,
             userInfo: userInfo
@@ -642,7 +642,7 @@ public actor CompactBlockProcessor {
     }
     
     func notifyTransactions(_ txs: [ConfirmedTransactionEntity], in range: BlockRange) {
-        NotificationCenter.default.mainThreadPost(
+        NotificationSender.default.post(
             name: .blockProcessorFoundTransactions,
             object: self,
             userInfo: [
@@ -798,7 +798,7 @@ public actor CompactBlockProcessor {
             try downloader.rewind(to: rewindHeight)
             
             // notify reorg
-            NotificationCenter.default.mainThreadPost(
+            NotificationSender.default.post(
                 name: Notification.Name.blockProcessorHandledReOrg,
                 object: self,
                 userInfo: [
@@ -831,7 +831,7 @@ public actor CompactBlockProcessor {
     }
     
     private func processingFinished(height: BlockHeight) async {
-        NotificationCenter.default.mainThreadPost(
+        NotificationSender.default.post(
             name: Notification.Name.blockProcessorFinished,
             object: self,
             userInfo: [
@@ -841,7 +841,7 @@ public actor CompactBlockProcessor {
         )
         state = .synced
         await setTimer()
-        NotificationCenter.default.mainThreadPost(
+        NotificationSender.default.post(
             name: Notification.Name.blockProcessorIdle,
             object: self,
             userInfo: nil
@@ -908,7 +908,7 @@ public actor CompactBlockProcessor {
             return
         }
 
-        NotificationCenter.default.mainThreadPost(
+        NotificationSender.default.post(
             name: .blockProcessorStatusChanged,
             object: self,
             userInfo: [
@@ -919,27 +919,27 @@ public actor CompactBlockProcessor {
         
         switch newValue {
         case .downloading:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedDownloading, object: self)
+            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
         case .synced:
             // transition to this state is handled by `processingFinished(height: BlockHeight)`
             break
         case .error(let err):
             notifyError(err)
         case .scanning:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedScanning, object: self)
+            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
         case .stopped:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStopped, object: self)
+            NotificationSender.default.post(name: Notification.Name.blockProcessorStopped, object: self)
         case .validating:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedValidating, object: self)
+            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedValidating, object: self)
         case .enhancing:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
+            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
         case .fetching:
-            NotificationCenter.default.mainThreadPost(name: Notification.Name.blockProcessorStartedFetching, object: self)
+            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedFetching, object: self)
         }
     }
 
     private func notifyError(_ err: Error) {
-        NotificationCenter.default.mainThreadPost(
+        NotificationSender.default.post(
             name: Notification.Name.blockProcessorFailed,
             object: self,
             userInfo: [CompactBlockProcessorNotificationKey.error: mapError(err)]
@@ -1143,7 +1143,7 @@ extension CompactBlockProcessorError: LocalizedError {
 
 extension CompactBlockProcessor: EnhancementStreamDelegate {
     func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress) {
-        NotificationCenter.default.mainThreadPost(
+        NotificationSender.default.post(
             name: .blockProcessorEnhancementProgress,
             object: self,
             userInfo: [CompactBlockProcessorNotificationKey.enhancementProgress: progress]

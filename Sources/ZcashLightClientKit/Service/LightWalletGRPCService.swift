@@ -417,7 +417,7 @@ extension LightWalletServiceError {
 class ConnectionStatusManager: ConnectivityStateDelegate {
     func connectivityStateDidChange(from oldState: ConnectivityState, to newState: ConnectivityState) {
         LoggerProxy.event("Connection Changed from \(oldState) to \(newState)")
-        NotificationCenter.default.mainThreadPost(
+        NotificationSender.default.post(
             name: .blockProcessorConnectivityStateChanged,
             object: self,
             userInfo: [

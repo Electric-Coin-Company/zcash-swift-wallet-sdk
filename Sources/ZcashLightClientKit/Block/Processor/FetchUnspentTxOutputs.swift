@@ -58,7 +58,7 @@ extension CompactBlockProcessor {
 
             let result = (inserted: refreshed, skipped: skipped)
             
-            NotificationCenter.default.mainThreadPost(
+            NotificationSender.default.post(
                 name: .blockProcessorStoredUTXOs,
                 object: self,
                 userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs: result]

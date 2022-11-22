@@ -44,14 +44,12 @@ class SendViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        Task { @MainActor in
-            do {
-                try await synchronizer.start(retry: false)
-                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-            } catch {
-                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
-                fail(error)
-            }
+        do {
+            try synchronizer.start(retry: false)
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+        } catch {
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+            fail(error)
         }
     }
     
