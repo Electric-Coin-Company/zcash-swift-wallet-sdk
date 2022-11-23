@@ -110,8 +110,9 @@ public class SDKSynchronizer: Synchronizer {
     public private(set) var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState
     public private(set) var network: ZcashNetwork
-    public private(set) var lastState: CurrentValueSubject<SynchronizerState,Never>
+    public var lastState: AnyPublisher<SynchronizerState, Never> { lastStateSubject.eraseToAnyPublisher() }
 
+    private var lastStateSubject: CurrentValueSubject<SynchronizerState, Never>
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
@@ -149,7 +150,7 @@ public class SDKSynchronizer: Synchronizer {
         let lastscannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
         self.latestScannedHeight = lastscannedHeight
         self.network = initializer.network
-        self.lastState = CurrentValueSubject(
+        self.lastStateSubject = CurrentValueSubject(
             SynchronizerState(
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
@@ -178,7 +179,6 @@ public class SDKSynchronizer: Synchronizer {
         return .success
     }
 
-
     /// Starts the synchronizer
     /// - Throws: CompactBlockProcessorError when failures occur
     public func start(retry: Bool = false) throws {
@@ -193,7 +193,7 @@ public class SDKSynchronizer: Synchronizer {
         case .stopped, .synced, .disconnected, .error:
             Task {
                 let state = await snapshotState()
-                lastState.send(state)
+                lastStateSubject.send(state)
 
                 NotificationSender.default.post(
                     name: .synchronizerStarted,
@@ -723,7 +723,7 @@ public class SDKSynchronizer: Synchronizer {
         case .synced:
             Task {
                 let state = await self.snapshotState()
-                self.lastState.send(state)
+                self.lastStateSubject.send(state)
 
                 NotificationSender.default.post(
                     name: Notification.Name.synchronizerSynced,
