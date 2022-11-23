@@ -65,7 +65,7 @@ class SyncBlocksViewController: UIViewController {
                 .store(in: &notificationCancellables)
         }
 
-         self.lastMetric
+        self.lastMetric
             .throttle(for: 5, scheduler: DispatchQueue.main, latest: true)
             .receive(on: DispatchQueue.main)
             .sink { report in
@@ -218,7 +218,6 @@ class SyncBlocksViewController: UIViewController {
     }
 }
 
-
 struct ProcessorMetrics {
     var minHeight: BlockHeight
     var maxHeight: BlockHeight
@@ -244,8 +243,16 @@ struct ProcessorMetrics {
         .init(
             minHeight: min(prev.minHeight, current.startHeight),
             maxHeight: max(prev.maxHeight, current.progressHeight),
-            maxDuration: compareDuration(prev.maxDuration, (current.duration, current.progressHeight - current.batchSize ... current.progressHeight), max),
-            minDuration: compareDuration(prev.minDuration, (current.duration, current.progressHeight - current.batchSize ... current.progressHeight), min),
+            maxDuration: compareDuration(
+                prev.maxDuration,
+                (current.duration, current.progressHeight - current.batchSize ... current.progressHeight),
+                max
+            ),
+            minDuration: compareDuration(
+                prev.minDuration,
+                (current.duration, current.progressHeight - current.batchSize ... current.progressHeight),
+                min
+            ),
             cummulativeDuration: prev.cummulativeDuration + current.duration,
             measuredCount: prev.measuredCount + 1
         )
@@ -259,7 +266,6 @@ struct ProcessorMetrics {
         cmp(prev.0, current.0) == current.0 ? current : prev
     }
 }
-
 
 extension ProcessorMetrics: CustomDebugStringConvertible {
     var debugDescription: String {
@@ -280,7 +286,6 @@ extension ProcessorMetrics: CustomDebugStringConvertible {
         """
     }
 }
-
 
 extension CompactBlockRange {
     var description: String {

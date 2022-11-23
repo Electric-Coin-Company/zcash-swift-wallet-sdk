@@ -65,6 +65,7 @@ extension CompactBlockProcessor {
         // fetch transactions
         do {
             guard let transactions = try transactionRepository.findTransactions(in: blockRange, limit: Int.max), !transactions.isEmpty else {
+                await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
                 LoggerProxy.debug("no transactions detected on range: \(blockRange.printRange)")
                 return
             }
@@ -88,6 +89,8 @@ extension CompactBlockProcessor {
                                 )
                             )
                         )
+                        await internalSyncProgress.set(confirmedTx.minedHeight, .latestEnhancedHeight)
+
                     } catch {
                         retries += 1
                         LoggerProxy.error("could not enhance txId \(transaction.transactionId.toHexStringTxId()) - Error: \(error)")
@@ -105,6 +108,8 @@ extension CompactBlockProcessor {
         if let foundTxs = try? transactionRepository.findConfirmedTransactions(in: blockRange, offset: 0, limit: Int.max) {
             notifyTransactions(foundTxs, in: blockRange)
         }
+
+        await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
         
         if Task.isCancelled {
             LoggerProxy.debug("Warning: compactBlockEnhancement on range \(range) cancelled")

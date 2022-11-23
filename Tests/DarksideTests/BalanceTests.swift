@@ -535,6 +535,8 @@ class BalanceTests: XCTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
+
+        sleep(1)
         
         try await withCheckedThrowingContinuation { continuation in
             do {
@@ -841,6 +843,7 @@ class BalanceTests: XCTestCase {
     func testVerifyIncomingTransaction() throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
+        sleep(1)
         try coordinator.sync(completion: { _ in
             self.syncedExpectation.fulfill()
         }, error: self.handleError)
@@ -877,6 +880,7 @@ class BalanceTests: XCTestCase {
         try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
+        sleep(1)
         let sendExpectation = XCTestExpectation(description: "send expectation")
         let createToAddressExpectation = XCTestExpectation(description: "create to address")
         

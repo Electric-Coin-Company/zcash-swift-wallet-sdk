@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  PagedTransactionDAO.swift
 //  ZcashLightClientKit
 //
 //  Created by Francisco Gindre on 12/9/19.

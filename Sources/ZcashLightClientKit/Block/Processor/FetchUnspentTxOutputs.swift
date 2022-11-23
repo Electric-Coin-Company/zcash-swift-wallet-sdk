@@ -31,7 +31,11 @@ extension CompactBlockProcessor {
                 .flatMap({ $0 })
 
             var utxos: [UnspentTransactionOutputEntity] = []
-            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddresses: tAddresses.map { $0.stringEncoded }, startHeight: config.walletBirthday)
+            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(
+                tAddresses: tAddresses.map { $0.stringEncoded },
+                startHeight: config.walletBirthday
+            )
+
             for try await transaction in stream {
                 utxos.append(transaction)
             }
@@ -50,6 +54,8 @@ extension CompactBlockProcessor {
                         height: utxo.height,
                         networkType: config.network.networkType
                     ) ? refreshed.append(utxo) : skipped.append(utxo)
+
+                    await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
                 } catch {
                     LoggerProxy.error("failed to put utxo - error: \(error)")
                     skipped.append(utxo)
@@ -63,6 +69,8 @@ extension CompactBlockProcessor {
                 object: self,
                 userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs: result]
             )
+
+            await internalSyncProgress.set(range.upperBound, .latestUTXOFetchedHeight)
 
             if Task.isCancelled {
                 LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")

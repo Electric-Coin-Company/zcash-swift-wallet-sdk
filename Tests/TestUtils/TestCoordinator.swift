@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import XCTest
 @testable import ZcashLightClientKit
 
 /**
@@ -76,6 +77,8 @@ class TestCoordinator {
         channelProvider: ChannelProvider,
         network: ZcashNetwork
     ) throws {
+        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
+
         self.spendingKey = spendingKey
         self.birthday = walletBirthday
         self.channelProvider = channelProvider

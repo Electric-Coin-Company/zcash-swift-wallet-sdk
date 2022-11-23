@@ -36,6 +36,8 @@ class TransactionEnhancementTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
+
         logger = SampleLogger(logLevel: .debug)
         
         downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
