@@ -231,6 +231,7 @@ class SendViewController: UIViewController {
                     zatoshi: zec,
                     // swiftlint:disable:next force_try
                     toAddress: try! Recipient(recipient, network: kZcashNetwork.networkType),
+                    // swiftlint:disable:next force_try
                     memo: try! self.memoField.text.asMemo()
                 )
                 KRProgressHUD.dismiss()

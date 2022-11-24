@@ -41,6 +41,24 @@ public struct DefaultResourceProvider: ResourceProvider {
         }
     }
 
+    public var spendParamsURL: URL {
+        do {
+            let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            return path.appendingPathComponent(ZcashSDK.spendParamFilename)
+        } catch {
+            return URL(fileURLWithPath: "file://\(ZcashSDK.spendParamFilename)")
+        }
+    }
+
+    public var outputParamsURL: URL {
+        do {
+            let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            return path.appendingPathComponent(ZcashSDK.outputParamFilename)
+        } catch {
+            return URL(fileURLWithPath: "file://\(ZcashSDK.outputParamFilename)")
+        }
+    }
+    
     init(network: ZcashNetwork) {
         self.network = network
     }

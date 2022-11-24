@@ -67,6 +67,7 @@ public enum SaplingParameterDownloader {
     /// - Parameters:
     ///     - spendURL: URL to check whether the parameter is already downloaded
     ///     - outputURL: URL to check whether the parameter is already downloaded
+    @discardableResult
     public static func downloadParamsIfnotPresent(
         spendURL: URL,
         outputURL: URL

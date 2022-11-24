@@ -307,45 +307,6 @@ public class Initializer {
     public func isValidTransparentAddress(_ address: String) -> Bool {
         rustBackend.isValidTransparentAddress(address, networkType: network.networkType)
     }
-    
-    func isSpendParameterPresent() -> Bool {
-        FileManager.default.isReadableFile(atPath: self.spendParamsURL.path)
-    }
-    
-    func isOutputParameterPresent() -> Bool {
-        FileManager.default.isReadableFile(atPath: self.outputParamsURL.path)
-    }
-    
-    @discardableResult
-    func downloadParametersIfNeeded() async throws -> Bool {
-        let spendParameterPresent = isSpendParameterPresent()
-        let outputParameterPresent = isOutputParameterPresent()
-        
-        if spendParameterPresent && outputParameterPresent {
-            return true
-        }
-        
-        let outputURL = self.outputParamsURL
-        let spendURL = self.spendParamsURL
-        
-        do {
-            if !outputParameterPresent && !spendParameterPresent {
-                async let outputURLRequest = SaplingParameterDownloader.downloadOutputParameter(outputURL)
-                async let spendURLRequest = SaplingParameterDownloader.downloadSpendParameter(spendURL)
-                _ = try await [outputURLRequest, spendURLRequest]
-                return false
-            } else if !outputParameterPresent {
-                try await SaplingParameterDownloader.downloadOutputParameter(outputURL)
-                return false
-            } else if !spendParameterPresent {
-                try await SaplingParameterDownloader.downloadSpendParameter(spendURL)
-                return false
-            }
-        } catch {
-            throw error
-        }
-        return true
-    }
 }
 
 enum CompactBlockProcessorBuilder {

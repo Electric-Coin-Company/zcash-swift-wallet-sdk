@@ -232,6 +232,8 @@ extension TestCoordinator {
             let newConfig = CompactBlockProcessor.Configuration(
                 cacheDb: config.cacheDb,
                 dataDb: config.dataDb,
+                spendParamsURL: config.spendParamsURL,
+                outputParamsURL: config.outputParamsURL,
                 downloadBatchSize: config.downloadBatchSize,
                 retries: config.retries,
                 maxBackoffInterval: config.maxBackoffInterval,

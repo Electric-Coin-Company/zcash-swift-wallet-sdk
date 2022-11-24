@@ -475,7 +475,10 @@ public class SDKSynchronizer: Synchronizer {
         memo: Memo?
     ) async throws -> PendingTransactionEntity {
         do {
-            try await initializer.downloadParametersIfNeeded()
+            try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+                spendURL: initializer.spendParamsURL,
+                outputURL: initializer.outputParamsURL
+            )
         } catch {
             throw SynchronizerError.parameterMissing(underlyingError: error)
         }

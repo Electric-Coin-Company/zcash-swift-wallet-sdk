@@ -23,6 +23,8 @@ class BlockBatchValidationTests: XCTestCase {
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
+            spendParamsURL: try! __spendParamsURL(),
+            outputParamsURL: try! __outputParamsURL(),
             downloadBatchSize: 100,
             retries: 5,
             maxBackoffInterval: 10,
@@ -76,6 +78,8 @@ class BlockBatchValidationTests: XCTestCase {
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
+            spendParamsURL: try! __spendParamsURL(),
+            outputParamsURL: try! __outputParamsURL(),
             downloadBatchSize: 100,
             retries: 5,
             maxBackoffInterval: 10,
@@ -129,6 +133,8 @@ class BlockBatchValidationTests: XCTestCase {
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
+            spendParamsURL: try! __spendParamsURL(),
+            outputParamsURL: try! __outputParamsURL(),
             downloadBatchSize: 100,
             retries: 5,
             maxBackoffInterval: 10,
@@ -182,6 +188,8 @@ class BlockBatchValidationTests: XCTestCase {
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
+            spendParamsURL: try! __spendParamsURL(),
+            outputParamsURL: try! __outputParamsURL(),
             downloadBatchSize: 100,
             retries: 5,
             maxBackoffInterval: 10,
@@ -247,6 +255,8 @@ class BlockBatchValidationTests: XCTestCase {
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
+            spendParamsURL: try! __spendParamsURL(),
+            outputParamsURL: try! __outputParamsURL(),
             downloadBatchSize: 100,
             retries: 5,
             maxBackoffInterval: 10,
@@ -333,6 +343,8 @@ class BlockBatchValidationTests: XCTestCase {
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
+            spendParamsURL: try! __spendParamsURL(),
+            outputParamsURL: try! __outputParamsURL(),
             downloadBatchSize: 100,
             retries: 5,
             maxBackoffInterval: 10,
@@ -411,6 +423,8 @@ class BlockBatchValidationTests: XCTestCase {
         let config = CompactBlockProcessor.Configuration(
             cacheDb: try!  __cacheDbURL(),
             dataDb: try! __dataDbURL(),
+            spendParamsURL: try! __spendParamsURL(),
+            outputParamsURL: try! __outputParamsURL(),
             downloadBatchSize: 100,
             retries: 5,
             maxBackoffInterval: 10,
