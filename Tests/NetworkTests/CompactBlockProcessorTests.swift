@@ -116,7 +116,6 @@ class CompactBlockProcessorTests: XCTestCase {
         await processor.start()
     }
 
-    // FIXME: disabled see https://github.com/zcash/ZcashLightClientKit/issues/590
     func testStartNotifiesSuscriptors() async {
         await startProcessing()
    
@@ -132,7 +131,6 @@ class CompactBlockProcessorTests: XCTestCase {
         )
     }
 
-    // FIXME: disabled see https://github.com/zcash/ZcashLightClientKit/issues/590
     func testProgressNotifications() async {
         let expectedUpdates = expectedBatches(
             currentHeight: processorConfig.walletBirthday,

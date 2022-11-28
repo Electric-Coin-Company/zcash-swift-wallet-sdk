@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Crypto
+import CryptoKit
 
 /// Small utility that converts Digest to the String
 extension Digest {
