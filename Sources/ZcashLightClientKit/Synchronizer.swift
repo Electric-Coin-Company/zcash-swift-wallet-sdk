@@ -185,7 +185,9 @@ public protocol Synchronizer {
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
 
 
-    /// Stops the synchronizer and rescans the known blocks with the current keys.
+    /// Rescans the known blocks with the current keys. If this is called while sync process is in progress then
+    /// `SynchronizerError.rewindError(CompactBlockProcessorError.rewindAttemptWhileProcessing)` is thrown.
+    ///
     /// - Parameter policy: the rewind policy
     /// - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
     /// - Throws rewindError for other errors

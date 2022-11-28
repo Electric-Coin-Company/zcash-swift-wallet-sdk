@@ -31,6 +31,7 @@ public enum CompactBlockProcessorError: Error {
     case networkMismatch(expected: NetworkType, found: NetworkType)
     case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
     case unknown
+    case rewindAttemptWhileProcessing
 }
 
 /**
@@ -550,9 +551,11 @@ public actor CompactBlockProcessor {
     /**
     Rewinds to provided height.
     If nil is provided, it will rescan to nearest height (quick rescan)
+
+    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is throwed.
     */
     public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
-        self.stop()
+        guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
 
         let lastDownloaded = try downloader.lastDownloadedBlockHeight()
         let height = Int32(height ?? lastDownloaded)
@@ -1146,6 +1149,8 @@ extension CompactBlockProcessorError: LocalizedError {
         case let .networkMismatch(expected, found):
             // swiftlint:disable:next line_length
             return "A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing to the right server"
+        case .rewindAttemptWhileProcessing:
+            return "Can't execute rewind while sync process is in progress."
         case let .saplingActivationMismatch(expected, found):
             // swiftlint:disable:next line_length
             return "A server was reached, it's showing a different sapling activation. App expected sapling activation height to be \(expected) but instead it found \(found). Are you sure you are pointing to the right server?"
