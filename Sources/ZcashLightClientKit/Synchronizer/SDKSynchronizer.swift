@@ -648,7 +648,7 @@ public class SDKSynchronizer: Synchronizer {
         try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
     }
 
-    public func rewind(_ policy: RewindPolicy) async throws {
+    public func rewind(_ policy: RewindPolicy, completionHandler: @escaping (SynchronizerError?) async -> Void) async {
         self.stop()
 
         var height: BlockHeight?
@@ -666,16 +666,24 @@ public class SDKSynchronizer: Synchronizer {
 
         case .transaction(let transaction):
             guard let txHeight = transaction.anchor(network: self.network) else {
-                throw SynchronizerError.rewindErrorUnknownArchorHeight
+                return await completionHandler(SynchronizerError.rewindErrorUnknownArchorHeight)
             }
             height = txHeight
         }
 
-        do {
-            let rewindHeight = try await self.blockProcessor.rewindTo(height)
-            try self.transactionManager.handleReorg(at: rewindHeight)
-        } catch {
-            throw SynchronizerError.rewindError(underlyingError: error)
+        await self.blockProcessor.rewindTo(height) { result in
+            switch result {
+            case .success(let height):
+                do {
+                    try self.transactionManager.handleReorg(at: height)
+                    await completionHandler(nil)
+                } catch {
+                    await completionHandler(SynchronizerError.rewindError(underlyingError: error))
+                }
+
+            case .failure(let error):
+                await completionHandler(SynchronizerError.rewindError(underlyingError: error))
+            }
         }
     }
 

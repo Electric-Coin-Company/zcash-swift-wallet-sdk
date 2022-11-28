@@ -319,6 +319,8 @@ public actor CompactBlockProcessor {
     }
     
     private var needsToStartScanningWhenStopped = false
+    private var needsToStartRewindWhenStopped: (BlockHeight?, (Result<BlockHeight, Error>) async -> Void)? = nil
+
     var config: Configuration {
         willSet {
             self.stop()
@@ -523,42 +525,65 @@ public actor CompactBlockProcessor {
         self.retryAttempts = 0
     }
 
+    private func canStartRewind(
+        height: BlockHeight?,
+        completionHandler completion: @escaping (Result<BlockHeight, Error>) async -> Void
+    ) -> Bool {
+        guard shouldStart else {
+            needsToStartRewindWhenStopped = (height, completion)
+            return false
+        }
+
+        needsToStartRewindWhenStopped = nil
+        return true
+    }
+
     /**
     Rewinds to provided height.
     If nil is provided, it will rescan to nearest height (quick rescan)
     */
-    public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
+    public func rewindTo(
+        _ height: BlockHeight?,
+        completionHandler completion: @escaping (Result<BlockHeight, Error>) async -> Void
+    ) async {
         self.stop()
 
-        let lastDownloaded = try downloader.lastDownloadedBlockHeight()
-        let height = Int32(height ?? lastDownloaded)
-        let nearestHeight = rustBackend.getNearestRewindHeight(
-            dbData: config.dataDb,
-            height: height,
-            networkType: self.config.network.networkType
-        )
+        needsToStartRewindWhenStopped = nil
+        guard canStartRewind(height: height, completionHandler: completion) else { return }
 
-        guard nearestHeight > 0 else {
-            let error = rustBackend.lastError() ?? RustWeldingError.genericError(
-                message: "unknown error getting nearest rewind height for height: \(height)"
+        do {
+            let lastDownloaded = try downloader.lastDownloadedBlockHeight()
+            let height = Int32(height ?? lastDownloaded)
+            let nearestHeight = rustBackend.getNearestRewindHeight(
+                dbData: config.dataDb,
+                height: height,
+                networkType: self.config.network.networkType
             )
-            await fail(error)
-            throw error
-        }
 
-        // FIXME: this should be done on the rust layer
-        let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
-            let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
-            await fail(error)
-            throw error
-        }
+            guard nearestHeight > 0 else {
+                let error = rustBackend.lastError() ?? RustWeldingError.genericError(
+                    message: "unknown error getting nearest rewind height for height: \(height)"
+                )
+                await fail(error)
+                throw error
+            }
 
-        // clear cache
-        try downloader.rewind(to: BlockHeight(rewindHeight))
-        self.lastChainValidationFailure = nil
-        self.lowerBoundHeight = try? downloader.lastDownloadedBlockHeight()
-        return BlockHeight(rewindHeight)
+            // FIXME: this should be done on the rust layer
+            let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
+            guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
+                let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
+                await fail(error)
+                throw error
+            }
+
+            // clear cache
+            try downloader.rewind(to: BlockHeight(rewindHeight))
+            self.lastChainValidationFailure = nil
+            self.lowerBoundHeight = try? downloader.lastDownloadedBlockHeight()
+            await completion(.success(BlockHeight(rewindHeight)))
+        } catch {
+            await completion(.failure(error))
+        }
     }
 
     func validateServer() async {
@@ -613,6 +638,10 @@ public actor CompactBlockProcessor {
                     await fail(error)
                 } else {
                     state = .stopped
+                    if let (rewindHeight, rewindCompletion) = needsToStartRewindWhenStopped {
+                        await rewindTo(rewindHeight, completionHandler: rewindCompletion)
+                    }
+
                     if needsToStartScanningWhenStopped {
                         await nextBatch()
                     }

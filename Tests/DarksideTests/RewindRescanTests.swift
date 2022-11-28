@@ -68,44 +68,58 @@ class RewindRescanTests: XCTestCase {
     func testBirthdayRescan() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
-        
+
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
         let initialVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
-        
+
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: handleError)
-        
+
         wait(for: [firstSyncExpectation], timeout: 12)
         let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
-        
+
         // rewind to birthday
-        try await coordinator.synchronizer.rewind(.birthday)
-        
-        // assert that after the new height is
-        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
-        
-        // check that the balance is cleared
-        XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
-        let secondScanExpectation = XCTestExpectation(description: "rescan")
-        
-        try coordinator.sync(completion: { _ in
-            secondScanExpectation.fulfill()
-        }, error: handleError)
-        
-        wait(for: [secondScanExpectation], timeout: 12)
-        
-        // verify that the balance still adds up
-        XCTAssertEqual(verifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(totalBalance, coordinator.synchronizer.initializer.getBalance())
+        let rewindExpectation = XCTestExpectation(description: "Waiting for rewind to finish")
+        await coordinator.synchronizer.rewind(.birthday) { error in
+            do {
+                if let error { throw error }
+
+                // assert that after the new height is
+                XCTAssertEqual(try self.coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
+
+                // check that the balance is cleared
+                XCTAssertEqual(initialVerifiedBalance, self.coordinator.synchronizer.initializer.getVerifiedBalance())
+                XCTAssertEqual(initialTotalBalance, self.coordinator.synchronizer.initializer.getBalance())
+                let secondScanExpectation = XCTestExpectation(description: "rescan")
+
+                try self.coordinator.sync(
+                    completion: { _ in
+                        secondScanExpectation.fulfill()
+                    },
+                    error: self.handleError
+                )
+
+                self.wait(for: [secondScanExpectation], timeout: 12)
+
+                // verify that the balance still adds up
+                XCTAssertEqual(verifiedBalance, self.coordinator.synchronizer.initializer.getVerifiedBalance())
+                XCTAssertEqual(totalBalance, self.coordinator.synchronizer.initializer.getBalance())
+                rewindExpectation.fulfill()
+            } catch {
+                self.handleError(error)
+                rewindExpectation.fulfill()
+            }
+        }
+
+        wait(for: [rewindExpectation], timeout: 60)
     }
     
     func testRescanToHeight() async throws {
@@ -146,113 +160,139 @@ class RewindRescanTests: XCTestCase {
             height: Int32(targetHeight),
             networkType: network.networkType
         )
-        try await coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
-        
-        guard rewindHeight > 0 else {
-            XCTFail("get nearest height failed error: \(ZcashRustBackend.getLastError() ?? "null")")
-            return
-        }
 
-        // check that the balance is cleared
-        XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-
-        let secondScanExpectation = XCTestExpectation(description: "rescan")
-        
-        try await withCheckedThrowingContinuation { continuation in
+        let rewindExpectation = XCTestExpectation(description: "Waiting for rewind to finish")
+        await coordinator.synchronizer.rewind(.height(blockheight: targetHeight)) { error in
             do {
-                try coordinator.sync(completion: { synchronizer in
-                    secondScanExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
+                if let error { throw error }
+
+                guard rewindHeight > 0 else {
+                    XCTFail("get nearest height failed error: \(ZcashRustBackend.getLastError() ?? "null")")
+                    return
+                }
+
+                // check that the balance is cleared
+                XCTAssertEqual(initialVerifiedBalance, self.coordinator.synchronizer.initializer.getVerifiedBalance())
+
+                let secondScanExpectation = XCTestExpectation(description: "rescan")
+
+                try await withCheckedThrowingContinuation { continuation in
+                    do {
+                        try self.coordinator.sync(
+                            completion: { synchronizer in
+                                secondScanExpectation.fulfill()
+                                continuation.resume()
+                            },
+                            error: self.handleError
+                        )
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+
+                self.wait(for: [secondScanExpectation], timeout: 20)
+
+                // verify that the balance still adds up
+                XCTAssertEqual(verifiedBalance, self.coordinator.synchronizer.initializer.getVerifiedBalance())
+                XCTAssertEqual(totalBalance, self.coordinator.synchronizer.initializer.getBalance())
+
+                // try to spend the funds
+                let sendExpectation = XCTestExpectation(description: "after rewind expectation")
+                let pendingTx = try await self.coordinator.synchronizer.sendToAddress(
+                    spendingKey: self.coordinator.spendingKey,
+                    zatoshi: Zatoshi(1000),
+                    toAddress: self.testRecipientAddress,
+                    memo: .empty
+                )
+                XCTAssertEqual(Zatoshi(1000), pendingTx.value)
+                self.wait(for: [sendExpectation], timeout: 15)
+                rewindExpectation.fulfill()
+
             } catch {
-                continuation.resume(throwing: error)
+                self.handleError(error)
+                rewindExpectation.fulfill()
             }
         }
 
-        wait(for: [secondScanExpectation], timeout: 20)
-        
-        // verify that the balance still adds up
-        XCTAssertEqual(verifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(totalBalance, coordinator.synchronizer.initializer.getBalance())
-        
-        // try to spend the funds
-        let sendExpectation = XCTestExpectation(description: "after rewind expectation")
-        do {
-            let pendingTx = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: coordinator.spendingKey,
-                zatoshi: Zatoshi(1000),
-                toAddress: testRecipientAddress,
-                memo: .empty
-            )
-            XCTAssertEqual(Zatoshi(1000), pendingTx.value)
-        } catch {
-            XCTFail("sending fail: \(error)")
-        }
-        wait(for: [sendExpectation], timeout: 15)
+        wait(for: [rewindExpectation], timeout: 60)
     }
 
     func testRescanToTransaction() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
-        
+
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 50)
-      
+
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
-        
+
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: handleError)
-        
+
         wait(for: [firstSyncExpectation], timeout: 12)
         let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
-        
+
         // rewind to transaction
         guard let transaction = try coordinator.synchronizer.allClearedTransactions().first else {
             XCTFail("failed to get a transaction to rewind to")
             return
         }
 
-        try await coordinator.synchronizer.rewind(.transaction(transaction.transactionEntity))
-        
-        // assert that after the new height is
-        XCTAssertEqual(
-            try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),
-            transaction.transactionEntity.anchor(network: network)
-        )
-        
-        let secondScanExpectation = XCTestExpectation(description: "rescan")
-        
-        try coordinator.sync(completion: { _ in
-            secondScanExpectation.fulfill()
-        }, error: handleError)
-        
-        wait(for: [secondScanExpectation], timeout: 12)
-        
-        // verify that the balance still adds up
-        XCTAssertEqual(verifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(totalBalance, coordinator.synchronizer.initializer.getBalance())
+        let rewindExpectation = XCTestExpectation(description: "Waiting for rewind to finish")
+        await coordinator.synchronizer.rewind(.transaction(transaction.transactionEntity)) { error in
+            do {
+                if let error { throw error }
+
+                // assert that after the new height is
+                XCTAssertEqual(
+                    try self.coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),
+                    transaction.transactionEntity.anchor(network: self.network)
+                )
+
+                let secondScanExpectation = XCTestExpectation(description: "rescan")
+
+                try self.coordinator.sync(
+                    completion: { _ in
+                        secondScanExpectation.fulfill()
+                    },
+                    error: self.handleError
+                )
+
+                self.wait(for: [secondScanExpectation], timeout: 12)
+
+                // verify that the balance still adds up
+                XCTAssertEqual(verifiedBalance, self.coordinator.synchronizer.initializer.getVerifiedBalance())
+                XCTAssertEqual(totalBalance, self.coordinator.synchronizer.initializer.getBalance())
+                rewindExpectation.fulfill()
+            } catch {
+                self.handleError(error)
+                rewindExpectation.fulfill()
+            }
+        }
+
+        wait(for: [rewindExpectation], timeout: 60)
     }
     
     func testRewindAfterSendingTransaction() async throws {
         let notificationHandler = SDKSynchonizerListener()
         let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
         let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
-        
+
         // 0 subscribe to updated transactions events
         notificationHandler.subscribeToSynchronizer(coordinator.synchronizer)
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
-        
+
         try coordinator.applyStaged(blockheight: defaultLatestHeight + 10)
-        
+
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
-        
+
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(completion: { synchronizer in
@@ -265,14 +305,14 @@ class RewindRescanTests: XCTestCase {
         }
         wait(for: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
-        
+
         let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
-        
+
         let maxBalance = verifiedBalance - network.constants.defaultFee(for: defaultLatestHeight)
-        
+
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
         guard let spendingKey = coordinator.spendingKeys?.first else {
@@ -297,29 +337,29 @@ class RewindRescanTests: XCTestCase {
             XCTFail("transaction creation failed")
             return
         }
-        
+
         notificationHandler.synchronizerMinedTransaction = { transaction in
             XCTAssertNotNil(transaction.rawTransactionId)
             XCTAssertNotNil(pendingTx.rawTransactionId)
             XCTAssertEqual(transaction.rawTransactionId, pendingTx.rawTransactionId)
             transactionMinedExpectation.fulfill()
         }
-        
+
         // 5 apply to height
         // 6 mine the block
         guard let rawTx = try coordinator.getIncomingTransactions()?.first else {
             XCTFail("no incoming transaction after")
             return
         }
-        
+
         let latestHeight = try coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
-        
+
         notificationHandler.transactionsFound = { txs in
             let foundTx = txs.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
             XCTAssertNotNil(foundTx)
             XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
-            
+
             foundTransactionsExpectation.fulfill()
         }
         try coordinator.stageBlockCreate(height: sentTxHeight, count: 100)
@@ -327,9 +367,9 @@ class RewindRescanTests: XCTestCase {
         try coordinator.stageTransaction(rawTx, at: sentTxHeight)
         try coordinator.applyStaged(blockheight: sentTxHeight)
         sleep(2)
-        
+
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
-        
+
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(
@@ -346,7 +386,7 @@ class RewindRescanTests: XCTestCase {
                             XCTFail("unknown error syncing after sending transaction")
                             return
                         }
-                    
+
                         XCTFail("Error: \(error)")
                     }
                 )
@@ -355,58 +395,73 @@ class RewindRescanTests: XCTestCase {
             }
         }
         wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
-        
+
         // 7 advance to confirmation
-        
+
         try coordinator.applyStaged(blockheight: sentTxHeight + 10)
-        
+
         sleep(2)
-        
+
         // rewind 5 blocks prior to sending
-        
-        try await coordinator.synchronizer.rewind(.height(blockheight: sentTxHeight - 5))
-        
-        guard
-            let pendingEntity = try coordinator.synchronizer.allPendingTransactions()
-                .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
-        else {
-            XCTFail("sent pending transaction not found after rewind")
-            return
-        }
-        
-        XCTAssertFalse(pendingEntity.isMined)
-
-        let confirmExpectation = XCTestExpectation(description: "confirm expectation")
-        notificationHandler.transactionsFound = { txs in
-            XCTAssertEqual(txs.count, 1)
-            guard let transaction = txs.first else {
-                XCTFail("should have found sent transaction but didn't")
-                return
-            }
-            XCTAssertEqual(transaction.rawTransactionId, pendingTx.rawTransactionId, "should have mined sent transaction but didn't")
-        }
-
-        notificationHandler.synchronizerMinedTransaction = { transaction in
-            XCTFail("We shouldn't find any mined transactions at this point but found \(transaction)")
-        }
-
-        try await withCheckedThrowingContinuation { continuation in
+        let rewindExpectation = XCTestExpectation(description: "Waiting for rewind to finish")
+        await coordinator.synchronizer.rewind(.height(blockheight: sentTxHeight - 5)) { error in
             do {
-                try coordinator.sync(completion: { synchronizer in
-                    confirmExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
+                if let error { throw error }
+
+                guard
+                    let pendingEntity = try self.coordinator.synchronizer.allPendingTransactions()
+                        .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                else {
+                    XCTFail("sent pending transaction not found after rewind")
+                    rewindExpectation.fulfill()
+                    return
+                }
+
+                XCTAssertFalse(pendingEntity.isMined)
+
+                let confirmExpectation = XCTestExpectation(description: "confirm expectation")
+                notificationHandler.transactionsFound = { txs in
+                    XCTAssertEqual(txs.count, 1)
+                    guard let transaction = txs.first else {
+                        XCTFail("should have found sent transaction but didn't")
+                        return
+                    }
+                    XCTAssertEqual(transaction.rawTransactionId, pendingTx.rawTransactionId, "should have mined sent transaction but didn't")
+                }
+
+                notificationHandler.synchronizerMinedTransaction = { transaction in
+                    XCTFail("We shouldn't find any mined transactions at this point but found \(transaction)")
+                }
+
+                try await withCheckedThrowingContinuation { continuation in
+                    do {
+                        try self.coordinator.sync(
+                            completion: { synchronizer in
+                                confirmExpectation.fulfill()
+                                continuation.resume()
+                            },
+                            error: self.handleError
+                        )
+                    } catch {
+                        continuation.resume(throwing: error)
+                    }
+                }
+                self.wait(for: [confirmExpectation], timeout: 10)
+
+                let confirmedPending = try self.coordinator.synchronizer.allPendingTransactions()
+                    .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+
+                XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
+                XCTAssertEqual(self.coordinator.synchronizer.initializer.getBalance(), .zero)
+                XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), .zero)
+
+                rewindExpectation.fulfill()
             } catch {
-                continuation.resume(throwing: error)
+                self.handleError(error)
+                rewindExpectation.fulfill()
             }
         }
-        wait(for: [confirmExpectation], timeout: 10)
-        
-        let confirmedPending = try coordinator.synchronizer.allPendingTransactions()
-            .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
-        
-        XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
-        XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), .zero)
-        XCTAssertEqual(coordinator.synchronizer.initializer.getVerifiedBalance(), .zero)
+
+        wait(for: [rewindExpectation], timeout: 60)
     }
 }

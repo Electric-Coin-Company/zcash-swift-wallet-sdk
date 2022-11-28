@@ -186,11 +186,17 @@ public protocol Synchronizer {
 
 
     /// Stops the synchronizer and rescans the known blocks with the current keys.
-    /// - Parameter policy: the rewind policy
+    ///
+    /// When this method is called while the sync process is in progress then this method must wait until the sync process stops. And it may take some
+    /// time to stop the sync process. In this case, you can expect `completionHandler` to be called after some time.
+    ///
+    /// - Parameters:
+    ///   - policy: the rewind policy
+    ///   - completionHandler: Closure called when rewind finishes.
     /// - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
     /// - Throws rewindError for other errors
     /// - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
-    func rewind(_ policy: RewindPolicy) async throws
+    func rewind(_ policy: RewindPolicy, completionHandler: @escaping (SynchronizerError?) async -> Void) async
 }
 
 public enum SyncStatus: Equatable {
