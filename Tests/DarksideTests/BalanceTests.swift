@@ -30,16 +30,14 @@ class BalanceTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        wait { [self] in
-            self.coordinator = try await TestCoordinator(
-                seed: self.seedPhrase,
-                walletBirthday: self.birthday,
-                channelProvider: ChannelProvider(),
-                network: self.network
-            )
+        self.coordinator = try TestCoordinator(
+            seed: self.seedPhrase,
+            walletBirthday: self.birthday,
+            channelProvider: ChannelProvider(),
+            network: self.network
+        )
 
-            try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
-        }
+        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
     
     /**

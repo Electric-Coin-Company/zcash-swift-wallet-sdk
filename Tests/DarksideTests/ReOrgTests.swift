@@ -47,25 +47,23 @@ class ReOrgTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        wait { [self] in
-            NotificationCenter.default.addObserver(
-                self,
-                selector: #selector(self.handleReOrgNotification(_:)),
-                name: Notification.Name.blockProcessorHandledReOrg,
-                object: nil
-            )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(self.handleReOrgNotification(_:)),
+            name: Notification.Name.blockProcessorHandledReOrg,
+            object: nil
+        )
 
-            self.coordinator = try await TestCoordinator(
-                seed: self.seedPhrase,
-                walletBirthday: self.birthday,
-                channelProvider: ChannelProvider(),
-                network: self.network
-            )
+        self.coordinator = try TestCoordinator(
+            seed: self.seedPhrase,
+            walletBirthday: self.birthday,
+            channelProvider: ChannelProvider(),
+            network: self.network
+        )
 
-            try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
+        try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
 
-            try self.coordinator.resetBlocks(dataset: .default)
-        }
+        try self.coordinator.resetBlocks(dataset: .default)
     }
 
     override func tearDownWithError() throws {

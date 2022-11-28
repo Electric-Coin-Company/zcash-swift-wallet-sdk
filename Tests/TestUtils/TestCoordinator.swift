@@ -50,7 +50,7 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
         network: ZcashNetwork
-    ) async throws {
+    ) throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
         let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
@@ -60,7 +60,7 @@ class TestCoordinator {
 
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
-        try await self.init(
+        try self.init(
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
@@ -75,7 +75,7 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         channelProvider: ChannelProvider,
         network: ZcashNetwork
-    ) async throws {
+    ) throws {
         self.spendingKey = spendingKey
         self.birthday = walletBirthday
         self.channelProvider = channelProvider
@@ -93,7 +93,7 @@ class TestCoordinator {
         let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
         try storage.createTable()
         
-        let buildResult = try await TestSynchronizerBuilder.build(
+        let buildResult = try TestSynchronizerBuilder.build(
             rustBackend: ZcashRustBackend.self,
             lowerBoundHeight: self.birthday,
             cacheDbURL: databases.cacheDB,
@@ -291,7 +291,7 @@ enum TestSynchronizerBuilder {
         network: ZcashNetwork,
         seed: [UInt8]? = nil,
         loggerProxy: Logger? = nil
-    ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
+    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
             cacheDbURL: cacheDbURL,
             dataDbURL: dataDbURL,
@@ -307,7 +307,7 @@ enum TestSynchronizerBuilder {
         )
 
         let synchronizer = try SDKSynchronizer(initializer: initializer)
-        if case .seedRequired = try await synchronizer.prepare(with: seed) {
+        if case .seedRequired = try synchronizer.prepare(with: seed) {
             throw TestCoordinator.CoordinatorError.seedRequiredForMigration
         }
         
@@ -339,7 +339,7 @@ enum TestSynchronizerBuilder {
         let uvk = try DerivationTool(networkType: network.networkType)
             .deriveUnifiedFullViewingKey(from: spendingKey)
 
-        return try await build(
+        return try build(
             rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
             cacheDbURL: cacheDbURL,

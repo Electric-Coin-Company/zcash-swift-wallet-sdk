@@ -30,14 +30,12 @@ class ShieldFundsTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        Task { @MainActor [self] in
-            self.coordinator = try await TestCoordinator(
-                seed: seedPhrase,
-                walletBirthday: birthday,
-                channelProvider: ChannelProvider(),
-                network: network
-            )
-        }
+        self.coordinator = try TestCoordinator(
+            seed: seedPhrase,
+            walletBirthday: birthday,
+            channelProvider: ChannelProvider(),
+            network: network
+        )
         try coordinator.reset(saplingActivation: birthday, branchID: self.branchID, chainName: self.chainName)
         try coordinator.service.clearAddedUTXOs()
     }
