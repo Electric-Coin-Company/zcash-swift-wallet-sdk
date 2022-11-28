@@ -220,7 +220,7 @@ extension LightWalletGRPCService: LightWalletService {
                     for try await block in stream {
                         continuation.yield(ZcashCompactBlock(compactBlock: block))
                     }
-                    continuation.finish(throwing: nil)
+                    continuation.finish()
                 } catch {
                     continuation.finish(throwing: error.mapToServiceError())
                 }
@@ -298,7 +298,7 @@ extension LightWalletGRPCService: LightWalletService {
         height: BlockHeight
     ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
         guard !tAddresses.isEmpty else {
-            return AsyncThrowingStream { _ in }
+            return AsyncThrowingStream { continuation in continuation.finish() }
         }
         
         let args = GetAddressUtxosArg.with { utxoArgs in
@@ -324,7 +324,7 @@ extension LightWalletGRPCService: LightWalletService {
                             )
                         )
                     }
-                    continuation.finish(throwing: nil)
+                    continuation.finish()
                 } catch {
                     continuation.finish(throwing: error.mapToServiceError())
                 }
@@ -350,7 +350,7 @@ extension LightWalletGRPCService: LightWalletService {
                     for try await compactBlock in stream {
                         continuation.yield(ZcashCompactBlock(compactBlock: compactBlock))
                     }
-                    continuation.finish(throwing: nil)
+                    continuation.finish()
                 } catch {
                     continuation.finish(throwing: error.mapToServiceError())
                 }
