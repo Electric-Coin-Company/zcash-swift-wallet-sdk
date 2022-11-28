@@ -35,6 +35,7 @@ extension CompactBlockProcessor {
                         ),
                         start: scanStartTime,
                         end: scanFinishTime,
+                        batchSize: Int(batchSize),
                         task: .scanBlocks
                     )
                 )
@@ -75,6 +76,7 @@ extension CompactBlockProcessor {
                                 progress: progress,
                                 start: scanStartTime,
                                 end: scanFinishTime,
+                                batchSize: Int(batchSize),
                                 task: .scanBlocks
                             )
                         )
@@ -128,41 +130,50 @@ extension CompactBlockProcessor {
 }
 
 public enum SDKMetrics {
-    struct BlockMetricReport {
-        var startHeight: BlockHeight
-        var targetHeight: BlockHeight
-        var duration: TimeInterval
-        var task: TaskReported
+    public struct BlockMetricReport {
+        public var startHeight: BlockHeight
+        public var progressHeight: BlockHeight
+        public var targetHeight: BlockHeight
+        public var batchSize: Int
+        public var duration: TimeInterval
+        public var task: TaskReported
     }
     
-    enum TaskReported: String {
+    public enum TaskReported: String {
         case scanBlocks
     }
 
-    static let startBlockHeightKey = "SDKMetrics.startBlockHeightKey"
-    static let targetBlockHeightKey = "SDKMetrics.targetBlockHeightKey"
-    static let progressHeightKey = "SDKMetrics.progressHeight"
-    static let startDateKey = "SDKMetrics.startDateKey"
-    static let endDateKey = "SDKMetrics.endDateKey"
-    static let taskReportedKey = "SDKMetrics.taskReported"
-    static let notificationName = Notification.Name("SDKMetrics.Notification")
+    public static let startBlockHeightKey = "SDKMetrics.startBlockHeightKey"
+    public static let targetBlockHeightKey = "SDKMetrics.targetBlockHeightKey"
+    public static let progressHeightKey = "SDKMetrics.progressHeight"
+    public static let batchSizeKey = "SDKMetrics.batchSize"
+    public static let startDateKey = "SDKMetrics.startDateKey"
+    public static let endDateKey = "SDKMetrics.endDateKey"
+    public static let taskReportedKey = "SDKMetrics.taskReported"
+    public static let notificationName = Notification.Name("SDKMetrics.Notification")
+
     
-    static func blockReportFromNotification(_ notification: Notification) -> BlockMetricReport? {
+    public static func blockReportFromNotification(_ notification: Notification) -> BlockMetricReport? {
         guard
             notification.name == notificationName,
             let info = notification.userInfo,
             let startHeight = info[startBlockHeightKey] as? BlockHeight,
+            let progressHeight = info[progressHeightKey] as? BlockHeight,
             let targetHeight = info[targetBlockHeightKey] as? BlockHeight,
+            let batchSize = info[batchSizeKey] as? Int,
             let task = info[taskReportedKey] as? TaskReported,
             let startDate = info[startDateKey] as? Date,
             let endDate = info[endDateKey] as? Date
+
         else {
             return nil
         }
         
         return BlockMetricReport(
             startHeight: startHeight,
+            progressHeight: progressHeight,
             targetHeight: targetHeight,
+            batchSize: batchSize,
             duration: abs(
                 startDate.timeIntervalSinceReferenceDate - endDate.timeIntervalSinceReferenceDate
             ),
@@ -174,6 +185,7 @@ public enum SDKMetrics {
         progress: BlockProgress,
         start: Date,
         end: Date,
+        batchSize: Int,
         task: SDKMetrics.TaskReported
     ) -> Notification {
         var notification = Notification(name: notificationName)
@@ -183,6 +195,7 @@ public enum SDKMetrics {
             progressHeightKey: progress.progressHeight,
             startDateKey: start,
             endDateKey: end,
+            batchSizeKey: batchSize,
             taskReportedKey: task
         ]
         
