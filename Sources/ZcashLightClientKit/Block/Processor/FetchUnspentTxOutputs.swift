@@ -66,8 +66,6 @@ extension CompactBlockProcessor {
 
             if Task.isCancelled {
                 LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
-            } else {
-                await processBatchFinished(range: range)
             }
         } catch {
             throw error

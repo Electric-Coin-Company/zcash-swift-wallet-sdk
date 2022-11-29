@@ -17,6 +17,8 @@ class BlockScanTests: XCTestCase {
 
     var cacheDbURL: URL!
     var dataDbURL: URL!
+    var spendParamsURL: URL!
+    var outputParamsURL: URL!
     var saplingExtendedKey = SaplingExtendedFullViewingKey(validatedEncoding: "zxviewtestsapling1qw88ayg8qqqqpqyhg7jnh9mlldejfqwu46pm40ruwstd8znq3v3l4hjf33qcu2a5e36katshcfhcxhzgyfugj2lkhmt40j45cv38rv3frnghzkxcx73k7m7afw9j7ujk7nm4dx5mv02r26umxqgar7v3x390w2h3crqqgjsjly7jy4vtwzrmustm5yudpgcydw7x78awca8wqjvkqj8p8e3ykt7lrgd7xf92fsfqjs5vegfsja4ekzpfh5vtccgvs5747xqm6qflmtqpr8s9u")
 
     var walletBirthDay = Checkpoint.birthday(
@@ -32,7 +34,9 @@ class BlockScanTests: XCTestCase {
         super.setUp()
         self.cacheDbURL = try! __cacheDbURL()
         self.dataDbURL = try! __dataDbURL()
-        
+        self.spendParamsURL = try! __spendParamsURL()
+        self.outputParamsURL = try! __outputParamsURL()
+
         deleteDBs()
     }
     
@@ -47,6 +51,8 @@ class BlockScanTests: XCTestCase {
         
         try? FileManager.default.removeItem(at: cacheDbURL)
         try? FileManager.default.removeItem(at: dataDbURL)
+        try? FileManager.default.removeItem(at: spendParamsURL)
+        try? FileManager.default.removeItem(at: outputParamsURL)
     }
     
     func testSingleDownloadAndScan() async throws {
@@ -158,6 +164,8 @@ class BlockScanTests: XCTestCase {
         var processorConfig = CompactBlockProcessor.Configuration(
             cacheDb: cacheDbURL,
             dataDb: dataDbURL,
+            spendParamsURL: spendParamsURL,
+            outputParamsURL: outputParamsURL,
             walletBirthday: network.constants.saplingActivationHeight,
             network: network
         )

@@ -25,6 +25,8 @@ enum DemoAppConfig {
         CompactBlockProcessor.Configuration(
             cacheDb: try! cacheDbURLHelper(),
             dataDb: try! dataDbURLHelper(),
+            spendParamsURL: try! spendParamsURLHelper(),
+            outputParamsURL: try! outputParamsURLHelper(),
             walletBirthday: Self.birthdayHeight,
             network: kZcashNetwork
         )

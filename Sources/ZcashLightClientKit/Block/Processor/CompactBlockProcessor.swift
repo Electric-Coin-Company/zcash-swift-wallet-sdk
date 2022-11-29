@@ -204,6 +204,8 @@ public extension Notification.Name {
     
     static let blockProcessorStartedFetching = Notification.Name(rawValue: "CompactBlockProcessorStartedFetching")
     
+    static let blockProcessorHandlingSaplingFiles = Notification.Name(rawValue: "blockProcessorHandlingSaplingFiles")
+    
     /**
     Notification sent when the grpc service connection detects a change. Query the user info object  for status change details `currentConnectivityStatus` for current and previous with `previousConnectivityStatus`
     */
@@ -219,9 +221,13 @@ public actor CompactBlockProcessor {
     ///
     /// Property: cacheDbPath absolute file path of the DB where raw, unprocessed compact blocks are stored.
     /// Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
+    /// Property: spendParamsURL absolute file path of the sapling-spend.params file
+    /// Property: outputParamsURL absolute file path of the sapling-output.params file
     public struct Configuration {
         public var cacheDb: URL
         public var dataDb: URL
+        public var spendParamsURL: URL
+        public var outputParamsURL: URL
         public var downloadBatchSize = ZcashSDK.DefaultDownloadBatch
         public var scanningBatchSize = ZcashSDK.DefaultScanningBatch
         public var retries = ZcashSDK.defaultRetries
@@ -239,6 +245,8 @@ public actor CompactBlockProcessor {
         init (
             cacheDb: URL,
             dataDb: URL,
+            spendParamsURL: URL,
+            outputParamsURL: URL,
             downloadBatchSize: Int,
             retries: Int,
             maxBackoffInterval: TimeInterval,
@@ -249,6 +257,8 @@ public actor CompactBlockProcessor {
         ) {
             self.cacheDb = cacheDb
             self.dataDb = dataDb
+            self.spendParamsURL = spendParamsURL
+            self.outputParamsURL = outputParamsURL
             self.network = network
             self.downloadBatchSize = downloadBatchSize
             self.retries = retries
@@ -258,9 +268,18 @@ public actor CompactBlockProcessor {
             self.saplingActivation = saplingActivation
         }
         
-        public init(cacheDb: URL, dataDb: URL, walletBirthday: BlockHeight, network: ZcashNetwork) {
+        public init(
+            cacheDb: URL,
+            dataDb: URL,
+            spendParamsURL: URL,
+            outputParamsURL: URL,
+            walletBirthday: BlockHeight,
+            network: ZcashNetwork
+        ) {
             self.cacheDb = cacheDb
             self.dataDb = dataDb
+            self.spendParamsURL = spendParamsURL
+            self.outputParamsURL = outputParamsURL
             self.walletBirthday = walletBirthday
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
@@ -305,7 +324,10 @@ public actor CompactBlockProcessor {
         was processing but erred
         */
         case error(_ e: Error)
-        
+
+        /// Download sapling param files if needed.
+        case handlingSaplingFiles
+
         /**
         Processor is up to date with the blockchain and you can now make transactions.
         */
@@ -397,6 +419,8 @@ public actor CompactBlockProcessor {
             config: Configuration(
                 cacheDb: initializer.cacheDbURL,
                 dataDb: initializer.dataDbURL,
+                spendParamsURL: initializer.spendParamsURL,
+                outputParamsURL: initializer.outputParamsURL,
                 walletBirthday: Checkpoint.birthday(
                     with: initializer.walletBirthday,
                     network: initializer.network
@@ -499,7 +523,7 @@ public actor CompactBlockProcessor {
                 // max attempts have been reached
                 LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
-            case .downloading, .validating, .scanning, .enhancing, .fetching:
+            case .downloading, .validating, .scanning, .enhancing, .fetching, .handlingSaplingFiles:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
                 self.`needsToStartScanningWhenStopped` = true
             }
@@ -605,7 +629,12 @@ public actor CompactBlockProcessor {
                 try await compactBlockBatchScanning(range: range)
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
+                try await handleSaplingParametersIfNeeded()
                 try await removeCacheDB()
+                
+                if !Task.isCancelled {
+                    await processBatchFinished(range: range)
+                }
             } catch {
                 LoggerProxy.error("Sync failed with error: \(error)")
 
@@ -935,6 +964,8 @@ public actor CompactBlockProcessor {
             NotificationSender.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
         case .fetching:
             NotificationSender.default.post(name: Notification.Name.blockProcessorStartedFetching, object: self)
+        case .handlingSaplingFiles:
+            NotificationSender.default.post(name: Notification.Name.blockProcessorHandlingSaplingFiles, object: self)
         }
     }
 
@@ -957,6 +988,8 @@ public extension CompactBlockProcessor.Configuration {
         return CompactBlockProcessor.Configuration(
             cacheDb: pathProvider.cacheDbURL,
             dataDb: pathProvider.dataDbURL,
+            spendParamsURL: pathProvider.spendParamsURL,
+            outputParamsURL: pathProvider.outputParamsURL,
             walletBirthday: walletBirthday,
             network: network
         )
