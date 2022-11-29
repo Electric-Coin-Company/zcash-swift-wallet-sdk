@@ -72,10 +72,20 @@ class RewindRescanTests: XCTestCase {
         let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
-        
-        try coordinator.sync(completion: { _ in
-            firstSyncExpectation.fulfill()
-        }, error: handleError)
+
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(
+                    completion: { _ in
+                        firstSyncExpectation.fulfill()
+                        continuation.resume()
+                    },
+                    error: self.handleError
+                )
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
         
         wait(for: [firstSyncExpectation], timeout: 12)
         let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
@@ -95,10 +105,20 @@ class RewindRescanTests: XCTestCase {
         XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         
-        try coordinator.sync(completion: { _ in
-            secondScanExpectation.fulfill()
-        }, error: handleError)
-        
+        try await withCheckedThrowingContinuation { continuation in
+            do {
+                try coordinator.sync(
+                    completion: { _ in
+                        secondScanExpectation.fulfill()
+                        continuation.resume()
+                    },
+                    error: self.handleError
+                )
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
+
         wait(for: [secondScanExpectation], timeout: 12)
         
         // verify that the balance still adds up

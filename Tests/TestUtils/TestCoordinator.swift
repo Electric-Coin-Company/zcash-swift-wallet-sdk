@@ -228,7 +228,7 @@ extension TestCoordinator {
         Task {
             await self.synchronizer.blockProcessor.stop()
             let config = await self.synchronizer.blockProcessor.config
-            
+
             let newConfig = CompactBlockProcessor.Configuration(
                 cacheDb: config.cacheDb,
                 dataDb: config.dataDb,
@@ -239,10 +239,10 @@ extension TestCoordinator {
                 maxBackoffInterval: config.maxBackoffInterval,
                 rewindDistance: config.rewindDistance,
                 walletBirthday: config.walletBirthday,
-                saplingActivation: config.saplingActivation,
+                saplingActivation: saplingActivation,
                 network: config.network
             )
-            
+
             await self.synchronizer.blockProcessor.setConfig(newConfig)
         }
 
