@@ -828,9 +828,12 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .networkMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
+            case .rewindAttemptWhileProcessing:
+                break
             case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
-            case .unknown: break
+            case .unknown:
+                break
             }
         }
 
