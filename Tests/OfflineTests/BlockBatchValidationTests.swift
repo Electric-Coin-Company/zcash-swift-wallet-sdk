@@ -417,7 +417,6 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedStoreLatestHeight = BlockHeight(1230000)
         let walletBirthday = BlockHeight(1210000)
         let expectedResult = CompactBlockProcessor.NextState.finishProcessing(height: expectedStoreLatestHeight)
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
