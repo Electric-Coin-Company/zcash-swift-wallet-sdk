@@ -99,9 +99,16 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
     }
 
-    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
+    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) throws -> Int64 {
         let dbData = dbData.osStr()
-        return zcashlc_get_balance(dbData.0, dbData.1, account, networkType.networkId)
+
+        let balance = zcashlc_get_balance(dbData.0, dbData.1, account, networkType.networkId)
+
+        guard balance >= 0 else {
+            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting total balance from account \(account)")
+        }
+
+        return balance
     }
 
     static func getCurrentAddress(
@@ -276,15 +283,27 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard balance >= 0 else {
-            throw throwDataDbError(lastError() ?? .genericError(message: "Error getting Total Transparent balance from account \(account)"))
+            throw throwBalanceError(account: account, lastError(), fallbackMessage:  "Error getting Total Transparent balance from account \(account)")
         }
 
         return balance
     }
 
-    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
+    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) throws -> Int64 {
         let dbData = dbData.osStr()
-        return zcashlc_get_verified_balance(dbData.0, dbData.1, account, networkType.networkId, minimumConfirmations)
+        let balance = zcashlc_get_verified_balance(
+            dbData.0,
+            dbData.1,
+            account,
+            networkType.networkId,
+            minimumConfirmations
+        )
+
+        guard balance >= 0 else {
+            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting verified balance from account \(account)")
+        }
+
+        return balance
     }
 
     static func getVerifiedTransparentBalance(
@@ -298,13 +317,19 @@ class ZcashRustBackend: ZcashRustBackendWelding {
 
         let dbData = dbData.osStr()
 
-        return zcashlc_get_verified_transparent_balance_for_account(
+        let balance = zcashlc_get_verified_transparent_balance_for_account(
             dbData.0,
             dbData.1,
             networkType.networkId,
             account,
             minimumConfirmations
         )
+
+        guard balance >= 0 else {
+            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting verified transparent balance from account \(account)")
+        }
+
+        return balance
     }
     
     static func lastError() -> RustWeldingError? {
@@ -690,6 +715,14 @@ private extension ZcashRustBackend {
 
         return RustWeldingError.dataDbInitFailed(message: error.localizedDescription)
     }
+
+    static func throwBalanceError(account: Int32, _ error: RustWeldingError?, fallbackMessage: String) -> Error {
+        guard let balanceError = error else {
+            return RustWeldingError.genericError(message: fallbackMessage)
+        }
+
+        return RustWeldingError.getBalanceError(Int(account), balanceError)
+    }
 }
 
 private extension URL {
@@ -756,6 +789,8 @@ extension RustWeldingError: LocalizedError {
             return "`.saplingSpendParametersNotFound` sapling parameters not present at specified URL"
         case .unableToDeriveKeys:
             return "`.unableToDeriveKeys` the requested keys could not be derived from the source provided"
+        case .getBalanceError(let account, let error):
+            return "`.getBalanceError` could not retrieve balance from account: \(account), error:\(error)"
         }
     }
 }

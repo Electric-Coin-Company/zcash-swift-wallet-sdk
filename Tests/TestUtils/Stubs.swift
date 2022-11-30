@@ -295,12 +295,19 @@ class MockRustBackend: ZcashRustBackendWelding {
         }
     }
     
-    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
-        mockBalance ?? rustBackend.getBalance(dbData: dbData, account: account, networkType: networkType)
+    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) throws -> Int64 {
+        if let balance = mockBalance {
+            return balance
+        }
+        return try rustBackend.getBalance(dbData: dbData, account: account, networkType: networkType)
     }
     
-    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) -> Int64 {
-        mockVerifiedBalance ?? rustBackend.getVerifiedBalance(dbData: dbData, account: account, networkType: networkType)
+    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) throws -> Int64 {
+        if let balance = mockVerifiedBalance {
+            return balance
+        }
+
+        return try rustBackend.getVerifiedBalance(dbData: dbData, account: account, networkType: networkType)
     }
     
     static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {

@@ -85,14 +85,18 @@ class ShieldFundsTests: XCTestCase {
     ///
     func testShieldFunds() async throws {
         // 1. load the dataset
-        try coordinator.service.useDataset(from: "https://github.com/zcash-hackworks/darksidewalletd-test-data/blob/master/shield-funds/1631000.txt")
+        try coordinator.service.useDataset(from: "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/shield-funds/1631000.txt")
 
+        sleep(1)
         try coordinator.stageBlockCreate(height: birthday + 1, count: 200, nonce: 0)
 
+        sleep(1)
+        
         let utxoHeight = BlockHeight(1631177)
         var shouldContinue = false
         var initialTotalBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
+
         var initialTransparentBalance: WalletBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         let utxo = try GetAddressUtxosReply(jsonString: """
@@ -135,7 +139,7 @@ class ShieldFundsTests: XCTestCase {
         // at this point the balance should be all zeroes for transparent and shielded funds
         XCTAssertEqual(initialTotalBalance, Zatoshi.zero)
         XCTAssertEqual(initialVerifiedBalance, Zatoshi.zero)
-        initialTransparentBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
+        initialTransparentBalance = (try? await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)) ?? .zero
 
         XCTAssertEqual(initialTransparentBalance.total, .zero)
         XCTAssertEqual(initialTransparentBalance.verified, .zero)
@@ -222,6 +226,7 @@ class ShieldFundsTests: XCTestCase {
             shieldingPendingTx = pendingTx
             shieldFundsExpectation.fulfill()
         } catch {
+            shieldFundsExpectation.fulfill()
             XCTFail("Failed With error: \(error.localizedDescription)")
         }
 
@@ -271,6 +276,7 @@ class ShieldFundsTests: XCTestCase {
                 }, error: self.handleError)
             } catch {
                 continuation.resume(throwing: error)
+                postShieldSyncExpectation.fulfill()
             }
         }
         wait(for: [postShieldSyncExpectation], timeout: 3)
@@ -304,6 +310,7 @@ class ShieldFundsTests: XCTestCase {
                 }, error: self.handleError)
             } catch {
                 continuation.resume(throwing: error)
+                confirmationExpectation.fulfill()
             }
         }
 

@@ -16,6 +16,7 @@ enum RustWeldingError: Error {
     case malformedStringInput
     case noConsensusBranchId(height: Int32)
     case unableToDeriveKeys
+    case getBalanceError(Int, Error)
     case invalidInput(message: String)
     case invalidRewind(suggestedHeight: Int32)
 }
@@ -114,7 +115,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) -> Int64
+    ) throws -> Int64
 
     /// Returns the most-recently-generated unified payment address for the specified account.
     /// - Parameters:
@@ -345,7 +346,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) -> Int64
+    ) throws -> Int64
 
 
     /// Get the verified cached transparent balance for the given account
