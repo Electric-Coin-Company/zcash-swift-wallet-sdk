@@ -17,8 +17,6 @@ extension CompactBlockProcessor {
     func compactBlockValidation() async throws {
         try Task.checkCancellation()
         
-        state = .validating
-
         let result = rustBackend.validateCombinedChain(dbCache: config.cacheDb, dbData: config.dataDb, networkType: config.network.networkType)
         
         do {

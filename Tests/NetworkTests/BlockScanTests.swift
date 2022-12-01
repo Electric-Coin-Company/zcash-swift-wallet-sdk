@@ -183,11 +183,12 @@ class BlockScanTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.compactBlockStreamDownload(
-                blockBufferSize: 10,
+            let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
                 startHeight: range.lowerBound,
                 targetHeight: range.upperBound
             )
+
+            try await compactBlockProcessor.downloadAndStoreBlocks(using: downloadStream, at: range, maxBlockBufferSize: 10)
             XCTAssertFalse(Task.isCancelled)
             
             try await compactBlockProcessor.compactBlockValidation()

@@ -202,17 +202,7 @@ public enum SyncStatus: Equatable {
     /// taking other maintenance steps that need to occur after an upgrade.
     case unprepared
 
-    /// Indicates that this Synchronizer is actively downloading new blocks from the server.
-    case downloading(_ status: BlockProgress)
-
-    /// Indicates that this Synchronizer is actively validating new blocks that were downloaded
-    /// from the server. Blocks need to be verified before they are scanned. This confirms that
-    /// each block is chain-sequential, thereby detecting missing blocks and reorgs.
-    case validating
-
-    /// Indicates that this Synchronizer is actively scanning new valid blocks that were
-    /// downloaded from the server.
-    case scanning(_ progress: BlockProgress)
+    case syncing(_ progress: BlockProgress)
 
     /// Indicates that this Synchronizer is actively enhancing newly scanned blocks
     /// with additional transaction details, fetched from the server.
@@ -236,7 +226,7 @@ public enum SyncStatus: Equatable {
     
     public var isSyncing: Bool {
         switch self {
-        case .downloading, .validating, .scanning, .enhancing, .fetching:
+        case .syncing, .enhancing, .fetching:
             return true
         default:
             return false
@@ -285,20 +275,8 @@ extension SyncStatus {
             } else {
                 return false
             }
-        case .downloading:
-            if case .downloading = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .validating:
-            if case .validating = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .scanning:
-            if case .scanning = rhs {
+        case .syncing:
+            if case .syncing = rhs {
                 return true
             } else {
                 return false
@@ -340,12 +318,8 @@ extension SyncStatus {
 extension SyncStatus {
     init(_ blockProcessorProgress: CompactBlockProgress) {
         switch blockProcessorProgress {
-        case .download(let progressReport):
-            self = SyncStatus.downloading(progressReport)
-        case .validate:
-            self = .validating
-        case .scan(let progressReport):
-            self = .scanning(progressReport)
+        case .syncing(let progressReport):
+            self = .syncing(progressReport)
         case .enhance(let enhancingReport):
             self = .enhancing(enhancingReport)
         case .fetch:
