@@ -9,9 +9,15 @@ import Foundation
 
 struct SyncRanges: Equatable {
     let latestBlockHeight: BlockHeight
-    let downloadRange: CompactBlockRange?
-    let scanRange: CompactBlockRange?
+    /// The sync process can be interrupted in any phase. It may happen that it's interrupted while downloading blocks. In that case in next sync
+    /// process already downloaded blocks needs to be scanned before the sync process starts to download new blocks. And the range of blocks that are
+    /// already downloaded but not scanned is stored in this variable.
+    let downloadedButUnscannedRange: CompactBlockRange?
+    /// Range of blocks that are not yet downloaded and not yet scanned.
+    let downloadAndScanRange: CompactBlockRange?
+    /// Range of blocks that are not enhanced yet.
     let enhanceRange: CompactBlockRange?
+    /// Range of blocks for which no UTXOs are fetched yet.
     let fetchUTXORange: CompactBlockRange?
 }
 
@@ -127,15 +133,20 @@ actor InternalSyncProgress {
         latestBlockHeight: BlockHeight,
         latestScannedHeight: BlockHeight
     ) -> SyncRanges {
+        // If there is more downloaded then scanned blocks we have to range for these blocks. The sync process will then start with scanning these
+        // blocks instead of downloading new ones.
+        let downloadedButUnscannedRange: CompactBlockRange?
+        if latestScannedHeight < latestDownloadedBlockHeight {
+            downloadedButUnscannedRange = latestScannedHeight+1...latestDownloadedBlockHeight
+        } else {
+            downloadedButUnscannedRange = nil
+        }
+
         return SyncRanges(
             latestBlockHeight: latestBlockHeight,
-            downloadRange: computeRange(
+            downloadedButUnscannedRange: downloadedButUnscannedRange,
+            downloadAndScanRange: computeRange(
                 latestHeight: latestDownloadedBlockHeight,
-                birthday: birthday,
-                latestBlockHeight: latestBlockHeight
-            ),
-            scanRange: computeRange(
-                latestHeight: latestScannedHeight,
                 birthday: birthday,
                 latestBlockHeight: latestBlockHeight
             ),

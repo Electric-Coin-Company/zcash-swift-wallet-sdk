@@ -50,14 +50,14 @@ class InternalSyncProgressTests: XCTestCase {
 
         let nextState = try await internalSyncProgress.computeNextState(
             latestBlockHeight: latestHeight,
-            latestScannedHeight: 630000,
+            latestScannedHeight: 620000,
             walletBirthday: 600000
         )
 
         switch nextState {
         case let .processNewBlocks(ranges):
-            XCTAssertEqual(ranges.downloadRange, 630001...640000)
-            XCTAssertEqual(ranges.scanRange, 630001...640000)
+            XCTAssertEqual(ranges.downloadedButUnscannedRange, 620001...630000)
+            XCTAssertEqual(ranges.downloadAndScanRange, 630001...640000)
             XCTAssertEqual(ranges.enhanceRange, 630001...640000)
             XCTAssertEqual(ranges.fetchUTXORange, 630001...640000)
 

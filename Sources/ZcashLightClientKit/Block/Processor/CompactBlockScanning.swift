@@ -9,11 +9,22 @@
 import Foundation
 
 extension CompactBlockProcessor {
-    func compactBlockBatchScanning(range: CompactBlockRange) async throws {
+
+    func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
+        try await compactBlockBatchScanning(range: range) { [weak self] lastScannedHeight in
+            let progress = BlockProgress(
+                startHeight: totalProgressRange.lowerBound,
+                targetHeight: totalProgressRange.upperBound,
+                progressHeight: lastScannedHeight
+            )
+            await self?.notifyProgress(.syncing(progress))
+        }
+    }
+
+
+    func compactBlockBatchScanning(range: CompactBlockRange, didScan: ((BlockHeight) async -> Void)? = nil) async throws {
         try Task.checkCancellation()
         
-        state = .scanning
-
         // TODO: remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
         let batchSize = scanBatchSize(for: range, network: self.config.network.networkType)
         
@@ -69,18 +80,8 @@ extension CompactBlockProcessor {
                     
                     scannedNewBlocks = previousScannedHeight != lastScannedHeight
                     if scannedNewBlocks {
-                        let progress = BlockProgress(startHeight: scanStartHeight, targetHeight: targetScanHeight, progressHeight: lastScannedHeight)
-                        notifyProgress(.scan(progress))
-                        NotificationSender.default.post(notification:
-                            SDKMetrics.progressReportNotification(
-                                progress: progress,
-                                start: scanStartTime,
-                                end: scanFinishTime,
-                                batchSize: Int(batchSize),
-                                task: .scanBlocks
-                            )
-                        )
-                        
+                        await didScan?(lastScannedHeight)
+
                         let heightCount = lastScannedHeight - previousScannedHeight
                         let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
                         LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")

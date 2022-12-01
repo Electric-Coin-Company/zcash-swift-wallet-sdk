@@ -23,11 +23,9 @@ class TransactionEnhancementTests: XCTestCase {
     var processor: CompactBlockProcessor!
     var darksideWalletService: DarksideWalletService!
     var downloader: CompactBlockDownloader!
-    var downloadStartedExpect: XCTestExpectation!
+    var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
-    var startedScanningNotificationExpectation: XCTestExpectation!
-    var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
     var afterReorgIdleNotification: XCTestExpectation!
@@ -40,15 +38,9 @@ class TransactionEnhancementTests: XCTestCase {
 
         logger = SampleLogger(logLevel: .debug)
         
-        downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
+        syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
-        startedValidatingNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedValidatingNotificationExpectation"
-        )
-        startedScanningNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedScanningNotificationExpectation"
-        )
         idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
         afterReorgIdleNotification = XCTestExpectation(description: "\(self.description) afterReorgIdleNotification")
         reorgNotificationExpectation = XCTestExpectation(description: "\(self.description) reorgNotificationExpectation")
@@ -126,11 +118,9 @@ class TransactionEnhancementTests: XCTestCase {
         try super.tearDownWithError()
         try? FileManager.default.removeItem(at: processorConfig.cacheDb)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        downloadStartedExpect.unsubscribeFromNotifications()
+        syncStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()
         updatedNotificationExpectation.unsubscribeFromNotifications()
-        startedScanningNotificationExpectation.unsubscribeFromNotifications()
-        startedValidatingNotificationExpectation.unsubscribeFromNotifications()
         idleNotificationExpectation.unsubscribeFromNotifications()
         reorgNotificationExpectation.unsubscribeFromNotifications()
         afterReorgIdleNotification.unsubscribeFromNotifications()
@@ -141,11 +131,9 @@ class TransactionEnhancementTests: XCTestCase {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
-        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
+        syncStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedSyncing, object: processor)
         stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-        startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
-        startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
 
         txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
         idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
@@ -188,9 +176,7 @@ class TransactionEnhancementTests: XCTestCase {
 
         wait(
             for: [
-                downloadStartedExpect,
-                startedValidatingNotificationExpectation,
-                startedScanningNotificationExpectation,
+                syncStartedExpect,
                 txFoundNotificationExpectation,
                 idleNotificationExpectation
             ],

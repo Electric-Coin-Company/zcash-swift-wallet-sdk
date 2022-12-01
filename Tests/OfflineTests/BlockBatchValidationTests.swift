@@ -333,8 +333,8 @@ class BlockBatchValidationTests: XCTestCase {
 
         let ranges = SyncRanges(
             latestBlockHeight: expectedLatestHeight,
-            downloadRange: expectedStoreLatestHeight+1...expectedLatestHeight,
-            scanRange: expectedStoreLatestHeight+1...expectedLatestHeight,
+            downloadedButUnscannedRange: nil,
+            downloadAndScanRange: expectedStoreLatestHeight+1...expectedLatestHeight,
             enhanceRange: walletBirthday...expectedLatestHeight,
             fetchUTXORange: walletBirthday...expectedLatestHeight
         )
