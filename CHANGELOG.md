@@ -1,8 +1,34 @@
-# 0.17.1-alpha.1
+# 0.17.1-beta
 - [#651] Change the rewind behavior. Now if the rewind is used while the sync process is in progress then an exception is thrown.
 - [#616] Download Stream generates too many updates on the main thread
-
 > **WARNING**: Notifications from SDK are no longer delivered on main thread.
+
+- [#585] Fix RewindRescanTests (#656)
+- Cleanup warnings (#655)
+- [#637] Make sapling parameter download part of processing blocks (#650)
+- [#631] Verify SHA1 correctness of Sapling files after downloading (#643)
+- Add benchmarking info to SyncBlocksViewController (#649)
+- [#639] Provide an API to estimate TextMemo length limit correctly (#640)
+- [#597] Bump up SQLite Swift to 0.14.1 (#638)
+- [#488] Delete cache db when sync ends
+
+- Added Checkpoints
+
+Mainnet 
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1882500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1885000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1887500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1890000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1892500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1895000.json
+````
+
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2120000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2130000.json
+````
 
 # Summary of 0.17.0-beta
 
