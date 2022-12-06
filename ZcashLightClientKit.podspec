@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
     s.name             = 'ZcashLightClientKit'
-    s.version          = '0.17.1-beta'
+    s.version          = '0.17.2-beta'
     s.summary          = 'Zcash Light Client wallet SDK for iOS'
   
     s.description      = <<-DESC
