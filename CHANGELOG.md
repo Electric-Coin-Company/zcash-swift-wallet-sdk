@@ -1,3 +1,6 @@
+# 0.17.2-beta
+- [#660] Fix the situation when any rewind causes full rescan
+
 # 0.17.1-beta
 - [#651] Change the rewind behavior. Now if the rewind is used while the sync process is in progress then an exception is thrown.
 - [#616] Download Stream generates too many updates on the main thread

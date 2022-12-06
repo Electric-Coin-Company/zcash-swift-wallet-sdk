@@ -633,7 +633,6 @@ public actor CompactBlockProcessor {
                 try await compactBlockEnhancement(range: range)
                 try await fetchUnspentTxOutputs(range: range)
                 try await handleSaplingParametersIfNeeded()
-                try await removeCacheDB()
                 
                 if !Task.isCancelled {
                     await processBatchFinished(range: range)
