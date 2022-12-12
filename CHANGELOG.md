@@ -1,4 +1,21 @@
-# Unreleased
+# 0.17.3-beta
+New Checkpoints
+
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1897500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1900000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1902500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1905000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1907500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1910000.json
+````
+
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2140000.json
+````
+
 
 New Checkpoint for `testShieldFunds()`
 ```
