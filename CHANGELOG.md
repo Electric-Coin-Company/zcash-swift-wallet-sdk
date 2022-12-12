@@ -1,3 +1,10 @@
+# Unreleased
+
+New Checkpoint for `testShieldFunds()`
+```
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1631000.json
+```
+
 # 0.17.2-beta
 - [#660] Fix the situation when any rewind causes full rescan
 
