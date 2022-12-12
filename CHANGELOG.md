@@ -1,4 +1,15 @@
 # 0.17.3-beta
+- [#646] SDK sync process resumes to previously saved block height
+This change adds an internal storage test on UserDefaults that tells the 
+SDK where sync was left off when cancelled whatever the reason for it
+to restart on a later attempt. This fixes some issues around syncing
+long block ranges in several attempts not enhancing the right transactions
+because the enhancing phase would only consider the last range scanned.
+This only fixes the situation where rewinding the SDK would cause the 
+whole database to be cleared instead and syncing to be restarted from 
+scratch (issue [#660]).
+
+- commit `3b7202c` Fix `testShieldFunds()` dataset loading issue. (#659)
 New Checkpoints
 
 Mainnet
