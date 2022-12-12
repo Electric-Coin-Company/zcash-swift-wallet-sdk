@@ -243,13 +243,13 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: expectedLatestHeight,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
-        let expectedStoreLatestHeight = BlockHeight(1220000)
+        let expectedStoredLatestHeight = BlockHeight(1220000)
         let expectedResult = CompactBlockProcessor.NextState.wait(
             latestHeight: expectedLatestHeight,
-            latestDownloadHeight: expectedLatestHeight
+            latestDownloadHeight: expectedStoredLatestHeight
         )
 
-        let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
+        let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoredLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
 
         let config = CompactBlockProcessor.Configuration(
@@ -270,7 +270,7 @@ class BlockBatchValidationTests: XCTestCase {
             unminedCount: 0,
             receivedCount: 0,
             sentCount: 0,
-            scannedHeight: expectedStoreLatestHeight,
+            scannedHeight: expectedStoredLatestHeight,
             network: network
         )
 
@@ -295,7 +295,8 @@ class BlockBatchValidationTests: XCTestCase {
                 downloader: downloader,
                 transactionRepository: transactionRepository,
                 config: config,
-                rustBackend: mockRust
+                rustBackend: mockRust,
+                internalSyncProgress: InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -309,9 +310,9 @@ class BlockBatchValidationTests: XCTestCase {
         
         XCTAssertTrue(
             {
-                switch nextBatch {
-                case .wait(latestHeight: expectedLatestHeight, latestDownloadHeight: expectedLatestHeight):
-                    return true
+                switch (nextBatch, expectedResult) {
+                case (let .wait(latestHeight, latestDownloadHeight), let .wait(expectedLatestHeight, exectedLatestDownloadHeight)):
+                    return latestHeight == expectedLatestHeight && latestDownloadHeight == exectedLatestDownloadHeight
                 default:
                     return false
                 }
@@ -329,14 +330,15 @@ class BlockBatchValidationTests: XCTestCase {
         )
         let expectedStoreLatestHeight = BlockHeight(1220000)
         let walletBirthday = BlockHeight(1210000)
-        let expectedResult = CompactBlockProcessor.NextState.processNewBlocks(
-            range: CompactBlockProcessor.nextBatchBlockRange(
-                latestHeight: expectedLatestHeight,
-                latestDownloadedHeight: expectedStoreLatestHeight,
-                walletBirthday: walletBirthday
-            ),
-            latestBlockHeight: expectedLatestHeight
+
+        let ranges = SyncRanges(
+            latestBlockHeight: expectedLatestHeight,
+            downloadRange: expectedStoreLatestHeight+1...expectedLatestHeight,
+            scanRange: expectedStoreLatestHeight+1...expectedLatestHeight,
+            enhanceRange: walletBirthday...expectedLatestHeight,
+            fetchUTXORange: walletBirthday...expectedLatestHeight
         )
+        let expectedResult = CompactBlockProcessor.NextState.processNewBlocks(ranges: ranges)
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloader = CompactBlockDownloader(service: service, storage: repository)
@@ -382,7 +384,8 @@ class BlockBatchValidationTests: XCTestCase {
                 downloader: downloader,
                 transactionRepository: transactionRepository,
                 config: config,
-                rustBackend: mockRust
+                rustBackend: mockRust,
+                internalSyncProgress: InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -393,12 +396,12 @@ class BlockBatchValidationTests: XCTestCase {
             XCTFail("result should not be nil")
             return
         }
-        
+
         XCTAssertTrue(
             {
-                switch nextBatch {
-                case .processNewBlocks(range: CompactBlockRange(uncheckedBounds: (expectedStoreLatestHeight + 1, expectedLatestHeight)), latestBlockHeight: expectedLatestHeight):
-                    return true
+                switch (nextBatch, expectedResult)  {
+                case (.processNewBlocks(let ranges), .processNewBlocks(let expectedRanges)):
+                    return ranges == expectedRanges
                 default:
                     return false
                 }
@@ -433,6 +436,10 @@ class BlockBatchValidationTests: XCTestCase {
             network: network
         )
 
+        let internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        await internalSyncProgress.set(expectedStoreLatestHeight, .latestEnhancedHeight)
+        await internalSyncProgress.set(expectedStoreLatestHeight, .latestUTXOFetchedHeight)
+
         let transactionRepository = MockTransactionRepository(
             unminedCount: 0,
             receivedCount: 0,
@@ -461,7 +468,8 @@ class BlockBatchValidationTests: XCTestCase {
                 downloader: downloader,
                 transactionRepository: transactionRepository,
                 config: config,
-                rustBackend: mockRust
+                rustBackend: mockRust,
+                internalSyncProgress: internalSyncProgress
             )
 
             XCTAssertFalse(Task.isCancelled)
@@ -477,9 +485,9 @@ class BlockBatchValidationTests: XCTestCase {
         XCTAssertTrue(
             {
 
-                switch nextBatch {
-                case .finishProcessing(height: expectedLatestHeight):
-                    return true
+                switch (nextBatch, expectedResult) {
+                case (.finishProcessing(let height), .finishProcessing(let expectedHeight)):
+                    return height == expectedHeight
                 default:
                     return false
                 }

@@ -130,6 +130,7 @@ class ReOrgTests: XCTestCase {
             try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
             try coordinator.resetBlocks(dataset: .predefined(dataset: .beforeReOrg))
             try coordinator.applyStaged(blockheight: firstLatestHeight)
+            sleep(1)
         } catch {
             XCTFail("Error: \(error)")
             return

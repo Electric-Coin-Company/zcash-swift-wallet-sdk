@@ -56,6 +56,8 @@ class DarksideSanityCheckTests: XCTestCase {
         let expectedLastBlock = (height: BlockHeight(663200), hash: "2fc7b4682f5ba6ba6f86e170b40f0aa9302e1d3becb2a6ee0db611ff87835e4a")
         
         try coordinator.applyStaged(blockheight: expectedLastBlock.height)
+
+        sleep(1)
         
         let syncExpectation = XCTestExpectation(description: "sync to \(expectedLastBlock.height)")
         

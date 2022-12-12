@@ -10,10 +10,10 @@ import Foundation
 extension CompactBlockProcessor {
     enum NextState: Equatable {
         case finishProcessing(height: BlockHeight)
-        case processNewBlocks(range: CompactBlockRange, latestBlockHeight: BlockHeight)
+        case processNewBlocks(ranges: SyncRanges)
         case wait(latestHeight: BlockHeight, latestDownloadHeight: BlockHeight)
     }
-    
+
     @discardableResult
     func figureNextBatch(
         downloader: CompactBlockDownloading
@@ -26,7 +26,8 @@ extension CompactBlockProcessor {
                 downloader: downloader,
                 transactionRepository: transactionRepository,
                 config: config,
-                rustBackend: rustBackend
+                rustBackend: rustBackend,
+                internalSyncProgress: internalSyncProgress
             )
         } catch {
             throw error

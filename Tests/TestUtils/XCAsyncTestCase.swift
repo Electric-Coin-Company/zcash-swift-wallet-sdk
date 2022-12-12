@@ -11,12 +11,16 @@ import Foundation
 import XCTest
 
 extension XCTestCase {
-    func wait(asyncBlock: @escaping (() async throws -> Void)) {
+    static func wait(asyncBlock: @escaping (() async throws -> Void)) {
         let semaphore = DispatchSemaphore(value: 0)
         Task.init {
             try await asyncBlock()
             semaphore.signal()
         }
         semaphore.wait()
+    }
+
+    func wait(asyncBlock: @escaping (() async throws -> Void)) {
+        XCTestCase.wait(asyncBlock: asyncBlock)
     }
 }

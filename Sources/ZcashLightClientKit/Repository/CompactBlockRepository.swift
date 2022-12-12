@@ -31,11 +31,6 @@ protocol CompactBlockRepository {
     func latestHeightAsync() async throws -> BlockHeight
 
     /**
-     Gets the block with the highest height that is currently stored.
-     */
-    func latestBlock() throws -> ZcashCompactBlock
-
-    /**
     Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
     Non-Blocking
     - Parameters:

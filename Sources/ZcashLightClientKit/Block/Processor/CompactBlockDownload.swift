@@ -43,6 +43,7 @@ extension CompactBlockProcessor {
                 buffer.append(zcashCompactBlock)
                 if buffer.count >= blockBufferSize {
                     try await storage.write(blocks: buffer)
+                    await blocksBufferWritten(buffer)
                     buffer.removeAll(keepingCapacity: true)
                 }
                 
@@ -54,12 +55,18 @@ extension CompactBlockProcessor {
                 notifyProgress(.download(progress))
             }
             try await storage.write(blocks: buffer)
+            await blocksBufferWritten(buffer)
             buffer.removeAll(keepingCapacity: true)
         } catch {
             guard let err = error as? LightWalletServiceError, case .userCancelled = err else {
                 throw error
             }
         }
+    }
+
+    private func blocksBufferWritten(_ buffer: [ZcashCompactBlock]) async {
+        guard let lastBlock = buffer.last else { return }
+        await internalSyncProgress.set(lastBlock.height, .latestDownloadedBlockHeight)
     }
 }
 
@@ -72,87 +79,6 @@ extension CompactBlockProcessor {
         
         do {
             try await downloader.downloadBlockRange(range)
-        } catch {
-            throw error
-        }
-    }
-}
-
-extension CompactBlockProcessor {
-    enum CompactBlockBatchDownloadError: Error {
-        case startHeightMissing
-        case batchDownloadFailed(range: CompactBlockRange, error: Error?)
-    }
-
-    func compactBlockBatchDownload(
-        range: CompactBlockRange,
-        batchSize: Int = 100,
-        maxRetries: Int = 5
-    ) async throws {
-        try Task.checkCancellation()
-        
-        var startHeight = range.lowerBound
-        let targetHeight = range.upperBound
-        
-        do {
-            let localDownloadedHeight = try await self.storage.latestHeightAsync()
-            
-            if localDownloadedHeight != BlockHeight.empty() && localDownloadedHeight > startHeight {
-                LoggerProxy.warn("provided startHeight (\(startHeight)) differs from local latest downloaded height (\(localDownloadedHeight))")
-                startHeight = localDownloadedHeight + 1
-            }
-            
-            var currentHeight = startHeight
-            notifyProgress(
-                .download(
-                    BlockProgress(
-                        startHeight: currentHeight,
-                        targetHeight: targetHeight,
-                        progressHeight: currentHeight
-                    )
-                )
-            )
-            
-            while !Task.isCancelled && currentHeight <= targetHeight {
-                var retries = 0
-                var success = true
-                var localError: Error?
-                
-                let range = CompactBlockRange(uncheckedBounds: (lower: currentHeight, upper: min(currentHeight + batchSize, targetHeight)))
-                
-                repeat {
-                    do {
-                        let stream: AsyncThrowingStream<ZcashCompactBlock, Error> = service.blockRange(range)
-
-                        var blocks: [ZcashCompactBlock] = []
-                        for try await compactBlock in stream {
-                            blocks.append(compactBlock)
-                        }
-                        try storage.insert(blocks)
-                        success = true
-                    } catch {
-                        success = false
-                        localError = error
-                        retries += 1
-                    }
-                } while !Task.isCancelled && !success && retries < maxRetries
-                
-                if retries >= maxRetries {
-                    throw CompactBlockBatchDownloadError.batchDownloadFailed(range: range, error: localError)
-                }
-                
-                notifyProgress(
-                    .download(
-                        BlockProgress(
-                            startHeight: startHeight,
-                            targetHeight: targetHeight,
-                            progressHeight: range.upperBound
-                        )
-                    )
-                )
-                
-                currentHeight = range.upperBound + 1
-            }
         } catch {
             throw error
         }

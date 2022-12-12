@@ -33,7 +33,7 @@ class WalletTests: XCTestCase {
         }
     }
     
-    func testWalletInitialization() async throws {
+    func testWalletInitialization() throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
         let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
             .map( { try derivationTool.deriveUnifiedFullViewingKey(from: $0) })

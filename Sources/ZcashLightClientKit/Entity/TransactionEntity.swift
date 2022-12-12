@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  TransactionEntity.swift
 //  ZcashLightClientKit
 //
 //  Created by Francisco Gindre on 11/14/19.

@@ -369,8 +369,6 @@ public actor CompactBlockProcessor {
     var rustBackend: ZcashRustBackendWelding.Type
     private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
-    private var lowerBoundHeight: BlockHeight?
-    private var latestBlockHeight: BlockHeight
     private var lastChainValidationFailure: BlockHeight?
     private var consecutiveChainValidationErrors: Int = 0
     var processingError: Error?
@@ -384,6 +382,8 @@ public actor CompactBlockProcessor {
     }
 
     private var cancelableTask: Task<Void, Error>?
+
+    let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
 
     /// Initializes a CompactBlockProcessor instance
     /// - Parameters:
@@ -447,7 +447,6 @@ public actor CompactBlockProcessor {
         self.storage = storage
         self.config = config
         self.transactionRepository = repository
-        self.latestBlockHeight = config.walletBirthday
         self.accountRepository = accountRepository
     }
     
@@ -487,13 +486,6 @@ public actor CompactBlockProcessor {
         guard remoteBranchID == localBranch else {
             throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
         }
-    }
-
-    static func nextBatchBlockRange(latestHeight: BlockHeight, latestDownloadedHeight: BlockHeight, walletBirthday: BlockHeight) -> CompactBlockRange {
-        let lowerBound = latestDownloadedHeight <= walletBirthday ? walletBirthday : latestDownloadedHeight + 1
-
-        let upperBound = latestHeight
-        return lowerBound ... upperBound
     }
 
     /// Starts the CompactBlockProcessor instance and starts downloading and processing blocks
@@ -557,7 +549,7 @@ public actor CompactBlockProcessor {
     public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
         guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
 
-        let lastDownloaded = try downloader.lastDownloadedBlockHeight()
+        let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
         let height = Int32(height ?? lastDownloaded)
         let nearestHeight = rustBackend.getNearestRewindHeight(
             dbData: config.dataDb,
@@ -582,10 +574,12 @@ public actor CompactBlockProcessor {
         }
 
         // clear cache
-        try downloader.rewind(to: BlockHeight(rewindHeight))
+        let rewindBlockHeight = BlockHeight(rewindHeight)
+        try downloader.rewind(to: rewindBlockHeight)
+        await internalSyncProgress.rewind(to: rewindBlockHeight)
+
         self.lastChainValidationFailure = nil
-        self.lowerBoundHeight = try? downloader.lastDownloadedBlockHeight()
-        return BlockHeight(rewindHeight)
+        return rewindBlockHeight
     }
 
     func validateServer() async {
@@ -605,37 +599,61 @@ public actor CompactBlockProcessor {
     }
     
     /// Processes new blocks on the given range based on the configuration set for this instance
-    func processNewBlocks(range: CompactBlockRange, latestBlockHeight: BlockHeight) async {
+    func processNewBlocks(ranges: SyncRanges) async {
         self.foundBlocks = true
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
         
         cancelableTask = Task(priority: .userInitiated) {
             do {
-                let lastDownloadedBlockHeight = try downloader.lastDownloadedBlockHeight()
+                LoggerProxy.debug("""
+                Syncing with ranges:
+                downloadRange:  \(ranges.downloadRange?.lowerBound ?? -1)...\(ranges.downloadRange?.upperBound ?? -1)
+                scanRange:      \(ranges.scanRange?.lowerBound ?? -1)...\(ranges.scanRange?.upperBound ?? -1)
+                enhanceRange:   \(ranges.enhanceRange?.lowerBound ?? -1)...\(ranges.enhanceRange?.upperBound ?? -1)
+                fetchUTXORange: \(ranges.fetchUTXORange?.lowerBound ?? -1)...\(ranges.fetchUTXORange?.upperBound ?? -1)
+                """)
 
-                // It may happen that sync process is interrupted in scanning phase. And then when sync process is resumed we already have
-                // blocks downloaded.
-                //
-                // Therefore we want to skip downloading in case that we already have everything downloaded.
-                if lastDownloadedBlockHeight < latestBlockHeight {
+                var anyActionExecuted = false
+
+                try storage.createTable()
+
+                if let range = ranges.downloadRange {
+                    anyActionExecuted = true
+                    LoggerProxy.debug("Downloading with range: \(range.lowerBound)...\(range.upperBound)")
+
                     try await compactBlockStreamDownload(
                         blockBufferSize: config.downloadBufferSize,
                         startHeight: range.lowerBound,
                         targetHeight: range.upperBound
                     )
+
+                    try await compactBlockValidation()
                 }
 
-                try storage.createTable()
+                if let range = ranges.scanRange {
+                    anyActionExecuted = true
+                    LoggerProxy.debug("Scanning with range: \(range.lowerBound)...\(range.upperBound)")
+                    try await compactBlockBatchScanning(range: range)
+                }
 
-                try await compactBlockValidation()
-                try await compactBlockBatchScanning(range: range)
-                try await compactBlockEnhancement(range: range)
-                try await fetchUnspentTxOutputs(range: range)
+                if let range = ranges.enhanceRange {
+                    anyActionExecuted = true
+                    LoggerProxy.debug("Enhancing with range: \(range.lowerBound)...\(range.upperBound)")
+                    try await compactBlockEnhancement(range: range)
+                }
+
+                if let range = ranges.fetchUTXORange {
+                    anyActionExecuted = true
+                    LoggerProxy.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
+                    try await fetchUnspentTxOutputs(range: range)
+                }
+
                 try await handleSaplingParametersIfNeeded()
+                try await removeCacheDB()
                 
                 if !Task.isCancelled {
-                    await processBatchFinished(range: range)
+                    await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
                 }
             } catch {
                 LoggerProxy.error("Sync failed with error: \(error)")
@@ -720,27 +738,6 @@ public actor CompactBlockProcessor {
         await self.setTimer()
     }
 
-    func retryProcessing(range: CompactBlockRange) async {
-        cancelableTask?.cancel()
-        // update retries
-        self.retryAttempts += 1
-        self.processingError = nil
-        guard self.retryAttempts < config.retries else {
-            self.notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.retryAttempts))
-            self.stop()
-            return
-        }
-
-        do {
-            try downloader.rewind(to: max(range.lowerBound, self.config.walletBirthday))
-
-            // process next batch
-            await nextBatch()
-        } catch {
-            await self.fail(error)
-        }
-    }
-
     func mapError(_ error: Error) -> CompactBlockProcessorError {
         if let processorError = error as? CompactBlockProcessorError {
             return processorError
@@ -780,22 +777,18 @@ public actor CompactBlockProcessor {
                 downloader: self.downloader,
                 transactionRepository: transactionRepository,
                 config: self.config,
-                rustBackend: self.rustBackend
+                rustBackend: self.rustBackend,
+                internalSyncProgress: internalSyncProgress
             )
             switch nextState {
             case .finishProcessing(let height):
-                self.latestBlockHeight = height
                 await self.processingFinished(height: height)
-            case .processNewBlocks(let range, let latestBlockHeight):
-                self.latestBlockHeight = range.upperBound
-                self.lowerBoundHeight = range.lowerBound
-                await self.processNewBlocks(range: range, latestBlockHeight: latestBlockHeight)
+            case .processNewBlocks(let ranges):
+                await self.processNewBlocks(ranges: ranges)
             case let .wait(latestHeight, latestDownloadHeight):
                 // Lightwalletd might be syncing
-                self.lowerBoundHeight = latestDownloadHeight
-                self.latestBlockHeight = latestHeight
                 LoggerProxy.info(
-                    "Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight)" +
+                    "Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight) " +
                     "while latest blockheight is reported at: \(latestHeight)"
                 )
                 await self.processingFinished(height: latestDownloadHeight)
@@ -827,6 +820,7 @@ public actor CompactBlockProcessor {
         
         do {
             try downloader.rewind(to: rewindHeight)
+            await internalSyncProgress.rewind(to: rewindHeight)
             
             // notify reorg
             NotificationSender.default.post(
@@ -844,21 +838,15 @@ public actor CompactBlockProcessor {
         }
     }
 
-    internal func processBatchFinished(range: CompactBlockRange) async {
-        guard processingError == nil else {
-            await retryProcessing(range: range)
-            return
-        }
-        
+    internal func processBatchFinished(height: BlockHeight?) async {
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
-        
-        guard !range.isEmpty else {
-            await processingFinished(height: range.upperBound)
-            return
+
+        if let height {
+            await processingFinished(height: height)
+        } else {
+            await nextBatch()
         }
-        
-        await nextBatch()
     }
     
     private func processingFinished(height: BlockHeight) async {
@@ -880,26 +868,9 @@ public actor CompactBlockProcessor {
     }
 
     private func removeCacheDB() async throws {
-        let latestBlock: ZcashCompactBlock
-        do {
-            latestBlock = try storage.latestBlock()
-        } catch let error {
-            // If we don't have anything downloaded we don't need to remove DB and we also don't want to throw error and error out whole sync process.
-            if let err = error as? StorageError, case .latestBlockNotFound = err {
-                return
-            } else {
-                throw error
-            }
-        }
-
         storage.closeDBConnection()
         try FileManager.default.removeItem(at: config.cacheDb)
         try storage.createTable()
-
-        // Latest downloaded block needs to be preserved because after the sync process is interrupted it must be correctly resumed. And for that
-        // we need correct information which was downloaded as latest.
-        try await storage.write(blocks: [latestBlock])
-
         LoggerProxy.info("Cache removed")
     }
     
@@ -917,9 +888,8 @@ public actor CompactBlockProcessor {
                                 """
                                 Timer triggered: Starting compact Block processor!.
                                 Processor State: \(await self.state)
-                                latestHeight: \(await self.latestBlockHeight)
+                                latestHeight: \(try await self.transactionRepository.lastScannedHeight())
                                 attempts: \(await self.retryAttempts)
-                                lowerbound: \(String(describing: await self.lowerBoundHeight))
                                 """
                         )
                         await self.start()
@@ -1195,51 +1165,33 @@ extension CompactBlockProcessor {
             downloader: CompactBlockDownloading,
             transactionRepository: TransactionRepository,
             config: Configuration,
-            rustBackend: ZcashRustBackendWelding.Type
-        ) async throws -> NextState {
+            rustBackend: ZcashRustBackendWelding.Type,
+            internalSyncProgress: InternalSyncProgress
+        ) async throws -> CompactBlockProcessor.NextState {
+            // It should be ok to not create new Task here because this method is already async. But for some reason something not good happens
+            // when Task is not created here. For example tests start failing. Reason is unknown at this time.
             let task = Task(priority: .userInitiated) {
-                do {
-                    let info = try await service.getInfo()
-                    
-                    try CompactBlockProcessor.validateServerInfo(
-                        info,
-                        saplingActivation: config.saplingActivation,
-                        localNetwork: config.network,
-                        rustBackend: rustBackend
-                    )
+                let info = try await service.getInfo()
 
-                    let lastDownloadedBlockHeight = try downloader.lastDownloadedBlockHeight()
-                    let latestBlockheight = try service.latestBlockHeight()
+                try CompactBlockProcessor.validateServerInfo(
+                    info,
+                    saplingActivation: config.saplingActivation,
+                    localNetwork: config.network,
+                    rustBackend: rustBackend
+                )
 
-                    // Syncing process can be interrupted in any phase. And here it must be detected in which phase is syncing process.
-                    let latestDownloadedBlockHeight: BlockHeight
-                    // This means that there are some blocks that are not downloaded yet.
-                    if lastDownloadedBlockHeight < latestBlockheight {
-                        latestDownloadedBlockHeight = max(config.walletBirthday, lastDownloadedBlockHeight)
-                    } else {
-                        // Here all the blocks are downloaded and last scan height should be then used to compute processing range.
-                        latestDownloadedBlockHeight = max(config.walletBirthday, try transactionRepository.lastScannedHeight())
-                    }
+                await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: try downloader.lastDownloadedBlockHeight())
 
-                    
-                    if latestDownloadedBlockHeight < latestBlockheight {
-                        return NextState.processNewBlocks(
-                            range: CompactBlockProcessor.nextBatchBlockRange(
-                                latestHeight: latestBlockheight,
-                                latestDownloadedHeight: latestDownloadedBlockHeight,
-                                walletBirthday: config.walletBirthday
-                            ),
-                            latestBlockHeight: latestBlockheight
-                        )
-                    } else if latestBlockheight == latestDownloadedBlockHeight {
-                        return .finishProcessing(height: latestBlockheight)
-                    }
-                    
-                    return .wait(latestHeight: latestBlockheight, latestDownloadHeight: latestBlockheight)
-                } catch {
-                    throw error
-                }
+                let latestBlockHeight = try service.latestBlockHeight()
+                let latestScannedHeight = try transactionRepository.lastScannedHeight()
+
+                return try await internalSyncProgress.computeNextState(
+                    latestBlockHeight: latestBlockHeight,
+                    latestScannedHeight: latestScannedHeight,
+                    walletBirthday: config.walletBirthday
+                )
             }
+
             return try await task.value
         }
     }

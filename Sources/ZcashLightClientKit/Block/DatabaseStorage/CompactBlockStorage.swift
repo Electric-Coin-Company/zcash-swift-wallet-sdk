@@ -97,21 +97,6 @@ extension CompactBlockStorage: CompactBlockRepository {
         }
         return try await task.value
     }
-
-    func latestBlock() throws -> ZcashCompactBlock {
-        let dataColumn = self.dataColumn()
-        let heightColumn = self.heightColumn()
-        let query = compactBlocksTable()
-            .select(dataColumn, heightColumn)
-            .order(heightColumn.desc)
-            .limit(1)
-
-        guard let blockData = try dbProvider.connection().prepare(query).first(where: { _ in return true }) else {
-            throw StorageError.latestBlockNotFound
-        }
-
-        return ZcashCompactBlock(height: Int(blockData[heightColumn]), data: Data(blob: blockData[dataColumn]))
-    }
     
     func write(blocks: [ZcashCompactBlock]) async throws {
         let task = Task(priority: .userInitiated) {

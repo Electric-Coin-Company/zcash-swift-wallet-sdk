@@ -147,51 +147,87 @@ class CompactBlockProcessorTests: XCTestCase {
         (abs(currentHeight - targetHeight) / batchSize)
     }
     
-    func testNextBatchBlockRange() {
+    func testNextBatchBlockRange() async {
         // test first range
         var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
         var latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
         
-        var expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight, upper:latestBlockchainHeight))
-        
-        XCTAssertEqual(
-            expectedBatchRange,
-            CompactBlockProcessor.nextBatchBlockRange(
-                latestHeight: latestBlockchainHeight,
-                latestDownloadedHeight: latestDownloadedHeight,
-                walletBirthday: processorConfig.walletBirthday
-            )
+        var expectedSyncRanges = SyncRanges(
+            latestBlockHeight: latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight...latestBlockchainHeight,
+            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
+            enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
+            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
         )
-        
+
+        var internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
+
+        var syncRanges = await internalSyncProgress.computeSyncRanges(
+            birthday: processorConfig.walletBirthday,
+            latestBlockHeight: latestBlockchainHeight,
+            latestScannedHeight: 0
+        )
+
+        XCTAssertEqual(
+            expectedSyncRanges,
+            syncRanges,
+            "Failure when testing first range"
+        )
+
         // Test mid-range
         latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + ZcashSDK.DefaultDownloadBatch)
         latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
-        
-        expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
+
+        expectedSyncRanges = SyncRanges(
+            latestBlockHeight: latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight+1...latestBlockchainHeight,
+            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
+            enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
+            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
+        )
+
+        internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
+
+        syncRanges = await internalSyncProgress.computeSyncRanges(
+            birthday: processorConfig.walletBirthday,
+            latestBlockHeight: latestBlockchainHeight,
+            latestScannedHeight: 0
+        )
         
         XCTAssertEqual(
-            expectedBatchRange,
-            CompactBlockProcessor.nextBatchBlockRange(
-                latestHeight: latestBlockchainHeight,
-                latestDownloadedHeight: latestDownloadedHeight,
-                walletBirthday: processorConfig.walletBirthday
-            )
+            expectedSyncRanges,
+            syncRanges,
+            "Failure when testing mid range"
         )
         
         // Test last batch range
         
         latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + 950)
         latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
-        
-        expectedBatchRange = CompactBlockRange(uncheckedBounds: (lower: latestDownloadedHeight + 1, upper: latestBlockchainHeight))
+
+        expectedSyncRanges = SyncRanges(
+            latestBlockHeight: latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight+1...latestBlockchainHeight,
+            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
+            enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
+            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
+        )
+
+        internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
+
+        syncRanges = await internalSyncProgress.computeSyncRanges(
+            birthday: processorConfig.walletBirthday,
+            latestBlockHeight: latestBlockchainHeight,
+            latestScannedHeight: 0
+        )
         
         XCTAssertEqual(
-            expectedBatchRange,
-            CompactBlockProcessor.nextBatchBlockRange(
-                latestHeight: latestBlockchainHeight,
-                latestDownloadedHeight: latestDownloadedHeight,
-                walletBirthday: processorConfig.walletBirthday
-            )
+            expectedSyncRanges,
+            syncRanges,
+            "Failure when testing last range"
         )
     }
     

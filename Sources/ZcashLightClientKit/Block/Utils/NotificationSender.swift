@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  NotificationSender.swift
 //  
 //
 //  Created by Michal Fousek on 21.11.2022.
