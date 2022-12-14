@@ -196,6 +196,48 @@ extension MockTransactionRepository: TransactionRepository {
     }
 }
 
+enum MockTransactionRepositoryError: Error {
+    case notImplemented
+}
+
+extension MockTransactionRepository {
+    func find(id: Int) throws -> ZcashLightClientKit.TransactionNG.Overview {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func find(rawID: Data) throws -> ZcashLightClientKit.TransactionNG.Overview {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func find(offset: Int, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Overview] {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func find(in range: ZcashLightClientKit.BlockRange, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Overview] {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func findReceived(offset: Int, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Received] {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func findSent(offset: Int, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Sent] {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func findSent(from: ZcashLightClientKit.TransactionNG.Sent, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Sent] {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func findSent(in range: ZcashLightClientKit.BlockRange, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Sent] {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+
+    func findSent(rawID: Data) throws -> ZcashLightClientKit.TransactionNG.Sent {
+        throw MockTransactionRepositoryError.notImplemented
+    }
+}
+
 extension Array {
     func indices(where function: (_ element: Element) -> Bool) -> [Int]? {
         guard !self.isEmpty else { return nil }

@@ -9,6 +9,7 @@ import Foundation
 
 enum TransactionRepositoryError: Error {
     case malformedTransaction
+    case notFound
 }
 
 protocol TransactionRepository {
@@ -27,4 +28,16 @@ protocol TransactionRepository {
     func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]?
     func findConfirmedTransactions(in range: BlockRange, offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
     func findConfirmedTransactionBy(rawId: Data) throws -> ConfirmedTransactionEntity?
+
+    // MARK: - TransactionNG methods
+
+    func find(id: Int) throws -> TransactionNG.Overview
+    func find(rawID: Data) throws -> TransactionNG.Overview
+    func find(offset: Int, limit: Int) throws -> [TransactionNG.Overview]
+    func find(in range: BlockRange, limit: Int) throws -> [TransactionNG.Overview]
+    func findReceived(offset: Int, limit: Int) throws -> [TransactionNG.Received]
+    func findSent(offset: Int, limit: Int) throws -> [TransactionNG.Sent]
+    func findSent(from: TransactionNG.Sent, limit: Int) throws -> [TransactionNG.Sent]
+    func findSent(in range: BlockRange, limit: Int) throws -> [TransactionNG.Sent]
+    func findSent(rawID: Data) throws -> TransactionNG.Sent
 }
