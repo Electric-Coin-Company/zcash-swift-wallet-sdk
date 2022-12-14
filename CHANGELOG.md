@@ -1,3 +1,7 @@
+# 0.17.4-beta
+- [#665] Fix testShieldFunds() `get_transparent_balance` error
+updates `libzcashlc` to `0.1.1` to fix an error where getting a 
+transparent balance on an empty database would fail.
 # 0.17.3-beta
 - [#646] SDK sync process resumes to previously saved block height
 This change adds an internal storage test on UserDefaults that tells the 
