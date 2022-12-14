@@ -19,10 +19,20 @@ class SyncBlocksViewController: UIViewController {
     @IBOutlet weak var startPause: UIButton!
     @IBOutlet weak var metricLabel: UILabel!
     @IBOutlet weak var summaryLabel: UILabel!
-    var lastMetric = PassthroughSubject<SDKMetrics.BlockMetricReport, Never>()
     
     private var queue = DispatchQueue(label: "metrics.queue", qos: .default)
     private var accumulatedMetrics: ProcessorMetrics = .initial
+    private var currentMetric: SDKMetrics.Operation?
+    private var currentMetricName: String {
+        guard let currentMetric else { return "" }
+        switch currentMetric {
+        case .downloadBlocks: return "download: "
+        case .validateBlocks: return "validate: "
+        case .scanBlocks: return "scan: "
+        case .enhancement: return "enhancement: "
+        case .fetchUTXOs: return "fetchUTXOs: "
+        }
+    }
 
     let synchronizer = AppDelegate.shared.sharedSynchronizer
 
@@ -65,27 +75,47 @@ class SyncBlocksViewController: UIViewController {
                 .store(in: &notificationCancellables)
         }
 
-        self.lastMetric
-            .throttle(for: 5, scheduler: DispatchQueue.main, latest: true)
-            .receive(on: DispatchQueue.main)
-            .sink { report in
-                // handle report
-                self.metricLabel.text = report.debugDescription
+        NotificationCenter.default.publisher(for: .blockProcessorStartedDownloading, object: nil)
+            .sink { [weak self] _ in
+                self?.currentMetric = .downloadBlocks
             }
             .store(in: &notificationCancellables)
 
-        NotificationCenter.default.publisher(for: SDKMetrics.notificationName)
-            .receive(on: queue)
-            .compactMap { SDKMetrics.blockReportFromNotification($0) }
-            .map { [weak self] report in
-                guard let self = self else { return report }
+        NotificationCenter.default.publisher(for: .blockProcessorStartedValidating, object: nil)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.accumulateMetrics()
+                self?.summaryLabel.text = "download: \((self?.accumulatedMetrics.debugDescription ?? "No summary"))"
+                self?.accumulatedMetrics = .initial
+                self?.currentMetric = .validateBlocks
+            }
+            .store(in: &notificationCancellables)
 
-                self.accumulatedMetrics = .accummulate(self.accumulatedMetrics, current: report)
+        NotificationCenter.default.publisher(for: .blockProcessorStartedScanning, object: nil)
+            .sink { [weak self] _ in
+                self?.currentMetric = .scanBlocks
+            }
+            .store(in: &notificationCancellables)
 
-                return report
+        NotificationCenter.default.publisher(for: .blockProcessorStartedEnhancing, object: nil)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.accumulateMetrics()
+                self?.summaryLabel.text = "scan: \((self?.accumulatedMetrics.debugDescription ?? "No summary"))"
+                self?.accumulatedMetrics = .initial
+                self?.currentMetric = .enhancement
+            }
+            .store(in: &notificationCancellables)
+
+        NotificationCenter.default.publisher(for: .blockProcessorUpdated, object: nil)
+            .throttle(for: 5, scheduler: DispatchQueue.main, latest: true)
+            .receive(on: DispatchQueue.main)
+            .map { [weak self] _ -> SDKMetrics.BlockMetricReport? in
+                guard let currentMetric = self?.currentMetric else { return nil }
+                return SDKMetrics.shared.popBlock(operation: currentMetric)?.last
             }
             .sink { [weak self] report in
-                self?.lastMetric.send(report)
+                self?.metricLabel.text = (self?.currentMetricName ?? "") + report.debugDescription
             }
             .store(in: &notificationCancellables)
 
@@ -93,7 +123,9 @@ class SyncBlocksViewController: UIViewController {
             .receive(on: DispatchQueue.main)
             .delay(for: 0.5, scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.summaryLabel.text = self?.accumulatedMetrics.debugDescription ?? "No summary"
+                self?.accumulateMetrics()
+                self?.summaryLabel.text = "enhancement: \((self?.accumulatedMetrics.debugDescription ?? "No summary"))"
+                self?.overallSummary()
             }
             .store(in: &notificationCancellables)
     }
@@ -117,6 +149,37 @@ class SyncBlocksViewController: UIViewController {
             return
         }
     }
+    
+    func accumulateMetrics() {
+        guard let currentMetric else { return }
+        if let reports = SDKMetrics.shared.popBlock(operation: currentMetric) {
+            for report in reports {
+                accumulatedMetrics = .accumulate(accumulatedMetrics, current: report)
+            }
+        }
+    }
+    
+    func overallSummary() {
+        let cumulativeSummary = SDKMetrics.shared.cumulativeSummary()
+        
+        let downloadedBlocksReport = cumulativeSummary.downloadedBlocksReport ?? SDKMetrics.ReportSummary.zero
+        let validatedBlocksReport = cumulativeSummary.validatedBlocksReport ?? SDKMetrics.ReportSummary.zero
+        let scannedBlocksReport = cumulativeSummary.scannedBlocksReport ?? SDKMetrics.ReportSummary.zero
+        let enhancementReport = cumulativeSummary.enhancementReport ?? SDKMetrics.ReportSummary.zero
+        let fetchUTXOsReport = cumulativeSummary.fetchUTXOsReport ?? SDKMetrics.ReportSummary.zero
+        let totalSyncReport = cumulativeSummary.totalSyncReport ?? SDKMetrics.ReportSummary.zero
+
+        metricLabel.text =
+            """
+            Summary:
+                downloadedBlocks: min: \(downloadedBlocksReport.minTime) max: \(downloadedBlocksReport.maxTime) avg: \(downloadedBlocksReport.avgTime)
+                validatedBlocks: min: \(validatedBlocksReport.minTime) max: \(validatedBlocksReport.maxTime) avg: \(validatedBlocksReport.avgTime)
+                scannedBlocks: min: \(scannedBlocksReport.minTime) max: \(scannedBlocksReport.maxTime) avg: \(scannedBlocksReport.avgTime)
+                enhancement: min: \(enhancementReport.minTime) max: \(enhancementReport.maxTime) avg: \(enhancementReport.avgTime)
+                fetchUTXOs: min: \(fetchUTXOsReport.minTime) max: \(fetchUTXOsReport.maxTime) avg: \(fetchUTXOsReport.avgTime)
+                totalSync: min: \(totalSyncReport.minTime) max: \(totalSyncReport.maxTime) avg: \(totalSyncReport.avgTime)
+            """
+    }
 
     @IBAction func startStop() {
         Task { @MainActor in
@@ -132,6 +195,7 @@ class SyncBlocksViewController: UIViewController {
                     _ = try synchronizer.prepare(with: DemoAppConfig.seed)
                 }
 
+                SDKMetrics.shared.enableMetrics()
                 try synchronizer.start()
                 updateUI()
             } catch {
@@ -140,6 +204,7 @@ class SyncBlocksViewController: UIViewController {
             }
         default:
             synchronizer.stop()
+            SDKMetrics.shared.disableMetrics()
             updateUI()
         }
 
@@ -223,11 +288,11 @@ struct ProcessorMetrics {
     var maxHeight: BlockHeight
     var maxDuration: (TimeInterval, CompactBlockRange)
     var minDuration: (TimeInterval, CompactBlockRange)
-    var cummulativeDuration: TimeInterval
+    var cumulativeDuration: TimeInterval
     var measuredCount: Int
 
     var averageDuration: TimeInterval {
-        measuredCount > 0 ? cummulativeDuration / Double(measuredCount) : 0
+        measuredCount > 0 ? cumulativeDuration / Double(measuredCount) : 0
     }
 
     static let initial = Self.init(
@@ -235,11 +300,11 @@ struct ProcessorMetrics {
         maxHeight: .min,
         maxDuration: (TimeInterval.leastNonzeroMagnitude, 0 ... 1),
         minDuration: (TimeInterval.greatestFiniteMagnitude, 0 ... 1),
-        cummulativeDuration: 0,
+        cumulativeDuration: 0,
         measuredCount: 0
     )
 
-    static func accummulate(_ prev: ProcessorMetrics, current: SDKMetrics.BlockMetricReport) -> Self {
+    static func accumulate(_ prev: ProcessorMetrics, current: SDKMetrics.BlockMetricReport) -> Self {
         .init(
             minHeight: min(prev.minHeight, current.startHeight),
             maxHeight: max(prev.maxHeight, current.progressHeight),
@@ -253,7 +318,7 @@ struct ProcessorMetrics {
                 (current.duration, current.progressHeight - current.batchSize ... current.progressHeight),
                 min
             ),
-            cummulativeDuration: prev.cummulativeDuration + current.duration,
+            cumulativeDuration: prev.cumulativeDuration + current.duration,
             measuredCount: prev.measuredCount + 1
         )
     }
@@ -274,12 +339,13 @@ extension ProcessorMetrics: CustomDebugStringConvertible {
             minHeight: \(self.minHeight)
             maxHeight: \(self.maxHeight)
 
-            avg scan time: \(self.averageDuration)
-            slowest scanned range:
+            avg time: \(self.averageDuration)
+            overall time: \(self.cumulativeDuration)
+            slowest range:
                 range:  \(self.maxDuration.1.description)
                 count:  \(self.maxDuration.1.count)
                 seconds: \(self.maxDuration.0)
-            Fastest scanned range:
+            Fastest range:
                 range: \(self.minDuration.1.description)
                 count: \(self.minDuration.1.count)
                 seconds: \(self.minDuration.0)
@@ -296,7 +362,7 @@ extension CompactBlockRange {
 extension SDKMetrics.BlockMetricReport: CustomDebugStringConvertible {
     public var debugDescription: String {
         """
-        BlockMetric: Scan
+        BlockMetric:
             startHeight: \(self.progressHeight - self.batchSize)
             endHeight: \(self.progressHeight)
             batchSize: \(self.batchSize)
