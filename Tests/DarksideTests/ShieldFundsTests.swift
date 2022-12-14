@@ -176,14 +176,14 @@ class ShieldFundsTests: XCTestCase {
         let tFundsDetectedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
         XCTAssertEqual(tFundsDetectedBalance.total, Zatoshi(10000))
-        XCTAssertEqual(tFundsDetectedBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
+        XCTAssertEqual(tFundsDetectedBalance.verified, .zero)
 
         let tFundsConfirmationSyncExpectation = XCTestExpectation(description: "t funds confirmation")
 
         shouldContinue = false
 
         // 7. stage ten blocks and confirm the transparent funds at `utxoHeight + 10`
-        try coordinator.applyStaged(blockheight: utxoHeight + 20) // FIXME: funds are confirmed at 20 blocks
+        try coordinator.applyStaged(blockheight: utxoHeight + 10)
 
         sleep(2)
 
