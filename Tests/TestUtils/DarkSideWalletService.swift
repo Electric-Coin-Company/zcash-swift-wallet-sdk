@@ -177,6 +177,8 @@ class DarksideWalletService: LightWalletService {
 }
 
 enum DarksideWalletDConstants: NetworkConstants {
+    static var defaultFsBlockDbRootName = "fs_cache"
+
     static var saplingActivationHeight: BlockHeight {
         663150
     }

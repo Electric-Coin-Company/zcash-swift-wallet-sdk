@@ -41,6 +41,17 @@ extension NetworkType {
     }
 }
 
+extension NetworkType {
+    public var chainName: String {
+        switch self {
+        case .mainnet:
+            return "main"
+        case .testnet:
+            return "test"
+        }
+    }
+}
+
 public enum ZcashNetworkBuilder {
     public static func network(for networkType: NetworkType) -> ZcashNetwork {
         switch networkType {
@@ -111,6 +122,9 @@ public enum ZcashSDK {
     /// Default Name for LibRustZcash data.db
     public static var defaultDataDbName = "data.db"
 
+    /// Default Name for Compact Block file system based db
+    public static var defaultFsCacheName = "fs_cache"
+
     /// Default Name for Compact Block caches db
     public static var defaultCacheDbName = "caches.db"
 
@@ -137,7 +151,10 @@ public protocol NetworkConstants {
     /// Default Name for LibRustZcash data.db
     static var defaultDataDbName: String { get }
 
+    static var defaultFsBlockDbRootName: String { get }
+
     /// Default Name for Compact Block caches db
+    @available(*, deprecated, message: "use this name to clean up the sqlite compact block database")
     static var defaultCacheDbName: String { get }
 
     /// Default name for pending transactions db
@@ -172,15 +189,15 @@ public extension NetworkConstants {
     }
 }
 
-public class ZcashSDKMainnetConstants: NetworkConstants {
-    private init() {}
-
+public enum ZcashSDKMainnetConstants: NetworkConstants {
     /// The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
     /// prior to this height, at all.
     public static var saplingActivationHeight: BlockHeight = 419_200
 
     /// Default Name for LibRustZcash data.db
     public static var defaultDataDbName = "data.db"
+
+    public static var defaultFsBlockDbRootName = "fs_cache"
 
     /// Default Name for Compact Block caches db
     public static var defaultCacheDbName = "caches.db"
@@ -193,9 +210,7 @@ public class ZcashSDKMainnetConstants: NetworkConstants {
     public static var feeChangeHeight: BlockHeight = 1_077_550
 }
 
-public class ZcashSDKTestnetConstants: NetworkConstants {
-    private init() {}
-
+public enum ZcashSDKTestnetConstants: NetworkConstants {
     /// The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
     /// prior to this height, at all.
     public static var saplingActivationHeight: BlockHeight = 280_000
@@ -205,6 +220,8 @@ public class ZcashSDKTestnetConstants: NetworkConstants {
 
     /// Default Name for Compact Block caches db
     public static var defaultCacheDbName = "caches.db"
+
+    public static var defaultFsBlockDbRootName = "fs_cache"
 
     /// Default name for pending transactions db
     public static var defaultPendingDbName = "pending.db"

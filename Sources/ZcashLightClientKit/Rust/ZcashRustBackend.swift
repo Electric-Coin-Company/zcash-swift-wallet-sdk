@@ -510,7 +510,86 @@ class ZcashRustBackend: ZcashRustBackendWelding {
             throw lastError() ?? .genericError(message: "`initAccountsTable` failed with unknown error")
         }
     }
-    
+
+    static func initBlockMetadataDb(fsBlockDbRoot: URL) throws -> Bool {
+        let blockDb = fsBlockDbRoot.osPathStr()
+
+        let result = zcashlc_init_block_metadata_db(blockDb.0, blockDb.1)
+
+        guard result else {
+            throw lastError() ?? .genericError(message: "`initAccountsTable` failed with unknown error")
+        }
+
+        return result
+    }
+
+    static func writeBlocksMetadata(fsBlockDbRoot: URL, blocks: [ZcashCompactBlock]) throws -> Bool {
+        var ffiBlockMetaVec: [FFIBlockMeta] = []
+
+        for block in blocks {
+            let meta = block.meta
+            let hashPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: meta.hash.count)
+
+            let contiguousHashBytes = ContiguousArray(meta.hash.bytes)
+
+            let result: Void? = contiguousHashBytes.withContiguousStorageIfAvailable { hashBytesPtr in
+                // swiftlint:disable:next force_unwrapping
+                hashPtr.initialize(from: hashBytesPtr.baseAddress!, count: hashBytesPtr.count)
+            }
+
+            guard result != nil else {
+                defer {
+                    hashPtr.deallocate()
+                    ffiBlockMetaVec.deallocateElements()
+                }
+                return false
+            }
+
+            ffiBlockMetaVec.append(
+                FFIBlockMeta(
+                    height: UInt32(block.height),
+                    block_hash_ptr: hashPtr,
+                    block_hash_ptr_len: UInt(contiguousHashBytes.count),
+                    block_time: meta.time,
+                    sapling_outputs_count: meta.saplingOutputs,
+                    orchard_actions_count: meta.orchardOutputs
+                )
+            )
+        }
+
+        var contiguousFFIBlocks = ContiguousArray(ffiBlockMetaVec)
+
+        let len = UInt(contiguousFFIBlocks.count)
+
+        let fsBlocks = UnsafeMutablePointer<FFIBlocksMeta>.allocate(capacity: 1)
+
+        defer { ffiBlockMetaVec.deallocateElements() }
+
+        let result = try contiguousFFIBlocks.withContiguousMutableStorageIfAvailable { ptr in
+            var meta = FFIBlocksMeta()
+            meta.ptr = ptr.baseAddress
+            meta.len = len
+
+            fsBlocks.initialize(to: meta)
+
+            let fsDb = fsBlockDbRoot.osPathStr()
+
+            let res = zcashlc_write_block_metadata(fsDb.0, fsDb.1, fsBlocks)
+
+            guard res else {
+                throw lastError() ?? RustWeldingError.genericError(message: "failed to write block metadata")
+            }
+
+            return res
+        }
+
+        guard let value = result else {
+            return false
+        }
+
+        return value
+    }
+
     // swiftlint:disable function_parameter_count
     static func initBlocksTable(
         dbData: URL,
@@ -541,6 +620,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         ) != 0 else {
             throw lastError() ?? .genericError(message: "No error message available")
         }
+    }
+
+    static func latestCachedBlockHeight(fsBlockDbRoot: URL) -> BlockHeight {
+        let fsBlockDb = fsBlockDbRoot.osPathStr()
+
+        return BlockHeight(zcashlc_latest_cached_block_height(fsBlockDb.0, fsBlockDb.1))
     }
 
     static func listTransparentReceivers(
@@ -599,28 +684,37 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return true
     }
     
-    static func validateCombinedChain(dbCache: URL, dbData: URL, networkType: NetworkType) -> Int32 {
-        let dbCache = dbCache.osStr()
+    static func validateCombinedChain(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType, limit: UInt32 = 0) -> Int32 {
+        let dbCache = fsBlockDbRoot.osPathStr()
         let dbData = dbData.osStr()
-        return zcashlc_validate_combined_chain(dbCache.0, dbCache.1, dbData.0, dbData.1, networkType.networkId)
+        return zcashlc_validate_combined_chain(dbCache.0, dbCache.1, dbData.0, dbData.1, networkType.networkId, limit)
     }
     
     static func rewindToHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Bool {
         let dbData = dbData.osStr()
         return zcashlc_rewind_to_height(dbData.0, dbData.1, height, networkType.networkId)
     }
-    
-    static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32 = 0, networkType: NetworkType) -> Bool {
-        let dbCache = dbCache.osStr()
+
+    static func rewindCacheToHeight(
+        fsBlockDbRoot: URL,
+        height: Int32
+    ) -> Bool {
+        let fsBlockCache = fsBlockDbRoot.osPathStr()
+
+        return zcashlc_rewind_fs_block_cache_to_height(fsBlockCache.0, fsBlockCache.1, height)
+    }
+
+    static func scanBlocks(fsBlockDbRoot: URL, dbData: URL, limit: UInt32 = 0, networkType: NetworkType) -> Bool {
+        let dbCache = fsBlockDbRoot.osPathStr()
         let dbData = dbData.osStr()
         return zcashlc_scan_blocks(dbCache.0, dbCache.1, dbData.0, dbData.1, limit, networkType.networkId) != 0
     }
     
     static func shieldFunds(
-        dbCache: URL,
         dbData: URL,
         usk: UnifiedSpendingKey,
         memo: MemoBytes?,
+        shieldingThreshold: Zatoshi,
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
@@ -634,11 +728,13 @@ class ZcashRustBackend: ZcashRustBackendWelding {
                 uskBuffer.baseAddress,
                 UInt(usk.bytes.count),
                 memo?.bytes,
+                UInt64(shieldingThreshold.amount),
                 spendParamsPath,
                 UInt(spendParamsPath.lengthOfBytes(using: .utf8)),
                 outputParamsPath,
                 UInt(outputParamsPath.lengthOfBytes(using: .utf8)),
                 networkType.networkId,
+                minimumConfirmations,
                 useZIP317Fees
             )
         }
@@ -730,6 +826,12 @@ private extension URL {
         let path = self.absoluteString
         return (path, UInt(path.lengthOfBytes(using: .utf8)))
     }
+
+    /// use when the rust ffi needs to make filesystem operations
+    func osPathStr() -> (String, UInt) {
+        let path = self.path
+        return (path, UInt(path.lengthOfBytes(using: .utf8)))
+    }
 }
 
 extension String {
@@ -767,7 +869,6 @@ extension UnsafeMutablePointer where Pointee == UInt8 {
         return bytes
     }
 }
-    
 extension RustWeldingError: LocalizedError {
     var errorDescription: String? {
         switch self {
@@ -791,6 +892,14 @@ extension RustWeldingError: LocalizedError {
             return "`.unableToDeriveKeys` the requested keys could not be derived from the source provided"
         case let .getBalanceError(account, error):
             return "`.getBalanceError` could not retrieve balance from account: \(account), error:\(error)"
+        }
+    }
+}
+
+extension Array where Element == FFIBlockMeta {
+    func deallocateElements() {
+        self.forEach { element in
+            element.block_hash_ptr.deallocate()
         }
     }
 }

@@ -11,7 +11,7 @@ import GRPC
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 
-// swiftlint:disable function_parameter_count identifier_name
+// swiftlint:disable function_parameter_count identifier_name type_body_length
 class AwfulLightWalletService: MockLightWalletService {
     override func latestBlockHeight() throws -> BlockHeight {
         throw LightWalletServiceError.criticalError
@@ -56,13 +56,58 @@ extension LightWalletServiceMockResponse {
 
 // swiftlint:disable:next type_body_length
 class MockRustBackend: ZcashRustBackendWelding {
+    static var networkType = NetworkType.testnet
+    static var mockDataDb = false
+    static var mockAcounts = false
+    static var mockError: RustWeldingError?
+    static var mockLastError: String?
+    static var mockAccounts: [SaplingExtendedSpendingKey]?
+    static var mockAddresses: [String]?
+    static var mockBalance: Int64?
+    static var mockVerifiedBalance: Int64?
+    static var mockMemo: String?
+    static var mockSentMemo: String?
+    static var mockValidateCombinedChainSuccessRate: Float?
+    static var mockValidateCombinedChainFailAfterAttempts: Int?
+    static var mockValidateCombinedChainKeepFailing = false
+    static var mockValidateCombinedChainFailureHeight: BlockHeight = 0
+    static var mockScanblocksSuccessRate: Float?
+    static var mockCreateToAddress: Int64?
+    static var rustBackend = ZcashRustBackend.self
+    static var consensusBranchID: Int32?
+    static var writeBlocksMetadataResult: () throws -> Bool = { true }
+    static var rewindCacheToHeightResult: () -> Bool = { true }
+    static func latestCachedBlockHeight(fsBlockDbRoot: URL) -> ZcashLightClientKit.BlockHeight {
+        .empty()
+    }
+
+    static func rewindCacheToHeight(fsBlockDbRoot: URL, height: Int32) -> Bool {
+        rewindCacheToHeightResult()
+    }
+
+    static func initBlockMetadataDb(fsBlockDbRoot: URL) throws -> Bool {
+        true
+    }
+
+    static func writeBlocksMetadata(fsBlockDbRoot: URL, blocks: [ZcashLightClientKit.ZcashCompactBlock]) throws -> Bool {
+        try writeBlocksMetadataResult()
+    }
+
     static func initAccountsTable(dbData: URL, ufvks: [ZcashLightClientKit.UnifiedFullViewingKey], networkType: ZcashLightClientKit.NetworkType) throws { }
 
     static func createToAddress(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, to address: String, value: Int64, memo: ZcashLightClientKit.MemoBytes?, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
         -1
     }
 
-    static func shieldFunds(dbCache: URL, dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, memo: ZcashLightClientKit.MemoBytes?, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
+    static func shieldFunds(
+        dbData: URL,
+        usk: ZcashLightClientKit.UnifiedSpendingKey,
+        memo: ZcashLightClientKit.MemoBytes?,
+        shieldingThreshold: Zatoshi,
+        spendParamsPath: String,
+        outputParamsPath: String,
+        networkType: ZcashLightClientKit.NetworkType
+    ) -> Int64 {
         -1
     }
 
@@ -106,7 +151,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func shieldFunds(dbCache: URL, dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, memo: ZcashLightClientKit.MemoBytes, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
+    static func shieldFunds(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, memo: ZcashLightClientKit.MemoBytes, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
         -1
     }
 
@@ -206,27 +251,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         }
         return consensus
     }
-    
-    static var networkType = NetworkType.testnet
-    static var mockDataDb = false
-    static var mockAcounts = false
-    static var mockError: RustWeldingError?
-    static var mockLastError: String?
-    static var mockAccounts: [SaplingExtendedSpendingKey]?
-    static var mockAddresses: [String]?
-    static var mockBalance: Int64?
-    static var mockVerifiedBalance: Int64?
-    static var mockMemo: String?
-    static var mockSentMemo: String?
-    static var mockValidateCombinedChainSuccessRate: Float?
-    static var mockValidateCombinedChainFailAfterAttempts: Int?
-    static var mockValidateCombinedChainKeepFailing = false
-    static var mockValidateCombinedChainFailureHeight: BlockHeight = 0
-    static var mockScanblocksSuccessRate: Float?
-    static var mockCreateToAddress: Int64?
-    static var rustBackend = ZcashRustBackend.self
-    static var consensusBranchID: Int32?
-    
+
     static func lastError() -> RustWeldingError? {
         mockError ?? rustBackend.lastError()
     }
@@ -292,35 +317,35 @@ class MockRustBackend: ZcashRustBackendWelding {
         mockSentMemo ?? getSentMemoAsUTF8(dbData: dbData, idNote: idNote, networkType: networkType)
     }
     
-    static func validateCombinedChain(dbCache: URL, dbData: URL, networkType: NetworkType) -> Int32 {
+    static func validateCombinedChain(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType, limit: UInt32 = 0) -> Int32 {
         if let rate = self.mockValidateCombinedChainSuccessRate {
             if shouldSucceed(successRate: rate) {
-                return validationResult(dbCache: dbCache, dbData: dbData, networkType: networkType)
+                return validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
             } else {
                 return Int32(mockValidateCombinedChainFailureHeight)
             }
         } else if let attempts = self.mockValidateCombinedChainFailAfterAttempts {
             self.mockValidateCombinedChainFailAfterAttempts = attempts - 1
             if attempts > 0 {
-                return validationResult(dbCache: dbCache, dbData: dbData, networkType: networkType)
+                return validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
             } else {
                 if attempts == 0 {
                     return Int32(mockValidateCombinedChainFailureHeight)
                 } else if attempts < 0 && mockValidateCombinedChainKeepFailing {
                     return Int32(mockValidateCombinedChainFailureHeight)
                 } else {
-                    return validationResult(dbCache: dbCache, dbData: dbData, networkType: networkType)
+                    return validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
                 }
             }
         }
-        return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData, networkType: networkType)
+        return rustBackend.validateCombinedChain(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
     }
     
-    private static func validationResult(dbCache: URL, dbData: URL, networkType: NetworkType) -> Int32 {
+    private static func validationResult(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType) -> Int32 {
         if mockDataDb {
             return -1
         } else {
-            return rustBackend.validateCombinedChain(dbCache: dbCache, dbData: dbData, networkType: networkType)
+            return rustBackend.validateCombinedChain(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
         }
     }
     
@@ -328,15 +353,15 @@ class MockRustBackend: ZcashRustBackendWelding {
         mockDataDb ? true : rustBackend.rewindToHeight(dbData: dbData, height: height, networkType: networkType)
     }
     
-    static func scanBlocks(dbCache: URL, dbData: URL, limit: UInt32, networkType: NetworkType) -> Bool {
+    static func scanBlocks(fsBlockDbRoot: URL, dbData: URL, limit: UInt32, networkType: NetworkType) -> Bool {
         if let rate = mockScanblocksSuccessRate {
             if shouldSucceed(successRate: rate) {
-                return mockDataDb ? true : rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData, networkType: networkType)
+                return mockDataDb ? true : rustBackend.scanBlocks(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
             } else {
                 return false
             }
         }
-        return rustBackend.scanBlocks(dbCache: dbCache, dbData: dbData, networkType: Self.networkType)
+        return rustBackend.scanBlocks(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: Self.networkType)
     }
     
     static func createToAddress(

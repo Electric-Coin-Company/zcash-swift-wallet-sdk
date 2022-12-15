@@ -473,7 +473,8 @@ public class SDKSynchronizer: Synchronizer {
 
     public func shieldFunds(
         spendingKey: UnifiedSpendingKey,
-        memo: Memo
+        memo: Memo,
+        shieldingThreshold: Zatoshi
     ) async throws -> PendingTransactionEntity {
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
@@ -495,6 +496,7 @@ public class SDKSynchronizer: Synchronizer {
             // TODO: [#487] Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
             let transaction = try await transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
+                shieldingThreshold: shieldingThreshold,
                 pendingTransaction: shieldingSpend
             )
 
@@ -592,6 +594,7 @@ public class SDKSynchronizer: Synchronizer {
         let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
         
         do {
+            // swiftlint:disable:next array_constructor
             var utxos: [UnspentTransactionOutputEntity] = []
             for try await transactionEntity in stream {
                 utxos.append(transactionEntity)
@@ -683,7 +686,7 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.closeDBConnection()
         transactionRepository.closeDBConnection()
 
-        try? FileManager.default.removeItem(at: initializer.cacheDbURL)
+        try? FileManager.default.removeItem(at: initializer.fsBlockDbRoot)
         try? FileManager.default.removeItem(at: initializer.pendingDbURL)
         try? FileManager.default.removeItem(at: initializer.dataDbURL)
 

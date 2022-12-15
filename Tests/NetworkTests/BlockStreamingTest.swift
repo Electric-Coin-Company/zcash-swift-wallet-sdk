@@ -11,14 +11,23 @@ import XCTest
 
 // swiftlint:disable print_function_usage
 class BlockStreamingTest: XCTestCase {
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
     override func setUpWithError() throws {
         try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? FileManager.default.removeItem(at: __dataDbURL())
+        try? testFileManager.removeItem(at: testTempDirectory)
     }
 
     func testStream() async throws {
@@ -58,7 +67,20 @@ class BlockStreamingTest: XCTestCase {
             streamingCallTimeout: 10000
         )
 
-        let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let latestBlockHeight = try service.latestBlockHeight()
         let startHeight = latestBlockHeight - 100_000
         let processorConfig = CompactBlockProcessor.Configuration.standard(
@@ -69,7 +91,7 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            backend: realRustBackend,
             config: processorConfig
         )
         
@@ -101,11 +123,25 @@ class BlockStreamingTest: XCTestCase {
             port: 9067,
             secure: true,
             singleCallTimeout: 1000,
-            streamingCallTimeout: 3000
+            streamingCallTimeout: 1000
         )
 
-        let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let latestBlockHeight = try service.latestBlockHeight()
+
         let startHeight = latestBlockHeight - 100_000
         
         let processorConfig = CompactBlockProcessor.Configuration.standard(
@@ -116,7 +152,7 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            backend: realRustBackend,
             config: processorConfig
         )
         

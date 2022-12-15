@@ -39,20 +39,18 @@ protocol BlockDownloader {
         maxBlockBufferSize: Int,
         totalProgressRange: CompactBlockRange
     ) async throws
-
-    func removeCacheDB(at cacheDBURL: URL) async throws
 }
 
 class BlockDownloaderImpl {
     let service: LightWalletService
     let downloaderService: BlockDownloaderService
-    let storage: CompactBlockStorage
+    let storage: CompactBlockRepository
     let internalSyncProgress: InternalSyncProgress
 
     init(
         service: LightWalletService,
         downloaderService: BlockDownloaderService,
-        storage: CompactBlockStorage,
+        storage: CompactBlockRepository,
         internalSyncProgress: InternalSyncProgress
     ) {
         self.service = service
@@ -63,7 +61,6 @@ class BlockDownloaderImpl {
 }
 
 extension BlockDownloaderImpl: BlockDownloader {
-
     func compactBlocksDownloadStream(startHeight: BlockHeight, targetHeight: BlockHeight) async throws -> BlockDownloaderStream {
         try Task.checkCancellation()
         let stream = service.blockStream(startHeight: startHeight, endHeight: targetHeight)
@@ -124,13 +121,6 @@ extension BlockDownloaderImpl: BlockDownloader {
 
         try await storage.write(blocks: buffer)
         await blocksBufferWritten(buffer)
-    }
-
-    func removeCacheDB(at cacheDBURL: URL) async throws {
-        storage.closeDBConnection()
-        try FileManager.default.removeItem(at: cacheDBURL)
-        try storage.createTable()
-        LoggerProxy.info("Cache removed")
     }
 
     private func blocksBufferWritten(_ buffer: [ZcashCompactBlock]) async {

@@ -49,7 +49,8 @@ class GetUTXOsViewController: UIViewController {
             Task { @MainActor in
                 let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
                     spendingKey: usk,
-                    memo: try Memo(string: "shielding is fun!")
+                    memo: try Memo(string: "shielding is fun!"),
+                    shieldingThreshold: Zatoshi(10000)
                 )
                 KRProgressHUD.dismiss()
                 self.messageLabel.text = "funds shielded \(transaction)"

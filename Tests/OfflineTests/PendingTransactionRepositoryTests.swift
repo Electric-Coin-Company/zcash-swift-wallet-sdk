@@ -20,7 +20,7 @@ class PendingTransactionRepositoryTests: XCTestCase {
         super.setUp()
         cleanUpDb()
         let pendingDbProvider = SimpleConnectionProvider(path: try! TestDbBuilder.pendingTransactionsDbURL().absoluteString)
-        let migrations = try! MigrationManager(cacheDbConnection: InMemoryDbProvider(), pendingDbConnection: pendingDbProvider, networkType: .testnet)
+        let migrations = MigrationManager(pendingDbConnection: pendingDbProvider, networkType: .testnet)
         try! migrations.performMigration()
         pendingRepository = PendingTransactionSQLDAO(dbProvider: pendingDbProvider)
     }

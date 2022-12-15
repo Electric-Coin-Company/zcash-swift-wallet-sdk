@@ -13,7 +13,7 @@ Wrapper for the Rust backend. This class basically represents all the Rust-walle
 capabilities and the supporting data required to exercise those abilities.
 */
 public enum InitializerError: Error {
-    case cacheDbInitFailed(Error)
+    case fsCacheInitFailed(Error)
     case dataDbInitFailed(Error)
     case accountInitFailed(Error)
     case invalidViewingKey(key: String)
@@ -70,7 +70,7 @@ public class Initializer {
     private(set) var endpoint: LightWalletEndpoint
     
     private var lowerBoundHeight: BlockHeight
-    private(set) var cacheDbURL: URL
+    private(set) var fsBlockDbRoot: URL
     private(set) var dataDbURL: URL
     private(set) var pendingDbURL: URL
     private(set) var spendParamsURL: URL
@@ -78,7 +78,7 @@ public class Initializer {
     private(set) var lightWalletService: LightWalletService
     private(set) var transactionRepository: TransactionRepository
     private(set) var accountRepository: AccountRepository
-    private(set) var storage: CompactBlockStorage
+    private(set) var storage: CompactBlockRepository
     private(set) var blockDownloaderService: BlockDownloaderService
     private(set) var network: ZcashNetwork
     private(set) public var viewingKeys: [UnifiedFullViewingKey]
@@ -86,18 +86,80 @@ public class Initializer {
     /// and the checkpoints available on this SDK
     private(set) public var walletBirthday: BlockHeight
 
-    /**
-    Constructs the Initializer
-    - Parameters:
-        - cacheDbURL: location of the compact blocks cache db
-        - dataDbURL: Location of the data db
-        - pendingDbURL: location of the pending transactions database
-        - endpoint: the endpoint representing the lightwalletd instance you want to point to
-        - spendParamsURL: location of the spend parameters
-        - outputParamsURL: location of the output parameters
-    */
+    /// The purpose of this to migrate from cacheDb to fsBlockDb
+    private var cacheDbURL: URL?
+
+    /// Constructs the Initializer
+    /// - Parameters:
+    ///  - fsBlockDbRoot: location of the compact blocks cache
+    ///  - dataDbURL: Location of the data db
+    ///  - pendingDbURL: location of the pending transactions database
+    ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
+    ///  - spendParamsURL: location of the spend parameters
+    ///  - outputParamsURL: location of the output parameters
     convenience public init (
-        cacheDbURL: URL,
+        fsBlockDbRoot: URL,
+        dataDbURL: URL,
+        pendingDbURL: URL,
+        endpoint: LightWalletEndpoint,
+        network: ZcashNetwork,
+        spendParamsURL: URL,
+        outputParamsURL: URL,
+        viewingKeys: [UnifiedFullViewingKey],
+        walletBirthday: BlockHeight,
+        alias: String = "",
+        loggerProxy: Logger? = nil
+    ) {
+        self.init(
+            rustBackend: ZcashRustBackend.self,
+            lowerBoundHeight: walletBirthday,
+            network: network,
+            cacheDbURL: nil,
+            fsBlockDbRoot: fsBlockDbRoot,
+            dataDbURL: dataDbURL,
+            pendingDbURL: pendingDbURL,
+            endpoint: endpoint,
+            service: LightWalletGRPCService(endpoint: endpoint),
+            repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
+            accountRepository: AccountRepositoryBuilder.build(
+                dataDbURL: dataDbURL,
+                readOnly: true,
+                caching: true
+            ),
+            storage: FSCompactBlockRepository(
+                cacheDirectory: fsBlockDbRoot,
+                metadataStore: .live(
+                    fsBlockDbRoot: fsBlockDbRoot,
+                    rustBackend: ZcashRustBackend.self
+                ),
+                blockDescriptor: .live,
+                contentProvider: DirectoryListingProviders.defaultSorted
+            ),
+            spendParamsURL: spendParamsURL,
+            outputParamsURL: outputParamsURL,
+            viewingKeys: viewingKeys,
+            walletBirthday: walletBirthday,
+            alias: alias,
+            loggerProxy: loggerProxy
+        )
+    }
+
+    /// Constructs the Initializer and migrates an old cacheDb to the new file system block cache if
+    /// a `cacheDbURL` is provided.
+    /// - Parameters:
+    ///  - cacheDbURL: previous location of the cacheDb. Use this constru
+    ///  - fsBlockDbRoot: location of the compact blocks cache
+    ///  - dataDbURL: Location of the data db
+    ///  - pendingDbURL: location of the pending transactions database
+    ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
+    ///  - spendParamsURL: location of the spend parameters
+    ///  - outputParamsURL: location of the output parameters
+    ///
+    /// - note: If you don't know what a cacheDb is and you are adopting
+    /// this SDK for the first time then you just need to invoke `convenience init(fsBlockDbRoot: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, network: ZcashNetwork, spendParamsURL: URL, outputParamsURL: URL, viewingKeys: [UnifiedFullViewingKey], walletBirthday: BlockHeight, alias: String = "", loggerProxy: Logger? = nil)` instead
+    convenience public init (
+        cacheDbURL: URL?,
+        fsBlockDbRoot: URL,
         dataDbURL: URL,
         pendingDbURL: URL,
         endpoint: LightWalletEndpoint,
@@ -111,14 +173,12 @@ public class Initializer {
     ) {
         let lwdService = LightWalletGRPCService(endpoint: endpoint)
 
-        let storageConnectionProvider = SimpleConnectionProvider(path: cacheDbURL.absoluteString, readonly: false)
-        let storage = CompactBlockStorage(connectionProvider: storageConnectionProvider)
-        
         self.init(
             rustBackend: ZcashRustBackend.self,
             lowerBoundHeight: walletBirthday,
             network: network,
             cacheDbURL: cacheDbURL,
+            fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
             endpoint: endpoint,
@@ -129,7 +189,15 @@ public class Initializer {
                 readOnly: true,
                 caching: true
             ),
-            storage: storage,
+            storage: FSCompactBlockRepository(
+                cacheDirectory: fsBlockDbRoot,
+                metadataStore: .live(
+                    fsBlockDbRoot: fsBlockDbRoot,
+                    rustBackend: ZcashRustBackend.self
+                ),
+                blockDescriptor: .live,
+                contentProvider: DirectoryListingProviders.defaultSorted
+            ),
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             viewingKeys: viewingKeys,
@@ -138,7 +206,7 @@ public class Initializer {
             loggerProxy: loggerProxy
         )
     }
-    
+
     /**
     Internal for dependency injection purposes
     */
@@ -146,14 +214,15 @@ public class Initializer {
         rustBackend: ZcashRustBackendWelding.Type,
         lowerBoundHeight: BlockHeight,
         network: ZcashNetwork,
-        cacheDbURL: URL,
+        cacheDbURL: URL?,
+        fsBlockDbRoot: URL,
         dataDbURL: URL,
         pendingDbURL: URL,
         endpoint: LightWalletEndpoint,
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        storage: CompactBlockStorage,
+        storage: CompactBlockRepository,
         spendParamsURL: URL,
         outputParamsURL: URL,
         viewingKeys: [UnifiedFullViewingKey],
@@ -162,9 +231,10 @@ public class Initializer {
         loggerProxy: Logger? = nil
     ) {
         logger = loggerProxy
+        self.cacheDbURL = cacheDbURL
         self.rustBackend = rustBackend
         self.lowerBoundHeight = lowerBoundHeight
-        self.cacheDbURL = cacheDbURL
+        self.fsBlockDbRoot = fsBlockDbRoot
         self.dataDbURL = dataDbURL
         self.pendingDbURL = pendingDbURL
         self.endpoint = endpoint
@@ -196,9 +266,9 @@ public class Initializer {
     /// `InitializerError.accountInitFailed` if the account table can't be initialized. 
     public func initialize(with seed: [UInt8]?) throws -> InitializationResult {
         do {
-            try storage.createTable()
+            try storage.create()
         } catch {
-            throw InitializerError.cacheDbInitFailed(error)
+            throw InitializerError.fsCacheInitFailed(error)
         }
         
         do {
@@ -225,10 +295,6 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed(error)
         }
         self.walletBirthday = checkpoint.height
-        
-        let lastDownloaded = (try? blockDownloaderService.storage.latestHeight()) ?? walletBirthday
-        // resume from last downloaded block
-        lowerBoundHeight = max(walletBirthday, lastDownloaded)
  
         do {
             try rustBackend.initAccountsTable(
@@ -245,12 +311,14 @@ public class Initializer {
         }
 
         let migrationManager = MigrationManager(
-            cacheDbConnection: SimpleConnectionProvider(path: cacheDbURL.path),
             pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
             networkType: self.network.networkType
         )
 
         try migrationManager.performMigration()
+
+        // resume from last downloaded block
+        lowerBoundHeight = max(walletBirthday, storage.latestHeight())
 
         return .success
     }
@@ -323,7 +391,7 @@ enum CompactBlockProcessorBuilder {
     static func buildProcessor(
         configuration: CompactBlockProcessor.Configuration,
         service: LightWalletService,
-        storage: CompactBlockStorage,
+        storage: CompactBlockRepository,
         transactionRepository: TransactionRepository,
         accountRepository: AccountRepository,
         backend: ZcashRustBackendWelding.Type
@@ -344,12 +412,12 @@ extension InitializerError: LocalizedError {
         switch self {
         case .invalidViewingKey:
             return "The provided viewing key is invalid"
-        case .cacheDbInitFailed(let error):
-            return "cacheDb Init failed with error: \(error.localizedDescription)"
         case .dataDbInitFailed(let error):
             return "dataDb init failed with error: \(error.localizedDescription)"
         case .accountInitFailed(let error):
             return "account table init failed with error: \(error.localizedDescription)"
+        case .fsCacheInitFailed(let error):
+            return "Compact Block Cache failed to initialize with error: \(error.localizedDescription)"
         }
     }
 }

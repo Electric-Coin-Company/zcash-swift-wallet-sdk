@@ -75,12 +75,12 @@ class AccountSQDAO: AccountRepository {
     
     func update(_ account: AccountEntity) throws {
         guard let acc = account as? Account else {
-            throw StorageError.updateFailed
+            throw DatabaseStorageError.updateFailed
         }
         let updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
         if updatedRows == 0 {
             LoggerProxy.error("attempted to update pending transactions but no rows were updated")
-            throw StorageError.updateFailed
+            throw DatabaseStorageError.updateFailed
         }
     }
 }

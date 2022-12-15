@@ -207,12 +207,12 @@ public extension Notification.Name {
 actor CompactBlockProcessor {
     /// Compact Block Processor configuration
     ///
-    /// Property: cacheDbPath absolute file path of the DB where raw, unprocessed compact blocks are stored.
-    /// Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
-    /// Property: spendParamsURL absolute file path of the sapling-spend.params file
-    /// Property: outputParamsURL absolute file path of the sapling-output.params file
+    /// - parameter fsBlockCacheRoot: absolute root path where the filesystem block cache will be stored.
+    /// - parameter dataDb: absolute file path of the DB where all information derived from the cache DB is stored.
+    /// - parameter spendParamsURL: absolute file path of the sapling-spend.params file
+    /// - parameter outputParamsURL: absolute file path of the sapling-output.params file
     struct Configuration {
-        public var cacheDb: URL
+        public var fsBlockCacheRoot: URL
         public var dataDb: URL
         public var spendParamsURL: URL
         public var outputParamsURL: URL
@@ -226,13 +226,14 @@ actor CompactBlockProcessor {
         public private(set) var downloadBufferSize: Int = 10
         private(set) var network: ZcashNetwork
         private(set) var saplingActivation: BlockHeight
-
+        private(set) var cacheDbURL: URL?
         var blockPollInterval: TimeInterval {
             TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
         }
         
         init (
-            cacheDb: URL,
+            cacheDbURL: URL? = nil,
+            fsBlockCacheRoot: URL,
             dataDb: URL,
             spendParamsURL: URL,
             outputParamsURL: URL,
@@ -244,7 +245,7 @@ actor CompactBlockProcessor {
             saplingActivation: BlockHeight,
             network: ZcashNetwork
         ) {
-            self.cacheDb = cacheDb
+            self.fsBlockCacheRoot = fsBlockCacheRoot
             self.dataDb = dataDb
             self.spendParamsURL = spendParamsURL
             self.outputParamsURL = outputParamsURL
@@ -255,25 +256,26 @@ actor CompactBlockProcessor {
             self.rewindDistance = rewindDistance
             self.walletBirthday = walletBirthday
             self.saplingActivation = saplingActivation
-
+            self.cacheDbURL = cacheDbURL
             assert(downloadBatchSize >= scanningBatchSize)
         }
         
         init(
-            cacheDb: URL,
+            fsBlockCacheRoot: URL,
             dataDb: URL,
             spendParamsURL: URL,
             outputParamsURL: URL,
             walletBirthday: BlockHeight,
             network: ZcashNetwork
         ) {
-            self.cacheDb = cacheDb
+            self.fsBlockCacheRoot = fsBlockCacheRoot
             self.dataDb = dataDb
             self.spendParamsURL = spendParamsURL
             self.outputParamsURL = outputParamsURL
             self.walletBirthday = walletBirthday
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
+            self.cacheDbURL = nil
 
             assert(downloadBatchSize >= scanningBatchSize)
         }
@@ -346,7 +348,7 @@ actor CompactBlockProcessor {
     var service: LightWalletService
     let blockDownloaderService: BlockDownloaderService
     let blockDownloader: BlockDownloader
-    var storage: CompactBlockStorage
+    var storage: CompactBlockRepository
     var transactionRepository: TransactionRepository
     var accountRepository: AccountRepository
     var rustBackend: ZcashRustBackendWelding.Type
@@ -371,12 +373,12 @@ actor CompactBlockProcessor {
     /// Initializes a CompactBlockProcessor instance
     /// - Parameters:
     ///  - service: concrete implementation of `LightWalletService` protocol
-    ///  - storage: concrete implementation of `CompactBlockStorage` protocol
+    ///  - storage: concrete implementation of `CompactBlockRepository` protocol
     ///  - backend: a class that complies to `ZcashRustBackendWelding`
     ///  - config: `Configuration` struct for this processor
     init(
         service: LightWalletService,
-        storage: CompactBlockStorage,
+        storage: CompactBlockRepository,
         backend: ZcashRustBackendWelding.Type,
         config: Configuration
     ) {
@@ -393,13 +395,15 @@ actor CompactBlockProcessor {
     }
 
     /// Initializes a CompactBlockProcessor instance from an Initialized object
+    /// - Parameters:
+    ///     - initializer: an instance that complies to CompactBlockDownloading protocol
     init(initializer: Initializer) {
         self.init(
             service: initializer.lightWalletService,
             storage: initializer.storage,
             backend: initializer.rustBackend,
             config: Configuration(
-                cacheDb: initializer.cacheDbURL,
+                fsBlockCacheRoot: initializer.fsBlockDbRoot,
                 dataDb: initializer.dataDbURL,
                 spendParamsURL: initializer.spendParamsURL,
                 outputParamsURL: initializer.outputParamsURL,
@@ -416,7 +420,7 @@ actor CompactBlockProcessor {
     
     internal init(
         service: LightWalletService,
-        storage: CompactBlockStorage,
+        storage: CompactBlockRepository,
         backend: ZcashRustBackendWelding.Type,
         config: Configuration,
         repository: TransactionRepository,
@@ -513,6 +517,14 @@ actor CompactBlockProcessor {
             return
         }
 
+        do {
+            if let legacyCacheDbURL = self.config.cacheDbURL {
+                try await self.migrateCacheDb(legacyCacheDbURL)
+            }
+        } catch {
+            await self.fail(error)
+        }
+
         await self.nextBatch()
     }
 
@@ -530,12 +542,10 @@ actor CompactBlockProcessor {
         self.retryAttempts = 0
     }
 
-    /**
-    Rewinds to provided height.
-    If nil is provided, it will rescan to nearest height (quick rescan)
-
-    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is thrown.
-    */
+    /// Rewinds to provided height.
+    /// - Parameter height: height to rewind to. If nil is provided, it will rescan to nearest height (quick rescan)
+    ///
+    /// - Note: If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is thrown.
     func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
         guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
 
@@ -581,8 +591,11 @@ actor CompactBlockProcessor {
         }
 
         state = .stopped
-        blockDownloaderService.closeDBConnection()
+
+        try await self.storage.clear()
         await internalSyncProgress.rewind(to: 0)
+
+        wipeLegacyCacheDbIfNeeded()
     }
 
     func validateServer() async {
@@ -623,7 +636,7 @@ actor CompactBlockProcessor {
 
                 var anyActionExecuted = false
 
-                try storage.createTable()
+                try storage.create()
 
                 if let range = ranges.downloadedButUnscannedRange {
                     LoggerProxy.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
@@ -648,17 +661,17 @@ actor CompactBlockProcessor {
                 }
 
                 try await handleSaplingParametersIfNeeded()
-                try await blockDownloader.removeCacheDB(at: config.cacheDb)
+                try await clearCompactBlockCache()
 
                 if !Task.isCancelled {
                     await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
                 }
             } catch {
-                LoggerProxy.error("Sync failed with error: \(error)")
-
                 if !(Task.isCancelled) {
+                    LoggerProxy.error("processing failed with error: \(error)")
                     await fail(error)
                 } else {
+                    LoggerProxy.info("processing cancelled.")
                     state = .stopped
                     if needsToStartScanningWhenStopped {
                         await nextBatch()
@@ -695,7 +708,7 @@ actor CompactBlockProcessor {
             )
             try await compactBlockValidation()
             try await scanBlocks(at: processingRange, totalProgressRange: totalProgressRange)
-            try await blockDownloader.removeCacheDB(at: config.cacheDb)
+            try await clearCompactBlockCache()
 
             let progress = BlockProgress(
                 startHeight: totalProgressRange.lowerBound,
@@ -822,8 +835,8 @@ actor CompactBlockProcessor {
     }
 
     private func validateConfiguration() throws {
-        guard FileManager.default.isReadableFile(atPath: config.cacheDb.absoluteString) else {
-            throw CompactBlockProcessorError.missingDbPath(path: config.cacheDb.absoluteString)
+        guard FileManager.default.isReadableFile(atPath: config.fsBlockCacheRoot.absoluteString) else {
+            throw CompactBlockProcessorError.missingDbPath(path: config.fsBlockCacheRoot.absoluteString)
         }
 
         guard FileManager.default.isReadableFile(atPath: config.dataDb.absoluteString) else {
@@ -930,6 +943,11 @@ actor CompactBlockProcessor {
         )
     }
 
+    private func clearCompactBlockCache() async throws {
+        try await storage.clear()
+        LoggerProxy.info("Cache removed")
+    }
+    
     private func setTimer() async {
         let interval = self.config.blockPollInterval
         self.backoffTimer?.invalidate()
@@ -1010,7 +1028,7 @@ extension CompactBlockProcessor.Configuration {
     static func standard(for network: ZcashNetwork, walletBirthday: BlockHeight) -> CompactBlockProcessor.Configuration {
         let pathProvider = DefaultResourceProvider(network: network)
         return CompactBlockProcessor.Configuration(
-            cacheDb: pathProvider.cacheDbURL,
+            fsBlockCacheRoot: pathProvider.fsCacheURL,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
@@ -1241,7 +1259,9 @@ extension CompactBlockProcessor {
                     rustBackend: rustBackend
                 )
 
-                await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: try downloaderService.lastDownloadedBlockHeight())
+                let latestDownloadHeight = try downloaderService.lastDownloadedBlockHeight()
+
+                await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight)
 
                 let latestBlockHeight = try service.latestBlockHeight()
                 let latestScannedHeight = try transactionRepository.lastScannedHeight()
@@ -1255,5 +1275,75 @@ extension CompactBlockProcessor {
 
             return try await task.value
         }
+    }
+}
+
+/// This extension contains asociated types and functions needed to clean up the
+/// `cacheDb` in favor of `FsBlockDb`. Once this cleanup functionality is deprecated,
+/// delete the whole extension and reference to it in other parts of the code including tests.
+extension CompactBlockProcessor {
+    public enum CacheDbMigrationError: Error {
+        case fsCacheMigrationFailedSameURL
+        case failedToDeleteLegacyDb(Error)
+        case failedToInitFsBlockDb(Error)
+        case failedToSetDownloadHeight(Error)
+    }
+
+    /// Deletes the SQLite cacheDb and attempts to initialize the fsBlockDbRoot
+    /// - parameter legacyCacheDbURL: the URL where the cache Db used to be stored.
+    /// - Throws `InitializerError.fsCacheInitFailedSameURL` when the given URL
+    /// is the same URL than the one provided as `self.fsBlockDbRoot` assuming that's a
+    /// programming error being the `legacyCacheDbURL` a sqlite database file and not a
+    /// directory. Also throws errors from initializing the fsBlockDbRoot.
+    ///
+    /// - Note: Errors from deleting the `legacyCacheDbURL` won't be throwns.
+    func migrateCacheDb(_ legacyCacheDbURL: URL) async throws {
+        guard legacyCacheDbURL != config.fsBlockCacheRoot else {
+            throw CacheDbMigrationError.fsCacheMigrationFailedSameURL
+        }
+
+        // if the URL provided is not readable, it means that the client has a reference
+        // to the cacheDb file but it has been deleted in a prior sync cycle. there's
+        // nothing to do here.
+        guard FileManager.default.isReadableFile(atPath: legacyCacheDbURL.path) else {
+            return
+        }
+
+        do {
+            // if there's a readable file at the provided URL, delete it.
+            try FileManager.default.removeItem(at: legacyCacheDbURL)
+        } catch {
+            throw CacheDbMigrationError.failedToDeleteLegacyDb(error)
+        }
+
+        // create the storage
+        do {
+            try self.storage.create()
+        } catch {
+            throw CacheDbMigrationError.failedToInitFsBlockDb(error)
+        }
+
+        // The database has been deleted, so we have adjust the internal state of the
+        // `CompactBlockProcessor` so that it doesn't rely on download heights set
+        // by a previous processing cycle.
+        do {
+            let lastScannedHeight = try self.transactionRepository.lastScannedHeight()
+
+            await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
+        } catch {
+            throw CacheDbMigrationError.failedToSetDownloadHeight(error)
+        }
+    }
+
+    func wipeLegacyCacheDbIfNeeded() {
+        guard let cacheDbURL = config.cacheDbURL else {
+            return
+        }
+
+        guard FileManager.default.isDeletableFile(atPath: cacheDbURL.pathExtension) else {
+            return
+        }
+
+        try? FileManager.default.removeItem(at: cacheDbURL)
     }
 }

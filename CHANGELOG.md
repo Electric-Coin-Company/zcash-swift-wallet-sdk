@@ -1,3 +1,59 @@
+# Unreleased
+
+## File system backed block cache
+
+File system based block cache. Compact blocks will now be stored
+on the file system. Caller must provide a `URL` pointing to the 
+filesystem root directory where the fsBlock cache is. this directory
+is expected to contain a `/blocks` sub-directory with the blocks stored
+in the convened filename format `{height}-{hash}-compactblock`. This directory
+must be granted both read and write permissions.
+
+the file system cache will have a "bookkeeping" database that the rust
+welding layer will use to know the state of the cache and locate the 
+cached compact blocks. This directory can be deleted provided that the
+Compactblock processor or Synchronizer are not running. Upon deletion 
+caller is responsible for initializing these objects for the cache to 
+be created. 
+
+Implementation notes: Users of the SDK will know the path they will 
+provide but must assume no behavior whatsoever or rely on the cached 
+information in any way, since it is an internal state of the SDK. 
+Maintainers might provide no support for problems related to speculative
+use of the file system cache. If you consider your application needs any
+other information than the one available through public APIs, please 
+file the corresponding feature request.
+
+### Added
+
+- `Synchronizer.shieldFunds(spendingKey:memo:shieldingThreshold)` shieldingThreshold
+was added allowing wallets to manage their own shielding policies.
+    
+### Removed
+- `InitializerError.cacheDbMigrationFailed`
+
+### Deprecations
+CacheDb references that were deprecated instead of **deleted** are pointing out
+that they should be useful for you to migrate from using cacheDb.
+
+- `ResourceProvider.cacheDbURL` deprecated but left for one release cycle for clients 
+to move away from cacheDb.
+
+- `NetworkConstants.defaultCacheDbName` deprecated but left for one release cycle for clients 
+to move away from cacheDb.
+
+## Other Issues Fixed by this PR:
+
+- [#587] ShieldFundsTests:
+ - https://github.com/zcash/ZcashLightClientKit/issues/720
+ - https://github.com/zcash/ZcashLightClientKit/issues/587
+ - https://github.com/zcash/ZcashLightClientKit/issues/667
+
+- [#443] Delete blocks from cache after processing them
+    Closes https://github.com/zcash/ZcashLightClientKit/issues/443
+- [#754] adopt name change in libzashlc package that fixes a deprecation in SPM
+    Closes https://github.com/zcash/ZcashLightClientKit/issues/754
+
 # 0.18.0-beta
 
 ## Farewell Cocoapods.
@@ -42,10 +98,9 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2200000.json
 - [#645] Default rewind after ReOrg is 20 blocks when it should be 10
     This fixes an issue where the default reorg was 20 blocks rewind instead of 10. The
 reorg count was incremented before calling the rewind height computing function.
+
+## Use Librustzcash database views to query and represent transactions
  
-
-## Change in how we represent transactions. 
-
 - [#556] Change data structures which represent transactions.
 
     These data types are gone: `Transaction`, `TransactionEntity`, `ConfirmedTransaction`, 
@@ -64,8 +119,7 @@ the `SDKSynchronizer` has now new methods to fetch those:
     - `func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]`
     - `func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]`
     
-## Compact Block Processor is not public anymore.
-
+## CompactBlockProcessor is now internal
 - [#671] Make CompactBlockProcessor Internal.
 
     The CompactBlockProcessor is no longer a public class/API. Any direct access will

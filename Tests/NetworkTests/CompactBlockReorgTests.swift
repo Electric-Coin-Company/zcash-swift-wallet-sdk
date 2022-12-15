@@ -16,6 +16,13 @@ class CompactBlockReorgTests: XCTestCase {
         for: ZcashNetworkBuilder.network(for: .testnet),
         walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
     )
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -27,6 +34,7 @@ class CompactBlockReorgTests: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
 
         let service = MockLightWalletService(
@@ -44,15 +52,26 @@ class CompactBlockReorgTests: XCTestCase {
             info.estimatedHeight = UInt64(mockLatestHeight)
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         }
-        
-        guard case .success = try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet) else {
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let realCache = FSCompactBlockRepository(
+            cacheDirectory: processorConfig.fsBlockCacheRoot,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try realCache.create()
+
+        guard case .success = try realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet) else {
             XCTFail("initDataDb failed. Expected Success but got .seedRequired")
             return
         }
-        
-        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
-        try! storage.createTable()
-        
+
         let mockBackend = MockRustBackend.self
         mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
         mockBackend.mockValidateCombinedChainKeepFailing = false
@@ -60,7 +79,7 @@ class CompactBlockReorgTests: XCTestCase {
         
         processor = CompactBlockProcessor(
             service: service,
-            storage: storage,
+            storage: realCache,
             backend: mockBackend,
             config: processorConfig
         )
@@ -88,7 +107,8 @@ class CompactBlockReorgTests: XCTestCase {
     
     override func tearDown() {
         super.tearDown()
-        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? testFileManager.removeItem(at: testTempDirectory)
+        try! FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         syncStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()

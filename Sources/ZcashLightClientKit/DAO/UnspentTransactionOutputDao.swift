@@ -116,7 +116,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
                 }
             }
         } catch {
-            throw StorageError.transactionFailed(underlyingError: error)
+            throw DatabaseStorageError.transactionFailed(underlyingError: error)
         }
     }
 
@@ -125,13 +125,13 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             do {
                 try dbProvider.connection().run(table.filter(TableColumns.address == tAddr).delete())
             } catch {
-                throw StorageError.operationFailed
+                throw DatabaseStorageError.operationFailed
             }
         } else {
             do {
                 try dbProvider.connection().run(table.delete())
             } catch {
-                throw StorageError.operationFailed
+                throw DatabaseStorageError.operationFailed
             }
         }
     }
@@ -171,7 +171,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
                 total: Zatoshi(Int64(total))
             )
         } catch {
-            throw StorageError.operationFailed
+            throw DatabaseStorageError.operationFailed
         }
     }
 }

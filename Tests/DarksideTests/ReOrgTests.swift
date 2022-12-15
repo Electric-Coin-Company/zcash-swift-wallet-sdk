@@ -68,7 +68,7 @@ class ReOrgTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }

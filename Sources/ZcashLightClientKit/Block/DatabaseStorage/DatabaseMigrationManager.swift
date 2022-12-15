@@ -9,10 +9,6 @@ import Foundation
 import SQLite
 
 class MigrationManager {
-    enum CacheDbMigration: Int32, CaseIterable {
-        case none = 0
-    }
-
     // swiftlint:disable identifier_name
     enum PendingDbMigration: Int32, CaseIterable {
         case none = 0
@@ -20,25 +16,20 @@ class MigrationManager {
         case v2 = 2
     }
 
-    static let nextCacheDbMigration = CacheDbMigration.none
     static let nextPendingDbMigration = PendingDbMigration.v2
 
-    var cacheDb: ConnectionProvider
     var pendingDb: ConnectionProvider
     var network: NetworkType
 
     init(
-        cacheDbConnection: ConnectionProvider,
         pendingDbConnection: ConnectionProvider,
         networkType: NetworkType
     ) {
-        self.cacheDb = cacheDbConnection
         self.pendingDb = pendingDbConnection
         self.network = networkType
     }
 
     func performMigration() throws {
-        try migrateCacheDb()
         try migratePendingDb()
     }
 }
@@ -64,7 +55,7 @@ private extension MigrationManager {
                 // unreachable due to the bound on the loop.
                 break
             case nil:
-                throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(version).")
+                throw DatabaseStorageError.migrationFailedWithMessage(message: "Invalid migration version: \(version).")
             }
         }
     }
@@ -147,27 +138,6 @@ private extension MigrationManager {
 
             try pendingDb.connection().execute(statement)
             try pendingDb.connection().setUserVersion(PendingDbMigration.v2.rawValue)
-        }
-    }
-
-    func migrateCacheDb() throws {
-        // getUserVersion returns a default value of zero for an unmigrated database.
-        let currentCacheDbVersion = try cacheDb.connection().getUserVersion()
-
-        LoggerProxy.debug(
-            "Attempting to perform migration for cache Db - currentVersion: \(currentCacheDbVersion)." +
-            "Latest version is: \(Self.nextCacheDbMigration.rawValue)"
-        )
-
-        for version in (currentCacheDbVersion..<Self.nextCacheDbMigration.rawValue) {
-            switch CacheDbMigration(rawValue: version) {
-            case .some(.none):
-                // we have no migrations to run; this case should ordinarily be 
-                // unreachable due to the bound on the loop.
-                break
-            case nil:
-                throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(version).")
-            }
         }
     }
 }

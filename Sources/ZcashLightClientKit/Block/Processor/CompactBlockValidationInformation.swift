@@ -18,7 +18,14 @@ extension CompactBlockProcessor {
         try Task.checkCancellation()
 
         let startTime = Date()
-        let result = rustBackend.validateCombinedChain(dbCache: config.cacheDb, dbData: config.dataDb, networkType: config.network.networkType)
+
+        let result = rustBackend.validateCombinedChain(
+            fsBlockDbRoot: config.fsBlockCacheRoot,
+            dbData: config.dataDb,
+            networkType: config.network.networkType,
+            limit: 0
+        )
+
         let finishTime = Date()
 
         SDKMetrics.shared.pushProgressReport(

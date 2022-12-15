@@ -45,7 +45,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
