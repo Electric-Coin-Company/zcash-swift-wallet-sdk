@@ -26,6 +26,7 @@ public enum SynchronizerError: Error {
     case rewindErrorUnknownArchorHeight // ZcashLightClientKit.SynchronizerError error 13.
     case invalidAccount // ZcashLightClientKit.SynchronizerError error 14.
     case lightwalletdValidationFailed(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 8.
+    case wipeAttemptWhileProcessing
 }
 
 public enum ShieldFundsError: Error {
@@ -193,6 +194,12 @@ public protocol Synchronizer {
     /// - Throws rewindError for other errors
     /// - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
     func rewind(_ policy: RewindPolicy) async throws
+
+    /// Wipes out internal data structures of the SDK. After this call, everything is the same as before any sync. The state of the synchronizer is
+    /// switched to `unprepared`. So before the next sync, it's required to call `prepare()`.
+    ///
+    /// If this is called while the sync process is in progress then `SynchronizerError.wipeAttemptWhileProcessing` is thrown.
+    func wipe() async throws
 }
 
 public enum SyncStatus: Equatable {

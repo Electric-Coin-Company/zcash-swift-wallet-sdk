@@ -1,3 +1,6 @@
+# Unreleased
+- [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 
+
 # 0.17.4-beta
 - [#665] Fix testShieldFunds() `get_transparent_balance` error
 updates `libzcashlc` to `0.1.1` to fix an error where getting a 

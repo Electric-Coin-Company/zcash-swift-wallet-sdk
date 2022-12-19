@@ -95,6 +95,10 @@ class TransactionSQLDAO: TransactionRepository {
         self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
     }
 
+    func closeDBConnection() {
+        dbProvider.close()
+    }
+
     func blockForHeight(_ height: BlockHeight) throws -> Block? {
         try blockDao.block(at: height)
     }
