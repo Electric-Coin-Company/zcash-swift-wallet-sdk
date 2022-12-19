@@ -39,35 +39,26 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindById() {
-        var transaction: TransactionEntity?
-        XCTAssertNoThrow(try { transaction = try self.transactionRepository.findBy(id: 10) }())
-        guard let transaction = transaction else {
-            XCTFail("transaction is nil")
-            return
-        }
-        
+        var transaction: TransactionNG.Overview!
+        XCTAssertNoThrow(try { transaction = try self.transactionRepository.find(id: 10) }())
+
         XCTAssertEqual(transaction.id, 10)
         XCTAssertEqual(transaction.minedHeight, 663942)
-        XCTAssertEqual(transaction.transactionIndex, 5)
+        XCTAssertEqual(transaction.index, 5)
     }
     
     func testFindByTxId() {
-        var transaction: TransactionEntity?
+        var transaction: TransactionNG.Overview!
 
         let id = Data(fromHexEncodedString: "01af48bcc4e9667849a073b8b5c539a0fc19de71aac775377929dc6567a36eff")!
         
         XCTAssertNoThrow(
-            try { transaction = try self.transactionRepository.findBy(rawId: id) }()
+            try { transaction = try self.transactionRepository.find(rawID: id) }()
         )
 
-        guard let transaction = transaction else {
-            XCTFail("transaction is nil")
-            return
-        }
-        
         XCTAssertEqual(transaction.id, 8)
         XCTAssertEqual(transaction.minedHeight, 663922)
-        XCTAssertEqual(transaction.transactionIndex, 1)
+        XCTAssertEqual(transaction.index, 1)
     }
     
     func testFindAllSentTransactions() {

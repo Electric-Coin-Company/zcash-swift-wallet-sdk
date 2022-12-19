@@ -651,7 +651,7 @@ public actor CompactBlockProcessor {
 
                 try await handleSaplingParametersIfNeeded()
                 try await removeCacheDB()
-                
+
                 if !Task.isCancelled {
                     await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
                 }

@@ -123,19 +123,6 @@ class TransactionSQLDAO: TransactionRepository {
     func countUnmined() throws -> Int {
         try dbProvider.connection().scalar(transactions.filter(TableStructure.minedHeight == nil).count)
     }
-    
-    func findBy(id: Int) throws -> TransactionEntity? {
-        let query = transactions.filter(TableStructure.id == id).limit(1)
-        let sequence = try dbProvider.connection().prepare(query)
-        let entity: Transaction? = try sequence.map({ try $0.decode() }).first
-        return entity
-    }
-    
-    func findBy(rawId: Data) throws -> TransactionEntity? {
-        let query = transactions.filter(TableStructure.transactionId == Blob(bytes: rawId.bytes)).limit(1)
-        let entity: Transaction? = try dbProvider.connection().prepare(query).map({ try $0.decode() }).first
-        return entity
-    }
 }
 
 // MARK: - Queries

@@ -759,11 +759,10 @@ public class SDKSynchronizer: Synchronizer {
         try transactionManager.allPendingTransactions()?
             .filter { $0.isSubmitSuccess && !$0.isMined }
             .forEach { pendingTx in
-                guard let rawId = pendingTx.rawTransactionId else { return }
-                let transaction = try transactionRepository.findBy(rawId: rawId)
+                guard let rawID = pendingTx.rawTransactionId else { return }
+                let transaction = try transactionRepository.find(rawID: rawID)
 
-                guard let minedHeight = transaction?.minedHeight else { return }
-                let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
+                let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: transaction.minedHeight)
 
                 notifyMinedTransaction(minedTx)
             }
