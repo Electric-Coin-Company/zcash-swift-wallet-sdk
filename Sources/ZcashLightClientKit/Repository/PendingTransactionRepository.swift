@@ -8,6 +8,8 @@
 import Foundation
 
 protocol PendingTransactionRepository {
+    func closeDBConnection()
+
     func create(_ transaction: PendingTransactionEntity) throws -> Int
     func update(_ transaction: PendingTransactionEntity) throws
     func delete(_ transaction: PendingTransactionEntity) throws

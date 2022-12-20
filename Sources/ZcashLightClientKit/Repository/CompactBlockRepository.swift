@@ -58,4 +58,6 @@ protocol CompactBlockRepository {
     - Parameter height: the height to rewind to
     */
     func rewindAsync(to height: BlockHeight) async throws
+
+    func closeDBConnection()
 }

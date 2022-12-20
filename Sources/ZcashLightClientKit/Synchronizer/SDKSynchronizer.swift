@@ -644,6 +644,23 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
+    public func wipe() async throws {
+        do {
+            try await blockProcessor.wipe()
+        } catch {
+            throw SynchronizerError.wipeAttemptWhileProcessing
+        }
+
+        transactionManager.closeDBConnection()
+        transactionRepository.closeDBConnection()
+
+        try? FileManager.default.removeItem(at: initializer.cacheDbURL)
+        try? FileManager.default.removeItem(at: initializer.pendingDbURL)
+        try? FileManager.default.removeItem(at: initializer.dataDbURL)
+
+        status = .unprepared
+    }
+
     // MARK: notify state
     private func notify(progress: CompactBlockProgress) {
         var userInfo: [AnyHashable: Any] = .init()
@@ -791,6 +808,8 @@ public class SDKSynchronizer: Synchronizer {
             case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .unknown:
+                break
+            case .wipeAttemptWhileProcessing:
                 break
             }
         }

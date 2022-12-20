@@ -254,6 +254,10 @@ class PersistentTransactionManager: OutboundTransactionManager {
             throw TransactionManagerError.notPending(pendingTransaction)
         }
     }
+
+    func closeDBConnection() {
+        repository.closeDBConnection()
+    }
 }
 
 enum OutboundTransactionManagerBuilder {

@@ -32,6 +32,7 @@ public enum CompactBlockProcessorError: Error {
     case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
     case unknown
     case rewindAttemptWhileProcessing
+    case wipeAttemptWhileProcessing
 }
 
 /**
@@ -563,6 +564,19 @@ public actor CompactBlockProcessor {
 
         self.lastChainValidationFailure = nil
         return rewindBlockHeight
+    }
+
+    func wipe() async throws {
+        switch self.state {
+        case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
+            throw CompactBlockProcessorError.wipeAttemptWhileProcessing
+        case .stopped, .error, .synced:
+            break
+        }
+
+        state = .stopped
+        downloader.closeDBConnection()
+        await internalSyncProgress.rewind(to: 0)
     }
 
     func validateServer() async {
@@ -1102,6 +1116,8 @@ extension CompactBlockProcessorError: LocalizedError {
             // swiftlint:disable:next line_length
             return "The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade."
         case .unknown: return "Unknown error occured."
+        case .wipeAttemptWhileProcessing:
+            return "Can't execute wipe while sync process is in progress."
         }
     }
 

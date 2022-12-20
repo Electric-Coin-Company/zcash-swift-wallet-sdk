@@ -44,7 +44,7 @@ class SychronizerDarksideTests: XCTestCase {
 
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
-    
+
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
@@ -179,6 +179,41 @@ class SychronizerDarksideTests: XCTestCase {
                 latestScannedHeight: 663189
             )
         ])
+    }
+
+    @MainActor func testSyncAfterWipeWorks() async throws {
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
+        let receivedTxHeight: BlockHeight = 663188
+
+        try coordinator.applyStaged(blockheight: receivedTxHeight + 1)
+
+        sleep(2)
+
+        let firsSyncExpectation = XCTestExpectation(description: "first sync")
+
+        try coordinator.sync(
+            completion: { _ in
+                firsSyncExpectation.fulfill()
+            },
+            error: self.handleError
+        )
+
+        wait(for: [firsSyncExpectation], timeout: 10)
+
+        try await coordinator.synchronizer.wipe()
+
+        _ = try coordinator.synchronizer.prepare(with: nil)
+
+        let secondSyncExpectation = XCTestExpectation(description: "second sync")
+
+        try coordinator.sync(
+            completion: { _ in
+                secondSyncExpectation.fulfill()
+            },
+            error: self.handleError
+        )
+
+        wait(for: [secondSyncExpectation], timeout: 10)
     }
     
     @objc func handleFoundTransactions(_ notification: Notification) {
