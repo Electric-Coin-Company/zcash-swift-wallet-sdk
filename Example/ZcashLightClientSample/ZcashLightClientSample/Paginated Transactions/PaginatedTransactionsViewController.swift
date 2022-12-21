@@ -16,7 +16,7 @@ class PaginatedTransactionsViewController: UIViewController {
 
     // swiftlint:disable:next implicitly_unwrapped_optional
     var paginatedRepository: PaginatedTransactionRepository!
-    var transactions: [TransactionEntity] = []
+    var transactions: [TransactionNG.Overview] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -87,8 +87,8 @@ extension PaginatedTransactionsViewController: PaginatedTableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
         
         let transaction = transactions[indexPath.row]
-        cell.detailTextLabel?.text = transaction.transactionId.toHexStringTxId()
-        cell.textLabel?.text = transaction.created ?? "No date"
+        cell.detailTextLabel?.text = transaction.rawID.toHexStringTxId()
+        cell.textLabel?.text = transaction.blocktime.description
         
         return cell
     }

@@ -950,14 +950,16 @@ class AdvancedReOrgTests: XCTestCase {
         15. verify that there's no pending transaction and that the tx is displayed on the sentTransactions collection
         */
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
+
+        let sentTransactions = coordinator.synchronizer.sentTransactions
+            .first(
+                where: { transaction in
+                    return transaction.rawID == newlyPendingTx.rawTransactionId
+                }
+            )
+
         XCTAssertNotNil(
-            coordinator.synchronizer.sentTransactions
-                .first(
-                    where: { transaction in
-                        guard let txId = transaction.rawTransactionId else { return false }
-                        return txId == newlyPendingTx.rawTransactionId
-                    }
-                ),
+            sentTransactions,
             "Sent Tx is not on sent transactions"
         )
         

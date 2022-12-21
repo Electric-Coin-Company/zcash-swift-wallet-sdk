@@ -20,7 +20,7 @@ public enum TransactionNG {
         public var isSentTransaction: Bool { value < Zatoshi(0) }
         public let hasChange: Bool
         public let memoCount: Int
-        public let minedHeight: BlockHeight
+        public let minedHeight: BlockHeight?
         public let raw: Data
         public let rawID: Data
         public let receivedNoteCount: Int
@@ -35,7 +35,7 @@ public enum TransactionNG {
         public let id: Int
         public let index: Int
         public let memoCount: Int
-        public let minedHeight: BlockHeight
+        public let minedHeight: BlockHeight?
         public let noteCount: Int
         public let raw: Data
         public let rawID: Data
@@ -60,7 +60,7 @@ public enum TransactionNG {
 extension TransactionNG.Overview {
     enum Column {
         static let id = Expression<Int>("id_tx")
-        static let minedHeight = Expression<BlockHeight>("mined_height")
+        static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob>("txid")
         static let expiryHeight = Expression<BlockHeight>("expiry_height")
@@ -96,7 +96,7 @@ extension TransactionNG.Overview {
 extension TransactionNG.Received {
     enum Column {
         static let id = Expression<Int>("id_tx")
-        static let minedHeight = Expression<BlockHeight>("mined_height")
+        static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob>("txid")
         static let expiryHeight = Expression<BlockHeight>("expiry_height")
@@ -127,7 +127,7 @@ extension TransactionNG.Received {
 extension TransactionNG.Sent {
     enum Column {
         static let id = Expression<Int>("id_tx")
-        static let minedHeight = Expression<BlockHeight>("mined_height")
+        static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob>("txid")
         static let expiryHeight = Expression<BlockHeight>("expiry_height")
