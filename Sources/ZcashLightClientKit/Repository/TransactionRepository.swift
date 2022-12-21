@@ -31,11 +31,11 @@ protocol TransactionRepository {
 
     func find(id: Int) throws -> TransactionNG.Overview
     func find(rawID: Data) throws -> TransactionNG.Overview
-    func find(offset: Int, limit: Int) throws -> [TransactionNG.Overview]
-    func find(in range: BlockRange, limit: Int) throws -> [TransactionNG.Overview]
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview]
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview]
+    func find(from: TransactionNG.Overview, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview]
     func findReceived(offset: Int, limit: Int) throws -> [TransactionNG.Received]
     func findSent(offset: Int, limit: Int) throws -> [TransactionNG.Sent]
-    func findSent(from: TransactionNG.Sent, limit: Int) throws -> [TransactionNG.Sent]
     func findSent(in range: BlockRange, limit: Int) throws -> [TransactionNG.Sent]
     func findSent(rawID: Data) throws -> TransactionNG.Sent
 }

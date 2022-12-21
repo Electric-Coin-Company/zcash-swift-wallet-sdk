@@ -11,7 +11,7 @@ import SQLite
 public enum TransactionNG {
 
     public struct Overview {
-        public let blocktime: Int64
+        public let blocktime: TimeInterval
         public let expiryHeight: BlockHeight
         public let fee: Zatoshi
         public let id: Int
@@ -29,7 +29,7 @@ public enum TransactionNG {
     }
 
     public struct Received {
-        public let blocktime: Int64
+        public let blocktime: TimeInterval
         public let expiryHeight: BlockHeight
         public let fromAccount: Int
         public let id: Int
@@ -43,7 +43,7 @@ public enum TransactionNG {
     }
 
     public struct Sent {
-        public let blocktime: Int64
+        public let blocktime: TimeInterval
         public let expiryHeight: BlockHeight
         public let fromAccount: Int
         public let id: Int
@@ -76,7 +76,7 @@ extension TransactionNG.Overview {
     }
 
     init(row: Row) throws {
-        self.blocktime = try row.get(Column.blockTime)
+        self.blocktime = TimeInterval(try row.get(Column.blockTime))
         self.expiryHeight = try row.get(Column.expiryHeight)
         self.fee = Zatoshi(try row.get(Column.fee))
         self.id = try row.get(Column.id)
@@ -110,7 +110,7 @@ extension TransactionNG.Received {
     }
 
     init(row: Row) throws {
-        self.blocktime = try row.get(Column.blockTime)
+        self.blocktime = TimeInterval(try row.get(Column.blockTime))
         self.expiryHeight = try row.get(Column.expiryHeight)
         self.fromAccount = try row.get(Column.fromAccount)
         self.id = try row.get(Column.id)
@@ -141,7 +141,7 @@ extension TransactionNG.Sent {
     }
 
     init(row: Row) throws {
-        self.blocktime = try row.get(Column.blockTime)
+        self.blocktime = TimeInterval(try row.get(Column.blockTime))
         self.expiryHeight = try row.get(Column.expiryHeight)
         self.fromAccount = try row.get(Column.fromAccount)
         self.id = try row.get(Column.id)
