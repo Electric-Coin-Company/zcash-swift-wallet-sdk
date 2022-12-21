@@ -22,6 +22,7 @@ extension CompactBlockProcessor {
         var targetHeightInternal: BlockHeight?
         
         do {
+            var startTime = Date()
             targetHeightInternal = targetHeight
             if targetHeight == nil {
                 targetHeightInternal = try await service.latestBlockHeightAsync()
@@ -38,22 +39,53 @@ extension CompactBlockProcessor {
                 endHeight: latestHeight
             )
             
+            var counter = 0
+            var lastDownloadedBlockHeight = -1
+            
             for try await zcashCompactBlock in stream {
                 try Task.checkCancellation()
                 buffer.append(zcashCompactBlock)
-                if buffer.count >= blockBufferSize {
-                    try await storage.write(blocks: buffer)
-                    await blocksBufferWritten(buffer)
-                    buffer.removeAll(keepingCapacity: true)
-                }
+                counter += 1
+                lastDownloadedBlockHeight = zcashCompactBlock.height
                 
                 let progress = BlockProgress(
                     startHeight: startHeight,
                     targetHeight: latestHeight,
-                    progressHeight: zcashCompactBlock.height
+                    progressHeight: lastDownloadedBlockHeight
                 )
                 notifyProgress(.download(progress))
+
+                if buffer.count >= blockBufferSize {
+                    let finishTime = Date()
+                    try await storage.write(blocks: buffer)
+                    await blocksBufferWritten(buffer)
+                    buffer.removeAll(keepingCapacity: true)
+                    
+                    SDKMetrics.shared.pushProgressReport(
+                        progress: progress,
+                        start: startTime,
+                        end: finishTime,
+                        batchSize: Int(blockBufferSize),
+                        operation: .downloadBlocks
+                    )
+                    counter = 0
+                    startTime = finishTime
+                }
             }
+            if counter > 0 {
+                SDKMetrics.shared.pushProgressReport(
+                    progress: BlockProgress(
+                        startHeight: startHeight,
+                        targetHeight: latestHeight,
+                        progressHeight: lastDownloadedBlockHeight
+                    ),
+                    start: startTime,
+                    end: Date(),
+                    batchSize: Int(blockBufferSize),
+                    operation: .downloadBlocks
+                )
+            }
+            
             try await storage.write(blocks: buffer)
             await blocksBufferWritten(buffer)
             buffer.removeAll(keepingCapacity: true)

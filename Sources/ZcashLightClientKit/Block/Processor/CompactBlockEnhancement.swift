@@ -64,6 +64,7 @@ extension CompactBlockProcessor {
         
         // fetch transactions
         do {
+            let startTime = Date()
             guard let transactions = try transactionRepository.findTransactions(in: blockRange, limit: Int.max), !transactions.isEmpty else {
                 await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
                 LoggerProxy.debug("no transactions detected on range: \(blockRange.printRange)")
@@ -100,6 +101,18 @@ extension CompactBlockProcessor {
                     }
                 }
             }
+            
+            SDKMetrics.shared.pushProgressReport(
+                progress: BlockProgress(
+                    startHeight: range.lowerBound,
+                    targetHeight: range.upperBound,
+                    progressHeight: range.upperBound
+                ),
+                start: startTime,
+                end: Date(),
+                batchSize: range.count,
+                operation: .enhancement
+            )
         } catch {
             LoggerProxy.error("error enhancing transactions! \(error)")
             throw error
