@@ -423,21 +423,33 @@ extension TransactionSQLDAO {
         return try execute(query) { try TransactionNG.Overview(row: $0) }
     }
 
-    func find(offset: Int, limit: Int) throws -> [TransactionNG.Overview] {
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
         let query = transactionsView
             .order(TransactionNG.Overview.Column.minedHeight.asc, TransactionNG.Overview.Column.id.asc)
+            .filterQueryFor(kind: kind)
             .limit(limit, offset: offset)
 
         return try execute(query) { try TransactionNG.Overview(row: $0) }
     }
 
-    func find(in range: BlockRange, limit: Int) throws -> [TransactionNG.Overview] {
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
         let query = transactionsView
+            .order(TransactionNG.Overview.Column.minedHeight.asc, TransactionNG.Overview.Column.id.asc)
             .filter(
                 TransactionNG.Overview.Column.minedHeight >= BlockHeight(range.start.height) &&
                 TransactionNG.Overview.Column.minedHeight <= BlockHeight(range.end.height)
             )
+            .filterQueryFor(kind: kind)
+            .limit(limit)
+
+        return try execute(query) { try TransactionNG.Overview(row: $0) }
+    }
+
+    func find(from transaction: TransactionNG.Overview, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
+        let query = transactionsView
             .order(TransactionNG.Overview.Column.minedHeight.asc, TransactionNG.Overview.Column.id.asc)
+            .filter(Int64(transaction.blocktime) > TransactionNG.Overview.Column.blockTime && transaction.index > TransactionNG.Overview.Column.index)
+            .filterQueryFor(kind: kind)
             .limit(limit)
 
         return try execute(query) { try TransactionNG.Overview(row: $0) }
@@ -462,7 +474,7 @@ extension TransactionSQLDAO {
     func findSent(from transaction: TransactionNG.Sent, limit: Int) throws -> [TransactionNG.Sent] {
         let query = sentTransactionsView
             .order(TransactionNG.Sent.Column.minedHeight.asc, TransactionNG.Sent.Column.id.asc)
-            .filter(transaction.blocktime > TransactionNG.Sent.Column.blockTime && transaction.index > TransactionNG.Sent.Column.index)
+            .filter(Int64(transaction.blocktime) > TransactionNG.Sent.Column.blockTime && transaction.index > TransactionNG.Sent.Column.index)
             .limit(limit)
 
         return try execute(query) { try TransactionNG.Sent(row: $0) }
@@ -470,11 +482,11 @@ extension TransactionSQLDAO {
 
     func findSent(in range: BlockRange, limit: Int) throws -> [TransactionNG.Sent] {
         let query = sentTransactionsView
+            .order(TransactionNG.Sent.Column.minedHeight.asc, TransactionNG.Sent.Column.id.asc)
             .filter(
                 TransactionNG.Sent.Column.minedHeight >= BlockHeight(range.start.height) &&
                 TransactionNG.Sent.Column.minedHeight <= BlockHeight(range.end.height)
             )
-            .order(TransactionNG.Sent.Column.minedHeight.asc, TransactionNG.Sent.Column.id.asc)
             .limit(limit)
 
         return try execute(query) { try TransactionNG.Sent(row: $0) }
@@ -501,7 +513,19 @@ extension TransactionSQLDAO {
             .map(createEntity)
 
         return entities
+    }
+}
 
+private extension View {
+    func filterQueryFor(kind: TransactionKind) -> View {
+        switch kind {
+        case .all:
+            return self
+        case .sent:
+            return filter(TransactionNG.Overview.Column.value < 0)
+        case .received:
+            return filter(TransactionNG.Overview.Column.value >= 0)
+        }
     }
 }
 

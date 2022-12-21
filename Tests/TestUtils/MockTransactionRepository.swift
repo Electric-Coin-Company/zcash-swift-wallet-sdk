@@ -24,6 +24,10 @@ class MockTransactionRepository {
     var receivedTransactions: [ConfirmedTransaction] = []
     var network: ZcashNetwork
 
+    var transactionsNG: [TransactionNG.Overview] = []
+    var receivedTransactionsNG: [TransactionNG.Received] = []
+    var sentTransactionsNG: [TransactionNG.Sent] = []
+
     var allCount: Int {
         receivedCount + sentCount
     }
@@ -201,39 +205,109 @@ enum MockTransactionRepositoryError: Error {
 }
 
 extension MockTransactionRepository {
-    func find(id: Int) throws -> ZcashLightClientKit.TransactionNG.Overview {
+    func generateNG() {
+        var txArray: [TransactionNG.Overview] = []
+        reference = referenceArray()
+        for index in 0 ..< reference.count {
+            txArray.append(mockTx(index: index, kind: reference[index]))
+        }
+        transactionsNG = txArray
+    }
+
+    func mockTx(index: Int, kind: Kind) -> TransactionNG.Overview {
+        switch kind {
+        case .received:
+            return mockReceived(index)
+        case .sent:
+            return mockSent(index)
+        }
+    }
+
+    func mockSent(_ index: Int) -> TransactionNG.Overview {
+        return TransactionNG.Overview(
+            blocktime: randomTimeInterval(),
+            expiryHeight: BlockHeight.max,
+            fee: Zatoshi(2),
+            id: index,
+            index: index,
+            isWalletInternal: true,
+            hasChange: true,
+            memoCount: 0,
+            minedHeight: randomBlockHeight(),
+            raw: Data(),
+            rawID: Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 1,
+            value: Zatoshi(-Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi))
+        )
+    }
+
+    func mockReceived(_ index: Int) -> TransactionNG.Overview {
+        return TransactionNG.Overview(
+            blocktime: randomTimeInterval(),
+            expiryHeight: BlockHeight.max,
+            fee: Zatoshi(2),
+            id: index,
+            index: index,
+            isWalletInternal: true,
+            hasChange: true,
+            memoCount: 0,
+            minedHeight: randomBlockHeight(),
+            raw: Data(),
+            rawID: Data(),
+            receivedNoteCount: 1,
+            sentNoteCount: 0,
+            value: Zatoshi(Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi))
+        )
+    }
+
+    func slice(txs: [TransactionNG.Overview], offset: Int, limit: Int) -> [TransactionNG.Overview] {
+        guard offset < txs.count else { return [] }
+
+        return Array(txs[offset ..< min(offset + limit, txs.count - offset)])
+    }
+
+    func find(id: Int) throws -> TransactionNG.Overview {
+        guard let transaction = transactionsNG.first(where: { $0.id == id }) else {
+            throw TransactionRepositoryError.notFound
+        }
+
+        return transaction
+    }
+
+    func find(rawID: Data) throws -> TransactionNG.Overview {
+        guard let transaction = transactionsNG.first(where: { $0.rawID == rawID }) else {
+            throw TransactionRepositoryError.notFound
+        }
+
+        return transaction
+    }
+
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [ZcashLightClientKit.TransactionNG.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func find(rawID: Data) throws -> ZcashLightClientKit.TransactionNG.Overview {
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func find(offset: Int, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Overview] {
+    func find(from: TransactionNG.Overview, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func find(in range: ZcashLightClientKit.BlockRange, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Overview] {
+    func findReceived(offset: Int, limit: Int) throws -> [TransactionNG.Received] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findReceived(offset: Int, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Received] {
+    func findSent(offset: Int, limit: Int) throws -> [TransactionNG.Sent] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findSent(offset: Int, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Sent] {
+    func findSent(in range: BlockRange, limit: Int) throws -> [TransactionNG.Sent] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findSent(from: ZcashLightClientKit.TransactionNG.Sent, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Sent] {
-        throw MockTransactionRepositoryError.notImplemented
-    }
-
-    func findSent(in range: ZcashLightClientKit.BlockRange, limit: Int) throws -> [ZcashLightClientKit.TransactionNG.Sent] {
-        throw MockTransactionRepositoryError.notImplemented
-    }
-
-    func findSent(rawID: Data) throws -> ZcashLightClientKit.TransactionNG.Sent {
+    func findSent(rawID: Data) throws -> TransactionNG.Sent {
         throw MockTransactionRepositoryError.notImplemented
     }
 }
