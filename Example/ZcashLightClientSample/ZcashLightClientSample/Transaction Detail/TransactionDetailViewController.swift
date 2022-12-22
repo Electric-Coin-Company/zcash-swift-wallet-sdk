@@ -18,6 +18,19 @@ final class TransactionDetailModel {
     var memo: String?
     
     init() {}
+
+    init(receivedTransaction transaction: TransactionNG.Received) {
+        self.id = transaction.rawID.toHexStringTxId()
+        self.minedHeight = transaction.minedHeight.description
+        self.expiryHeight = transaction.expiryHeight.description
+        self.created = Date(timeIntervalSince1970: transaction.blocktime).description
+        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
+
+        // TODO [#683]: Add API to SDK to fetch memos.
+//        if let memoData = confirmedTransaction.memo, let memoString = String(bytes: memoData, encoding: .utf8) {
+//            self.memo = memoString
+//        }
+    }
     
     init(confirmedTransaction: ConfirmedTransactionEntity) {
         self.id = confirmedTransaction.rawTransactionId?.toHexStringTxId()
@@ -29,6 +42,7 @@ final class TransactionDetailModel {
             self.memo = memoString
         }
     }
+
     init(pendingTransaction: PendingTransactionEntity) {
         self.id = pendingTransaction.rawTransactionId?.toHexStringTxId()
         self.minedHeight = pendingTransaction.minedHeight.description
