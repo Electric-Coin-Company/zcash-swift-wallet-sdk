@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.8.0"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
-        .package(name:"libzcashlc", url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", from: "0.1.1")
+        .package(name:"libzcashlc", url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", from: "0.1.1"),
     ],
     targets: [
         .target(
@@ -59,6 +59,10 @@ let package = Package(
         ),
         .testTarget(
             name: "DarksideTests",
+            dependencies: ["ZcashLightClientKit", "TestUtils"]
+        ),
+        .testTarget(
+            name: "PerformanceTests",
             dependencies: ["ZcashLightClientKit", "TestUtils"]
         )
     ]
