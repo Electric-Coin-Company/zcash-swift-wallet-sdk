@@ -80,7 +80,12 @@ class BlockStreamingTest: XCTestCase {
                     targetHeight: latestBlockHeight
                 )
 
-                try await compactBlockProcessor.downloadAndStoreBlocks(using: downloadStream, at: startHeight...latestBlockHeight, maxBlockBufferSize: 10)
+                try await compactBlockProcessor.downloadAndStoreBlocks(
+                    using: downloadStream,
+                    at: startHeight...latestBlockHeight,
+                    maxBlockBufferSize: 10,
+                    totalProgressRange: startHeight...latestBlockHeight
+                )
             } catch {
                 XCTAssertTrue(Task.isCancelled)
             }
@@ -123,7 +128,12 @@ class BlockStreamingTest: XCTestCase {
                 targetHeight: latestBlockHeight
             )
 
-            try await compactBlockProcessor.downloadAndStoreBlocks(using: downloadStream, at: startHeight...latestBlockHeight, maxBlockBufferSize: 10)
+            try await compactBlockProcessor.downloadAndStoreBlocks(
+                using: downloadStream,
+                at: startHeight...latestBlockHeight,
+                maxBlockBufferSize: 10,
+                totalProgressRange: startHeight...latestBlockHeight
+            )
         } catch {
             if let lwdError = error as? LightWalletServiceError {
                 switch lwdError {

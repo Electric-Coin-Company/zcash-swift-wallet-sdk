@@ -16,9 +16,19 @@ extension CompactBlockProcessor {
 
     func compactBlockValidation() async throws {
         try Task.checkCancellation()
-        
+
+        let startTime = Date()
         let result = rustBackend.validateCombinedChain(dbCache: config.cacheDb, dbData: config.dataDb, networkType: config.network.networkType)
-        
+        let finishTime = Date()
+
+        SDKMetrics.shared.pushProgressReport(
+            progress: BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0),
+            start: startTime,
+            end: finishTime,
+            batchSize: 0,
+            operation: .validateBlocks
+        )
+
         do {
             switch result {
             case 0:

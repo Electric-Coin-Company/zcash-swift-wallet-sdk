@@ -11,7 +11,7 @@ import Foundation
 extension CompactBlockProcessor {
 
     func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
-        try await compactBlockBatchScanning(range: range) { [weak self] lastScannedHeight in
+        try await compactBlockBatchScanning(range: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
             let progress = BlockProgress(
                 startHeight: totalProgressRange.lowerBound,
                 targetHeight: totalProgressRange.upperBound,
@@ -22,7 +22,11 @@ extension CompactBlockProcessor {
     }
 
 
-    func compactBlockBatchScanning(range: CompactBlockRange, didScan: ((BlockHeight) async -> Void)? = nil) async throws {
+    func compactBlockBatchScanning(
+        range: CompactBlockRange,
+        totalProgressRange: CompactBlockRange,
+        didScan: ((BlockHeight) async -> Void)? = nil
+    ) async throws {
         try Task.checkCancellation()
         
         // TODO: remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
@@ -37,19 +41,19 @@ extension CompactBlockProcessor {
                     throw error
                 }
                 let scanFinishTime = Date()
-                NotificationSender.default.post(notification:
-                    SDKMetrics.progressReportNotification(
-                        progress: BlockProgress(
-                            startHeight: range.lowerBound,
-                            targetHeight: range.upperBound,
-                            progressHeight: range.upperBound
-                        ),
-                        start: scanStartTime,
-                        end: scanFinishTime,
-                        batchSize: Int(batchSize),
-                        task: .scanBlocks
-                    )
+                
+                SDKMetrics.shared.pushProgressReport(
+                    progress: BlockProgress(
+                        startHeight: range.lowerBound,
+                        targetHeight: range.upperBound,
+                        progressHeight: range.upperBound
+                    ),
+                    start: scanStartTime,
+                    end: scanFinishTime,
+                    batchSize: Int(batchSize),
+                    operation: .scanBlocks
                 )
+                
                 let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
                 LoggerProxy.debug("Scanned \(range.count) blocks in \(seconds) seconds")
             } else {
@@ -82,6 +86,20 @@ extension CompactBlockProcessor {
                     if scannedNewBlocks {
                         await didScan?(lastScannedHeight)
 
+                        let progress = BlockProgress(
+                            startHeight: totalProgressRange.lowerBound,
+                            targetHeight: totalProgressRange.upperBound,
+                            progressHeight: lastScannedHeight
+                        )
+
+                        SDKMetrics.shared.pushProgressReport(
+                            progress: progress,
+                            start: scanStartTime,
+                            end: scanFinishTime,
+                            batchSize: Int(batchSize),
+                            operation: .scanBlocks
+                        )
+                        
                         let heightCount = lastScannedHeight - previousScannedHeight
                         let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
                         LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
@@ -127,86 +145,5 @@ extension CompactBlockProcessor {
             LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
             throw error
         }
-    }
-}
-
-public enum SDKMetrics {
-    public struct BlockMetricReport {
-        public var startHeight: BlockHeight
-        public var progressHeight: BlockHeight
-        public var targetHeight: BlockHeight
-        public var batchSize: Int
-        public var duration: TimeInterval
-        public var task: TaskReported
-    }
-    
-    public enum TaskReported: String {
-        case scanBlocks
-    }
-
-    public static let startBlockHeightKey = "SDKMetrics.startBlockHeightKey"
-    public static let targetBlockHeightKey = "SDKMetrics.targetBlockHeightKey"
-    public static let progressHeightKey = "SDKMetrics.progressHeight"
-    public static let batchSizeKey = "SDKMetrics.batchSize"
-    public static let startDateKey = "SDKMetrics.startDateKey"
-    public static let endDateKey = "SDKMetrics.endDateKey"
-    public static let taskReportedKey = "SDKMetrics.taskReported"
-    public static let notificationName = Notification.Name("SDKMetrics.Notification")
-
-    
-    public static func blockReportFromNotification(_ notification: Notification) -> BlockMetricReport? {
-        guard
-            notification.name == notificationName,
-            let info = notification.userInfo,
-            let startHeight = info[startBlockHeightKey] as? BlockHeight,
-            let progressHeight = info[progressHeightKey] as? BlockHeight,
-            let targetHeight = info[targetBlockHeightKey] as? BlockHeight,
-            let batchSize = info[batchSizeKey] as? Int,
-            let task = info[taskReportedKey] as? TaskReported,
-            let startDate = info[startDateKey] as? Date,
-            let endDate = info[endDateKey] as? Date
-
-        else {
-            return nil
-        }
-        
-        return BlockMetricReport(
-            startHeight: startHeight,
-            progressHeight: progressHeight,
-            targetHeight: targetHeight,
-            batchSize: batchSize,
-            duration: abs(
-                startDate.timeIntervalSinceReferenceDate - endDate.timeIntervalSinceReferenceDate
-            ),
-            task: task
-        )
-    }
-    
-    static func progressReportNotification(
-        progress: BlockProgress,
-        start: Date,
-        end: Date,
-        batchSize: Int,
-        task: SDKMetrics.TaskReported
-    ) -> Notification {
-        var notification = Notification(name: notificationName)
-        notification.userInfo = [
-            startBlockHeightKey: progress.startHeight,
-            targetBlockHeightKey: progress.targetHeight,
-            progressHeightKey: progress.progressHeight,
-            startDateKey: start,
-            endDateKey: end,
-            batchSizeKey: batchSize,
-            taskReportedKey: task
-        ]
-        
-        return notification
-    }
-}
-
-extension String.StringInterpolation {
-    mutating func appendInterpolation(_ value: SDKMetrics.BlockMetricReport) {
-        let literal = "\(value.task) - \(abs(value.startHeight - value.targetHeight)) processed on \(value.duration) seconds"
-        appendLiteral(literal)
     }
 }

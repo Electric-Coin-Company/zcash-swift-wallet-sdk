@@ -621,7 +621,7 @@ public actor CompactBlockProcessor {
 
                 if let range = ranges.downloadedButUnscannedRange {
                     LoggerProxy.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await scanBlocks(at: range, totalProgressRange: totalProgressRange)
+                    try await compactBlockBatchScanning(range: range, totalProgressRange: totalProgressRange)
                 }
 
                 if let range = ranges.downloadAndScanRange {
@@ -642,7 +642,8 @@ public actor CompactBlockProcessor {
                 }
 
                 try await handleSaplingParametersIfNeeded()
-                
+                try await removeCacheDB()
+
                 if !Task.isCancelled {
                     await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
                 }
@@ -659,6 +660,61 @@ public actor CompactBlockProcessor {
                 }
             }
         }
+    }
+
+    private func downloadAndScanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
+        let downloadStream = try await compactBlocksDownloadStream(
+            startHeight: range.lowerBound,
+            targetHeight: range.upperBound
+        )
+
+        // Divide `range` by `batchSize` and compute how many time do we need to run to download and scan all the blocks.
+        // +1 must be done here becase `range` is closed range. So even if upperBound and lowerBound are same there is one block to sync.
+        let blocksCountToSync = (range.upperBound - range.lowerBound) + 1
+        var loopsCount = blocksCountToSync / batchSize
+        if blocksCountToSync % batchSize != 0 {
+            loopsCount += 1
+        }
+
+        for i in 0..<loopsCount {
+            let processingRange = computeSingleLoopDownloadRange(fullRange: range, loopCounter: i, batchSize: batchSize)
+
+            LoggerProxy.debug("Sync loop #\(i+1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
+
+            try await downloadAndStoreBlocks(
+                using: downloadStream,
+                at: processingRange,
+                maxBlockBufferSize: config.downloadBufferSize,
+                totalProgressRange: totalProgressRange
+            )
+            try await compactBlockValidation()
+            try await compactBlockBatchScanning(range: processingRange, totalProgressRange: totalProgressRange)
+            try await removeCacheDB()
+
+            let progress = BlockProgress(
+                startHeight: totalProgressRange.lowerBound,
+                targetHeight: totalProgressRange.upperBound,
+                progressHeight: processingRange.upperBound
+            )
+            notifyProgress(.syncing(progress))
+        }
+    }
+
+    /*
+     Here range for one batch is computed. For example if we want to sync blocks 0...1000 with batchSize 100 we want to generage blocks like
+     this:
+     0...99
+     100...199
+     200...299
+     300...399
+     ...
+     900...999
+     1000...1000
+     */
+    func computeSingleLoopDownloadRange(fullRange: CompactBlockRange, loopCounter: Int, batchSize: BlockHeight) -> CompactBlockRange {
+        let lowerBound = fullRange.lowerBound + (loopCounter * batchSize)
+        let upperBound = min(fullRange.lowerBound + ((loopCounter+1) * batchSize) - 1, fullRange.upperBound)
+        return lowerBound...upperBound
     }
 
     /// It may happen that sync process start with syncing blocks that were downloaded but not synced in previous run of the sync process. This
