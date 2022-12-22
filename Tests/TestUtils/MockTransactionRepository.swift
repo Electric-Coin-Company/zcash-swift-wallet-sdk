@@ -183,10 +183,6 @@ extension MockTransactionRepository: TransactionRepository {
         true
     }
 
-    func findEncodedTransactionBy(txId: Int) -> EncodedTransaction? {
-        nil
-    }
-
     func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
         nil
     }
