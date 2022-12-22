@@ -235,12 +235,12 @@ class RewindRescanTests: XCTestCase {
             return
         }
 
-        try await coordinator.synchronizer.rewind(.transaction(transaction.transactionEntity))
+        try await coordinator.synchronizer.rewind(.transaction(transaction))
         
         // assert that after the new height is
         XCTAssertEqual(
             try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),
-            transaction.transactionEntity.anchor(network: network)
+            transaction.anchor(network: network)
         )
         
         let secondScanExpectation = XCTestExpectation(description: "rescan")

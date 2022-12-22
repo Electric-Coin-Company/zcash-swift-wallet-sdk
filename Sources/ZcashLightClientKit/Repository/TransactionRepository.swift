@@ -16,8 +16,6 @@ protocol TransactionRepository {
     func countAll() throws -> Int
     func countUnmined() throws -> Int
     func blockForHeight(_ height: BlockHeight) throws -> Block?
-    func findAll(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
-    func findAll(from: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
     func lastScannedHeight() throws -> BlockHeight
     func isInitialized() throws -> Bool
 
