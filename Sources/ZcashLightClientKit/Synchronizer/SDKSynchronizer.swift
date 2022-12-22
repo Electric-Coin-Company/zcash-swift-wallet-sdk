@@ -912,6 +912,6 @@ extension ConnectionState {
 private struct NullEnhancementProgress: EnhancementProgress {
     var totalTransactions: Int { 0 }
     var enhancedTransactions: Int { 0 }
-    var lastFoundTransaction: ConfirmedTransactionEntity? { nil }
+    var lastFoundTransaction: TransactionNG.Overview? { nil }
     var range: CompactBlockRange { 0 ... 0 }
 }
