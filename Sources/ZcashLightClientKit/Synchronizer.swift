@@ -142,7 +142,7 @@ public protocol Synchronizer {
     var sentTransactions: [ConfirmedTransactionEntity] { get }
 
     /// all transactions related to receiving funds
-    var receivedTransactions: [ConfirmedTransactionEntity] { get }
+    var receivedTransactions: [TransactionNG.Received] { get }
     
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository

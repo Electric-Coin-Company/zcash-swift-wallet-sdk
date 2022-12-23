@@ -564,8 +564,8 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.cancel(pendingTransaction: transaction)
     }
 
-    public func allReceivedTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allReceivedTransactions() throws -> [TransactionNG.Received] {
+        try transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
 
     public func allPendingTransactions() throws -> [PendingTransactionEntity] {
@@ -871,8 +871,8 @@ extension SDKSynchronizer {
         (try? self.allSentTransactions()) ?? [ConfirmedTransactionEntity]()
     }
 
-    public var receivedTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var receivedTransactions: [TransactionNG.Received] {
+        (try? self.allReceivedTransactions()) ?? []
     }
 }
 

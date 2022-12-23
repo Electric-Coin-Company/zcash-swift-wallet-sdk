@@ -174,10 +174,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         4. get that transaction hex encoded data
         */
-        guard let receivedTxData = receivedTx.raw else {
-            XCTFail("received tx has no raw data!")
-            return
-        }
+        let receivedTxData = receivedTx.raw
         
         let receivedRawTx = RawTransaction.with { rawTx in
             rawTx.height = UInt64(receivedTxHeight)
@@ -608,7 +605,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         var initialBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
-        var incomingTx: ConfirmedTransactionEntity?
+        var incomingTx: TransactionNG.Received!
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
@@ -622,15 +619,7 @@ class AdvancedReOrgTests: XCTestCase {
         initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         incomingTx = coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == incomingTxHeight })
 
-        guard let transaction = incomingTx else {
-            XCTFail("no tx found")
-            return
-        }
-        
-        guard let txRawData = transaction.raw else {
-            XCTFail("transaction has no raw data")
-            return
-        }
+        let txRawData = incomingTx.raw
         
         let rawTransaction = RawTransaction.with({ rawTx in
             rawTx.data = txRawData

@@ -165,40 +165,6 @@ extension TransactionSQLDAO {
             }
     }
 
-    func findAllReceivedTransactions(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
-        try dbProvider.connection()
-            .run(
-                """
-                SELECT
-                    transactions.id_tx     AS id,
-                    transactions.block     AS minedHeight,
-                    transactions.tx_index  AS transactionIndex,
-                    transactions.txid      AS rawTransactionId,
-                    transactions.raw       AS raw,
-                    received_notes.value   AS value,
-                    received_notes.memo    AS memo,
-                    received_notes.id_note AS noteId,
-                    blocks.time            AS blockTimeInSeconds,
-                    transactions.fee       AS fee
-
-                FROM    transactions
-                    LEFT JOIN received_notes
-                        ON transactions.id_tx = received_notes.tx
-                    LEFT JOIN blocks
-                        ON transactions.block = blocks.height
-                WHERE   received_notes.is_change != 1
-                ORDER   BY minedheight DESC, blocktimeinseconds DESC, id DESC
-                LIMIT   \(limit) OFFSET \(offset)
-                """
-            )
-            .map { bindings -> ConfirmedTransactionEntity in
-                guard let transaction = TransactionBuilder.createReceivedTransaction(from: bindings) else {
-                    throw TransactionRepositoryError.malformedTransaction
-                }
-                return transaction
-            }
-    }
-
     func findAll(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
         try dbProvider.connection()
             .run(
