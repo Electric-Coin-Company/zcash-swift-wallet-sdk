@@ -110,11 +110,6 @@ class TransactionSQLDAO: TransactionRepository {
     func isInitialized() throws -> Bool {
         true
     }
-
-    func findEncodedTransactionBy(txId: Int) -> EncodedTransaction? {
-        // try dbProvider
-        return nil
-    }
     
     func countAll() throws -> Int {
         try dbProvider.connection().scalar(transactions.count)
