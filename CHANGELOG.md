@@ -1,5 +1,9 @@
 # Unreleased
 - [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 
+- [#663] Foundations for the benchmarking/performance testing in the SDK. 
+This change presents 2 building blocks for the future automated tests, consisting
+of a new SDKMetrics interface to control flow of the data in the SDK and 
+new performance (unit) test measuring synchronization of 100 mainnet blocks. 
 
 # 0.17.4-beta
 - [#665] Fix testShieldFunds() `get_transparent_balance` error

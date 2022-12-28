@@ -43,6 +43,7 @@ extension CompactBlockProcessor {
             var refreshed: [UnspentTransactionOutputEntity] = []
             var skipped: [UnspentTransactionOutputEntity] = []
 
+            let startTime = Date()
             for utxo in utxos {
                 do {
                     try rustBackend.putUnspentTransparentOutput(
@@ -61,6 +62,18 @@ extension CompactBlockProcessor {
                     skipped.append(utxo)
                 }
             }
+
+            SDKMetrics.shared.pushProgressReport(
+                progress: BlockProgress(
+                    startHeight: range.lowerBound,
+                    targetHeight: range.upperBound,
+                    progressHeight: range.upperBound
+                ),
+                start: startTime,
+                end: Date(),
+                batchSize: range.count,
+                operation: .fetchUTXOs
+            )
 
             let result = (inserted: refreshed, skipped: skipped)
             

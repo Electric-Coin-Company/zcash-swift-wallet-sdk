@@ -24,56 +24,6 @@ extension CompactBlockProcessor {
         }
     }
 
-    func downloadAndScanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
-        let downloadStream = try await compactBlocksDownloadStream(
-            startHeight: range.lowerBound,
-            targetHeight: range.upperBound
-        )
-
-        // Divide `range` by `batchSize` and compute how many time do we need to run to download and scan all the blocks.
-        // +1 must be done here becase `range` is closed range. So even if upperBound and lowerBound are same there is one block to sync.
-        let blocksCountToSync = (range.upperBound - range.lowerBound) + 1
-        var loopsCount = blocksCountToSync / batchSize
-        if blocksCountToSync % batchSize != 0 {
-            loopsCount += 1
-        }
-
-        for i in 0..<loopsCount {
-            let processingRange = computeSingleLoopDownloadRange(fullRange: range, loopCounter: i, batchSize: batchSize)
-
-            LoggerProxy.debug("Sync loop #\(i+1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
-
-            try await downloadAndStoreBlocks(using: downloadStream, at: processingRange, maxBlockBufferSize: config.downloadBufferSize)
-            try await compactBlockValidation()
-            try await compactBlockBatchScanning(range: processingRange)
-            try await removeCacheDB()
-
-            let progress = BlockProgress(
-                startHeight: totalProgressRange.lowerBound,
-                targetHeight: totalProgressRange.upperBound,
-                progressHeight: processingRange.upperBound
-            )
-            notifyProgress(.syncing(progress))
-        }
-    }
-
-    /*
-     Here range for one batch is computed. For example if we want to sync blocks 0...1000 with batchSize 100 we want to generage blocks like
-     this:
-     0...99
-     100...199
-     200...299
-     300...399
-     ...
-     900...999
-     1000...1000
-     */
-    func computeSingleLoopDownloadRange(fullRange: CompactBlockRange, loopCounter: Int, batchSize: BlockHeight) -> CompactBlockRange {
-        let lowerBound = fullRange.lowerBound + (loopCounter * batchSize)
-        let upperBound = min(fullRange.lowerBound + ((loopCounter+1) * batchSize) - 1, fullRange.upperBound)
-        return lowerBound...upperBound
-    }
-
     func compactBlocksDownloadStream(
         startHeight: BlockHeight? = nil,
         targetHeight: BlockHeight? = nil
@@ -84,9 +34,11 @@ extension CompactBlockProcessor {
         if targetHeight == nil {
             targetHeightInternal = try await service.latestBlockHeightAsync()
         }
+
         guard let latestHeight = targetHeightInternal else {
             throw LightWalletServiceError.generalError(message: "missing target height on compactBlockStreamDownload")
         }
+
         try Task.checkCancellation()
         let latestDownloaded = try await storage.latestHeightAsync()
         let startHeight = max(startHeight ?? BlockHeight.empty(), latestDownloaded)
@@ -99,26 +51,63 @@ extension CompactBlockProcessor {
         return BlocksDownloadStream(stream: stream)
     }
 
-    func downloadAndStoreBlocks(using stream: BlocksDownloadStream, at range: CompactBlockRange, maxBlockBufferSize: Int) async throws {
+    func downloadAndStoreBlocks(
+        using stream: BlocksDownloadStream,
+        at range: CompactBlockRange,
+        maxBlockBufferSize: Int,
+        totalProgressRange: CompactBlockRange
+    ) async throws {
         var buffer: [ZcashCompactBlock] = []
         LoggerProxy.debug("Downloading blocks in range: \(range.lowerBound)...\(range.upperBound)")
+
+        var startTime = Date()
+        var counter = 0
+        var lastDownloadedBlockHeight = -1
+
+        let pushMetrics: (BlockHeight, Date, Date) -> Void = { lastDownloadedBlockHeight, startTime, finishTime in
+            SDKMetrics.shared.pushProgressReport(
+                progress: BlockProgress(
+                    startHeight: totalProgressRange.lowerBound,
+                    targetHeight: totalProgressRange.upperBound,
+                    progressHeight: Int(lastDownloadedBlockHeight)
+                ),
+                start: startTime,
+                end: finishTime,
+                batchSize: maxBlockBufferSize,
+                operation: .downloadBlocks
+            )
+        }
+
         for _ in stride(from: range.lowerBound, to: range.upperBound + 1, by: 1) {
             try Task.checkCancellation()
             guard let block = try await stream.nextBlock() else { break }
 
+            counter += 1
+            lastDownloadedBlockHeight = block.height
+
             buffer.append(block)
             if buffer.count >= maxBlockBufferSize {
+                let finishTime = Date()
                 try await storage.write(blocks: buffer)
                 await blocksBufferWritten(buffer)
                 buffer.removeAll(keepingCapacity: true)
+
+                pushMetrics(block.height, startTime, finishTime)
+
+                counter = 0
+                startTime = finishTime
             }
+        }
+
+        if counter > 0 {
+            pushMetrics(lastDownloadedBlockHeight, startTime, Date())
         }
 
         try await storage.write(blocks: buffer)
         await blocksBufferWritten(buffer)
     }
 
-    private func removeCacheDB() async throws {
+    func removeCacheDB() async throws {
         storage.closeDBConnection()
         try FileManager.default.removeItem(at: config.cacheDb)
         try storage.createTable()
