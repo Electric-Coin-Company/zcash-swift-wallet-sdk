@@ -34,7 +34,7 @@ class CompactBlockStorageTests: XCTestCase {
         do {
             try await TestDbBuilder.seed(db: compactBlockDao, with: startHeight...finalHeight)
         } catch {
-            XCTFail("seed faild with error: \(error)")
+            XCTFail("seed failed with error: \(error)")
             return
         }
         
@@ -65,7 +65,7 @@ class CompactBlockStorageTests: XCTestCase {
         
         let expectedHeight = BlockHeight(123_456)
         guard let block = StubBlockCreator.createRandomDataBlock(with: expectedHeight) else {
-            XCTFail("could not create randem block with height: \(expectedHeight)")
+            XCTFail("could not create random block with height: \(expectedHeight)")
             return
         }
         do {
@@ -92,7 +92,7 @@ class CompactBlockStorageTests: XCTestCase {
         
         let expectedHeight = BlockHeight(123_456)
         guard let block = StubBlockCreator.createRandomDataBlock(with: expectedHeight) else {
-            XCTFail("could not create randem block with height: \(expectedHeight)")
+            XCTFail("could not create random block with height: \(expectedHeight)")
             return
         }
         try await compactBlockDao.write(blocks: [block])
@@ -109,7 +109,7 @@ class CompactBlockStorageTests: XCTestCase {
         do {
             try await TestDbBuilder.seed(db: compactBlockDao, with: startHeight...finalHeight)
         } catch {
-            XCTFail("seed faild with error: \(error)")
+            XCTFail("seed failed with error: \(error)")
             return
         }
         let rewindHeight = BlockHeight(finalHeight - 233)

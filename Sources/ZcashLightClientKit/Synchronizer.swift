@@ -148,7 +148,7 @@ public protocol Synchronizer {
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
-    /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
+    /// Returns a list of confirmed transactions that precede the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
@@ -189,7 +189,7 @@ public protocol Synchronizer {
     /// `SynchronizerError.rewindError(CompactBlockProcessorError.rewindAttemptWhileProcessing)` is thrown.
     ///
     /// - Parameter policy: the rewind policy
-    /// - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
+    /// - Throws rewindErrorUnknownAnchorHeight when the rewind points to an invalid height
     /// - Throws rewindError for other errors
     /// - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
     func rewind(_ policy: RewindPolicy) async throws

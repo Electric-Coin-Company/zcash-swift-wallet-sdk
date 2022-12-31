@@ -28,8 +28,8 @@ removed `public func getAddress(index account: Int = 0) -> String`
 
 ### Wallet Types
 `UnifiedSpendingKey` to represent Unified Spending Keys. This is a binary
-encoded not meant to be stored or backed up. This only serves the purpuse
-of letting clients use the least priviledge keys at all times for every
+encoded not meant to be stored or backed up. This only serves the purpose
+of letting clients use the least privilege keys at all times for every
 operation.
 
 ### Synchronizer
@@ -74,10 +74,8 @@ public extension UnifiedAddress {
 ## Notes on Structured Concurrency
 
 `CompactBlockProcessor` is now an Swift Actor. This makes it more robust and have its own
-async environment. 
+async environment.
 
-SDK Clients will likely be affected by some `async` methods on `SDKSynchronizer`. 
+SDK Clients will likely be affected by some `async` methods on `SDKSynchronizer`.
 
-We recommend clients that don't support structured concurrency features, to work around this by  surrounding the these function calls either in @MainActor contexts either by marking callers as @MainActor or launching tasks on that actor with `Task { @MainActor in ... }` 
-
-
+We recommend clients that don't support structured concurrency features, to work around this by  surrounding the these function calls either in @MainActor contexts either by marking callers as @MainActor or launching tasks on that actor with `Task { @MainActor in ... }`
