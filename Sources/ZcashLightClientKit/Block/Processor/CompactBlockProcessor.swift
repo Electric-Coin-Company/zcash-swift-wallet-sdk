@@ -502,7 +502,7 @@ public actor CompactBlockProcessor {
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
-                self.`needsToStartScanningWhenStopped` = true
+                self.needsToStartScanningWhenStopped = true
             }
             return
         }

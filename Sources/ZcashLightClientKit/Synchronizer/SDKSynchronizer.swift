@@ -180,8 +180,12 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.notPrepared
 
         case .syncing, .enhancing, .fetching:
-            LoggerProxy.warn("warning: synchronizer started when already started")
-            return
+            LoggerProxy.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
+            Task {
+                /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
+                /// it's start here.
+                await blockProcessor.start(retry: retry)
+            }
 
         case .stopped, .synced, .disconnected, .error:
             Task {
