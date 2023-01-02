@@ -98,7 +98,7 @@ public protocol AbstractTransaction {
 }
 
 /**
-Capabilites of a signed transaction
+Capabilities of a signed transaction
 */
 public protocol SignedTransactionEntity {
     var raw: Data? { get set }
@@ -116,7 +116,7 @@ Attributes that a Mined transaction must have
 */
 public protocol MinedTransactionEntity: AbstractTransaction, RawIdentifiable {
     /**
-    height on which this transaction was mined at. Convention is that -1 is retuned when it has not been mined yet
+    height on which this transaction was mined at. Convention is that -1 is returned when it has not been mined yet
     */
     var minedHeight: Int { get set }
     

@@ -809,10 +809,10 @@
             </objects>
             <point key="canvasLocation" x="1792.753623188406" y="-1148.4375"/>
         </scene>
-        <!--Get Addreses-->
+        <!--Get Addresses-->
         <scene sceneID="zFi-Pu-g6Q">
             <objects>
-                <viewController title="Get Addreses" id="Rx9-1X-8Gi" customClass="GetAddressViewController" customModule="ZcashLightClientSample" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Get Addresses" id="Rx9-1X-8Gi" customClass="GetAddressViewController" customModule="ZcashLightClientSample" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5WU-Pu-1e9">
                         <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
