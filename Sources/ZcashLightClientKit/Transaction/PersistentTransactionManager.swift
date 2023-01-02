@@ -17,6 +17,7 @@ enum TransactionManagerError: Error {
     case submitFailed(PendingTransactionEntity, errorCode: Int)
     case shieldingEncodingFailed(PendingTransactionEntity, reason: String)
     case cannotEncodeInternalTx(PendingTransactionEntity)
+    case transactionNotMined(PendingTransactionEntity, TransactionNG.Overview)
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
@@ -76,12 +77,16 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 from: pendingTransaction.accountIndex
             )
 
+            guard let minedHeight = transaction.minedHeight else {
+                throw TransactionManagerError.transactionNotMined(pendingTransaction, transaction)
+            }
+
             var pending = pendingTransaction
             pending.encodeAttempts += 1
             pending.raw = transaction.raw
             pending.rawTransactionId = transaction.rawID
             pending.expiryHeight = transaction.expiryHeight
-            pending.minedHeight = transaction.minedHeight
+            pending.minedHeight = minedHeight
             
             try self.repository.update(pending)
             
@@ -118,12 +123,16 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 from: pendingTransaction.accountIndex
             )
 
+            guard let minedHeight = transaction.minedHeight else {
+                throw TransactionManagerError.transactionNotMined(pendingTransaction, transaction)
+            }
+
             var pending = pendingTransaction
             pending.encodeAttempts += 1
             pending.raw = transaction.raw
             pending.rawTransactionId = transaction.rawID
             pending.expiryHeight = transaction.expiryHeight
-            pending.minedHeight = transaction.minedHeight
+            pending.minedHeight = minedHeight
             
             try self.repository.update(pending)
             

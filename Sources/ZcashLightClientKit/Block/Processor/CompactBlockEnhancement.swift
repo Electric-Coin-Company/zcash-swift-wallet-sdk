@@ -100,7 +100,10 @@ extension CompactBlockProcessor {
                                 )
                             )
                         )
-                        await internalSyncProgress.set(confirmedTx.minedHeight, .latestEnhancedHeight)
+                        
+                        if let minedHeight = confirmedTx.minedHeight {
+                            await internalSyncProgress.set(minedHeight, .latestEnhancedHeight)
+                        }
 
                     } catch {
                         retries += 1

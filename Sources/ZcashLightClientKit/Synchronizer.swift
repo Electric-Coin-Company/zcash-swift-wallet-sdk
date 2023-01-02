@@ -139,7 +139,7 @@ public protocol Synchronizer {
     var clearedTransactions: [ConfirmedTransactionEntity] { get }
 
     /// All transactions that are related to sending funds
-    var sentTransactions: [ConfirmedTransactionEntity] { get }
+    var sentTransactions: [TransactionNG.Sent] { get }
 
     /// all transactions related to receiving funds
     var receivedTransactions: [TransactionNG.Received] { get }

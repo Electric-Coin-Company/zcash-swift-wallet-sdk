@@ -48,7 +48,7 @@ class TransactionsDataSource: NSObject {
             }
         case .sent:
             transactions = synchronizer.sentTransactions.map {
-                TransactionDetailModel(confirmedTransaction: $0)
+                TransactionDetailModel(sendTransaction: $0)
             }
         case .all:
             transactions = (

@@ -19,13 +19,24 @@ final class TransactionDetailModel {
     
     init() {}
 
-    init(receivedTransaction transaction: TransactionNG.Received) {
+    init(sendTransaction transaction: TransactionNG.Sent) {
         self.id = transaction.rawID.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight.description
+        self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight.description
         self.created = Date(timeIntervalSince1970: transaction.blocktime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
+        // TODO [#683]: Add API to SDK to fetch memos.
+//        if let memoData = confirmedTransaction.memo, let memoString = String(bytes: memoData, encoding: .utf8) {
+//            self.memo = memoString
+//        }
+    }
 
+    init(receivedTransaction transaction: TransactionNG.Received) {
+        self.id = transaction.rawID.toHexStringTxId()
+        self.minedHeight = transaction.minedHeight?.description
+        self.expiryHeight = transaction.expiryHeight.description
+        self.created = Date(timeIntervalSince1970: transaction.blocktime).description
+        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
         // TODO [#683]: Add API to SDK to fetch memos.
 //        if let memoData = confirmedTransaction.memo, let memoString = String(bytes: memoData, encoding: .utf8) {
 //            self.memo = memoString
@@ -56,6 +67,14 @@ final class TransactionDetailModel {
         self.minedHeight = transaction.minedHeight?.description ?? "no height"
         self.expiryHeight = transaction.expiryHeight?.description ?? "no height"
         self.created = transaction.created ?? "no date"
+        self.zatoshi = "not available in this entity"
+    }
+
+    init(transaction: TransactionNG.Overview) {
+        self.id = transaction.rawID.toHexStringTxId()
+        self.minedHeight = transaction.minedHeight?.description
+        self.expiryHeight = transaction.expiryHeight.description
+        self.created = transaction.blocktime.description
         self.zatoshi = "not available in this entity"
     }
 }

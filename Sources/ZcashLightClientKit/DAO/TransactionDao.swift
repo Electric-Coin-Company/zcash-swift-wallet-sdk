@@ -123,43 +123,6 @@ class TransactionSQLDAO: TransactionRepository {
 // MARK: - Queries
 
 extension TransactionSQLDAO {
-    func findAllSentTransactions(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
-        try dbProvider.connection()
-            .run(
-                """
-                    SELECT
-                        transactions.id_tx          AS id,
-                        transactions.block          AS minedHeight,
-                        transactions.tx_index       AS transactionIndex,
-                        transactions.txid           AS rawTransactionId,
-                        transactions.expiry_height  AS expiryHeight,
-                        transactions.raw            AS raw,
-                        sent_notes.to_address       AS toAddress,
-                        sent_notes.value            AS value,
-                        sent_notes.memo             AS memo,
-                        sent_notes.id_note          AS noteId,
-                        blocks.time                 AS blockTimeInSeconds,
-                        transactions.fee            AS fee
-                    FROM    transactions
-                        INNER JOIN sent_notes
-                            ON transactions.id_tx = sent_notes.tx
-                        LEFT JOIN blocks
-                            ON transactions.block = blocks.height
-                    WHERE  transactions.raw IS NOT NULL
-                        AND minedheight > 0
-
-                    ORDER  BY block IS NOT NULL, height DESC, time DESC, txid DESC
-                    LIMIT  \(limit) OFFSET \(offset)
-                """
-            )
-            .map { bindings -> ConfirmedTransactionEntity in
-                guard let transaction = TransactionBuilder.createConfirmedTransaction(from: bindings) else {
-                    throw TransactionRepositoryError.malformedTransaction
-                }
-                return transaction
-            }
-    }
-
     func findAll(offset: Int = 0, limit: Int = Int.max) throws -> [ConfirmedTransactionEntity]? {
         try dbProvider.connection()
             .run(

@@ -576,8 +576,8 @@ public class SDKSynchronizer: Synchronizer {
         try transactionRepository.findAll(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
     }
 
-    public func allSentTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allSentTransactions() throws -> [TransactionNG.Sent] {
+        return try transactionRepository.findSent(offset: 0, limit: Int.max)
     }
 
     public func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
@@ -771,8 +771,9 @@ public class SDKSynchronizer: Synchronizer {
             .forEach { pendingTx in
                 guard let rawID = pendingTx.rawTransactionId else { return }
                 let transaction = try transactionRepository.find(rawID: rawID)
+                guard let minedHeight = transaction.minedHeight else { return }
 
-                let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: transaction.minedHeight)
+                let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
 
                 notifyMinedTransaction(minedTx)
             }
@@ -867,8 +868,8 @@ extension SDKSynchronizer {
         (try? self.allClearedTransactions()) ?? [ConfirmedTransactionEntity]()
     }
 
-    public var sentTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allSentTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var sentTransactions: [TransactionNG.Sent] {
+        (try? self.allSentTransactions()) ?? []
     }
 
     public var receivedTransactions: [TransactionNG.Received] {
