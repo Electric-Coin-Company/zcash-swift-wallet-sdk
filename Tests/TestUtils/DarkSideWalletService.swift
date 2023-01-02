@@ -171,7 +171,7 @@ class DarksideWalletService: LightWalletService {
         try await service.submit(spendTransaction: spendTransaction)
     }
     
-    func fetchTransaction(txId: Data) async throws -> TransactionEntity {
+    func fetchTransaction(txId: Data) async throws -> TransactionNG.Fetched {
         try await service.fetchTransaction(txId: txId)
     }
 }

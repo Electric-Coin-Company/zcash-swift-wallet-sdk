@@ -18,29 +18,20 @@ extension CompactBlockProcessor {
     private func enhance(transaction: TransactionNG.Overview) async throws -> TransactionNG.Overview {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.rawID.toHexStringTxId())")
         
-        let transaction = try await downloader.fetchTransaction(txId: transaction.rawID)
+        let fetchedTransaction = try await downloader.fetchTransaction(txId: transaction.rawID)
 
-        let transactionID = transaction.transactionId.toHexStringTxId()
+        let transactionID = fetchedTransaction.rawID.toHexStringTxId()
         let block = String(describing: transaction.minedHeight)
         LoggerProxy.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
-        
-        guard let rawBytes = transaction.raw?.bytes else {
-            let error = EnhancementError.noRawData(
-                message: "Critical Error: transaction id: \(transaction.transactionId.toHexStringTxId()) has no data"
-            )
-            LoggerProxy.error("\(error)")
-            throw error
-        }
-        
-        guard let minedHeight = transaction.minedHeight else {
-            let error = EnhancementError.noRawData(
-                message: "Critical Error - Attempt to decrypt and store an unmined transaction. Id: \(transaction.transactionId.toHexStringTxId())"
-            )
-            LoggerProxy.error("\(error)")
-            throw error
-        }
-        
-        guard rustBackend.decryptAndStoreTransaction(dbData: config.dataDb, txBytes: rawBytes, minedHeight: Int32(minedHeight), networkType: config.network.networkType) else {
+
+        let decryptionResult = rustBackend.decryptAndStoreTransaction(
+            dbData: config.dataDb,
+            txBytes: fetchedTransaction.raw.bytes,
+            minedHeight: Int32(fetchedTransaction.minedHeight),
+            networkType: config.network.networkType
+        )
+
+        guard decryptionResult else {
             throw EnhancementError.decryptError(
                 error: rustBackend.lastError() ?? .genericError(message: "`decryptAndStoreTransaction` failed. No message available")
             )
@@ -48,10 +39,10 @@ extension CompactBlockProcessor {
 
         let confirmedTx: TransactionNG.Overview
         do {
-            confirmedTx = try transactionRepository.find(rawID: transaction.transactionId)
+            confirmedTx = try transactionRepository.find(rawID: fetchedTransaction.rawID)
         } catch {
             if let err = error as? TransactionRepositoryError, case .notFound = err {
-                throw EnhancementError.txIdNotFound(txId: transaction.transactionId)
+                throw EnhancementError.txIdNotFound(txId: fetchedTransaction.rawID)
             } else {
                 throw error
             }

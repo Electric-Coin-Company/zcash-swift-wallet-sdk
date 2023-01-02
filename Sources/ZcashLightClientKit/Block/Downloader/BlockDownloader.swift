@@ -63,7 +63,7 @@ public protocol CompactBlockDownloading {
     Gets the transaction for the Id given
     - Parameter txId: Data representing the transaction Id
     */
-    func fetchTransaction(txId: Data) async throws -> TransactionEntity
+    func fetchTransaction(txId: Data) async throws -> TransactionNG.Fetched
 
     func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
@@ -149,7 +149,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
         try self.storage.latestHeight()
     }
     
-    func fetchTransaction(txId: Data) async throws -> TransactionEntity {
+    func fetchTransaction(txId: Data) async throws -> TransactionNG.Fetched {
         try await lightwalletService.fetchTransaction(txId: txId)
     }
 }

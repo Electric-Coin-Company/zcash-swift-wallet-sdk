@@ -51,13 +51,12 @@ class TransactionsDataSource: NSObject {
                 TransactionDetailModel(sendTransaction: $0)
             }
         case .all:
-            transactions = synchronizer.pendingTransactions.map { TransactionDetailModel(transaction: $0.transactionEntity) }
+            transactions = synchronizer.pendingTransactions.map { pendingTransaction in
+                let defaultFee: Zatoshi = kZcashNetwork.constants.defaultFee(for: pendingTransaction.minedHeight)
+                return TransactionDetailModel(transaction: pendingTransaction.makeTransactionEntity(defaultFee: defaultFee))
+            }
             transactions += synchronizer.clearedTransactions.map { TransactionDetailModel(transaction: $0) }
         }
-    }
-    
-    func transactionString(_ transcation: TransactionEntity) -> String {
-        transcation.transactionId.toHexStringTxId()
     }
 }
 

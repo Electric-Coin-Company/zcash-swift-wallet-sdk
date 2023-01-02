@@ -955,7 +955,7 @@ class BalanceTests: XCTestCase {
                     let confirmedTx: TransactionNG.Overview!
                     do {
                         confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
-                            confirmed.rawID == pendingTx?.transactionEntity.transactionId
+                            confirmed.rawID == pendingTx?.rawTransactionId
                         })
                     } catch {
                         XCTFail("Error  retrieving cleared transactions")
