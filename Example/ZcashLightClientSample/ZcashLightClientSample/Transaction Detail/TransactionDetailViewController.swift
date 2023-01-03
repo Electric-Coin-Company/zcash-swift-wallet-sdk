@@ -19,7 +19,7 @@ final class TransactionDetailModel {
     
     init() {}
 
-    init(sendTransaction transaction: TransactionNG.Sent) {
+    init(sendTransaction transaction: Transaction.Sent) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
@@ -31,7 +31,7 @@ final class TransactionDetailModel {
 //        }
     }
 
-    init(receivedTransaction transaction: TransactionNG.Received) {
+    init(receivedTransaction transaction: Transaction.Received) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
@@ -51,7 +51,7 @@ final class TransactionDetailModel {
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: pendingTransaction.value.amount))
     }
     
-    init(transaction: TransactionNG.Overview) {
+    init(transaction: Transaction.Overview) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description

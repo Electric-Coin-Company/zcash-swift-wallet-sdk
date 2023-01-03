@@ -39,104 +39,104 @@ class TransactionSQLDAO: TransactionRepository {
     }
     
     func countUnmined() throws -> Int {
-        try dbProvider.connection().scalar(transactions.filter(TransactionNG.Overview.Column.minedHeight == nil).count)
+        try dbProvider.connection().scalar(transactions.filter(Transaction.Overview.Column.minedHeight == nil).count)
     }
 }
 
 // MARK: - Queries
 
 extension TransactionSQLDAO {
-    func find(id: Int) throws -> TransactionNG.Overview {
+    func find(id: Int) throws -> Transaction.Overview {
         let query = transactionsView
-            .filter(TransactionNG.Overview.Column.id == id)
+            .filter(Transaction.Overview.Column.id == id)
             .limit(1)
 
-        return try execute(query) { try TransactionNG.Overview(row: $0) }
+        return try execute(query) { try Transaction.Overview(row: $0) }
     }
 
-    func find(rawID: Data) throws -> TransactionNG.Overview {
+    func find(rawID: Data) throws -> Transaction.Overview {
         let query = transactionsView
-            .filter(TransactionNG.Overview.Column.rawID == Blob(bytes: rawID.bytes))
+            .filter(Transaction.Overview.Column.rawID == Blob(bytes: rawID.bytes))
             .limit(1)
 
-        return try execute(query) { try TransactionNG.Overview(row: $0) }
+        return try execute(query) { try Transaction.Overview(row: $0) }
     }
 
-    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview] {
         let query = transactionsView
-            .order(TransactionNG.Overview.Column.minedHeight.asc, TransactionNG.Overview.Column.id.asc)
+            .order(Transaction.Overview.Column.minedHeight.asc, Transaction.Overview.Column.id.asc)
             .filterQueryFor(kind: kind)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try TransactionNG.Overview(row: $0) }
+        return try execute(query) { try Transaction.Overview(row: $0) }
     }
 
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview] {
         let query = transactionsView
-            .order(TransactionNG.Overview.Column.minedHeight.asc, TransactionNG.Overview.Column.id.asc)
+            .order(Transaction.Overview.Column.minedHeight.asc, Transaction.Overview.Column.id.asc)
             .filter(
-                TransactionNG.Overview.Column.minedHeight >= BlockHeight(range.start.height) &&
-                TransactionNG.Overview.Column.minedHeight <= BlockHeight(range.end.height)
+                Transaction.Overview.Column.minedHeight >= BlockHeight(range.start.height) &&
+                Transaction.Overview.Column.minedHeight <= BlockHeight(range.end.height)
             )
             .filterQueryFor(kind: kind)
             .limit(limit)
 
-        return try execute(query) { try TransactionNG.Overview(row: $0) }
+        return try execute(query) { try Transaction.Overview(row: $0) }
     }
 
-    func find(from transaction: TransactionNG.Overview, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview] {
+    func find(from transaction: Transaction.Overview, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview] {
         let query = transactionsView
-            .order(TransactionNG.Overview.Column.minedHeight.asc, TransactionNG.Overview.Column.id.asc)
-            .filter(Int64(transaction.blocktime) > TransactionNG.Overview.Column.blockTime && transaction.index > TransactionNG.Overview.Column.index)
+            .order(Transaction.Overview.Column.minedHeight.asc, Transaction.Overview.Column.id.asc)
+            .filter(Int64(transaction.blocktime) > Transaction.Overview.Column.blockTime && transaction.index > Transaction.Overview.Column.index)
             .filterQueryFor(kind: kind)
             .limit(limit)
 
-        return try execute(query) { try TransactionNG.Overview(row: $0) }
+        return try execute(query) { try Transaction.Overview(row: $0) }
     }
 
-    func findReceived(offset: Int, limit: Int) throws -> [TransactionNG.Received] {
+    func findReceived(offset: Int, limit: Int) throws -> [Transaction.Received] {
         let query = receivedTransactionsView
-            .order(TransactionNG.Received.Column.minedHeight.asc, TransactionNG.Received.Column.id.asc)
+            .order(Transaction.Received.Column.minedHeight.asc, Transaction.Received.Column.id.asc)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try TransactionNG.Received(row: $0) }
+        return try execute(query) { try Transaction.Received(row: $0) }
     }
 
-    func findSent(offset: Int, limit: Int) throws -> [TransactionNG.Sent] {
+    func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent] {
         let query = sentTransactionsView
-            .order(TransactionNG.Sent.Column.minedHeight.asc, TransactionNG.Sent.Column.id.asc)
+            .order(Transaction.Sent.Column.minedHeight.asc, Transaction.Sent.Column.id.asc)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try TransactionNG.Sent(row: $0) }
+        return try execute(query) { try Transaction.Sent(row: $0) }
     }
 
-    func findSent(from transaction: TransactionNG.Sent, limit: Int) throws -> [TransactionNG.Sent] {
+    func findSent(from transaction: Transaction.Sent, limit: Int) throws -> [Transaction.Sent] {
         let query = sentTransactionsView
-            .order(TransactionNG.Sent.Column.minedHeight.asc, TransactionNG.Sent.Column.id.asc)
-            .filter(Int64(transaction.blocktime) > TransactionNG.Sent.Column.blockTime && transaction.index > TransactionNG.Sent.Column.index)
+            .order(Transaction.Sent.Column.minedHeight.asc, Transaction.Sent.Column.id.asc)
+            .filter(Int64(transaction.blocktime) > Transaction.Sent.Column.blockTime && transaction.index > Transaction.Sent.Column.index)
             .limit(limit)
 
-        return try execute(query) { try TransactionNG.Sent(row: $0) }
+        return try execute(query) { try Transaction.Sent(row: $0) }
     }
 
-    func findSent(in range: BlockRange, limit: Int) throws -> [TransactionNG.Sent] {
+    func findSent(in range: BlockRange, limit: Int) throws -> [Transaction.Sent] {
         let query = sentTransactionsView
-            .order(TransactionNG.Sent.Column.minedHeight.asc, TransactionNG.Sent.Column.id.asc)
+            .order(Transaction.Sent.Column.minedHeight.asc, Transaction.Sent.Column.id.asc)
             .filter(
-                TransactionNG.Sent.Column.minedHeight >= BlockHeight(range.start.height) &&
-                TransactionNG.Sent.Column.minedHeight <= BlockHeight(range.end.height)
+                Transaction.Sent.Column.minedHeight >= BlockHeight(range.start.height) &&
+                Transaction.Sent.Column.minedHeight <= BlockHeight(range.end.height)
             )
             .limit(limit)
 
-        return try execute(query) { try TransactionNG.Sent(row: $0) }
+        return try execute(query) { try Transaction.Sent(row: $0) }
     }
 
-    func findSent(rawID: Data) throws -> TransactionNG.Sent {
+    func findSent(rawID: Data) throws -> Transaction.Sent {
         let query = sentTransactionsView
-            .order(TransactionNG.Sent.Column.minedHeight.asc, TransactionNG.Sent.Column.id.asc)
-            .filter(TransactionNG.Sent.Column.rawID == Blob(bytes: rawID.bytes)).limit(1)
+            .order(Transaction.Sent.Column.minedHeight.asc, Transaction.Sent.Column.id.asc)
+            .filter(Transaction.Sent.Column.rawID == Blob(bytes: rawID.bytes)).limit(1)
 
-        return try execute(query) { try TransactionNG.Sent(row: $0) }
+        return try execute(query) { try Transaction.Sent(row: $0) }
     }
 
     private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> Entity {
@@ -161,9 +161,9 @@ private extension View {
         case .all:
             return self
         case .sent:
-            return filter(TransactionNG.Overview.Column.value < 0)
+            return filter(Transaction.Overview.Column.value < 0)
         case .received:
-            return filter(TransactionNG.Overview.Column.value >= 0)
+            return filter(Transaction.Overview.Column.value >= 0)
         }
     }
 }

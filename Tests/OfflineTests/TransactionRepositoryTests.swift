@@ -39,7 +39,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindById() {
-        var transaction: TransactionNG.Overview!
+        var transaction: Transaction.Overview!
         XCTAssertNoThrow(try { transaction = try self.transactionRepository.find(id: 10) }())
 
         XCTAssertEqual(transaction.id, 10)
@@ -48,7 +48,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindByTxId() {
-        var transaction: TransactionNG.Overview!
+        var transaction: Transaction.Overview!
 
         let id = Data(fromHexEncodedString: "01af48bcc4e9667849a073b8b5c539a0fc19de71aac775377929dc6567a36eff")!
         
@@ -62,21 +62,21 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllSentTransactions() {
-        var transactions: [TransactionNG.Overview] = []
+        var transactions: [Transaction.Overview] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: Int.max, kind: .sent) }())
         XCTAssertEqual(transactions.count, 13)
         transactions.forEach { XCTAssertEqual($0.isSentTransaction, true) }
     }
     
     func testFindAllReceivedTransactions() {
-        var transactions: [TransactionNG.Overview] = []
+        var transactions: [Transaction.Overview] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: Int.max, kind: .received) }())
         XCTAssertEqual(transactions.count, 8)
         transactions.forEach { XCTAssertEqual($0.isSentTransaction, false) }
     }
     
     func testFindAllTransactions() {
-        var transactions: [TransactionNG.Overview] = []
+        var transactions: [Transaction.Overview] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: Int.max, kind: .all) }())
         XCTAssertEqual(transactions.count, 21)
     }
@@ -94,10 +94,10 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllFrom() throws {
-        var transaction: TransactionNG.Overview!
+        var transaction: Transaction.Overview!
         XCTAssertNoThrow(try { transaction = try self.transactionRepository.find(id: 16) }())
 
-        var transactionsFrom: [TransactionNG.Overview] = []
+        var transactionsFrom: [Transaction.Overview] = []
         XCTAssertNoThrow(try { transactionsFrom = try self.transactionRepository.find(from: transaction, limit: Int.max, kind: .all) }())
 
         XCTAssertEqual(transactionsFrom.count, 8)

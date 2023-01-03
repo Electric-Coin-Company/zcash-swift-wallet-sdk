@@ -136,13 +136,13 @@ public protocol Synchronizer {
     var pendingTransactions: [PendingTransactionEntity] { get }
 
     /// all the transactions that are on the blockchain
-    var clearedTransactions: [TransactionNG.Overview] { get }
+    var clearedTransactions: [Transaction.Overview] { get }
 
     /// All transactions that are related to sending funds
-    var sentTransactions: [TransactionNG.Sent] { get }
+    var sentTransactions: [Transaction.Sent] { get }
 
     /// all transactions related to receiving funds
-    var receivedTransactions: [TransactionNG.Received] { get }
+    var receivedTransactions: [Transaction.Received] { get }
     
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
@@ -153,7 +153,7 @@ public protocol Synchronizer {
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
     ///     - Returns: an array with the given Transactions or nil
-    func allConfirmedTransactions(from transaction: TransactionNG.Overview, limit: Int) throws -> [TransactionNG.Overview]
+    func allConfirmedTransactions(from transaction: Transaction.Overview, limit: Int) throws -> [Transaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
@@ -265,7 +265,7 @@ public enum TransactionKind {
 public enum RewindPolicy {
     case birthday
     case height(blockheight: BlockHeight)
-    case transaction(_ transaction: TransactionNG.Overview)
+    case transaction(_ transaction: Transaction.Overview)
     case quick
 }
 

@@ -36,7 +36,7 @@ protocol TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> TransactionNG.Overview
+    ) async throws -> Transaction.Overview
     
     /**
     Creates a transaction that will attempt to shield transparent funds that are present on the cacheDB .throwing an exception whenever things are missing. When the provided wallet implementation doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using double-bangs for things).
@@ -52,5 +52,5 @@ protocol TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> TransactionNG.Overview
+    ) async throws -> Transaction.Overview
 }

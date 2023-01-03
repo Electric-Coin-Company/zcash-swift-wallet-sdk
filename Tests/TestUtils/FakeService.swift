@@ -71,7 +71,7 @@ class MockLightWalletService: LightWalletService {
         LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
     
-    func fetchTransaction(txId: Data) async throws -> TransactionNG.Fetched {
-        return TransactionNG.Fetched(rawID: Data(), minedHeight: -1, raw: Data())
+    func fetchTransaction(txId: Data) async throws -> Transaction.Fetched {
+        return Transaction.Fetched(rawID: Data(), minedHeight: -1, raw: Data())
     }
 }

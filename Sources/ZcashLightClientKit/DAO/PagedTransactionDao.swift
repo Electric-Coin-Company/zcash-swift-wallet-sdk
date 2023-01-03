@@ -32,13 +32,13 @@ class PagedTransactionDAO: PaginatedTransactionRepository {
         self.kind = kind
     }
     
-    func page(_ number: Int) throws -> [TransactionNG.Overview]? {
+    func page(_ number: Int) throws -> [Transaction.Overview]? {
         let offset = number * pageSize
         guard offset < itemCount else { return nil }
         return try transactionRepository.find(offset: offset, limit: pageSize, kind: kind)
     }
     
-    func page(_ number: Int, result: @escaping (Result<[TransactionNG.Overview]?, Error>) -> Void) {
+    func page(_ number: Int, result: @escaping (Result<[Transaction.Overview]?, Error>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self = self else { return }
             do {

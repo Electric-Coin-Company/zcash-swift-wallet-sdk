@@ -53,7 +53,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> TransactionNG.Overview {
+    ) async throws -> Transaction.Overview {
         let txId = try createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
@@ -103,7 +103,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> TransactionNG.Overview {
+    ) async throws -> Transaction.Overview {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
             memo: memoBytes,
