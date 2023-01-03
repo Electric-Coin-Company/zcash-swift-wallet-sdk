@@ -43,17 +43,6 @@ final class TransactionDetailModel {
 //        }
     }
     
-    init(confirmedTransaction: ConfirmedTransactionEntity) {
-        self.id = confirmedTransaction.rawTransactionId?.toHexStringTxId()
-        self.minedHeight = confirmedTransaction.minedHeight.description
-        self.expiryHeight = confirmedTransaction.expiryHeight?.description
-        self.created = Date(timeIntervalSince1970: confirmedTransaction.blockTimeInSeconds).description
-        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: confirmedTransaction.value.amount))
-        if let memoData = confirmedTransaction.memo, let memoString = String(bytes: memoData, encoding: .utf8) {
-            self.memo = memoString
-        }
-    }
-
     init(pendingTransaction: PendingTransactionEntity) {
         self.id = pendingTransaction.rawTransactionId?.toHexStringTxId()
         self.minedHeight = pendingTransaction.minedHeight.description

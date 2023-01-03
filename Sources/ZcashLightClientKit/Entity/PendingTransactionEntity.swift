@@ -215,28 +215,3 @@ public extension PendingTransactionEntity {
         )
     }
 }
-
-public extension ConfirmedTransactionEntity {
-    /**
-    TransactionEntity representation of this ConfirmedTransactionEntity transaction
-    */
-    /// This code will be gone in next PR.
-    var transactionEntity: TransactionNG.Overview {
-        return TransactionNG.Overview(
-            blocktime: blockTimeInSeconds,
-            expiryHeight: expiryHeight ?? 0,
-            fee: fee ?? Zatoshi(0),
-            id: id ?? -1,
-            index: -1,
-            isWalletInternal: false,
-            hasChange: false,
-            memoCount: 0,
-            minedHeight: minedHeight,
-            raw: raw ?? Data(),
-            rawID: rawTransactionId ?? Data(),
-            receivedNoteCount: 0,
-            sentNoteCount: 0,
-            value: value
-        )
-    }
-}

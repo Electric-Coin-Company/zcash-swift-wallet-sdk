@@ -334,7 +334,7 @@ class RewindRescanTests: XCTestCase {
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
-            let foundTx = txs.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+            let foundTx = txs.first(where: { $0.rawID == pendingTx.rawTransactionId })
             XCTAssertNotNil(foundTx)
             XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
             
@@ -401,7 +401,7 @@ class RewindRescanTests: XCTestCase {
                 XCTFail("should have found sent transaction but didn't")
                 return
             }
-            XCTAssertEqual(transaction.rawTransactionId, pendingTx.rawTransactionId, "should have mined sent transaction but didn't")
+            XCTAssertEqual(transaction.rawID, pendingTx.rawTransactionId, "should have mined sent transaction but didn't")
         }
 
         notificationHandler.synchronizerMinedTransaction = { transaction in
