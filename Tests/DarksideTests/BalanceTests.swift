@@ -952,10 +952,10 @@ class BalanceTests: XCTestCase {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(completion: { synchronizer in
-                    let confirmedTx: ConfirmedTransactionEntity!
+                    let confirmedTx: TransactionNG.Overview!
                     do {
                         confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
-                            confirmed.transactionEntity.transactionId == pendingTx?.transactionEntity.transactionId
+                            confirmed.rawID == pendingTx?.transactionEntity.transactionId
                         })
                     } catch {
                         XCTFail("Error  retrieving cleared transactions")
@@ -966,14 +966,9 @@ class BalanceTests: XCTestCase {
                     There’s a sent transaction matching the amount sent to the given zAddr
                     */
                     XCTAssertEqual(confirmedTx.value, self.sendAmount)
-                    XCTAssertEqual(confirmedTx.toAddress, self.testRecipientAddress)
-                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
-                    XCTAssertEqual(confirmedMemo, memo)
-
-                    guard let transactionId = confirmedTx.rawTransactionId else {
-                        XCTFail("no raw transaction id")
-                        return
-                    }
+                    // TODO [#683]: Add API to SDK to fetch memos.
+//                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
+//                    XCTAssertEqual(confirmedMemo, memo)
 
                     /*
                     Find out what note was used
@@ -985,8 +980,8 @@ class BalanceTests: XCTestCase {
                         )
                     )
 
-                    guard let sentNote = try? sentNotesRepo.sentNote(byRawTransactionId: transactionId) else {
-                        XCTFail("Could not finde sent note with transaction Id \(transactionId)")
+                    guard let sentNote = try? sentNotesRepo.sentNote(byRawTransactionId: confirmedTx.rawID) else {
+                        XCTFail("Could not finde sent note with transaction Id \(confirmedTx.rawID)")
                         return
                     }
 
@@ -1000,8 +995,8 @@ class BalanceTests: XCTestCase {
                     /*
                     get change note
                     */
-                    guard let receivedNote = try? receivedNotesRepo.receivedNote(byRawTransactionId: transactionId) else {
-                        XCTFail("Could not find received not with change for transaction Id \(transactionId)")
+                    guard let receivedNote = try? receivedNotesRepo.receivedNote(byRawTransactionId: confirmedTx.rawID) else {
+                        XCTFail("Could not find received not with change for transaction Id \(confirmedTx.rawID)")
                         return
                     }
 

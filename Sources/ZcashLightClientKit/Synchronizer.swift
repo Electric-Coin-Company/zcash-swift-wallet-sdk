@@ -136,7 +136,7 @@ public protocol Synchronizer {
     var pendingTransactions: [PendingTransactionEntity] { get }
 
     /// all the transactions that are on the blockchain
-    var clearedTransactions: [ConfirmedTransactionEntity] { get }
+    var clearedTransactions: [TransactionNG.Overview] { get }
 
     /// All transactions that are related to sending funds
     var sentTransactions: [TransactionNG.Sent] { get }
@@ -153,7 +153,7 @@ public protocol Synchronizer {
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
     ///     - Returns: an array with the given Transactions or nil
-    func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?    
+    func allConfirmedTransactions(from transaction: TransactionNG.Overview, limit: Int) throws -> [TransactionNG.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
@@ -265,7 +265,7 @@ public enum TransactionKind {
 public enum RewindPolicy {
     case birthday
     case height(blockheight: BlockHeight)
-    case transaction(_ transaction: TransactionEntity)
+    case transaction(_ transaction: TransactionNG.Overview)
     case quick
 }
 

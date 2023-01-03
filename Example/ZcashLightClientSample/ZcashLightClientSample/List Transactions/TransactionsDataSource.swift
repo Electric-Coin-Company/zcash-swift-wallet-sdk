@@ -40,7 +40,7 @@ class TransactionsDataSource: NSObject {
             }
         case .cleared:
             transactions = synchronizer.clearedTransactions.map {
-                TransactionDetailModel(confirmedTransaction: $0)
+                TransactionDetailModel(transaction: $0)
             }
         case .received:
             transactions = synchronizer.receivedTransactions.map {
@@ -51,11 +51,8 @@ class TransactionsDataSource: NSObject {
                 TransactionDetailModel(sendTransaction: $0)
             }
         case .all:
-            transactions = (
-                synchronizer.pendingTransactions.map { $0.transactionEntity } +
-                synchronizer.clearedTransactions.map { $0.transactionEntity }
-            )
-            .map { TransactionDetailModel(transaction: $0) }
+            transactions = synchronizer.pendingTransactions.map { TransactionDetailModel(transaction: $0.transactionEntity) }
+            transactions += synchronizer.clearedTransactions.map { TransactionDetailModel(transaction: $0) }
         }
     }
     

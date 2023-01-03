@@ -91,6 +91,19 @@ extension TransactionNG.Overview {
         self.sentNoteCount = try row.get(Column.sentNoteCount)
         self.value = Zatoshi(try row.get(Column.value))
     }
+
+    func anchor(network: ZcashNetwork) -> BlockHeight? {
+        guard let minedHeight = self.minedHeight else { return nil }
+        if minedHeight != -1 {
+            return max(minedHeight - ZcashSDK.defaultStaleTolerance, network.constants.saplingActivationHeight)
+        }
+
+        if expiryHeight != -1 {
+            return max(expiryHeight - ZcashSDK.expiryOffset - ZcashSDK.defaultStaleTolerance, network.constants.saplingActivationHeight)
+        }
+
+        return nil
+    }
 }
 
 extension TransactionNG.Received {

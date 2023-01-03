@@ -572,16 +572,16 @@ public class SDKSynchronizer: Synchronizer {
         try transactionManager.allPendingTransactions() ?? [PendingTransactionEntity]()
     }
 
-    public func allClearedTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAll(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allClearedTransactions() throws -> [TransactionNG.Overview] {
+        return try transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
     }
 
     public func allSentTransactions() throws -> [TransactionNG.Sent] {
         return try transactionRepository.findSent(offset: 0, limit: Int.max)
     }
 
-    public func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
-        try transactionRepository.findAll(from: transaction, limit: limit)
+    public func allConfirmedTransactions(from transaction: TransactionNG.Overview, limit: Int) throws -> [TransactionNG.Overview] {
+        return try transactionRepository.find(from: transaction, limit: limit, kind: .all)
     }
 
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
@@ -864,8 +864,8 @@ extension SDKSynchronizer {
         (try? self.allPendingTransactions()) ?? [PendingTransactionEntity]()
     }
 
-    public var clearedTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allClearedTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var clearedTransactions: [TransactionNG.Overview] {
+        (try? self.allClearedTransactions()) ?? []
     }
 
     public var sentTransactions: [TransactionNG.Sent] {
