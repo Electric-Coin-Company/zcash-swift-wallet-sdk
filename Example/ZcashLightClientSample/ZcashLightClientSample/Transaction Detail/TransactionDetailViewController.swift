@@ -22,7 +22,7 @@ final class TransactionDetailModel {
     init(sendTransaction transaction: TransactionNG.Sent) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
-        self.expiryHeight = transaction.expiryHeight.description
+        self.expiryHeight = transaction.expiryHeight?.description
         self.created = Date(timeIntervalSince1970: transaction.blocktime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
         // TODO [#683]: Add API to SDK to fetch memos.
@@ -34,7 +34,7 @@ final class TransactionDetailModel {
     init(receivedTransaction transaction: TransactionNG.Received) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
-        self.expiryHeight = transaction.expiryHeight.description
+        self.expiryHeight = transaction.expiryHeight?.description
         self.created = Date(timeIntervalSince1970: transaction.blocktime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
         // TODO [#683]: Add API to SDK to fetch memos.
@@ -73,7 +73,7 @@ final class TransactionDetailModel {
     init(transaction: TransactionNG.Overview) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
-        self.expiryHeight = transaction.expiryHeight.description
+        self.expiryHeight = transaction.expiryHeight?.description
         self.created = transaction.blocktime.description
         self.zatoshi = "not available in this entity"
     }

@@ -174,7 +174,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         4. get that transaction hex encoded data
         */
-        let receivedTxData = receivedTx.raw
+        let receivedTxData = receivedTx.raw ?? Data()
         
         let receivedRawTx = RawTransaction.with { rawTx in
             rawTx.height = UInt64(receivedTxHeight)
@@ -619,7 +619,7 @@ class AdvancedReOrgTests: XCTestCase {
         initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         incomingTx = coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == incomingTxHeight })
 
-        let txRawData = incomingTx.raw
+        let txRawData = incomingTx.raw ?? Data()
         
         let rawTransaction = RawTransaction.with({ rawTx in
             rawTx.data = txRawData
