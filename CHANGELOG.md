@@ -3,6 +3,33 @@
 This change presents 2 building blocks for the future automated tests, consisting
 of a new SDKMetrics interface to control flow of the data in the SDK and 
 new performance (unit) test measuring synchronization of 100 mainnet blocks. 
+
+# 0.17.5-beta
+
+Update checkpoints 
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1912500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1915000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1917500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1920000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1922500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1925000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1927500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1930000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1932500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1935000.json
+````
+
+Tesnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2150000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2160000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2170000.json
+````
+
 # 0.17.4-beta
 - [#665] Fix testShieldFunds() `get_transparent_balance` error
 updates `libzcashlc` to `0.1.1` to fix an error where getting a 
