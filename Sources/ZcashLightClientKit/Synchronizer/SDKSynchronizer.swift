@@ -119,6 +119,8 @@ public class SDKSynchronizer: Synchronizer {
 
     private let statusUpdateLock = NSRecursiveLock()
 
+    private var syncStartDate: Date?
+    
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) throws {
@@ -147,15 +149,15 @@ public class SDKSynchronizer: Synchronizer {
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
-        let lastscannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
-        self.latestScannedHeight = lastscannedHeight
+        let lastScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
+        self.latestScannedHeight = lastScannedHeight
         self.network = initializer.network
         self.lastStateSubject = CurrentValueSubject(
             SynchronizerState(
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .unprepared,
-                latestScannedHeight: lastscannedHeight
+                latestScannedHeight: lastScannedHeight
             )
         )
 
@@ -203,6 +205,7 @@ public class SDKSynchronizer: Synchronizer {
                     ]
                 )
 
+                syncStartDate = Date()
                 await blockProcessor.start(retry: retry)
             }
         }
@@ -460,6 +463,13 @@ public class SDKSynchronizer: Synchronizer {
         }
         self.refreshPendingTransactions()
         self.status = .synced
+        
+        if let syncStartDate {
+            SDKMetrics.shared.pushSyncReport(
+                start: syncStartDate,
+                end: Date()
+            )
+        }
     }
 
     @objc func processorTransitionUnknown(_ notification: Notification) {

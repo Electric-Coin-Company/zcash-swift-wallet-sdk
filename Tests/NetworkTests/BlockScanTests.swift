@@ -107,11 +107,11 @@ class BlockScanTests: XCTestCase {
     }
     
     @objc func observeBenchmark(_ notification: Notification) {
-        guard let report = SDKMetrics.blockReportFromNotification(notification) else {
-            return
-        }
+        let reports = SDKMetrics.shared.popAllBlockReports(flush: true)
         
-        print("observed benchmark: \(report)")
+        reports.forEach {
+            print("observed benchmark: \($0)")
+        }
     }
     
     func testScanValidateDownload() async throws {
@@ -119,10 +119,12 @@ class BlockScanTests: XCTestCase {
 
         logger = SampleLogger(logLevel: .debug)
         
+        SDKMetrics.shared.enableMetrics()
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(observeBenchmark(_:)),
-            name: SDKMetrics.notificationName,
+            name: .blockProcessorUpdated,
             object: nil
         )
         
@@ -207,5 +209,7 @@ class BlockScanTests: XCTestCase {
                 XCTFail("Error should have been a timeLimit reached Error - \(error)")
             }
         }
+        
+        SDKMetrics.shared.disableMetrics()
     }
 }

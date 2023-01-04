@@ -544,7 +544,7 @@ public actor CompactBlockProcessor {
     Rewinds to provided height.
     If nil is provided, it will rescan to nearest height (quick rescan)
 
-    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is throwed.
+    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is thrown.
     */
     public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
         guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
@@ -651,7 +651,7 @@ public actor CompactBlockProcessor {
 
                 try await handleSaplingParametersIfNeeded()
                 try await removeCacheDB()
-                
+
                 if !Task.isCancelled {
                     await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
                 }
@@ -712,7 +712,7 @@ public actor CompactBlockProcessor {
 
     func severeFailure(_ error: Error) {
         cancelableTask?.cancel()
-        LoggerProxy.error("show stoppper failure: \(error)")
+        LoggerProxy.error("show stopper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error
@@ -1114,7 +1114,7 @@ extension CompactBlockProcessorError: LocalizedError {
         case .maxAttemptsReached(let attempts):
             return "Compact Block failed \(attempts) times and reached the maximum amount of retries it was set up to do"
         case .missingDbPath(let path):
-            return "CompactBlockProcessor was set up with path \(path) but thath location couldn't be reached"
+            return "CompactBlockProcessor was set up with path \(path) but that location couldn't be reached"
         case let .networkMismatch(expected, found):
             // swiftlint:disable:next line_length
             return "A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing to the right server"
@@ -1128,7 +1128,7 @@ extension CompactBlockProcessorError: LocalizedError {
         case let .wrongConsensusBranchId(expectedLocally, found):
             // swiftlint:disable:next line_length
             return "The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade."
-        case .unknown: return "Unknown error occured."
+        case .unknown: return "Unknown error occurred."
         }
     }
 
