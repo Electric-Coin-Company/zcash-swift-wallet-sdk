@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct EncodedTransaction: SignedTransactionEntity {
+struct EncodedTransaction {
     var transactionId: Data
     var raw: Data?
 }

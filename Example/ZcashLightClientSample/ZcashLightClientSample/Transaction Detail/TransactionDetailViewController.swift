@@ -62,14 +62,6 @@ final class TransactionDetailModel {
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: pendingTransaction.value.amount))
     }
     
-    init(transaction: TransactionEntity) {
-        self.id = transaction.transactionId.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight?.description ?? "no height"
-        self.expiryHeight = transaction.expiryHeight?.description ?? "no height"
-        self.created = transaction.created ?? "no date"
-        self.zatoshi = "not available in this entity"
-    }
-
     init(transaction: TransactionNG.Overview) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description

@@ -248,12 +248,12 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    public func fetchTransaction(txId: Data) async throws -> TransactionEntity {
+    public func fetchTransaction(txId: Data) async throws -> TransactionNG.Fetched {
         var txFilter = TxFilter()
         txFilter.hash = txId
         
         let rawTx = try await compactTxStreamerAsync.getTransaction(txFilter)
-        return TransactionBuilder.createTransactionEntity(txId: txId, rawTransaction: rawTx)
+        return TransactionNG.Fetched(rawID: txId, minedHeight: BlockHeight(rawTx.height), raw: rawTx.data)
     }
     
     public func fetchUTXOs(

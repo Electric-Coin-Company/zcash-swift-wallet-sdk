@@ -8,57 +8,6 @@
 import Foundation
 import SQLite
 
-struct Transaction: TransactionEntity {
-    enum CodingKeys: String, CodingKey {
-        case id = "id_tx"
-        case transactionId = "txid"
-        case created
-        case transactionIndex = "tx_index"
-        case expiryHeight = "expiry_height"
-        case minedHeight = "block"
-        case raw
-        case fee
-    }
-    
-    var id: Int?
-    var transactionId: Data
-    var created: String?
-    var transactionIndex: Int?
-    var expiryHeight: BlockHeight?
-    var minedHeight: BlockHeight?
-    var raw: Data?
-    var fee: Zatoshi?
-}
-
-extension Transaction: Codable {
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.id = try container.decodeIfPresent(Int.self, forKey: .id)
-        self.transactionId = try container.decode(Data.self, forKey: .transactionId)
-        self.created = try container.decodeIfPresent(String.self, forKey: .created)
-        self.transactionIndex = try container.decodeIfPresent(Int.self, forKey: .transactionIndex)
-        self.expiryHeight = try container.decodeIfPresent(BlockHeight.self, forKey: .expiryHeight)
-        self.minedHeight = try container.decodeIfPresent(BlockHeight.self, forKey: .minedHeight)
-        self.raw = try container.decodeIfPresent(Data.self, forKey: .raw)
-        
-        if let fee = try container.decodeIfPresent(Int64.self, forKey: .fee) {
-            self.fee = Zatoshi(fee)
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent(self.id, forKey: .id)
-        try container.encode(self.transactionId, forKey: .transactionId)
-        try container.encodeIfPresent(self.created, forKey: .created)
-        try container.encodeIfPresent(self.transactionIndex, forKey: .transactionIndex)
-        try container.encodeIfPresent(self.expiryHeight, forKey: .expiryHeight)
-        try container.encodeIfPresent(self.minedHeight, forKey: .minedHeight)
-        try container.encodeIfPresent(self.raw, forKey: .raw)
-        try container.encodeIfPresent(self.fee?.amount, forKey: .fee)
-    }
-}
-
 struct ConfirmedTransaction: ConfirmedTransactionEntity {
     var toAddress: String?
     var expiryHeight: BlockHeight?
@@ -75,17 +24,6 @@ struct ConfirmedTransaction: ConfirmedTransactionEntity {
 }
 
 class TransactionSQLDAO: TransactionRepository {
-    enum TableStructure {
-        static var id = Expression<Int>(Transaction.CodingKeys.id.rawValue)
-        static var transactionId = Expression<Blob>(Transaction.CodingKeys.transactionId.rawValue)
-        static var created = Expression<String?>(Transaction.CodingKeys.created.rawValue)
-        static var txIndex = Expression<Int?>(Transaction.CodingKeys.transactionIndex.rawValue)
-        static var expiryHeight = Expression<Int?>(Transaction.CodingKeys.expiryHeight.rawValue)
-        static var minedHeight = Expression<Int?>(Transaction.CodingKeys.minedHeight.rawValue)
-        static var raw = Expression<Blob?>(Transaction.CodingKeys.raw.rawValue)
-        static var fee = Expression<Zatoshi?>(Transaction.CodingKeys.fee.rawValue)
-    }
-
     var dbProvider: ConnectionProvider
     var transactions = Table("transactions")
     private var blockDao: BlockSQLDAO
@@ -116,7 +54,7 @@ class TransactionSQLDAO: TransactionRepository {
     }
     
     func countUnmined() throws -> Int {
-        try dbProvider.connection().scalar(transactions.filter(TableStructure.minedHeight == nil).count)
+        try dbProvider.connection().scalar(transactions.filter(TransactionNG.Overview.Column.minedHeight == nil).count)
     }
 }
 

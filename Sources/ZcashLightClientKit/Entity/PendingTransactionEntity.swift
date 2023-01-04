@@ -15,7 +15,26 @@ public enum PendingTransactionRecipient: Equatable {
 /**
 Represents a sent transaction that has not been confirmed yet on the blockchain
 */
-public protocol PendingTransactionEntity: SignedTransactionEntity, AbstractTransaction, RawIdentifiable {
+public protocol PendingTransactionEntity: RawIdentifiable {
+    /**
+     internal id for this transaction
+     */
+    var id: Int? { get set }
+
+    /**
+     value in zatoshi
+     */
+    var value: Zatoshi { get set }
+
+    /**
+     data containing the memo if any
+     */
+    var memo: Data? { get set }
+
+    var fee: Zatoshi? { get set }
+
+    var raw: Data? { get set }
+
     /**
     recipient address
     */
@@ -177,19 +196,22 @@ public extension PendingTransactionEntity {
 }
 
 public extension PendingTransactionEntity {
-    /**
-    TransactionEntity representation of this PendingTransactionEntity transaction
-    */
-    var transactionEntity: TransactionEntity {
-        Transaction(
-            id: self.id ?? -1,
-            transactionId: self.rawTransactionId ?? Data(),
-            created: Date(timeIntervalSince1970: self.createTime).description,
-            transactionIndex: -1,
-            expiryHeight: self.expiryHeight,
-            minedHeight: self.minedHeight,
-            raw: self.raw,
-            fee: self.fee
+    func makeTransactionEntity(defaultFee: Zatoshi) -> TransactionNG.Overview {
+        return TransactionNG.Overview(
+            blocktime: createTime,
+            expiryHeight: expiryHeight,
+            fee: fee ?? defaultFee,
+            id: id ?? -1,
+            index: -1,
+            isWalletInternal: false,
+            hasChange: false,
+            memoCount: 0,
+            minedHeight: minedHeight,
+            raw: raw ?? Data(),
+            rawID: rawTransactionId ?? Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 0,
+            value: value
         )
     }
 }
@@ -198,16 +220,23 @@ public extension ConfirmedTransactionEntity {
     /**
     TransactionEntity representation of this ConfirmedTransactionEntity transaction
     */
-    var transactionEntity: TransactionEntity {
-        Transaction(
-            id: self.id ?? -1,
-            transactionId: self.rawTransactionId ?? Data(),
-            created: Date(timeIntervalSince1970: self.blockTimeInSeconds).description,
-            transactionIndex: self.transactionIndex,
-            expiryHeight: self.expiryHeight,
-            minedHeight: self.minedHeight,
-            raw: self.raw,
-            fee: self.fee
+    /// This code will be gone in next PR.
+    var transactionEntity: TransactionNG.Overview {
+        return TransactionNG.Overview(
+            blocktime: blockTimeInSeconds,
+            expiryHeight: expiryHeight ?? 0,
+            fee: fee ?? Zatoshi(0),
+            id: id ?? -1,
+            index: -1,
+            isWalletInternal: false,
+            hasChange: false,
+            memoCount: 0,
+            minedHeight: minedHeight,
+            raw: raw ?? Data(),
+            rawID: rawTransactionId ?? Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 0,
+            value: value
         )
     }
 }

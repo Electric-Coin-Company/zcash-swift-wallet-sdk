@@ -140,11 +140,11 @@ extension MockTransactionRepository: TransactionRepository {
         nil
     }
 
-    func findBy(id: Int) throws -> TransactionEntity? {
+    func findBy(id: Int) throws -> TransactionNG.Overview? {
         transactions.first(where: { $0.id == id })?.transactionEntity
     }
 
-    func findBy(rawId: Data) throws -> TransactionEntity? {
+    func findBy(rawId: Data) throws -> TransactionNG.Overview? {
         transactions.first(where: { $0.rawTransactionId == rawId })?.transactionEntity
     }
 
@@ -181,10 +181,6 @@ extension MockTransactionRepository: TransactionRepository {
 
     func isInitialized() throws -> Bool {
         true
-    }
-
-    func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]? {
-        nil
     }
 
     func findConfirmedTransactionBy(rawId: Data) throws -> ConfirmedTransactionEntity? {
