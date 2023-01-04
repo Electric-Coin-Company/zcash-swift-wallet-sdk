@@ -12,7 +12,7 @@ public enum TransactionNG {
 
     public struct Overview {
         public let blocktime: TimeInterval
-        public let expiryHeight: BlockHeight
+        public let expiryHeight: BlockHeight?
         public let fee: Zatoshi
         public let id: Int
         public let index: Int
@@ -21,7 +21,7 @@ public enum TransactionNG {
         public let hasChange: Bool
         public let memoCount: Int
         public let minedHeight: BlockHeight?
-        public let raw: Data
+        public let raw: Data?
         public let rawID: Data
         public let receivedNoteCount: Int
         public let sentNoteCount: Int
@@ -30,28 +30,28 @@ public enum TransactionNG {
 
     public struct Received {
         public let blocktime: TimeInterval
-        public let expiryHeight: BlockHeight
+        public let expiryHeight: BlockHeight?
         public let fromAccount: Int
         public let id: Int
         public let index: Int
         public let memoCount: Int
         public let minedHeight: BlockHeight?
         public let noteCount: Int
-        public let raw: Data
+        public let raw: Data?
         public let rawID: Data
         public let value: Zatoshi
     }
 
     public struct Sent {
         public let blocktime: TimeInterval
-        public let expiryHeight: BlockHeight
+        public let expiryHeight: BlockHeight?
         public let fromAccount: Int
         public let id: Int
         public let index: Int
         public let memoCount: Int
         public let minedHeight: BlockHeight?
         public let noteCount: Int
-        public let raw: Data
+        public let raw: Data?
         public let rawID: Data
         public let value: Zatoshi
     }
@@ -63,8 +63,8 @@ extension TransactionNG.Overview {
         static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob>("txid")
-        static let expiryHeight = Expression<BlockHeight>("expiry_height")
-        static let raw = Expression<Blob>("raw")
+        static let expiryHeight = Expression<BlockHeight?>("expiry_height")
+        static let raw = Expression<Blob?>("raw")
         static let value = Expression<Int64>("net_value")
         static let fee = Expression<Int64>("fee_paid")
         static let isWalletInternal = Expression<Bool>("is_wallet_internal")
@@ -85,7 +85,11 @@ extension TransactionNG.Overview {
         self.hasChange = try row.get(Column.hasChange)
         self.memoCount = try row.get(Column.memoCount)
         self.minedHeight = try row.get(Column.minedHeight)
-        self.raw = Data(blob: try row.get(Column.raw))
+        if let raw = try row.get(Column.raw) {
+            self.raw = Data(blob: raw)
+        } else {
+            self.raw = nil
+        }
         self.rawID = Data(blob: try row.get(Column.rawID))
         self.receivedNoteCount = try row.get(Column.receivedNoteCount)
         self.sentNoteCount = try row.get(Column.sentNoteCount)
@@ -98,6 +102,7 @@ extension TransactionNG.Overview {
             return max(minedHeight - ZcashSDK.defaultStaleTolerance, network.constants.saplingActivationHeight)
         }
 
+        guard let expiryHeight = self.expiryHeight else { return nil }
         if expiryHeight != -1 {
             return max(expiryHeight - ZcashSDK.expiryOffset - ZcashSDK.defaultStaleTolerance, network.constants.saplingActivationHeight)
         }
@@ -112,8 +117,8 @@ extension TransactionNG.Received {
         static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob>("txid")
-        static let expiryHeight = Expression<BlockHeight>("expiry_height")
-        static let raw = Expression<Blob>("raw")
+        static let expiryHeight = Expression<BlockHeight?>("expiry_height")
+        static let raw = Expression<Blob?>("raw")
         static let fromAccount = Expression<Int>("received_by_account")
         static let value = Expression<Int64>("received_total")
         static let fee = Expression<Int64>("fee_paid")
@@ -131,7 +136,11 @@ extension TransactionNG.Received {
         self.memoCount = try row.get(Column.memoCount)
         self.minedHeight = try row.get(Column.minedHeight)
         self.noteCount = try row.get(Column.noteCount)
-        self.raw = Data(blob: try row.get(Column.raw))
+        if let raw = try row.get(Column.raw) {
+            self.raw = Data(blob: raw)
+        } else {
+            self.raw = nil
+        }
         self.rawID = Data(blob: try row.get(Column.rawID))
         self.value = Zatoshi(try row.get(Column.value))
     }
@@ -143,8 +152,8 @@ extension TransactionNG.Sent {
         static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob>("txid")
-        static let expiryHeight = Expression<BlockHeight>("expiry_height")
-        static let raw = Expression<Blob>("raw")
+        static let expiryHeight = Expression<BlockHeight?>("expiry_height")
+        static let raw = Expression<Blob?>("raw")
         static let fromAccount = Expression<Int>("sent_from_account")
         static let value = Expression<Int64>("sent_total")
         static let fee = Expression<Int64>("fee_paid")
@@ -162,7 +171,11 @@ extension TransactionNG.Sent {
         self.memoCount = try row.get(Column.memoCount)
         self.minedHeight = try row.get(Column.minedHeight)
         self.noteCount = try row.get(Column.noteCount)
-        self.raw = Data(blob: try row.get(Column.raw))
+        if let raw = try row.get(Column.raw) {
+            self.raw = Data(blob: raw)
+        } else {
+            self.raw = nil
+        }
         self.rawID = Data(blob: try row.get(Column.rawID))
         self.value = Zatoshi(try row.get(Column.value))
     }

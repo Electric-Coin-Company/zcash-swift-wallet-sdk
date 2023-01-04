@@ -77,7 +77,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 from: pendingTransaction.accountIndex
             )
 
-            guard let minedHeight = transaction.minedHeight else {
+            guard let minedHeight = transaction.minedHeight, let expiryHeight = transaction.expiryHeight else {
                 throw TransactionManagerError.transactionNotMined(pendingTransaction, transaction)
             }
 
@@ -85,7 +85,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             pending.encodeAttempts += 1
             pending.raw = transaction.raw
             pending.rawTransactionId = transaction.rawID
-            pending.expiryHeight = transaction.expiryHeight
+            pending.expiryHeight = expiryHeight
             pending.minedHeight = minedHeight
             
             try self.repository.update(pending)
@@ -123,7 +123,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 from: pendingTransaction.accountIndex
             )
 
-            guard let minedHeight = transaction.minedHeight else {
+            guard let minedHeight = transaction.minedHeight, let expiryHeight = transaction.expiryHeight else {
                 throw TransactionManagerError.transactionNotMined(pendingTransaction, transaction)
             }
 
@@ -131,7 +131,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             pending.encodeAttempts += 1
             pending.raw = transaction.raw
             pending.rawTransactionId = transaction.rawID
-            pending.expiryHeight = transaction.expiryHeight
+            pending.expiryHeight = expiryHeight
             pending.minedHeight = minedHeight
             
             try self.repository.update(pending)
