@@ -21,7 +21,6 @@ extension CompactBlockProcessor {
         }
     }
 
-
     func compactBlockBatchScanning(
         range: CompactBlockRange,
         totalProgressRange: CompactBlockRange,
