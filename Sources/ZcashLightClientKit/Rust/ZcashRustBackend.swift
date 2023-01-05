@@ -748,18 +748,18 @@ extension FFIBinaryKey {
         .init(
             network: network,
             bytes: self.encoding.toByteArray(
-                lenght: Int(self.encoding_len)),
+                length: Int(self.encoding_len)),
             account: self.account_id
         )
     }
 }
 
 extension UnsafeMutablePointer where Pointee == UInt8 {
-    /// copies the bytes poined on
-    func toByteArray(lenght: Int) -> [UInt8] {
+    /// copies the bytes pointed on
+    func toByteArray(length: Int) -> [UInt8] {
         var bytes = [UInt8]()
 
-        for index in 0 ..< lenght {
+        for index in 0 ..< length {
             bytes.append(self.advanced(by: index).pointee)
         }
 

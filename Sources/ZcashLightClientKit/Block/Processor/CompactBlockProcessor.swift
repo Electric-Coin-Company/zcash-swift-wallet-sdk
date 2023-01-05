@@ -528,7 +528,7 @@ public actor CompactBlockProcessor {
     Rewinds to provided height.
     If nil is provided, it will rescan to nearest height (quick rescan)
 
-    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is throwed.
+    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is thrown.
     */
     public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
         guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
@@ -768,7 +768,7 @@ public actor CompactBlockProcessor {
 
     func severeFailure(_ error: Error) {
         cancelableTask?.cancel()
-        LoggerProxy.error("show stoppper failure: \(error)")
+        LoggerProxy.error("show stopper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error
@@ -1157,7 +1157,7 @@ extension CompactBlockProcessorError: LocalizedError {
         case .maxAttemptsReached(let attempts):
             return "Compact Block failed \(attempts) times and reached the maximum amount of retries it was set up to do"
         case .missingDbPath(let path):
-            return "CompactBlockProcessor was set up with path \(path) but thath location couldn't be reached"
+            return "CompactBlockProcessor was set up with path \(path) but that location couldn't be reached"
         case let .networkMismatch(expected, found):
             // swiftlint:disable:next line_length
             return "A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing to the right server"

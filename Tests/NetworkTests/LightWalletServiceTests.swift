@@ -25,7 +25,7 @@ class LightWalletServiceTests: XCTestCase {
         service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
     }
 
-    /// FIXME: check whether this test is stil valid on in memory lwd implementatiojn
+    /// FIXME: check whether this test is still valid on in memory lwd implementation
 //    func testFailure() {
 //
 //        let expect = XCTestExpectation(description: self.description)
