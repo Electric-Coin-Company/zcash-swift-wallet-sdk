@@ -149,7 +149,16 @@ public protocol Synchronizer {
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
-    /// Returns a list of confirmed transactions that precede the given transaction with a limit count.
+    /// Get all memos for `transaction`.
+    func getMemos(for transaction: Transaction.Overview) throws -> [Memo]
+
+    /// Get all memos for `receivedTransaction`.
+    func getMemos(for receivedTransaction: Transaction.Received) throws -> [Memo]
+
+    /// Get all memos for `sentTransaction`.
+    func getMemos(for sentTransaction: Transaction.Sent) throws -> [Memo]
+
+    /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
@@ -162,7 +171,6 @@ public protocol Synchronizer {
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking
     func latestHeight() async throws -> BlockHeight
-    
 
     /// Returns the latests UTXOs for the given address from the specified height on
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
