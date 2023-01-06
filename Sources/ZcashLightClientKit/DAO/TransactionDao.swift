@@ -8,21 +8,6 @@
 import Foundation
 import SQLite
 
-struct ConfirmedTransaction: ConfirmedTransactionEntity {
-    var toAddress: String?
-    var expiryHeight: BlockHeight?
-    var minedHeight: Int
-    var noteId: Int
-    var blockTimeInSeconds: TimeInterval
-    var transactionIndex: Int
-    var raw: Data?
-    var id: Int?
-    var value: Zatoshi
-    var memo: Data?
-    var rawTransactionId: Data?
-    var fee: Zatoshi?
-}
-
 class TransactionSQLDAO: TransactionRepository {
     var dbProvider: ConnectionProvider
     var transactions = Table("transactions")

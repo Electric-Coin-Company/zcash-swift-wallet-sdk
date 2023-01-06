@@ -350,7 +350,7 @@ public class SDKSynchronizer: Synchronizer {
     @objc func transactionsFound(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ConfirmedTransactionEntity]
+            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [TransactionNG.Overview]
         else {
             return
         }

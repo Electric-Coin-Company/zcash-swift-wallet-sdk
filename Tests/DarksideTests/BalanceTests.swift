@@ -124,7 +124,7 @@ class BalanceTests: XCTestCase {
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
-            let foundTx = txs.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+            let foundTx = txs.first(where: { $0.rawID == pendingTx.rawTransactionId })
             XCTAssertNotNil(foundTx)
             XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
             
@@ -282,7 +282,7 @@ class BalanceTests: XCTestCase {
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
-            let foundTx = txs.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+            let foundTx = txs.first(where: { $0.rawID == pendingTx.rawTransactionId })
             XCTAssertNotNil(foundTx)
             XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
             
@@ -439,7 +439,7 @@ class BalanceTests: XCTestCase {
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
-            let foundTx = txs.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+            let foundTx = txs.first(where: { $0.rawID == pendingTx.rawTransactionId })
             XCTAssertNotNil(foundTx)
             XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
             
@@ -1190,7 +1190,7 @@ class BalanceTests: XCTestCase {
 }
 
 class SDKSynchonizerListener {
-    var transactionsFound: (([ConfirmedTransactionEntity]) -> Void)?
+    var transactionsFound: (([TransactionNG.Overview]) -> Void)?
     var synchronizerMinedTransaction: ((PendingTransactionEntity) -> Void)?
     
     func subscribeToSynchronizer(_ synchronizer: SDKSynchronizer) {
@@ -1204,7 +1204,7 @@ class SDKSynchonizerListener {
     
     @objc func txFound(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            guard let txs = notification.userInfo?[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ConfirmedTransactionEntity] else {
+            guard let txs = notification.userInfo?[SDKSynchronizer.NotificationKeys.foundTransactions] as? [TransactionNG.Overview] else {
                 XCTFail("expected [ConfirmedTransactionEntity] array")
                 return
             }
