@@ -1,4 +1,8 @@
 # Unreleased
+- [#671] Make CompactBlockProcessor Internal.
+    The CompactBlockProcessor is no longer a public class/API. Any direct access will
+end up as a compiler error. Recommended way how to handle things is via `SDKSynchronizer`
+from now on. The Demo app has been updated accordingly as well.
 - [#657] Change how blocks are downloaded and scanned. 
     In previous versions, the SDK first downloaded all the blocks and then it
 scanned all the blocks. This approach requires a lot of disk space. The SDK now 
