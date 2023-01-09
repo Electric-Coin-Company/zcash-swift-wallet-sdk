@@ -1,15 +1,15 @@
 # Unreleased
 - [#657] Change how blocks are downloaded and scanned. 
-    In previous versions, the SDK first downloaded all the blocks and then the SDK
+    In previous versions, the SDK first downloaded all the blocks and then it
 scanned all the blocks. This approach requires a lot of disk space. The SDK now 
 behaves differently. It downloads a batch of blocks (100 by default), scans those, and
-remove those blocks from the disk. And repeat this until all the blocks are processed.
+removes those blocks from the disk. And repeats this until all the blocks are processed.
     `SyncStatus` was changed. `.downloading`, `.validating`, and `.scanning` symbols
 were removed. And the `.scanning` symbol was added. The removed phases of the sync 
 process are now reported as one phase. 
     Notifications were also changed similarly. These notifications were
-removed: `SDKSyncronizerDownloading`, `SDKSyncronizerValidating`, and `SDKSyncronizerScanning`.
-And the `SDKSyncronizerSyncing` notification was added. The added notification replaces
+removed: `SDKSynchronizerDownloading`, `SDKSyncronizerValidating`, and `SDKSyncronizerScanning`.
+And the `SDKSynchronizerSyncing` notification was added. The added notification replaces
 the removed notifications.
         
 - [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 

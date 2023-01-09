@@ -32,7 +32,7 @@ public extension Notification.Name {
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
 
     /// Posted when the synchronizer starts syncing
-    static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
+    static let synchronizerSyncing = Notification.Name("SDKSynchronizerSyncing")
 
     /// Posted when the synchronizer starts Enhancing
     static let synchronizerEnhancing = Notification.Name("SDKSyncronizerEnhancing")
