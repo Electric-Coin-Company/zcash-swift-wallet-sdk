@@ -70,6 +70,8 @@ public protocol CompactBlockDownloading {
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
     func closeConnection()
+
+    func closeDBConnection()
 }
 
 /**
@@ -93,6 +95,10 @@ class CompactBlockDownloader {
 extension CompactBlockDownloader: CompactBlockDownloading {
     func closeConnection() {
         lightwalletService.closeConnection()
+    }
+
+    func closeDBConnection() {
+        storage.closeDBConnection()
     }
             
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {

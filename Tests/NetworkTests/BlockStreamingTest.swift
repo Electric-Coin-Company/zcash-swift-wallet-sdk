@@ -59,7 +59,8 @@ class BlockStreamingTest: XCTestCase {
         )
 
         let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
-        let startHeight = try service.latestBlockHeight() - 100_000
+        let latestBlockHeight = try service.latestBlockHeight()
+        let startHeight = latestBlockHeight - 100_000
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: ZcashNetworkBuilder.network(for: .testnet),
             walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
@@ -74,9 +75,16 @@ class BlockStreamingTest: XCTestCase {
         
         let cancelableTask = Task {
             do {
-                try await compactBlockProcessor.compactBlockStreamDownload(
-                    blockBufferSize: 10,
-                    startHeight: startHeight
+                let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+                    startHeight: startHeight,
+                    targetHeight: latestBlockHeight
+                )
+
+                try await compactBlockProcessor.downloadAndStoreBlocks(
+                    using: downloadStream,
+                    at: startHeight...latestBlockHeight,
+                    maxBlockBufferSize: 10,
+                    totalProgressRange: startHeight...latestBlockHeight
                 )
             } catch {
                 XCTAssertTrue(Task.isCancelled)
@@ -97,7 +105,8 @@ class BlockStreamingTest: XCTestCase {
         )
 
         let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
-        let startHeight = try service.latestBlockHeight() - 100_000
+        let latestBlockHeight = try service.latestBlockHeight()
+        let startHeight = latestBlockHeight - 100_000
         
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: ZcashNetworkBuilder.network(for: .testnet),
@@ -114,9 +123,16 @@ class BlockStreamingTest: XCTestCase {
         let date = Date()
         
         do {
-            try await compactBlockProcessor.compactBlockStreamDownload(
-                blockBufferSize: 10,
-                startHeight: startHeight
+            let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+                startHeight: startHeight,
+                targetHeight: latestBlockHeight
+            )
+
+            try await compactBlockProcessor.downloadAndStoreBlocks(
+                using: downloadStream,
+                at: startHeight...latestBlockHeight,
+                maxBlockBufferSize: 10,
+                totalProgressRange: startHeight...latestBlockHeight
             )
         } catch {
             if let lwdError = error as? LightWalletServiceError {

@@ -82,10 +82,10 @@ public enum ZcashSDK {
     @available(*, deprecated, message: "this value is being deprecated in favor of `DefaultDownloadBatch` and `DefaultScanningBatch`")
     public static var DefaultBatchSize = 100
 
-    /// Default batch size for downloading blocks for the compact block processor. This value was changed due to
-    /// full blocks causing block download memory usage significantly and also timeouts on grpc calls.
-    /// this value is subject to change in the future.
-    public static var DefaultDownloadBatch = 10
+    /// Default batch size for downloading blocks for the compact block processor. Be careful with this number. This amount of blocks is held in
+    /// memory at some point of the sync process.
+    /// This values can't be smaller than `DefaultScanningBatch`. Otherwise bad things will happen.
+    public static var DefaultDownloadBatch = 100
 
     /// Default batch size for scanning blocks for the compact block processor
     public static var DefaultScanningBatch = 100

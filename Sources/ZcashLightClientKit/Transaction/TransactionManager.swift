@@ -53,4 +53,6 @@ protocol OutboundTransactionManager {
     Deletes a pending transaction from the database
     */
     func delete(pendingTransaction: PendingTransactionEntity) throws
+
+    func closeDBConnection()
 }

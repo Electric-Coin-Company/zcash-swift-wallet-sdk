@@ -32,16 +32,7 @@ public extension Notification.Name {
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
 
     /// Posted when the synchronizer starts syncing
-    static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
-
-    /// Posted when synchronizer starts downloading blocks
-    static let synchronizerDownloading = Notification.Name("SDKSyncronizerDownloading")
-
-    /// Posted when synchronizer starts validating blocks
-    static let synchronizerValidating = Notification.Name("SDKSyncronizerValidating")
-
-    /// Posted when synchronizer starts scanning blocks
-    static let synchronizerScanning = Notification.Name("SDKSyncronizerScanning")
+    static let synchronizerSyncing = Notification.Name("SDKSynchronizerSyncing")
 
     /// Posted when the synchronizer starts Enhancing
     static let synchronizerEnhancing = Notification.Name("SDKSyncronizerEnhancing")
@@ -188,9 +179,13 @@ public class SDKSynchronizer: Synchronizer {
         case .unprepared:
             throw SynchronizerError.notPrepared
 
-        case .downloading, .validating, .scanning, .enhancing, .fetching:
-            LoggerProxy.warn("warning: synchronizer started when already started")
-            return
+        case .syncing, .enhancing, .fetching:
+            LoggerProxy.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
+            Task {
+                /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
+                /// it's start here.
+                await blockProcessor.start(retry: retry)
+            }
 
         case .stopped, .synced, .disconnected, .error:
             Task {
@@ -236,22 +231,8 @@ public class SDKSynchronizer: Synchronizer {
 
         center.addObserver(
             self,
-            selector: #selector(processorStartedDownloading(_:)),
-            name: Notification.Name.blockProcessorStartedDownloading,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedValidating(_:)),
-            name: Notification.Name.blockProcessorStartedValidating,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedScanning(_:)),
-            name: Notification.Name.blockProcessorStartedScanning,
+            selector: #selector(processorStartedSyncing(_:)),
+            name: Notification.Name.blockProcessorStartedSyncing,
             object: processor
         )
 
@@ -395,29 +376,14 @@ public class SDKSynchronizer: Synchronizer {
         self.notify(progress: progress)
     }
 
-    @objc func processorStartedDownloading(_ notification: Notification) {
+    @objc func processorStartedSyncing(_ notification: Notification) {
         statusUpdateLock.lock()
         defer { statusUpdateLock.unlock() }
 
-        guard status != .downloading(.nullProgress) else { return }
-        status = .downloading(.nullProgress)
+        guard status != .syncing(.nullProgress) else { return }
+        status = .syncing(.nullProgress)
     }
 
-    @objc func processorStartedValidating(_ notification: Notification) {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .validating else { return }
-        status = .validating
-    }
-
-    @objc func processorStartedScanning(_ notification: Notification) {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .scanning(.nullProgress) else { return }
-        status = .scanning(.nullProgress)
-    }
     @objc func processorStartedEnhancing(_ notification: Notification) {
         statusUpdateLock.lock()
         defer { statusUpdateLock.unlock() }
@@ -692,6 +658,23 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
+    public func wipe() async throws {
+        do {
+            try await blockProcessor.wipe()
+        } catch {
+            throw SynchronizerError.wipeAttemptWhileProcessing
+        }
+
+        transactionManager.closeDBConnection()
+        transactionRepository.closeDBConnection()
+
+        try? FileManager.default.removeItem(at: initializer.cacheDbURL)
+        try? FileManager.default.removeItem(at: initializer.pendingDbURL)
+        try? FileManager.default.removeItem(at: initializer.dataDbURL)
+
+        status = .unprepared
+    }
+
     // MARK: notify state
     private func notify(progress: CompactBlockProgress) {
         var userInfo: [AnyHashable: Any] = .init()
@@ -749,12 +732,8 @@ public class SDKSynchronizer: Synchronizer {
             }
         case .unprepared:
             break
-        case .downloading:
-            NotificationSender.default.post(name: Notification.Name.synchronizerDownloading, object: self)
-        case .validating:
-            NotificationSender.default.post(name: Notification.Name.synchronizerValidating, object: self)
-        case .scanning:
-            NotificationSender.default.post(name: Notification.Name.synchronizerScanning, object: self)
+        case .syncing:
+            NotificationSender.default.post(name: Notification.Name.synchronizerSyncing, object: self)
         case .enhancing:
             NotificationSender.default.post(name: Notification.Name.synchronizerEnhancing, object: self)
         case .fetching:
@@ -843,6 +822,8 @@ public class SDKSynchronizer: Synchronizer {
             case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .unknown:
+                break
+            case .wipeAttemptWhileProcessing:
                 break
             }
         }

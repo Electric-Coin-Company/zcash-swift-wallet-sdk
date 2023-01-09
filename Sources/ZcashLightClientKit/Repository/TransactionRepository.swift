@@ -12,6 +12,7 @@ enum TransactionRepositoryError: Error {
 }
 
 protocol TransactionRepository {
+    func closeDBConnection()
     func countAll() throws -> Int
     func countUnmined() throws -> Int
     func blockForHeight(_ height: BlockHeight) throws -> Block?
