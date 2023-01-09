@@ -8,7 +8,7 @@
 import Foundation
 import SQLite
 
-public enum TransactionNG {
+public enum Transaction {
 
     public struct Overview {
         public let blocktime: TimeInterval
@@ -63,7 +63,7 @@ public enum TransactionNG {
     }
 }
 
-extension TransactionNG.Overview {
+extension Transaction.Overview {
     enum Column {
         static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight?>("mined_height")
@@ -117,7 +117,7 @@ extension TransactionNG.Overview {
     }
 }
 
-extension TransactionNG.Received {
+extension Transaction.Received {
     enum Column {
         static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight?>("mined_height")
@@ -152,7 +152,7 @@ extension TransactionNG.Received {
     }
 }
 
-extension TransactionNG.Sent {
+extension Transaction.Sent {
     enum Column {
         static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight?>("mined_height")

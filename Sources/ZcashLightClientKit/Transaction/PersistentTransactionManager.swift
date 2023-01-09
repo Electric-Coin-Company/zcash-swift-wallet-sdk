@@ -17,7 +17,7 @@ enum TransactionManagerError: Error {
     case submitFailed(PendingTransactionEntity, errorCode: Int)
     case shieldingEncodingFailed(PendingTransactionEntity, reason: String)
     case cannotEncodeInternalTx(PendingTransactionEntity)
-    case transactionNotMined(PendingTransactionEntity, TransactionNG.Overview)
+    case transactionNotMined(PendingTransactionEntity, Transaction.Overview)
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {

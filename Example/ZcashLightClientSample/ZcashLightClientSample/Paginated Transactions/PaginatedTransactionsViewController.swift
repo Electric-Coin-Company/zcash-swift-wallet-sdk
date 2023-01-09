@@ -16,7 +16,7 @@ class PaginatedTransactionsViewController: UIViewController {
 
     // swiftlint:disable:next implicitly_unwrapped_optional
     var paginatedRepository: PaginatedTransactionRepository!
-    var transactions: [TransactionNG.Overview] = []
+    var transactions: [Transaction.Overview] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()

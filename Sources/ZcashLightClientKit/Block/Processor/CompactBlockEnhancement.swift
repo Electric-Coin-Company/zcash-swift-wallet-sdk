@@ -15,7 +15,7 @@ extension CompactBlockProcessor {
         case txIdNotFound(txId: Data)
     }
     
-    private func enhance(transaction: TransactionNG.Overview) async throws -> TransactionNG.Overview {
+    private func enhance(transaction: Transaction.Overview) async throws -> Transaction.Overview {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.rawID.toHexStringTxId())")
         
         let fetchedTransaction = try await downloader.fetchTransaction(txId: transaction.rawID)
@@ -37,7 +37,7 @@ extension CompactBlockProcessor {
             )
         }
 
-        let confirmedTx: TransactionNG.Overview
+        let confirmedTx: Transaction.Overview
         do {
             confirmedTx = try transactionRepository.find(rawID: fetchedTransaction.rawID)
         } catch {

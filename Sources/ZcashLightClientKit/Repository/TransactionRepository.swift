@@ -19,15 +19,15 @@ protocol TransactionRepository {
     func lastScannedHeight() throws -> BlockHeight
     func isInitialized() throws -> Bool
 
-    // MARK: - TransactionNG methods
+    // MARK: - Transaction methods
 
-    func find(id: Int) throws -> TransactionNG.Overview
-    func find(rawID: Data) throws -> TransactionNG.Overview
-    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview]
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview]
-    func find(from: TransactionNG.Overview, limit: Int, kind: TransactionKind) throws -> [TransactionNG.Overview]
-    func findReceived(offset: Int, limit: Int) throws -> [TransactionNG.Received]
-    func findSent(offset: Int, limit: Int) throws -> [TransactionNG.Sent]
-    func findSent(in range: BlockRange, limit: Int) throws -> [TransactionNG.Sent]
-    func findSent(rawID: Data) throws -> TransactionNG.Sent
+    func find(id: Int) throws -> Transaction.Overview
+    func find(rawID: Data) throws -> Transaction.Overview
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
+    func find(from: Transaction.Overview, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
+    func findReceived(offset: Int, limit: Int) throws -> [Transaction.Received]
+    func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent]
+    func findSent(in range: BlockRange, limit: Int) throws -> [Transaction.Sent]
+    func findSent(rawID: Data) throws -> Transaction.Sent
 }

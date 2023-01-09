@@ -605,7 +605,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         var initialBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
-        var incomingTx: TransactionNG.Received!
+        var incomingTx: Transaction.Received!
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: self.handleError)

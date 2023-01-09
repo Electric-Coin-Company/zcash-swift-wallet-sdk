@@ -350,7 +350,7 @@ public class SDKSynchronizer: Synchronizer {
     @objc func transactionsFound(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [TransactionNG.Overview]
+            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [Transaction.Overview]
         else {
             return
         }
@@ -564,7 +564,7 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.cancel(pendingTransaction: transaction)
     }
 
-    public func allReceivedTransactions() throws -> [TransactionNG.Received] {
+    public func allReceivedTransactions() throws -> [Transaction.Received] {
         try transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
 
@@ -572,15 +572,15 @@ public class SDKSynchronizer: Synchronizer {
         try transactionManager.allPendingTransactions() ?? [PendingTransactionEntity]()
     }
 
-    public func allClearedTransactions() throws -> [TransactionNG.Overview] {
+    public func allClearedTransactions() throws -> [Transaction.Overview] {
         return try transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
     }
 
-    public func allSentTransactions() throws -> [TransactionNG.Sent] {
+    public func allSentTransactions() throws -> [Transaction.Sent] {
         return try transactionRepository.findSent(offset: 0, limit: Int.max)
     }
 
-    public func allConfirmedTransactions(from transaction: TransactionNG.Overview, limit: Int) throws -> [TransactionNG.Overview] {
+    public func allConfirmedTransactions(from transaction: Transaction.Overview, limit: Int) throws -> [Transaction.Overview] {
         return try transactionRepository.find(from: transaction, limit: limit, kind: .all)
     }
 
@@ -864,15 +864,15 @@ extension SDKSynchronizer {
         (try? self.allPendingTransactions()) ?? [PendingTransactionEntity]()
     }
 
-    public var clearedTransactions: [TransactionNG.Overview] {
+    public var clearedTransactions: [Transaction.Overview] {
         (try? self.allClearedTransactions()) ?? []
     }
 
-    public var sentTransactions: [TransactionNG.Sent] {
+    public var sentTransactions: [Transaction.Sent] {
         (try? self.allSentTransactions()) ?? []
     }
 
-    public var receivedTransactions: [TransactionNG.Received] {
+    public var receivedTransactions: [Transaction.Received] {
         (try? self.allReceivedTransactions()) ?? []
     }
 }
@@ -913,6 +913,6 @@ extension ConnectionState {
 private struct NullEnhancementProgress: EnhancementProgress {
     var totalTransactions: Int { 0 }
     var enhancedTransactions: Int { 0 }
-    var lastFoundTransaction: TransactionNG.Overview? { nil }
+    var lastFoundTransaction: Transaction.Overview? { nil }
     var range: CompactBlockRange { 0 ... 0 }
 }
