@@ -621,7 +621,7 @@ public actor CompactBlockProcessor {
 
                 if let range = ranges.downloadedButUnscannedRange {
                     LoggerProxy.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await compactBlockBatchScanning(range: range, totalProgressRange: totalProgressRange)
+                    try await scanBlocks(at: range, totalProgressRange: totalProgressRange)
                 }
 
                 if let range = ranges.downloadAndScanRange {
@@ -688,7 +688,7 @@ public actor CompactBlockProcessor {
                 totalProgressRange: totalProgressRange
             )
             try await compactBlockValidation()
-            try await compactBlockBatchScanning(range: processingRange, totalProgressRange: totalProgressRange)
+            try await scanBlocks(at: processingRange, totalProgressRange: totalProgressRange)
             try await removeCacheDB()
 
             let progress = BlockProgress(
