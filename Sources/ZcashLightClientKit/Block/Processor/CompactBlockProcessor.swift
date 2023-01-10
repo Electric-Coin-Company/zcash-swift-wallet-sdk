@@ -32,6 +32,7 @@ public enum CompactBlockProcessorError: Error {
     case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
     case unknown
     case rewindAttemptWhileProcessing
+    case wipeAttemptWhileProcessing
 }
 
 /**
@@ -57,15 +58,13 @@ public enum CompactBlockProcessorNotificationKey {
 }
 
 public enum CompactBlockProgress {
-    case download(_ progress: BlockProgress)
-    case validate
-    case scan(_ progress: BlockProgress)
+    case syncing(_ progress: BlockProgress)
     case enhance(_ progress: EnhancementStreamProgress)
     case fetch
     
     public var progress: Float {
         switch self {
-        case .download(let blockProgress), .scan(let blockProgress):
+        case .syncing(let blockProgress):
             return blockProgress.progress
         case .enhance(let enhancementProgress):
             return enhancementProgress.progress
@@ -76,7 +75,7 @@ public enum CompactBlockProgress {
     
     public var progressHeight: BlockHeight? {
         switch self {
-        case .download(let blockProgress), .scan(let blockProgress):
+        case .syncing(let blockProgress):
             return blockProgress.progressHeight
         case .enhance(let enhancementProgress):
             return enhancementProgress.lastFoundTransaction?.minedHeight
@@ -95,7 +94,7 @@ public enum CompactBlockProgress {
     
     public var targetHeight: BlockHeight? {
         switch self {
-        case .download(let blockProgress), .scan(let blockProgress):
+        case .syncing(let blockProgress):
             return blockProgress.targetHeight
         default:
             return nil
@@ -139,20 +138,10 @@ public extension Notification.Name {
     static let blockProcessorStatusChanged = Notification.Name(rawValue: "CompactBlockProcessorStatusChanged")
 
     /**
-    Notification sent when a compact block processor starts downloading
-    */
+     Notification sent when a compact block processor starts syncing
+     */
+    static let blockProcessorStartedSyncing = Notification.Name(rawValue: "CompactBlockProcessorStartedSyncing")
 
-    static let blockProcessorStartedDownloading = Notification.Name(rawValue: "CompactBlockProcessorStartedDownloading")
-    /**
-    Notification sent when the compact block processor starts validating the chain state
-    */
-
-    static let blockProcessorStartedValidating = Notification.Name(rawValue: "CompactBlockProcessorStartedValidating")
-    /**
-    Notification sent when the compact block processor starts scanning blocks from the cache
-    */
-    static let blockProcessorStartedScanning = Notification.Name(rawValue: "CompactBlockProcessorStartedScanning")
-    
     /**
     Notification sent when the compact block processor stop() method is called
     */
@@ -233,6 +222,7 @@ public actor CompactBlockProcessor {
         public var scanningBatchSize = ZcashSDK.DefaultScanningBatch
         public var retries = ZcashSDK.defaultRetries
         public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
+        public var maxReorgSize = ZcashSDK.maxReorgSize
         public var rewindDistance = ZcashSDK.defaultRewindDistance
         public var walletBirthday: BlockHeight
         public private(set) var downloadBufferSize: Int = 10
@@ -267,6 +257,8 @@ public actor CompactBlockProcessor {
             self.rewindDistance = rewindDistance
             self.walletBirthday = walletBirthday
             self.saplingActivation = saplingActivation
+
+            assert(downloadBatchSize >= scanningBatchSize)
         }
         
         public init(
@@ -284,6 +276,8 @@ public actor CompactBlockProcessor {
             self.walletBirthday = walletBirthday
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
+
+            assert(downloadBatchSize >= scanningBatchSize)
         }
     }
 
@@ -294,23 +288,13 @@ public actor CompactBlockProcessor {
         /**
         connected and downloading blocks
         */
-        case downloading
+        case syncing
         
         /**
         was doing something but was paused
         */
         case stopped
 
-        /**
-        processor is validating
-        */
-        case validating
-
-        /**
-        processor is scanning
-        */
-        case scanning
-        
         /**
         Processor is Enhancing transactions
         */
@@ -377,7 +361,7 @@ public actor CompactBlockProcessor {
         config.retries
     }
     
-    private var batchSize: BlockHeight {
+    var batchSize: BlockHeight {
         BlockHeight(self.config.downloadBatchSize)
     }
 
@@ -516,9 +500,9 @@ public actor CompactBlockProcessor {
                 // max attempts have been reached
                 LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
-            case .downloading, .validating, .scanning, .enhancing, .fetching, .handlingSaplingFiles:
+            case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
-                self.`needsToStartScanningWhenStopped` = true
+                self.needsToStartScanningWhenStopped = true
             }
             return
         }
@@ -544,7 +528,7 @@ public actor CompactBlockProcessor {
     Rewinds to provided height.
     If nil is provided, it will rescan to nearest height (quick rescan)
 
-    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is throwed.
+    If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is thrown.
     */
     public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
         guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
@@ -582,6 +566,19 @@ public actor CompactBlockProcessor {
         return rewindBlockHeight
     }
 
+    func wipe() async throws {
+        switch self.state {
+        case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
+            throw CompactBlockProcessorError.wipeAttemptWhileProcessing
+        case .stopped, .error, .synced:
+            break
+        }
+
+        state = .stopped
+        downloader.closeDBConnection()
+        await internalSyncProgress.rewind(to: 0)
+    }
+
     func validateServer() async {
         do {
             let info = try await self.service.getInfo()
@@ -606,35 +603,30 @@ public actor CompactBlockProcessor {
         
         cancelableTask = Task(priority: .userInitiated) {
             do {
+                let totalProgressRange = computeTotalProgressRange(from: ranges)
+
                 LoggerProxy.debug("""
                 Syncing with ranges:
-                downloadRange:  \(ranges.downloadRange?.lowerBound ?? -1)...\(ranges.downloadRange?.upperBound ?? -1)
-                scanRange:      \(ranges.scanRange?.lowerBound ?? -1)...\(ranges.scanRange?.upperBound ?? -1)
-                enhanceRange:   \(ranges.enhanceRange?.lowerBound ?? -1)...\(ranges.enhanceRange?.upperBound ?? -1)
-                fetchUTXORange: \(ranges.fetchUTXORange?.lowerBound ?? -1)...\(ranges.fetchUTXORange?.upperBound ?? -1)
+                downloaded but not scanned: \
+                \(ranges.downloadedButUnscannedRange?.lowerBound ?? -1)...\(ranges.downloadedButUnscannedRange?.upperBound ?? -1)
+                download and scan:          \(ranges.downloadAndScanRange?.lowerBound ?? -1)...\(ranges.downloadAndScanRange?.upperBound ?? -1)
+                enhance range:              \(ranges.enhanceRange?.lowerBound ?? -1)...\(ranges.enhanceRange?.upperBound ?? -1)
+                fetchUTXO range:            \(ranges.fetchUTXORange?.lowerBound ?? -1)...\(ranges.fetchUTXORange?.upperBound ?? -1)
+                total progress range:       \(totalProgressRange.lowerBound)...\(totalProgressRange.upperBound)
                 """)
 
                 var anyActionExecuted = false
 
                 try storage.createTable()
 
-                if let range = ranges.downloadRange {
-                    anyActionExecuted = true
-                    LoggerProxy.debug("Downloading with range: \(range.lowerBound)...\(range.upperBound)")
-
-                    try await compactBlockStreamDownload(
-                        blockBufferSize: config.downloadBufferSize,
-                        startHeight: range.lowerBound,
-                        targetHeight: range.upperBound
-                    )
-
-                    try await compactBlockValidation()
+                if let range = ranges.downloadedButUnscannedRange {
+                    LoggerProxy.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
+                    try await scanBlocks(at: range, totalProgressRange: totalProgressRange)
                 }
 
-                if let range = ranges.scanRange {
-                    anyActionExecuted = true
-                    LoggerProxy.debug("Scanning with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await compactBlockBatchScanning(range: range)
+                if let range = ranges.downloadAndScanRange {
+                    LoggerProxy.debug("Starting sync with range: \(range.lowerBound)...\(range.upperBound)")
+                    try await downloadAndScanBlocks(at: range, totalProgressRange: totalProgressRange)
                 }
 
                 if let range = ranges.enhanceRange {
@@ -669,14 +661,78 @@ public actor CompactBlockProcessor {
             }
         }
     }
-    
-    func calculateProgress(start: BlockHeight, current: BlockHeight, latest: BlockHeight) -> Float {
-        let totalBlocks = Float(abs(latest - start))
-        let completed = Float(abs(current - start))
-        let progress = completed / totalBlocks
-        return progress
+
+    private func downloadAndScanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
+        let downloadStream = try await compactBlocksDownloadStream(
+            startHeight: range.lowerBound,
+            targetHeight: range.upperBound
+        )
+
+        // Divide `range` by `batchSize` and compute how many time do we need to run to download and scan all the blocks.
+        // +1 must be done here becase `range` is closed range. So even if upperBound and lowerBound are same there is one block to sync.
+        let blocksCountToSync = (range.upperBound - range.lowerBound) + 1
+        var loopsCount = blocksCountToSync / batchSize
+        if blocksCountToSync % batchSize != 0 {
+            loopsCount += 1
+        }
+
+        for i in 0..<loopsCount {
+            let processingRange = computeSingleLoopDownloadRange(fullRange: range, loopCounter: i, batchSize: batchSize)
+
+            LoggerProxy.debug("Sync loop #\(i+1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
+
+            try await downloadAndStoreBlocks(
+                using: downloadStream,
+                at: processingRange,
+                maxBlockBufferSize: config.downloadBufferSize,
+                totalProgressRange: totalProgressRange
+            )
+            try await compactBlockValidation()
+            try await scanBlocks(at: processingRange, totalProgressRange: totalProgressRange)
+            try await removeCacheDB()
+
+            let progress = BlockProgress(
+                startHeight: totalProgressRange.lowerBound,
+                targetHeight: totalProgressRange.upperBound,
+                progressHeight: processingRange.upperBound
+            )
+            notifyProgress(.syncing(progress))
+        }
     }
-    
+
+    /*
+     Here range for one batch is computed. For example if we want to sync blocks 0...1000 with batchSize 100 we want to generage blocks like
+     this:
+     0...99
+     100...199
+     200...299
+     300...399
+     ...
+     900...999
+     1000...1000
+     */
+    func computeSingleLoopDownloadRange(fullRange: CompactBlockRange, loopCounter: Int, batchSize: BlockHeight) -> CompactBlockRange {
+        let lowerBound = fullRange.lowerBound + (loopCounter * batchSize)
+        let upperBound = min(fullRange.lowerBound + ((loopCounter+1) * batchSize) - 1, fullRange.upperBound)
+        return lowerBound...upperBound
+    }
+
+    /// It may happen that sync process start with syncing blocks that were downloaded but not synced in previous run of the sync process. This
+    /// methods analyses what must be done and computes range that should be used to compute reported progress.
+    private func computeTotalProgressRange(from syncRanges: SyncRanges) -> CompactBlockRange {
+        guard syncRanges.downloadedButUnscannedRange != nil || syncRanges.downloadAndScanRange != nil else {
+            // In this case we are sure that no downloading or scanning happens so this returned range won't be even used. And it's easier to return
+            // this "fake" range than to handle nil.
+            return 0...0
+        }
+
+        // Thanks to guard above we can be sure that one of these two ranges is not nil.
+        let lowerBound = syncRanges.downloadedButUnscannedRange?.lowerBound ?? syncRanges.downloadAndScanRange?.lowerBound ?? 0
+        let upperBound = syncRanges.downloadAndScanRange?.upperBound ?? syncRanges.downloadedButUnscannedRange?.upperBound ?? 0
+
+        return lowerBound...upperBound
+    }
+
     func notifyProgress(_ progress: CompactBlockProgress) {
         var userInfo: [AnyHashable: Any] = [:]
         userInfo[CompactBlockProcessorNotificationKey.progress] = progress
@@ -712,7 +768,7 @@ public actor CompactBlockProcessor {
 
     func severeFailure(_ error: Error) {
         cancelableTask?.cancel()
-        LoggerProxy.error("show stoppper failure: \(error)")
+        LoggerProxy.error("show stopper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error
@@ -770,7 +826,7 @@ public actor CompactBlockProcessor {
     }
 
     private func nextBatch() async {
-        state = .downloading
+        state = .syncing
         do {
             let nextState = try await NextStateHelper.nextStateAsync(
                 service: self.service,
@@ -867,13 +923,6 @@ public actor CompactBlockProcessor {
         )
     }
 
-    private func removeCacheDB() async throws {
-        storage.closeDBConnection()
-        try FileManager.default.removeItem(at: config.cacheDb)
-        try storage.createTable()
-        LoggerProxy.info("Cache removed")
-    }
-    
     private func setTimer() async {
         let interval = self.config.blockPollInterval
         self.backoffTimer?.invalidate()
@@ -919,25 +968,21 @@ public actor CompactBlockProcessor {
         )
         
         switch newValue {
-        case .downloading:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedDownloading, object: self)
-        case .synced:
-            // transition to this state is handled by `processingFinished(height: BlockHeight)`
-            break
         case .error(let err):
             notifyError(err)
-        case .scanning:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedScanning, object: self)
         case .stopped:
             NotificationSender.default.post(name: Notification.Name.blockProcessorStopped, object: self)
-        case .validating:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedValidating, object: self)
         case .enhancing:
             NotificationSender.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
         case .fetching:
             NotificationSender.default.post(name: Notification.Name.blockProcessorStartedFetching, object: self)
         case .handlingSaplingFiles:
             NotificationSender.default.post(name: Notification.Name.blockProcessorHandlingSaplingFiles, object: self)
+        case .synced:
+            // transition to this state is handled by `processingFinished(height: BlockHeight)`
+            break
+        case .syncing:
+            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedSyncing, object: self)
         }
     }
 
@@ -996,13 +1041,11 @@ extension CompactBlockProcessor.State: Equatable {
     public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
         switch  (lhs, rhs) {
         case
-            (.downloading, .downloading),
-            (.scanning, .scanning),
-            (.validating, .validating),
+            (.syncing, .syncing),
             (.stopped, .stopped),
             (.error, .error),
             (.synced, .synced),
-            (.enhancing, enhancing),
+            (.enhancing, .enhancing),
             (.fetching, .fetching):
             return true
         default:
@@ -1114,7 +1157,7 @@ extension CompactBlockProcessorError: LocalizedError {
         case .maxAttemptsReached(let attempts):
             return "Compact Block failed \(attempts) times and reached the maximum amount of retries it was set up to do"
         case .missingDbPath(let path):
-            return "CompactBlockProcessor was set up with path \(path) but thath location couldn't be reached"
+            return "CompactBlockProcessor was set up with path \(path) but that location couldn't be reached"
         case let .networkMismatch(expected, found):
             // swiftlint:disable:next line_length
             return "A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing to the right server"
@@ -1129,6 +1172,8 @@ extension CompactBlockProcessorError: LocalizedError {
             // swiftlint:disable:next line_length
             return "The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade."
         case .unknown: return "Unknown error occured."
+        case .wipeAttemptWhileProcessing:
+            return "Can't execute wipe while sync process is in progress."
         }
     }
 

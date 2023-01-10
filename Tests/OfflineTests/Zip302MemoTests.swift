@@ -152,7 +152,7 @@ class Zip302MemoTests: XCTestCase {
 
         XCTAssertThrowsError(try Memo(string: nullTrailedString)) { error in
             guard let thrownError = error as? MemoBytes.Errors else {
-                XCTFail("Thrown erros is not MemoBytes.Error")
+                XCTFail("Thrown error is not MemoBytes.Error")
                 return
             }
 
@@ -170,7 +170,7 @@ class Zip302MemoTests: XCTestCase {
 
         XCTAssertThrowsError(try Memo(string: nullTrailedString)) { error in
             guard let thrownError = error as? MemoBytes.Errors else {
-                XCTFail("Thrown erros is not MemoBytes.Error")
+                XCTFail("Thrown error is not MemoBytes.Error")
                 return
             }
 

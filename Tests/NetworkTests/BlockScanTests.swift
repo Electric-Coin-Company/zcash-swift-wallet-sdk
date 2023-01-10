@@ -185,17 +185,23 @@ class BlockScanTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.compactBlockStreamDownload(
-                blockBufferSize: 10,
+            let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
                 startHeight: range.lowerBound,
                 targetHeight: range.upperBound
+            )
+
+            try await compactBlockProcessor.downloadAndStoreBlocks(
+                using: downloadStream,
+                at: range,
+                maxBlockBufferSize: 10,
+                totalProgressRange: range
             )
             XCTAssertFalse(Task.isCancelled)
             
             try await compactBlockProcessor.compactBlockValidation()
             XCTAssertFalse(Task.isCancelled)
             
-            try await compactBlockProcessor.compactBlockBatchScanning(range: range)
+            try await compactBlockProcessor.compactBlockBatchScanning(range: range, totalProgressRange: range)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             if let lwdError = error as? LightWalletServiceError {

@@ -1,8 +1,49 @@
 # Unreleased
+- [#657] Change how blocks are downloaded and scanned. 
+    In previous versions, the SDK first downloaded all the blocks and then it
+scanned all the blocks. This approach requires a lot of disk space. The SDK now 
+behaves differently. It downloads a batch of blocks (100 by default), scans those, and
+removes those blocks from the disk. And repeats this until all the blocks are processed.
+    `SyncStatus` was changed. `.downloading`, `.validating`, and `.scanning` symbols
+were removed. And the `.scanning` symbol was added. The removed phases of the sync 
+process are now reported as one phase. 
+    Notifications were also changed similarly. These notifications were
+removed: `SDKSynchronizerDownloading`, `SDKSyncronizerValidating`, and `SDKSyncronizerScanning`.
+And the `SDKSynchronizerSyncing` notification was added. The added notification replaces
+the removed notifications.
+        
+- [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 
 - [#663] Foundations for the benchmarking/performance testing in the SDK. 
 This change presents 2 building blocks for the future automated tests, consisting
 of a new SDKMetrics interface to control flow of the data in the SDK and 
 new performance (unit) test measuring synchronization of 100 mainnet blocks. 
+
+# 0.17.5-beta
+
+Update checkpoints 
+
+Mainnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1912500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1915000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1917500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1920000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1922500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1925000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1927500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1930000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1932500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1935000.json
+````
+
+Tesnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2150000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2160000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2170000.json
+````
+
 # 0.17.4-beta
 - [#665] Fix testShieldFunds() `get_transparent_balance` error
 updates `libzcashlc` to `0.1.1` to fix an error where getting a 

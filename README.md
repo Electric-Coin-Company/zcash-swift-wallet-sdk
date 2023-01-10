@@ -26,10 +26,6 @@ Add a package with the source "https://github.com/zcash/ZcashLightClientKit.git"
 
 If you want to include a beta version of `ZCashLightClientKit` in an Xcode project e.g `0.14.0-beta` you will need to specify it with the commit sha instead as it does not appear that Xcode supports 'meta data' from semantic version strings for swift packages (at the time of writing).
 
-## Cocoapods Support
-
-Add `pod "ZcashLightClientKit", ~> "0.14.0-beta"` to the target you want to add the kit too.
-
 # Testing
 
 The best way to run tests is to open "Package.swift" in Xcode and use the Test panel and target an iOS device. Tests will build and run for a Mac target but are not currently working as expected.

@@ -235,6 +235,10 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
+
+    func closeDBConnection() {
+        dbProvider.close()
+    }
     
     func create(_ transaction: PendingTransactionEntity) throws -> Int {
         let pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)

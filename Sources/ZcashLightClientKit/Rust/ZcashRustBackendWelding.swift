@@ -283,7 +283,7 @@ protocol ZcashRustBackendWelding {
     /// Validates the if the given string is a valid Sapling Extended Spending Key
     /// - Returns: `true` when the Sapling Extended Spending Key is valid, false in any other case.
     /// - Throws: Error when the key is semantically valid  but it belongs to another network
-    /// - parameter key: String encoded Extendeed Spending Key
+    /// - parameter key: String encoded Extended Spending Key
     /// - parameter networkType: `NetworkType` signaling testnet or mainnet
     static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: NetworkType) -> Bool
 
@@ -308,7 +308,7 @@ protocol ZcashRustBackendWelding {
     /// - Throws: Error when there's another problem not related to validity of the string in question
     static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType)  -> Bool
 
-    /// initialize the blocks table from a given checkpoint (heigh, hash, time, saplingTree and networkType)
+    /// initialize the blocks table from a given checkpoint (height, hash, time, saplingTree and networkType)
     /// - Parameters:
     ///   - dbData: location of the data db
     ///   - height: represents the block height of the given checkpoint
@@ -429,7 +429,7 @@ protocol ZcashRustBackendWelding {
     ///   - value: the value of the UTXO
     ///   - height: the mined height for the UTXO
     ///   - networkType: the network type
-    /// - Returns: true if the operation succeded or false otherwise
+    /// - Returns: true if the operation succeeded or false otherwise
     static func putUnspentTransparentOutput(
         dbData: URL,
         txid: [UInt8],

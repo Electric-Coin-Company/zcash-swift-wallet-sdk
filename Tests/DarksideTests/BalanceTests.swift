@@ -1037,7 +1037,7 @@ class BalanceTests: XCTestCase {
     }
     
     /**
-    erify transactions that expire are reflected accurately in balance
+    Verify transactions that expire are reflected accurately in balance
     This test requires the transaction to expire.
 
     How can we mock or cause this? Would createToAddress and faking a network submission through lightwalletService and syncing 10 more blocks work?

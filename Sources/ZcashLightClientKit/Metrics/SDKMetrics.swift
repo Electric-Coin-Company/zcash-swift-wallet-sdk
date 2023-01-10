@@ -8,7 +8,7 @@
 import Foundation
 
 /// SDK's tool for the measurement of metrics.
-/// The barebone API of the `SDKMetrics` is all about turning it on/off, pushing new reports in and poping RAW data out.
+/// The barebone API of the `SDKMetrics` is all about turning it on/off, pushing new reports in and popping RAW data out.
 /// The processing of data is either left to the user of `SDKMetrics` or anybody can take an advantage of extension APIs
 /// providing useful structs and reports.
 ///

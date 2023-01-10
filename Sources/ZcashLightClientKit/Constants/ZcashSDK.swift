@@ -82,10 +82,10 @@ public enum ZcashSDK {
     @available(*, deprecated, message: "this value is being deprecated in favor of `DefaultDownloadBatch` and `DefaultScanningBatch`")
     public static var DefaultBatchSize = 100
 
-    /// Default batch size for downloading blocks for the compact block processor. This value was changed due to
-    /// full blocks causing block download memory usage significantly and also timeouts on grpc calls.
-    /// this value is subject to change in the future.
-    public static var DefaultDownloadBatch = 10
+    /// Default batch size for downloading blocks for the compact block processor. Be careful with this number. This amount of blocks is held in
+    /// memory at some point of the sync process.
+    /// This values can't be smaller than `DefaultScanningBatch`. Otherwise bad things will happen.
+    public static var DefaultDownloadBatch = 100
 
     /// Default batch size for scanning blocks for the compact block processor
     public static var DefaultScanningBatch = 100
@@ -98,7 +98,7 @@ public enum ZcashSDK {
     public static var defaultRetries: Int = 5
 
     /// The default maximum amount of time to wait during retry backoff intervals. Failed loops will never wait longer than
-    /// this before retyring.
+    /// this before retrying.
     public static var defaultMaxBackOffInterval: TimeInterval = 600
 
     /// Default number of blocks to rewind when a chain reorg is detected. This should be large enough to recover from the

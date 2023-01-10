@@ -10,6 +10,8 @@ import Foundation
 @testable import ZcashLightClientKit
 
 class ZcashConsoleFakeStorage: CompactBlockRepository {
+    func closeDBConnection() { }
+
     func latestHeightAsync() async throws -> BlockHeight {
         latestBlockHeight
     }
@@ -26,8 +28,8 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
         return self.latestBlockHeight
     }
 
-    func latestBlock() throws -> ZcashLightClientKit.ZcashCompactBlock {
-        return ZcashCompactBlock(height: latestBlockHeight, data: Data())
+    func latestBlocks(count: Int) throws -> [ZcashLightClientKit.ZcashCompactBlock] {
+        return (0..<count).map { ZcashCompactBlock(height: latestBlockHeight - $0, data: Data()) }
     }
 
     func rewind(to height: BlockHeight) throws {

@@ -56,9 +56,6 @@ class SyncBlocksViewController: UIViewController {
             .synchronizerStopped,
             .synchronizerDisconnected,
             .synchronizerSyncing,
-            .synchronizerDownloading,
-            .synchronizerValidating,
-            .synchronizerScanning,
             .synchronizerEnhancing,
             .synchronizerFetching,
             .synchronizerFailed
@@ -74,28 +71,6 @@ class SyncBlocksViewController: UIViewController {
                 }
                 .store(in: &notificationCancellables)
         }
-
-        NotificationCenter.default.publisher(for: .blockProcessorStartedDownloading, object: nil)
-            .sink { [weak self] _ in
-                self?.currentMetric = .downloadBlocks
-            }
-            .store(in: &notificationCancellables)
-
-        NotificationCenter.default.publisher(for: .blockProcessorStartedValidating, object: nil)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.accumulateMetrics()
-                self?.summaryLabel.text = "download: \((self?.accumulatedMetrics.debugDescription ?? "No summary"))"
-                self?.accumulatedMetrics = .initial
-                self?.currentMetric = .validateBlocks
-            }
-            .store(in: &notificationCancellables)
-
-        NotificationCenter.default.publisher(for: .blockProcessorStartedScanning, object: nil)
-            .sink { [weak self] _ in
-                self?.currentMetric = .scanBlocks
-            }
-            .store(in: &notificationCancellables)
 
         NotificationCenter.default.publisher(for: .blockProcessorStartedEnhancing, object: nil)
             .receive(on: DispatchQueue.main)
@@ -144,7 +119,7 @@ class SyncBlocksViewController: UIViewController {
         case let not where not == Notification.Name.synchronizerProgressUpdated:
             guard let progress = notification.userInfo?[SDKSynchronizer.NotificationKeys.progress] as? CompactBlockProgress else { return }
             self.progressBar.progress = progress.progress
-            self.progressLabel.text = "\(Int(floor(progress.progress * 100)))%"
+            self.progressLabel.text = "\(floor(progress.progress * 1000) / 10)%"
         default:
             return
         }
@@ -242,7 +217,7 @@ class SyncBlocksViewController: UIViewController {
 
     func buttonText(for state: SyncStatus) -> String {
         switch state {
-        case .downloading, .scanning, .validating:
+        case .syncing:
             return "Pause"
         case .stopped:
             return "Start"
@@ -259,16 +234,12 @@ class SyncBlocksViewController: UIViewController {
 
     func textFor(state: SyncStatus) -> String {
         switch state {
-        case .downloading:
-            return "Downloading ⛓"
+        case .syncing:
+            return "Syncing 🤖"
         case .error:
             return "error 💔"
-        case .scanning:
-            return "Scanning Blocks 🤖"
         case .stopped:
             return "Stopped 🚫"
-        case .validating:
-            return "Validating chain 🕵️‍♀️"
         case .synced:
             return "Synced 😎"
         case .enhancing:
