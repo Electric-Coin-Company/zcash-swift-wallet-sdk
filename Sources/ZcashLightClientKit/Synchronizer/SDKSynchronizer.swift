@@ -554,6 +554,18 @@ public class SDKSynchronizer: Synchronizer {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
     }
 
+    public func getMemos(for transaction: Transaction.Overview) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: transaction)
+    }
+
+    public func getMemos(for receivedTransaction: Transaction.Received) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: receivedTransaction)
+    }
+
+    public func getMemos(for sentTransaction: Transaction.Sent) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: sentTransaction)
+    }
+
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         Task {
             do {

@@ -9,6 +9,11 @@ import Foundation
 import SQLite
 
 class TransactionSQLDAO: TransactionRepository {
+    enum NotesTableStructure {
+        static let transactionID = Expression<Int>("tx")
+        static let memo = Expression<Blob>("memo")
+    }
+
     var dbProvider: ConnectionProvider
     var transactions = Table("transactions")
     private var blockDao: BlockSQLDAO
@@ -16,6 +21,8 @@ class TransactionSQLDAO: TransactionRepository {
     fileprivate let transactionsView = View("v_transactions")
     fileprivate let receivedTransactionsView = View("v_tx_received")
     fileprivate let sentTransactionsView = View("v_tx_sent")
+    fileprivate let receivedNotesTable = Table("received_notes")
+    fileprivate let sentNotesTable = Table("sent_notes")
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
@@ -141,6 +148,34 @@ extension TransactionSQLDAO {
             .filter(Transaction.Sent.Column.rawID == Blob(bytes: rawID.bytes)).limit(1)
 
         return try execute(query) { try Transaction.Sent(row: $0) }
+    }
+
+    func findMemos(for transaction: Transaction.Overview) throws -> [Memo] {
+        return try findMemos(for: transaction.id, table: receivedNotesTable)
+    }
+
+    func findMemos(for receivedTransaction: Transaction.Received) throws -> [Memo] {
+        return try findMemos(for: receivedTransaction.id, table: receivedNotesTable)
+    }
+
+    func findMemos(for sentTransaction: Transaction.Sent) throws -> [Memo] {
+        return try findMemos(for: sentTransaction.id, table: sentNotesTable)
+    }
+
+    private func findMemos(for transactionID: Int, table: Table) throws -> [Memo] {
+        let query = table
+            .filter(NotesTableStructure.transactionID == transactionID)
+        
+        let memos = try dbProvider.connection().prepare(query).compactMap { row in
+            do {
+                let rawMemo = try row.get(NotesTableStructure.memo)
+                return try Memo(bytes: rawMemo.bytes)
+            } catch {
+                return nil
+            }
+        }
+
+        return memos
     }
 
     private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> Entity {

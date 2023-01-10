@@ -72,7 +72,18 @@ class PaginatedTransactionsViewController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? TransactionDetailViewController, let row = selectedRow {
-            destination.model = TransactionDetailModel(transaction: transactions[row])
+
+            let transaction = transactions[row]
+
+            let memos: [Memo]
+            do {
+                memos = try AppDelegate.shared.sharedSynchronizer.getMemos(for: transaction)
+            } catch {
+                loggerProxy.warn("Can't load memos \(error)")
+                memos = []
+            }
+
+            destination.model = TransactionDetailModel(transaction: transaction, memos: memos)
             selectedRow = nil
         }
     }

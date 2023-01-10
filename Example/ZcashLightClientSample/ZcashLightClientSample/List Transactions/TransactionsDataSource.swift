@@ -32,30 +32,41 @@ class TransactionsDataSource: NSObject {
         self.synchronizer = synchronizer
     }
 
-    func load() {
+    func load() throws {
         switch status {
         case .pending:
-            transactions = synchronizer.pendingTransactions.map {
-                TransactionDetailModel(pendingTransaction: $0)
+            transactions = try synchronizer.pendingTransactions.map { pendingTransaction in
+                let defaultFee: Zatoshi = kZcashNetwork.constants.defaultFee(for: pendingTransaction.minedHeight)
+                let transaction = pendingTransaction.makeTransactionEntity(defaultFee: defaultFee)
+                let memos = try synchronizer.getMemos(for: transaction)
+                return TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos)
             }
         case .cleared:
-            transactions = synchronizer.clearedTransactions.map {
-                TransactionDetailModel(transaction: $0)
+            transactions = try synchronizer.clearedTransactions.map { transaction in
+                let memos = try synchronizer.getMemos(for: transaction)
+                return TransactionDetailModel(transaction: transaction, memos: memos)
             }
         case .received:
-            transactions = synchronizer.receivedTransactions.map {
-                TransactionDetailModel(receivedTransaction: $0)
+            transactions = try synchronizer.receivedTransactions.map { transaction in
+                let memos = try synchronizer.getMemos(for: transaction)
+                return TransactionDetailModel(receivedTransaction: transaction, memos: memos)
             }
         case .sent:
-            transactions = synchronizer.sentTransactions.map {
-                TransactionDetailModel(sendTransaction: $0)
+            transactions = try synchronizer.sentTransactions.map { transaction in
+                let memos = try synchronizer.getMemos(for: transaction)
+                return TransactionDetailModel(sendTransaction: transaction, memos: memos)
             }
         case .all:
-            transactions = synchronizer.pendingTransactions.map { pendingTransaction in
+            transactions = try synchronizer.pendingTransactions.map { pendingTransaction in
                 let defaultFee: Zatoshi = kZcashNetwork.constants.defaultFee(for: pendingTransaction.minedHeight)
-                return TransactionDetailModel(transaction: pendingTransaction.makeTransactionEntity(defaultFee: defaultFee))
+                let transaction = pendingTransaction.makeTransactionEntity(defaultFee: defaultFee)
+                let memos = try synchronizer.getMemos(for: transaction)
+                return TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos)
             }
-            transactions += synchronizer.clearedTransactions.map { TransactionDetailModel(transaction: $0) }
+            transactions += try synchronizer.clearedTransactions.map { transaction in
+                let memos = try synchronizer.getMemos(for: transaction)
+                return TransactionDetailModel(transaction: transaction, memos: memos)
+            }
         }
     }
 }

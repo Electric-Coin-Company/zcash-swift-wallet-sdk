@@ -19,44 +19,40 @@ final class TransactionDetailModel {
     
     init() {}
 
-    init(sendTransaction transaction: Transaction.Sent) {
+    init(sendTransaction transaction: Transaction.Sent, memos: [Memo]) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
         self.created = Date(timeIntervalSince1970: transaction.blocktime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
-        // TODO [#683]: Add API to SDK to fetch memos.
-//        if let memoData = confirmedTransaction.memo, let memoString = String(bytes: memoData, encoding: .utf8) {
-//            self.memo = memoString
-//        }
+        self.memo = memos.first?.toString()
     }
 
-    init(receivedTransaction transaction: Transaction.Received) {
+    init(receivedTransaction transaction: Transaction.Received, memos: [Memo]) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
         self.created = Date(timeIntervalSince1970: transaction.blocktime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
-        // TODO [#683]: Add API to SDK to fetch memos.
-//        if let memoData = confirmedTransaction.memo, let memoString = String(bytes: memoData, encoding: .utf8) {
-//            self.memo = memoString
-//        }
+        self.memo = memos.first?.toString()
     }
     
-    init(pendingTransaction: PendingTransactionEntity) {
+    init(pendingTransaction: PendingTransactionEntity, memos: [Memo]) {
         self.id = pendingTransaction.rawTransactionId?.toHexStringTxId()
         self.minedHeight = pendingTransaction.minedHeight.description
         self.expiryHeight = pendingTransaction.expiryHeight.description
         self.created = Date(timeIntervalSince1970: pendingTransaction.createTime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: pendingTransaction.value.amount))
+        self.memo = memos.first?.toString()
     }
     
-    init(transaction: Transaction.Overview) {
+    init(transaction: Transaction.Overview, memos: [Memo]) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
         self.created = transaction.blocktime.description
         self.zatoshi = "not available in this entity"
+        self.memo = memos.first?.toString()
     }
 }
 

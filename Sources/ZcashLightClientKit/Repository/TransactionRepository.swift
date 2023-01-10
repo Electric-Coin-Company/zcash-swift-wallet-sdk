@@ -19,9 +19,6 @@ protocol TransactionRepository {
     func blockForHeight(_ height: BlockHeight) throws -> Block?
     func lastScannedHeight() throws -> BlockHeight
     func isInitialized() throws -> Bool
-
-    // MARK: - Transaction methods
-
     func find(id: Int) throws -> Transaction.Overview
     func find(rawID: Data) throws -> Transaction.Overview
     func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
@@ -31,4 +28,7 @@ protocol TransactionRepository {
     func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent]
     func findSent(in range: BlockRange, limit: Int) throws -> [Transaction.Sent]
     func findSent(rawID: Data) throws -> Transaction.Sent
+    func findMemos(for transaction: Transaction.Overview) throws -> [Memo]
+    func findMemos(for receivedTransaction: Transaction.Received) throws -> [Memo]
+    func findMemos(for sentTransaction: Transaction.Sent) throws -> [Memo]
 }
