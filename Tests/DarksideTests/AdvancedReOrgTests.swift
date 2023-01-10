@@ -160,7 +160,7 @@ class AdvancedReOrgTests: XCTestCase {
             return
         }
         sleep(5)
-        guard let receivedTx = syncedSynchronizer.receivedTransactions.first, receivedTx.minedHeight == receivedTxHeight else {
+        guard let receivedTx = syncedSynchronizer.receivedTransactions.first(where: { $0.minedHeight == receivedTxHeight }) else {
             XCTFail("did not receive transaction")
             return
         }
@@ -265,7 +265,7 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [finalsyncExpectation], timeout: 5)
         sleep(3)
         
-        guard let reorgedTx = coordinator.synchronizer.receivedTransactions.first else {
+        guard let reorgedTx = coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == reorgedTxheight }) else {
             XCTFail("no transactions found")
             return
         }

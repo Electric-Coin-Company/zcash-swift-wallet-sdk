@@ -85,7 +85,7 @@ public enum CompactBlockProgress {
     }
     
     public var blockDate: Date? {
-        if case .enhance(let enhancementProgress) = self, let time = enhancementProgress.lastFoundTransaction?.blocktime {
+        if case .enhance(let enhancementProgress) = self, let time = enhancementProgress.lastFoundTransaction?.blockTime {
             return Date(timeIntervalSince1970: time)
         }
         
