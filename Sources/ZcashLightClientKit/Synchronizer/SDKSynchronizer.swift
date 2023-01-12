@@ -96,7 +96,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     public private(set) var progress: Float = 0.0
-    public private(set) var blockProcessor: CompactBlockProcessor
+    let blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
     public private(set) var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState

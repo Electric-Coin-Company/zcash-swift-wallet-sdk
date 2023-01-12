@@ -9,6 +9,7 @@
 import Foundation
 import ZcashLightClientKit
 import MnemonicSwift
+
 // swiftlint:disable line_length force_try
 enum DemoAppConfig {
     static var host = ZcashSDK.isMainnet ? "lightwalletd.electriccoin.co" : "lightwalletd.testnet.electriccoin.co"
@@ -20,17 +21,6 @@ enum DemoAppConfig {
     static var address: String {
         "\(host):\(port)"
     }
-    
-    static var processorConfig: CompactBlockProcessor.Configuration  = {
-        CompactBlockProcessor.Configuration(
-            cacheDb: try! cacheDbURLHelper(),
-            dataDb: try! dataDbURLHelper(),
-            spendParamsURL: try! spendParamsURLHelper(),
-            outputParamsURL: try! outputParamsURLHelper(),
-            walletBirthday: Self.birthdayHeight,
-            network: kZcashNetwork
-        )
-    }()
     
     static var endpoint: LightWalletEndpoint {
         return LightWalletEndpoint(address: self.host, port: self.port, secure: true, streamingCallTimeoutInMillis: 10 * 60 * 60 * 1000)
