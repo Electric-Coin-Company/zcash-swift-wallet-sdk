@@ -37,6 +37,35 @@ class TransactionRepositoryTests: XCTestCase {
         XCTAssertNotNil(count)
         XCTAssertEqual(count, 0)
     }
+
+    func testBlockForHeight() {
+        var block: Block!
+        XCTAssertNoThrow(try { block = try self.transactionRepository.blockForHeight(663150) }())
+        XCTAssertEqual(block.height, 663150)
+    }
+
+    func testLastScannedHeight() {
+        var height: BlockHeight!
+        XCTAssertNoThrow(try { height = try self.transactionRepository.lastScannedHeight() }())
+        XCTAssertEqual(height, 665000)
+    }
+
+    func testFindInRange() {
+        var transactions: [Transaction.Overview]!
+        XCTAssertNoThrow(
+            try {
+                transactions = try self.transactionRepository.find(in: BlockRange(startHeight: 663218, endHeight: 663974), limit: 3, kind: .received)
+            }()
+        )
+
+        XCTAssertEqual(transactions.count, 3)
+        XCTAssertEqual(transactions[0].minedHeight, 663218)
+        XCTAssertEqual(transactions[0].isSentTransaction, false)
+        XCTAssertEqual(transactions[1].minedHeight, 663229)
+        XCTAssertEqual(transactions[1].isSentTransaction, false)
+        XCTAssertEqual(transactions[2].minedHeight, 663953)
+        XCTAssertEqual(transactions[2].isSentTransaction, false)
+    }
     
     func testFindById() {
         var transaction: Transaction.Overview!
@@ -52,9 +81,7 @@ class TransactionRepositoryTests: XCTestCase {
 
         let id = Data(fromHexEncodedString: "01af48bcc4e9667849a073b8b5c539a0fc19de71aac775377929dc6567a36eff")!
         
-        XCTAssertNoThrow(
-            try { transaction = try self.transactionRepository.find(rawID: id) }()
-        )
+        XCTAssertNoThrow(try { transaction = try self.transactionRepository.find(rawID: id) }())
 
         XCTAssertEqual(transaction.id, 8)
         XCTAssertEqual(transaction.minedHeight, 663922)
@@ -80,6 +107,95 @@ class TransactionRepositoryTests: XCTestCase {
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: Int.max, kind: .all) }())
         XCTAssertEqual(transactions.count, 21)
     }
+
+    func testFindReceivedOffsetLimit() {
+        var transactions: [Transaction.Received] = []
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findReceived(offset: 2, limit: 3) }())
+
+        XCTAssertEqual(transactions.count, 3)
+        XCTAssertEqual(transactions[0].minedHeight, 663202)
+        XCTAssertEqual(transactions[1].minedHeight, 663218)
+        XCTAssertEqual(transactions[2].minedHeight, 663229)
+    }
+
+    func testFindSentOffsetLimit() {
+        var transactions: [Transaction.Sent] = []
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findSent(offset: 2, limit: 3) }())
+
+        XCTAssertEqual(transactions.count, 3)
+        XCTAssertEqual(transactions[0].minedHeight, 663922)
+        XCTAssertEqual(transactions[1].minedHeight, 663938)
+        XCTAssertEqual(transactions[2].minedHeight, 663942)
+    }
+
+    func testFindMemoForTransaction() {
+        let transaction = Transaction.Overview(
+            blockTime: nil,
+            expiryHeight: nil,
+            fee: nil,
+            id: 9,
+            index: nil,
+            isWalletInternal: false,
+            hasChange: false,
+            memoCount: 0,
+            minedHeight: nil,
+            raw: nil,
+            rawID: Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 0,
+            value: Zatoshi.zero
+        )
+
+        var memos: [Memo]!
+        XCTAssertNoThrow(try { memos = try self.transactionRepository.findMemos(for: transaction) }())
+
+        XCTAssertEqual(memos.count, 1)
+        XCTAssertEqual(memos[0].toString(), "Some funds")
+    }
+
+    func testFindMemoForReceivedTransaction() {
+        let transaction = Transaction.Received(
+            blockTime: 1,
+            expiryHeight: nil,
+            fromAccount: 0,
+            id: 9,
+            index: 0,
+            memoCount: 0,
+            minedHeight: 0,
+            noteCount: 0,
+            raw: nil,
+            rawID: nil,
+            value: Zatoshi.zero
+        )
+
+        var memos: [Memo]!
+        XCTAssertNoThrow(try { memos = try self.transactionRepository.findMemos(for: transaction) }())
+
+        XCTAssertEqual(memos.count, 1)
+        XCTAssertEqual(memos[0].toString(), "Some funds")
+    }
+
+    func testFindMemoForSentTransaction() {
+        let transaction = Transaction.Sent(
+            blockTime: 1,
+            expiryHeight: nil,
+            fromAccount: 0,
+            id: 9,
+            index: 0,
+            memoCount: 0,
+            minedHeight: 0,
+            noteCount: 0,
+            raw: nil,
+            rawID: nil,
+            value: Zatoshi.zero
+        )
+
+        var memos: [Memo]!
+        XCTAssertNoThrow(try { memos = try self.transactionRepository.findMemos(for: transaction) }())
+
+        XCTAssertEqual(memos.count, 1)
+        XCTAssertEqual(memos[0].toString(), "Some funds")
+    }
     
     func testFindAllPerformance() {
         // This is an example of a performance test case.
@@ -103,8 +219,18 @@ class TransactionRepositoryTests: XCTestCase {
         XCTAssertEqual(transactionsFrom.count, 8)
 
         transactionsFrom.forEach { preceededTransaction in
-            XCTAssertLessThan(preceededTransaction.index, transaction.index)
-            XCTAssertLessThan(preceededTransaction.blocktime, transaction.blocktime)
+            guard let preceededTransactionIndex = preceededTransaction.index, let transactionIndex = transaction.index else {
+                XCTFail("Transactions are missing indexes.")
+                return
+            }
+
+            guard let preceededTransactionBlockTime = preceededTransaction.blockTime, let transactionBlockTime = transaction.blockTime else {
+                XCTFail("Transactions are missing block time.")
+                return
+            }
+
+            XCTAssertLessThan(preceededTransactionIndex, transactionIndex)
+            XCTAssertLessThan(preceededTransactionBlockTime, transactionBlockTime)
         }
     }
 }

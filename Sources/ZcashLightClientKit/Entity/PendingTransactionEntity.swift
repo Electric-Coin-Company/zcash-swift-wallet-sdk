@@ -198,16 +198,16 @@ public extension PendingTransactionEntity {
 public extension PendingTransactionEntity {
     func makeTransactionEntity(defaultFee: Zatoshi) -> Transaction.Overview {
         return Transaction.Overview(
-            blocktime: createTime,
+            blockTime: createTime,
             expiryHeight: expiryHeight,
-            fee: fee ?? defaultFee,
-            id: id ?? -1,
-            index: -1,
+            fee: fee,
+            id: id,
+            index: nil,
             isWalletInternal: false,
             hasChange: false,
             memoCount: 0,
             minedHeight: minedHeight,
-            raw: raw ?? Data(),
+            raw: raw,
             rawID: rawTransactionId ?? Data(),
             receivedNoteCount: 0,
             sentNoteCount: 0,

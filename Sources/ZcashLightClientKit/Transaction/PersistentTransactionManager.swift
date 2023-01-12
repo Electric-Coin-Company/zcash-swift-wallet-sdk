@@ -17,7 +17,6 @@ enum TransactionManagerError: Error {
     case submitFailed(PendingTransactionEntity, errorCode: Int)
     case shieldingEncodingFailed(PendingTransactionEntity, reason: String)
     case cannotEncodeInternalTx(PendingTransactionEntity)
-    case transactionNotMined(PendingTransactionEntity, Transaction.Overview)
 }
 
 class PersistentTransactionManager: OutboundTransactionManager {
@@ -76,17 +75,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
-
-            guard let minedHeight = transaction.minedHeight, let expiryHeight = transaction.expiryHeight else {
-                throw TransactionManagerError.transactionNotMined(pendingTransaction, transaction)
-            }
-
+            
             var pending = pendingTransaction
             pending.encodeAttempts += 1
             pending.raw = transaction.raw
             pending.rawTransactionId = transaction.rawID
-            pending.expiryHeight = expiryHeight
-            pending.minedHeight = minedHeight
+            pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
+            pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
             
             try self.repository.update(pending)
             
@@ -123,16 +118,12 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 from: pendingTransaction.accountIndex
             )
 
-            guard let minedHeight = transaction.minedHeight, let expiryHeight = transaction.expiryHeight else {
-                throw TransactionManagerError.transactionNotMined(pendingTransaction, transaction)
-            }
-
             var pending = pendingTransaction
             pending.encodeAttempts += 1
             pending.raw = transaction.raw
             pending.rawTransactionId = transaction.rawID
-            pending.expiryHeight = expiryHeight
-            pending.minedHeight = minedHeight
+            pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
+            pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
             
             try self.repository.update(pending)
             

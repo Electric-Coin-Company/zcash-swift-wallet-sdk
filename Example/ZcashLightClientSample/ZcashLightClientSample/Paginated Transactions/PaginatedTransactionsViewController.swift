@@ -99,7 +99,7 @@ extension PaginatedTransactionsViewController: PaginatedTableViewDataSource {
         
         let transaction = transactions[indexPath.row]
         cell.detailTextLabel?.text = transaction.rawID.toHexStringTxId()
-        cell.textLabel?.text = transaction.blocktime.description
+        cell.textLabel?.text = transaction.blockTime?.description
         
         return cell
     }

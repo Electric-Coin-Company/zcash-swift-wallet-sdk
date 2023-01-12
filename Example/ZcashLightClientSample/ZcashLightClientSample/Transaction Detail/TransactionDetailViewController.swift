@@ -20,19 +20,19 @@ final class TransactionDetailModel {
     init() {}
 
     init(sendTransaction transaction: Transaction.Sent, memos: [Memo]) {
-        self.id = transaction.rawID.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight?.description
+        self.id = transaction.rawID?.toHexStringTxId()
+        self.minedHeight = transaction.minedHeight.description
         self.expiryHeight = transaction.expiryHeight?.description
-        self.created = Date(timeIntervalSince1970: transaction.blocktime).description
+        self.created = Date(timeIntervalSince1970: transaction.blockTime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
         self.memo = memos.first?.toString()
     }
 
     init(receivedTransaction transaction: Transaction.Received, memos: [Memo]) {
-        self.id = transaction.rawID.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight?.description
+        self.id = transaction.rawID?.toHexStringTxId()
+        self.minedHeight = transaction.minedHeight.description
         self.expiryHeight = transaction.expiryHeight?.description
-        self.created = Date(timeIntervalSince1970: transaction.blocktime).description
+        self.created = Date(timeIntervalSince1970: transaction.blockTime).description
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
         self.memo = memos.first?.toString()
     }
@@ -50,7 +50,7 @@ final class TransactionDetailModel {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
-        self.created = transaction.blocktime.description
+        self.created = transaction.blockTime?.description
         self.zatoshi = "not available in this entity"
         self.memo = memos.first?.toString()
     }

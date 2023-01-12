@@ -8,6 +8,10 @@
 import Foundation
 @testable import ZcashLightClientKit
 
+enum MockTransactionRepositoryError: Error {
+    case notImplemented
+}
+
 class MockTransactionRepository {
     enum Kind {
         case sent
@@ -21,9 +25,9 @@ class MockTransactionRepository {
     var reference: [Kind] = []
     var network: ZcashNetwork
 
-    var transactionsNG: [Transaction.Overview] = []
-    var receivedTransactionsNG: [Transaction.Received] = []
-    var sentTransactionsNG: [Transaction.Sent] = []
+    var transactions: [Transaction.Overview] = []
+    var receivedTransactions: [Transaction.Received] = []
+    var sentTransactions: [Transaction.Sent] = []
 
     var allCount: Int {
         receivedCount + sentCount
@@ -84,11 +88,11 @@ extension MockTransactionRepository: TransactionRepository {
     }
 
     func findBy(id: Int) throws -> Transaction.Overview? {
-        transactionsNG.first(where: { $0.id == id })
+        transactions.first(where: { $0.id == id })
     }
 
     func findBy(rawId: Data) throws -> Transaction.Overview? {
-        transactionsNG.first(where: { $0.rawID == rawId })
+        transactions.first(where: { $0.rawID == rawId })
     }
 
     func lastScannedHeight() throws -> BlockHeight {
@@ -98,20 +102,14 @@ extension MockTransactionRepository: TransactionRepository {
     func isInitialized() throws -> Bool {
         true
     }
-}
 
-enum MockTransactionRepositoryError: Error {
-    case notImplemented
-}
-
-extension MockTransactionRepository {
-    func generateNG() {
+    func generate() {
         var txArray: [Transaction.Overview] = []
         reference = referenceArray()
         for index in 0 ..< reference.count {
             txArray.append(mockTx(index: index, kind: reference[index]))
         }
-        transactionsNG = txArray
+        transactions = txArray
     }
 
     func mockTx(index: Int, kind: Kind) -> Transaction.Overview {
@@ -125,7 +123,7 @@ extension MockTransactionRepository {
 
     func mockSent(_ index: Int) -> Transaction.Overview {
         return Transaction.Overview(
-            blocktime: randomTimeInterval(),
+            blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
             id: index,
@@ -144,7 +142,7 @@ extension MockTransactionRepository {
 
     func mockReceived(_ index: Int) -> Transaction.Overview {
         return Transaction.Overview(
-            blocktime: randomTimeInterval(),
+            blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
             id: index,
@@ -168,7 +166,7 @@ extension MockTransactionRepository {
     }
 
     func find(id: Int) throws -> Transaction.Overview {
-        guard let transaction = transactionsNG.first(where: { $0.id == id }) else {
+        guard let transaction = transactions.first(where: { $0.id == id }) else {
             throw TransactionRepositoryError.notFound
         }
 
@@ -176,7 +174,7 @@ extension MockTransactionRepository {
     }
 
     func find(rawID: Data) throws -> Transaction.Overview {
-        guard let transaction = transactionsNG.first(where: { $0.rawID == rawID }) else {
+        guard let transaction = transactions.first(where: { $0.rawID == rawID }) else {
             throw TransactionRepositoryError.notFound
         }
 
@@ -200,14 +198,6 @@ extension MockTransactionRepository {
     }
 
     func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent] {
-        throw MockTransactionRepositoryError.notImplemented
-    }
-
-    func findSent(in range: BlockRange, limit: Int) throws -> [Transaction.Sent] {
-        throw MockTransactionRepositoryError.notImplemented
-    }
-
-    func findSent(rawID: Data) throws -> Transaction.Sent {
         throw MockTransactionRepositoryError.notImplemented
     }
 

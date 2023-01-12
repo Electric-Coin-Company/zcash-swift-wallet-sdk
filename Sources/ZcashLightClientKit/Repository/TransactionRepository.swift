@@ -10,6 +10,7 @@ import Foundation
 enum TransactionRepositoryError: Error {
     case malformedTransaction
     case notFound
+    case transactionMissingRequiredFields
 }
 
 protocol TransactionRepository {
@@ -26,8 +27,6 @@ protocol TransactionRepository {
     func find(from: Transaction.Overview, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
     func findReceived(offset: Int, limit: Int) throws -> [Transaction.Received]
     func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent]
-    func findSent(in range: BlockRange, limit: Int) throws -> [Transaction.Sent]
-    func findSent(rawID: Data) throws -> Transaction.Sent
     func findMemos(for transaction: Transaction.Overview) throws -> [Memo]
     func findMemos(for receivedTransaction: Transaction.Received) throws -> [Memo]
     func findMemos(for sentTransaction: Transaction.Sent) throws -> [Memo]
