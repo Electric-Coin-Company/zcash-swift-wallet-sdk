@@ -55,9 +55,7 @@ extension LightWalletServiceMockResponse {
 }
 
 class MockRustBackend: ZcashRustBackendWelding {
-    static func initAccountsTable(dbData: URL, ufvks: [ZcashLightClientKit.UnifiedFullViewingKey], networkType: ZcashLightClientKit.NetworkType) throws {
-        
-    }
+    static func initAccountsTable(dbData: URL, ufvks: [ZcashLightClientKit.UnifiedFullViewingKey], networkType: ZcashLightClientKit.NetworkType) throws { }
 
     static func createToAddress(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, to address: String, value: Int64, memo: ZcashLightClientKit.MemoBytes?, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
         -1
@@ -75,13 +73,9 @@ class MockRustBackend: ZcashRustBackendWelding {
         0
     }
 
-    static func getTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> Int64 {
-         0
-    }
+    static func getTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> Int64 { 0 }
 
-    static func getVerifiedTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> Int64 {
-        0
-    }
+    static func getVerifiedTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> Int64 { 0 }
 
     static func listTransparentReceivers(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> [ZcashLightClientKit.TransparentAddress] {
         []
@@ -123,13 +117,9 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func getReceivedMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) -> ZcashLightClientKit.Memo? {
-        nil
-    }
+    static func getReceivedMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) -> ZcashLightClientKit.Memo? { nil }
 
-    static func getSentMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) -> ZcashLightClientKit.Memo? {
-        nil
-    }
+    static func getSentMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) -> ZcashLightClientKit.Memo? { nil }
 
     static func createToAddress(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, to address: String, value: Int64, memo: ZcashLightClientKit.MemoBytes, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
         -1
@@ -143,9 +133,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw RustWeldingError.unableToDeriveKeys
     }
 
-    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: ZcashLightClientKit.NetworkType) -> Bool {
-        false
-    }
+    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: ZcashLightClientKit.NetworkType) -> Bool { false }
 
     static func deriveSaplingExtendedFullViewingKeys(seed: [UInt8], accounts: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> [ZcashLightClientKit.SaplingExtendedFullViewingKey]? {
         nil
@@ -159,22 +147,13 @@ class MockRustBackend: ZcashRustBackendWelding {
         nil
     }
 
-
-    public func deriveViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] {
-        []
-    }
+    public func deriveViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] { [] }
     
-    static func getNearestRewindHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Int32 {
-        -1
-    }
+    static func getNearestRewindHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Int32 { -1 }
     
-    static func network(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 {
-        -1
-    }
+    static func network(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 { -1 }
     
-    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool {
-        false
-    }
+    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool { false }
     
     static func putUnspentTransparentOutput(
         dbData: URL,
@@ -214,17 +193,11 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
     
-    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) -> Bool {
-        false
-    }
+    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) -> Bool { false }
     
-    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool {
-        false
-    }
+    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool { false }
 
-    static func deriveSaplingExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [SaplingExtendedSpendingKey]? {
-        nil
-    }
+    static func deriveSaplingExtendedSpendingKeys(seed: [UInt8], accounts: Int32, networkType: NetworkType) throws -> [SaplingExtendedSpendingKey]? { nil }
 
     static func consensusBranchIdFor(height: Int32, networkType: NetworkType) throws -> Int32 {
         guard let consensus = consensusBranchID else {

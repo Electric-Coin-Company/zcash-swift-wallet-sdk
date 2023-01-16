@@ -64,7 +64,6 @@ class ZcashMainnet: ZcashNetwork {
 Constants of ZcashLightClientKit. this constants don't
 */
 public enum ZcashSDK {
-
     /// The number of zatoshi that equal 1 ZEC.
     public static var zatoshiPerZEC: BlockHeight = 100_000_000
 
@@ -75,7 +74,7 @@ public enum ZcashSDK {
     /// by the rust backend but it is helpful to know what it is set to and should be kept in sync.
     public static var expiryOffset = 20
 
-    // mark: Defaults
+    // MARK: Defaults
 
     /// Default size of batches of blocks to request from the compact block service. Which was used both for scanning and downloading.
     /// consider basing your code assumptions on `DefaultDownloadBatch` and `DefaultScanningBatch` instead.

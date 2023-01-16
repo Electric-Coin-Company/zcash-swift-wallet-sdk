@@ -20,6 +20,7 @@ struct EnclosingStruct {
     var someStructure: SomeStructure
 }
 
+// swiftlint:disable print_function_usage
 final class UndescribableTests: XCTestCase {
     func testDescriptionIsRedacted() throws {
         let info = "important info"
@@ -52,10 +53,10 @@ final class UndescribableTests: XCTestCase {
     func testMirroringIsRedacted() {
         let info = "important info"
         let someStructure = SomeStructure(info: info)
-        var s = ""
-        debugPrint(someStructure, to: &s)
-        XCTAssertFalse(s.contains(info))
-        XCTAssertEqual(s, "--redacted--\n")
+        var str = ""
+        debugPrint(someStructure, to: &str)
+        XCTAssertFalse(str.contains(info))
+        XCTAssertEqual(str, "--redacted--\n")
     }
 
     func testLocalizedErrorIsRedacted() {
@@ -86,11 +87,12 @@ final class UndescribableTests: XCTestCase {
     }
 
     func testSpendingKeyCantBeDescribed() {
+        // swiftlint:disable:next line_length
         let key = SaplingExtendedFullViewingKey(validatedEncoding: "zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htfavqk72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqgegsaj")
 
-        var s = ""
-        debugPrint(key, to: &s)
+        var str = ""
+        debugPrint(key, to: &str)
         
-        XCTAssertEqual(s, "--redacted--\n")
+        XCTAssertEqual(str, "--redacted--\n")
     }
 }

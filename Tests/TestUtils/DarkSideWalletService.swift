@@ -119,7 +119,7 @@ class DarksideWalletService: LightWalletService {
         metaState.saplingActivation = Int32(saplingActivation)
         metaState.branchID = branchID
         metaState.chainName = chainName
-        // TODO: complete meta state correctly
+        // TODO: [#718] complete meta state correctly, https://github.com/zcash/ZcashLightClientKit/issues/718
         _ = try darksideService.reset(metaState).response.wait()
     }
 
@@ -206,4 +206,3 @@ class DarksideWalletDNetwork: ZcashNetwork {
     var constants: NetworkConstants.Type = DarksideWalletDConstants.self
     var networkType = NetworkType.mainnet
 }
-

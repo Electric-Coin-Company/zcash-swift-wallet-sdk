@@ -9,12 +9,14 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_unwrapping implicitly_unwrapped_optional
+// swiftlint:disable force_unwrapping implicitly_unwrapped_optional force_try
 class Z2TReceiveTests: XCTestCase {
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" // TODO: Parameterize this from environment?
+    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
     
-    let testRecipientAddress = "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz" // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
+    let testRecipientAddress = "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
     
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
@@ -85,7 +87,7 @@ class Z2TReceiveTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     preTxExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -101,7 +103,7 @@ class Z2TReceiveTests: XCTestCase {
         4. create transaction
         */
         do {
-            let _ = try await coordinator.synchronizer.sendToAddress(
+            _ = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: coordinator.spendingKeys!.first!,
                 zatoshi: sendAmount,
                 toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
@@ -114,6 +116,7 @@ class Z2TReceiveTests: XCTestCase {
             if case let SynchronizerError.generalError(message) = error {
                 XCTAssertEqual(message, "Memos can't be sent to transparent addresses.")
             } else {
+                // swiftlint:disable:next line_length
                 XCTFail("expected SynchronizerError.genericError(\"Memos can't be sent to transparent addresses.\") but received \(error.localizedDescription)")
             }
             return
@@ -138,7 +141,7 @@ class Z2TReceiveTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     preTxExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)

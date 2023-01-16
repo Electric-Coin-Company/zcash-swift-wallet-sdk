@@ -89,13 +89,10 @@ class NullBytesTests: XCTestCase {
         }
     }
     
+    // TODO: [#716] fix, https://github.com/zcash/ZcashLightClientKit/issues/716
     func testderiveExtendedFullViewingKeyWithNullBytes() throws {
-
-        // TODO: fix
-//        // swiftlint:disable:next line_length
 //        let wrongSpendingKeys = SaplingExtendedSpendingKey(validatedEncoding: "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mq\0uy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv") // this spending key corresponds to the "demo app reference seed"
 //
-//        // swiftlint:disable:next line_length
 //        let goodSpendingKeys = SaplingExtendedSpendingKey(validatedEncoding: "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv")
 //
 //        XCTAssertThrowsError(
@@ -136,7 +133,7 @@ class NullBytesTests: XCTestCase {
 
         let nonNullTrailedString = "This Is a memo with text and trailing null bytes"
 
-        let trimmedString = String(nullTrailedString.reversed().drop(while: { $0 == "\u{0}"}).reversed())
+        let trimmedString = String(nullTrailedString.reversed().drop(while: { $0 == "\u{0}" }).reversed())
 
         XCTAssertEqual(trimmedString, nonNullTrailedString)
     }

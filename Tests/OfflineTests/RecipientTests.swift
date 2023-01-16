@@ -8,6 +8,7 @@
 import XCTest
 @testable import ZcashLightClientKit
 final class RecipientTests: XCTestCase {
+    // swiftlint:disable:next line_length
     let uaString = "u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj"
 
     let saplingString = "zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0"
@@ -41,6 +42,5 @@ final class RecipientTests: XCTestCase {
 
         XCTAssertEqual(recipient?.0, .sapling(SaplingAddress(validatedEncoding: address)))
         XCTAssertEqual(recipient?.1, .mainnet)
-
     }
 }

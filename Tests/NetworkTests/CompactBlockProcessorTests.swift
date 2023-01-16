@@ -168,7 +168,7 @@ class CompactBlockProcessorTests: XCTestCase {
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
             downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight+1...latestBlockchainHeight,
+            downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
         )
@@ -196,7 +196,7 @@ class CompactBlockProcessorTests: XCTestCase {
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
             downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight+1...latestBlockchainHeight,
+            downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
         )

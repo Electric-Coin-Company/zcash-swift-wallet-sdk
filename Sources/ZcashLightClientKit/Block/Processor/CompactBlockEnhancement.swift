@@ -40,7 +40,12 @@ extension CompactBlockProcessor {
             throw error
         }
         
-        guard rustBackend.decryptAndStoreTransaction(dbData: config.dataDb, txBytes: rawBytes, minedHeight: Int32(minedHeight), networkType: config.network.networkType) else {
+        guard rustBackend.decryptAndStoreTransaction(
+            dbData: config.dataDb,
+            txBytes: rawBytes,
+            minedHeight: Int32(minedHeight),
+            networkType: config.network.networkType
+        ) else {
             throw EnhancementError.decryptError(
                 error: rustBackend.lastError() ?? .genericError(message: "`decryptAndStoreTransaction` failed. No message available")
             )
@@ -91,7 +96,6 @@ extension CompactBlockProcessor {
                             )
                         )
                         await internalSyncProgress.set(confirmedTx.minedHeight, .latestEnhancedHeight)
-
                     } catch {
                         retries += 1
                         LoggerProxy.error("could not enhance txId \(transaction.transactionId.toHexStringTxId()) - Error: \(error)")

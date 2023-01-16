@@ -22,7 +22,10 @@ class MemoTests: XCTestCase {
     */
     func testMemoLength() throws {
         XCTAssertEqual(validMemoData.count, 512)
-        XCTAssertEqual(validMemoData.asZcashTransactionMemo()!.trimmingCharacters(in: .controlCharacters).count, Self.validMemoDataExpectedString.count)
+        XCTAssertEqual(
+            validMemoData.asZcashTransactionMemo()!.trimmingCharacters(in: .controlCharacters).count,
+            Self.validMemoDataExpectedString.count
+        )
     }
     /**
     Verify support for common unicode characters

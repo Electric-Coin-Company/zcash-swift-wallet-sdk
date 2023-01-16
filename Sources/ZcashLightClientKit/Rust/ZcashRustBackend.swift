@@ -80,7 +80,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         accountIndex: Int32,
         networkType: NetworkType
     ) throws -> UnifiedSpendingKey {
-
         let binaryKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
             return zcashlc_derive_spending_key(
                 seedBufferPtr.baseAddress,
@@ -256,7 +255,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
         var success = false
 
-        contiguousMemoBytes.withUnsafeMutableBytes{ memoBytePtr in
+        contiguousMemoBytes.withUnsafeMutableBytes { memoBytePtr in
             success = zcashlc_get_sent_memo(dbData.0, dbData.1, idNote, memoBytePtr.baseAddress, networkType.networkId)
         }
 
@@ -283,7 +282,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard balance >= 0 else {
-            throw throwBalanceError(account: account, lastError(), fallbackMessage:  "Error getting Total Transparent balance from account \(account)")
+            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting Total Transparent balance from account \(account)")
         }
 
         return balance
@@ -326,7 +325,11 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard balance >= 0 else {
-            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting verified transparent balance from account \(account)")
+            throw throwBalanceError(
+                account: account,
+                lastError(),
+                fallbackMessage: "Error getting verified transparent balance from account \(account)"
+            )
         }
 
         return balance
@@ -360,7 +363,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         }
         
         guard let network = NetworkType.forNetworkId(networkId),
-              let addrType = AddressType.forId(addrId)
+            let addrType = AddressType.forId(addrId)
         else {
             return nil
         }
@@ -399,7 +402,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: NetworkType) throws -> DbInitResult {
         let dbData = dbData.osStr()
         switch zcashlc_init_data_database(dbData.0, dbData.1, seed, UInt(seed?.count ?? 0), networkType.networkId) {
-        case 0: //ok
+        case 0: // ok
             return DbInitResult.success
         case 1:
             return DbInitResult.seedRequired
@@ -408,7 +411,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
     
-    static func isValidSaplingAddress(_ address: String, networkType: NetworkType)  -> Bool {
+    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) -> Bool {
         guard !address.containsCStringNullBytesBeforeStringEnding() else {
             return false
         }
@@ -416,7 +419,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return zcashlc_is_valid_shielded_address([CChar](address.utf8CString), networkType.networkId)
     }
     
-    static func isValidTransparentAddress(_ address: String, networkType: NetworkType)  -> Bool {
+    static func isValidTransparentAddress(_ address: String, networkType: NetworkType) -> Bool {
         guard !address.containsCStringNullBytesBeforeStringEnding() else {
             return false
         }
@@ -463,7 +466,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     ) throws {
         let dbData = dbData.osStr()
         
-        var ffiUfvks = [FFIEncodedKey]()
+        var ffiUfvks: [FFIEncodedKey] = []
         for ufvk in ufvks {
             guard !ufvk.encoding.containsCStringNullBytesBeforeStringEnding() else {
                 throw RustWeldingError.invalidInput(message: "`UFVK` contains null bytes.")
@@ -558,7 +561,7 @@ class ZcashRustBackend: ZcashRustBackendWelding {
 
         defer { zcashlc_free_keys(encodedKeysPtr) }
 
-        var addresses = [TransparentAddress]()
+        var addresses: [TransparentAddress] = []
 
         for i in (0 ..< Int(encodedKeysPtr.pointee.len)) {
             let key = encodedKeysPtr.pointee.ptr.advanced(by: i).pointee
@@ -642,13 +645,12 @@ class ZcashRustBackend: ZcashRustBackendWelding {
     }
     
     static func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey, networkType: NetworkType) throws -> UnifiedFullViewingKey {
-
         let extfvk = try spendingKey.bytes.withUnsafeBufferPointer { uskBufferPtr -> UnsafeMutablePointer<CChar> in
             guard let extfvk = zcashlc_spending_key_to_full_viewing_key(
-                    uskBufferPtr.baseAddress,
-                    UInt(spendingKey.bytes.count),
-                    networkType.networkId
-                ) else {
+                uskBufferPtr.baseAddress,
+                UInt(spendingKey.bytes.count),
+                networkType.networkId
+            ) else {
                 throw lastError() ?? .genericError(message: "No error message available")
             }
 
@@ -664,7 +666,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return UnifiedFullViewingKey(validatedEncoding: derived, account: spendingKey.account)
     }
 
-
     static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
         guard !address.containsCStringNullBytesBeforeStringEnding() else {
             throw RustWeldingError.invalidInput(message: "`address` contains null bytes.")
@@ -672,16 +673,15 @@ class ZcashRustBackend: ZcashRustBackendWelding {
 
         var len = UInt(0)
 
-        guard let typecodesPointer =  zcashlc_get_typecodes_for_unified_address_receivers(
+        guard let typecodesPointer = zcashlc_get_typecodes_for_unified_address_receivers(
             [CChar](address.utf8CString),
             &len
-          ),
-            len > 0
-              else {
+        ), len > 0
+        else {
             throw RustWeldingError.malformedStringInput
         }
 
-        var typecodes = [UInt32]()
+        var typecodes: [UInt32] = []
 
         for typecodeIndex in 0 ..< Int(len) {
             let pointer = typecodesPointer.advanced(by: typecodeIndex)
@@ -748,7 +748,8 @@ extension FFIBinaryKey {
         .init(
             network: network,
             bytes: self.encoding.toByteArray(
-                length: Int(self.encoding_len)),
+                length: Int(self.encoding_len)
+            ),
             account: self.account_id
         )
     }
@@ -757,7 +758,7 @@ extension FFIBinaryKey {
 extension UnsafeMutablePointer where Pointee == UInt8 {
     /// copies the bytes pointed on
     func toByteArray(length: Int) -> [UInt8] {
-        var bytes = [UInt8]()
+        var bytes: [UInt8] = []
 
         for index in 0 ..< length {
             bytes.append(self.advanced(by: index).pointee)
@@ -767,7 +768,6 @@ extension UnsafeMutablePointer where Pointee == UInt8 {
     }
 }
     
-
 extension RustWeldingError: LocalizedError {
     var errorDescription: String? {
         switch self {
@@ -789,7 +789,7 @@ extension RustWeldingError: LocalizedError {
             return "`.saplingSpendParametersNotFound` sapling parameters not present at specified URL"
         case .unableToDeriveKeys:
             return "`.unableToDeriveKeys` the requested keys could not be derived from the source provided"
-        case .getBalanceError(let account, let error):
+        case let .getBalanceError(account, error):
             return "`.getBalanceError` could not retrieve balance from account: \(account), error:\(error)"
         }
     }

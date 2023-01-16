@@ -17,7 +17,7 @@ enum Environment {
     static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
 }
 
-public struct Constants {
+public enum Constants {
     static let address: String = ProcessInfo.processInfo.environment[Environment.lightwalletdKey] ?? "localhost"
 }
 
@@ -47,8 +47,8 @@ class ChannelProvider {
         let channel = connectionBuilder
             .withKeepalive(
                 ClientConnectionKeepalive(
-                  interval: .seconds(15),
-                  timeout: .seconds(10)
+                    interval: .seconds(15),
+                    timeout: .seconds(10)
                 )
             )
             .connect(host: endpoint.host, port: endpoint.port)

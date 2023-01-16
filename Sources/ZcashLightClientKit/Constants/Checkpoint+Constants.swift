@@ -63,9 +63,7 @@ struct BundleCheckpointURLProvider {
     var url: (NetworkType) -> URL
 }
 
-
 extension BundleCheckpointURLProvider {
-
     /// Attempts to resolve the platform by checking `#if os(macOS)` build corresponds to a MacOS target
     /// `#else` branch of that condition will assume iOS is the target platform
     static var `default` = BundleCheckpointURLProvider { networkType in
@@ -101,7 +99,7 @@ extension BundleCheckpointURLProvider {
             )?
             .deletingLastPathComponent() ?? Checkpoint.mainnetCheckpointDirectory
         case .testnet:
-           return Bundle.module.url(
+            return Bundle.module.url(
                 forResource: "280000",
                 withExtension: "json",
                 subdirectory: "checkpoints/testnet/",

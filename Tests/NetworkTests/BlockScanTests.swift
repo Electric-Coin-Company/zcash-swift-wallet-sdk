@@ -19,6 +19,7 @@ class BlockScanTests: XCTestCase {
     var dataDbURL: URL!
     var spendParamsURL: URL!
     var outputParamsURL: URL!
+    // swiftlint:disable:next line_length
     var saplingExtendedKey = SaplingExtendedFullViewingKey(validatedEncoding: "zxviewtestsapling1qw88ayg8qqqqpqyhg7jnh9mlldejfqwu46pm40ruwstd8znq3v3l4hjf33qcu2a5e36katshcfhcxhzgyfugj2lkhmt40j45cv38rv3frnghzkxcx73k7m7afw9j7ujk7nm4dx5mv02r26umxqgar7v3x390w2h3crqqgjsjly7jy4vtwzrmustm5yudpgcydw7x78awca8wqjvkqj8p8e3ykt7lrgd7xf92fsfqjs5vegfsja4ekzpfh5vtccgvs5747xqm6qflmtqpr8s9u")
 
     var walletBirthDay = Checkpoint.birthday(
@@ -137,7 +138,6 @@ class BlockScanTests: XCTestCase {
         let ufvk = try derivationTool
             .deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
             .map { try derivationTool.deriveUnifiedFullViewingKey(from: $0) }
-
 
         do {
             try self.rustWelding.initAccountsTable(

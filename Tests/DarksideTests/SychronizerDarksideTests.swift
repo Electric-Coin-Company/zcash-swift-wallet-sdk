@@ -12,11 +12,11 @@ import Combine
 
 // swiftlint:disable implicitly_unwrapped_optional
 class SychronizerDarksideTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
@@ -133,10 +133,9 @@ class SychronizerDarksideTests: XCTestCase {
     }
 
     func testLastStates() throws {
+        var disposeBag: [AnyCancellable] = []
 
-        var disposeBag = [AnyCancellable]()
-
-        var states = [SDKSynchronizer.SynchronizerState]()
+        var states: [SDKSynchronizer.SynchronizerState] = []
 
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
@@ -235,7 +234,6 @@ class SychronizerDarksideTests: XCTestCase {
         XCTFail("Failed with error: \(testError)")
     }
 }
-
 
 extension Zatoshi: CustomDebugStringConvertible {
     public var debugDescription: String {

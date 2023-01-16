@@ -196,7 +196,7 @@ public class SDKSynchronizer: Synchronizer {
                     name: .synchronizerStarted,
                     object: self,
                     userInfo: [
-                        NotificationKeys.synchronizerState : state
+                        NotificationKeys.synchronizerState: state
                     ]
                 )
 
@@ -459,8 +459,7 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.parameterMissing(underlyingError: error)
         }
 
-        if case Recipient.transparent = toAddress,
-           memo != nil {
+        if case Recipient.transparent = toAddress, memo != nil {
             throw SynchronizerError.generalError(message: "Memos can't be sent to transparent addresses.")
         }
 
@@ -479,7 +478,6 @@ public class SDKSynchronizer: Synchronizer {
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
         do {
-
             let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
 
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
@@ -487,9 +485,14 @@ public class SDKSynchronizer: Synchronizer {
                 throw ShieldFundsError.insuficientTransparentFunds
             }
 
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, recipient: .internalAccount(spendingKey.account), memo: try memo.asMemoBytes(), from: accountIndex)
+            let shieldingSpend = try transactionManager.initSpend(
+                zatoshi: tBalance.verified,
+                recipient: .internalAccount(spendingKey.account),
+                memo: try memo.asMemoBytes(),
+                from: accountIndex
+            )
 
-            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
+            // TODO: [#487] Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
             let transaction = try await transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
                 pendingTransaction: shieldingSpend
@@ -573,9 +576,9 @@ public class SDKSynchronizer: Synchronizer {
         guard initializer.isValidTransparentAddress(address) else {
             throw SynchronizerError.generalError(message: "invalid t-address")
         }
-
+        
         let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
-
+        
         do {
             var utxos: [UnspentTransactionOutputEntity] = []
             for try await transactionEntity in stream {
@@ -697,9 +700,9 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
 
-
+    // swiftlint:disable:next strict_fileprivate
     fileprivate func snapshotState() async -> SDKSynchronizer.SynchronizerState {
-        return SynchronizerState(
+        SynchronizerState(
             shieldedBalance: WalletBalance(
                 verified: initializer.getVerifiedBalance(),
                 total: initializer.getBalance()
@@ -738,8 +741,8 @@ public class SDKSynchronizer: Synchronizer {
             NotificationSender.default.post(name: Notification.Name.synchronizerEnhancing, object: self)
         case .fetching:
             NotificationSender.default.post(name: Notification.Name.synchronizerFetching, object: self)
-        case .error(let e):
-            self.notifyFailure(e)
+        case .error(let error):
+            self.notifyFailure(error)
         }
     }
     // MARK: book keeping
@@ -870,7 +873,6 @@ extension SDKSynchronizer {
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
-
 }
 
 import GRPC

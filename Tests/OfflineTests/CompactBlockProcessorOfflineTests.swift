@@ -5,7 +5,6 @@
 //  Created by Michal Fousek on 15.12.2022.
 //
 
-
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit

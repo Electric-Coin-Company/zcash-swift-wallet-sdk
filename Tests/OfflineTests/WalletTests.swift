@@ -36,7 +36,7 @@ class WalletTests: XCTestCase {
     func testWalletInitialization() throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
         let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
-            .map( { try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
+            .map({ try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
         let wallet = Initializer(
             cacheDbURL: try __cacheDbURL(),
             dataDbURL: try __dataDbURL(),
@@ -61,7 +61,7 @@ class WalletTests: XCTestCase {
         
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
         XCTAssertNoThrow( try FileManager.default.removeItem(at: dbData!) )
-        // TODO: Initialize cacheDB on start, will be done when Synchronizer is ready and integrated
+        // TODO: [#717] Initialize cacheDB on start, will be done when Synchronizer is ready and integrated, https://github.com/zcash/ZcashLightClientKit/issues/717
 //        XCTAssertNoThrow( try FileManager.default.removeItem(at: cacheData!) )
     }
 }
