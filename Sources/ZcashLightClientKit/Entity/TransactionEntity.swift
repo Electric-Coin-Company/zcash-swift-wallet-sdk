@@ -14,7 +14,7 @@ public enum Transaction {
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
-        public let id: Int?
+        public let id: Int
         public let index: Int?
         public let isWalletInternal: Bool
         public var isSentTransaction: Bool { value < Zatoshi(0) }
@@ -32,7 +32,7 @@ public enum Transaction {
         public let blockTime: TimeInterval
         public let expiryHeight: BlockHeight?
         public let fromAccount: Int
-        public let id: Int?
+        public let id: Int
         public let index: Int
         public let memoCount: Int
         public let minedHeight: BlockHeight
@@ -46,7 +46,7 @@ public enum Transaction {
         public let blockTime: TimeInterval
         public let expiryHeight: BlockHeight?
         public let fromAccount: Int
-        public let id: Int?
+        public let id: Int
         public let index: Int
         public let memoCount: Int
         public let minedHeight: BlockHeight
@@ -65,7 +65,7 @@ public enum Transaction {
 
 extension Transaction.Overview {
     enum Column {
-        static let id = Expression<Int?>("id_tx")
+        static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int?>("tx_index")
         static let rawID = Expression<Blob>("txid")
@@ -130,7 +130,7 @@ extension Transaction.Overview {
 
 extension Transaction.Received {
     enum Column {
-        static let id = Expression<Int?>("id_tx")
+        static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob?>("txid")
@@ -171,7 +171,7 @@ extension Transaction.Received {
 
 extension Transaction.Sent {
     enum Column {
-        static let id = Expression<Int?>("id_tx")
+        static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight>("mined_height")
         static let index = Expression<Int>("tx_index")
         static let rawID = Expression<Blob?>("txid")
