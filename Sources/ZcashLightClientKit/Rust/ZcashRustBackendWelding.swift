@@ -67,6 +67,7 @@ protocol ZcashRustBackendWelding {
     /// - Parameter spendParamsPath: path escaped String for the filesystem locations where the spend parameters are located
     /// - Parameter outputParamsPath: path escaped String for the filesystem locations where the output parameters are located
     /// - Parameter networkType: network type of this key
+    // swiftlint:disable:next function_parameter_count
     static func createToAddress(
         dbData: URL,
         usk: UnifiedSpendingKey,
@@ -94,8 +95,8 @@ protocol ZcashRustBackendWelding {
         networkType: NetworkType
     ) -> Bool
 
-     /// Derives and returns a unified spending key from the given seed for the given account ID.
-     /// Returns the binary encoding of the spending key. The caller should manage the memory of (and store, if necessary) the returned spending key in a secure fashion.
+    /// Derives and returns a unified spending key from the given seed for the given account ID.
+    /// Returns the binary encoding of the spending key. The caller should manage the memory of (and store, if necessary) the returned spending key in a secure fashion.
     /// - Parameter seed: a Byte Array with the seed
     /// - Parameter accountIndex:account index that the key can spend from
     /// - Parameter networkType: network type of this key
@@ -169,7 +170,6 @@ protocol ZcashRustBackendWelding {
         idNote: Int64,
         networkType: NetworkType
     ) -> String?
-
 
     /// get received memo from note
     /// - Parameters:
@@ -264,7 +264,7 @@ protocol ZcashRustBackendWelding {
 
     /// Returns the network and address type for the given Zcash address string,
     /// if the string represents a valid Zcash address.
-    static func getAddressMetadata(_ address: String) -> AddressMetadata? 
+    static func getAddressMetadata(_ address: String) -> AddressMetadata?
 
     /// Validates the if the given string is a valid Sapling Address
     /// - Parameter address: UTF-8 encoded String to validate
@@ -306,7 +306,7 @@ protocol ZcashRustBackendWelding {
     /// - Parameter networkType: network type of this key
     /// - Returns: true when the encoded string is a valid UFVK. false in any other case
     /// - Throws: Error when there's another problem not related to validity of the string in question
-    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType)  -> Bool
+    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool
 
     /// initialize the blocks table from a given checkpoint (height, hash, time, saplingTree and networkType)
     /// - Parameters:
@@ -347,7 +347,6 @@ protocol ZcashRustBackendWelding {
         account: Int32,
         networkType: NetworkType
     ) throws -> Int64
-
 
     /// Get the verified cached transparent balance for the given account
     /// - Parameters:
@@ -393,7 +392,6 @@ protocol ZcashRustBackendWelding {
         networkType: NetworkType
     ) -> Bool
     
-
     /// Scans new blocks added to the cache for any transactions received by the tracked
     /// accounts.
     /// This function pays attention only to cached blocks with heights greater than the
@@ -418,7 +416,6 @@ protocol ZcashRustBackendWelding {
         limit: UInt32,
         networkType: NetworkType
     ) -> Bool
-
 
     /// puts a UTXO into the data db database
     /// - Parameters:
@@ -456,14 +453,13 @@ protocol ZcashRustBackendWelding {
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
-    ) -> Int64 // swiftlint:disable function_parameter_count
+    ) -> Int64
 
     /// Obtains the available receiver typecodes for the given String encoded Unified Address
     /// - Parameter address: public key represented as a String
     /// - Returns  the `[UInt32]` that compose the given UA
     /// - Throws `RustWeldingError.invalidInput(message: String)` when the UA is either invalid or malformed
     static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32]
-
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
@@ -472,7 +468,6 @@ protocol ZcashRustBackendWelding {
         height: Int32,
         networkType: NetworkType
     ) throws -> Int32
-
 
     /// Derives a `UnifiedFullViewingKey` from a `UnifiedSpendingKey`
     /// - Parameter spendingKey: the `UnifiedSpendingKey` to derive from

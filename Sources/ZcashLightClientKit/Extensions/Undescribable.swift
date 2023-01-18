@@ -7,7 +7,6 @@
 
 public protocol Undescribable: CustomStringConvertible, CustomDebugStringConvertible, CustomLeafReflectable {}
 
-
 extension Undescribable {
     public var description: String {
         return "--redacted--"

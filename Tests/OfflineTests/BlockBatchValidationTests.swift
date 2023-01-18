@@ -287,7 +287,6 @@ class BlockBatchValidationTests: XCTestCase {
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
 
-        
         var nextBatch: CompactBlockProcessor.NextState?
         do {
             nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
@@ -303,7 +302,7 @@ class BlockBatchValidationTests: XCTestCase {
             XCTFail("this shouldn't happen: \(error)")
         }
         
-        guard let _ = nextBatch else {
+        guard nextBatch != nil else {
             XCTFail("result should not be nil")
             return
         }
@@ -311,7 +310,7 @@ class BlockBatchValidationTests: XCTestCase {
         XCTAssertTrue(
             {
                 switch (nextBatch, expectedResult) {
-                case (let .wait(latestHeight, latestDownloadHeight), let .wait(expectedLatestHeight, exectedLatestDownloadHeight)):
+                case let (.wait(latestHeight, latestDownloadHeight), .wait(expectedLatestHeight, exectedLatestDownloadHeight)):
                     return latestHeight == expectedLatestHeight && latestDownloadHeight == exectedLatestDownloadHeight
                 default:
                     return false
@@ -334,7 +333,7 @@ class BlockBatchValidationTests: XCTestCase {
         let ranges = SyncRanges(
             latestBlockHeight: expectedLatestHeight,
             downloadedButUnscannedRange: nil,
-            downloadAndScanRange: expectedStoreLatestHeight+1...expectedLatestHeight,
+            downloadAndScanRange: expectedStoreLatestHeight + 1...expectedLatestHeight,
             enhanceRange: walletBirthday...expectedLatestHeight,
             fetchUTXORange: walletBirthday...expectedLatestHeight
         )
@@ -392,15 +391,15 @@ class BlockBatchValidationTests: XCTestCase {
             XCTFail("this shouldn't happen: \(error)")
         }
         
-        guard let _ = nextBatch else {
+        guard nextBatch != nil else {
             XCTFail("result should not be nil")
             return
         }
 
         XCTAssertTrue(
             {
-                switch (nextBatch, expectedResult)  {
-                case (.processNewBlocks(let ranges), .processNewBlocks(let expectedRanges)):
+                switch (nextBatch, expectedResult) {
+                case let (.processNewBlocks(ranges), .processNewBlocks(expectedRanges)):
                     return ranges == expectedRanges
                 default:
                     return false
@@ -477,16 +476,15 @@ class BlockBatchValidationTests: XCTestCase {
             XCTFail("this shouldn't happen: \(error)")
         }
         
-        guard let _ = nextBatch else {
+        guard nextBatch != nil else {
             XCTFail("result should not be nil")
             return
         }
         
         XCTAssertTrue(
             {
-
                 switch (nextBatch, expectedResult) {
-                case (.finishProcessing(let height), .finishProcessing(let expectedHeight)):
+                case let (.finishProcessing(height), .finishProcessing(expectedHeight)):
                     return height == expectedHeight
                 default:
                     return false

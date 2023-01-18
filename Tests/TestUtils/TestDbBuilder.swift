@@ -84,10 +84,10 @@ class TestDbBuilder {
             networkType: .mainnet
         )
         
-        switch (initResult) {
-            case .success: return provider
-            case .seedRequired:
-                throw StorageError.migrationFailedWithMessage(message: "Seed value required to initialize the wallet database")
+        switch initResult {
+        case .success: return provider
+        case .seedRequired:
+            throw StorageError.migrationFailedWithMessage(message: "Seed value required to initialize the wallet database")
         }
     }
     

@@ -8,7 +8,7 @@
 import Foundation
 
 public protocol UnspentTransactionOutputEntity {
-    // TODO: Remove address field?
+    // TODO: [#714] Remove address field?, https://github.com/zcash/ZcashLightClientKit/issues/714
     var address: String { get set }
     var txid: Data { get set }
     var index: Int { get set }

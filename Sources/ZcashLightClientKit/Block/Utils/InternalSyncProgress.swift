@@ -26,13 +26,13 @@ protocol InternalSyncProgressStorage {
     func integer(forKey defaultName: String) -> Int
     func set(_ value: Int, forKey defaultName: String)
     func set(_ value: Bool, forKey defaultName: String)
-    @discardableResult func synchronize() -> Bool
+    @discardableResult
+    func synchronize() -> Bool
 }
 
 extension UserDefaults: InternalSyncProgressStorage { }
 
 actor InternalSyncProgress {
-
     enum Key: String, CaseIterable {
         case latestDownloadedBlockHeight
         case latestEnhancedHeight
@@ -41,15 +41,15 @@ actor InternalSyncProgress {
 
     private let storage: InternalSyncProgressStorage
 
-    var latestDownloadedBlockHeight: BlockHeight { get { get(.latestDownloadedBlockHeight) } }
-    var latestEnhancedHeight: BlockHeight { get { get(.latestEnhancedHeight) } }
-    var latestUTXOFetchedHeight: BlockHeight { get { get(.latestUTXOFetchedHeight) } }
+    var latestDownloadedBlockHeight: BlockHeight { load(.latestDownloadedBlockHeight) }
+    var latestEnhancedHeight: BlockHeight { load(.latestEnhancedHeight) }
+    var latestUTXOFetchedHeight: BlockHeight { load(.latestUTXOFetchedHeight) }
 
     init(storage: InternalSyncProgressStorage) {
         self.storage = storage
     }
 
-    func get(_ key: Key) -> BlockHeight {
+    func load(_ key: Key) -> BlockHeight {
         storage.integer(forKey: key.rawValue)
     }
 
@@ -60,7 +60,7 @@ actor InternalSyncProgress {
 
     func rewind(to: BlockHeight) {
         Key.allCases.forEach { key in
-            let finalRewindHeight = min(self.get(key), to)
+            let finalRewindHeight = min(load(key), to)
             self.set(finalRewindHeight, key)
         }
     }
@@ -113,10 +113,10 @@ actor InternalSyncProgress {
             latestEnhancedHeight > latestBlockHeight ||
             latestUTXOFetchedHeight > latestBlockHeight {
             return .wait(latestHeight: latestBlockHeight, latestDownloadHeight: latestDownloadedBlockHeight)
-        } else if   latestDownloadedBlockHeight < latestBlockHeight ||
-                    latestScannedHeight < latestBlockHeight ||
-                    latestEnhancedHeight < latestEnhancedHeight ||
-                    latestUTXOFetchedHeight < latestBlockHeight {
+        } else if latestDownloadedBlockHeight < latestBlockHeight ||
+            latestScannedHeight < latestBlockHeight ||
+            latestEnhancedHeight < latestEnhancedHeight ||
+            latestUTXOFetchedHeight < latestBlockHeight {
             let ranges = computeSyncRanges(
                 birthday: walletBirthday,
                 latestBlockHeight: latestBlockHeight,
@@ -137,7 +137,7 @@ actor InternalSyncProgress {
         // blocks instead of downloading new ones.
         let downloadedButUnscannedRange: CompactBlockRange?
         if latestScannedHeight < latestDownloadedBlockHeight {
-            downloadedButUnscannedRange = latestScannedHeight+1...latestDownloadedBlockHeight
+            downloadedButUnscannedRange = latestScannedHeight + 1...latestDownloadedBlockHeight
         } else {
             downloadedButUnscannedRange = nil
         }

@@ -9,17 +9,19 @@
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
-// FIXME: disabled until https://github.com/zcash/ZcashLightClientKit/issues/587 fixed
+
+// FIXME: [#587] disabled until https://github.com/zcash/ZcashLightClientKit/issues/587 fixed
 class ShieldFundsTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 
     let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 1631000
+    // swiftlint:disable:next implicitly_unwrapped_optional
     var coordinator: TestCoordinator!
     var syncedExpectation = XCTestExpectation(description: "synced")
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
@@ -83,6 +85,7 @@ class ShieldFundsTests: XCTestCase {
     /// 15. sync up to the new chain tip
     /// verify that the shielded transactions are confirmed
     ///
+    // swiftlint:disable:next cyclomatic_complexity
     func testShieldFunds() async throws {
         // 1. load the dataset
         try coordinator.service.useDataset(from: "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/shield-funds/1631000.txt")
@@ -99,15 +102,16 @@ class ShieldFundsTests: XCTestCase {
 
         var initialTransparentBalance: WalletBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
-        let utxo = try GetAddressUtxosReply(jsonString: """
-                                                    {
-                                                          "txid": "3md9M0OOpPBsF02Rp2b7CJZMpv093bjLuSCIG1RPioU=",
-                                                          "script": "dqkU1mkF+eETNMCYyJs0OZcygn0KDi+IrA==",
-                                                          "valueZat": "10000",
-                                                          "height": "1631177",
-                                                          "address": "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
-                                                    }
-                                                    """)
+        let utxo = try GetAddressUtxosReply(jsonString:
+            """
+            {
+                "txid": "3md9M0OOpPBsF02Rp2b7CJZMpv093bjLuSCIG1RPioU=",
+                "script": "dqkU1mkF+eETNMCYyJs0OZcygn0KDi+IrA==",
+                "valueZat": "10000",
+                "height": "1631177",
+                "address": "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
+            }
+            """)
         // 2. applyStaged to `utxoHeight - 1`
         try coordinator.service.applyStaged(nextLatestHeight: utxoHeight - 1)
         sleep(2)
@@ -160,7 +164,7 @@ class ShieldFundsTests: XCTestCase {
         // 6. Sync and find the UXTO on chain.
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     shouldContinue = true
                     tFundsDetectionExpectation.fulfill()
                     continuation.resume()
@@ -190,7 +194,7 @@ class ShieldFundsTests: XCTestCase {
         // 8. sync up to chain tip.
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     shouldContinue = true
                     tFundsConfirmationSyncExpectation.fulfill()
                     continuation.resume()
@@ -238,8 +242,10 @@ class ShieldFundsTests: XCTestCase {
         // when funds are shielded the UTXOs should be marked as spend and not shown on the balance.
         // now balance should be zero shielded, zero transaparent.
         // verify that the balance has been marked as spent regardless of confirmation
-        XCTAssertEqual(postShieldingBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
-        XCTAssertEqual(postShieldingBalance.total, Zatoshi(10000)) //FIXME: this should be zero
+        // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
+        XCTAssertEqual(postShieldingBalance.verified, Zatoshi(10000))
+        // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
+        XCTAssertEqual(postShieldingBalance.total, Zatoshi(10000))
         XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), .zero)
 
         // 10. clear the UTXO from darksidewalletd's cache
@@ -269,7 +275,7 @@ class ShieldFundsTests: XCTestCase {
         shouldContinue = false
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     shouldContinue = true
                     postShieldSyncExpectation.fulfill()
                     continuation.resume()
@@ -288,9 +294,12 @@ class ShieldFundsTests: XCTestCase {
         // Fees at the time of writing the tests are 1000 zatoshi as defined on ZIP-313
         let postShieldingShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
-        XCTAssertEqual(postShieldingShieldedBalance.total, Zatoshi(10000)) //FIXME: this should be zero
-        XCTAssertEqual(postShieldingShieldedBalance.verified, Zatoshi(10000)) //FIXME: this should be zero
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), .zero) //FIXME: this should be 9000
+        // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
+        XCTAssertEqual(postShieldingShieldedBalance.total, Zatoshi(10000))
+        // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
+        XCTAssertEqual(postShieldingShieldedBalance.verified, Zatoshi(10000))
+        // FIXME: [#720] this should be 9000, https://github.com/zcash/ZcashLightClientKit/issues/720
+        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), .zero)
 
         // 14. proceed confirm the shielded funds by staging ten more blocks
         try coordinator.service.applyStaged(nextLatestHeight: utxoHeight + 10 + 1 + 10)
@@ -303,7 +312,7 @@ class ShieldFundsTests: XCTestCase {
         // 15. sync up to the new chain tip
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     shouldContinue = true
                     confirmationExpectation.fulfill()
                     continuation.resume()
@@ -319,7 +328,9 @@ class ShieldFundsTests: XCTestCase {
         guard shouldContinue else { return }
 
         // verify that there's a confirmed transaction that's the shielding transaction
-        let clearedTransaction = coordinator.synchronizer.clearedTransactions.first(where: { $0.rawTransactionId == shieldingPendingTx?.rawTransactionId })
+        let clearedTransaction = coordinator.synchronizer.clearedTransactions.first(
+            where: { $0.rawTransactionId == shieldingPendingTx?.rawTransactionId }
+        )
 
         XCTAssertNotNil(clearedTransaction)
 
@@ -327,7 +338,6 @@ class ShieldFundsTests: XCTestCase {
         let postShieldingConfirmationShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
         XCTAssertEqual(postShieldingConfirmationShieldedBalance.total, .zero)
         XCTAssertEqual(postShieldingConfirmationShieldedBalance.verified, .zero)
-
     }
 
     func handleError(_ error: Error?) {
@@ -338,6 +348,4 @@ class ShieldFundsTests: XCTestCase {
         }
         XCTFail("Failed with error: \(testError)")
     }
-
 }
-

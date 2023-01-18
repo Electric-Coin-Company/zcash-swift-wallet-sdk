@@ -92,7 +92,10 @@ class PersistentTransactionManager: OutboundTransactionManager {
         } catch MemoBytes.Errors.invalidUTF8 {
             throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")
         } catch MemoBytes.Errors.tooLong(let length) {
-            throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo is too long. expected 512 bytes, received \(length)")
+            throw TransactionManagerError.shieldingEncodingFailed(
+                pendingTransaction,
+                reason: "Memo is too long. expected 512 bytes, received \(length)"
+            )
         } catch {
             throw error
         }
@@ -104,17 +107,20 @@ class PersistentTransactionManager: OutboundTransactionManager {
     ) async throws -> PendingTransactionEntity {
         do {
             var toAddress: String?
-            switch (pendingTransaction.recipient) {
-                case .address(let addr):
-                    toAddress = addr.stringEncoded
-                case .internalAccount(_):
-                    throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
+            switch pendingTransaction.recipient {
+            case .address(let addr):
+                toAddress = addr.stringEncoded
+            case .internalAccount: break
             }
 
+            guard let toAddress else {
+                throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
+            }
+            
             let encodedTransaction = try await self.encoder.createTransaction(
                 spendingKey: spendingKey,
                 zatoshi: pendingTransaction.value,
-                to: toAddress!,
+                to: toAddress,
                 memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )

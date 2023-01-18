@@ -9,7 +9,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional
+// swiftlint:disable implicitly_unwrapped_optional force_try
 class NotesRepositoryTests: XCTestCase {
     var sentNotesRepository: SentNotesRepository!
     var receivedNotesRepository: ReceivedNoteRepository!

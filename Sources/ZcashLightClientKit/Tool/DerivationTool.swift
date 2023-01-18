@@ -20,7 +20,6 @@ public protocol KeyValidation {
 }
 
 public protocol KeyDeriving {
-
     /// Given the seed bytes tand the account index, return the UnifiedSpendingKey
     /// - Parameter seed: `[Uint8]` seed bytes
     /// - Parameter accountNumber: `Int` with the account number
@@ -142,7 +141,6 @@ extension DerivationTool: KeyValidation {
     }
 }
 
-
 extension TransparentAddress {
     /// This constructor is for internal use for Strings encodings that are assumed to be
     /// already validated by another function. only for internal use. Unless you are
@@ -161,7 +159,7 @@ extension SaplingAddress {
     init(validatedEncoding: String) {
         self.encoding = validatedEncoding
     }
- }
+}
 
 extension UnifiedAddress {
     /// This constructor is for internal use for Strings encodings that are assumed to be
@@ -184,7 +182,6 @@ extension UnifiedFullViewingKey {
     }
 }
 
-
 extension SaplingExtendedFullViewingKey {
     /// This constructor is for internal use for Strings encodings that are assumed to be
     /// already validated by another function. only for internal use. Unless you are
@@ -194,7 +191,6 @@ extension SaplingExtendedFullViewingKey {
         self.encoding = validatedEncoding
     }
 }
-
 
 extension SaplingExtendedSpendingKey {
     /// This constructor is for internal use for Strings encodings that are assumed to be

@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 /// Represents errors thrown by a Synchronizer
 public enum SynchronizerError: Error {
     case initFailed(message: String) // ZcashLightClientKit.SynchronizerError error 0.
@@ -48,7 +47,6 @@ extension ShieldFundsError: LocalizedError {
     }
 }
 
-
 /// Represent the connection state to the lightwalletd server
 public enum ConnectionState {
     /// not in use
@@ -67,11 +65,9 @@ public enum ConnectionState {
     case shutdown
 }
 
-
 /// Primary interface for interacting with the SDK. Defines the contract that specific
 /// implementations like SdkSynchronizer fulfill.
 public protocol Synchronizer {
-
     /// Value representing the Status of this Synchronizer. As the status changes, it will be also notified
     var status: SyncStatus { get }
 
@@ -82,10 +78,10 @@ public protocol Synchronizer {
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
     func prepare(with seed: [UInt8]?) async throws -> Initializer.InitializationResult
 
-    ///Starts this synchronizer within the given scope.
+    /// Starts this synchronizer within the given scope.
     ///
-    ///Implementations should leverage structured concurrency and
-    ///cancel all jobs when this scope completes.
+    /// Implementations should leverage structured concurrency and
+    /// cancel all jobs when this scope completes.
     func start(retry: Bool) throws
 
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
@@ -111,7 +107,6 @@ public protocol Synchronizer {
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
-    // swiftlint:disable:next function_parameter_count
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -154,7 +149,7 @@ public protocol Synchronizer {
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
     ///     - Returns: an array with the given Transactions or nil
-    func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?    
+    func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
@@ -163,7 +158,6 @@ public protocol Synchronizer {
     /// Blocking
     func latestHeight() async throws -> BlockHeight
     
-
     /// Returns the latests UTXOs for the given address from the specified height on
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
@@ -174,7 +168,6 @@ public protocol Synchronizer {
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     func getShieldedBalance(accountIndex: Int) -> Int64
 
-
     /// Returns the shielded total balance (includes verified and unverified balance)
     func getShieldedBalance(accountIndex: Int) -> Zatoshi
 
@@ -184,7 +177,6 @@ public protocol Synchronizer {
 
     /// Returns the shielded verified balance (anchor is 10 blocks back)
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
-
 
     /// Rescans the known blocks with the current keys. If this is called while sync process is in progress then
     /// `SynchronizerError.rewindError(CompactBlockProcessorError.rewindAttemptWhileProcessing)` is thrown.
@@ -203,7 +195,6 @@ public protocol Synchronizer {
 }
 
 public enum SyncStatus: Equatable {
-
     /// Indicates that this Synchronizer is actively preparing to start,
     /// which usually involves setting up database tables, migrations or
     /// taking other maintenance steps that need to occur after an upgrade.

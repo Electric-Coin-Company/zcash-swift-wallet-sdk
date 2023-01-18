@@ -29,7 +29,6 @@ protocol TransactionEncoder {
     /// - Parameter to: string containing the recipient address
     /// - Parameter MemoBytes: string containing the memo (optional)
     /// - Parameter accountIndex: index of the account that will be used to send the funds
-    // swiftlint:disable:next function_parameter_count
     func createTransaction(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -54,7 +53,7 @@ protocol TransactionEncoder {
         from accountIndex: Int
     ) async throws -> EncodedTransaction
 
-    ///Fetch the Transaction Entity from the encoded representation
+    /// Fetch the Transaction Entity from the encoded representation
     /// - Parameter encodedTransaction: The encoded transaction to expand
     /// - Returns: a TransactionEntity based on the given Encoded Transaction
     /// - Throws: a TransactionEncoderError

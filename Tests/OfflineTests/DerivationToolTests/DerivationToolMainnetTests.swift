@@ -4,15 +4,18 @@
 //
 //  Created by Francisco Gindre on 10/9/20.
 //
-//swiftlint:disable force_unwrapping
+
 import XCTest
 @testable import ZcashLightClientKit
 
+// swiftlint:disable line_length force_unwrapping
 class DerivationToolMainnetTests: XCTestCase {
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" //TODO: Parameterize this from environment?
-    var seedData: Data = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
+    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+    var seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
 
-    let testRecipientAddress = UnifiedAddress(validatedEncoding: "u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj") //TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
+    let testRecipientAddress = UnifiedAddress(validatedEncoding: "u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj")
     
     let expectedSpendingKey = UnifiedSpendingKey(
         network: .mainnet,
@@ -50,7 +53,6 @@ class DerivationToolMainnetTests: XCTestCase {
         let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
         XCTAssertEqual(expectedSpendingKey, spendingKey)
-
     }
 
     func testDeriveUnifiedSpendingKeyFromSeed() throws {
@@ -81,7 +83,6 @@ class DerivationToolMainnetTests: XCTestCase {
                     seed: [UInt8](seedData),
                     accountIndex: $0
                 )
-
             })
             .map {
                 try derivationTool.deriveUnifiedFullViewingKey(
@@ -104,7 +105,7 @@ class DerivationToolMainnetTests: XCTestCase {
 
         XCTAssertFalse(derivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey))
     }
-    // TODO: Address encoding does not catch this test https://github.com/zcash/ZcashLightClientKit/issues/509
+    // TODO: [#509] Address encoding does not catch this test https://github.com/zcash/ZcashLightClientKit/issues/509
 //    func testSpendingKeyValidationThrowsWhenWrongNetwork() throws {
 //        XCTAssertThrowsError(try derivationTool.isValidExtendedSpendingKey("secret-extended-key-test1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6lk8xce3d4jw7s8ln5yjp6fqv2g0nzue2hc0kv5t004vklvlenncscq9flwh5vf5qnv0hnync72n7gjn70u47765v3kyrxytx50g730svvmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqe49swv"))
 //    }

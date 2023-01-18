@@ -9,7 +9,6 @@
 import Foundation
 
 extension CompactBlockProcessor {
-
     func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
         try await compactBlockBatchScanning(range: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
             let progress = BlockProgress(
@@ -40,7 +39,7 @@ extension CompactBlockProcessor {
 
                 let previousScannedHeight = lastScannedHeight
 
-                // TODO: remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
+                // TODO: [#576] remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
                 let batchSize = scanBatchSize(startScanHeight: previousScannedHeight + 1, network: self.config.network.networkType)
 
                 let scanStartTime = Date()
@@ -93,6 +92,7 @@ extension CompactBlockProcessor {
         }
     }
 
+    // swiftlint:disable:next strict_fileprivate
     fileprivate func scanBatchSize(startScanHeight height: BlockHeight, network: NetworkType) -> UInt32 {
         assert(config.scanningBatchSize > 0, "ZcashSDK.DefaultScanningBatch must be larger than 0!")
         guard network == .mainnet else {

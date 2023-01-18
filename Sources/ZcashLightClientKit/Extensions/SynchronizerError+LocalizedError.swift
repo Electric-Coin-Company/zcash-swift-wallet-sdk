@@ -22,7 +22,7 @@ extension SynchronizerError: LocalizedError {
             return "An error occurred when syncing. Message: \(message)"
         case .maxRetryAttemptsReached(attempts: let attempts):
             return "An error occurred. We made \(attempts) retry attempts."
-        case .connectionError(status: let status, message: let message):
+        case let .connectionError(status: status, message: message):
             return "There's a connection error. Status #\(status). Message: \(message)"
         case .networkTimeout:
             return "Network Timeout. Please check Internet connection"

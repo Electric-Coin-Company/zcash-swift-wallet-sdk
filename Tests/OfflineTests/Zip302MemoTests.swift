@@ -9,7 +9,6 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class Zip302MemoTests: XCTestCase {
-
     /// Zip-302 specifies "the byte 0xF6 followed by 511 0x00 bytes, indicating 'no memo'"
     func testEmptyMemoBytesHasF6LeadByteAndThenZeroes() throws {
         XCTAssertEqual(MemoBytes.empty().bytes, Self.emptyMemoBytes)
@@ -70,7 +69,7 @@ class Zip302MemoTests: XCTestCase {
             XCTAssertEqual(
                 memo,
                 .future(futureMemoBytes),
-                "Failed to create a Future memo starting with \(String(format:"%02X", firstByte))"
+                "Failed to create a Future memo starting with \(String(format: "%02X", firstByte))"
             )
         }
     }
@@ -84,6 +83,7 @@ class Zip302MemoTests: XCTestCase {
     }
 
     func testItThrowsTooLongWhenCreatingAMemoFromAValidButTooLongString() throws {
+        // swiftlint:disable:next line_length
         let tooLongString = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo but it's now a bit too long"
 
         XCTAssertThrowsError(try Memo(string: tooLongString)) { err in
@@ -93,16 +93,17 @@ class Zip302MemoTests: XCTestCase {
             }
 
             switch error {
-                case .tooLong(let length) :
-                    XCTAssertEqual(length, 513)
-
-                default:
-                    XCTFail("Expected `MemoBytes.Errors.TooLong` error but found \(err.localizedDescription)")
+            case .tooLong(let length):
+                XCTAssertEqual(length, 513)
+                
+            default:
+                XCTFail("Expected `MemoBytes.Errors.TooLong` error but found \(err.localizedDescription)")
             }
         }
     }
 
     func testItCreatesAMemoFromAValidAndShortEnoughText() throws {
+        // swiftlint:disable:next line_length
         let almostTooLongString = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo but it's just short enough"
 
         let memo = try Memo(string: almostTooLongString)
@@ -114,6 +115,7 @@ class Zip302MemoTests: XCTestCase {
 
     func testItThrowsTooLongWhenMemoCharacterCountIsLongEnoughButIsTooLongInBytes() {
         /// This string's count it 512 characters, but when converted to UTF8 bytes, it has 515 bytes.
+        // swiftlint:disable:next line_length
         let almostTooLongString = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo but it's just short is it😛"
         
         XCTAssertThrowsError(try Memo(string: almostTooLongString)) { err in
@@ -222,20 +224,22 @@ class Zip302MemoTests: XCTestCase {
     }
 
     func testMemoLenght1CharTooLong () {
+        // swiftlint:disable:next line_length
         let tooLongString = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo but it's now a bit too long"
 
         XCTAssertEqual(Memo.length(for: tooLongString), 513)
     }
 
     func testTextIsVisibleFitButExceedsLimit() {
+        // swiftlint:disable:next line_length
         let tooLongStringThatVisiblyFits = "thiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiis aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa veeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeryyyyyyyyyyyyyyyyyyyyyyyyyy looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong meeeeeeeeeeeeeeeeemooooooooooooooooooooooooooooooooooooooong. Visibly fit, but it exceeds the byte limit. 👩‍👩‍👧‍👧"
-        XCTAssertEqual(MemoBytes.capacity, tooLongStringThatVisiblyFits.count) // this assertion proves that the count of visible characters is within the limit
+        // this assertion proves that the count of visible characters is within the limit
+        XCTAssertEqual(MemoBytes.capacity, tooLongStringThatVisiblyFits.count)
         XCTAssertTrue(Memo.length(for: tooLongStringThatVisiblyFits) > MemoBytes.capacity)
 
         XCTAssertEqual(Memo.length(for: tooLongStringThatVisiblyFits), 536)
     }
 }
-
 
 extension Zip302MemoTests {
     static let emptyMemoBytes: [UInt8] = [

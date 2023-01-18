@@ -11,11 +11,11 @@ import XCTest
 
 // swiftlint:disable type_body_length implicitly_unwrapped_optional force_unwrapping file_length
 class BalanceTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount = Zatoshi(1000)
     let defaultLatestHeight: BlockHeight = 663188
@@ -60,7 +60,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -178,7 +178,7 @@ class BalanceTests: XCTestCase {
         }
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     confirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -218,7 +218,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -336,7 +336,7 @@ class BalanceTests: XCTestCase {
         }
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     confirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -377,7 +377,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -493,7 +493,7 @@ class BalanceTests: XCTestCase {
         }
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     confirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -540,7 +540,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -574,12 +574,9 @@ class BalanceTests: XCTestCase {
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
-            /*
-             balance should be the same as before sending if transaction failed
-             */
+            // balance should be the same as before sending if transaction failed
             XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), presendVerifiedBalance)
             XCTFail("sendToAddress failed: \(error)")
-
         }
         
         XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > .zero)
@@ -604,7 +601,7 @@ class BalanceTests: XCTestCase {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(
-                    completion: { synchronizer in
+                    completion: { _ in
                         mineExpectation.fulfill()
                         continuation.resume()
                     }, error: { error in
@@ -724,7 +721,7 @@ class BalanceTests: XCTestCase {
         sleep(2)
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -800,7 +797,7 @@ class BalanceTests: XCTestCase {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(
-                    completion: { synchronizer in
+                    completion: { _ in
                         mineExpectation.fulfill()
                         continuation.resume()
                     }, error: { error in
@@ -891,7 +888,7 @@ class BalanceTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -1071,7 +1068,7 @@ class BalanceTests: XCTestCase {
         sleep(2)
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -1121,7 +1118,7 @@ class BalanceTests: XCTestCase {
         sleep(2)
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     expirationSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)

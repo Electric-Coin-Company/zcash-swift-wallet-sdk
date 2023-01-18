@@ -46,7 +46,7 @@ extension CompactBlockProcessor {
             let startTime = Date()
             for utxo in utxos {
                 do {
-                    try rustBackend.putUnspentTransparentOutput(
+                    if try rustBackend.putUnspentTransparentOutput(
                         dbData: config.dataDb,
                         txid: utxo.txid.bytes,
                         index: utxo.index,
@@ -54,7 +54,11 @@ extension CompactBlockProcessor {
                         value: Int64(utxo.valueZat),
                         height: utxo.height,
                         networkType: config.network.networkType
-                    ) ? refreshed.append(utxo) : skipped.append(utxo)
+                    ) {
+                        refreshed.append(utxo)
+                    } else {
+                        skipped.append(utxo)
+                    }
 
                     await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
                 } catch {

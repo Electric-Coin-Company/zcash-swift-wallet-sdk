@@ -167,8 +167,8 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
             ) ?? 0
             
             return WalletBalance(
-                    verified: Zatoshi(Int64(verified)),
-                    total: Zatoshi(Int64(total))
+                verified: Zatoshi(Int64(verified)),
+                total: Zatoshi(Int64(total))
             )
         } catch {
             throw StorageError.operationFailed

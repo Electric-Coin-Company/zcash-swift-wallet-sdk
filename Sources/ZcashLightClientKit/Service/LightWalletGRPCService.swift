@@ -260,7 +260,8 @@ extension LightWalletGRPCService: LightWalletService {
         for tAddress: String,
         height: BlockHeight,
         result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>
-    ) -> Void) {
+        ) -> Void
+    ) {
         queue.async { [weak self] in
             guard let self = self else { return }
             let arg = GetAddressUtxosArg.with { utxoArgs in

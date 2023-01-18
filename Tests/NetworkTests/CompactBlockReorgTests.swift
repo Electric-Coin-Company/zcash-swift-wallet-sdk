@@ -47,7 +47,7 @@ class CompactBlockReorgTests: XCTestCase {
         
         guard case .success = try ZcashRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet) else {
             XCTFail("initDataDb failed. Expected Success but got .seedRequired")
-            return 
+            return
         }
         
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
