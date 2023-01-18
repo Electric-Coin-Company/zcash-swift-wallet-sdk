@@ -201,7 +201,7 @@ public extension PendingTransactionEntity {
             blockTime: createTime,
             expiryHeight: expiryHeight,
             fee: fee,
-            id: id,
+            id: id ?? -1,
             index: nil,
             isWalletInternal: false,
             hasChange: false,

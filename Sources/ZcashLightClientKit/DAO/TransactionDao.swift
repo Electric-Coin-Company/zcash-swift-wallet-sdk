@@ -75,7 +75,7 @@ extension TransactionSQLDAO {
 
     func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview] {
         let query = transactionsView
-            .order(Transaction.Overview.Column.minedHeight.asc, Transaction.Overview.Column.id.asc)
+            .order((Transaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, Transaction.Overview.Column.id.desc)
             .filterQueryFor(kind: kind)
             .limit(limit, offset: offset)
 
@@ -84,7 +84,7 @@ extension TransactionSQLDAO {
 
     func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview] {
         let query = transactionsView
-            .order(Transaction.Overview.Column.minedHeight.asc, Transaction.Overview.Column.id.asc)
+            .order((Transaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, Transaction.Overview.Column.id.desc)
             .filter(
                 Transaction.Overview.Column.minedHeight >= BlockHeight(range.start.height) &&
                 Transaction.Overview.Column.minedHeight <= BlockHeight(range.end.height)
@@ -102,7 +102,7 @@ extension TransactionSQLDAO {
         else { throw TransactionRepositoryError.transactionMissingRequiredFields }
 
         let query = transactionsView
-            .order(Transaction.Overview.Column.minedHeight.asc, Transaction.Overview.Column.id.asc)
+            .order((Transaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, Transaction.Overview.Column.id.desc)
             .filter(Int64(transactionBlockTime) > Transaction.Overview.Column.blockTime && transactionIndex > Transaction.Overview.Column.index)
             .filterQueryFor(kind: kind)
             .limit(limit)
@@ -112,7 +112,7 @@ extension TransactionSQLDAO {
 
     func findReceived(offset: Int, limit: Int) throws -> [Transaction.Received] {
         let query = receivedTransactionsView
-            .order(Transaction.Received.Column.minedHeight.asc, Transaction.Received.Column.id.asc)
+            .order((Transaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, Transaction.Overview.Column.id.desc)
             .limit(limit, offset: offset)
 
         return try execute(query) { try Transaction.Received(row: $0) }
@@ -120,25 +120,22 @@ extension TransactionSQLDAO {
 
     func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent] {
         let query = sentTransactionsView
-            .order(Transaction.Sent.Column.minedHeight.asc, Transaction.Sent.Column.id.asc)
+            .order((Transaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, Transaction.Overview.Column.id.desc)
             .limit(limit, offset: offset)
 
         return try execute(query) { try Transaction.Sent(row: $0) }
     }
 
     func findMemos(for transaction: Transaction.Overview) throws -> [Memo] {
-        guard let transactionID = transaction.id else { throw TransactionRepositoryError.transactionMissingRequiredFields }
-        return try findMemos(for: transactionID, table: receivedNotesTable)
+        return try findMemos(for: transaction.id, table: receivedNotesTable)
     }
 
     func findMemos(for receivedTransaction: Transaction.Received) throws -> [Memo] {
-        guard let transactionID = receivedTransaction.id else { throw TransactionRepositoryError.transactionMissingRequiredFields }
-        return try findMemos(for: transactionID, table: receivedNotesTable)
+        return try findMemos(for: receivedTransaction.id, table: receivedNotesTable)
     }
 
     func findMemos(for sentTransaction: Transaction.Sent) throws -> [Memo] {
-        guard let transactionID = sentTransaction.id else { throw TransactionRepositoryError.transactionMissingRequiredFields }
-        return try findMemos(for: transactionID, table: sentNotesTable)
+        return try findMemos(for: sentTransaction.id, table: sentNotesTable)
     }
 
     private func findMemos(for transactionID: Int, table: Table) throws -> [Memo] {

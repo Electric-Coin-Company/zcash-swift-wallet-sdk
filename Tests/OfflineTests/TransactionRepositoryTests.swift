@@ -59,11 +59,11 @@ class TransactionRepositoryTests: XCTestCase {
         )
 
         XCTAssertEqual(transactions.count, 3)
-        XCTAssertEqual(transactions[0].minedHeight, 663218)
+        XCTAssertEqual(transactions[0].minedHeight, 663974)
         XCTAssertEqual(transactions[0].isSentTransaction, false)
-        XCTAssertEqual(transactions[1].minedHeight, 663229)
+        XCTAssertEqual(transactions[1].minedHeight, 663953)
         XCTAssertEqual(transactions[1].isSentTransaction, false)
-        XCTAssertEqual(transactions[2].minedHeight, 663953)
+        XCTAssertEqual(transactions[2].minedHeight, 663229)
         XCTAssertEqual(transactions[2].isSentTransaction, false)
     }
     
@@ -110,22 +110,22 @@ class TransactionRepositoryTests: XCTestCase {
 
     func testFindReceivedOffsetLimit() {
         var transactions: [Transaction.Received] = []
-        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findReceived(offset: 2, limit: 3) }())
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findReceived(offset: 3, limit: 3) }())
 
         XCTAssertEqual(transactions.count, 3)
-        XCTAssertEqual(transactions[0].minedHeight, 663202)
-        XCTAssertEqual(transactions[1].minedHeight, 663218)
-        XCTAssertEqual(transactions[2].minedHeight, 663229)
+        XCTAssertEqual(transactions[0].minedHeight, 664022)
+        XCTAssertEqual(transactions[1].minedHeight, 664012)
+        XCTAssertEqual(transactions[2].minedHeight, 664003)
     }
 
     func testFindSentOffsetLimit() {
         var transactions: [Transaction.Sent] = []
-        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findSent(offset: 2, limit: 3) }())
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.findSent(offset: 3, limit: 3) }())
 
         XCTAssertEqual(transactions.count, 3)
-        XCTAssertEqual(transactions[0].minedHeight, 663922)
-        XCTAssertEqual(transactions[1].minedHeight, 663938)
-        XCTAssertEqual(transactions[2].minedHeight, 663942)
+        XCTAssertEqual(transactions[0].minedHeight, 664022)
+        XCTAssertEqual(transactions[1].minedHeight, 664012)
+        XCTAssertEqual(transactions[2].minedHeight, 663956)
     }
 
     func testFindMemoForTransaction() {
@@ -195,6 +195,19 @@ class TransactionRepositoryTests: XCTestCase {
 
         XCTAssertEqual(memos.count, 1)
         XCTAssertEqual(memos[0].toString(), "Some funds")
+    }
+
+    func testFindTransactionWithNULLMinedHeight() {
+        var transactions: [Transaction.Overview] = []
+        XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: 3, kind: .all) }())
+
+        XCTAssertEqual(transactions.count, 3)
+        XCTAssertEqual(transactions[0].id, 21)
+        XCTAssertEqual(transactions[0].minedHeight, nil)
+        XCTAssertEqual(transactions[1].id, 20)
+        XCTAssertEqual(transactions[1].minedHeight, 664037)
+        XCTAssertEqual(transactions[2].id, 19)
+        XCTAssertEqual(transactions[2].minedHeight, 664022)
     }
     
     func testFindAllPerformance() {
