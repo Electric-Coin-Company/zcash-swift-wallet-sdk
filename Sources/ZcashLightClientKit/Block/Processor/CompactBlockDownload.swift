@@ -9,7 +9,6 @@
 import Foundation
 
 extension CompactBlockProcessor {
-
     class BlocksDownloadStream {
         let stream: AsyncThrowingStream<ZcashCompactBlock, Error>
         var iterator: AsyncThrowingStream<ZcashCompactBlock, Error>.Iterator

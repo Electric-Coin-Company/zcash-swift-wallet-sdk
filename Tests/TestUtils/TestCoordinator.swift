@@ -173,19 +173,19 @@ class TestCoordinator {
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
     
     @objc func synchronizerStarted(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
     
     @objc func synchronizerStopped(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
     
     @objc func synchronizerSyncing(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
 }
 
@@ -338,9 +338,8 @@ enum TestSynchronizerBuilder {
         loggerProxy: Logger? = nil
     ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let spendingKey = try DerivationTool(networkType: network.networkType)
-                .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+            .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
-        
         let uvk = try DerivationTool(networkType: network.networkType)
             .deriveUnifiedFullViewingKey(from: spendingKey)
 

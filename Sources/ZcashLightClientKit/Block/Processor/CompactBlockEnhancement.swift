@@ -23,7 +23,7 @@ extension CompactBlockProcessor {
         let transactionID = fetchedTransaction.rawID.toHexStringTxId()
         let block = String(describing: transaction.minedHeight)
         LoggerProxy.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
-
+        
         let decryptionResult = rustBackend.decryptAndStoreTransaction(
             dbData: config.dataDb,
             txBytes: fetchedTransaction.raw.bytes,
@@ -91,11 +91,10 @@ extension CompactBlockProcessor {
                                 )
                             )
                         )
-                        
+
                         if let minedHeight = confirmedTx.minedHeight {
                             await internalSyncProgress.set(minedHeight, .latestEnhancedHeight)
                         }
-
                     } catch {
                         retries += 1
                         LoggerProxy.error("could not enhance txId \(transaction.rawID.toHexStringTxId()) - Error: \(error)")

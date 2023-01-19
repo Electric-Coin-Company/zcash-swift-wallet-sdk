@@ -75,7 +75,7 @@ public extension Memo {
 
         case .arbitrary(var arbitraryBytes):
             arbitraryBytes.insert(0xFF, at: 0)
-            return try MemoBytes(bytes:arbitraryBytes)
+            return try MemoBytes(bytes: arbitraryBytes)
         }
     }
 }
@@ -85,7 +85,7 @@ public struct MemoText: Equatable {
     public private(set) var string: String
 
     init(_ string: String) throws {
-        let trimmedString = String(string.reversed().drop(while: { $0 == "\u{0}"}).reversed())
+        let trimmedString = String(string.reversed().drop(while: { $0 == "\u{0}" }).reversed())
 
         guard trimmedString.count == string.count else {
             throw MemoBytes.Errors.endsWithNullBytes
@@ -144,6 +144,7 @@ public struct MemoBytes: Equatable {
     }
 
     public static func empty() -> Self {
+        // swiftlint:disable:next force_try
         try! Self(bytes: .emptyMemoBytes)
     }
 }
@@ -231,11 +232,14 @@ extension Array where Element == UInt8 {
 
 extension String {
     public init?(validatingUTF8 cString: UnsafePointer<UInt8>) {
-        guard let (s, _) = String.decodeCString(cString, as: UTF8.self,
-                                                repairingInvalidCodeUnits: false) else {
+        guard let (str, _) = String.decodeCString(
+            cString,
+            as: UTF8.self,
+            repairingInvalidCodeUnits: false
+        ) else {
             return nil
         }
-        self = s
+        self = str
     }
 }
 

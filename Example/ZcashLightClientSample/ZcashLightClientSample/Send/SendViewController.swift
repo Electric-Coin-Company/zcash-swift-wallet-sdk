@@ -357,8 +357,8 @@ extension SDKSynchronizer {
         case .unprepared:
             return "Unprepared 😅"
 
-        case .error(let e):
-            return "Error: \(e.localizedDescription)"
+        case .error(let error):
+            return "Error: \(error.localizedDescription)"
         }
     }
 }

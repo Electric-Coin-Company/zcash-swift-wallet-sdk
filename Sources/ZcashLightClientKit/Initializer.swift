@@ -60,7 +60,6 @@ The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Ru
 functionality, related to processing blocks.
 */
 public class Initializer {
-
     public enum InitializationResult {
         case success
         case seedRequired
@@ -262,7 +261,6 @@ public class Initializer {
         return balance
     }
 
-
     /// get (unverified) balance from the given account index
     /// - Parameter account: the index of the account
     /// - Returns: balance in `Zatoshi`
@@ -297,7 +295,7 @@ public class Initializer {
             dbData: dataDbURL,
             account: Int32(index),
             networkType: network.networkType
-        ) else { return .zero}
+        ) else { return .zero }
 
         return Zatoshi(balance)
     }
@@ -338,7 +336,6 @@ enum CompactBlockProcessorBuilder {
     }
 }
 
-
 extension InitializerError: LocalizedError {
     public var errorDescription: String? {
         switch self {
@@ -353,7 +350,6 @@ extension InitializerError: LocalizedError {
         }
     }
 }
-
 
 /// Synchronous helpers that support clients that don't use structured concurrency yet
 extension Initializer {

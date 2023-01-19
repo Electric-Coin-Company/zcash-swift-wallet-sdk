@@ -11,11 +11,11 @@ import XCTest
 
 // swiftlint:disable type_body_length implicitly_unwrapped_optional force_unwrapping file_length
 class BalanceTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount = Zatoshi(1000)
     let defaultLatestHeight: BlockHeight = 663188
@@ -60,7 +60,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -178,7 +178,7 @@ class BalanceTests: XCTestCase {
         }
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     confirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -218,7 +218,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -336,7 +336,7 @@ class BalanceTests: XCTestCase {
         }
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     confirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -377,7 +377,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -493,7 +493,7 @@ class BalanceTests: XCTestCase {
         }
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     confirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -540,7 +540,7 @@ class BalanceTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -574,12 +574,9 @@ class BalanceTests: XCTestCase {
             pendingTx = transaction
             self.sentTransactionExpectation.fulfill()
         } catch {
-            /*
-             balance should be the same as before sending if transaction failed
-             */
+            // balance should be the same as before sending if transaction failed
             XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), presendVerifiedBalance)
             XCTFail("sendToAddress failed: \(error)")
-
         }
         
         XCTAssertTrue(coordinator.synchronizer.initializer.getVerifiedBalance() > .zero)
@@ -604,7 +601,7 @@ class BalanceTests: XCTestCase {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(
-                    completion: { synchronizer in
+                    completion: { _ in
                         mineExpectation.fulfill()
                         continuation.resume()
                     }, error: { error in
@@ -724,7 +721,7 @@ class BalanceTests: XCTestCase {
         sleep(2)
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -800,7 +797,7 @@ class BalanceTests: XCTestCase {
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(
-                    completion: { synchronizer in
+                    completion: { _ in
                         mineExpectation.fulfill()
                         continuation.resume()
                     }, error: { error in
@@ -891,7 +888,7 @@ class BalanceTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -951,83 +948,86 @@ class BalanceTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
-                    let confirmedTx: Transaction.Overview!
-                    do {
-                        confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
-                            confirmed.rawID == pendingTx?.rawTransactionId
-                        })
-                    } catch {
-                        XCTFail("Error  retrieving cleared transactions")
-                        return
-                    }
+                try coordinator.sync(
+                    completion: { synchronizer in
+                        let confirmedTx: Transaction.Overview!
+                        do {
+                            confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
+                                confirmed.rawID == pendingTx?.rawTransactionId
+                            })
+                        } catch {
+                            XCTFail("Error  retrieving cleared transactions")
+                            return
+                        }
 
-                    /*
-                    There’s a sent transaction matching the amount sent to the given zAddr
-                    */
-                    XCTAssertEqual(confirmedTx.value, self.sendAmount)
-                    // TODO [#683]: Add API to SDK to fetch memos.
-//                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
-//                    XCTAssertEqual(confirmedMemo, memo)
+                        /*
+                        There’s a sent transaction matching the amount sent to the given zAddr
+                        */
+                        XCTAssertEqual(confirmedTx.value, self.sendAmount)
+                        // TODO [#683]: Add API to SDK to fetch memos.
+                        //                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
+                        //                    XCTAssertEqual(confirmedMemo, memo)
 
-                    /*
-                    Find out what note was used
-                    */
-                    let sentNotesRepo = SentNotesSQLDAO(
-                        dbProvider: SimpleConnectionProvider(
-                            path: synchronizer.initializer.dataDbURL.absoluteString,
-                            readonly: true
+                        /*
+                        Find out what note was used
+                        */
+                        let sentNotesRepo = SentNotesSQLDAO(
+                            dbProvider: SimpleConnectionProvider(
+                                path: synchronizer.initializer.dataDbURL.absoluteString,
+                                readonly: true
+                            )
                         )
-                    )
 
-                    guard let sentNote = try? sentNotesRepo.sentNote(byRawTransactionId: confirmedTx.rawID) else {
-                        XCTFail("Could not finde sent note with transaction Id \(confirmedTx.rawID)")
-                        return
-                    }
+                        guard let sentNote = try? sentNotesRepo.sentNote(byRawTransactionId: confirmedTx.rawID) else {
+                            XCTFail("Could not finde sent note with transaction Id \(confirmedTx.rawID)")
+                            return
+                        }
 
-                    let receivedNotesRepo = ReceivedNotesSQLDAO(
-                        dbProvider: SimpleConnectionProvider(
-                            path: self.coordinator.synchronizer.initializer.dataDbURL.absoluteString,
-                            readonly: true
+                        let receivedNotesRepo = ReceivedNotesSQLDAO(
+                            dbProvider: SimpleConnectionProvider(
+                                path: self.coordinator.synchronizer.initializer.dataDbURL.absoluteString,
+                                readonly: true
+                            )
                         )
-                    )
 
-                    /*
-                    get change note
-                    */
-                    guard let receivedNote = try? receivedNotesRepo.receivedNote(byRawTransactionId: confirmedTx.rawID) else {
-                        XCTFail("Could not find received not with change for transaction Id \(confirmedTx.rawID)")
-                        return
-                    }
+                        /*
+                        get change note
+                        */
+                        guard let receivedNote = try? receivedNotesRepo.receivedNote(byRawTransactionId: confirmedTx.rawID) else {
+                            XCTFail("Could not find received not with change for transaction Id \(confirmedTx.rawID)")
+                            return
+                        }
 
-                    /*
-                    There’s a change note of value (previous note value - sent amount)
-                    */
-                    XCTAssertEqual(
-                        previousVerifiedBalance - self.sendAmount - self.network.constants.defaultFee(for: self.defaultLatestHeight),
-                        Zatoshi(Int64(receivedNote.value))
-                    )
+                        /*
+                        There’s a change note of value (previous note value - sent amount)
+                        */
+                        XCTAssertEqual(
+                            previousVerifiedBalance - self.sendAmount - self.network.constants.defaultFee(for: self.defaultLatestHeight),
+                            Zatoshi(Int64(receivedNote.value))
+                        )
 
-                    /*
-                    Balance meets verified Balance and total balance criteria
-                    */
-                    self.verifiedBalanceValidation(
-                        previousBalance: previousVerifiedBalance,
-                        spentNoteValue: Zatoshi(Int64(sentNote.value)),
-                        changeValue: Zatoshi(Int64(receivedNote.value)),
-                        sentAmount: self.sendAmount,
-                        currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance()
-                    )
+                        /*
+                        Balance meets verified Balance and total balance criteria
+                        */
+                        self.verifiedBalanceValidation(
+                            previousBalance: previousVerifiedBalance,
+                            spentNoteValue: Zatoshi(Int64(sentNote.value)),
+                            changeValue: Zatoshi(Int64(receivedNote.value)),
+                            sentAmount: self.sendAmount,
+                            currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance()
+                        )
 
-                    self.totalBalanceValidation(
-                        totalBalance: synchronizer.initializer.getBalance(),
-                        previousTotalbalance: previousTotalBalance,
-                        sentAmount: self.sendAmount
-                    )
+                        self.totalBalanceValidation(
+                            totalBalance: synchronizer.initializer.getBalance(),
+                            previousTotalbalance: previousTotalBalance,
+                            sentAmount: self.sendAmount
+                        )
 
-                    syncToMinedheightExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
+                        syncToMinedheightExpectation.fulfill()
+                        continuation.resume()
+                    },
+                    error: self.handleError
+                )
             } catch {
                 continuation.resume(throwing: error)
             }
@@ -1066,7 +1066,7 @@ class BalanceTests: XCTestCase {
         sleep(2)
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -1116,7 +1116,7 @@ class BalanceTests: XCTestCase {
         sleep(2)
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     expirationSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)

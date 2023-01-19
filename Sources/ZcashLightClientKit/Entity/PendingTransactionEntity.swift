@@ -17,18 +17,18 @@ Represents a sent transaction that has not been confirmed yet on the blockchain
 */
 public protocol PendingTransactionEntity: RawIdentifiable {
     /**
-     internal id for this transaction
-     */
+    internal id for this transaction
+    */
     var id: Int? { get set }
 
     /**
-     value in zatoshi
-     */
+    value in zatoshi
+    */
     var value: Zatoshi { get set }
 
     /**
-     data containing the memo if any
-     */
+    data containing the memo if any
+    */
     var memo: Data? { get set }
 
     var fee: Zatoshi? { get set }

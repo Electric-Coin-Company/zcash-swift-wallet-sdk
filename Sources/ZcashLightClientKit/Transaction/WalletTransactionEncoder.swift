@@ -148,6 +148,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         let readableSpend = FileManager.default.isReadableFile(atPath: spend.path)
         let readableOutput = FileManager.default.isReadableFile(atPath: output.path)
         
-        return readableSpend && readableOutput // Todo: change this to something that makes sense
+        // TODO: [#713] change this to something that makes sense, https://github.com/zcash/ZcashLightClientKit/issues/713
+        return readableSpend && readableOutput
     }
 }

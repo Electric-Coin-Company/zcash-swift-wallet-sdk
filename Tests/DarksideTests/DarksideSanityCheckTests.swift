@@ -12,10 +12,10 @@ import XCTest
 
 // swiftlint:disable implicitly_unwrapped_optional
 class DarksideSanityCheckTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 
     let sendAmount: Int64 = 1000
@@ -66,11 +66,11 @@ class DarksideSanityCheckTests: XCTestCase {
                 syncExpectation.fulfill()
             },
             error: { error in
-                guard let e = error else {
+                guard let error else {
                     XCTFail("failed with unknown error")
                     return
                 }
-                XCTFail("failed with error: \(e)")
+                XCTFail("failed with error: \(error)")
                 return
             }
         )

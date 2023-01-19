@@ -8,7 +8,6 @@
 import Foundation
 import SQLite
 struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
-
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
         case toInternalAccount = "to_internal"
@@ -147,7 +146,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         
         var toAddress: String?
         var accountId: Int?
-        switch (self.recipient) {
+        switch recipient {
         case .address(let recipient):
             toAddress = recipient.stringEncoded
         case .internalAccount(let acct):

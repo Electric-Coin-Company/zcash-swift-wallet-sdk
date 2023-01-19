@@ -18,11 +18,11 @@ class TransactionSQLDAO: TransactionRepository {
     var transactions = Table("transactions")
     private var blockDao: BlockSQLDAO
 
-    fileprivate let transactionsView = View("v_transactions")
-    fileprivate let receivedTransactionsView = View("v_tx_received")
-    fileprivate let sentTransactionsView = View("v_tx_sent")
-    fileprivate let receivedNotesTable = Table("received_notes")
-    fileprivate let sentNotesTable = Table("sent_notes")
+    private let transactionsView = View("v_transactions")
+    private let receivedTransactionsView = View("v_tx_received")
+    private let sentTransactionsView = View("v_tx_sent")
+    private let receivedNotesTable = Table("received_notes")
+    private let sentNotesTable = Table("sent_notes")
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
@@ -52,11 +52,7 @@ class TransactionSQLDAO: TransactionRepository {
     func countUnmined() throws -> Int {
         try dbProvider.connection().scalar(transactions.filter(Transaction.Overview.Column.minedHeight == nil).count)
     }
-}
 
-// MARK: - Queries
-
-extension TransactionSQLDAO {
     func find(id: Int) throws -> Transaction.Overview {
         let query = transactionsView
             .filter(Transaction.Overview.Column.id == id)

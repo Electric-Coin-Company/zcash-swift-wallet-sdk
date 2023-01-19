@@ -47,9 +47,7 @@ public struct TransparentAccountPrivKey: Equatable, Undescribable {
     var encoding: String
 }
 
-/**
- A ZIP 316 Unified Full Viewing Key.
- */
+/// A ZIP 316 Unified Full Viewing Key.
 public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
     var encoding: String
 
@@ -268,13 +266,13 @@ public enum Recipient: Equatable, StringEncoded {
     }
     
     static func forEncodedAddress(encoded: String) -> (Recipient, NetworkType)? {
-        return DerivationTool.getAddressMetadata(encoded).map { m in
-            switch m.addressType {
+        return DerivationTool.getAddressMetadata(encoded).map { metadata in
+            switch metadata.addressType {
             case .p2pkh: return (.transparent(TransparentAddress(validatedEncoding: encoded)),
-                m.networkType)
-            case .p2sh:  return (.transparent(TransparentAddress(validatedEncoding: encoded)), m.networkType)
-            case .sapling: return (.sapling(SaplingAddress(validatedEncoding: encoded)), m.networkType)
-            case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded)), m.networkType)
+                metadata.networkType)
+            case .p2sh:  return (.transparent(TransparentAddress(validatedEncoding: encoded)), metadata.networkType)
+            case .sapling: return (.sapling(SaplingAddress(validatedEncoding: encoded)), metadata.networkType)
+            case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded)), metadata.networkType)
             }
         }
     }
@@ -283,8 +281,8 @@ public enum Recipient: Equatable, StringEncoded {
 public struct WalletBalance: Equatable {
     public var verified: Zatoshi
     public var total: Zatoshi
-
-    public init(verified: Zatoshi, total: Zatoshi) {    
+    
+    public init(verified: Zatoshi, total: Zatoshi) {
         self.verified = verified
         self.total = total
     }

@@ -62,11 +62,10 @@ class TransactionEnhancementTests: XCTestCase {
         let ufvks = [
             try DerivationTool(networkType: network.networkType)
                 .deriveUnifiedSpendingKey(seed: TestSeed().seed(), accountIndex: 0)
-                .map{
+                .map {
                     try DerivationTool(networkType: network.networkType)
                         .deriveUnifiedFullViewingKey(from: $0)
                 }
-
         ]
         do {
             try rustBackend.initAccountsTable(
@@ -75,7 +74,7 @@ class TransactionEnhancementTests: XCTestCase {
                 networkType: network.networkType
             )
         } catch {
-            XCTFail("Failed to init accounts table error: " + String(describing: rustBackend.getLastError()))
+            XCTFail("Failed to init accounts table error: \(String(describing: rustBackend.getLastError()))")
             return
         }
         

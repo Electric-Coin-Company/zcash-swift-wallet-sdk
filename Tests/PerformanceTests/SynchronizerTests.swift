@@ -9,6 +9,7 @@ import XCTest
 @testable import ZcashLightClientKit
 @testable import TestUtils
 
+// swiftlint:disable line_length
 class SynchronizerTests: XCTestCase {
     class MockLatestBlockHeightProvider: LatestBlockHeightProvider {
         let birthday: BlockHeight
@@ -22,16 +23,19 @@ class SynchronizerTests: XCTestCase {
         }
     }
 
+    // swiftlint:disable:next implicitly_unwrapped_optional
     var coordinator: TestCoordinator!
 
-    // swiftlint:disable:next line_length
     let seedPhrase = "wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame"
     var birthday: BlockHeight = 1_730_000
 
     @MainActor
     func testHundredBlocksSync() async throws {
         let derivationTool = DerivationTool(networkType: .mainnet)
-        let seedData: Data = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
+        guard let seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==") else {
+            XCTFail("seedData expected to be successfuly instantiated.")
+            return
+        }
         let seedBytes = [UInt8](seedData)
         let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
             seed: seedBytes,
@@ -71,7 +75,9 @@ class SynchronizerTests: XCTestCase {
             
             let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
             await internalSyncProgress.rewind(to: birthday)
-            await (synchronizer.blockProcessor.service as? LightWalletGRPCService)?.latestBlockHeightProvider = MockLatestBlockHeightProvider(birthday: self.birthday + 99)
+            await (synchronizer.blockProcessor.service as? LightWalletGRPCService)?.latestBlockHeightProvider = MockLatestBlockHeightProvider(
+                birthday: self.birthday + 99
+            )
             
             try synchronizer.start()
             

@@ -72,7 +72,6 @@ class PaginatedTransactionsViewController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? TransactionDetailViewController, let row = selectedRow {
-
             let transaction = transactions[row]
 
             let memos: [Memo]

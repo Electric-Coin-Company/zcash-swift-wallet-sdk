@@ -9,7 +9,6 @@ import Foundation
 import SQLite
 
 public enum Transaction {
-
     public struct Overview {
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?

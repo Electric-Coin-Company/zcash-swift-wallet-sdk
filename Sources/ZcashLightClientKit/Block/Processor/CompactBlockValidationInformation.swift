@@ -42,7 +42,6 @@ extension CompactBlockProcessor {
                     LoggerProxy.debug("Warning: compactBlockValidation cancelled")
                 }
                 LoggerProxy.debug("validateChainFinished")
-                break
                 
             default:
                 let error = CompactBlockValidationError.validationFailed(height: BlockHeight(result))

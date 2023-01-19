@@ -60,7 +60,7 @@ public class SDKMetrics {
     public var cumulativeSummaries: [CumulativeSummary] = []
     public var syncReport: SyncReport?
     var isEnabled = false
-    var reports: [Operation : [BlockMetricReport]] = [:]
+    var reports: [Operation: [BlockMetricReport]] = [:]
 
     /// `SDKMetrics` is disabled by default. Any pushed data are simply ignored until `enableMetrics()` is called.
     public func enableMetrics() {
@@ -129,7 +129,7 @@ public class SDKMetrics {
     
     /// A method allowing users of the `SDKMetrics` to pop the RAW data out of the system. This time for all measured operations
     /// with option to either leave data in the storage or flushing it out and start the next batch of collecting new ones.
-    public func popAllBlockReports(flush: Bool = false) -> [Operation : [BlockMetricReport]] {
+    public func popAllBlockReports(flush: Bool = false) -> [Operation: [BlockMetricReport]] {
         defer {
             if flush { clearAllBlockReports() }
         }

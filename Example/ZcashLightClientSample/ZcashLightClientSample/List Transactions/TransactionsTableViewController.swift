@@ -13,7 +13,7 @@ class TransactionsTableViewController: UITableViewController {
     var datasource: TransactionsDataSource? {
         didSet {
             self.tableView.dataSource = datasource
-            try! datasource?.load()
+            try? datasource?.load()
             if viewIfLoaded != nil {
                 self.tableView.reloadData()
             }
@@ -26,7 +26,7 @@ class TransactionsTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.tableView.dataSource = datasource
-        try! datasource?.load()
+        try? datasource?.load()
         self.tableView.reloadData()
     }
 }

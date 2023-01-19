@@ -29,7 +29,7 @@ final class SDKMetricsTests: XCTestCase {
         if let reports = SDKMetrics.shared.reports[.downloadBlocks], let report = reports.first {
             XCTAssertEqual(report, SDKMetrics.BlockMetricReport.placeholderA)
         } else {
-            XCTFail()
+            XCTFail("Not expected to fail.")
         }
         
         SDKMetrics.shared.disableMetrics()
@@ -43,7 +43,7 @@ final class SDKMetricsTests: XCTestCase {
         if let reports = SDKMetrics.shared.popBlock(operation: .downloadBlocks), let report = reports.first {
             XCTAssertEqual(report, SDKMetrics.BlockMetricReport.placeholderA)
         } else {
-            XCTFail()
+            XCTFail("Not expected to fail.")
         }
         
         SDKMetrics.shared.disableMetrics()

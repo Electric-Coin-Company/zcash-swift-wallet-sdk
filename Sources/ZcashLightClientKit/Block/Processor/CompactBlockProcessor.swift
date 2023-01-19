@@ -138,8 +138,8 @@ public extension Notification.Name {
     static let blockProcessorStatusChanged = Notification.Name(rawValue: "CompactBlockProcessorStatusChanged")
 
     /**
-     Notification sent when a compact block processor starts syncing
-     */
+    Notification sent when a compact block processor starts syncing
+    */
     static let blockProcessorStartedSyncing = Notification.Name(rawValue: "CompactBlockProcessorStartedSyncing")
 
     /**
@@ -202,18 +202,16 @@ public extension Notification.Name {
     static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
 }
 
-
 /// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
 /// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
-public actor CompactBlockProcessor {
-
+actor CompactBlockProcessor {
     /// Compact Block Processor configuration
     ///
     /// Property: cacheDbPath absolute file path of the DB where raw, unprocessed compact blocks are stored.
     /// Property: dataDbPath absolute file path of the DB where all information derived from the cache DB is stored.
     /// Property: spendParamsURL absolute file path of the sapling-spend.params file
     /// Property: outputParamsURL absolute file path of the sapling-output.params file
-    public struct Configuration {
+    struct Configuration {
         public var cacheDb: URL
         public var dataDb: URL
         public var spendParamsURL: URL
@@ -229,7 +227,7 @@ public actor CompactBlockProcessor {
         private(set) var network: ZcashNetwork
         private(set) var saplingActivation: BlockHeight
 
-        public var blockPollInterval: TimeInterval {
+        var blockPollInterval: TimeInterval {
             TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
         }
         
@@ -261,7 +259,7 @@ public actor CompactBlockProcessor {
             assert(downloadBatchSize >= scanningBatchSize)
         }
         
-        public init(
+        init(
             cacheDb: URL,
             dataDb: URL,
             spendParamsURL: URL,
@@ -284,7 +282,7 @@ public actor CompactBlockProcessor {
     /**
     Represents the possible states of a CompactBlockProcessor
     */
-    public enum State {
+    enum State {
         /**
         connected and downloading blocks
         */
@@ -308,7 +306,7 @@ public actor CompactBlockProcessor {
         /**
         was processing but erred
         */
-        case error(_ e: Error)
+        case error(_ error: Error)
 
         /// Download sapling param files if needed.
         case handlingSaplingFiles
@@ -319,7 +317,7 @@ public actor CompactBlockProcessor {
         case synced
     }
     
-    public internal(set) var state: State = .stopped {
+    var state: State = .stopped {
         didSet {
             transitionState(from: oldValue, to: self.state)
         }
@@ -396,7 +394,7 @@ public actor CompactBlockProcessor {
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    public init(initializer: Initializer) {
+    init(initializer: Initializer) {
         self.init(
             service: initializer.lightWalletService,
             storage: initializer.storage,
@@ -477,7 +475,7 @@ public actor CompactBlockProcessor {
     /// triggers the blockProcessorStartedDownloading notification
     ///
     /// - Important: subscribe to the notifications before calling this method
-    public func start(retry: Bool = false) async {
+    func start(retry: Bool = false) async {
         if retry {
             self.retryAttempts = 0
             self.processingError = nil
@@ -487,9 +485,9 @@ public actor CompactBlockProcessor {
 
         guard shouldStart else {
             switch self.state {
-            case .error(let e):
+            case .error(let error):
                 // max attempts have been reached
-                LoggerProxy.info("max retry attempts reached with error: \(e)")
+                LoggerProxy.info("max retry attempts reached with error: \(error)")
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
                 state = .stopped
             case .stopped:
@@ -515,7 +513,7 @@ public actor CompactBlockProcessor {
 
     Note: retry count is reset
     */
-    public func stop() {
+    func stop() {
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
 
@@ -530,7 +528,7 @@ public actor CompactBlockProcessor {
 
     If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is thrown.
     */
-    public func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
+    func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
         guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
 
         let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
@@ -549,7 +547,7 @@ public actor CompactBlockProcessor {
             throw error
         }
 
-        // FIXME: this should be done on the rust layer
+        // FIXME: [#719] this should be done on the rust layer, https://github.com/zcash/ZcashLightClientKit/issues/719
         let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
         guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
@@ -679,7 +677,7 @@ public actor CompactBlockProcessor {
         for i in 0..<loopsCount {
             let processingRange = computeSingleLoopDownloadRange(fullRange: range, loopCounter: i, batchSize: batchSize)
 
-            LoggerProxy.debug("Sync loop #\(i+1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
+            LoggerProxy.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
 
             try await downloadAndStoreBlocks(
                 using: downloadStream,
@@ -701,19 +699,19 @@ public actor CompactBlockProcessor {
     }
 
     /*
-     Here range for one batch is computed. For example if we want to sync blocks 0...1000 with batchSize 100 we want to generage blocks like
-     this:
-     0...99
-     100...199
-     200...299
-     300...399
-     ...
-     900...999
-     1000...1000
-     */
+    Here range for one batch is computed. For example if we want to sync blocks 0...1000 with batchSize 100 we want to generage blocks like
+    this:
+    0...99
+    100...199
+    200...299
+    300...399
+    ...
+    900...999
+    1000...1000
+    */
     func computeSingleLoopDownloadRange(fullRange: CompactBlockRange, loopCounter: Int, batchSize: BlockHeight) -> CompactBlockRange {
         let lowerBound = fullRange.lowerBound + (loopCounter * batchSize)
-        let upperBound = min(fullRange.lowerBound + ((loopCounter+1) * batchSize) - 1, fullRange.upperBound)
+        let upperBound = min(fullRange.lowerBound + ((loopCounter + 1) * batchSize) - 1, fullRange.upperBound)
         return lowerBound...upperBound
     }
 
@@ -777,7 +775,7 @@ public actor CompactBlockProcessor {
     }
 
     func fail(_ error: Error) async {
-        // todo specify: failure
+        // TODO: [#713] specify: failure. https://github.com/zcash/ZcashLightClientKit/issues/713
         LoggerProxy.error("\(error)")
         cancelableTask?.cancel()
         self.retryAttempts += 1
@@ -934,12 +932,12 @@ public actor CompactBlockProcessor {
                     guard let self = self else { return }
                     if await self.shouldStart {
                         LoggerProxy.debug(
-                                """
-                                Timer triggered: Starting compact Block processor!.
-                                Processor State: \(await self.state)
-                                latestHeight: \(try await self.transactionRepository.lastScannedHeight())
-                                attempts: \(await self.retryAttempts)
-                                """
+                            """
+                            Timer triggered: Starting compact Block processor!.
+                            Processor State: \(await self.state)
+                            latestHeight: \(try await self.transactionRepository.lastScannedHeight())
+                            attempts: \(await self.retryAttempts)
+                            """
                         )
                         await self.start()
                     } else if await self.maxAttemptsReached {
@@ -993,10 +991,10 @@ public actor CompactBlockProcessor {
             userInfo: [CompactBlockProcessorNotificationKey.error: mapError(err)]
         )
     }
-    // TODO: encapsulate service errors better
+    // TODO: [#713] encapsulate service errors better, https://github.com/zcash/ZcashLightClientKit/issues/713
 }
 
-public extension CompactBlockProcessor.Configuration {
+extension CompactBlockProcessor.Configuration {
     /**
     Standard configuration for most compact block processors
     */
@@ -1055,7 +1053,7 @@ extension CompactBlockProcessor.State: Equatable {
 }
 
 extension CompactBlockProcessor {
-    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
+    func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
         try? rustBackend.getCurrentAddress(
             dbData: config.dataDb,
             account: Int32(accountIndex),
@@ -1063,15 +1061,15 @@ extension CompactBlockProcessor {
         )
     }
     
-    public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
+    func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
         getUnifiedAddress(accountIndex: accountIndex)?.saplingReceiver()
     }
     
-    public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
+    func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
     
-    public func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
+    func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
         guard accountIndex >= 0 else {
             throw CompactBlockProcessorError.invalidAccount
         }
@@ -1081,8 +1079,9 @@ extension CompactBlockProcessor {
                 try rustBackend.getVerifiedTransparentBalance(
                     dbData: config.dataDb,
                     account: Int32(accountIndex),
-                    networkType: config.network.networkType)
-                ),
+                    networkType: config.network.networkType
+                )
+            ),
             total: Zatoshi(
                 try rustBackend.getTransparentBalance(
                     dbData: config.dataDb,
@@ -1098,7 +1097,10 @@ extension CompactBlockProcessor {
     func refreshUTXOs(tAddress: TransparentAddress, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
         let dataDb = self.config.dataDb
         
-        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(tAddress: tAddress.stringEncoded, startHeight: startHeight)
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(
+            tAddress: tAddress.stringEncoded,
+            startHeight: startHeight
+        )
         var utxos: [UnspentTransactionOutputEntity] = []
         
         do {
@@ -1116,7 +1118,7 @@ extension CompactBlockProcessor {
         var skipped: [UnspentTransactionOutputEntity] = []
         for utxo in utxos {
             do {
-                try self.rustBackend.putUnspentTransparentOutput(
+                if try self.rustBackend.putUnspentTransparentOutput(
                     dbData: dataDb,
                     txid: utxo.txid.bytes,
                     index: utxo.index,
@@ -1124,7 +1126,11 @@ extension CompactBlockProcessor {
                     value: Int64(utxo.valueZat),
                     height: utxo.height,
                     networkType: self.config.network.networkType
-                ) ? refreshed.append(utxo) : skipped.append(utxo)
+                ) {
+                    refreshed.append(utxo)
+                } else {
+                    skipped.append(utxo)
+                }
             } catch {
                 LoggerProxy.info("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
@@ -1205,6 +1211,7 @@ extension CompactBlockProcessor: EnhancementStreamDelegate {
 
 extension CompactBlockProcessor {
     enum NextStateHelper {
+        // swiftlint:disable:next function_parameter_count
         static func nextStateAsync(
             service: LightWalletService,
             downloader: CompactBlockDownloading,

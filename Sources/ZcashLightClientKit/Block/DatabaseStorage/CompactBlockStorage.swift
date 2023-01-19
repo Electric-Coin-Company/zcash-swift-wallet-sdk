@@ -43,10 +43,11 @@ class CompactBlockStorage: CompactBlockDAO {
             
             let db = try dbProvider.connection()
          
-            try db.run(compactBlocks.create(ifNotExists: true) { table in
-                table.column(height, primaryKey: true)
-                table.column(data)
-            }
+            try db.run(
+                compactBlocks.create(ifNotExists: true) { table in
+                    table.column(height, primaryKey: true)
+                    table.column(data)
+                }
             )
             
             try db.run(compactBlocks.createIndex(height, ifNotExists: true))

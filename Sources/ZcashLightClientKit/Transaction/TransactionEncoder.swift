@@ -29,7 +29,6 @@ protocol TransactionEncoder {
     /// - Parameter to: string containing the recipient address
     /// - Parameter MemoBytes: string containing the memo (optional)
     /// - Parameter accountIndex: index of the account that will be used to send the funds
-    // swiftlint:disable:next function_parameter_count
     func createTransaction(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,

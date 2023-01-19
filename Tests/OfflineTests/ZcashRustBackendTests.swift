@@ -46,7 +46,7 @@ class ZcashRustBackendTests: XCTestCase {
             return
         }
 
-       XCTAssertThrowsError(try ZcashRustBackend.createAccount(dbData: dbData!, seed: Array(seed.utf8), networkType: networkType))
+        XCTAssertThrowsError(try ZcashRustBackend.createAccount(dbData: dbData!, seed: Array(seed.utf8), networkType: networkType))
     }
 
     func testInitAndScanBlocks() throws {
@@ -57,19 +57,21 @@ class ZcashRustBackendTests: XCTestCase {
         let seed = "testreferencealicetestreferencealice"
 
         var dbInit: DbInitResult!
-        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: Array(seed.utf8), networkType: self.networkType) }())
+        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(
+            dbData: self.dbData!,
+            seed: Array(seed.utf8),
+            networkType: self.networkType
+        ) }())
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
             return
         }
 
-
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
         let ufvks = [
             try DerivationTool(networkType: networkType).deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
                 .deriveFullViewingKey()
-
         ]
         do {
             try ZcashRustBackend.initAccountsTable(dbData: dbData!, ufvks: ufvks, networkType: networkType)
@@ -89,6 +91,7 @@ class ZcashRustBackendTests: XCTestCase {
         
         let addr = try ZcashRustBackend.getCurrentAddress(dbData: dbData!, account: 0, networkType: networkType)
         XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
+        // swiftlint:disable:next line_length
         XCTAssertEqual(addr.saplingReceiver()?.stringEncoded, Optional("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"))
         
         XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData, networkType: networkType))
@@ -145,7 +148,7 @@ class ZcashRustBackendTests: XCTestCase {
             .success
         )
 
-        var usk: UnifiedSpendingKey?;
+        var usk: UnifiedSpendingKey?
         XCTAssertNoThrow(
             usk = try ZcashRustBackend.createAccount(
                 dbData: tempDBs.dataDB,
@@ -160,8 +163,7 @@ class ZcashRustBackendTests: XCTestCase {
         }
         .compactMap({ $0.transparentReceiver() })
 
-
-        let expectedUAs = testVector.map{
+        let expectedUAs = testVector.map {
             UnifiedAddress(validatedEncoding: $0.unified_addr!)
         }
 
@@ -169,8 +171,8 @@ class ZcashRustBackendTests: XCTestCase {
             XCTFail("not enough transparent receivers")
             return
         }
-        var uAddresses = [UnifiedAddress]()
-        for i in (0 ... 2) {
+        var uAddresses: [UnifiedAddress] = []
+        for i in 0...2 {
             uAddresses.append(
                 try ZcashRustBackend.getCurrentAddress(
                     dbData: tempDBs.dataDB,
@@ -179,7 +181,7 @@ class ZcashRustBackendTests: XCTestCase {
                 )
             )
 
-            if (i < 2) {
+            if i < 2 {
                 _ = try ZcashRustBackend.getNextAvailableAddress(
                     dbData: tempDBs.dataDB,
                     account: 0,
@@ -187,7 +189,6 @@ class ZcashRustBackendTests: XCTestCase {
                 )
             }
         }
-
 
         XCTAssertEqual(
             uAddresses,
@@ -207,7 +208,6 @@ class ZcashRustBackendTests: XCTestCase {
     }
 
     func testGetMetadataFromAddress() throws {
-
         let recipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 
         let metadata = ZcashRustBackend.getAddressMetadata(recipientAddress)
