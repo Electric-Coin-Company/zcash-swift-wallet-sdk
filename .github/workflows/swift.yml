@@ -23,8 +23,8 @@ jobs:
     - uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
       timeout-minutes: 1
     - name: Build ZcashLightClientKit Swift Package
-      timeout-minutes: 15
-      run: swift build -v
+      timeout-minutes: 20
+      run: xcodebuild -scheme 'ZcashLightClientKit' -destination 'platform=iOS Simulator,name=iPhone 13 Pro' -skipPackagePluginValidation
     - name: Run OfflineTests suite
-      timeout-minutes: 5
+      timeout-minutes: 10
       run: swift test --filter OfflineTests
