@@ -1,8 +1,13 @@
 # This SwiftLint file is based on this great guideline. 
 # https://github.com/raywenderlich/swift-style-guide
 
+included:
+- Sources/ZcashLightClientKit/
+- Tests/
+- Example/ZcashLightClientSample/ZcashLightClientSample
+- Example/ZcashLightClientSample/ZcashLightClientSampleTests
 excluded:
-  - xctemplates
+  - xctemplates/
   - Sources/ZcashLightClientKit/Service/ProtoBuf/compact_formats.pb.swift
   - Sources/ZcashLightClientKit/Service/ProtoBuf/service.pb.swift
   - Sources/ZcashLightClientKit/Service/ProtoBuf/service.grpc.swift
@@ -10,6 +15,8 @@ excluded:
   - Tests/TestUtils/TestVector.swift
   - Tests/OfflineTests/BirthdayTests.swift
   - ZcashLightClientKitTests/Constants.generated.swift
+  - build/
+  - docs/
 
 disabled_rules:
   - notification_center_detachment
