@@ -1,24 +1,49 @@
 # Unreleased
+- [#556] Change data structures which represent transactions.
+
+    These data types are gone: `Transaction`, `TransactionEntity`, `ConfirmedTransaction`, 
+`ConfirmedTransactionEntity`. And these data types were added: `ZcashTransaction.Overview`, 
+`ZcashTransaction.Received`, `ZcashTransaction.Sent`. 
+
+    New data structures are very similar to the old ones. Although there many breaking changes.
+The APIs of the `SDKSynchronizer` remain unchanged in their behavior. They return different 
+data types. **When adopting this change, you should check which data types are used by methods 
+of the `SDKSynchronizer` in your code and change them accordingly.**
+
+    New transaction structures no longer have a `memo` property. This responds to the fact that 
+Zcash transactions can have either none or multiple memos. To get memos for the transaction 
+the `SDKSynchronizer` has now new methods to fetch those:
+    - `func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]`, 
+    - `func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]`
+    - `func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]`
+    
 - [#671] Make CompactBlockProcessor Internal.
+
     The CompactBlockProcessor is no longer a public class/API. Any direct access will
 end up as a compiler error. Recommended way how to handle things is via `SDKSynchronizer`
 from now on. The Demo app has been updated accordingly as well.
+
 - [#657] Change how blocks are downloaded and scanned. 
+
     In previous versions, the SDK first downloaded all the blocks and then it
 scanned all the blocks. This approach requires a lot of disk space. The SDK now 
 behaves differently. It downloads a batch of blocks (100 by default), scans those, and
 removes those blocks from the disk. And repeats this until all the blocks are processed.
+
     `SyncStatus` was changed. `.downloading`, `.validating`, and `.scanning` symbols
 were removed. And the `.scanning` symbol was added. The removed phases of the sync 
 process are now reported as one phase. 
+
     Notifications were also changed similarly. These notifications were
 removed: `SDKSynchronizerDownloading`, `SDKSyncronizerValidating`, and `SDKSyncronizerScanning`.
 And the `SDKSynchronizerSyncing` notification was added. The added notification replaces
 the removed notifications.
         
 - [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 
+
 - [#663] Foundations for the benchmarking/performance testing in the SDK. 
-This change presents 2 building blocks for the future automated tests, consisting
+
+    This change presents 2 building blocks for the future automated tests, consisting
 of a new SDKMetrics interface to control flow of the data in the SDK and 
 new performance (unit) test measuring synchronization of 100 mainnet blocks. 
 
