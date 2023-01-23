@@ -132,24 +132,33 @@ public protocol Synchronizer {
     var pendingTransactions: [PendingTransactionEntity] { get }
 
     /// all the transactions that are on the blockchain
-    var clearedTransactions: [ConfirmedTransactionEntity] { get }
+    var clearedTransactions: [ZcashTransaction.Overview] { get }
 
     /// All transactions that are related to sending funds
-    var sentTransactions: [ConfirmedTransactionEntity] { get }
+    var sentTransactions: [ZcashTransaction.Sent] { get }
 
     /// all transactions related to receiving funds
-    var receivedTransactions: [ConfirmedTransactionEntity] { get }
+    var receivedTransactions: [ZcashTransaction.Received] { get }
     
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
-    /// Returns a list of confirmed transactions that precede the given transaction with a limit count.
+    /// Get all memos for `transaction`.
+    func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
+
+    /// Get all memos for `receivedTransaction`.
+    func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
+
+    /// Get all memos for `sentTransaction`.
+    func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
+
+    /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
     ///     - Returns: an array with the given Transactions or nil
-    func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
+    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
@@ -253,7 +262,7 @@ public enum TransactionKind {
 public enum RewindPolicy {
     case birthday
     case height(blockheight: BlockHeight)
-    case transaction(_ transaction: TransactionEntity)
+    case transaction(_ transaction: ZcashTransaction.Overview)
     case quick
 }
 

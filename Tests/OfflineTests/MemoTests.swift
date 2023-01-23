@@ -57,6 +57,28 @@ class MemoTests: XCTestCase {
         XCTAssertNil(Self.canonicalEmptyMemo().asZcashTransactionMemo())
     }
     
+    /* Test conversion to string */
+    
+    func testEmptyMemoToString() {
+        let memo: Memo = .empty
+        XCTAssertNil(memo.toString())
+    }
+    
+    func testTextMemoToString() throws {
+        let memo: Memo = .text(try MemoText(Self.validMemoDataExpectedString))
+        XCTAssertEqual(memo.toString(), Self.validMemoDataExpectedString)
+    }
+    
+    func testFutureMemoToString() throws {
+        let memo: Memo = .future(try MemoBytes(bytes: Self.validMemoDataExpectedString.data(using: .utf8)!.bytes))
+        XCTAssertNil(memo.toString())
+    }
+    
+    func testArbitraryMemoToString() {
+        let memo: Memo = .arbitrary(Self.validMemoDataExpectedString.data(using: .utf8)!.bytes)
+        XCTAssertNil(memo.toString())
+    }
+    
     /**
     *******
     * mocked memos

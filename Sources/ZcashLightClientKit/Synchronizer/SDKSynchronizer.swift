@@ -331,7 +331,7 @@ public class SDKSynchronizer: Synchronizer {
     @objc func transactionsFound(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ConfirmedTransactionEntity]
+            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ZcashTransaction.Overview]
         else {
             return
         }
@@ -533,28 +533,40 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.cancel(pendingTransaction: transaction)
     }
 
-    public func allReceivedTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allReceivedTransactions() throws -> [ZcashTransaction.Received] {
+        try transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
 
     public func allPendingTransactions() throws -> [PendingTransactionEntity] {
         try transactionManager.allPendingTransactions() ?? [PendingTransactionEntity]()
     }
 
-    public func allClearedTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAll(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allClearedTransactions() throws -> [ZcashTransaction.Overview] {
+        return try transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
     }
 
-    public func allSentTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allSentTransactions() throws -> [ZcashTransaction.Sent] {
+        return try transactionRepository.findSent(offset: 0, limit: Int.max)
     }
 
-    public func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
-        try transactionRepository.findAll(from: transaction, limit: limit)
+    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview] {
+        return try transactionRepository.find(from: transaction, limit: limit, kind: .all)
     }
 
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
+    }
+
+    public func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: transaction)
+    }
+
+    public func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: receivedTransaction)
+    }
+
+    public func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: sentTransaction)
     }
 
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
@@ -751,10 +763,10 @@ public class SDKSynchronizer: Synchronizer {
         try transactionManager.allPendingTransactions()?
             .filter { $0.isSubmitSuccess && !$0.isMined }
             .forEach { pendingTx in
-                guard let rawId = pendingTx.rawTransactionId else { return }
-                let transaction = try transactionRepository.findBy(rawId: rawId)
+                guard let rawID = pendingTx.rawTransactionId else { return }
+                let transaction = try transactionRepository.find(rawID: rawID)
+                guard let minedHeight = transaction.minedHeight else { return }
 
-                guard let minedHeight = transaction?.minedHeight else { return }
                 let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
 
                 notifyMinedTransaction(minedTx)
@@ -848,16 +860,16 @@ extension SDKSynchronizer {
         (try? self.allPendingTransactions()) ?? [PendingTransactionEntity]()
     }
 
-    public var clearedTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allClearedTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var clearedTransactions: [ZcashTransaction.Overview] {
+        (try? self.allClearedTransactions()) ?? []
     }
 
-    public var sentTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allSentTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var sentTransactions: [ZcashTransaction.Sent] {
+        (try? self.allSentTransactions()) ?? []
     }
 
-    public var receivedTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var receivedTransactions: [ZcashTransaction.Received] {
+        (try? self.allReceivedTransactions()) ?? []
     }
 }
 
@@ -896,6 +908,6 @@ extension ConnectionState {
 private struct NullEnhancementProgress: EnhancementProgress {
     var totalTransactions: Int { 0 }
     var enhancedTransactions: Int { 0 }
-    var lastFoundTransaction: ConfirmedTransactionEntity? { nil }
+    var lastFoundTransaction: ZcashTransaction.Overview? { nil }
     var range: CompactBlockRange { 0 ... 0 }
 }

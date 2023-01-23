@@ -70,17 +70,16 @@ class PersistentTransactionManager: OutboundTransactionManager {
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
-            let encodedTransaction = try await self.encoder.createShieldingTransaction(
+            let transaction = try await self.encoder.createShieldingTransaction(
                 spendingKey: spendingKey,
                 memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
-            let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
             
             var pending = pendingTransaction
             pending.encodeAttempts += 1
-            pending.raw = encodedTransaction.raw
-            pending.rawTransactionId = encodedTransaction.transactionId
+            pending.raw = transaction.raw
+            pending.rawTransactionId = transaction.rawID
             pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
             pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
             
@@ -110,26 +109,26 @@ class PersistentTransactionManager: OutboundTransactionManager {
             switch pendingTransaction.recipient {
             case .address(let addr):
                 toAddress = addr.stringEncoded
-            case .internalAccount: break
+            case .internalAccount:
+                break
             }
 
             guard let toAddress else {
                 throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
             }
             
-            let encodedTransaction = try await self.encoder.createTransaction(
+            let transaction = try await self.encoder.createTransaction(
                 spendingKey: spendingKey,
                 zatoshi: pendingTransaction.value,
                 to: toAddress,
                 memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
-            let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
 
             var pending = pendingTransaction
             pending.encodeAttempts += 1
-            pending.raw = encodedTransaction.raw
-            pending.rawTransactionId = encodedTransaction.transactionId
+            pending.raw = transaction.raw
+            pending.rawTransactionId = transaction.rawID
             pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
             pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
             

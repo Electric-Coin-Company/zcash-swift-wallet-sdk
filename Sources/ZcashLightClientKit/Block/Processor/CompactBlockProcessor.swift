@@ -85,7 +85,7 @@ public enum CompactBlockProgress {
     }
     
     public var blockDate: Date? {
-        if case .enhance(let enhancementProgress) = self, let time = enhancementProgress.lastFoundTransaction?.blockTimeInSeconds {
+        if case .enhance(let enhancementProgress) = self, let time = enhancementProgress.lastFoundTransaction?.blockTime {
             return Date(timeIntervalSince1970: time)
         }
         
@@ -109,14 +109,14 @@ protocol EnhancementStreamDelegate: AnyObject {
 public protocol EnhancementProgress {
     var totalTransactions: Int { get }
     var enhancedTransactions: Int { get }
-    var lastFoundTransaction: ConfirmedTransactionEntity? { get }
+    var lastFoundTransaction: ZcashTransaction.Overview? { get }
     var range: CompactBlockRange { get }
 }
 
 public struct EnhancementStreamProgress: EnhancementProgress {
     public var totalTransactions: Int
     public var enhancedTransactions: Int
-    public var lastFoundTransaction: ConfirmedTransactionEntity?
+    public var lastFoundTransaction: ZcashTransaction.Overview?
     public var range: CompactBlockRange
     
     public var progress: Float {
@@ -744,7 +744,7 @@ actor CompactBlockProcessor {
         )
     }
     
-    func notifyTransactions(_ txs: [ConfirmedTransactionEntity], in range: BlockRange) {
+    func notifyTransactions(_ txs: [ZcashTransaction.Overview], in range: BlockRange) {
         NotificationSender.default.post(
             name: .blockProcessorFoundTransactions,
             object: self,

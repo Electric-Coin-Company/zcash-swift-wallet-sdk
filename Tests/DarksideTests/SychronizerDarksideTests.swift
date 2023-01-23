@@ -31,7 +31,7 @@ class SychronizerDarksideTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation = XCTestExpectation(description: "reorg")
-    var foundTransactions: [ConfirmedTransactionEntity] = []
+    var foundTransactions: [ZcashTransaction.Overview] = []
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -218,7 +218,7 @@ class SychronizerDarksideTests: XCTestCase {
     @objc func handleFoundTransactions(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ConfirmedTransactionEntity]
+            let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ZcashTransaction.Overview]
         else {
             return
         }

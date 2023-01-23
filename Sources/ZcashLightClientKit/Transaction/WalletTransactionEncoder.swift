@@ -53,7 +53,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> EncodedTransaction {
+    ) async throws -> ZcashTransaction.Overview {
         let txId = try createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
@@ -61,16 +61,10 @@ class WalletTransactionEncoder: TransactionEncoder {
             memoBytes: memoBytes,
             from: accountIndex
         )
-        
+
         do {
-            let transactionEntity = try repository.findBy(id: txId)
-            guard let transaction = transactionEntity else {
-                throw TransactionEncoderError.notFound(transactionId: txId)
-            }
-
-            LoggerProxy.debug("sentTransaction id: \(txId)")
-
-            return EncodedTransaction(transactionId: transaction.transactionId, raw: transaction.raw)
+            LoggerProxy.debug("transaction id: \(txId)")
+            return try repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
@@ -109,7 +103,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> EncodedTransaction {
+    ) async throws -> ZcashTransaction.Overview {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
             memo: memoBytes,
@@ -117,18 +111,13 @@ class WalletTransactionEncoder: TransactionEncoder {
         )
         
         do {
-            let transactionEntity = try repository.findBy(id: txId)
-            
-            guard let transaction = transactionEntity else {
-                throw TransactionEncoderError.notFound(transactionId: txId)
-            }
-            
-            LoggerProxy.debug("sentTransaction id: \(txId)")
-            return EncodedTransaction(transactionId: transaction.transactionId, raw: transaction.raw)
+            LoggerProxy.debug("transaction id: \(txId)")
+            return try repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
     }
+
     func createShieldingSpend(
         spendingKey: UnifiedSpendingKey,
         memo: MemoBytes?,
@@ -161,18 +150,5 @@ class WalletTransactionEncoder: TransactionEncoder {
         
         // TODO: [#713] change this to something that makes sense, https://github.com/zcash/ZcashLightClientKit/issues/713
         return readableSpend && readableOutput
-    }
-    
-    /**
-    Fetch the Transaction Entity from the encoded representation
-    - Parameter encodedTransaction: The encoded transaction to expand
-    - Returns: a TransactionEntity based on the given Encoded Transaction
-    - Throws: a TransactionEncoderError
-    */
-    func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity {
-        guard let transaction = try? repository.findBy(rawId: encodedTransaction.transactionId) else {
-            throw TransactionEncoderError.couldNotExpand(txId: encodedTransaction.transactionId)
-        }
-        return transaction
     }
 }

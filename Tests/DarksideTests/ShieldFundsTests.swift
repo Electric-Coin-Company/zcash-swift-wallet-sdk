@@ -329,7 +329,7 @@ class ShieldFundsTests: XCTestCase {
 
         // verify that there's a confirmed transaction that's the shielding transaction
         let clearedTransaction = coordinator.synchronizer.clearedTransactions.first(
-            where: { $0.rawTransactionId == shieldingPendingTx?.rawTransactionId }
+            where: { $0.rawID == shieldingPendingTx?.rawTransactionId }
         )
 
         XCTAssertNotNil(clearedTransaction)

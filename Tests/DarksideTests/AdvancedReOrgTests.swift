@@ -172,10 +172,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         4. get that transaction hex encoded data
         */
-        guard let receivedTxData = receivedTx.raw else {
-            XCTFail("received tx has no raw data!")
-            return
-        }
+        let receivedTxData = receivedTx.raw ?? Data()
         
         let receivedRawTx = RawTransaction.with { rawTx in
             rawTx.height = UInt64(receivedTxHeight)
@@ -605,7 +602,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         var initialBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
-        var incomingTx: ConfirmedTransactionEntity?
+        var incomingTx: ZcashTransaction.Received!
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
@@ -619,15 +616,7 @@ class AdvancedReOrgTests: XCTestCase {
         initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         incomingTx = coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == incomingTxHeight })
 
-        guard let transaction = incomingTx else {
-            XCTFail("no tx found")
-            return
-        }
-        
-        guard let txRawData = transaction.raw else {
-            XCTFail("transaction has no raw data")
-            return
-        }
+        let txRawData = incomingTx.raw ?? Data()
         
         let rawTransaction = RawTransaction.with({ rawTx in
             rawTx.data = txRawData
@@ -958,14 +947,16 @@ class AdvancedReOrgTests: XCTestCase {
         15. verify that there's no pending transaction and that the tx is displayed on the sentTransactions collection
         */
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
+
+        let sentTransactions = coordinator.synchronizer.sentTransactions
+            .first(
+                where: { transaction in
+                    return transaction.rawID == newlyPendingTx.rawTransactionId
+                }
+            )
+
         XCTAssertNotNil(
-            coordinator.synchronizer.sentTransactions
-                .first(
-                    where: { transaction in
-                        guard let txId = transaction.rawTransactionId else { return false }
-                        return txId == newlyPendingTx.rawTransactionId
-                    }
-                ),
+            sentTransactions,
             "Sent Tx is not on sent transactions"
         )
         

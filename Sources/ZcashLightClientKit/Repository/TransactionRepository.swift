@@ -9,6 +9,8 @@ import Foundation
 
 enum TransactionRepositoryError: Error {
     case malformedTransaction
+    case notFound
+    case transactionMissingRequiredFields
 }
 
 protocol TransactionRepository {
@@ -16,16 +18,16 @@ protocol TransactionRepository {
     func countAll() throws -> Int
     func countUnmined() throws -> Int
     func blockForHeight(_ height: BlockHeight) throws -> Block?
-    func findBy(id: Int) throws -> TransactionEntity?
-    func findBy(rawId: Data) throws -> TransactionEntity?
-    func findAllSentTransactions(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
-    func findAllReceivedTransactions(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
-    func findAll(offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
-    func findAll(from: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?
     func lastScannedHeight() throws -> BlockHeight
     func isInitialized() throws -> Bool
-    func findEncodedTransactionBy(txId: Int) -> EncodedTransaction?
-    func findTransactions(in range: BlockRange, limit: Int) throws -> [TransactionEntity]?
-    func findConfirmedTransactions(in range: BlockRange, offset: Int, limit: Int) throws -> [ConfirmedTransactionEntity]?
-    func findConfirmedTransactionBy(rawId: Data) throws -> ConfirmedTransactionEntity?
+    func find(id: Int) throws -> ZcashTransaction.Overview
+    func find(rawID: Data) throws -> ZcashTransaction.Overview
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
+    func find(from: ZcashTransaction.Overview, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
+    func findReceived(offset: Int, limit: Int) throws -> [ZcashTransaction.Received]
+    func findSent(offset: Int, limit: Int) throws -> [ZcashTransaction.Sent]
+    func findMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
+    func findMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
+    func findMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
 }

@@ -15,45 +15,39 @@ extension CompactBlockProcessor {
         case txIdNotFound(txId: Data)
     }
     
-    private func enhance(transaction: TransactionEntity) async throws -> ConfirmedTransactionEntity {
-        LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.transactionId.toHexStringTxId())")
+    private func enhance(transaction: ZcashTransaction.Overview) async throws -> ZcashTransaction.Overview {
+        LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.rawID.toHexStringTxId())")
         
-        let transaction = try await downloader.fetchTransaction(txId: transaction.transactionId)
+        let fetchedTransaction = try await downloader.fetchTransaction(txId: transaction.rawID)
 
-        let transactionID = transaction.transactionId.toHexStringTxId()
+        let transactionID = fetchedTransaction.rawID.toHexStringTxId()
         let block = String(describing: transaction.minedHeight)
         LoggerProxy.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
         
-        guard let rawBytes = transaction.raw?.bytes else {
-            let error = EnhancementError.noRawData(
-                message: "Critical Error: transaction id: \(transaction.transactionId.toHexStringTxId()) has no data"
-            )
-            LoggerProxy.error("\(error)")
-            throw error
-        }
-        
-        guard let minedHeight = transaction.minedHeight else {
-            let error = EnhancementError.noRawData(
-                message: "Critical Error - Attempt to decrypt and store an unmined transaction. Id: \(transaction.transactionId.toHexStringTxId())"
-            )
-            LoggerProxy.error("\(error)")
-            throw error
-        }
-        
-        guard rustBackend.decryptAndStoreTransaction(
+        let decryptionResult = rustBackend.decryptAndStoreTransaction(
             dbData: config.dataDb,
-            txBytes: rawBytes,
-            minedHeight: Int32(minedHeight),
+            txBytes: fetchedTransaction.raw.bytes,
+            minedHeight: Int32(fetchedTransaction.minedHeight),
             networkType: config.network.networkType
-        ) else {
+        )
+
+        guard decryptionResult else {
             throw EnhancementError.decryptError(
                 error: rustBackend.lastError() ?? .genericError(message: "`decryptAndStoreTransaction` failed. No message available")
             )
         }
-        
-        guard let confirmedTx = try transactionRepository.findConfirmedTransactionBy(rawId: transaction.transactionId) else {
-            throw EnhancementError.txIdNotFound(txId: transaction.transactionId)
+
+        let confirmedTx: ZcashTransaction.Overview
+        do {
+            confirmedTx = try transactionRepository.find(rawID: fetchedTransaction.rawID)
+        } catch {
+            if let err = error as? TransactionRepositoryError, case .notFound = err {
+                throw EnhancementError.txIdNotFound(txId: fetchedTransaction.rawID)
+            } else {
+                throw error
+            }
         }
+
         return confirmedTx
     }
     
@@ -70,7 +64,9 @@ extension CompactBlockProcessor {
         // fetch transactions
         do {
             let startTime = Date()
-            guard let transactions = try transactionRepository.findTransactions(in: blockRange, limit: Int.max), !transactions.isEmpty else {
+            let transactions = try transactionRepository.find(in: blockRange, limit: Int.max, kind: .all)
+
+            guard !transactions.isEmpty else {
                 await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
                 LoggerProxy.debug("no transactions detected on range: \(blockRange.printRange)")
                 return
@@ -95,10 +91,13 @@ extension CompactBlockProcessor {
                                 )
                             )
                         )
-                        await internalSyncProgress.set(confirmedTx.minedHeight, .latestEnhancedHeight)
+
+                        if let minedHeight = confirmedTx.minedHeight {
+                            await internalSyncProgress.set(minedHeight, .latestEnhancedHeight)
+                        }
                     } catch {
                         retries += 1
-                        LoggerProxy.error("could not enhance txId \(transaction.transactionId.toHexStringTxId()) - Error: \(error)")
+                        LoggerProxy.error("could not enhance txId \(transaction.rawID.toHexStringTxId()) - Error: \(error)")
                         if retries > maxRetries {
                             throw error
                         }
@@ -121,8 +120,8 @@ extension CompactBlockProcessor {
             LoggerProxy.error("error enhancing transactions! \(error)")
             throw error
         }
-        
-        if let foundTxs = try? transactionRepository.findConfirmedTransactions(in: blockRange, offset: 0, limit: Int.max) {
+
+        if let foundTxs = try? transactionRepository.find(in: blockRange, limit: Int.max, kind: .all) {
             notifyTransactions(foundTxs, in: blockRange)
         }
 

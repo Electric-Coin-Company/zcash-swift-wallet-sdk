@@ -30,6 +30,18 @@ public enum Memo: Equatable {
     public init(string: String) throws {
         self = .text(try MemoText(String(string.utf8)))
     }
+    
+    /// Represent memo as String. Only `.text` memo can be represented as String.
+    /// - Returns: Valid String if it can be created from memo; otherwise `nil`.
+    public func toString() -> String? {
+        switch self {
+        case .empty, .future, .arbitrary:
+            return nil
+            
+        case .text(let text):
+            return text.string
+        }
+    }
 }
 
 public extension Memo {

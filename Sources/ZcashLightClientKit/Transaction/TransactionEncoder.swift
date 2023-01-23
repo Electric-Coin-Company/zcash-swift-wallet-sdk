@@ -35,7 +35,7 @@ protocol TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> EncodedTransaction
+    ) async throws -> ZcashTransaction.Overview
     
     /**
     Creates a transaction that will attempt to shield transparent funds that are present on the cacheDB .throwing an exception whenever things are missing. When the provided wallet implementation doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using double-bangs for things).
@@ -51,11 +51,5 @@ protocol TransactionEncoder {
         spendingKey: UnifiedSpendingKey,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> EncodedTransaction
-
-    /// Fetch the Transaction Entity from the encoded representation
-    /// - Parameter encodedTransaction: The encoded transaction to expand
-    /// - Returns: a TransactionEntity based on the given Encoded Transaction
-    /// - Throws: a TransactionEncoderError
-    func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity
+    ) async throws -> ZcashTransaction.Overview
 }
