@@ -19,7 +19,7 @@ final class TransactionDetailModel {
     
     init() {}
 
-    init(sendTransaction transaction: Transaction.Sent, memos: [Memo]) {
+    init(sendTransaction transaction: ZcashTransaction.Sent, memos: [Memo]) {
         self.id = transaction.rawID?.toHexStringTxId()
         self.minedHeight = transaction.minedHeight.description
         self.expiryHeight = transaction.expiryHeight?.description
@@ -28,7 +28,7 @@ final class TransactionDetailModel {
         self.memo = memos.first?.toString()
     }
 
-    init(receivedTransaction transaction: Transaction.Received, memos: [Memo]) {
+    init(receivedTransaction transaction: ZcashTransaction.Received, memos: [Memo]) {
         self.id = transaction.rawID?.toHexStringTxId()
         self.minedHeight = transaction.minedHeight.description
         self.expiryHeight = transaction.expiryHeight?.description
@@ -46,7 +46,7 @@ final class TransactionDetailModel {
         self.memo = memos.first?.toString()
     }
     
-    init(transaction: Transaction.Overview, memos: [Memo]) {
+    init(transaction: ZcashTransaction.Overview, memos: [Memo]) {
         self.id = transaction.rawID.toHexStringTxId()
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description

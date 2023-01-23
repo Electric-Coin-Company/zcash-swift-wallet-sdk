@@ -196,8 +196,8 @@ public extension PendingTransactionEntity {
 }
 
 public extension PendingTransactionEntity {
-    func makeTransactionEntity(defaultFee: Zatoshi) -> Transaction.Overview {
-        return Transaction.Overview(
+    func makeTransactionEntity(defaultFee: Zatoshi) -> ZcashTransaction.Overview {
+        return ZcashTransaction.Overview(
             blockTime: createTime,
             expiryHeight: expiryHeight,
             fee: fee,

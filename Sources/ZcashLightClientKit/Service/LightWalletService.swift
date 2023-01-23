@@ -125,7 +125,7 @@ public protocol LightWalletService {
     /// - Parameter txId: data representing the transaction ID
     /// - Throws: LightWalletServiceError
     /// - Returns: LightWalletServiceResponse
-    func fetchTransaction(txId: Data) async throws -> Transaction.Fetched
+    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched
     
     func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
