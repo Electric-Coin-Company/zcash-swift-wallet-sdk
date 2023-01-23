@@ -950,7 +950,7 @@ class BalanceTests: XCTestCase {
             do {
                 try coordinator.sync(
                     completion: { synchronizer in
-                        let confirmedTx: Transaction.Overview!
+                        let confirmedTx: ZcashTransaction.Overview!
                         do {
                             confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
                                 confirmed.rawID == pendingTx?.rawTransactionId
@@ -1190,7 +1190,7 @@ class BalanceTests: XCTestCase {
 }
 
 class SDKSynchonizerListener {
-    var transactionsFound: (([Transaction.Overview]) -> Void)?
+    var transactionsFound: (([ZcashTransaction.Overview]) -> Void)?
     var synchronizerMinedTransaction: ((PendingTransactionEntity) -> Void)?
     
     func subscribeToSynchronizer(_ synchronizer: SDKSynchronizer) {
@@ -1204,7 +1204,7 @@ class SDKSynchonizerListener {
     
     @objc func txFound(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in
-            guard let txs = notification.userInfo?[SDKSynchronizer.NotificationKeys.foundTransactions] as? [Transaction.Overview] else {
+            guard let txs = notification.userInfo?[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ZcashTransaction.Overview] else {
                 XCTFail("expected [ConfirmedTransactionEntity] array")
                 return
             }

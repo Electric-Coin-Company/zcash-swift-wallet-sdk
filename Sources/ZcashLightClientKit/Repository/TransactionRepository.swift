@@ -20,14 +20,14 @@ protocol TransactionRepository {
     func blockForHeight(_ height: BlockHeight) throws -> Block?
     func lastScannedHeight() throws -> BlockHeight
     func isInitialized() throws -> Bool
-    func find(id: Int) throws -> Transaction.Overview
-    func find(rawID: Data) throws -> Transaction.Overview
-    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
-    func find(from: Transaction.Overview, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview]
-    func findReceived(offset: Int, limit: Int) throws -> [Transaction.Received]
-    func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent]
-    func findMemos(for transaction: Transaction.Overview) throws -> [Memo]
-    func findMemos(for receivedTransaction: Transaction.Received) throws -> [Memo]
-    func findMemos(for sentTransaction: Transaction.Sent) throws -> [Memo]
+    func find(id: Int) throws -> ZcashTransaction.Overview
+    func find(rawID: Data) throws -> ZcashTransaction.Overview
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
+    func find(from: ZcashTransaction.Overview, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
+    func findReceived(offset: Int, limit: Int) throws -> [ZcashTransaction.Received]
+    func findSent(offset: Int, limit: Int) throws -> [ZcashTransaction.Sent]
+    func findMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
+    func findMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
+    func findMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
 }

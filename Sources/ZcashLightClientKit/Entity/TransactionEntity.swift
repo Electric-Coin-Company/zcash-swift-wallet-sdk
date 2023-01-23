@@ -8,7 +8,7 @@
 import Foundation
 import SQLite
 
-public enum Transaction {
+public enum ZcashTransaction {
     public struct Overview {
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
@@ -62,7 +62,7 @@ public enum Transaction {
     }
 }
 
-extension Transaction.Overview {
+extension ZcashTransaction.Overview {
     enum Column {
         static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight?>("mined_height")
@@ -127,7 +127,7 @@ extension Transaction.Overview {
     }
 }
 
-extension Transaction.Received {
+extension ZcashTransaction.Received {
     enum Column {
         static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight>("mined_height")
@@ -168,7 +168,7 @@ extension Transaction.Received {
     }
 }
 
-extension Transaction.Sent {
+extension ZcashTransaction.Sent {
     enum Column {
         static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight>("mined_height")

@@ -25,9 +25,9 @@ class MockTransactionRepository {
     var reference: [Kind] = []
     var network: ZcashNetwork
 
-    var transactions: [Transaction.Overview] = []
-    var receivedTransactions: [Transaction.Received] = []
-    var sentTransactions: [Transaction.Sent] = []
+    var transactions: [ZcashTransaction.Overview] = []
+    var receivedTransactions: [ZcashTransaction.Received] = []
+    var sentTransactions: [ZcashTransaction.Sent] = []
 
     var allCount: Int {
         receivedCount + sentCount
@@ -87,11 +87,11 @@ extension MockTransactionRepository: TransactionRepository {
         nil
     }
 
-    func findBy(id: Int) throws -> Transaction.Overview? {
+    func findBy(id: Int) throws -> ZcashTransaction.Overview? {
         transactions.first(where: { $0.id == id })
     }
 
-    func findBy(rawId: Data) throws -> Transaction.Overview? {
+    func findBy(rawId: Data) throws -> ZcashTransaction.Overview? {
         transactions.first(where: { $0.rawID == rawId })
     }
 
@@ -104,7 +104,7 @@ extension MockTransactionRepository: TransactionRepository {
     }
 
     func generate() {
-        var txArray: [Transaction.Overview] = []
+        var txArray: [ZcashTransaction.Overview] = []
         reference = referenceArray()
         for index in 0 ..< reference.count {
             txArray.append(mockTx(index: index, kind: reference[index]))
@@ -112,7 +112,7 @@ extension MockTransactionRepository: TransactionRepository {
         transactions = txArray
     }
 
-    func mockTx(index: Int, kind: Kind) -> Transaction.Overview {
+    func mockTx(index: Int, kind: Kind) -> ZcashTransaction.Overview {
         switch kind {
         case .received:
             return mockReceived(index)
@@ -121,8 +121,8 @@ extension MockTransactionRepository: TransactionRepository {
         }
     }
 
-    func mockSent(_ index: Int) -> Transaction.Overview {
-        return Transaction.Overview(
+    func mockSent(_ index: Int) -> ZcashTransaction.Overview {
+        return ZcashTransaction.Overview(
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
@@ -140,8 +140,8 @@ extension MockTransactionRepository: TransactionRepository {
         )
     }
 
-    func mockReceived(_ index: Int) -> Transaction.Overview {
-        return Transaction.Overview(
+    func mockReceived(_ index: Int) -> ZcashTransaction.Overview {
+        return ZcashTransaction.Overview(
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
@@ -159,13 +159,13 @@ extension MockTransactionRepository: TransactionRepository {
         )
     }
 
-    func slice(txs: [Transaction.Overview], offset: Int, limit: Int) -> [Transaction.Overview] {
+    func slice(txs: [ZcashTransaction.Overview], offset: Int, limit: Int) -> [ZcashTransaction.Overview] {
         guard offset < txs.count else { return [] }
 
         return Array(txs[offset ..< min(offset + limit, txs.count - offset)])
     }
 
-    func find(id: Int) throws -> Transaction.Overview {
+    func find(id: Int) throws -> ZcashTransaction.Overview {
         guard let transaction = transactions.first(where: { $0.id == id }) else {
             throw TransactionRepositoryError.notFound
         }
@@ -173,7 +173,7 @@ extension MockTransactionRepository: TransactionRepository {
         return transaction
     }
 
-    func find(rawID: Data) throws -> Transaction.Overview {
+    func find(rawID: Data) throws -> ZcashTransaction.Overview {
         guard let transaction = transactions.first(where: { $0.rawID == rawID }) else {
             throw TransactionRepositoryError.notFound
         }
@@ -181,35 +181,35 @@ extension MockTransactionRepository: TransactionRepository {
         return transaction
     }
 
-    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [ZcashLightClientKit.Transaction.Overview] {
+    func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [ZcashLightClientKit.ZcashTransaction.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview] {
+    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func find(from: Transaction.Overview, limit: Int, kind: TransactionKind) throws -> [Transaction.Overview] {
+    func find(from: ZcashTransaction.Overview, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findReceived(offset: Int, limit: Int) throws -> [Transaction.Received] {
+    func findReceived(offset: Int, limit: Int) throws -> [ZcashTransaction.Received] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findSent(offset: Int, limit: Int) throws -> [Transaction.Sent] {
+    func findSent(offset: Int, limit: Int) throws -> [ZcashTransaction.Sent] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findMemos(for transaction: ZcashLightClientKit.Transaction.Overview) throws -> [ZcashLightClientKit.Memo] {
+    func findMemos(for transaction: ZcashLightClientKit.ZcashTransaction.Overview) throws -> [ZcashLightClientKit.Memo] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findMemos(for receivedTransaction: ZcashLightClientKit.Transaction.Received) throws -> [ZcashLightClientKit.Memo] {
+    func findMemos(for receivedTransaction: ZcashLightClientKit.ZcashTransaction.Received) throws -> [ZcashLightClientKit.Memo] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findMemos(for sentTransaction: ZcashLightClientKit.Transaction.Sent) throws -> [ZcashLightClientKit.Memo] {
+    func findMemos(for sentTransaction: ZcashLightClientKit.ZcashTransaction.Sent) throws -> [ZcashLightClientKit.Memo] {
         throw MockTransactionRepositoryError.notImplemented
     }
 }

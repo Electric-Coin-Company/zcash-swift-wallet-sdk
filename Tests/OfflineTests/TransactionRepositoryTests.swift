@@ -51,7 +51,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindInRange() {
-        var transactions: [Transaction.Overview]!
+        var transactions: [ZcashTransaction.Overview]!
         XCTAssertNoThrow(
             try {
                 transactions = try self.transactionRepository.find(in: BlockRange(startHeight: 663218, endHeight: 663974), limit: 3, kind: .received)
@@ -68,7 +68,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindById() {
-        var transaction: Transaction.Overview!
+        var transaction: ZcashTransaction.Overview!
         XCTAssertNoThrow(try { transaction = try self.transactionRepository.find(id: 10) }())
 
         XCTAssertEqual(transaction.id, 10)
@@ -77,7 +77,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindByTxId() {
-        var transaction: Transaction.Overview!
+        var transaction: ZcashTransaction.Overview!
 
         let id = Data(fromHexEncodedString: "01af48bcc4e9667849a073b8b5c539a0fc19de71aac775377929dc6567a36eff")!
         
@@ -89,27 +89,27 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllSentTransactions() {
-        var transactions: [Transaction.Overview] = []
+        var transactions: [ZcashTransaction.Overview] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: Int.max, kind: .sent) }())
         XCTAssertEqual(transactions.count, 13)
         transactions.forEach { XCTAssertEqual($0.isSentTransaction, true) }
     }
     
     func testFindAllReceivedTransactions() {
-        var transactions: [Transaction.Overview] = []
+        var transactions: [ZcashTransaction.Overview] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: Int.max, kind: .received) }())
         XCTAssertEqual(transactions.count, 8)
         transactions.forEach { XCTAssertEqual($0.isSentTransaction, false) }
     }
     
     func testFindAllTransactions() {
-        var transactions: [Transaction.Overview] = []
+        var transactions: [ZcashTransaction.Overview] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: Int.max, kind: .all) }())
         XCTAssertEqual(transactions.count, 21)
     }
 
     func testFindReceivedOffsetLimit() {
-        var transactions: [Transaction.Received] = []
+        var transactions: [ZcashTransaction.Received] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.findReceived(offset: 3, limit: 3) }())
 
         XCTAssertEqual(transactions.count, 3)
@@ -119,7 +119,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindSentOffsetLimit() {
-        var transactions: [Transaction.Sent] = []
+        var transactions: [ZcashTransaction.Sent] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.findSent(offset: 3, limit: 3) }())
 
         XCTAssertEqual(transactions.count, 3)
@@ -129,7 +129,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindMemoForTransaction() {
-        let transaction = Transaction.Overview(
+        let transaction = ZcashTransaction.Overview(
             blockTime: nil,
             expiryHeight: nil,
             fee: nil,
@@ -154,7 +154,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindMemoForReceivedTransaction() {
-        let transaction = Transaction.Received(
+        let transaction = ZcashTransaction.Received(
             blockTime: 1,
             expiryHeight: nil,
             fromAccount: 0,
@@ -176,7 +176,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindMemoForSentTransaction() {
-        let transaction = Transaction.Sent(
+        let transaction = ZcashTransaction.Sent(
             blockTime: 1,
             expiryHeight: nil,
             fromAccount: 0,
@@ -198,7 +198,7 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindTransactionWithNULLMinedHeight() {
-        var transactions: [Transaction.Overview] = []
+        var transactions: [ZcashTransaction.Overview] = []
         XCTAssertNoThrow(try { transactions = try self.transactionRepository.find(offset: 0, limit: 3, kind: .all) }())
 
         XCTAssertEqual(transactions.count, 3)
@@ -223,10 +223,10 @@ class TransactionRepositoryTests: XCTestCase {
     }
     
     func testFindAllFrom() throws {
-        var transaction: Transaction.Overview!
+        var transaction: ZcashTransaction.Overview!
         XCTAssertNoThrow(try { transaction = try self.transactionRepository.find(id: 16) }())
 
-        var transactionsFrom: [Transaction.Overview] = []
+        var transactionsFrom: [ZcashTransaction.Overview] = []
         XCTAssertNoThrow(try { transactionsFrom = try self.transactionRepository.find(from: transaction, limit: Int.max, kind: .all) }())
 
         XCTAssertEqual(transactionsFrom.count, 8)

@@ -248,12 +248,12 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    public func fetchTransaction(txId: Data) async throws -> Transaction.Fetched {
+    public func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
         var txFilter = TxFilter()
         txFilter.hash = txId
         
         let rawTx = try await compactTxStreamerAsync.getTransaction(txFilter)
-        return Transaction.Fetched(rawID: txId, minedHeight: BlockHeight(rawTx.height), raw: rawTx.data)
+        return ZcashTransaction.Fetched(rawID: txId, minedHeight: BlockHeight(rawTx.height), raw: rawTx.data)
     }
     
     public func fetchUTXOs(
