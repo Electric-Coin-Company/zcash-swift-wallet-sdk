@@ -1,4 +1,9 @@
 # Unreleased
+
+- [#645] Default rewind after ReOrg is 20 blocks when it should be 10
+    This fixes an issue where the default reorg was 20 blocks rewind instead of 10. The
+reorg count was incremented before calling the rewind height computing function.
+ 
 - [#556] Change data structures which represent transactions.
 
     These data types are gone: `Transaction`, `TransactionEntity`, `ConfirmedTransaction`, 
