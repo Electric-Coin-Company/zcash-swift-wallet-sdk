@@ -858,7 +858,6 @@ actor CompactBlockProcessor {
 
         // register latest failure
         self.lastChainValidationFailure = height
-        self.consecutiveChainValidationErrors += 1
         
         // rewind
         let rewindHeight = determineLowerBound(
@@ -867,7 +866,9 @@ actor CompactBlockProcessor {
             walletBirthday: self.config.walletBirthday
         )
 
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network.networkType) else {
+        self.consecutiveChainValidationErrors += 1
+
+            guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network.networkType) else {
             await fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }
