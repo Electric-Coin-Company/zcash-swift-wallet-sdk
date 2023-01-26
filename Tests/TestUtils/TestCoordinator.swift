@@ -116,7 +116,7 @@ class TestCoordinator {
             unifiedFullViewingKey: unifiedFullViewingKey,
             walletBirthday: walletBirthday,
             network: network,
-            loggerProxy: SampleLogger(logLevel: .debug)
+            loggerProxy: OSLogger(logLevel: .debug)
         )
         
         self.synchronizer = buildResult.synchronizer

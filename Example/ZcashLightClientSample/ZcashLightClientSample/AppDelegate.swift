@@ -10,7 +10,7 @@ import UIKit
 import ZcashLightClientKit
 import NotificationBubbles
 
-var loggerProxy = SampleLogger(logLevel: .debug)
+var loggerProxy = OSLogger(logLevel: .debug)
 
 @UIApplicationMain
 // swiftlint:disable force_cast force_try force_unwrapping

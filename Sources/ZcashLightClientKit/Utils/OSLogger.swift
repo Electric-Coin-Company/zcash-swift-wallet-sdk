@@ -1,42 +1,34 @@
 //
-//  SampleLogger.swift
-//  ZcashLightClientSample
+//  OSLogger.swift
+//  
 //
-//  Created by Francisco Gindre on 3/9/20.
-//  Copyright © 2020 Electric Coin Company. All rights reserved.
+//  Created by Lukáš Korba on 26.01.2023.
 //
 
 import Foundation
-import ZcashLightClientKit
 import os
 
-class SampleLogger: ZcashLightClientKit.Logger {
-    enum LogLevel: Int {
+public class OSLogger: Logger {
+    public enum LogLevel: Int {
         case debug
         case error
         case warning
         case event
         case info
     }
-    
-    enum LoggerType {
-        case osLog
-        case printerLog
-    }
 
-    static let oslog = OSLog(subsystem: subsystem, category: "logs")
-    // swiftlint:disable:next force_unwrapping
-    private static let subsystem = Bundle.main.bundleIdentifier!
+    private(set) var oslog: OSLog?
     
     var level: LogLevel
-    var loggerType: LoggerType
     
-    init(logLevel: LogLevel, type: LoggerType = .osLog) {
+    public init(logLevel: LogLevel, category: String = "logs") {
         self.level = logLevel
-        self.loggerType = type
+        if let bundleName = Bundle.main.bundleIdentifier {
+            self.oslog = OSLog(subsystem: bundleName, category: category)
+        }
     }
 
-    func debug(
+    public func debug(
         _ message: String,
         file: StaticString = #file,
         function: StaticString = #function,
@@ -46,7 +38,7 @@ class SampleLogger: ZcashLightClientKit.Logger {
         log(level: "DEBUG 🐞", message: message, file: file, function: function, line: line)
     }
     
-    func error(
+    public func error(
         _ message: String,
         file: StaticString = #file,
         function: StaticString = #function,
@@ -56,7 +48,7 @@ class SampleLogger: ZcashLightClientKit.Logger {
         log(level: "ERROR 💥", message: message, file: file, function: function, line: line)
     }
     
-    func warn(
+    public func warn(
         _ message: String,
         file: StaticString = #file,
         function: StaticString = #function,
@@ -66,7 +58,7 @@ class SampleLogger: ZcashLightClientKit.Logger {
         log(level: "WARNING ⚠️", message: message, file: file, function: function, line: line)
     }
 
-    func event(
+    public func event(
         _ message: String,
         file: StaticString = #file,
         function: StaticString = #function,
@@ -76,7 +68,7 @@ class SampleLogger: ZcashLightClientKit.Logger {
         log(level: "EVENT ⏱", message: message, file: file, function: function, line: line)
     }
     
-    func info(
+    public func info(
         _ message: String,
         file: StaticString = #file,
         function: StaticString = #function,
@@ -93,21 +85,18 @@ class SampleLogger: ZcashLightClientKit.Logger {
         function: StaticString = #function,
         line: Int = #line
     ) {
+        guard let oslog else { return }
+        
         let fileName = (String(describing: file) as NSString).lastPathComponent
-        switch loggerType {
-        case .printerLog:
-            // swiftlint:disable print_function_usage
-            print("[\(level)] \(fileName) - \(function) - line: \(line) -> \(message)")
-
-        default:
-            os_log(
-                "[%{public}@] %{public}@ - %{public}@ - Line: %{public}d -> %{public}@",
-                level,
-                fileName,
-                String(describing: function),
-                line,
-                message
-            )
-        }
+        
+        os_log(
+            "[%{public}@] %{public}@ - %{public}@ - Line: %{public}d -> %{public}@",
+            log: oslog,
+            level,
+            fileName,
+            String(describing: function),
+            line,
+            message
+        )
     }
 }

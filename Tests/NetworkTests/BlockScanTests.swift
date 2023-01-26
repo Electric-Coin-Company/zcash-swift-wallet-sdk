@@ -57,7 +57,7 @@ class BlockScanTests: XCTestCase {
     }
     
     func testSingleDownloadAndScan() async throws {
-        logger = SampleLogger(logLevel: .debug)
+        logger = OSLogger(logLevel: .debug)
 
         XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType))
 
@@ -118,8 +118,8 @@ class BlockScanTests: XCTestCase {
     func testScanValidateDownload() async throws {
         let seed = "testreferencealicetestreferencealice"
 
-        logger = SampleLogger(logLevel: .debug)
-        
+        logger = OSLogger(logLevel: .debug)
+
         SDKMetrics.shared.enableMetrics()
         
         NotificationCenter.default.addObserver(

@@ -13,7 +13,7 @@ import XCTest
 class BlockStreamingTest: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
-        logger = SampleLogger(logLevel: .debug)
+        logger = OSLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
