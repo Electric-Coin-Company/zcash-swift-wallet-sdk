@@ -12,8 +12,8 @@ import NotificationBubbles
 
 var loggerProxy = OSLogger(logLevel: .debug)
 
-@UIApplicationMain
 // swiftlint:disable force_cast force_try force_unwrapping
+@UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     private var wallet: Initializer?
