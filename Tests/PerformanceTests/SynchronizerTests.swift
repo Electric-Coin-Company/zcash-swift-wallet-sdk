@@ -60,7 +60,7 @@ class SynchronizerTests: XCTestCase {
                 viewingKeys: [ufvk],
                 walletBirthday: birthday,
                 alias: "",
-                loggerProxy: SampleLogger(logLevel: .debug)
+                loggerProxy: OSLogger(logLevel: .debug)
             )
             
             try? FileManager.default.removeItem(at: databases.cacheDB)

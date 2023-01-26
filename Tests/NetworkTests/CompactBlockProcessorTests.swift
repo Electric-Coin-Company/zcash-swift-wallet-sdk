@@ -26,8 +26,8 @@ class CompactBlockProcessorTests: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        logger = SampleLogger(logLevel: .debug)
-        
+        logger = OSLogger(logLevel: .debug)
+
         let service = MockLightWalletService(
             latestBlockHeight: mockLatestHeight,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)

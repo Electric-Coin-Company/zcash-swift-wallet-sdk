@@ -36,7 +36,7 @@ class TransactionEnhancementTests: XCTestCase {
         try super.setUpWithError()
         XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
-        logger = SampleLogger(logLevel: .debug)
+        logger = OSLogger(logLevel: .debug)
         
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
