@@ -13,6 +13,7 @@
 # params files
 *.params
 # Xcode
+ZcashLightClientSample.xcworkspace
 
 ## Build generated
 build/

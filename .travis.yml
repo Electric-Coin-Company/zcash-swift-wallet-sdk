@@ -4,8 +4,8 @@ osx_image: xcode14
 xcode_project: ./Example/ZcashLightClientSample/ZcashLightClientSample.xcodeproj
 xcode_scheme: ZcashLightClientSample
 xcode_destination: platform=iOS Simulator,OS=16.0,name=iPhone 14
-addons:
-  homebrew:
-    packages:
-    - sourcery
-    - swiftlint
+before_install:
+  - cd Example/ZcashLightClientSample
+  - pod repo update
+  - pod install
+  - cd ../../

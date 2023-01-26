@@ -1,0 +1,9 @@
+source 'https://cdn.cocoapods.org/'
+
+workspace 'ZcashLightClientSample.xcworkspace'
+
+abstract_target :Tools do
+    platform :ios, '13.0'
+    pod 'SwiftLint'
+end
+
