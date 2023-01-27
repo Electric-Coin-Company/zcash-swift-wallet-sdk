@@ -1,5 +1,18 @@
 # 0.18.0-beta
 
+## Farewell Cocoapods.
+- [#612] Remove Support for Cocoapods (#706)
+
+It wouldn't have been possible to release an SDK without you, pal.
+
+We are moving away from Cocoapods since our main dependencies, SwiftGRPC
+and SWIFT-NIO are. We don't have much of a choice. 
+
+We've been communicating this for a long time. Although, if you really need Cocoapods,
+please let us know by opening an issue in our repo and we'll talk about it.
+
+
+## New Checkpoints 
 Checkpoints 
 
 Mainnet
@@ -24,11 +37,15 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2190000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2200000.json
 ````
 
+## Bugfixes
 
 - [#645] Default rewind after ReOrg is 20 blocks when it should be 10
     This fixes an issue where the default reorg was 20 blocks rewind instead of 10. The
 reorg count was incremented before calling the rewind height computing function.
  
+
+## Change in how we represent transactions. 
+
 - [#556] Change data structures which represent transactions.
 
     These data types are gone: `Transaction`, `TransactionEntity`, `ConfirmedTransaction`, 
@@ -47,11 +64,15 @@ the `SDKSynchronizer` has now new methods to fetch those:
     - `func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]`
     - `func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]`
     
+## Compact Block Processor is not public anymore.
+
 - [#671] Make CompactBlockProcessor Internal.
 
     The CompactBlockProcessor is no longer a public class/API. Any direct access will
 end up as a compiler error. Recommended way how to handle things is via `SDKSynchronizer`
 from now on. The Demo app has been updated accordingly as well.
+
+## We've changed how we download and scan blocks. Status reporting has changed.
 
 - [#657] Change how blocks are downloaded and scanned. 
 
@@ -69,8 +90,10 @@ removed: `SDKSynchronizerDownloading`, `SDKSyncronizerValidating`, and `SDKSyncr
 And the `SDKSynchronizerSyncing` notification was added. The added notification replaces
 the removed notifications.
         
+## New Wipe Method to delete wallet information. Use with care. 
 - [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 
 
+## Benchmarking APIs: A primer
 - [#663] Foundations for the benchmarking/performance testing in the SDK. 
 
     This change presents 2 building blocks for the future automated tests, consisting
