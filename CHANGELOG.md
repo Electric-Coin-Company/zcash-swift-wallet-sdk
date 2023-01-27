@@ -1,4 +1,29 @@
-# Unreleased
+# 0.18.0-beta
+
+Checkpoints 
+
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1937500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1940000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1942500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1945000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1947500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1950000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1952500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1955000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1957500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1960000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1962500.json
+````
+
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2180000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2190000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2200000.json
+````
+
 
 - [#645] Default rewind after ReOrg is 20 blocks when it should be 10
     This fixes an issue where the default reorg was 20 blocks rewind instead of 10. The
