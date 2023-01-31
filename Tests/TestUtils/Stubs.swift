@@ -54,6 +54,7 @@ extension LightWalletServiceMockResponse {
     }
 }
 
+// swiftlint:disable:next type_body_length
 class MockRustBackend: ZcashRustBackendWelding {
     static func initAccountsTable(dbData: URL, ufvks: [ZcashLightClientKit.UnifiedFullViewingKey], networkType: ZcashLightClientKit.NetworkType) throws { }
 

@@ -99,8 +99,10 @@ class TransactionSQLDAO: TransactionRepository {
 
         let query = transactionsView
             .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, ZcashTransaction.Overview.Column.id.desc)
-            .filter(Int64(transactionBlockTime) > ZcashTransaction.Overview.Column.blockTime
-            && transactionIndex > ZcashTransaction.Overview.Column.index)
+            .filter(
+                Int64(transactionBlockTime) > ZcashTransaction.Overview.Column.blockTime &&
+                transactionIndex > ZcashTransaction.Overview.Column.index
+            )
             .filterQueryFor(kind: kind)
             .limit(limit)
 
