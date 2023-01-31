@@ -344,7 +344,8 @@ actor CompactBlockProcessor {
     }
 
     var service: LightWalletService
-    private(set) var downloader: CompactBlockDownloading
+    let blockDownloaderService: BlockDownloaderService
+    let blockDownloader: BlockDownloader
     var storage: CompactBlockStorage
     var transactionRepository: TransactionRepository
     var accountRepository: AccountRepository
@@ -392,8 +393,6 @@ actor CompactBlockProcessor {
     }
 
     /// Initializes a CompactBlockProcessor instance from an Initialized object
-    /// - Parameters:
-    ///     - initializer: an instance that complies to CompactBlockDownloading protocol
     init(initializer: Initializer) {
         self.init(
             service: initializer.lightWalletService,
@@ -423,8 +422,17 @@ actor CompactBlockProcessor {
         repository: TransactionRepository,
         accountRepository: AccountRepository
     ) {
+        let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
+        let blockDownloader = BlockDownloaderImpl(
+            service: service,
+            downloaderService: blockDownloaderService,
+            storage: storage,
+            internalSyncProgress: internalSyncProgress
+        )
+
         self.service = service
-        self.downloader = CompactBlockDownloader(service: service, storage: storage)
+        self.blockDownloaderService = blockDownloaderService
+        self.blockDownloader = blockDownloader
         self.rustBackend = backend
         self.storage = storage
         self.config = config
@@ -557,7 +565,7 @@ actor CompactBlockProcessor {
 
         // clear cache
         let rewindBlockHeight = BlockHeight(rewindHeight)
-        try downloader.rewind(to: rewindBlockHeight)
+        try blockDownloaderService.rewind(to: rewindBlockHeight)
         await internalSyncProgress.rewind(to: rewindBlockHeight)
 
         self.lastChainValidationFailure = nil
@@ -573,7 +581,7 @@ actor CompactBlockProcessor {
         }
 
         state = .stopped
-        downloader.closeDBConnection()
+        blockDownloaderService.closeDBConnection()
         await internalSyncProgress.rewind(to: 0)
     }
 
@@ -640,7 +648,7 @@ actor CompactBlockProcessor {
                 }
 
                 try await handleSaplingParametersIfNeeded()
-                try await removeCacheDB()
+                try await blockDownloader.removeCacheDB(at: config.cacheDb)
 
                 if !Task.isCancelled {
                     await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
@@ -661,7 +669,7 @@ actor CompactBlockProcessor {
     }
 
     private func downloadAndScanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
-        let downloadStream = try await compactBlocksDownloadStream(
+        let downloadStream = try await blockDownloader.compactBlocksDownloadStream(
             startHeight: range.lowerBound,
             targetHeight: range.upperBound
         )
@@ -679,7 +687,7 @@ actor CompactBlockProcessor {
 
             LoggerProxy.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
 
-            try await downloadAndStoreBlocks(
+            try await blockDownloader.downloadAndStoreBlocks(
                 using: downloadStream,
                 at: processingRange,
                 maxBlockBufferSize: config.downloadBufferSize,
@@ -687,7 +695,7 @@ actor CompactBlockProcessor {
             )
             try await compactBlockValidation()
             try await scanBlocks(at: processingRange, totalProgressRange: totalProgressRange)
-            try await removeCacheDB()
+            try await blockDownloader.removeCacheDB(at: config.cacheDb)
 
             let progress = BlockProgress(
                 startHeight: totalProgressRange.lowerBound,
@@ -828,7 +836,7 @@ actor CompactBlockProcessor {
         do {
             let nextState = try await NextStateHelper.nextStateAsync(
                 service: self.service,
-                downloader: self.downloader,
+                downloaderService: blockDownloaderService,
                 transactionRepository: transactionRepository,
                 config: self.config,
                 rustBackend: self.rustBackend,
@@ -874,7 +882,7 @@ actor CompactBlockProcessor {
         }
         
         do {
-            try downloader.rewind(to: rewindHeight)
+            try blockDownloaderService.rewind(to: rewindHeight)
             await internalSyncProgress.rewind(to: rewindHeight)
             
             // notify reorg
@@ -1098,7 +1106,7 @@ extension CompactBlockProcessor {
     func refreshUTXOs(tAddress: TransparentAddress, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
         let dataDb = self.config.dataDb
         
-        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
             tAddress: tAddress.stringEncoded,
             startHeight: startHeight
         )
@@ -1215,7 +1223,7 @@ extension CompactBlockProcessor {
         // swiftlint:disable:next function_parameter_count
         static func nextStateAsync(
             service: LightWalletService,
-            downloader: CompactBlockDownloading,
+            downloaderService: BlockDownloaderService,
             transactionRepository: TransactionRepository,
             config: Configuration,
             rustBackend: ZcashRustBackendWelding.Type,
@@ -1233,7 +1241,7 @@ extension CompactBlockProcessor {
                     rustBackend: rustBackend
                 )
 
-                await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: try downloader.lastDownloadedBlockHeight())
+                await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: try downloaderService.lastDownloadedBlockHeight())
 
                 let latestBlockHeight = try service.latestBlockHeight()
                 let latestScannedHeight = try transactionRepository.lastScannedHeight()

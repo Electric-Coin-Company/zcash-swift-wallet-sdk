@@ -8,50 +8,70 @@
 
 import Foundation
 
-extension CompactBlockProcessor {
-    class BlocksDownloadStream {
-        let stream: AsyncThrowingStream<ZcashCompactBlock, Error>
-        var iterator: AsyncThrowingStream<ZcashCompactBlock, Error>.Iterator
+class BlockDownloaderStream {
+    let stream: AsyncThrowingStream<ZcashCompactBlock, Error>
+    var iterator: AsyncThrowingStream<ZcashCompactBlock, Error>.Iterator
 
-        init(stream: AsyncThrowingStream<ZcashCompactBlock, Error>) {
-            self.stream = stream
-            self.iterator = stream.makeAsyncIterator()
-        }
-
-        func nextBlock() async throws -> ZcashCompactBlock? {
-            return try await iterator.next()
-        }
+    init(stream: AsyncThrowingStream<ZcashCompactBlock, Error>) {
+        self.stream = stream
+        self.iterator = stream.makeAsyncIterator()
     }
 
-    func compactBlocksDownloadStream(
-        startHeight: BlockHeight? = nil,
-        targetHeight: BlockHeight? = nil
-    ) async throws -> BlocksDownloadStream {
+    func nextBlock() async throws -> ZcashCompactBlock? {
+        return try await iterator.next()
+    }
+}
+
+/// Described object which can download blocks.
+protocol BlockDownloader {
+    /// Create stream that can be used to download blocks for specific range.
+    func compactBlocksDownloadStream(startHeight: BlockHeight, targetHeight: BlockHeight) async throws -> BlockDownloaderStream
+
+    /// Read (download) blocks from stream and store those in storage.
+    /// - Parameters:
+    ///   - stream: Stream used to read blocks.
+    ///   - range: Range used to compute how many blocks to download.
+    ///   - maxBlockBufferSize: Max amount of blocks that can be held in memory.
+    ///   - totalProgressRange: Range that contains height for the whole sync process. This is used to compute progress.
+    func downloadAndStoreBlocks(
+        using stream: BlockDownloaderStream,
+        at range: CompactBlockRange,
+        maxBlockBufferSize: Int,
+        totalProgressRange: CompactBlockRange
+    ) async throws
+
+    func removeCacheDB(at cacheDBURL: URL) async throws
+}
+
+class BlockDownloaderImpl {
+    let service: LightWalletService
+    let downloaderService: BlockDownloaderService
+    let storage: CompactBlockStorage
+    let internalSyncProgress: InternalSyncProgress
+
+    init(
+        service: LightWalletService,
+        downloaderService: BlockDownloaderService,
+        storage: CompactBlockStorage,
+        internalSyncProgress: InternalSyncProgress
+    ) {
+        self.service = service
+        self.downloaderService = downloaderService
+        self.storage = storage
+        self.internalSyncProgress = internalSyncProgress
+    }
+}
+
+extension BlockDownloaderImpl: BlockDownloader {
+
+    func compactBlocksDownloadStream(startHeight: BlockHeight, targetHeight: BlockHeight) async throws -> BlockDownloaderStream {
         try Task.checkCancellation()
-
-        var targetHeightInternal: BlockHeight? = targetHeight
-        if targetHeight == nil {
-            targetHeightInternal = try await service.latestBlockHeightAsync()
-        }
-
-        guard let latestHeight = targetHeightInternal else {
-            throw LightWalletServiceError.generalError(message: "missing target height on compactBlockStreamDownload")
-        }
-
-        try Task.checkCancellation()
-        let latestDownloaded = try await storage.latestHeightAsync()
-        let startHeight = max(startHeight ?? BlockHeight.empty(), latestDownloaded)
-
-        let stream = service.blockStream(
-            startHeight: startHeight,
-            endHeight: latestHeight
-        )
-
-        return BlocksDownloadStream(stream: stream)
+        let stream = service.blockStream(startHeight: startHeight, endHeight: targetHeight)
+        return BlockDownloaderStream(stream: stream)
     }
 
     func downloadAndStoreBlocks(
-        using stream: BlocksDownloadStream,
+        using stream: BlockDownloaderStream,
         at range: CompactBlockRange,
         maxBlockBufferSize: Int,
         totalProgressRange: CompactBlockRange
@@ -106,9 +126,9 @@ extension CompactBlockProcessor {
         await blocksBufferWritten(buffer)
     }
 
-    func removeCacheDB() async throws {
+    func removeCacheDB(at cacheDBURL: URL) async throws {
         storage.closeDBConnection()
-        try FileManager.default.removeItem(at: config.cacheDb)
+        try FileManager.default.removeItem(at: cacheDBURL)
         try storage.createTable()
         LoggerProxy.info("Cache removed")
     }
@@ -116,20 +136,5 @@ extension CompactBlockProcessor {
     private func blocksBufferWritten(_ buffer: [ZcashCompactBlock]) async {
         guard let lastBlock = buffer.last else { return }
         await internalSyncProgress.set(lastBlock.height, .latestDownloadedBlockHeight)
-    }
-}
-
-extension CompactBlockProcessor {
-    func compactBlockDownload(
-        downloader: CompactBlockDownloading,
-        range: CompactBlockRange
-    ) async throws {
-        try Task.checkCancellation()
-        
-        do {
-            try await downloader.downloadBlockRange(range)
-        } catch {
-            throw error
-        }
     }
 }

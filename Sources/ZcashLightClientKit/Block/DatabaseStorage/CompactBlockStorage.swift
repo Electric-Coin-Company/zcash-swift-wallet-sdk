@@ -16,7 +16,11 @@ protocol ConnectionProvider {
 
 class CompactBlockStorage: CompactBlockDAO {
     var dbProvider: ConnectionProvider
-    
+
+    convenience init(url: URL, readonly: Bool) {
+        self.init(connectionProvider: SimpleConnectionProvider(path: url.absoluteString, readonly: readonly))
+    }
+
     init(connectionProvider: ConnectionProvider) {
         dbProvider = connectionProvider
     }

@@ -79,7 +79,7 @@ public class Initializer {
     private(set) var transactionRepository: TransactionRepository
     private(set) var accountRepository: AccountRepository
     private(set) var storage: CompactBlockStorage
-    private(set) var downloader: CompactBlockDownloader
+    private(set) var blockDownloaderService: BlockDownloaderService
     private(set) var network: ZcashNetwork
     private(set) public var viewingKeys: [UnifiedFullViewingKey]
     /// The effective birthday of the wallet based on the height provided when initializing
@@ -110,6 +110,9 @@ public class Initializer {
         loggerProxy: Logger? = nil
     ) {
         let lwdService = LightWalletGRPCService(endpoint: endpoint)
+
+        let storageConnectionProvider = SimpleConnectionProvider(path: cacheDbURL.absoluteString, readonly: false)
+        let storage = CompactBlockStorage(connectionProvider: storageConnectionProvider)
         
         self.init(
             rustBackend: ZcashRustBackend.self,
@@ -126,7 +129,7 @@ public class Initializer {
                 readOnly: true,
                 caching: true
             ),
-            storage: CompactBlockStorage(url: cacheDbURL, readonly: false),
+            storage: storage,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             viewingKeys: viewingKeys,
@@ -172,7 +175,7 @@ public class Initializer {
         self.transactionRepository = repository
         self.accountRepository = accountRepository
         self.storage = storage
-        self.downloader = CompactBlockDownloader(service: service, storage: storage)
+        self.blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
         self.viewingKeys = viewingKeys
         self.walletBirthday = walletBirthday
         self.network = network
@@ -223,7 +226,7 @@ public class Initializer {
         }
         self.walletBirthday = checkpoint.height
         
-        let lastDownloaded = (try? downloader.storage.latestHeight()) ?? walletBirthday
+        let lastDownloaded = (try? blockDownloaderService.storage.latestHeight()) ?? walletBirthday
         // resume from last downloaded block
         lowerBoundHeight = max(walletBirthday, lastDownloaded)
  

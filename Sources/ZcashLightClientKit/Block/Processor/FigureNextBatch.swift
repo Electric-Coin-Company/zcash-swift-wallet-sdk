@@ -16,14 +16,14 @@ extension CompactBlockProcessor {
 
     @discardableResult
     func figureNextBatch(
-        downloader: CompactBlockDownloading
+        downloaderService: BlockDownloaderService
     ) async throws -> NextState {
         try Task.checkCancellation()
         
         do {
             return try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
-                downloader: downloader,
+                downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: rustBackend,

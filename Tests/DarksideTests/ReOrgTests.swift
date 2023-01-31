@@ -159,7 +159,7 @@ class ReOrgTests: XCTestCase {
         verify that mock height has been reached
         */
         var latestDownloadedHeight = BlockHeight(0)
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.downloader.latestBlockHeight() }())
+        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
         XCTAssertTrue(latestDownloadedHeight > 0)
         
         /**
@@ -190,7 +190,7 @@ class ReOrgTests: XCTestCase {
         
         // now everything should be fine. latest block should be targetHeight
         
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.downloader.latestBlockHeight() }())
+        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
         XCTAssertEqual(latestDownloadedHeight, targetHeight)
     }
     

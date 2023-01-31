@@ -22,7 +22,7 @@ class TransactionEnhancementTests: XCTestCase {
     var processorConfig: CompactBlockProcessor.Configuration!
     var processor: CompactBlockProcessor!
     var darksideWalletService: DarksideWalletService!
-    var downloader: CompactBlockDownloader!
+    var downloader: BlockDownloaderServiceImpl!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
@@ -97,7 +97,7 @@ class TransactionEnhancementTests: XCTestCase {
         let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
         try! storage.createTable()
         
-        downloader = CompactBlockDownloader(service: service, storage: storage)
+        downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         processor = CompactBlockProcessor(
             service: service,
             storage: storage,

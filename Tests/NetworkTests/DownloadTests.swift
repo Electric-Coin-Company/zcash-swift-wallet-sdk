@@ -22,7 +22,7 @@ class DownloadTests: XCTestCase {
     func testSingleDownload() async throws {
         let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
         let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
-        let downloader = CompactBlockDownloader(service: service, storage: storage)
+        let downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         let blockCount = 100
         let activationHeight = network.constants.saplingActivationHeight
         let range = activationHeight ... activationHeight + blockCount
@@ -39,7 +39,7 @@ class DownloadTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.compactBlockDownload(downloader: downloader, range: range)
+            try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range)
         } catch {
             XCTFail("Download failed with error: \(error)")
         }
