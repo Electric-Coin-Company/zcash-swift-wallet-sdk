@@ -345,9 +345,11 @@ actor CompactBlockProcessor {
         }
     }
 
-    var service: LightWalletService
     let blockDownloaderService: BlockDownloaderService
     let blockDownloader: BlockDownloader
+    let blockValidator: BlockValidator
+
+    var service: LightWalletService
     var storage: CompactBlockRepository
     var transactionRepository: TransactionRepository
     var accountRepository: AccountRepository
@@ -434,9 +436,17 @@ actor CompactBlockProcessor {
             internalSyncProgress: internalSyncProgress
         )
 
-        self.service = service
         self.blockDownloaderService = blockDownloaderService
         self.blockDownloader = blockDownloader
+
+        let blockValidatorConfig = BlockValidatorConfig(
+            fsBlockCacheRoot: config.fsBlockCacheRoot,
+            dataDB: config.dataDb,
+            networkType: config.network.networkType
+        )
+        self.blockValidator = BlockValidatorImpl(config: blockValidatorConfig, rustBackend: backend)
+
+        self.service = service
         self.rustBackend = backend
         self.storage = storage
         self.config = config
@@ -667,14 +677,20 @@ actor CompactBlockProcessor {
                     await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
                 }
             } catch {
-                if !(Task.isCancelled) {
-                    LoggerProxy.error("processing failed with error: \(error)")
-                    await fail(error)
-                } else {
+                LoggerProxy.error("Sync failed with error: \(error)")
+
+                if Task.isCancelled {
                     LoggerProxy.info("processing cancelled.")
                     state = .stopped
                     if needsToStartScanningWhenStopped {
                         await nextBatch()
+                    }
+                } else {
+                    if case BlockValidatorError.validationFailed(let height) = error {
+                        await validationFailed(at: height)
+                    } else {
+                        LoggerProxy.error("processing failed with error: \(error)")
+                        await fail(error)
                     }
                 }
             }
@@ -706,7 +722,28 @@ actor CompactBlockProcessor {
                 maxBlockBufferSize: config.downloadBufferSize,
                 totalProgressRange: totalProgressRange
             )
-            try await compactBlockValidation()
+
+            do {
+                try await blockValidator.validate()
+            } catch {
+                guard let validationError = error as? BlockValidatorError else {
+                    LoggerProxy.error("Block validation failed with generic error: \(error)")
+                    throw error
+                }
+
+                switch validationError {
+                case .validationFailed:
+                    throw error
+
+                case .failedWithError(let genericError):
+                    throw genericError
+
+                case .failedWithUnknownError:
+                    LoggerProxy.error("validation failed without a specific error")
+                    throw CompactBlockProcessorError.generalError(message: "validation failed without a specific error")
+                }
+            }
+
             try await scanBlocks(at: processingRange, totalProgressRange: totalProgressRange)
             try await clearCompactBlockCache()
 
