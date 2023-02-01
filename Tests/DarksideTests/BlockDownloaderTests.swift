@@ -16,7 +16,7 @@ class BlockDownloaderTests: XCTestCase {
     let chainName = "main"
 
     var darksideWalletService: DarksideWalletService!
-    var downloader: CompactBlockDownloading!
+    var downloader: BlockDownloaderService!
     var service: LightWalletService!
     var storage: CompactBlockRepository!
     var cacheDB = try! __cacheDbURL()
@@ -26,7 +26,7 @@ class BlockDownloaderTests: XCTestCase {
         try super.setUpWithError()
         service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         storage = try! TestDbBuilder.diskCompactBlockStorage(at: cacheDB)
-        downloader = CompactBlockDownloader(service: service, storage: storage)
+        downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         darksideWalletService = DarksideWalletService(service: service as! LightWalletGRPCService)
         
         try FakeChainBuilder.buildChain(darksideWallet: darksideWalletService, branchID: branchID, chainName: chainName)
@@ -63,7 +63,7 @@ class BlockDownloaderTests: XCTestCase {
     }
     
     func testFailure() async {
-        let awfulDownloader = CompactBlockDownloader(
+        let awfulDownloader = BlockDownloaderServiceImpl(
             service: AwfulLightWalletService(
                 latestBlockHeight: self.network.constants.saplingActivationHeight + 1000,
                 service: darksideWalletService

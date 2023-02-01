@@ -572,7 +572,7 @@ public class SDKSynchronizer: Synchronizer {
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         Task {
             do {
-                let latestBlockHeight = try await blockProcessor.downloader.latestBlockHeightAsync()
+                let latestBlockHeight = try await blockProcessor.blockDownloaderService.latestBlockHeightAsync()
                 result(.success(latestBlockHeight))
             } catch {
                 result(.failure(error))
@@ -581,7 +581,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.downloader.latestBlockHeight()
+        try await blockProcessor.blockDownloaderService.latestBlockHeightAsync()
     }
 
     public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {

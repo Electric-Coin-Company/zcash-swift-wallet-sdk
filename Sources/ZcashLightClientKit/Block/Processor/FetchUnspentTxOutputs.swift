@@ -31,7 +31,7 @@ extension CompactBlockProcessor {
                 .flatMap({ $0 })
 
             var utxos: [UnspentTransactionOutputEntity] = []
-            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(
+            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
                 tAddresses: tAddresses.map { $0.stringEncoded },
                 startHeight: config.walletBirthday
             )

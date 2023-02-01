@@ -75,12 +75,12 @@ class BlockStreamingTest: XCTestCase {
         
         let cancelableTask = Task {
             do {
-                let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+                let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
                     startHeight: startHeight,
                     targetHeight: latestBlockHeight
                 )
 
-                try await compactBlockProcessor.downloadAndStoreBlocks(
+                try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
                     using: downloadStream,
                     at: startHeight...latestBlockHeight,
                     maxBlockBufferSize: 10,
@@ -123,12 +123,12 @@ class BlockStreamingTest: XCTestCase {
         let date = Date()
         
         do {
-            let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+            let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
                 startHeight: startHeight,
                 targetHeight: latestBlockHeight
             )
 
-            try await compactBlockProcessor.downloadAndStoreBlocks(
+            try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
                 using: downloadStream,
                 at: startHeight...latestBlockHeight,
                 maxBlockBufferSize: 10,

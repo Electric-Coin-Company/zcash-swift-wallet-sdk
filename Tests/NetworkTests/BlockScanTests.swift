@@ -70,11 +70,11 @@ class BlockScanTests: XCTestCase {
         )
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
-        let downloader = CompactBlockDownloader.sqlDownloader(
-            service: service,
-            at: cacheDbURL
-        )!
-        
+
+        let sqliteStorage = CompactBlockStorage(url: cacheDbURL, readonly: false)
+        guard (try? sqliteStorage.createTable()) != nil else { return XCTFail("Can't prepare SQLite storage for BlockDownloaderServiceImpl") }
+        let downloader = BlockDownloaderServiceImpl(service: service, storage: sqliteStorage)
+
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: network,
             walletBirthday: network.constants.saplingActivationHeight
@@ -89,10 +89,7 @@ class BlockScanTests: XCTestCase {
         let repository = BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
         var latestScannedheight = BlockHeight.empty()
         do {
-            try await compactBlockProcessor.compactBlockDownload(
-                downloader: downloader,
-                range: range
-            )
+            try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range)
             XCTAssertFalse(Task.isCancelled)
             try await compactBlockProcessor.compactBlockScanning(
                 rustWelding: rustWelding,
@@ -185,12 +182,12 @@ class BlockScanTests: XCTestCase {
         )
         
         do {
-            let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+            let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
                 startHeight: range.lowerBound,
                 targetHeight: range.upperBound
             )
 
-            try await compactBlockProcessor.downloadAndStoreBlocks(
+            try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
                 using: downloadStream,
                 at: range,
                 maxBlockBufferSize: 10,

@@ -8,14 +8,16 @@
 
 import Foundation
 
-enum CompactBlockDownloadError: Error {
+enum BlockDownloaderServiceError: Error {
     case timeout
     case generalError(error: Error)
 }
 /**
 Represents what a compact block downloaded should provide to its clients
 */
-public protocol CompactBlockDownloading {
+protocol BlockDownloaderService {
+    var storage: CompactBlockRepository { get }
+
     /**
     Downloads and stores the given block range.
     Non-Blocking
@@ -82,9 +84,9 @@ data; although, by default the SDK uses gRPC and SQL.
 - Property lightwalletService: the service used for requesting compact blocks
 - Property storage: responsible for persisting the compact blocks that are received
 */
-class CompactBlockDownloader {
+class BlockDownloaderServiceImpl {
     var lightwalletService: LightWalletService
-    private(set) var storage: CompactBlockRepository
+    let storage: CompactBlockRepository
     
     init(service: LightWalletService, storage: CompactBlockRepository) {
         self.lightwalletService = service
@@ -92,7 +94,7 @@ class CompactBlockDownloader {
     }
 }
 
-extension CompactBlockDownloader: CompactBlockDownloading {
+extension BlockDownloaderServiceImpl: BlockDownloaderService {
     func closeConnection() {
         lightwalletService.closeConnection()
     }
@@ -143,7 +145,7 @@ extension CompactBlockDownloader: CompactBlockDownloading {
             let latestHeight = try await storage.latestHeightAsync()
             return latestHeight
         } catch {
-            throw CompactBlockDownloadError.generalError(error: error)
+            throw BlockDownloaderServiceError.generalError(error: error)
         }
     }
 
