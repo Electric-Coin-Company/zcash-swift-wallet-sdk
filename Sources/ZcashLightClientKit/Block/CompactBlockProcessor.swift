@@ -349,6 +349,7 @@ actor CompactBlockProcessor {
     let blockValidator: BlockValidator
     let blockScanner: BlockScanner
     let blockEnhancer: BlockEnhancer
+    let saplingParametersHandler: SaplingParametersHandler
 
     var service: LightWalletService
     var storage: CompactBlockRepository
@@ -463,6 +464,14 @@ actor CompactBlockProcessor {
             rustBackend: backend,
             transactionRepository: repository
         )
+
+        let saplingParametersHandlerConfig = SaplingParametersHandlerConfig(
+            dataDb: config.dataDb,
+            networkType: config.network.networkType,
+            outputParamsURL: config.outputParamsURL,
+            spendParamsURL: config.spendParamsURL
+        )
+        self.saplingParametersHandler = SaplingParametersHandlerImpl(config: saplingParametersHandlerConfig, rustBackend: backend)
 
         self.service = service
         self.rustBackend = backend
@@ -699,7 +708,9 @@ actor CompactBlockProcessor {
                     try await fetchUnspentTxOutputs(range: range)
                 }
 
-                try await handleSaplingParametersIfNeeded()
+                state = .handlingSaplingFiles
+                try await saplingParametersHandler.handleIfNeeded()
+
                 try await clearCompactBlockCache()
 
                 if !Task.isCancelled {

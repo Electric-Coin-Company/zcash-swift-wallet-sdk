@@ -7,23 +7,37 @@
 
 import Foundation
 
-extension CompactBlockProcessor {
-    func handleSaplingParametersIfNeeded() async throws {
+struct SaplingParametersHandlerConfig {
+    let dataDb: URL
+    let networkType: NetworkType
+    let outputParamsURL: URL
+    let spendParamsURL: URL
+}
+
+protocol SaplingParametersHandler {
+    func handleIfNeeded() async throws
+}
+
+struct SaplingParametersHandlerImpl {
+    let config: SaplingParametersHandlerConfig
+    let rustBackend: ZcashRustBackendWelding.Type
+}
+
+extension SaplingParametersHandlerImpl: SaplingParametersHandler {
+    func handleIfNeeded() async throws {
         try Task.checkCancellation()
-        
-        state = .handlingSaplingFiles
 
         do {
             let verifiedBalance = try rustBackend.getVerifiedBalance(
                 dbData: config.dataDb,
                 account: Int32(0),
-                networkType: config.network.networkType
+                networkType: config.networkType
             )
 
             let totalBalance = try rustBackend.getBalance(
                 dbData: config.dataDb,
                 account: Int32(0),
-                networkType: config.network.networkType
+                networkType: config.networkType
             )
 
             // Download Sapling parameters only if sapling funds are detected.
