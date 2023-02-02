@@ -14,7 +14,7 @@ import XCTest
 class ZcashRustBackendTests: XCTestCase {
     var dbData: URL!
     var dataDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedDataDbURL()!)
-    var cacheDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedCacheDbURL()!)
+
     let spendingKey =
         // swiftlint:disable:next line_length
         "secret-extended-key-test1qvpevftsqqqqpqy52ut2vv24a2qh7nsukew7qg9pq6djfwyc3xt5vaxuenshp2hhspp9qmqvdh0gs2ljpwxders5jkwgyhgln0drjqaguaenfhehz4esdl4kwlm5t9q0l6wmzcrvcf5ed6dqzvct3e2ge7f6qdvzhp02m7sp5a0qjssrwpdh7u6tq89hl3wchuq8ljq8r8rwd6xdwh3nry9at80z7amnj3s6ah4jevnvfr08gxpws523z95g6dmn4wm6l3658kd4xcq9rc0qn"
@@ -49,54 +49,6 @@ class ZcashRustBackendTests: XCTestCase {
         XCTAssertThrowsError(try ZcashRustBackend.createAccount(dbData: dbData!, seed: Array(seed.utf8), networkType: networkType))
     }
 
-    func testInitAndScanBlocks() throws {
-        guard let cacheDb = TestDbBuilder.prePopulatedCacheDbURL() else {
-            XCTFail("pre populated Db not present")
-            return
-        }
-        let seed = "testreferencealicetestreferencealice"
-
-        var dbInit: DbInitResult!
-        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(
-            dbData: self.dbData!,
-            seed: Array(seed.utf8),
-            networkType: self.networkType
-        ) }())
-
-        guard case .success = dbInit else {
-            XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
-            return
-        }
-
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        let ufvks = [
-            try DerivationTool(networkType: networkType).deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
-                .deriveFullViewingKey()
-        ]
-        do {
-            try ZcashRustBackend.initAccountsTable(dbData: dbData!, ufvks: ufvks, networkType: networkType)
-        } catch {
-            XCTFail("failed with error: \(String(describing: ZcashRustBackend.lastError()))")
-            return
-        }
-        
-        XCTAssertNotNil(
-            try ZcashRustBackend.createAccount(
-                dbData: dbData!,
-                seed: Array(seed.utf8),
-                networkType: networkType
-            )
-        )
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        
-        let addr = try ZcashRustBackend.getCurrentAddress(dbData: dbData!, account: 0, networkType: networkType)
-        XCTAssertEqual(ZcashRustBackend.getLastError(), nil)
-        // swiftlint:disable:next line_length
-        XCTAssertEqual(addr.saplingReceiver()?.stringEncoded, Optional("ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"))
-        
-        XCTAssertTrue(ZcashRustBackend.scanBlocks(dbCache: cacheDb, dbData: dbData, networkType: networkType))
-    }
-    
     func testIsValidTransparentAddressFalse() {
         XCTAssertFalse(
             ZcashRustBackend.isValidTransparentAddress(

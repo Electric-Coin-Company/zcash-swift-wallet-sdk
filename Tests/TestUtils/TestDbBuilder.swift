@@ -43,26 +43,8 @@ class TestDbBuilder {
         case generalError
     }
     
-    static func inMemoryCompactBlockStorage() throws -> CompactBlockStorage {
-        let compactBlockDao = CompactBlockStorage(connectionProvider: try InMemoryDbProvider())
-        try compactBlockDao.createTable()
-
-        return compactBlockDao
-    }
-    
-    static func diskCompactBlockStorage(at url: URL) throws -> CompactBlockStorage {
-        let compactBlockDao = CompactBlockStorage(connectionProvider: SimpleConnectionProvider(path: url.absoluteString))
-        try compactBlockDao.createTable()
-
-        return compactBlockDao
-    }
-    
     static func pendingTransactionsDbURL() throws -> URL {
         try __documentsDirectory().appendingPathComponent("pending.db")
-    }
-
-    static func prePopulatedCacheDbURL() -> URL? {
-        Bundle.module.url(forResource: "cache", withExtension: "db")
     }
     
     static func prePopulatedDataDbURL() -> URL? {
@@ -73,6 +55,10 @@ class TestDbBuilder {
         Bundle.module.url(forResource: "darkside_data", withExtension: "db")
     }
 
+    static func prePopulatedDarksideCacheDb() -> URL? {
+        Bundle.module.url(forResource: "darkside_caches", withExtension: "db")
+    }
+    
     static func prepopulatedDataDbProvider() throws -> ConnectionProvider? {
         guard let url = prePopulatedMainnetDataDbURL() else { return nil }
 
@@ -87,7 +73,7 @@ class TestDbBuilder {
         switch initResult {
         case .success: return provider
         case .seedRequired:
-            throw StorageError.migrationFailedWithMessage(message: "Seed value required to initialize the wallet database")
+            throw DatabaseStorageError.migrationFailedWithMessage(message: "Seed value required to initialize the wallet database")
         }
     }
     
@@ -139,12 +125,22 @@ class InMemoryDbProvider: ConnectionProvider {
 }
 
 enum StubBlockCreator {
+    static func createRandomBlockMeta() -> ZcashCompactBlock.Meta {
+        ZcashCompactBlock.Meta(
+            // swiftlint:disable:next force_unwrapping
+            hash: randomData(ofLength: 32)!,
+            time: UInt32(Date().timeIntervalSince1970),
+            saplingOutputs: UInt32.random(in: 0 ... 32),
+            orchardOutputs: UInt32.random(in: 0 ... 32)
+        )
+    }
+
     static func createRandomDataBlock(with height: BlockHeight) -> ZcashCompactBlock? {
         guard let data = randomData(ofLength: 100) else {
             LoggerProxy.debug("error creating stub block")
             return nil
         }
-        return ZcashCompactBlock(height: height, data: data)
+        return ZcashCompactBlock(height: height, data: data, meta: createRandomBlockMeta())
     }
 
     static func createBlockRange(_ range: CompactBlockRange) -> [ZcashCompactBlock]? {

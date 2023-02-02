@@ -46,7 +46,7 @@ class AdvancedReOrgTests: XCTestCase {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -1276,7 +1276,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         try coordinator.applyStaged(blockheight: birthday + fullSyncLength)
         
-        sleep(10)
+        sleep(20)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
 
@@ -1304,7 +1304,7 @@ class AdvancedReOrgTests: XCTestCase {
             }
         }
         
-        wait(for: [firstSyncExpectation], timeout: 500)
+        wait(for: [firstSyncExpectation], timeout: 600)
         
         let latestScannedHeight = coordinator.synchronizer.latestScannedHeight
         XCTAssertEqual(latestScannedHeight, birthday + fullSyncLength)

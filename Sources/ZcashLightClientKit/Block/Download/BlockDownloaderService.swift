@@ -72,8 +72,6 @@ protocol BlockDownloaderService {
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
     
     func closeConnection()
-
-    func closeDBConnection()
 }
 
 /**
@@ -97,10 +95,6 @@ class BlockDownloaderServiceImpl {
 extension BlockDownloaderServiceImpl: BlockDownloaderService {
     func closeConnection() {
         lightwalletService.closeConnection()
-    }
-
-    func closeDBConnection() {
-        storage.closeDBConnection()
     }
             
     func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight ) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
@@ -139,22 +133,17 @@ extension BlockDownloaderServiceImpl: BlockDownloaderService {
             throw error
         }
     }
-    
-    func lastDownloadedBlockHeightAsync() async throws -> BlockHeight {
-        do {
-            let latestHeight = try await storage.latestHeightAsync()
-            return latestHeight
-        } catch {
-            throw BlockDownloaderServiceError.generalError(error: error)
-        }
-    }
 
     func rewind(to height: BlockHeight) throws {
         try self.storage.rewind(to: height)
     }
-    
-    func lastDownloadedBlockHeight() throws -> BlockHeight {
-        try self.storage.latestHeight()
+
+    func lastDownloadedBlockHeightAsync() async -> BlockHeight {
+        await Task { self.lastDownloadedBlockHeight() }.value
+    }
+
+    func lastDownloadedBlockHeight() -> BlockHeight {
+        self.storage.latestHeight()
     }
     
     func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {

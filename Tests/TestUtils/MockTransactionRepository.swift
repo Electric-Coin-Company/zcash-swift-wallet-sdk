@@ -220,11 +220,8 @@ extension Array {
 
         var idx: [Int] = []
 
-        for index in 0 ..< self.count {
-            // swiftlint:disable:next for_where
-            if function(self[index]) {
-                idx.append(index)
-            }
+        for index in 0 ..< self.count where function(self[index]) {
+            idx.append(index)
         }
         
         guard !idx.isEmpty else { return nil }

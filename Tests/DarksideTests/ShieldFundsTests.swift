@@ -46,7 +46,7 @@ class ShieldFundsTests: XCTestCase {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -223,7 +223,8 @@ class ShieldFundsTests: XCTestCase {
         do {
             let pendingTx = try await coordinator.synchronizer.shieldFunds(
                 spendingKey: coordinator.spendingKey,
-                memo: try Memo(string: "shield funds")
+                memo: try Memo(string: "shield funds"),
+                shieldingThreshold: Zatoshi(10000)
             )
             shouldContinue = true
             XCTAssertEqual(pendingTx.value, Zatoshi(10000))
@@ -294,12 +295,11 @@ class ShieldFundsTests: XCTestCase {
         // Fees at the time of writing the tests are 1000 zatoshi as defined on ZIP-313
         let postShieldingShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
 
-        // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
-        XCTAssertEqual(postShieldingShieldedBalance.total, Zatoshi(10000))
-        // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
-        XCTAssertEqual(postShieldingShieldedBalance.verified, Zatoshi(10000))
-        // FIXME: [#720] this should be 9000, https://github.com/zcash/ZcashLightClientKit/issues/720
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), .zero)
+        XCTAssertEqual(postShieldingShieldedBalance.total, .zero)
+        
+        XCTAssertEqual(postShieldingShieldedBalance.verified, .zero)
+
+        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), Zatoshi(9000))
 
         // 14. proceed confirm the shielded funds by staging ten more blocks
         try coordinator.service.applyStaged(nextLatestHeight: utxoHeight + 10 + 1 + 10)

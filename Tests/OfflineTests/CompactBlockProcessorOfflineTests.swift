@@ -10,9 +10,28 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class CompactBlockProcessorOfflineTests: XCTestCase {
+    let testFileManager = FileManager()
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+    }
+
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
+        try FileManager.default.removeItem(at: self.testTempDirectory)
+    }
+
     func testComputeProcessingRangeForSingleLoop() async throws {
+        let network = ZcashNetworkBuilder.network(for: .testnet)
+        let realRustBackend = ZcashRustBackend.self
+
         let processorConfig = CompactBlockProcessor.Configuration.standard(
-            for: ZcashNetworkBuilder.network(for: .testnet),
+            for: network,
             walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
         )
 
@@ -20,7 +39,17 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             latestBlockHeight: 690000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
         )
-        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+        
         let processor = CompactBlockProcessor(service: service, storage: storage, backend: ZcashRustBackend.self, config: processorConfig)
 
         let fullRange = 0...1000

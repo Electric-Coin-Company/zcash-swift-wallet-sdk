@@ -8,7 +8,7 @@
 
 import Foundation
 
-enum StorageError: Error {
+enum DatabaseStorageError: Error {
     case couldNotCreate
     case openFailed
     case closeFailed

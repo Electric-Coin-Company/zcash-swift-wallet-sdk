@@ -11,11 +11,10 @@ import SQLite
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_try force_unwrapping print_function_usage
+// swiftlint:disable implicitly_unwrapped_optional force_try print_function_usage
 class BlockScanTests: XCTestCase {
     let rustWelding = ZcashRustBackend.self
 
-    var cacheDbURL: URL!
     var dataDbURL: URL!
     var spendParamsURL: URL!
     var outputParamsURL: URL!
@@ -30,30 +29,37 @@ class BlockScanTests: XCTestCase {
     var network = ZcashNetworkBuilder.network(for: .testnet)
     var blockRepository: BlockRepository!
 
-    override func setUp() {
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
+    override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        super.setUp()
-        self.cacheDbURL = try! __cacheDbURL()
+        try super.setUpWithError()
         self.dataDbURL = try! __dataDbURL()
         self.spendParamsURL = try! __spendParamsURL()
         self.outputParamsURL = try! __outputParamsURL()
+
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
         deleteDBs()
     }
     
     private func deleteDBs() {
-        try? FileManager.default.removeItem(at: cacheDbURL)
         try? FileManager.default.removeItem(at: dataDbURL)
     }
 
-    override func tearDown() {
+    override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
-        
-        try? FileManager.default.removeItem(at: cacheDbURL)
-        try? FileManager.default.removeItem(at: dataDbURL)
-        try? FileManager.default.removeItem(at: spendParamsURL)
-        try? FileManager.default.removeItem(at: outputParamsURL)
+        try super.tearDownWithError()
+
+        try? testFileManager.removeItem(at: dataDbURL)
+        try? testFileManager.removeItem(at: spendParamsURL)
+        try? testFileManager.removeItem(at: outputParamsURL)
+        try? testFileManager.removeItem(at: testTempDirectory)
     }
     
     func testSingleDownloadAndScan() async throws {
@@ -61,7 +67,6 @@ class BlockScanTests: XCTestCase {
 
         XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType))
 
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
         let service = LightWalletGRPCService(
             endpoint: LightWalletEndpoint(
                 address: "lightwalletd.testnet.electriccoin.co",
@@ -71,37 +76,48 @@ class BlockScanTests: XCTestCase {
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
 
-        let sqliteStorage = CompactBlockStorage(url: cacheDbURL, readonly: false)
-        guard (try? sqliteStorage.createTable()) != nil else { return XCTFail("Can't prepare SQLite storage for BlockDownloaderServiceImpl") }
-        let downloader = BlockDownloaderServiceImpl(service: service, storage: sqliteStorage)
+        let fsDbRootURL = self.testTempDirectory
+
+        let rustBackend = ZcashRustBackend.self
+        let fsBlockRepository = FSCompactBlockRepository(
+            cacheDirectory: fsDbRootURL,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: fsDbRootURL,
+                rustBackend: rustBackend
+            ),
+            blockDescriptor: ZcashCompactBlockDescriptor.live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try fsBlockRepository.create()
+        let downloader = BlockDownloaderServiceImpl(service: service, storage: fsBlockRepository)
 
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: network,
             walletBirthday: network.constants.saplingActivationHeight
         )
+
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
-            storage: storage,
-            backend: ZcashRustBackend.self,
+            storage: fsBlockRepository,
+            backend: rustBackend,
             config: processorConfig
         )
         
         let repository = BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
         var latestScannedheight = BlockHeight.empty()
-        do {
-            try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range)
-            XCTAssertFalse(Task.isCancelled)
-            try await compactBlockProcessor.compactBlockScanning(
-                rustWelding: rustWelding,
-                cacheDb: cacheDbURL,
-                dataDb: dataDbURL,
-                networkType: network.networkType
-            )
-            latestScannedheight = repository.lastScannedBlockHeight()
-            XCTAssertEqual(latestScannedheight, range.upperBound)
-        } catch {
-            XCTFail("Download failed with error: \(error)")
-        }
+
+        try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range)
+        
+        XCTAssertFalse(Task.isCancelled)
+        try await compactBlockProcessor.compactBlockScanning(
+            rustWelding: rustWelding,
+            cacheDb: fsDbRootURL,
+            dataDb: dataDbURL,
+            networkType: network.networkType
+        )
+        latestScannedheight = repository.lastScannedBlockHeight()
+        XCTAssertEqual(latestScannedheight, range.upperBound)
     }
     
     @objc func observeBenchmark(_ notification: Notification) {
@@ -157,11 +173,23 @@ class BlockScanTests: XCTestCase {
         )
         
         let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
-        let storage = CompactBlockStorage(url: cacheDbURL, readonly: false)
-        try storage.createTable()
+
+        let fsDbRootURL = self.testTempDirectory
+
+        let fsBlockRepository = FSCompactBlockRepository(
+            cacheDirectory: fsDbRootURL,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: fsDbRootURL,
+                rustBackend: rustWelding
+            ),
+            blockDescriptor: ZcashCompactBlockDescriptor.live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try fsBlockRepository.create()
         
         var processorConfig = CompactBlockProcessor.Configuration(
-            cacheDb: cacheDbURL,
+            fsBlockCacheRoot: fsDbRootURL,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
@@ -172,7 +200,7 @@ class BlockScanTests: XCTestCase {
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
-            storage: storage,
+            storage: fsBlockRepository,
             backend: rustWelding,
             config: processorConfig
         )

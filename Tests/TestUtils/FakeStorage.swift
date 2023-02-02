@@ -5,14 +5,16 @@
 //  Created by Francisco Gindre on 12/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
-
+// swiftlint:disable force_unwrapping
 import Foundation
 @testable import ZcashLightClientKit
 
 class ZcashConsoleFakeStorage: CompactBlockRepository {
-    func closeDBConnection() { }
+    func create() throws {}
 
-    func latestHeightAsync() async throws -> BlockHeight {
+    func clear() async throws {}
+    
+    func latestHeightAsync() async -> BlockHeight {
         latestBlockHeight
     }
     
@@ -24,12 +26,21 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
         fakeRewind(to: height)
     }
     
-    func latestHeight() throws -> Int {
+    func latestHeight() -> Int {
         return self.latestBlockHeight
     }
 
-    func latestBlocks(count: Int) throws -> [ZcashLightClientKit.ZcashCompactBlock] {
-        return (0..<count).map { ZcashCompactBlock(height: latestBlockHeight - $0, data: Data()) }
+    func latestBlock() throws -> ZcashLightClientKit.ZcashCompactBlock {
+        return ZcashCompactBlock(
+            height: latestBlockHeight,
+            data: Data(),
+            meta: ZcashCompactBlock.Meta(
+                hash: Data(),
+                time: 1,
+                saplingOutputs: 2,
+                orchardOutputs: 2
+            )
+        )
     }
 
     func rewind(to height: BlockHeight) throws {
@@ -53,5 +64,30 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
     private func fakeRewind(to height: BlockHeight) {
         LoggerProxy.debug("rewind to \(height)")
         self.latestBlockHeight = min(self.latestBlockHeight, height)
+    }
+}
+
+import GRPC
+struct SandblastSimulator {
+    ///  Creates an array of Zcash CompactBlock from a mainnet sandblasted block of 500K bytes
+    ///  this is not good for syncing but for performance benchmarking of block storage.
+    func sandblast(with range: CompactBlockRange) throws -> [ZcashCompactBlock]? {
+        let jsonFile = Bundle.module.url(forResource: "sandblasted_mainnet_block", withExtension: "json")!
+        let fileHandle = try FileHandle(forReadingFrom: jsonFile)
+
+        let sandblastedBlock = try CompactBlock(jsonUTF8Data: fileHandle.availableData)
+
+        return [CompactBlock](repeating: sandblastedBlock, count: range.count)
+            .enumerated()
+            .map { sandblastedBlock in
+                let height = range.lowerBound + sandblastedBlock.offset
+                
+                var block = sandblastedBlock.element
+                
+                block.height = UInt64(height)
+                
+                return block
+            }
+            .asZcashCompactBlocks()
     }
 }

@@ -44,7 +44,7 @@ extension CompactBlockProcessor {
 
                 let scanStartTime = Date()
                 guard self.rustBackend.scanBlocks(
-                    dbCache: config.cacheDb,
+                    fsBlockDbRoot: config.fsBlockCacheRoot,
                     dbData: config.dataDb,
                     limit: batchSize,
                     networkType: config.network.networkType
@@ -74,7 +74,6 @@ extension CompactBlockProcessor {
                         batchSize: Int(batchSize),
                         operation: .scanBlocks
                     )
-
                     let heightCount = lastScannedHeight - previousScannedHeight
                     let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
                     LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
@@ -116,7 +115,7 @@ extension CompactBlockProcessor {
     ) throws {
         try Task.checkCancellation()
         
-        guard rustBackend.scanBlocks(dbCache: cacheDb, dbData: dataDb, limit: limit, networkType: networkType) else {
+        guard rustBackend.scanBlocks(fsBlockDbRoot: cacheDb, dbData: dataDb, limit: limit, networkType: networkType) else {
             let error: Error = rustBackend.lastError() ?? CompactBlockProcessorError.unknown
             LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
             throw error
