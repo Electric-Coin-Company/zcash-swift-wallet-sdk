@@ -348,6 +348,7 @@ actor CompactBlockProcessor {
     let blockDownloaderService: BlockDownloaderService
     let blockDownloader: BlockDownloader
     let blockValidator: BlockValidator
+    let blockScanner: BlockScanner
 
     var service: LightWalletService
     var storage: CompactBlockRepository
@@ -445,6 +446,14 @@ actor CompactBlockProcessor {
             networkType: config.network.networkType
         )
         self.blockValidator = BlockValidatorImpl(config: blockValidatorConfig, rustBackend: backend)
+
+        let blockScannerConfig = BlockScannerConfig(
+            fsBlockCacheRoot: config.fsBlockCacheRoot,
+            dataDB: config.dataDb,
+            networkType: config.network.networkType,
+            scanningBatchSize: config.scanningBatchSize
+        )
+        self.blockScanner = BlockScannerImpl(config: blockScannerConfig, rustBackend: backend, transactionRepository: repository)
 
         self.service = service
         self.rustBackend = backend
@@ -650,7 +659,14 @@ actor CompactBlockProcessor {
 
                 if let range = ranges.downloadedButUnscannedRange {
                     LoggerProxy.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await scanBlocks(at: range, totalProgressRange: totalProgressRange)
+                    try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
+                        let progress = BlockProgress(
+                            startHeight: totalProgressRange.lowerBound,
+                            targetHeight: totalProgressRange.upperBound,
+                            progressHeight: lastScannedHeight
+                        )
+                        await self?.notifyProgress(.syncing(progress))
+                    }
                 }
 
                 if let range = ranges.downloadAndScanRange {
@@ -744,7 +760,20 @@ actor CompactBlockProcessor {
                 }
             }
 
-            try await scanBlocks(at: processingRange, totalProgressRange: totalProgressRange)
+            do {
+                try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
+                    let progress = BlockProgress(
+                        startHeight: totalProgressRange.lowerBound,
+                        targetHeight: totalProgressRange.upperBound,
+                        progressHeight: lastScannedHeight
+                    )
+                    await self?.notifyProgress(.syncing(progress))
+                }
+            } catch {
+                LoggerProxy.error("Scanning failed with error: \(error)")
+                throw error
+            }
+
             try await clearCompactBlockCache()
 
             let progress = BlockProgress(

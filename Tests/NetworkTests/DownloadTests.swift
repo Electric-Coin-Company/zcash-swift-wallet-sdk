@@ -49,7 +49,6 @@ class DownloadTests: XCTestCase {
 
         try storage.create()
 
-        let downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         let blockCount = 100
         let activationHeight = network.constants.saplingActivationHeight
         let range = activationHeight ... activationHeight + blockCount
