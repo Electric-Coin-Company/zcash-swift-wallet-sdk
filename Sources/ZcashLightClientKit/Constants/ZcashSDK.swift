@@ -41,6 +41,17 @@ extension NetworkType {
     }
 }
 
+extension NetworkType {
+    public var chainName: String {
+        switch self {
+        case .mainnet:
+            return "main"
+        case .testnet:
+            return "test"
+        }
+    }
+}
+
 public enum ZcashNetworkBuilder {
     public static func network(for networkType: NetworkType) -> ZcashNetwork {
         switch networkType {
@@ -64,7 +75,6 @@ class ZcashMainnet: ZcashNetwork {
 Constants of ZcashLightClientKit. this constants don't
 */
 public enum ZcashSDK {
-
     /// The number of zatoshi that equal 1 ZEC.
     public static var zatoshiPerZEC: BlockHeight = 100_000_000
 
@@ -75,17 +85,17 @@ public enum ZcashSDK {
     /// by the rust backend but it is helpful to know what it is set to and should be kept in sync.
     public static var expiryOffset = 20
 
-    // mark: Defaults
+    // MARK: Defaults
 
     /// Default size of batches of blocks to request from the compact block service. Which was used both for scanning and downloading.
     /// consider basing your code assumptions on `DefaultDownloadBatch` and `DefaultScanningBatch` instead.
     @available(*, deprecated, message: "this value is being deprecated in favor of `DefaultDownloadBatch` and `DefaultScanningBatch`")
     public static var DefaultBatchSize = 100
 
-    /// Default batch size for downloading blocks for the compact block processor. This value was changed due to
-    /// full blocks causing block download memory usage significantly and also timeouts on grpc calls.
-    /// this value is subject to change in the future.
-    public static var DefaultDownloadBatch = 10
+    /// Default batch size for downloading blocks for the compact block processor. Be careful with this number. This amount of blocks is held in
+    /// memory at some point of the sync process.
+    /// This values can't be smaller than `DefaultScanningBatch`. Otherwise bad things will happen.
+    public static var DefaultDownloadBatch = 100
 
     /// Default batch size for scanning blocks for the compact block processor
     public static var DefaultScanningBatch = 100
@@ -98,7 +108,7 @@ public enum ZcashSDK {
     public static var defaultRetries: Int = 5
 
     /// The default maximum amount of time to wait during retry backoff intervals. Failed loops will never wait longer than
-    /// this before retyring.
+    /// this before retrying.
     public static var defaultMaxBackOffInterval: TimeInterval = 600
 
     /// Default number of blocks to rewind when a chain reorg is detected. This should be large enough to recover from the
@@ -111,6 +121,9 @@ public enum ZcashSDK {
 
     /// Default Name for LibRustZcash data.db
     public static var defaultDataDbName = "data.db"
+
+    /// Default Name for Compact Block file system based db
+    public static var defaultFsCacheName = "fs_cache"
 
     /// Default Name for Compact Block caches db
     public static var defaultCacheDbName = "caches.db"
@@ -138,7 +151,10 @@ public protocol NetworkConstants {
     /// Default Name for LibRustZcash data.db
     static var defaultDataDbName: String { get }
 
+    static var defaultFsBlockDbRootName: String { get }
+
     /// Default Name for Compact Block caches db
+    @available(*, deprecated, message: "use this name to clean up the sqlite compact block database")
     static var defaultCacheDbName: String { get }
 
     /// Default name for pending transactions db
@@ -173,15 +189,15 @@ public extension NetworkConstants {
     }
 }
 
-public class ZcashSDKMainnetConstants: NetworkConstants {
-    private init() {}
-
+public enum ZcashSDKMainnetConstants: NetworkConstants {
     /// The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
     /// prior to this height, at all.
     public static var saplingActivationHeight: BlockHeight = 419_200
 
     /// Default Name for LibRustZcash data.db
     public static var defaultDataDbName = "data.db"
+
+    public static var defaultFsBlockDbRootName = "fs_cache"
 
     /// Default Name for Compact Block caches db
     public static var defaultCacheDbName = "caches.db"
@@ -194,9 +210,7 @@ public class ZcashSDKMainnetConstants: NetworkConstants {
     public static var feeChangeHeight: BlockHeight = 1_077_550
 }
 
-public class ZcashSDKTestnetConstants: NetworkConstants {
-    private init() {}
-
+public enum ZcashSDKTestnetConstants: NetworkConstants {
     /// The height of the first sapling block. When it comes to shielded transactions, we do not need to consider any blocks
     /// prior to this height, at all.
     public static var saplingActivationHeight: BlockHeight = 280_000
@@ -206,6 +220,8 @@ public class ZcashSDKTestnetConstants: NetworkConstants {
 
     /// Default Name for Compact Block caches db
     public static var defaultCacheDbName = "caches.db"
+
+    public static var defaultFsBlockDbRootName = "fs_cache"
 
     /// Default name for pending transactions db
     public static var defaultPendingDbName = "pending.db"

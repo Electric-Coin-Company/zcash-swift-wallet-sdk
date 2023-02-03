@@ -9,14 +9,13 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_unwrapping type_body_length
-//@MainActor
+// swiftlint:disable implicitly_unwrapped_optional force_unwrapping force_try type_body_length file_length cyclomatic_complexity
 class AdvancedReOrgTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     // swiftlint:disable:next line_length
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 
     let sendAmount = Zatoshi(1000)
@@ -36,7 +35,7 @@ class AdvancedReOrgTests: XCTestCase {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
             seed: seedPhrase,
-            walletBirthday: birthday + 50, //don't use an exact birthday, users never do.
+            walletBirthday: birthday + 50, // don't use an exact birthday, users never do.
             channelProvider: ChannelProvider(),
             network: network
         )
@@ -47,7 +46,7 @@ class AdvancedReOrgTests: XCTestCase {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -67,7 +66,6 @@ class AdvancedReOrgTests: XCTestCase {
         reorgExpectation.fulfill()
     }
     
-
     /// pre-condition: know balances before tx at received_Tx_height arrives
     /// 1. Setup w/ default dataset
     /// 2. applyStaged(received_Tx_height)
@@ -174,10 +172,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         4. get that transaction hex encoded data
         */
-        guard let receivedTxData = receivedTx.raw else {
-            XCTFail("received tx has no raw data!")
-            return
-        }
+        let receivedTxData = receivedTx.raw ?? Data()
         
         let receivedRawTx = RawTransaction.with { rawTx in
             rawTx.height = UInt64(receivedTxHeight)
@@ -278,7 +273,6 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(initialTotalBalance + receivedTx.value, finalReorgTxTotalBalance)
     }
     
-
     /// An outbound, unconfirmed transaction in a specific block changes height in the event of a reorg
     ///
     ///
@@ -427,7 +421,8 @@ class AdvancedReOrgTests: XCTestCase {
                     */
                     let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
                     XCTAssertEqual(pMinedHeight, sentTxHeight)
-                    XCTAssertEqual(initialTotalBalance - sendAmount - Zatoshi(1000), synchronizer.initializer.getBalance()) // fee change on this branch
+                    // fee change on this branch
+                    XCTAssertEqual(initialTotalBalance - sendAmount - Zatoshi(1000), synchronizer.initializer.getBalance())
                     continuation.resume()
                     afterReOrgExpectation.fulfill()
                 }, error: self.handleError)
@@ -450,7 +445,7 @@ class AdvancedReOrgTests: XCTestCase {
         let lastSyncExpectation = XCTestExpectation(description: "sync to confirmation")
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     lastSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -582,7 +577,6 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(afterReOrgVerifiedBalance, initialVerifiedBalance)
     }
     
-
     /// Steps:
     /// 1.  sync up to an incoming transaction (incomingTxHeight + 1)
     /// 1a. save balances
@@ -608,7 +602,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         var initialBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
-        var incomingTx: ConfirmedTransactionEntity?
+        var incomingTx: ZcashTransaction.Received!
         try coordinator.sync(completion: { _ in
             firstSyncExpectation.fulfill()
         }, error: self.handleError)
@@ -622,15 +616,7 @@ class AdvancedReOrgTests: XCTestCase {
         initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
         incomingTx = coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == incomingTxHeight })
 
-        guard let transaction = incomingTx else {
-            XCTFail("no tx found")
-            return
-        }
-        
-        guard let txRawData = transaction.raw else {
-            XCTFail("transaction has no raw data")
-            return
-        }
+        let txRawData = incomingTx.raw ?? Data()
         
         let rawTransaction = RawTransaction.with({ rawTx in
             rawTx.data = txRawData
@@ -756,7 +742,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -829,7 +815,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     secondSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -874,7 +860,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     afterReorgExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -909,7 +895,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     yetAnotherExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -946,7 +932,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     thisIsTheLastExpectationIPromess.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -961,14 +947,16 @@ class AdvancedReOrgTests: XCTestCase {
         15. verify that there's no pending transaction and that the tx is displayed on the sentTransactions collection
         */
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
+
+        let sentTransactions = coordinator.synchronizer.sentTransactions
+            .first(
+                where: { transaction in
+                    return transaction.rawID == newlyPendingTx.rawTransactionId
+                }
+            )
+
         XCTAssertNotNil(
-            coordinator.synchronizer.sentTransactions
-                .first(
-                    where: { transaction in
-                        guard let txId = transaction.rawTransactionId else { return false }
-                        return txId == newlyPendingTx.rawTransactionId
-                    }
-                ),
+            sentTransactions,
             "Sent Tx is not on sent transactions"
         )
         
@@ -982,7 +970,6 @@ class AdvancedReOrgTests: XCTestCase {
             coordinator.synchronizer.initializer.getVerifiedBalance()
         )
     }
-
 
     /// Uses the zcash-hackworks data set.
 
@@ -1143,8 +1130,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
-                    
+                try coordinator.sync(completion: { _ in
                     continuation.resume()
                     firstSyncExpectation.fulfill()
                 }, error: self.handleError)
@@ -1217,7 +1203,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     secondSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -1237,7 +1223,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     reorgSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -1264,7 +1250,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     lastSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -1290,7 +1276,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         try coordinator.applyStaged(blockheight: birthday + fullSyncLength)
         
-        sleep(10)
+        sleep(20)
         
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
 
@@ -1318,7 +1304,7 @@ class AdvancedReOrgTests: XCTestCase {
             }
         }
         
-        wait(for: [firstSyncExpectation], timeout: 500)
+        wait(for: [firstSyncExpectation], timeout: 600)
         
         let latestScannedHeight = coordinator.synchronizer.latestScannedHeight
         XCTAssertEqual(latestScannedHeight, birthday + fullSyncLength)

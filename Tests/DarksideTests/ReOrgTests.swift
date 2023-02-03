@@ -23,10 +23,10 @@ basic reorg test.  Scan, get a reorg and then reach latest height.
 */
 // swiftlint:disable implicitly_unwrapped_optional print_function_usage function_parameter_count
 class ReOrgTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
@@ -67,7 +67,8 @@ class ReOrgTests: XCTestCase {
     }
 
     override func tearDownWithError() throws {
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try super.tearDownWithError()
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -158,7 +159,7 @@ class ReOrgTests: XCTestCase {
         verify that mock height has been reached
         */
         var latestDownloadedHeight = BlockHeight(0)
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.downloader.latestBlockHeight() }())
+        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
         XCTAssertTrue(latestDownloadedHeight > 0)
         
         /**
@@ -189,7 +190,7 @@ class ReOrgTests: XCTestCase {
         
         // now everything should be fine. latest block should be targetHeight
         
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.downloader.latestBlockHeight() }())
+        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
         XCTAssertEqual(latestDownloadedHeight, targetHeight)
     }
     

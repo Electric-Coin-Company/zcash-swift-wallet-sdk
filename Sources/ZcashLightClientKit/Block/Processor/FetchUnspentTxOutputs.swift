@@ -31,7 +31,7 @@ extension CompactBlockProcessor {
                 .flatMap({ $0 })
 
             var utxos: [UnspentTransactionOutputEntity] = []
-            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = downloader.fetchUnspentTransactionOutputs(
+            let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
                 tAddresses: tAddresses.map { $0.stringEncoded },
                 startHeight: config.walletBirthday
             )
@@ -43,9 +43,10 @@ extension CompactBlockProcessor {
             var refreshed: [UnspentTransactionOutputEntity] = []
             var skipped: [UnspentTransactionOutputEntity] = []
 
+            let startTime = Date()
             for utxo in utxos {
                 do {
-                    try rustBackend.putUnspentTransparentOutput(
+                    if try rustBackend.putUnspentTransparentOutput(
                         dbData: config.dataDb,
                         txid: utxo.txid.bytes,
                         index: utxo.index,
@@ -53,7 +54,11 @@ extension CompactBlockProcessor {
                         value: Int64(utxo.valueZat),
                         height: utxo.height,
                         networkType: config.network.networkType
-                    ) ? refreshed.append(utxo) : skipped.append(utxo)
+                    ) {
+                        refreshed.append(utxo)
+                    } else {
+                        skipped.append(utxo)
+                    }
 
                     await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
                 } catch {
@@ -61,6 +66,18 @@ extension CompactBlockProcessor {
                     skipped.append(utxo)
                 }
             }
+
+            SDKMetrics.shared.pushProgressReport(
+                progress: BlockProgress(
+                    startHeight: range.lowerBound,
+                    targetHeight: range.upperBound,
+                    progressHeight: range.upperBound
+                ),
+                start: startTime,
+                end: Date(),
+                batchSize: range.count,
+                operation: .fetchUTXOs
+            )
 
             let result = (inserted: refreshed, skipped: skipped)
             

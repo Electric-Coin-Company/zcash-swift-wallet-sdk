@@ -11,17 +11,48 @@ import XCTest
 
 // swiftlint:disable force_try type_body_length
 class BlockBatchValidationTests: XCTestCase {
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+    }
+
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
+        try? testFileManager.removeItem(at: testTempDirectory)
+    }
+
     func testBranchIdFailure() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -54,7 +85,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -72,11 +103,25 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -109,7 +154,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -127,11 +172,25 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -164,7 +223,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -182,11 +241,25 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: 1210000,
             service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -220,7 +293,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -250,10 +323,10 @@ class BlockBatchValidationTests: XCTestCase {
         )
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoredLatestHeight)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
 
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -287,12 +360,11 @@ class BlockBatchValidationTests: XCTestCase {
         let mockRust = MockRustBackend.self
         mockRust.consensusBranchID = 0xd34db4d
 
-        
         var nextBatch: CompactBlockProcessor.NextState?
         do {
             nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
-                downloader: downloader,
+                downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
@@ -303,7 +375,7 @@ class BlockBatchValidationTests: XCTestCase {
             XCTFail("this shouldn't happen: \(error)")
         }
         
-        guard let _ = nextBatch else {
+        guard nextBatch != nil else {
             XCTFail("result should not be nil")
             return
         }
@@ -311,7 +383,7 @@ class BlockBatchValidationTests: XCTestCase {
         XCTAssertTrue(
             {
                 switch (nextBatch, expectedResult) {
-                case (let .wait(latestHeight, latestDownloadHeight), let .wait(expectedLatestHeight, exectedLatestDownloadHeight)):
+                case let (.wait(latestHeight, latestDownloadHeight), .wait(expectedLatestHeight, exectedLatestDownloadHeight)):
                     return latestHeight == expectedLatestHeight && latestDownloadHeight == exectedLatestDownloadHeight
                 default:
                     return false
@@ -333,17 +405,17 @@ class BlockBatchValidationTests: XCTestCase {
 
         let ranges = SyncRanges(
             latestBlockHeight: expectedLatestHeight,
-            downloadRange: expectedStoreLatestHeight+1...expectedLatestHeight,
-            scanRange: expectedStoreLatestHeight+1...expectedLatestHeight,
+            downloadedButUnscannedRange: nil,
+            downloadAndScanRange: expectedStoreLatestHeight + 1...expectedLatestHeight,
             enhanceRange: walletBirthday...expectedLatestHeight,
             fetchUTXORange: walletBirthday...expectedLatestHeight
         )
         let expectedResult = CompactBlockProcessor.NextState.processNewBlocks(ranges: ranges)
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -381,7 +453,7 @@ class BlockBatchValidationTests: XCTestCase {
         do {
             nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
-                downloader: downloader,
+                downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
@@ -392,15 +464,15 @@ class BlockBatchValidationTests: XCTestCase {
             XCTFail("this shouldn't happen: \(error)")
         }
         
-        guard let _ = nextBatch else {
+        guard nextBatch != nil else {
             XCTFail("result should not be nil")
             return
         }
 
         XCTAssertTrue(
             {
-                switch (nextBatch, expectedResult)  {
-                case (.processNewBlocks(let ranges), .processNewBlocks(let expectedRanges)):
+                switch (nextBatch, expectedResult) {
+                case let (.processNewBlocks(ranges), .processNewBlocks(expectedRanges)):
                     return ranges == expectedRanges
                 default:
                     return false
@@ -421,9 +493,9 @@ class BlockBatchValidationTests: XCTestCase {
         let walletBirthday = BlockHeight(1210000)
         let expectedResult = CompactBlockProcessor.NextState.finishProcessing(height: expectedStoreLatestHeight)
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -465,7 +537,7 @@ class BlockBatchValidationTests: XCTestCase {
         do {
             nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
-                downloader: downloader,
+                downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
@@ -477,16 +549,15 @@ class BlockBatchValidationTests: XCTestCase {
             XCTFail("this shouldn't happen: \(error)")
         }
         
-        guard let _ = nextBatch else {
+        guard nextBatch != nil else {
             XCTFail("result should not be nil")
             return
         }
         
         XCTAssertTrue(
             {
-
                 switch (nextBatch, expectedResult) {
-                case (.finishProcessing(let height), .finishProcessing(let expectedHeight)):
+                case let (.finishProcessing(height), .finishProcessing(expectedHeight)):
                     return height == expectedHeight
                 default:
                     return false

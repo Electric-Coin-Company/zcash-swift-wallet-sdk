@@ -5,18 +5,18 @@ let package = Package(
     name: "ZcashLightClientKit",
     platforms: [
         .iOS(.v13),
-        .macOS(.v10_15)
+        .macOS(.v12)
     ],
     products: [
         .library(
             name: "ZcashLightClientKit",
             targets: ["ZcashLightClientKit"]
-        ),
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.8.0"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
-        .package(name:"libzcashlc", url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", .exactItem(Version(0, 1, 1))),
+        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", from: "0.2.0")
     ],
     targets: [
         .target(
@@ -24,7 +24,7 @@ let package = Package(
             dependencies: [
                 .product(name: "SQLite", package: "SQLite.swift"),
                 .product(name: "GRPC", package: "grpc-swift"),
-                .product(name: "libzcashlc", package: "libzcashlc"),
+                .product(name: "libzcashlc", package: "zcash-light-client-ffi")
             ],
             exclude: [
                 "Service/ProtoBuf/proto/compact_formats.proto",
@@ -46,7 +46,8 @@ let package = Package(
                 .copy("Resources/cache.db"),
                 .copy("Resources/darkside_caches.db"),
                 .copy("Resources/darkside_data.db"),
-                .copy("Resources/darkside_pending.db")
+                .copy("Resources/darkside_pending.db"),
+                .copy("Resources/sandblasted_mainnet_block.json")
             ]
         ),
         .testTarget(
@@ -59,6 +60,10 @@ let package = Package(
         ),
         .testTarget(
             name: "DarksideTests",
+            dependencies: ["ZcashLightClientKit", "TestUtils"]
+        ),
+        .testTarget(
+            name: "PerformanceTests",
             dependencies: ["ZcashLightClientKit", "TestUtils"]
         )
     ]

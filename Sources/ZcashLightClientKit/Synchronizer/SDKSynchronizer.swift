@@ -32,16 +32,7 @@ public extension Notification.Name {
     static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
 
     /// Posted when the synchronizer starts syncing
-    static let synchronizerSyncing = Notification.Name("SDKSyncronizerSyncing")
-
-    /// Posted when synchronizer starts downloading blocks
-    static let synchronizerDownloading = Notification.Name("SDKSyncronizerDownloading")
-
-    /// Posted when synchronizer starts validating blocks
-    static let synchronizerValidating = Notification.Name("SDKSyncronizerValidating")
-
-    /// Posted when synchronizer starts scanning blocks
-    static let synchronizerScanning = Notification.Name("SDKSyncronizerScanning")
+    static let synchronizerSyncing = Notification.Name("SDKSynchronizerSyncing")
 
     /// Posted when the synchronizer starts Enhancing
     static let synchronizerEnhancing = Notification.Name("SDKSyncronizerEnhancing")
@@ -105,7 +96,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
     public private(set) var progress: Float = 0.0
-    public private(set) var blockProcessor: CompactBlockProcessor
+    let blockProcessor: CompactBlockProcessor
     public private(set) var initializer: Initializer
     public private(set) var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState
@@ -119,6 +110,8 @@ public class SDKSynchronizer: Synchronizer {
 
     private let statusUpdateLock = NSRecursiveLock()
 
+    private var syncStartDate: Date?
+    
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) throws {
@@ -147,15 +140,15 @@ public class SDKSynchronizer: Synchronizer {
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
-        let lastscannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
-        self.latestScannedHeight = lastscannedHeight
+        let lastScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
+        self.latestScannedHeight = lastScannedHeight
         self.network = initializer.network
         self.lastStateSubject = CurrentValueSubject(
             SynchronizerState(
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .unprepared,
-                latestScannedHeight: lastscannedHeight
+                latestScannedHeight: lastScannedHeight
             )
         )
 
@@ -186,9 +179,13 @@ public class SDKSynchronizer: Synchronizer {
         case .unprepared:
             throw SynchronizerError.notPrepared
 
-        case .downloading, .validating, .scanning, .enhancing, .fetching:
-            LoggerProxy.warn("warning: synchronizer started when already started")
-            return
+        case .syncing, .enhancing, .fetching:
+            LoggerProxy.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
+            Task {
+                /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
+                /// it's start here.
+                await blockProcessor.start(retry: retry)
+            }
 
         case .stopped, .synced, .disconnected, .error:
             Task {
@@ -199,10 +196,11 @@ public class SDKSynchronizer: Synchronizer {
                     name: .synchronizerStarted,
                     object: self,
                     userInfo: [
-                        NotificationKeys.synchronizerState : state
+                        NotificationKeys.synchronizerState: state
                     ]
                 )
 
+                syncStartDate = Date()
                 await blockProcessor.start(retry: retry)
             }
         }
@@ -233,22 +231,8 @@ public class SDKSynchronizer: Synchronizer {
 
         center.addObserver(
             self,
-            selector: #selector(processorStartedDownloading(_:)),
-            name: Notification.Name.blockProcessorStartedDownloading,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedValidating(_:)),
-            name: Notification.Name.blockProcessorStartedValidating,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedScanning(_:)),
-            name: Notification.Name.blockProcessorStartedScanning,
+            selector: #selector(processorStartedSyncing(_:)),
+            name: Notification.Name.blockProcessorStartedSyncing,
             object: processor
         )
 
@@ -347,7 +331,7 @@ public class SDKSynchronizer: Synchronizer {
     @objc func transactionsFound(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ConfirmedTransactionEntity]
+            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ZcashTransaction.Overview]
         else {
             return
         }
@@ -392,29 +376,14 @@ public class SDKSynchronizer: Synchronizer {
         self.notify(progress: progress)
     }
 
-    @objc func processorStartedDownloading(_ notification: Notification) {
+    @objc func processorStartedSyncing(_ notification: Notification) {
         statusUpdateLock.lock()
         defer { statusUpdateLock.unlock() }
 
-        guard status != .downloading(.nullProgress) else { return }
-        status = .downloading(.nullProgress)
+        guard status != .syncing(.nullProgress) else { return }
+        status = .syncing(.nullProgress)
     }
 
-    @objc func processorStartedValidating(_ notification: Notification) {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .validating else { return }
-        status = .validating
-    }
-
-    @objc func processorStartedScanning(_ notification: Notification) {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .scanning(.nullProgress) else { return }
-        status = .scanning(.nullProgress)
-    }
     @objc func processorStartedEnhancing(_ notification: Notification) {
         statusUpdateLock.lock()
         defer { statusUpdateLock.unlock() }
@@ -460,6 +429,13 @@ public class SDKSynchronizer: Synchronizer {
         }
         self.refreshPendingTransactions()
         self.status = .synced
+        
+        if let syncStartDate {
+            SDKMetrics.shared.pushSyncReport(
+                start: syncStartDate,
+                end: Date()
+            )
+        }
     }
 
     @objc func processorTransitionUnknown(_ notification: Notification) {
@@ -483,8 +459,7 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.parameterMissing(underlyingError: error)
         }
 
-        if case Recipient.transparent = toAddress,
-           memo != nil {
+        if case Recipient.transparent = toAddress, memo != nil {
             throw SynchronizerError.generalError(message: "Memos can't be sent to transparent addresses.")
         }
 
@@ -498,12 +473,12 @@ public class SDKSynchronizer: Synchronizer {
 
     public func shieldFunds(
         spendingKey: UnifiedSpendingKey,
-        memo: Memo
+        memo: Memo,
+        shieldingThreshold: Zatoshi
     ) async throws -> PendingTransactionEntity {
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
         do {
-
             let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
 
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
@@ -511,11 +486,17 @@ public class SDKSynchronizer: Synchronizer {
                 throw ShieldFundsError.insuficientTransparentFunds
             }
 
-            let shieldingSpend = try transactionManager.initSpend(zatoshi: tBalance.verified, recipient: .internalAccount(spendingKey.account), memo: try memo.asMemoBytes(), from: accountIndex)
+            let shieldingSpend = try transactionManager.initSpend(
+                zatoshi: tBalance.verified,
+                recipient: .internalAccount(spendingKey.account),
+                memo: try memo.asMemoBytes(),
+                from: accountIndex
+            )
 
-            // TODO: Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
+            // TODO: [#487] Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
             let transaction = try await transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
+                shieldingThreshold: shieldingThreshold,
                 pendingTransaction: shieldingSpend
             )
 
@@ -554,34 +535,46 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.cancel(pendingTransaction: transaction)
     }
 
-    public func allReceivedTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllReceivedTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allReceivedTransactions() throws -> [ZcashTransaction.Received] {
+        try transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
 
     public func allPendingTransactions() throws -> [PendingTransactionEntity] {
         try transactionManager.allPendingTransactions() ?? [PendingTransactionEntity]()
     }
 
-    public func allClearedTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAll(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allClearedTransactions() throws -> [ZcashTransaction.Overview] {
+        return try transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
     }
 
-    public func allSentTransactions() throws -> [ConfirmedTransactionEntity] {
-        try transactionRepository.findAllSentTransactions(offset: 0, limit: Int.max) ?? [ConfirmedTransactionEntity]()
+    public func allSentTransactions() throws -> [ZcashTransaction.Sent] {
+        return try transactionRepository.findSent(offset: 0, limit: Int.max)
     }
 
-    public func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]? {
-        try transactionRepository.findAll(from: transaction, limit: limit)
+    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview] {
+        return try transactionRepository.find(from: transaction, limit: limit, kind: .all)
     }
 
     public func paginatedTransactions(of kind: TransactionKind = .all) -> PaginatedTransactionRepository {
         PagedTransactionRepositoryBuilder.build(initializer: initializer, kind: .all)
     }
 
+    public func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: transaction)
+    }
+
+    public func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: receivedTransaction)
+    }
+
+    public func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo] {
+        return try transactionRepository.findMemos(for: sentTransaction)
+    }
+
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         Task {
             do {
-                let latestBlockHeight = try await blockProcessor.downloader.latestBlockHeightAsync()
+                let latestBlockHeight = try await blockProcessor.blockDownloaderService.latestBlockHeightAsync()
                 result(.success(latestBlockHeight))
             } catch {
                 result(.failure(error))
@@ -590,17 +583,18 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.downloader.latestBlockHeight()
+        try await blockProcessor.blockDownloaderService.latestBlockHeightAsync()
     }
 
     public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
         guard initializer.isValidTransparentAddress(address) else {
             throw SynchronizerError.generalError(message: "invalid t-address")
         }
-
+        
         let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
-
+        
         do {
+            // swiftlint:disable:next array_constructor
             var utxos: [UnspentTransactionOutputEntity] = []
             for try await transactionEntity in stream {
                 utxos.append(transactionEntity)
@@ -682,6 +676,23 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
+    public func wipe() async throws {
+        do {
+            try await blockProcessor.wipe()
+        } catch {
+            throw SynchronizerError.wipeAttemptWhileProcessing
+        }
+
+        transactionManager.closeDBConnection()
+        transactionRepository.closeDBConnection()
+
+        try? FileManager.default.removeItem(at: initializer.fsBlockDbRoot)
+        try? FileManager.default.removeItem(at: initializer.pendingDbURL)
+        try? FileManager.default.removeItem(at: initializer.dataDbURL)
+
+        status = .unprepared
+    }
+
     // MARK: notify state
     private func notify(progress: CompactBlockProgress) {
         var userInfo: [AnyHashable: Any] = .init()
@@ -704,9 +715,9 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
 
-
+    // swiftlint:disable:next strict_fileprivate
     fileprivate func snapshotState() async -> SDKSynchronizer.SynchronizerState {
-        return SynchronizerState(
+        SynchronizerState(
             shieldedBalance: WalletBalance(
                 verified: initializer.getVerifiedBalance(),
                 total: initializer.getBalance()
@@ -739,18 +750,14 @@ public class SDKSynchronizer: Synchronizer {
             }
         case .unprepared:
             break
-        case .downloading:
-            NotificationSender.default.post(name: Notification.Name.synchronizerDownloading, object: self)
-        case .validating:
-            NotificationSender.default.post(name: Notification.Name.synchronizerValidating, object: self)
-        case .scanning:
-            NotificationSender.default.post(name: Notification.Name.synchronizerScanning, object: self)
+        case .syncing:
+            NotificationSender.default.post(name: Notification.Name.synchronizerSyncing, object: self)
         case .enhancing:
             NotificationSender.default.post(name: Notification.Name.synchronizerEnhancing, object: self)
         case .fetching:
             NotificationSender.default.post(name: Notification.Name.synchronizerFetching, object: self)
-        case .error(let e):
-            self.notifyFailure(e)
+        case .error(let error):
+            self.notifyFailure(error)
         }
     }
     // MARK: book keeping
@@ -759,10 +766,10 @@ public class SDKSynchronizer: Synchronizer {
         try transactionManager.allPendingTransactions()?
             .filter { $0.isSubmitSuccess && !$0.isMined }
             .forEach { pendingTx in
-                guard let rawId = pendingTx.rawTransactionId else { return }
-                let transaction = try transactionRepository.findBy(rawId: rawId)
+                guard let rawID = pendingTx.rawTransactionId else { return }
+                let transaction = try transactionRepository.find(rawID: rawID)
+                guard let minedHeight = transaction.minedHeight else { return }
 
-                guard let minedHeight = transaction?.minedHeight else { return }
                 let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
 
                 notifyMinedTransaction(minedTx)
@@ -834,6 +841,8 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .unknown:
                 break
+            case .wipeAttemptWhileProcessing:
+                break
             }
         }
 
@@ -854,16 +863,16 @@ extension SDKSynchronizer {
         (try? self.allPendingTransactions()) ?? [PendingTransactionEntity]()
     }
 
-    public var clearedTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allClearedTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var clearedTransactions: [ZcashTransaction.Overview] {
+        (try? self.allClearedTransactions()) ?? []
     }
 
-    public var sentTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allSentTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var sentTransactions: [ZcashTransaction.Sent] {
+        (try? self.allSentTransactions()) ?? []
     }
 
-    public var receivedTransactions: [ConfirmedTransactionEntity] {
-        (try? self.allReceivedTransactions()) ?? [ConfirmedTransactionEntity]()
+    public var receivedTransactions: [ZcashTransaction.Received] {
+        (try? self.allReceivedTransactions()) ?? []
     }
 }
 
@@ -879,7 +888,6 @@ extension SDKSynchronizer {
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
-
 }
 
 import GRPC
@@ -903,6 +911,6 @@ extension ConnectionState {
 private struct NullEnhancementProgress: EnhancementProgress {
     var totalTransactions: Int { 0 }
     var enhancedTransactions: Int { 0 }
-    var lastFoundTransaction: ConfirmedTransactionEntity? { nil }
+    var lastFoundTransaction: ZcashTransaction.Overview? { nil }
     var range: CompactBlockRange { 0 ... 0 }
 }

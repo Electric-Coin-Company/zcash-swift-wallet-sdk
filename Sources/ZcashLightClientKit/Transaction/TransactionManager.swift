@@ -23,6 +23,7 @@ protocol OutboundTransactionManager {
 
     func encodeShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
+        shieldingThreshold: Zatoshi,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity
     
@@ -53,4 +54,6 @@ protocol OutboundTransactionManager {
     Deletes a pending transaction from the database
     */
     func delete(pendingTransaction: PendingTransactionEntity) throws
+
+    func closeDBConnection()
 }

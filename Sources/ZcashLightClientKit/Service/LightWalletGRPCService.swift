@@ -88,6 +88,19 @@ public extension BlockProgress {
     static let nullProgress = BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)
 }
 
+protocol LatestBlockHeightProvider {
+    func latestBlockHeight(streamer: CompactTxStreamerNIOClient?) throws -> BlockHeight
+}
+
+class LiveLatestBlockHeightProvider: LatestBlockHeightProvider {
+    func latestBlockHeight(streamer: CompactTxStreamerNIOClient?) throws -> BlockHeight {
+        guard let height = try? streamer?.getLatestBlock(ChainSpec()).response.wait().compactBlockHeight() else {
+            throw LightWalletServiceError.timeOut
+        }
+        return height
+    }
+}
+
 public class LightWalletGRPCService {
     let channel: Channel
     let connectionManager: ConnectionStatusManager
@@ -95,6 +108,7 @@ public class LightWalletGRPCService {
     let compactTxStreamerAsync: CompactTxStreamerAsyncClient
     let singleCallTimeout: TimeLimit
     let streamingCallTimeout: TimeLimit
+    var latestBlockHeightProvider: LatestBlockHeightProvider = LiveLatestBlockHeightProvider()
 
     var queue: DispatchQueue
     
@@ -197,10 +211,7 @@ extension LightWalletGRPCService: LightWalletService {
     }
     
     public func latestBlockHeight() throws -> BlockHeight {
-        guard let height = try? compactTxStreamer.getLatestBlock(ChainSpec()).response.wait().compactBlockHeight() else {
-            throw LightWalletServiceError.timeOut
-        }
-        return height
+        try latestBlockHeightProvider.latestBlockHeight(streamer: compactTxStreamer)
     }
 
     public func latestBlockHeightAsync() async throws -> BlockHeight {
@@ -237,19 +248,20 @@ extension LightWalletGRPCService: LightWalletService {
         }
     }
     
-    public func fetchTransaction(txId: Data) async throws -> TransactionEntity {
+    public func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
         var txFilter = TxFilter()
         txFilter.hash = txId
         
         let rawTx = try await compactTxStreamerAsync.getTransaction(txFilter)
-        return TransactionBuilder.createTransactionEntity(txId: txId, rawTransaction: rawTx)
+        return ZcashTransaction.Fetched(rawID: txId, minedHeight: BlockHeight(rawTx.height), raw: rawTx.data)
     }
     
     public func fetchUTXOs(
         for tAddress: String,
         height: BlockHeight,
         result: @escaping (Result<[UnspentTransactionOutputEntity], LightWalletServiceError>
-    ) -> Void) {
+        ) -> Void
+    ) {
         queue.async { [weak self] in
             guard let self = self else { return }
             let arg = GetAddressUtxosArg.with { utxoArgs in

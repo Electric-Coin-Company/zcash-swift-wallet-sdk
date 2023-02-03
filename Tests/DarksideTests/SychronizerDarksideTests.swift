@@ -12,11 +12,11 @@ import Combine
 
 // swiftlint:disable implicitly_unwrapped_optional
 class SychronizerDarksideTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
@@ -31,7 +31,7 @@ class SychronizerDarksideTests: XCTestCase {
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation = XCTestExpectation(description: "reorg")
-    var foundTransactions: [ConfirmedTransactionEntity] = []
+    var foundTransactions: [ZcashTransaction.Overview] = []
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -44,12 +44,12 @@ class SychronizerDarksideTests: XCTestCase {
 
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
-    
+
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -133,10 +133,9 @@ class SychronizerDarksideTests: XCTestCase {
     }
 
     func testLastStates() throws {
+        var disposeBag: [AnyCancellable] = []
 
-        var disposeBag = [AnyCancellable]()
-
-        var states = [SDKSynchronizer.SynchronizerState]()
+        var states: [SDKSynchronizer.SynchronizerState] = []
 
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
@@ -180,11 +179,46 @@ class SychronizerDarksideTests: XCTestCase {
             )
         ])
     }
+
+    @MainActor func testSyncAfterWipeWorks() async throws {
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
+        let receivedTxHeight: BlockHeight = 663188
+
+        try coordinator.applyStaged(blockheight: receivedTxHeight + 1)
+
+        sleep(2)
+
+        let firsSyncExpectation = XCTestExpectation(description: "first sync")
+
+        try coordinator.sync(
+            completion: { _ in
+                firsSyncExpectation.fulfill()
+            },
+            error: self.handleError
+        )
+
+        wait(for: [firsSyncExpectation], timeout: 10)
+
+        try await coordinator.synchronizer.wipe()
+
+        _ = try coordinator.synchronizer.prepare(with: nil)
+
+        let secondSyncExpectation = XCTestExpectation(description: "second sync")
+
+        try coordinator.sync(
+            completion: { _ in
+                secondSyncExpectation.fulfill()
+            },
+            error: self.handleError
+        )
+
+        wait(for: [secondSyncExpectation], timeout: 10)
+    }
     
     @objc func handleFoundTransactions(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ConfirmedTransactionEntity]
+            let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ZcashTransaction.Overview]
         else {
             return
         }
@@ -200,7 +234,6 @@ class SychronizerDarksideTests: XCTestCase {
         XCTFail("Failed with error: \(testError)")
     }
 }
-
 
 extension Zatoshi: CustomDebugStringConvertible {
     public var debugDescription: String {

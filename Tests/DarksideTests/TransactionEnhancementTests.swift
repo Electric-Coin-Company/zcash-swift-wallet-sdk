@@ -17,17 +17,21 @@ class TransactionEnhancementTests: XCTestCase {
     let network = DarksideWalletDNetwork()
     let branchID = "2bb40e60"
     let chainName = "main"
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
 
     var initializer: Initializer!
     var processorConfig: CompactBlockProcessor.Configuration!
     var processor: CompactBlockProcessor!
     var darksideWalletService: DarksideWalletService!
-    var downloader: CompactBlockDownloader!
-    var downloadStartedExpect: XCTestExpectation!
+    var downloader: BlockDownloaderServiceImpl!
+    var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
-    var startedScanningNotificationExpectation: XCTestExpectation!
-    var startedValidatingNotificationExpectation: XCTestExpectation!
     var idleNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
     var afterReorgIdleNotification: XCTestExpectation!
@@ -36,19 +40,14 @@ class TransactionEnhancementTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
-        logger = SampleLogger(logLevel: .debug)
+        logger = OSLogger(logLevel: .debug)
         
-        downloadStartedExpect = XCTestExpectation(description: "\(self.description) downloadStartedExpect")
+        syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
-        startedValidatingNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedValidatingNotificationExpectation"
-        )
-        startedScanningNotificationExpectation = XCTestExpectation(
-            description: "\(self.description) startedScanningNotificationExpectation"
-        )
         idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
         afterReorgIdleNotification = XCTestExpectation(description: "\(self.description) afterReorgIdleNotification")
         reorgNotificationExpectation = XCTestExpectation(description: "\(self.description) reorgNotificationExpectation")
@@ -62,7 +61,7 @@ class TransactionEnhancementTests: XCTestCase {
         let rustBackend = ZcashRustBackend.self
         processorConfig = config
         
-        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
 
         let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
@@ -70,11 +69,10 @@ class TransactionEnhancementTests: XCTestCase {
         let ufvks = [
             try DerivationTool(networkType: network.networkType)
                 .deriveUnifiedSpendingKey(seed: TestSeed().seed(), accountIndex: 0)
-                .map{
+                .map {
                     try DerivationTool(networkType: network.networkType)
                         .deriveUnifiedFullViewingKey(from: $0)
                 }
-
         ]
         do {
             try rustBackend.initAccountsTable(
@@ -83,7 +81,7 @@ class TransactionEnhancementTests: XCTestCase {
                 networkType: network.networkType
             )
         } catch {
-            XCTFail("Failed to init accounts table error: " + String(describing: rustBackend.getLastError()))
+            XCTFail("Failed to init accounts table error: \(String(describing: rustBackend.getLastError()))")
             return
         }
         
@@ -103,10 +101,19 @@ class TransactionEnhancementTests: XCTestCase {
         
         let service = DarksideWalletService()
         darksideWalletService = service
-        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
-        try! storage.createTable()
         
-        downloader = CompactBlockDownloader(service: service, storage: storage)
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: rustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+        try! storage.create()
+        
+        downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         processor = CompactBlockProcessor(
             service: service,
             storage: storage,
@@ -124,13 +131,11 @@ class TransactionEnhancementTests: XCTestCase {
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        downloadStartedExpect.unsubscribeFromNotifications()
+        syncStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()
         updatedNotificationExpectation.unsubscribeFromNotifications()
-        startedScanningNotificationExpectation.unsubscribeFromNotifications()
-        startedValidatingNotificationExpectation.unsubscribeFromNotifications()
         idleNotificationExpectation.unsubscribeFromNotifications()
         reorgNotificationExpectation.unsubscribeFromNotifications()
         afterReorgIdleNotification.unsubscribeFromNotifications()
@@ -141,11 +146,9 @@ class TransactionEnhancementTests: XCTestCase {
         XCTAssertNotNil(processor)
         
         // Subscribe to notifications
-        downloadStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedDownloading, object: processor)
+        syncStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedSyncing, object: processor)
         stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
         updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-        startedValidatingNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedValidating, object: processor)
-        startedScanningNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStartedScanning, object: processor)
 
         txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
         idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
@@ -188,9 +191,7 @@ class TransactionEnhancementTests: XCTestCase {
 
         wait(
             for: [
-                downloadStartedExpect,
-                startedValidatingNotificationExpectation,
-                startedScanningNotificationExpectation,
+                syncStartedExpect,
                 txFoundNotificationExpectation,
                 idleNotificationExpectation
             ],

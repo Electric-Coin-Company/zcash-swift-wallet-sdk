@@ -16,7 +16,7 @@ class PaginatedTransactionsViewController: UIViewController {
 
     // swiftlint:disable:next implicitly_unwrapped_optional
     var paginatedRepository: PaginatedTransactionRepository!
-    var transactions: [TransactionEntity] = []
+    var transactions: [ZcashTransaction.Overview] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -72,7 +72,17 @@ class PaginatedTransactionsViewController: UIViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? TransactionDetailViewController, let row = selectedRow {
-            destination.model = TransactionDetailModel(transaction: transactions[row])
+            let transaction = transactions[row]
+
+            let memos: [Memo]
+            do {
+                memos = try AppDelegate.shared.sharedSynchronizer.getMemos(for: transaction)
+            } catch {
+                loggerProxy.warn("Can't load memos \(error)")
+                memos = []
+            }
+
+            destination.model = TransactionDetailModel(transaction: transaction, memos: memos)
             selectedRow = nil
         }
     }
@@ -87,8 +97,8 @@ extension PaginatedTransactionsViewController: PaginatedTableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
         
         let transaction = transactions[indexPath.row]
-        cell.detailTextLabel?.text = transaction.transactionId.toHexStringTxId()
-        cell.textLabel?.text = transaction.created ?? "No date"
+        cell.detailTextLabel?.text = transaction.rawID.toHexStringTxId()
+        cell.textLabel?.text = transaction.blockTime?.description
         
         return cell
     }

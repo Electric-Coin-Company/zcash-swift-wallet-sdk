@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		0D1BE47F2581937100F78BE3 /* GetUTXOsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */; };
-		0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0D4EBA312396CFD70041B507 /* SendViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4EBA302396CFD70041B507 /* SendViewController.swift */; };
 		0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
 		0D756A94236C761E009B041B /* GetAddressViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D756A93236C761E009B041B /* GetAddressViewController.swift */; };
@@ -32,7 +31,6 @@
 		0DA1C4C627D11D9500E5006E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D907F152322CC5900D641FE /* AppDelegate.swift */; };
 		0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */; };
 		0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */; };
-		0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D49A18B241698A800CC0649 /* SampleLogger.swift */; };
 		0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA58B952397F2CB004596EA /* TransactionsDataSource.swift */; };
 		0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
 		0DA1C4CF27D11D9500E5006E /* KRProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = 0DA1C4B227D11D9500E5006E /* KRProgressHUD */; };
@@ -71,7 +69,6 @@
 
 /* Begin PBXFileReference section */
 		0D1BE47E2581937100F78BE3 /* GetUTXOsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetUTXOsViewController.swift; sourceTree = "<group>"; };
-		0D49A18B241698A800CC0649 /* SampleLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLogger.swift; sourceTree = "<group>"; };
 		0D4EBA302396CFD70041B507 /* SendViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendViewController.swift; sourceTree = "<group>"; };
 		0D6CE8BC252E3C4A0005D707 /* SaplingParametersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaplingParametersViewController.swift; sourceTree = "<group>"; };
 		0D756A93236C761E009B041B /* GetAddressViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetAddressViewController.swift; sourceTree = "<group>"; };
@@ -233,7 +230,6 @@
 				0D907F212322CC5B00D641FE /* Info.plist */,
 				F94912622790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist */,
 				0DDFB33D236B844900AED892 /* DemoAppConfig.swift */,
-				0D49A18B241698A800CC0649 /* SampleLogger.swift */,
 			);
 			path = ZcashLightClientSample;
 			sourceTree = "<group>";
@@ -322,7 +318,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0D907F3A2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSample" */;
 			buildPhases = (
-				0DCB58A4237B5B580040096C /* ShellScript */,
+				0DCB58A4237B5B580040096C /* Swiftlint */,
 				0D907F0E2322CC5900D641FE /* Sources */,
 				0D907F0F2322CC5900D641FE /* Frameworks */,
 				0D907F102322CC5900D641FE /* Resources */,
@@ -365,7 +361,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0DA1C4D927D11D9500E5006E /* Build configuration list for PBXNativeTarget "ZcashLightClientSample-Mainnet" */;
 			buildPhases = (
-				0DA1C4BA27D11D9500E5006E /* ShellScript */,
+				0DA1C4BA27D11D9500E5006E /* Swiftlint */,
 				0DA1C4BB27D11D9500E5006E /* Sources */,
 				0DA1C4CE27D11D9500E5006E /* Frameworks */,
 				0DA1C4D427D11D9500E5006E /* Resources */,
@@ -463,7 +459,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0DA1C4BA27D11D9500E5006E /* ShellScript */ = {
+		0DA1C4BA27D11D9500E5006E /* Swiftlint */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -472,15 +468,16 @@
 			);
 			inputPaths = (
 			);
+			name = Swiftlint;
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../\nif which swiftlint >/dev/null; then\n  swiftlint lint --config .swiftlint.yml\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = "cd ../../\n./Tools/swiftlint lint --config .swiftlint.yml\n";
 		};
-		0DCB58A4237B5B580040096C /* ShellScript */ = {
+		0DCB58A4237B5B580040096C /* Swiftlint */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -490,13 +487,14 @@
 			);
 			inputPaths = (
 			);
+			name = Swiftlint;
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../\nif which swiftlint >/dev/null; then\n  swiftlint lint --config .swiftlint.yml\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = "cd ../../\n./Tools/swiftlint lint --config .swiftlint.yml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -518,7 +516,6 @@
 				0D907F162322CC5900D641FE /* AppDelegate.swift in Sources */,
 				0D6CE8BD252E3C4A0005D707 /* SaplingParametersViewController.swift in Sources */,
 				0D1BE47F2581937100F78BE3 /* GetUTXOsViewController.swift in Sources */,
-				0D49A18C241698A800CC0649 /* SampleLogger.swift in Sources */,
 				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
 				0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */,
 			);
@@ -549,7 +546,6 @@
 				0DA1C4C627D11D9500E5006E /* AppDelegate.swift in Sources */,
 				0DA1C4C727D11D9500E5006E /* SaplingParametersViewController.swift in Sources */,
 				0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */,
-				0DA1C4CB27D11D9500E5006E /* SampleLogger.swift in Sources */,
 				0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */,
 				0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */,
 			);
@@ -719,7 +715,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Testnet";
 				PRODUCT_MODULE_NAME = ZcashLightClientSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -742,7 +738,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Testnet";
 				PRODUCT_MODULE_NAME = ZcashLightClientSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -805,7 +801,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Testnet";
 				PRODUCT_MODULE_NAME = ZcashLightClientSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -828,7 +824,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				OTHER_SWIFT_FLAGS = "$(inherited) -D COCOAPODS";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "co.electriccoin.ZcashLightClientSample-Testnet";
 				PRODUCT_MODULE_NAME = ZcashLightClientSample;
 				PRODUCT_NAME = "$(TARGET_NAME)";

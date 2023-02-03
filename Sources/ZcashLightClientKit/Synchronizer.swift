@@ -8,7 +8,6 @@
 
 import Foundation
 
-
 /// Represents errors thrown by a Synchronizer
 public enum SynchronizerError: Error {
     case initFailed(message: String) // ZcashLightClientKit.SynchronizerError error 0.
@@ -26,6 +25,7 @@ public enum SynchronizerError: Error {
     case rewindErrorUnknownArchorHeight // ZcashLightClientKit.SynchronizerError error 13.
     case invalidAccount // ZcashLightClientKit.SynchronizerError error 14.
     case lightwalletdValidationFailed(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 8.
+    case wipeAttemptWhileProcessing
 }
 
 public enum ShieldFundsError: Error {
@@ -47,7 +47,6 @@ extension ShieldFundsError: LocalizedError {
     }
 }
 
-
 /// Represent the connection state to the lightwalletd server
 public enum ConnectionState {
     /// not in use
@@ -66,11 +65,9 @@ public enum ConnectionState {
     case shutdown
 }
 
-
 /// Primary interface for interacting with the SDK. Defines the contract that specific
 /// implementations like SdkSynchronizer fulfill.
 public protocol Synchronizer {
-
     /// Value representing the Status of this Synchronizer. As the status changes, it will be also notified
     var status: SyncStatus { get }
 
@@ -81,10 +78,10 @@ public protocol Synchronizer {
     /// Extended Viewing Keys and a wallet birthday found in the initializer object
     func prepare(with seed: [UInt8]?) async throws -> Initializer.InitializationResult
 
-    ///Starts this synchronizer within the given scope.
+    /// Starts this synchronizer within the given scope.
     ///
-    ///Implementations should leverage structured concurrency and
-    ///cancel all jobs when this scope completes.
+    /// Implementations should leverage structured concurrency and
+    /// cancel all jobs when this scope completes.
     func start(retry: Bool) throws
 
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
@@ -110,7 +107,6 @@ public protocol Synchronizer {
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
-    // swiftlint:disable:next function_parameter_count
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -123,7 +119,8 @@ public protocol Synchronizer {
     /// - Parameter memo: the optional memo to include as part of the transaction.
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
-        memo: Memo
+        memo: Memo,
+        shieldingThreshold: Zatoshi
     ) async throws -> PendingTransactionEntity
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
@@ -136,24 +133,33 @@ public protocol Synchronizer {
     var pendingTransactions: [PendingTransactionEntity] { get }
 
     /// all the transactions that are on the blockchain
-    var clearedTransactions: [ConfirmedTransactionEntity] { get }
+    var clearedTransactions: [ZcashTransaction.Overview] { get }
 
     /// All transactions that are related to sending funds
-    var sentTransactions: [ConfirmedTransactionEntity] { get }
+    var sentTransactions: [ZcashTransaction.Sent] { get }
 
     /// all transactions related to receiving funds
-    var receivedTransactions: [ConfirmedTransactionEntity] { get }
+    var receivedTransactions: [ZcashTransaction.Received] { get }
     
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
+
+    /// Get all memos for `transaction`.
+    func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
+
+    /// Get all memos for `receivedTransaction`.
+    func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
+
+    /// Get all memos for `sentTransaction`.
+    func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
 
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
     ///     - Returns: an array with the given Transactions or nil
-    func allConfirmedTransactions(from transaction: ConfirmedTransactionEntity?, limit: Int) throws -> [ConfirmedTransactionEntity]?    
+    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
@@ -162,7 +168,6 @@ public protocol Synchronizer {
     /// Blocking
     func latestHeight() async throws -> BlockHeight
     
-
     /// Returns the latests UTXOs for the given address from the specified height on
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
@@ -172,7 +177,6 @@ public protocol Synchronizer {
     /// Returns the shielded total balance (includes verified and unverified balance)
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     func getShieldedBalance(accountIndex: Int) -> Int64
-
 
     /// Returns the shielded total balance (includes verified and unverified balance)
     func getShieldedBalance(accountIndex: Int) -> Zatoshi
@@ -184,35 +188,29 @@ public protocol Synchronizer {
     /// Returns the shielded verified balance (anchor is 10 blocks back)
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
 
-
     /// Rescans the known blocks with the current keys. If this is called while sync process is in progress then
     /// `SynchronizerError.rewindError(CompactBlockProcessorError.rewindAttemptWhileProcessing)` is thrown.
     ///
     /// - Parameter policy: the rewind policy
-    /// - Throws rewindErrorUnknownArchorHeight when the rewind points to an invalid height
+    /// - Throws rewindErrorUnknownAnchorHeight when the rewind points to an invalid height
     /// - Throws rewindError for other errors
     /// - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
     func rewind(_ policy: RewindPolicy) async throws
+
+    /// Wipes out internal data structures of the SDK. After this call, everything is the same as before any sync. The state of the synchronizer is
+    /// switched to `unprepared`. So before the next sync, it's required to call `prepare()`.
+    ///
+    /// If this is called while the sync process is in progress then `SynchronizerError.wipeAttemptWhileProcessing` is thrown.
+    func wipe() async throws
 }
 
 public enum SyncStatus: Equatable {
-
     /// Indicates that this Synchronizer is actively preparing to start,
     /// which usually involves setting up database tables, migrations or
     /// taking other maintenance steps that need to occur after an upgrade.
     case unprepared
 
-    /// Indicates that this Synchronizer is actively downloading new blocks from the server.
-    case downloading(_ status: BlockProgress)
-
-    /// Indicates that this Synchronizer is actively validating new blocks that were downloaded
-    /// from the server. Blocks need to be verified before they are scanned. This confirms that
-    /// each block is chain-sequential, thereby detecting missing blocks and reorgs.
-    case validating
-
-    /// Indicates that this Synchronizer is actively scanning new valid blocks that were
-    /// downloaded from the server.
-    case scanning(_ progress: BlockProgress)
+    case syncing(_ progress: BlockProgress)
 
     /// Indicates that this Synchronizer is actively enhancing newly scanned blocks
     /// with additional transaction details, fetched from the server.
@@ -236,7 +234,7 @@ public enum SyncStatus: Equatable {
     
     public var isSyncing: Bool {
         switch self {
-        case .downloading, .validating, .scanning, .enhancing, .fetching:
+        case .syncing, .enhancing, .fetching:
             return true
         default:
             return false
@@ -265,7 +263,7 @@ public enum TransactionKind {
 public enum RewindPolicy {
     case birthday
     case height(blockheight: BlockHeight)
-    case transaction(_ transaction: TransactionEntity)
+    case transaction(_ transaction: ZcashTransaction.Overview)
     case quick
 }
 
@@ -285,20 +283,8 @@ extension SyncStatus {
             } else {
                 return false
             }
-        case .downloading:
-            if case .downloading = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .validating:
-            if case .validating = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .scanning:
-            if case .scanning = rhs {
+        case .syncing:
+            if case .syncing = rhs {
                 return true
             } else {
                 return false
@@ -340,12 +326,8 @@ extension SyncStatus {
 extension SyncStatus {
     init(_ blockProcessorProgress: CompactBlockProgress) {
         switch blockProcessorProgress {
-        case .download(let progressReport):
-            self = SyncStatus.downloading(progressReport)
-        case .validate:
-            self = .validating
-        case .scan(let progressReport):
-            self = .scanning(progressReport)
+        case .syncing(let progressReport):
+            self = .syncing(progressReport)
         case .enhance(let enhancingReport):
             self = .enhancing(enhancingReport)
         case .fetch:

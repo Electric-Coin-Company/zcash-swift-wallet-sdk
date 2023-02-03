@@ -9,14 +9,14 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// FIXME: disabled until this is resolved https://github.com/zcash/ZcashLightClientKit/issues/586
+// FIXME: [#586] disabled until this is resolved https://github.com/zcash/ZcashLightClientKit/issues/586
 // swiftlint:disable type_body_length implicitly_unwrapped_optional force_try
 class RewindRescanTests: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = try! Recipient("zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a", network: .mainnet)
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
@@ -49,7 +49,7 @@ class RewindRescanTests: XCTestCase {
         NotificationCenter.default.removeObserver(self)
 
         try coordinator.stop()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -142,7 +142,7 @@ class RewindRescanTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -178,7 +178,7 @@ class RewindRescanTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     secondScanExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -235,12 +235,12 @@ class RewindRescanTests: XCTestCase {
             return
         }
 
-        try await coordinator.synchronizer.rewind(.transaction(transaction.transactionEntity))
+        try await coordinator.synchronizer.rewind(.transaction(transaction))
         
         // assert that after the new height is
         XCTAssertEqual(
             try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),
-            transaction.transactionEntity.anchor(network: network)
+            transaction.anchor(network: network)
         )
         
         let secondScanExpectation = XCTestExpectation(description: "rescan")
@@ -273,7 +273,7 @@ class RewindRescanTests: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -334,7 +334,7 @@ class RewindRescanTests: XCTestCase {
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
-            let foundTx = txs.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+            let foundTx = txs.first(where: { $0.rawID == pendingTx.rawTransactionId })
             XCTAssertNotNil(foundTx)
             XCTAssertEqual(foundTx?.minedHeight, sentTxHeight)
             
@@ -401,7 +401,7 @@ class RewindRescanTests: XCTestCase {
                 XCTFail("should have found sent transaction but didn't")
                 return
             }
-            XCTAssertEqual(transaction.rawTransactionId, pendingTx.rawTransactionId, "should have mined sent transaction but didn't")
+            XCTAssertEqual(transaction.rawID, pendingTx.rawTransactionId, "should have mined sent transaction but didn't")
         }
 
         notificationHandler.synchronizerMinedTransaction = { transaction in
@@ -410,7 +410,7 @@ class RewindRescanTests: XCTestCase {
 
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     confirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)

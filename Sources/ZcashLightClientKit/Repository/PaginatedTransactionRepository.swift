@@ -26,10 +26,10 @@ public protocol PaginatedTransactionRepository {
     /**
     Returns the page number if exists. Blocking
     */
-    func page(_ number: Int) throws -> [TransactionEntity]?
+    func page(_ number: Int) throws -> [ZcashTransaction.Overview]?
     
     /**
     Returns the page number if exists. Non-blocking
     */
-    func page(_ number: Int, result: @escaping (Result<[TransactionEntity]?, Error>) -> Void)
+    func page(_ number: Int, result: @escaping (Result<[ZcashTransaction.Overview]?, Error>) -> Void)
 }

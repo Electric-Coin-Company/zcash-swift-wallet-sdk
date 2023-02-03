@@ -9,13 +9,12 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-/**
-This is the TestCoordinator
-What does it do? quite a lot.
-Is it a nice "SOLID" "Clean Code" piece of source code?
-Hell no. It's your testing overlord and you will be grateful it is.
-*/
 // swiftlint:disable force_try function_parameter_count
+
+/// This is the TestCoordinator
+/// What does it do? quite a lot.
+/// Is it a nice "SOLID" "Clean Code" piece of source code?
+/// Hell no. It's your testing overlord and you will be grateful it is.
 class TestCoordinator {
     enum CoordinatorError: Error {
         case notDarksideWallet
@@ -93,13 +92,23 @@ class TestCoordinator {
                 streamingCallTimeout: 1000000
             )
         )
-        let storage = CompactBlockStorage(url: databases.cacheDB, readonly: false)
-        try storage.createTable()
-        
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: self.databases.fsCacheDbRoot,
+            metadataStore: .live(
+                fsBlockDbRoot: self.databases.fsCacheDbRoot,
+                rustBackend: ZcashRustBackend.self
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
         let buildResult = try TestSynchronizerBuilder.build(
-            rustBackend: ZcashRustBackend.self,
+            rustBackend: realRustBackend,
             lowerBoundHeight: self.birthday,
-            cacheDbURL: databases.cacheDB,
+            fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
             pendingDbURL: databases.pendingDB,
             endpoint: LightWalletEndpointBuilder.default,
@@ -116,7 +125,7 @@ class TestCoordinator {
             unifiedFullViewingKey: unifiedFullViewingKey,
             walletBirthday: walletBirthday,
             network: network,
-            loggerProxy: SampleLogger(logLevel: .debug)
+            loggerProxy: OSLogger(logLevel: .debug)
         )
         
         self.synchronizer = buildResult.synchronizer
@@ -152,9 +161,8 @@ class TestCoordinator {
         try synchronizer.start(retry: true)
     }
     
-    /**
-    Notifications
-    */
+    // MARK: notifications
+
     func subscribeToNotifications(synchronizer: Synchronizer) {
         NotificationCenter.default.addObserver(self, selector: #selector(synchronizerFailed(_:)), name: .synchronizerFailed, object: synchronizer)
         NotificationCenter.default.addObserver(self, selector: #selector(synchronizerSynced(_:)), name: .synchronizerSynced, object: synchronizer)
@@ -173,19 +181,19 @@ class TestCoordinator {
     }
     
     @objc func synchronizerDisconnected(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
     
     @objc func synchronizerStarted(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
     
     @objc func synchronizerStopped(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
     
     @objc func synchronizerSyncing(_ notification: Notification) {
-        /// TODO: See if we need hooks for this
+        // TODO: [#713] See if we need hooks for this, https://github.com/zcash/ZcashLightClientKit/issues/713
     }
 }
 
@@ -233,7 +241,7 @@ extension TestCoordinator {
             let config = await self.synchronizer.blockProcessor.config
 
             let newConfig = CompactBlockProcessor.Configuration(
-                cacheDb: config.cacheDb,
+                fsBlockCacheRoot: config.fsBlockCacheRoot,
                 dataDb: config.dataDb,
                 spendParamsURL: config.spendParamsURL,
                 outputParamsURL: config.outputParamsURL,
@@ -258,7 +266,7 @@ extension TestCoordinator {
 }
 
 struct TemporaryTestDatabases {
-    var cacheDB: URL
+    var fsCacheDbRoot: URL
     var dataDB: URL
     var pendingDB: URL
 }
@@ -269,7 +277,7 @@ enum TemporaryDbBuilder {
         let timestamp = String(Int(Date().timeIntervalSince1970))
         
         return TemporaryTestDatabases(
-            cacheDB: tempUrl.appendingPathComponent("cache_db_\(timestamp).db"),
+            fsCacheDbRoot: tempUrl.appendingPathComponent("fs_cache_\(timestamp)"),
             dataDB: tempUrl.appendingPathComponent("data_db_\(timestamp).db"),
             pendingDB: tempUrl.appendingPathComponent("pending_db_\(timestamp).db")
         )
@@ -280,14 +288,14 @@ enum TestSynchronizerBuilder {
     static func build(
         rustBackend: ZcashRustBackendWelding.Type,
         lowerBoundHeight: BlockHeight,
-        cacheDbURL: URL,
+        fsBlockDbRoot: URL,
         dataDbURL: URL,
         pendingDbURL: URL,
         endpoint: LightWalletEndpoint,
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        storage: CompactBlockStorage,
+        storage: CompactBlockRepository,
         spendParamsURL: URL,
         outputParamsURL: URL,
         spendingKey: UnifiedSpendingKey,
@@ -298,7 +306,7 @@ enum TestSynchronizerBuilder {
         loggerProxy: Logger? = nil
     ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let initializer = Initializer(
-            cacheDbURL: cacheDbURL,
+            fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
             endpoint: endpoint,
@@ -322,14 +330,14 @@ enum TestSynchronizerBuilder {
     static func build(
         rustBackend: ZcashRustBackendWelding.Type,
         lowerBoundHeight: BlockHeight,
-        cacheDbURL: URL,
+        fsBlockDbRoot: URL,
         dataDbURL: URL,
         pendingDbURL: URL,
         endpoint: LightWalletEndpoint,
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        storage: CompactBlockStorage,
+        storage: CompactBlockRepository,
         spendParamsURL: URL,
         outputParamsURL: URL,
         seedBytes: [UInt8],
@@ -338,16 +346,15 @@ enum TestSynchronizerBuilder {
         loggerProxy: Logger? = nil
     ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
         let spendingKey = try DerivationTool(networkType: network.networkType)
-                .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+            .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
-        
         let uvk = try DerivationTool(networkType: network.networkType)
             .deriveUnifiedFullViewingKey(from: spendingKey)
 
         return try build(
             rustBackend: rustBackend,
             lowerBoundHeight: lowerBoundHeight,
-            cacheDbURL: cacheDbURL,
+            fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
             endpoint: endpoint,

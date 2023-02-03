@@ -10,23 +10,33 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_cast force_try
+// swiftlint:disable implicitly_unwrapped_optional force_cast
 class BlockDownloaderTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
+    let testFileManager = FileManager()
     var darksideWalletService: DarksideWalletService!
-    var downloader: CompactBlockDownloading!
+    var downloader: BlockDownloaderService!
     var service: LightWalletService!
     var storage: CompactBlockRepository!
-    var cacheDB = try! __cacheDbURL()
     var network = DarksideWalletDNetwork()
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
-        storage = try! TestDbBuilder.diskCompactBlockStorage(at: cacheDB)
-        downloader = CompactBlockDownloader(service: service, storage: storage)
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+        downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         darksideWalletService = DarksideWalletService(service: service as! LightWalletGRPCService)
         
         try FakeChainBuilder.buildChain(darksideWallet: darksideWalletService, branchID: branchID, chainName: chainName)
@@ -36,10 +46,11 @@ class BlockDownloaderTests: XCTestCase {
     }
     
     override func tearDown() {
+        super.tearDown()
+        try? testFileManager.removeItem(at: testTempDirectory)
         service = nil
         storage = nil
         downloader = nil
-        try? FileManager.default.removeItem(at: cacheDB)
     }
     
     func testSmallDownloadAsync() async {
@@ -51,7 +62,7 @@ class BlockDownloaderTests: XCTestCase {
             try await downloader.downloadBlockRange(range)
             
             // check what was 'stored'
-            let latestHeight = try await self.storage.latestHeightAsync()
+            let latestHeight = await self.storage.latestHeightAsync()
             XCTAssertEqual(latestHeight, upperRange)
             
             let resultHeight = try await self.downloader.lastDownloadedBlockHeightAsync()
@@ -62,7 +73,7 @@ class BlockDownloaderTests: XCTestCase {
     }
     
     func testFailure() async {
-        let awfulDownloader = CompactBlockDownloader(
+        let awfulDownloader = BlockDownloaderServiceImpl(
             service: AwfulLightWalletService(
                 latestBlockHeight: self.network.constants.saplingActivationHeight + 1000,
                 service: darksideWalletService

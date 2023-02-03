@@ -71,7 +71,7 @@ class MockLightWalletService: LightWalletService {
         LightWalletServiceMockResponse(errorCode: 0, errorMessage: "", unknownFields: UnknownStorage())
     }
     
-    func fetchTransaction(txId: Data) async throws -> TransactionEntity {
-        Transaction(id: 1, transactionId: Data(), created: "Today", transactionIndex: 1, expiryHeight: -1, minedHeight: -1, raw: nil)
+    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+        return ZcashTransaction.Fetched(rawID: Data(), minedHeight: -1, raw: Data())
     }
 }

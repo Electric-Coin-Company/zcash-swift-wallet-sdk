@@ -119,7 +119,7 @@ class DarksideWalletService: LightWalletService {
         metaState.saplingActivation = Int32(saplingActivation)
         metaState.branchID = branchID
         metaState.chainName = chainName
-        // TODO: complete meta state correctly
+        // TODO: [#718] complete meta state correctly, https://github.com/zcash/ZcashLightClientKit/issues/718
         _ = try darksideService.reset(metaState).response.wait()
     }
 
@@ -171,12 +171,14 @@ class DarksideWalletService: LightWalletService {
         try await service.submit(spendTransaction: spendTransaction)
     }
     
-    func fetchTransaction(txId: Data) async throws -> TransactionEntity {
+    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
         try await service.fetchTransaction(txId: txId)
     }
 }
 
 enum DarksideWalletDConstants: NetworkConstants {
+    static var defaultFsBlockDbRootName = "fs_cache"
+
     static var saplingActivationHeight: BlockHeight {
         663150
     }
@@ -206,4 +208,3 @@ class DarksideWalletDNetwork: ZcashNetwork {
     var constants: NetworkConstants.Type = DarksideWalletDConstants.self
     var networkType = NetworkType.mainnet
 }
-

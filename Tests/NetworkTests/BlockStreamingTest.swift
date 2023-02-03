@@ -11,14 +11,23 @@ import XCTest
 
 // swiftlint:disable print_function_usage
 class BlockStreamingTest: XCTestCase {
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
     override func setUpWithError() throws {
         try super.setUpWithError()
-        logger = SampleLogger(logLevel: .debug)
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        logger = OSLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? FileManager.default.removeItem(at: __dataDbURL())
+        try? testFileManager.removeItem(at: testTempDirectory)
     }
 
     func testStream() async throws {
@@ -58,8 +67,22 @@ class BlockStreamingTest: XCTestCase {
             streamingCallTimeout: 10000
         )
 
-        let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
-        let startHeight = try service.latestBlockHeight() - 100_000
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
+        let latestBlockHeight = try service.latestBlockHeight()
+        let startHeight = latestBlockHeight - 100_000
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: ZcashNetworkBuilder.network(for: .testnet),
             walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
@@ -68,15 +91,22 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            backend: realRustBackend,
             config: processorConfig
         )
         
         let cancelableTask = Task {
             do {
-                try await compactBlockProcessor.compactBlockStreamDownload(
-                    blockBufferSize: 10,
-                    startHeight: startHeight
+                let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
+                    startHeight: startHeight,
+                    targetHeight: latestBlockHeight
+                )
+
+                try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
+                    using: downloadStream,
+                    at: startHeight...latestBlockHeight,
+                    maxBlockBufferSize: 10,
+                    totalProgressRange: startHeight...latestBlockHeight
                 )
             } catch {
                 XCTAssertTrue(Task.isCancelled)
@@ -93,11 +123,26 @@ class BlockStreamingTest: XCTestCase {
             port: 9067,
             secure: true,
             singleCallTimeout: 1000,
-            streamingCallTimeout: 3000
+            streamingCallTimeout: 1000
         )
 
-        let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
-        let startHeight = try service.latestBlockHeight() - 100_000
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
+        let latestBlockHeight = try service.latestBlockHeight()
+
+        let startHeight = latestBlockHeight - 100_000
         
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: ZcashNetworkBuilder.network(for: .testnet),
@@ -107,16 +152,23 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            backend: realRustBackend,
             config: processorConfig
         )
         
         let date = Date()
         
         do {
-            try await compactBlockProcessor.compactBlockStreamDownload(
-                blockBufferSize: 10,
-                startHeight: startHeight
+            let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
+                startHeight: startHeight,
+                targetHeight: latestBlockHeight
+            )
+
+            try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
+                using: downloadStream,
+                at: startHeight...latestBlockHeight,
+                maxBlockBufferSize: 10,
+                totalProgressRange: startHeight...latestBlockHeight
             )
         } catch {
             if let lwdError = error as? LightWalletServiceError {

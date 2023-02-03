@@ -9,35 +9,27 @@ import Foundation
 import SQLite
 
 class MigrationManager {
-    enum CacheDbMigration: Int32, CaseIterable {
-        case none = 0
-    }
-
+    // swiftlint:disable identifier_name
     enum PendingDbMigration: Int32, CaseIterable {
         case none = 0
         case v1 = 1
         case v2 = 2
     }
 
-    static let nextCacheDbMigration: CacheDbMigration = CacheDbMigration.none
-    static let nextPendingDbMigration: PendingDbMigration = PendingDbMigration.v2
+    static let nextPendingDbMigration = PendingDbMigration.v2
 
-    var cacheDb: ConnectionProvider
     var pendingDb: ConnectionProvider
     var network: NetworkType
 
     init(
-        cacheDbConnection: ConnectionProvider,
         pendingDbConnection: ConnectionProvider,
         networkType: NetworkType
     ) {
-        self.cacheDb = cacheDbConnection
         self.pendingDb = pendingDbConnection
         self.network = networkType
     }
 
     func performMigration() throws {
-        try migrateCacheDb()
         try migratePendingDb()
     }
 }
@@ -52,8 +44,8 @@ private extension MigrationManager {
             "Latest version is: \(Self.nextPendingDbMigration.rawValue - 1)"
         )
 
-        for v in (currentPendingDbVersion..<Self.nextPendingDbMigration.rawValue) {
-            switch PendingDbMigration(rawValue: v) {
+        for version in (currentPendingDbVersion..<Self.nextPendingDbMigration.rawValue) {
+            switch PendingDbMigration(rawValue: version) {
             case .some(.none):
                 try migratePendingDbV1()
             case .some(.v1):
@@ -63,7 +55,7 @@ private extension MigrationManager {
                 // unreachable due to the bound on the loop.
                 break
             case nil:
-                throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(v).")
+                throw DatabaseStorageError.migrationFailedWithMessage(message: "Invalid migration version: \(version).")
             }
         }
     }
@@ -89,8 +81,8 @@ private extension MigrationManager {
         }
 
         try pendingDb.connection().transaction(.immediate) {
-            try pendingDb.connection().execute(statement);
-            try pendingDb.connection().setUserVersion(PendingDbMigration.v1.rawValue);
+            try pendingDb.connection().execute(statement)
+            try pendingDb.connection().setUserVersion(PendingDbMigration.v1.rawValue)
         }
     }
 
@@ -144,29 +136,8 @@ private extension MigrationManager {
                 DROP TABLE pending_transactions_old
                 """
 
-            try pendingDb.connection().execute(statement);
-            try pendingDb.connection().setUserVersion(PendingDbMigration.v2.rawValue);
-        }
-    }
-
-    func migrateCacheDb() throws {
-        // getUserVersion returns a default value of zero for an unmigrated database.
-        let currentCacheDbVersion = try cacheDb.connection().getUserVersion()
-
-        LoggerProxy.debug(
-            "Attempting to perform migration for cache Db - currentVersion: \(currentCacheDbVersion)." +
-            "Latest version is: \(Self.nextCacheDbMigration.rawValue)"
-        )
-
-        for v in (currentCacheDbVersion..<Self.nextCacheDbMigration.rawValue) {
-            switch CacheDbMigration(rawValue: v) {
-            case .some(.none):
-                // we have no migrations to run; this case should ordinarily be 
-                // unreachable due to the bound on the loop.
-                break
-            case nil:
-                throw StorageError.migrationFailedWithMessage(message: "Invalid migration version: \(v).")
-            }
+            try pendingDb.connection().execute(statement)
+            try pendingDb.connection().setUserVersion(PendingDbMigration.v2.rawValue)
         }
     }
 }

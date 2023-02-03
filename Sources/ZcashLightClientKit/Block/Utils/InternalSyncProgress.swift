@@ -9,9 +9,15 @@ import Foundation
 
 struct SyncRanges: Equatable {
     let latestBlockHeight: BlockHeight
-    let downloadRange: CompactBlockRange?
-    let scanRange: CompactBlockRange?
+    /// The sync process can be interrupted in any phase. It may happen that it's interrupted while downloading blocks. In that case in next sync
+    /// process already downloaded blocks needs to be scanned before the sync process starts to download new blocks. And the range of blocks that are
+    /// already downloaded but not scanned is stored in this variable.
+    let downloadedButUnscannedRange: CompactBlockRange?
+    /// Range of blocks that are not yet downloaded and not yet scanned.
+    let downloadAndScanRange: CompactBlockRange?
+    /// Range of blocks that are not enhanced yet.
     let enhanceRange: CompactBlockRange?
+    /// Range of blocks for which no UTXOs are fetched yet.
     let fetchUTXORange: CompactBlockRange?
 }
 
@@ -20,13 +26,13 @@ protocol InternalSyncProgressStorage {
     func integer(forKey defaultName: String) -> Int
     func set(_ value: Int, forKey defaultName: String)
     func set(_ value: Bool, forKey defaultName: String)
-    @discardableResult func synchronize() -> Bool
+    @discardableResult
+    func synchronize() -> Bool
 }
 
 extension UserDefaults: InternalSyncProgressStorage { }
 
 actor InternalSyncProgress {
-
     enum Key: String, CaseIterable {
         case latestDownloadedBlockHeight
         case latestEnhancedHeight
@@ -35,15 +41,15 @@ actor InternalSyncProgress {
 
     private let storage: InternalSyncProgressStorage
 
-    var latestDownloadedBlockHeight: BlockHeight { get { get(.latestDownloadedBlockHeight) } }
-    var latestEnhancedHeight: BlockHeight { get { get(.latestEnhancedHeight) } }
-    var latestUTXOFetchedHeight: BlockHeight { get { get(.latestUTXOFetchedHeight) } }
+    var latestDownloadedBlockHeight: BlockHeight { load(.latestDownloadedBlockHeight) }
+    var latestEnhancedHeight: BlockHeight { load(.latestEnhancedHeight) }
+    var latestUTXOFetchedHeight: BlockHeight { load(.latestUTXOFetchedHeight) }
 
     init(storage: InternalSyncProgressStorage) {
         self.storage = storage
     }
 
-    func get(_ key: Key) -> BlockHeight {
+    func load(_ key: Key) -> BlockHeight {
         storage.integer(forKey: key.rawValue)
     }
 
@@ -54,13 +60,13 @@ actor InternalSyncProgress {
 
     func rewind(to: BlockHeight) {
         Key.allCases.forEach { key in
-            let finalRewindHeight = min(self.get(key), to)
+            let finalRewindHeight = min(load(key), to)
             self.set(finalRewindHeight, key)
         }
     }
 
     /// `InternalSyncProgress` is from now on used to track which block were already downloaded. Previous versions of the SDK were using cache DB to
-    /// track this. Because of this we have to migrace height of latest downloaded block from cache DB to here.
+    /// track this. Because of this we have to migrate height of latest downloaded block from cache DB to here.
     ///
     /// - Parameter latestDownloadedBlockHeight: Height of latest downloaded block from cache DB.
     func migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB latestDownloadedBlockHeight: BlockHeight) {
@@ -107,10 +113,10 @@ actor InternalSyncProgress {
             latestEnhancedHeight > latestBlockHeight ||
             latestUTXOFetchedHeight > latestBlockHeight {
             return .wait(latestHeight: latestBlockHeight, latestDownloadHeight: latestDownloadedBlockHeight)
-        } else if   latestDownloadedBlockHeight < latestBlockHeight ||
-                    latestScannedHeight < latestBlockHeight ||
-                    latestEnhancedHeight < latestEnhancedHeight ||
-                    latestUTXOFetchedHeight < latestBlockHeight {
+        } else if latestDownloadedBlockHeight < latestBlockHeight ||
+            latestScannedHeight < latestBlockHeight ||
+            latestEnhancedHeight < latestEnhancedHeight ||
+            latestUTXOFetchedHeight < latestBlockHeight {
             let ranges = computeSyncRanges(
                 birthday: walletBirthday,
                 latestBlockHeight: latestBlockHeight,
@@ -127,15 +133,20 @@ actor InternalSyncProgress {
         latestBlockHeight: BlockHeight,
         latestScannedHeight: BlockHeight
     ) -> SyncRanges {
+        // If there is more downloaded then scanned blocks we have to range for these blocks. The sync process will then start with scanning these
+        // blocks instead of downloading new ones.
+        let downloadedButUnscannedRange: CompactBlockRange?
+        if latestScannedHeight < latestDownloadedBlockHeight {
+            downloadedButUnscannedRange = latestScannedHeight + 1...latestDownloadedBlockHeight
+        } else {
+            downloadedButUnscannedRange = nil
+        }
+
         return SyncRanges(
             latestBlockHeight: latestBlockHeight,
-            downloadRange: computeRange(
+            downloadedButUnscannedRange: downloadedButUnscannedRange,
+            downloadAndScanRange: computeRange(
                 latestHeight: latestDownloadedBlockHeight,
-                birthday: birthday,
-                latestBlockHeight: latestBlockHeight
-            ),
-            scanRange: computeRange(
-                latestHeight: latestScannedHeight,
                 birthday: birthday,
                 latestBlockHeight: latestBlockHeight
             ),

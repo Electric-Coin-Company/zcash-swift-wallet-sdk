@@ -14,13 +14,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     private var outputParamsURL: URL
     private var spendParamsURL: URL
     private var dataDbURL: URL
-    private var cacheDbURL: URL
+    private var fsBlockDbRoot: URL
     private var networkType: NetworkType
     
     init(
         rust: ZcashRustBackendWelding.Type,
         dataDb: URL,
-        cacheDb: URL,
+        fsBlockDbRoot: URL,
         repository: TransactionRepository,
         outputParams: URL,
         spendParams: URL,
@@ -28,7 +28,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     ) {
         self.rustBackend = rust
         self.dataDbURL = dataDb
-        self.cacheDbURL = cacheDb
+        self.fsBlockDbRoot = fsBlockDbRoot
         self.repository = repository
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
@@ -39,7 +39,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.init(
             rust: initializer.rustBackend,
             dataDb: initializer.dataDbURL,
-            cacheDb: initializer.cacheDbURL,
+            fsBlockDbRoot: initializer.fsBlockDbRoot,
             repository: initializer.transactionRepository,
             outputParams: initializer.outputParamsURL,
             spendParams: initializer.spendParamsURL,
@@ -53,7 +53,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> EncodedTransaction {
+    ) async throws -> ZcashTransaction.Overview {
         let txId = try createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
@@ -61,16 +61,10 @@ class WalletTransactionEncoder: TransactionEncoder {
             memoBytes: memoBytes,
             from: accountIndex
         )
-        
+
         do {
-            let transactionEntity = try repository.findBy(id: txId)
-            guard let transaction = transactionEntity else {
-                throw TransactionEncoderError.notFound(transactionId: txId)
-            }
-
-            LoggerProxy.debug("sentTransaction id: \(txId)")
-
-            return EncodedTransaction(transactionId: transaction.transactionId, raw: transaction.raw)
+            LoggerProxy.debug("transaction id: \(txId)")
+            return try repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
@@ -107,30 +101,28 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     func createShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
+        shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> EncodedTransaction {
+    ) async throws -> ZcashTransaction.Overview {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
+            shieldingThreshold: shieldingThreshold,
             memo: memoBytes,
             accountIndex: accountIndex
         )
         
         do {
-            let transactionEntity = try repository.findBy(id: txId)
-            
-            guard let transaction = transactionEntity else {
-                throw TransactionEncoderError.notFound(transactionId: txId)
-            }
-            
-            LoggerProxy.debug("sentTransaction id: \(txId)")
-            return EncodedTransaction(transactionId: transaction.transactionId, raw: transaction.raw)
+            LoggerProxy.debug("transaction id: \(txId)")
+            return try repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
     }
+
     func createShieldingSpend(
         spendingKey: UnifiedSpendingKey,
+        shieldingThreshold: Zatoshi,
         memo: MemoBytes?,
         accountIndex: Int
     ) throws -> Int {
@@ -139,10 +131,10 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
         
         let txId = rustBackend.shieldFunds(
-            dbCache: self.cacheDbURL,
             dbData: self.dataDbURL,
             usk: spendingKey,
             memo: memo,
+            shieldingThreshold: shieldingThreshold,
             spendParamsPath: self.spendParamsURL.path,
             outputParamsPath: self.outputParamsURL.path,
             networkType: networkType
@@ -159,19 +151,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         let readableSpend = FileManager.default.isReadableFile(atPath: spend.path)
         let readableOutput = FileManager.default.isReadableFile(atPath: output.path)
         
-        return readableSpend && readableOutput // Todo: change this to something that makes sense
-    }
-    
-    /**
-    Fetch the Transaction Entity from the encoded representation
-    - Parameter encodedTransaction: The encoded transaction to expand
-    - Returns: a TransactionEntity based on the given Encoded Transaction
-    - Throws: a TransactionEncoderError
-    */
-    func expandEncodedTransaction(_ encodedTransaction: EncodedTransaction) throws -> TransactionEntity {
-        guard let transaction = try? repository.findBy(rawId: encodedTransaction.transactionId) else {
-            throw TransactionEncoderError.couldNotExpand(txId: encodedTransaction.transactionId)
-        }
-        return transaction
+        // TODO: [#713] change this to something that makes sense, https://github.com/zcash/ZcashLightClientKit/issues/713
+        return readableSpend && readableOutput
     }
 }

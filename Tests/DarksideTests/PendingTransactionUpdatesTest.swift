@@ -11,10 +11,10 @@ import XCTest
 
 // swiftlint:disable implicitly_unwrapped_optional
 class PendingTransactionUpdatesTest: XCTestCase {
-    // TODO: Parameterize this from environment?
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
     var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-    // TODO: Parameterize this from environment
+    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     
     let sendAmount: Int64 = 1000
@@ -42,9 +42,10 @@ class PendingTransactionUpdatesTest: XCTestCase {
     }
     
     override func tearDownWithError() throws {
+        try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
         try coordinator.stop()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -80,7 +81,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         LoggerProxy.info("1a. sync to latest height")
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     firstSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -171,7 +172,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     secondSyncExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)
@@ -215,7 +216,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         
         try await withCheckedThrowingContinuation { continuation in
             do {
-                try coordinator.sync(completion: { synchronizer in
+                try coordinator.sync(completion: { _ in
                     syncToConfirmExpectation.fulfill()
                     continuation.resume()
                 }, error: self.handleError)

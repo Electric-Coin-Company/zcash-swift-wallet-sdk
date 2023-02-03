@@ -67,32 +67,36 @@ class PersistentTransactionManager: OutboundTransactionManager {
     
     func encodeShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
+        shieldingThreshold: Zatoshi,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
-            let encodedTransaction = try await self.encoder.createShieldingTransaction(
+            let transaction = try await self.encoder.createShieldingTransaction(
                 spendingKey: spendingKey,
+                shieldingThreshold: shieldingThreshold,
                 memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
-            let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
             
             var pending = pendingTransaction
             pending.encodeAttempts += 1
-            pending.raw = encodedTransaction.raw
-            pending.rawTransactionId = encodedTransaction.transactionId
+            pending.raw = transaction.raw
+            pending.rawTransactionId = transaction.rawID
             pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
             pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
             
             try self.repository.update(pending)
             
             return pending
-        } catch StorageError.updateFailed {
+        } catch DatabaseStorageError.updateFailed {
             throw TransactionManagerError.updateFailed(pendingTransaction)
         } catch MemoBytes.Errors.invalidUTF8 {
             throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")
         } catch MemoBytes.Errors.tooLong(let length) {
-            throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo is too long. expected 512 bytes, received \(length)")
+            throw TransactionManagerError.shieldingEncodingFailed(
+                pendingTransaction,
+                reason: "Memo is too long. expected 512 bytes, received \(length)"
+            )
         } catch {
             throw error
         }
@@ -104,33 +108,36 @@ class PersistentTransactionManager: OutboundTransactionManager {
     ) async throws -> PendingTransactionEntity {
         do {
             var toAddress: String?
-            switch (pendingTransaction.recipient) {
-                case .address(let addr):
-                    toAddress = addr.stringEncoded
-                case .internalAccount(_):
-                    throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
+            switch pendingTransaction.recipient {
+            case .address(let addr):
+                toAddress = addr.stringEncoded
+            case .internalAccount:
+                break
             }
 
-            let encodedTransaction = try await self.encoder.createTransaction(
+            guard let toAddress else {
+                throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
+            }
+            
+            let transaction = try await self.encoder.createTransaction(
                 spendingKey: spendingKey,
                 zatoshi: pendingTransaction.value,
-                to: toAddress!,
+                to: toAddress,
                 memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
-            let transaction = try self.encoder.expandEncodedTransaction(encodedTransaction)
 
             var pending = pendingTransaction
             pending.encodeAttempts += 1
-            pending.raw = encodedTransaction.raw
-            pending.rawTransactionId = encodedTransaction.transactionId
+            pending.raw = transaction.raw
+            pending.rawTransactionId = transaction.rawID
             pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
             pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
             
             try self.repository.update(pending)
             
             return pending
-        } catch StorageError.updateFailed {
+        } catch DatabaseStorageError.updateFailed {
             throw TransactionManagerError.updateFailed(pendingTransaction)
         } catch {
             do {
@@ -253,6 +260,10 @@ class PersistentTransactionManager: OutboundTransactionManager {
         } catch {
             throw TransactionManagerError.notPending(pendingTransaction)
         }
+    }
+
+    func closeDBConnection() {
+        repository.closeDBConnection()
     }
 }
 

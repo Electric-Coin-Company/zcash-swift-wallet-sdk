@@ -1,3 +1,159 @@
+# Unreleased
+
+## File system backed block cache
+
+File system based block cache. Compact blocks will now be stored
+on the file system. Caller must provide a `URL` pointing to the 
+filesystem root directory where the fsBlock cache is. this directory
+is expected to contain a `/blocks` sub-directory with the blocks stored
+in the convened filename format `{height}-{hash}-compactblock`. This directory
+must be granted both read and write permissions.
+
+the file system cache will have a "bookkeeping" database that the rust
+welding layer will use to know the state of the cache and locate the 
+cached compact blocks. This directory can be deleted provided that the
+Compactblock processor or Synchronizer are not running. Upon deletion 
+caller is responsible for initializing these objects for the cache to 
+be created. 
+
+Implementation notes: Users of the SDK will know the path they will 
+provide but must assume no behavior whatsoever or rely on the cached 
+information in any way, since it is an internal state of the SDK. 
+Maintainers might provide no support for problems related to speculative
+use of the file system cache. If you consider your application needs any
+other information than the one available through public APIs, please 
+file the corresponding feature request.
+
+### Added
+
+- `Synchronizer.shieldFunds(spendingKey:memo:shieldingThreshold)` shieldingThreshold
+was added allowing wallets to manage their own shielding policies.
+    
+### Removed
+- `InitializerError.cacheDbMigrationFailed`
+
+### Deprecations
+CacheDb references that were deprecated instead of **deleted** are pointing out
+that they should be useful for you to migrate from using cacheDb.
+
+- `ResourceProvider.cacheDbURL` deprecated but left for one release cycle for clients 
+to move away from cacheDb.
+
+- `NetworkConstants.defaultCacheDbName` deprecated but left for one release cycle for clients 
+to move away from cacheDb.
+
+## Other Issues Fixed by this PR:
+
+- [#587] ShieldFundsTests:
+ - https://github.com/zcash/ZcashLightClientKit/issues/720
+ - https://github.com/zcash/ZcashLightClientKit/issues/587
+ - https://github.com/zcash/ZcashLightClientKit/issues/667
+
+- [#443] Delete blocks from cache after processing them
+    Closes https://github.com/zcash/ZcashLightClientKit/issues/443
+- [#754] adopt name change in libzashlc package that fixes a deprecation in SPM
+    Closes https://github.com/zcash/ZcashLightClientKit/issues/754
+
+# 0.18.0-beta
+
+## Farewell Cocoapods.
+- [#612] Remove Support for Cocoapods (#706)
+
+It wouldn't have been possible to release an SDK without you, pal.
+
+We are moving away from Cocoapods since our main dependencies, SwiftGRPC
+and SWIFT-NIO are. We don't have much of a choice. 
+
+We've been communicating this for a long time. Although, if you really need Cocoapods,
+please let us know by opening an issue in our repo and we'll talk about it.
+
+
+## New Checkpoints 
+Checkpoints 
+
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1937500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1940000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1942500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1945000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1947500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1950000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1952500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1955000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1957500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1960000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1962500.json
+````
+
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2180000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2190000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2200000.json
+````
+
+## Bugfixes
+
+- [#645] Default rewind after ReOrg is 20 blocks when it should be 10
+    This fixes an issue where the default reorg was 20 blocks rewind instead of 10. The
+reorg count was incremented before calling the rewind height computing function.
+
+## Use Librustzcash database views to query and represent transactions
+ 
+- [#556] Change data structures which represent transactions.
+
+    These data types are gone: `Transaction`, `TransactionEntity`, `ConfirmedTransaction`, 
+`ConfirmedTransactionEntity`. And these data types were added: `ZcashTransaction.Overview`, 
+`ZcashTransaction.Received`, `ZcashTransaction.Sent`. 
+
+    New data structures are very similar to the old ones. Although there many breaking changes.
+The APIs of the `SDKSynchronizer` remain unchanged in their behavior. They return different 
+data types. **When adopting this change, you should check which data types are used by methods 
+of the `SDKSynchronizer` in your code and change them accordingly.**
+
+    New transaction structures no longer have a `memo` property. This responds to the fact that 
+Zcash transactions can have either none or multiple memos. To get memos for the transaction 
+the `SDKSynchronizer` has now new methods to fetch those:
+    - `func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]`, 
+    - `func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]`
+    - `func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]`
+    
+## CompactBlockProcessor is now internal
+- [#671] Make CompactBlockProcessor Internal.
+
+    The CompactBlockProcessor is no longer a public class/API. Any direct access will
+end up as a compiler error. Recommended way how to handle things is via `SDKSynchronizer`
+from now on. The Demo app has been updated accordingly as well.
+
+## We've changed how we download and scan blocks. Status reporting has changed.
+
+- [#657] Change how blocks are downloaded and scanned. 
+
+    In previous versions, the SDK first downloaded all the blocks and then it
+scanned all the blocks. This approach requires a lot of disk space. The SDK now 
+behaves differently. It downloads a batch of blocks (100 by default), scans those, and
+removes those blocks from the disk. And repeats this until all the blocks are processed.
+
+    `SyncStatus` was changed. `.downloading`, `.validating`, and `.scanning` symbols
+were removed. And the `.scanning` symbol was added. The removed phases of the sync 
+process are now reported as one phase. 
+
+    Notifications were also changed similarly. These notifications were
+removed: `SDKSynchronizerDownloading`, `SDKSyncronizerValidating`, and `SDKSyncronizerScanning`.
+And the `SDKSynchronizerSyncing` notification was added. The added notification replaces
+the removed notifications.
+        
+## New Wipe Method to delete wallet information. Use with care. 
+- [#677] Add support for wallet wipe into SDK. Add new method `Synchronizer.wipe()`. 
+
+## Benchmarking APIs: A primer
+- [#663] Foundations for the benchmarking/performance testing in the SDK. 
+
+    This change presents 2 building blocks for the future automated tests, consisting
+of a new SDKMetrics interface to control flow of the data in the SDK and 
+new performance (unit) test measuring synchronization of 100 mainnet blocks. 
+
 # 0.17.6-beta
 - [#756] 0.17.5-beta updates to libzcashlc 0.2.0 when it shouldn't
 
@@ -27,6 +183,7 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2150000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2160000.json
 Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2170000.json
 ````
+
 # 0.17.4-beta
 - [#665] Fix testShieldFunds() `get_transparent_balance` error
 updates `libzcashlc` to `0.1.1` to fix an error where getting a 

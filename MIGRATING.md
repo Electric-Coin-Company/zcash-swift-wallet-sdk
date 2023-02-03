@@ -1,3 +1,47 @@
+# Migrating from previous versions to <Unreleased>
+Compact block cache no longer uses a sqlite database. The existing database
+should be deleted. `Initializer` now takes an `fsBlockDbRootURL` which is a 
+URL pointing to a RW directory in the filesystem that will be used to store
+the cached blocks and the companion database managed internally by the SDK.
+
+`Initializer` provides a convenience initializer that takes the an optional
+URL to the `cacheDb` location to migrate the internal state of the 
+`CompactBlockProcessor` and delete that database. 
+
+````Swift
+    convenience public init (
+        cacheDbURL: URL?,
+        fsBlockDbRoot: URL,
+        dataDbURL: URL,
+        pendingDbURL: URL,
+        endpoint: LightWalletEndpoint,
+        network: ZcashNetwork,
+        spendParamsURL: URL,
+        outputParamsURL: URL,
+        viewingKeys: [UnifiedFullViewingKey],
+        walletBirthday: BlockHeight,
+        alias: String = "",
+        loggerProxy: Logger? = nil
+    )
+````
+
+We do not make any efforts to extract the cached blocks in the sqlite
+`cacheDb` and storing them on disk. Although this might be the logical 
+step to do, we think such migration as little to gain since a migration
+function will be a "run once" function with many different scenarios to
+consider and possibly very error prone. On the other hand, we rather delete
+the `cacheDb` altogether and free up that space on the users' devices since
+we have surveyed that the `cacheDb` as been growing exponentially taking up
+many gigabyte of disk space. We forsee that many possible attempts to copy
+information from one cache to another, would possibly fail 
+
+Consuming block cache information for other purposes is discouraged. Users
+must not make assumptions on its contents or rely on its contents in any way. 
+Maintainers assume that this state is internal and won't consider further
+uses other than the intended for the current development. If you consider
+your application needs any other information than the ones available through
+public APIs, please file the corresponding feature request.
+
 # Migrating from 0.16.x-beta to 0.17.0-alpha.x
 
 ## Changes to Demo APP
@@ -28,8 +72,8 @@ removed `public func getAddress(index account: Int = 0) -> String`
 
 ### Wallet Types
 `UnifiedSpendingKey` to represent Unified Spending Keys. This is a binary
-encoded not meant to be stored or backed up. This only serves the purpuse
-of letting clients use the least priviledge keys at all times for every
+encoded not meant to be stored or backed up. This only serves the purpose
+of letting clients use the least privilege keys at all times for every
 operation.
 
 ### Synchronizer
@@ -74,10 +118,8 @@ public extension UnifiedAddress {
 ## Notes on Structured Concurrency
 
 `CompactBlockProcessor` is now an Swift Actor. This makes it more robust and have its own
-async environment. 
+async environment.
 
-SDK Clients will likely be affected by some `async` methods on `SDKSynchronizer`. 
+SDK Clients will likely be affected by some `async` methods on `SDKSynchronizer`.
 
-We recommend clients that don't support structured concurrency features, to work around this by  surrounding the these function calls either in @MainActor contexts either by marking callers as @MainActor or launching tasks on that actor with `Task { @MainActor in ... }` 
-
-
+We recommend clients that don't support structured concurrency features, to work around this by  surrounding the these function calls either in @MainActor contexts either by marking callers as @MainActor or launching tasks on that actor with `Task { @MainActor in ... }`

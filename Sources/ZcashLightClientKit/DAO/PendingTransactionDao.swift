@@ -8,7 +8,6 @@
 import Foundation
 import SQLite
 struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
-
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
         case toInternalAccount = "to_internal"
@@ -112,13 +111,13 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         switch (toAddress, toInternalAccount) {
         case let (.some(address), nil):
             guard let recipient = Recipient.forEncodedAddress(encoded: address) else {
-                throw StorageError.malformedEntity(fields: ["toAddress"])
+                throw DatabaseStorageError.malformedEntity(fields: ["toAddress"])
             }
             self.recipient = .address(recipient.0)
         case let (nil, .some(accountId)):
             self.recipient = .internalAccount(UInt32(accountId))
         default:
-            throw StorageError.malformedEntity(fields: ["toAddress", "toInternalAccount"])
+            throw DatabaseStorageError.malformedEntity(fields: ["toAddress", "toInternalAccount"])
         }
         
         self.accountIndex = try container.decode(Int.self, forKey: .accountIndex)
@@ -147,7 +146,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         
         var toAddress: String?
         var accountId: Int?
-        switch (self.recipient) {
+        switch recipient {
         case .address(let recipient):
             toAddress = recipient.stringEncoded
         case .internalAccount(let acct):
@@ -235,6 +234,10 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
+
+    func closeDBConnection() {
+        dbProvider.close()
+    }
     
     func create(_ transaction: PendingTransactionEntity) throws -> Int {
         let pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
@@ -245,7 +248,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     func update(_ transaction: PendingTransactionEntity) throws {
         let pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
         guard let id = pendingTx.id else {
-            throw StorageError.malformedEntity(fields: ["id"])
+            throw DatabaseStorageError.malformedEntity(fields: ["id"])
         }
         
         let updatedRows = try dbProvider.connection().run(Self.table.filter(TableColumns.id == id).update(pendingTx))
@@ -256,13 +259,13 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     
     func delete(_ transaction: PendingTransactionEntity) throws {
         guard let id = transaction.id else {
-            throw StorageError.malformedEntity(fields: ["id"])
+            throw DatabaseStorageError.malformedEntity(fields: ["id"])
         }
         
         do {
             try dbProvider.connection().run(Self.table.filter(TableColumns.id == id).delete())
         } catch {
-            throw StorageError.updateFailed
+            throw DatabaseStorageError.updateFailed
         }
     }
     
@@ -270,7 +273,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         var pendingTx = transaction as? PendingTransaction ?? PendingTransaction.from(entity: transaction)
         pendingTx.cancelled = 1
         guard let txId = pendingTx.id else {
-            throw StorageError.malformedEntity(fields: ["id"])
+            throw DatabaseStorageError.malformedEntity(fields: ["id"])
         }
         
         try dbProvider.connection().run(Self.table.filter(TableColumns.id == txId).update(pendingTx))
@@ -286,7 +289,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
             
             return pendingTx
         } catch {
-            throw StorageError.operationFailed
+            throw DatabaseStorageError.operationFailed
         }
     }
     

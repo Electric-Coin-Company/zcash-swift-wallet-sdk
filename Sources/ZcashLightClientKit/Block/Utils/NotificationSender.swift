@@ -11,7 +11,7 @@ class NotificationSender {
     static let `default` = NotificationSender()
     private let queue = DispatchQueue(label: "NotificationsSender")
 
-    func post(name aName: Notification.Name, object anObject: Any?, userInfo aUserInfo: [AnyHashable : Any]? = nil) {
+    func post(name aName: Notification.Name, object anObject: Any?, userInfo aUserInfo: [AnyHashable: Any]? = nil) {
         let notification = Notification(name: aName, object: anObject, userInfo: aUserInfo)
         post(notification: notification)
     }

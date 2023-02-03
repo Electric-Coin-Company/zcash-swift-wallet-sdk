@@ -90,7 +90,6 @@ public extension NSDecimalNumber {
     }
 }
 
-
 extension Zatoshi: Codable {
     enum CodingKeys: String, CodingKey {
         case amount
