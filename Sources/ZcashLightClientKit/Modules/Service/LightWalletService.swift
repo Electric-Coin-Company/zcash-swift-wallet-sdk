@@ -7,13 +7,11 @@
 //
 
 import Foundation
-import GRPC
-import SwiftProtobuf
 
 /**
 Wrapper for errors received from a Lightwalletd endpoint
 */
-public enum LightWalletServiceError: Error {
+enum LightWalletServiceError: Error {
     case generalError(message: String)
     case failed(statusCode: Int, message: String)
     case invalidBlock
@@ -27,7 +25,7 @@ public enum LightWalletServiceError: Error {
 
 extension LightWalletServiceError: Equatable {
     // swiftlint:disable cyclomatic_complexity
-    public static func == (lhs: Self, rhs: Self) -> Bool {
+    static func == (lhs: Self, rhs: Self) -> Bool {
         switch lhs {
         case .generalError(let message):
             switch rhs {
@@ -93,15 +91,64 @@ extension LightWalletServiceError: Equatable {
     }
 }
 
-public protocol LightWalletServiceResponse {
-    var errorCode: Int32 { get }
-    var errorMessage: String { get }
-    var unknownFields: SwiftProtobuf.UnknownStorage { get }
+protocol LightWalletdInfo {
+    var version: String { get }
+
+    var vendor: String { get }
+
+    /// true
+    var taddrSupport: Bool { get }
+
+    /// either "main" or "test"
+    var chainName: String { get }
+
+    /// depends on mainnet or testnet
+    var saplingActivationHeight: UInt64 { get }
+
+    /// protocol identifier, see consensus/upgrades.cpp
+    var consensusBranchID: String { get }
+
+    /// latest block on the best chain
+    var blockHeight: UInt64 { get }
+
+    var gitCommit: String { get }
+
+    var branch: String { get }
+
+    var buildDate: String { get }
+
+    var buildUser: String { get }
+
+    /// less than tip height if zcashd is syncing
+    var estimatedHeight: UInt64 { get }
+
+    /// example: "v4.1.1-877212414"
+    var zcashdBuild: String { get }
+
+    /// example: "/MagicBean:4.1.1/"
+    var zcashdSubversion: String { get }
 }
 
-extension SendResponse: LightWalletServiceResponse {}
+protocol LightWalletServiceResponse {
+    var errorCode: Int32 { get }
+    var errorMessage: String { get }
+}
 
-public protocol LightWalletService {
+struct LightWalletServiceFactory {
+    let endpoint: LightWalletEndpoint
+    let connectionStateChange: (_ from: ConnectionState, _ to: ConnectionState) -> Void
+
+    init(endpoint: LightWalletEndpoint, connectionStateChange: @escaping (_ from: ConnectionState, _ to: ConnectionState) -> Void) {
+        self.endpoint = endpoint
+        self.connectionStateChange = connectionStateChange
+    }
+
+    func make() -> LightWalletService {
+        return LightWalletGRPCService(endpoint: endpoint, connectionStateChange: connectionStateChange)
+    }
+}
+
+protocol LightWalletService {
     /// Returns the info for this lightwalletd server
     func getInfo() async throws -> LightWalletdInfo
 

@@ -16,13 +16,11 @@ class LightWalletServiceTests: XCTestCase {
     let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
 
     var service: LightWalletService!
-    var channel: Channel!
 
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         super.setUp()
-        channel = ChannelProvider().channel()
-        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+        service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
     }
 
     // FIXME: [#721] check whether this test is still valid on in memory lwd implementation, https://github.com/zcash/ZcashLightClientKit/issues/721

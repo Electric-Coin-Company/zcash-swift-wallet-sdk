@@ -34,9 +34,10 @@ class CompactBlockProcessorTests: XCTestCase {
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
 
+        let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
         let service = MockLightWalletService(
             latestBlockHeight: mockLatestHeight,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+            service: liveService
         )
         let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
         service.mockLightDInfo = LightdInfo.with({ info in

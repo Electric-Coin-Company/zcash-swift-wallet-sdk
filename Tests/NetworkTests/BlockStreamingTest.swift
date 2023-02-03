@@ -31,14 +31,15 @@ class BlockStreamingTest: XCTestCase {
     }
 
     func testStream() async throws {
-        let service = LightWalletGRPCService(
-            host: LightWalletEndpointBuilder.eccTestnet.host,
+        let endpoint = LightWalletEndpoint(
+            address: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
-            singleCallTimeout: 1000,
-            streamingCallTimeout: 100000
+            singleCallTimeoutInMillis: 1000,
+            streamingCallTimeoutInMillis: 100000
         )
-        
+        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+
         let latestHeight = try service.latestBlockHeight()
         
         let startHeight = latestHeight - 100_000
@@ -59,13 +60,14 @@ class BlockStreamingTest: XCTestCase {
     }
     
     func testStreamCancellation() async throws {
-        let service = LightWalletGRPCService(
-            host: LightWalletEndpointBuilder.eccTestnet.host,
+        let endpoint = LightWalletEndpoint(
+            address: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
-            singleCallTimeout: 10000,
-            streamingCallTimeout: 10000
+            singleCallTimeoutInMillis: 10000,
+            streamingCallTimeoutInMillis: 10000
         )
+        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
 
         let realRustBackend = ZcashRustBackend.self
 
@@ -118,13 +120,14 @@ class BlockStreamingTest: XCTestCase {
     }
     
     func testStreamTimeout() async throws {
-        let service = LightWalletGRPCService(
-            host: LightWalletEndpointBuilder.eccTestnet.host,
+        let endpoint = LightWalletEndpoint(
+            address: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
-            singleCallTimeout: 1000,
-            streamingCallTimeout: 1000
+            singleCallTimeoutInMillis: 1000,
+            streamingCallTimeoutInMillis: 1000
         )
+        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
 
         let realRustBackend = ZcashRustBackend.self
 

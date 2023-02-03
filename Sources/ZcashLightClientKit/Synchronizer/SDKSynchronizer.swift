@@ -305,8 +305,8 @@ public class SDKSynchronizer: Synchronizer {
     @objc func connectivityStateChanged(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let previous = userInfo[CompactBlockProcessorNotificationKey.previousConnectivityStatus] as? ConnectivityState,
-            let current = userInfo[CompactBlockProcessorNotificationKey.currentConnectivityStatus] as? ConnectivityState
+            let previous = userInfo[CompactBlockProcessorNotificationKey.previousConnectivityStatus] as? ConnectionState,
+            let current = userInfo[CompactBlockProcessorNotificationKey.currentConnectivityStatus] as? ConnectionState
         else {
             LoggerProxy.error(
                 "Found \(Notification.Name.blockProcessorConnectivityStateChanged) but lacks dictionary information." +
@@ -315,17 +315,16 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
 
-        let currentState = ConnectionState(current)
         NotificationSender.default.post(
             name: .synchronizerConnectionStateChanged,
             object: self,
             userInfo: [
-                NotificationKeys.previousConnectionState: ConnectionState(previous),
-                NotificationKeys.currentConnectionState: currentState
+                NotificationKeys.previousConnectionState: previous,
+                NotificationKeys.currentConnectionState: current
             ]
         )
 
-        connectionState = currentState
+        connectionState = current
     }
 
     @objc func transactionsFound(_ notification: Notification) {
@@ -887,24 +886,6 @@ extension SDKSynchronizer {
 
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
-    }
-}
-
-import GRPC
-extension ConnectionState {
-    init(_ connectivityState: ConnectivityState) {
-        switch connectivityState {
-        case .connecting:
-            self = .connecting
-        case .idle:
-            self = .idle
-        case .ready:
-            self = .online
-        case .shutdown:
-            self = .shutdown
-        case .transientFailure:
-            self = .reconnecting
-        }
     }
 }
 

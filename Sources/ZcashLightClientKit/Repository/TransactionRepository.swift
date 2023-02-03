@@ -23,7 +23,7 @@ protocol TransactionRepository {
     func find(id: Int) throws -> ZcashTransaction.Overview
     func find(rawID: Data) throws -> ZcashTransaction.Overview
     func find(offset: Int, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
+    func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
     func find(from: ZcashTransaction.Overview, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview]
     func findReceived(offset: Int, limit: Int) throws -> [ZcashTransaction.Received]
     func findSent(offset: Int, limit: Int) throws -> [ZcashTransaction.Sent]

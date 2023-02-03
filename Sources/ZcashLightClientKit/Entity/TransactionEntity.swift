@@ -55,7 +55,8 @@ public enum ZcashTransaction {
         public let value: Zatoshi
     }
 
-    public struct Fetched {
+    /// Used when fetching blocks from the lightwalletd
+    struct Fetched {
         public let rawID: Data
         public let minedHeight: BlockHeight
         public let raw: Data

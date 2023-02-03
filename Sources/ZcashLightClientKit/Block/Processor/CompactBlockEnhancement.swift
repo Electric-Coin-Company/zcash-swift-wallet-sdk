@@ -57,18 +57,17 @@ extension CompactBlockProcessor {
         LoggerProxy.debug("Started Enhancing range: \(range)")
         state = .enhancing
 
-        let blockRange = range.blockRange()
         var retries = 0
         let maxRetries = 5
         
         // fetch transactions
         do {
             let startTime = Date()
-            let transactions = try transactionRepository.find(in: blockRange, limit: Int.max, kind: .all)
+            let transactions = try transactionRepository.find(in: range, limit: Int.max, kind: .all)
 
             guard !transactions.isEmpty else {
                 await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
-                LoggerProxy.debug("no transactions detected on range: \(blockRange.printRange)")
+                LoggerProxy.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
                 return
             }
             
@@ -121,8 +120,8 @@ extension CompactBlockProcessor {
             throw error
         }
 
-        if let foundTxs = try? transactionRepository.find(in: blockRange, limit: Int.max, kind: .all) {
-            notifyTransactions(foundTxs, in: blockRange)
+        if let foundTxs = try? transactionRepository.find(in: range, limit: Int.max, kind: .all) {
+            notifyTransactions(foundTxs, in: range)
         }
 
         await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
@@ -130,11 +129,5 @@ extension CompactBlockProcessor {
         if Task.isCancelled {
             LoggerProxy.debug("Warning: compactBlockEnhancement on range \(range) cancelled")
         }
-    }
-}
-
-private extension BlockRange {
-    var printRange: String {
-        "\(self.start.height) ... \(self.end.height)"
     }
 }

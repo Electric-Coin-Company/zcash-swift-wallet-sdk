@@ -36,7 +36,6 @@ class AdvancedReOrgTests: XCTestCase {
         self.coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday + 50, // don't use an exact birthday, users never do.
-            channelProvider: ChannelProvider(),
             network: network
         )
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)

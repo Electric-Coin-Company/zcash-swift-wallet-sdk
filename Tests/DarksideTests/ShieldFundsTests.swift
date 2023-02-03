@@ -35,7 +35,6 @@ class ShieldFundsTests: XCTestCase {
         self.coordinator = try TestCoordinator(
             seed: seedPhrase,
             walletBirthday: birthday,
-            channelProvider: ChannelProvider(),
             network: network
         )
         try coordinator.reset(saplingActivation: birthday, branchID: self.branchID, chainName: self.chainName)

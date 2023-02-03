@@ -1,5 +1,9 @@
 # Unreleased
 
+- [#726] Modularize GRPC layer
+    This is mostly internal change. `LightWalletService` is no longer public. If it
+is used in your code replace it by using `SDKSynchronizer` API.
+
 ## File system backed block cache
 
 File system based block cache. Compact blocks will now be stored

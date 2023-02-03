@@ -27,8 +27,8 @@ let package = Package(
                 .product(name: "libzcashlc", package: "zcash-light-client-ffi")
             ],
             exclude: [
-                "Service/ProtoBuf/proto/compact_formats.proto",
-                "Service/ProtoBuf/proto/service.proto"
+                "Modules/Service/GRPC/ProtoBuf/proto/compact_formats.proto",
+                "Modules/Service/GRPC/ProtoBuf/proto/service.proto"
             ],
             resources: [
                 .copy("Resources/checkpoints")

@@ -67,12 +67,8 @@ class BlockScanTests: XCTestCase {
 
         XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType))
 
-        let service = LightWalletGRPCService(
-            endpoint: LightWalletEndpoint(
-                address: "lightwalletd.testnet.electriccoin.co",
-                port: 9067
-            )
-        )
+        let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
+        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
 
@@ -90,6 +86,7 @@ class BlockScanTests: XCTestCase {
         )
 
         try fsBlockRepository.create()
+
         let processorConfig = CompactBlockProcessor.Configuration(
             fsBlockCacheRoot: fsDbRootURL,
             dataDb: dataDbURL,
@@ -169,7 +166,7 @@ class BlockScanTests: XCTestCase {
             networkType: network.networkType
         )
         
-        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
 
         let fsDbRootURL = self.testTempDirectory
 

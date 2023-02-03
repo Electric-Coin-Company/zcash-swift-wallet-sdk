@@ -36,7 +36,6 @@ final class SynchronizerTests: XCTestCase {
         self.coordinator = try TestCoordinator(
             seed: self.seedPhrase,
             walletBirthday: self.birthday + 50, // don't use an exact birthday, users never do.
-            channelProvider: ChannelProvider(),
             network: self.network
         )
 
