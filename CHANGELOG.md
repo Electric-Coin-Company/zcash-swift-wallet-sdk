@@ -154,6 +154,10 @@ the removed notifications.
 of a new SDKMetrics interface to control flow of the data in the SDK and 
 new performance (unit) test measuring synchronization of 100 mainnet blocks. 
 
+# 0.17.6-beta
+- [#756] 0.17.5-beta updates to libzcashlc 0.2.0 when it shouldn't
+
+Updated checkpoints to the ones present in 0.18.0-beta
 # 0.17.5-beta
 
 Update checkpoints 
