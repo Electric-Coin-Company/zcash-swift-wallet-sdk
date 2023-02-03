@@ -41,23 +41,11 @@ protocol BlockDownloader {
     ) async throws
 }
 
-class BlockDownloaderImpl {
+struct BlockDownloaderImpl {
     let service: LightWalletService
     let downloaderService: BlockDownloaderService
     let storage: CompactBlockRepository
     let internalSyncProgress: InternalSyncProgress
-
-    init(
-        service: LightWalletService,
-        downloaderService: BlockDownloaderService,
-        storage: CompactBlockRepository,
-        internalSyncProgress: InternalSyncProgress
-    ) {
-        self.service = service
-        self.downloaderService = downloaderService
-        self.storage = storage
-        self.internalSyncProgress = internalSyncProgress
-    }
 }
 
 extension BlockDownloaderImpl: BlockDownloader {

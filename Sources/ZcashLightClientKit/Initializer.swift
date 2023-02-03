@@ -386,27 +386,6 @@ public class Initializer {
     }
 }
 
-enum CompactBlockProcessorBuilder {
-    // swiftlint:disable:next function_parameter_count
-    static func buildProcessor(
-        configuration: CompactBlockProcessor.Configuration,
-        service: LightWalletService,
-        storage: CompactBlockRepository,
-        transactionRepository: TransactionRepository,
-        accountRepository: AccountRepository,
-        backend: ZcashRustBackendWelding.Type
-    ) -> CompactBlockProcessor {
-        return CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            backend: backend,
-            config: configuration,
-            repository: transactionRepository,
-            accountRepository: accountRepository
-        )
-    }
-}
-
 extension InitializerError: LocalizedError {
     public var errorDescription: String? {
         switch self {

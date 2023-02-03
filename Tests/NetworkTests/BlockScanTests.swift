@@ -223,7 +223,7 @@ class BlockScanTests: XCTestCase {
             )
             XCTAssertFalse(Task.isCancelled)
             
-            try await compactBlockProcessor.compactBlockValidation()
+            try await compactBlockProcessor.blockValidator.validate()
             XCTAssertFalse(Task.isCancelled)
             
             try await compactBlockProcessor.compactBlockBatchScanning(range: range, totalProgressRange: range)
