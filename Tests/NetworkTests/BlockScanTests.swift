@@ -90,11 +90,13 @@ class BlockScanTests: XCTestCase {
         )
 
         try fsBlockRepository.create()
-        let downloader = BlockDownloaderServiceImpl(service: service, storage: fsBlockRepository)
-
-        let processorConfig = CompactBlockProcessor.Configuration.standard(
-            for: network,
-            walletBirthday: network.constants.saplingActivationHeight
+        let processorConfig = CompactBlockProcessor.Configuration(
+            fsBlockCacheRoot: fsDbRootURL,
+            dataDb: dataDbURL,
+            spendParamsURL: spendParamsURL,
+            outputParamsURL: outputParamsURL,
+            walletBirthday: walletBirthDay.height,
+            network: network
         )
 
         let compactBlockProcessor = CompactBlockProcessor(
@@ -108,14 +110,9 @@ class BlockScanTests: XCTestCase {
         var latestScannedheight = BlockHeight.empty()
 
         try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range)
-        
         XCTAssertFalse(Task.isCancelled)
-        try await compactBlockProcessor.compactBlockScanning(
-            rustWelding: rustWelding,
-            cacheDb: fsDbRootURL,
-            dataDb: dataDbURL,
-            networkType: network.networkType
-        )
+        try await compactBlockProcessor.blockScanner.scanBlocks(at: range, totalProgressRange: range, didScan: { _ in })
+
         latestScannedheight = repository.lastScannedBlockHeight()
         XCTAssertEqual(latestScannedheight, range.upperBound)
     }
@@ -226,7 +223,7 @@ class BlockScanTests: XCTestCase {
             try await compactBlockProcessor.blockValidator.validate()
             XCTAssertFalse(Task.isCancelled)
             
-            try await compactBlockProcessor.compactBlockBatchScanning(range: range, totalProgressRange: range)
+            try await compactBlockProcessor.blockScanner.scanBlocks(at: range, totalProgressRange: range, didScan: { _ in })
             XCTAssertFalse(Task.isCancelled)
         } catch {
             if let lwdError = error as? LightWalletServiceError {
