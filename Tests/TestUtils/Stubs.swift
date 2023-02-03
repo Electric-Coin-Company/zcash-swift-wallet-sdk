@@ -11,7 +11,7 @@ import GRPC
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 
-// swiftlint:disable function_parameter_count identifier_name type_body_length
+// swiftlint:disable function_parameter_count identifier_name
 class AwfulLightWalletService: MockLightWalletService {
     override func latestBlockHeight() throws -> BlockHeight {
         throw LightWalletServiceError.criticalError

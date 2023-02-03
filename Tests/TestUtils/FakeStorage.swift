@@ -67,7 +67,6 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
     }
 }
 
-import GRPC
 struct SandblastSimulator {
     ///  Creates an array of Zcash CompactBlock from a mainnet sandblasted block of 500K bytes
     ///  this is not good for syncing but for performance benchmarking of block storage.

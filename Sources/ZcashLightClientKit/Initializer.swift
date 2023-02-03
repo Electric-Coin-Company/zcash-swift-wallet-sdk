@@ -53,12 +53,17 @@ public struct LightWalletEndpoint {
     }
 }
 
+extension Notification.Name {
+    static let connectionStatusChanged = Notification.Name("LightWalletServiceConnectivityStatusChanged")
+}
+
 /**
 Wrapper for all the Rust backend functionality that does not involve processing blocks. This
 class initializes the Rust backend and the supporting data required to exercise those abilities.
 The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
 functionality, related to processing blocks.
 */
+// swiftlint:disable:next type_body_length
 public class Initializer {
     public enum InitializationResult {
         case success
@@ -119,7 +124,7 @@ public class Initializer {
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
             endpoint: endpoint,
-            service: LightWalletGRPCService(endpoint: endpoint),
+            service: Self.makeLightWalletServiceFactory(endpoint: endpoint).make(),
             repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
             accountRepository: AccountRepositoryBuilder.build(
                 dataDbURL: dataDbURL,
@@ -171,8 +176,6 @@ public class Initializer {
         alias: String = "",
         loggerProxy: Logger? = nil
     ) {
-        let lwdService = LightWalletGRPCService(endpoint: endpoint)
-
         self.init(
             rustBackend: ZcashRustBackend.self,
             lowerBoundHeight: walletBirthday,
@@ -182,7 +185,7 @@ public class Initializer {
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
             endpoint: endpoint,
-            service: lwdService,
+            service: Self.makeLightWalletServiceFactory(endpoint: endpoint).make(),
             repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
             accountRepository: AccountRepositoryBuilder.build(
                 dataDbURL: dataDbURL,
@@ -249,6 +252,22 @@ public class Initializer {
         self.viewingKeys = viewingKeys
         self.walletBirthday = walletBirthday
         self.network = network
+    }
+
+    private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
+        return LightWalletServiceFactory(
+            endpoint: endpoint,
+            connectionStateChange: { oldState, newState in
+                NotificationSender.default.post(
+                    name: .blockProcessorConnectivityStateChanged,
+                    object: nil,
+                    userInfo: [
+                        CompactBlockProcessorNotificationKey.currentConnectivityStatus: newState,
+                        CompactBlockProcessorNotificationKey.previousConnectivityStatus: oldState
+                    ]
+                )
+            }
+        )
     }
 
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform

@@ -28,7 +28,7 @@ class BlockDownloaderTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+        service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         storage = FSCompactBlockRepository(
             cacheDirectory: testTempDirectory,

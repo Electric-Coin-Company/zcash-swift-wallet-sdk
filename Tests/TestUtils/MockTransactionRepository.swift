@@ -185,7 +185,7 @@ extension MockTransactionRepository: TransactionRepository {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
+    func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 

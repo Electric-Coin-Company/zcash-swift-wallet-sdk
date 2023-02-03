@@ -54,7 +54,7 @@ class TransactionRepositoryTests: XCTestCase {
         var transactions: [ZcashTransaction.Overview]!
         XCTAssertNoThrow(
             try {
-                transactions = try self.transactionRepository.find(in: BlockRange(startHeight: 663218, endHeight: 663974), limit: 3, kind: .received)
+                transactions = try self.transactionRepository.find(in: 663218...663974, limit: 3, kind: .received)
             }()
         )
 

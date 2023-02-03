@@ -11,8 +11,8 @@ import ZcashLightClientKit
 
 class LatestHeightViewController: UIViewController {
     @IBOutlet weak var blockHeightLabel: UILabel!
-    
-    var service: LightWalletService = LightWalletGRPCService(endpoint: DemoAppConfig.endpoint)
+
+    let synchronizer = AppDelegate.shared.sharedSynchronizer
     var model: BlockHeight? {
         didSet {
             if viewIfLoaded != nil {
@@ -32,9 +32,9 @@ class LatestHeightViewController: UIViewController {
         /// Note: It's safe to modify model or call fail() because all methods of a UIViewController are MainActor methods by default.
         Task {
             do {
-                model = try await service.latestBlockHeightAsync()
+                model = try await synchronizer.latestHeight()
             } catch {
-                fail(error as? LightWalletServiceError ?? .unknown)
+                fail(error)
             }
         }
     }
@@ -47,7 +47,7 @@ class LatestHeightViewController: UIViewController {
         blockHeightLabel.text = String(model)
     }
     
-    func fail(_ error: LightWalletServiceError) {
+    func fail(_ error: Error) {
         self.blockHeightLabel.text = "Error"
         
         let alert = UIAlertController(title: "Error", message: String(describing: error), preferredStyle: .alert)

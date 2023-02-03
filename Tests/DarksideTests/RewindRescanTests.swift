@@ -37,7 +37,6 @@ class RewindRescanTests: XCTestCase {
         self.coordinator = try TestCoordinator(
             seed: self.seedPhrase,
             walletBirthday: self.birthday,
-            channelProvider: ChannelProvider(),
             network: self.network
         )
 

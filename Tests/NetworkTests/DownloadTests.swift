@@ -33,7 +33,7 @@ class DownloadTests: XCTestCase {
     }
 
     func testSingleDownload() async throws {
-        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
+        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
 
         let realRustBackend = ZcashRustBackend.self
 

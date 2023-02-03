@@ -39,7 +39,6 @@ class TestCoordinator {
     var errorHandler: ((Error?) -> Void)?
     var spendingKey: UnifiedSpendingKey
     var birthday: BlockHeight
-    var channelProvider: ChannelProvider
     var synchronizer: SDKSynchronizer
     var service: DarksideWalletService
     var spendingKeys: [UnifiedSpendingKey]?
@@ -48,7 +47,6 @@ class TestCoordinator {
     convenience init(
         seed: String,
         walletBirthday: BlockHeight,
-        channelProvider: ChannelProvider,
         network: ZcashNetwork
     ) throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
@@ -64,7 +62,6 @@ class TestCoordinator {
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
-            channelProvider: channelProvider,
             network: network
         )
     }
@@ -73,25 +70,24 @@ class TestCoordinator {
         spendingKey: UnifiedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
-        channelProvider: ChannelProvider,
         network: ZcashNetwork
     ) throws {
         XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
         self.spendingKey = spendingKey
         self.birthday = walletBirthday
-        self.channelProvider = channelProvider
         self.databases = TemporaryDbBuilder.build()
         self.network = network
-        self.service = DarksideWalletService(
-            service: LightWalletGRPCService(
-                host: Constants.address,
-                port: 9067,
-                secure: false,
-                singleCallTimeout: 10000,
-                streamingCallTimeout: 1000000
-            )
+
+        let endpoint = LightWalletEndpoint(
+            address: Constants.address,
+            port: 9067,
+            secure: false,
+            singleCallTimeoutInMillis: 10000,
+            streamingCallTimeoutInMillis: 1000000
         )
+        let liveService = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        self.service = DarksideWalletService(service: liveService)
 
         let realRustBackend = ZcashRustBackend.self
 

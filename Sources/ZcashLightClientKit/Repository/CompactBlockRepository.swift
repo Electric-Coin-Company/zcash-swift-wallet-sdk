@@ -8,37 +8,6 @@
 
 import Foundation
 
-/**
-A Zcash compact block to store on cache DB
-*/
-public struct ZcashCompactBlock {
-    struct Meta {
-        var hash: Data
-        var time: UInt32
-        var saplingOutputs: UInt32
-        var orchardOutputs: UInt32
-    }
-
-    public var height: BlockHeight
-    public var data: Data
-
-    var meta: Meta
-}
-
-extension ZcashCompactBlock: Encodable {
-    enum CodingKeys: CodingKey {
-        case height
-        case data
-        case meta
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(data, forKey: .data)
-        try container.encode(height, forKey: .height)
-    }
-}
-
 enum CompactBlockRepositoryError: Error, Equatable {
     /// cache is empty
     case cacheEmpty

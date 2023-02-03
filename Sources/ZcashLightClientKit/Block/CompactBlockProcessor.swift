@@ -8,7 +8,6 @@
 // swiftlint:disable file_length type_body_length
 
 import Foundation
-import GRPC
 
 public typealias RefreshedUTXOs = (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 
@@ -831,13 +830,13 @@ actor CompactBlockProcessor {
         )
     }
     
-    func notifyTransactions(_ txs: [ZcashTransaction.Overview], in range: BlockRange) {
+    func notifyTransactions(_ txs: [ZcashTransaction.Overview], in range: CompactBlockRange) {
         NotificationSender.default.post(
             name: .blockProcessorFoundTransactions,
             object: self,
             userInfo: [
                 CompactBlockProcessorNotificationKey.foundTransactions: txs,
-                CompactBlockProcessorNotificationKey.foundTransactionsRange: ClosedRange(uncheckedBounds: (range.start.height, range.end.height))
+                CompactBlockProcessorNotificationKey.foundTransactionsRange: range
             ]
         )
     }
@@ -885,17 +884,6 @@ actor CompactBlockProcessor {
         }
         if let lwdError = error as? LightWalletServiceError {
             return lwdError.mapToProcessorError()
-        } else if let rpcError = error as? GRPC.GRPCStatus {
-            switch rpcError {
-            case .ok:
-                LoggerProxy.warn("Error Raised when status is OK")
-                return CompactBlockProcessorError.grpcError(
-                    statusCode: rpcError.code.rawValue,
-                    message: rpcError.message ?? "Error Raised when status is OK"
-                )
-            default:
-                return CompactBlockProcessorError.grpcError(statusCode: rpcError.code.rawValue, message: rpcError.message ?? "No message")
-            }
         }
         return .unspecifiedError(underlyingError: error)
     }
