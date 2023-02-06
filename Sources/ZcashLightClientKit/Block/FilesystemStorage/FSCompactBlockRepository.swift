@@ -63,47 +63,39 @@ extension FSCompactBlockRepository: CompactBlockRepository {
     }
 
     func write(blocks: [ZcashCompactBlock]) async throws {
-        try await withThrowingTaskGroup(of: ZcashCompactBlock.self) { group in
-            for block in blocks {
-                group.addTask {
-                    // check if file exists
-                    let blockURL = self.urlForBlock(block)
-
-                    if self.blockExistsInCache(block) {
-                        // remove if needed
-                        try self.fileManager.removeItem(at: blockURL)
-                    }
-
-                    // store atomically
-                    do {
-                        try self.fileWriter.writeToURL(block.data, blockURL)
-                    } catch {
-                        LoggerProxy.error("Failed to write block: \(block.height) to path: \(blockURL.path).")
-                        throw CompactBlockRepositoryError.failedToWriteBlock(block)
-                    }
-
-                    return block
-                }
-            }
-
+        do {
             var savedBlocks: [ZcashCompactBlock] = []
 
-            do {
-                for try await block in group {
-                    savedBlocks.append(block)
-                    
-                    if (savedBlocks.count % storageBatchSize) == 0 {
-                        try await self.metadataStore.saveBlocksMeta(savedBlocks)
-                        savedBlocks.removeAll(keepingCapacity: true)
-                    }
+            for block in blocks {
+                // check if file exists
+                let blockURL = self.urlForBlock(block)
+
+                if self.blockExistsInCache(block) {
+                    // remove if needed
+                    try self.fileManager.removeItem(at: blockURL)
                 }
 
-                // if there are any remaining blocks on the cache store them
-                try await self.metadataStore.saveBlocksMeta(savedBlocks)
-            } catch {
-                LoggerProxy.error("failed to Block save to cache error: \(error.localizedDescription)")
-                throw error
+                // store atomically
+                do {
+                    try self.fileWriter.writeToURL(block.data, blockURL)
+                } catch {
+                    LoggerProxy.error("Failed to write block: \(block.height) to path: \(blockURL.path).")
+                    throw CompactBlockRepositoryError.failedToWriteBlock(block)
+                }
+
+                savedBlocks.append(block)
+
+                if (savedBlocks.count % storageBatchSize) == 0 {
+                    try await self.metadataStore.saveBlocksMeta(savedBlocks)
+                    savedBlocks.removeAll(keepingCapacity: true)
+                }
             }
+
+            // if there are any remaining blocks on the cache store them
+            try await self.metadataStore.saveBlocksMeta(savedBlocks)
+        } catch {
+            LoggerProxy.error("failed to Block save to cache error: \(error.localizedDescription)")
+            throw error
         }
     }
 
