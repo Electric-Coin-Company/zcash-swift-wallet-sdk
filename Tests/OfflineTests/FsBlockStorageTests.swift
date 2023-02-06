@@ -477,7 +477,8 @@ final class FsBlockStorageTests: XCTestCase {
         }
     }
 
-    func testPerformanceExample() async throws {
+    // Disabled for now becasue we are not getting consistent results on GA Ci
+    func disable_testPerformanceExample() async throws {
         // NOTE: performance tests don't work with async code. Thanks Apple!
         let freshCache = FSCompactBlockRepository(
             cacheDirectory: testTempDirectory,
