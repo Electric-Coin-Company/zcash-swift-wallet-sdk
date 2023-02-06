@@ -1331,6 +1331,34 @@ extension CompactBlockProcessor: EnhancementStreamDelegate {
 }
 
 extension CompactBlockProcessor {
+    enum NextState: Equatable {
+        case finishProcessing(height: BlockHeight)
+        case processNewBlocks(ranges: SyncRanges)
+        case wait(latestHeight: BlockHeight, latestDownloadHeight: BlockHeight)
+    }
+
+    @discardableResult
+    func figureNextBatch(
+        downloaderService: BlockDownloaderService
+    ) async throws -> NextState {
+        try Task.checkCancellation()
+
+        do {
+            return try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+                service: service,
+                downloaderService: downloaderService,
+                transactionRepository: transactionRepository,
+                config: config,
+                rustBackend: rustBackend,
+                internalSyncProgress: internalSyncProgress
+            )
+        } catch {
+            throw error
+        }
+    }
+}
+
+extension CompactBlockProcessor {
     enum NextStateHelper {
         // swiftlint:disable:next function_parameter_count
         static func nextStateAsync(
