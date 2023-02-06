@@ -349,6 +349,7 @@ actor CompactBlockProcessor {
     let blockValidator: BlockValidator
     let blockScanner: BlockScanner
     let blockEnhancer: BlockEnhancer
+    let utxoFetcher: UTXOFetcher
     let saplingParametersHandler: SaplingParametersHandler
 
     var service: LightWalletService
@@ -463,6 +464,19 @@ actor CompactBlockProcessor {
             internalSyncProgress: internalSyncProgress,
             rustBackend: backend,
             transactionRepository: repository
+        )
+
+        let utxoFetcherConfig = UTXOFetcherConfig(
+            dataDb: config.dataDb,
+            networkType: config.network.networkType,
+            walletBirthday: config.walletBirthday
+        )
+        self.utxoFetcher = UTXOFetcherImpl(
+            accountRepository: accountRepository,
+            blockDownloaderService: blockDownloaderService,
+            config: utxoFetcherConfig,
+            internalSyncProgress: internalSyncProgress,
+            rustBackend: backend
         )
 
         let saplingParametersHandlerConfig = SaplingParametersHandlerConfig(
@@ -705,7 +719,8 @@ actor CompactBlockProcessor {
                 if let range = ranges.fetchUTXORange {
                     anyActionExecuted = true
                     LoggerProxy.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await fetchUnspentTxOutputs(range: range)
+                    state = .fetching
+                    try await utxoFetcher.fetch(at: range)
                 }
 
                 state = .handlingSaplingFiles
