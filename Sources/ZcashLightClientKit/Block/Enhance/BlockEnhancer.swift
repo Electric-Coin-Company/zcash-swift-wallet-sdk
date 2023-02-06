@@ -7,32 +7,47 @@
 
 import Foundation
 
-extension CompactBlockProcessor {
-    enum EnhancementError: Error {
-        case noRawData(message: String)
-        case unknownError
-        case decryptError(error: Error)
-        case txIdNotFound(txId: Data)
-    }
-    
+enum BlockEnhancerError: Error {
+    case noRawData(message: String)
+    case unknownError
+    case decryptError(error: Error)
+    case txIdNotFound(txId: Data)
+}
+
+struct BlockEnhancerConfig {
+    let dataDb: URL
+    let networkType: NetworkType
+}
+
+protocol BlockEnhancer {
+    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementStreamProgress) async -> Void) async throws -> [ZcashTransaction.Overview]
+}
+
+struct BlockEnhancerImpl {
+    let blockDownloaderService: BlockDownloaderService
+    let config: BlockEnhancerConfig
+    let internalSyncProgress: InternalSyncProgress
+    let rustBackend: ZcashRustBackendWelding.Type
+    let transactionRepository: TransactionRepository
+
     private func enhance(transaction: ZcashTransaction.Overview) async throws -> ZcashTransaction.Overview {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.rawID.toHexStringTxId())")
-        
+
         let fetchedTransaction = try await blockDownloaderService.fetchTransaction(txId: transaction.rawID)
 
         let transactionID = fetchedTransaction.rawID.toHexStringTxId()
         let block = String(describing: transaction.minedHeight)
         LoggerProxy.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
-        
+
         let decryptionResult = rustBackend.decryptAndStoreTransaction(
             dbData: config.dataDb,
             txBytes: fetchedTransaction.raw.bytes,
             minedHeight: Int32(fetchedTransaction.minedHeight),
-            networkType: config.network.networkType
+            networkType: config.networkType
         )
 
         guard decryptionResult else {
-            throw EnhancementError.decryptError(
+            throw BlockEnhancerError.decryptError(
                 error: rustBackend.lastError() ?? .genericError(message: "`decryptAndStoreTransaction` failed. No message available")
             )
         }
@@ -42,7 +57,7 @@ extension CompactBlockProcessor {
             confirmedTx = try transactionRepository.find(rawID: fetchedTransaction.rawID)
         } catch {
             if let err = error as? TransactionRepositoryError, case .notFound = err {
-                throw EnhancementError.txIdNotFound(txId: fetchedTransaction.rawID)
+                throw BlockEnhancerError.txIdNotFound(txId: fetchedTransaction.rawID)
             } else {
                 throw error
             }
@@ -50,12 +65,20 @@ extension CompactBlockProcessor {
 
         return confirmedTx
     }
-    
-    func compactBlockEnhancement(range: CompactBlockRange) async throws {
+}
+
+extension BlockEnhancerImpl: BlockEnhancer {
+    enum EnhancementError: Error {
+        case noRawData(message: String)
+        case unknownError
+        case decryptError(error: Error)
+        case txIdNotFound(txId: Data)
+    }
+
+    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementStreamProgress) async -> Void) async throws -> [ZcashTransaction.Overview] {
         try Task.checkCancellation()
         
         LoggerProxy.debug("Started Enhancing range: \(range)")
-        state = .enhancing
 
         var retries = 0
         let maxRetries = 5
@@ -68,7 +91,7 @@ extension CompactBlockProcessor {
             guard !transactions.isEmpty else {
                 await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
                 LoggerProxy.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
-                return
+                return []
             }
             
             for index in 0 ..< transactions.count {
@@ -80,16 +103,13 @@ extension CompactBlockProcessor {
                     do {
                         let confirmedTx = try await enhance(transaction: transaction)
                         retry = false
-                        notifyProgress(
-                            .enhance(
-                                EnhancementStreamProgress(
-                                    totalTransactions: transactions.count,
-                                    enhancedTransactions: index + 1,
-                                    lastFoundTransaction: confirmedTx,
-                                    range: range
-                                )
-                            )
+                        let progress = EnhancementStreamProgress(
+                            totalTransactions: transactions.count,
+                            enhancedTransactions: index + 1,
+                            lastFoundTransaction: confirmedTx,
+                            range: range
                         )
+                        await didEnhance(progress)
 
                         if let minedHeight = confirmedTx.minedHeight {
                             await internalSyncProgress.set(minedHeight, .latestEnhancedHeight)
@@ -120,14 +140,12 @@ extension CompactBlockProcessor {
             throw error
         }
 
-        if let foundTxs = try? transactionRepository.find(in: range, limit: Int.max, kind: .all) {
-            notifyTransactions(foundTxs, in: range)
-        }
-
         await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
         
         if Task.isCancelled {
             LoggerProxy.debug("Warning: compactBlockEnhancement on range \(range) cancelled")
         }
+
+        return (try? transactionRepository.find(in: range, limit: Int.max, kind: .all)) ?? []
     }
 }

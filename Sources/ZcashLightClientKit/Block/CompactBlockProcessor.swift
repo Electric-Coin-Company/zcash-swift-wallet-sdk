@@ -348,6 +348,7 @@ actor CompactBlockProcessor {
     let blockDownloader: BlockDownloader
     let blockValidator: BlockValidator
     let blockScanner: BlockScanner
+    let blockEnhancer: BlockEnhancer
 
     var service: LightWalletService
     var storage: CompactBlockRepository
@@ -453,6 +454,15 @@ actor CompactBlockProcessor {
             scanningBatchSize: config.scanningBatchSize
         )
         self.blockScanner = BlockScannerImpl(config: blockScannerConfig, rustBackend: backend, transactionRepository: repository)
+
+        let blockEnhancerConfig = BlockEnhancerConfig(dataDb: config.dataDb, networkType: config.network.networkType)
+        self.blockEnhancer = BlockEnhancerImpl(
+            blockDownloaderService: blockDownloaderService,
+            config: blockEnhancerConfig,
+            internalSyncProgress: internalSyncProgress,
+            rustBackend: backend,
+            transactionRepository: repository
+        )
 
         self.service = service
         self.rustBackend = backend
@@ -676,7 +686,11 @@ actor CompactBlockProcessor {
                 if let range = ranges.enhanceRange {
                     anyActionExecuted = true
                     LoggerProxy.debug("Enhancing with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await compactBlockEnhancement(range: range)
+                    state = .enhancing
+                    let transactions = try await blockEnhancer.enhance(at: range) { [weak self] progress in
+                        await self?.notifyProgress(.enhance(progress))
+                    }
+                    notifyTransactions(transactions, in: range)
                 }
 
                 if let range = ranges.fetchUTXORange {
