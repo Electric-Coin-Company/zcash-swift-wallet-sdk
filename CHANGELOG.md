@@ -1,4 +1,8 @@
 # Unreleased
+- [#759] Remove Jazz-generated HTML docs
+
+We remove these documents since they are outdated and we rely on the docs in the 
+code itself.
 
 - [#726] Modularize GRPC layer
     This is mostly internal change. `LightWalletService` is no longer public. If it
