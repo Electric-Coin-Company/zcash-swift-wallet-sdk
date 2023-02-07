@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 9/16/22.
 //
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -30,6 +31,8 @@ final class SynchronizerTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
+    var cancellables: [AnyCancellable] = []
+    let processorEventHandler = CompactBlockProcessorEventHandler()
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -40,6 +43,17 @@ final class SynchronizerTests: XCTestCase {
         )
 
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+
+        var stream: AnyPublisher<CompactBlockProcessor.Event, Never>!
+        XCTestCase.wait { await stream = self.coordinator.synchronizer.blockProcessor.eventStream }
+        stream
+            .sink { [weak self] event in
+                switch event {
+                case .handledReorg: self?.handleReorg(event: event)
+                default: break
+                }
+            }
+            .store(in: &cancellables)
     }
 
     override func tearDownWithError() throws {
@@ -51,14 +65,8 @@ final class SynchronizerTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
 
-    @objc func handleReorg(_ notification: Notification) {
-        guard
-            let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
-            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
-        else {
-            XCTFail("empty reorg notification")
-            return
-        }
+    func handleReorg(event: CompactBlockProcessor.Event) {
+        guard case let .handledReorg(reorgHeight, rewindHeight) = event else { return XCTFail("empty reorg notification") }
 
         logger!.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
 
@@ -67,8 +75,6 @@ final class SynchronizerTests: XCTestCase {
     }
 
     func testSynchronizerStops() async throws {
-        hookToReOrgNotification()
-
         /*
         1. create fake chain
         */
@@ -84,7 +90,10 @@ final class SynchronizerTests: XCTestCase {
         syncStoppedExpectation.subscribe(to: .synchronizerStopped, object: nil)
 
         let processorStoppedExpectation = XCTestExpectation(description: "ProcessorStopped Expectation")
-        processorStoppedExpectation.subscribe(to: .blockProcessorStopped, object: nil)
+        processorEventHandler.subscribe(
+            to: await coordinator.synchronizer.blockProcessor.eventStream,
+            expectations: [.stopped: processorStoppedExpectation]
+        )
 
         /*
         sync to latest height
@@ -118,9 +127,5 @@ final class SynchronizerTests: XCTestCase {
             return
         }
         XCTFail("Failed with error: \(testError)")
-    }
-
-    func hookToReOrgNotification() {
-        NotificationCenter.default.addObserver(self, selector: #selector(handleReorg(_:)), name: .blockProcessorHandledReOrg, object: nil)
     }
 }

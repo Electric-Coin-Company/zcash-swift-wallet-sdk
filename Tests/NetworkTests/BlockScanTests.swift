@@ -6,6 +6,7 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
 import XCTest
 import SQLite
 @testable import TestUtils
@@ -13,6 +14,8 @@ import SQLite
 
 // swiftlint:disable implicitly_unwrapped_optional force_try print_function_usage
 class BlockScanTests: XCTestCase {
+    var cancelables: [AnyCancellable] = []
+
     let rustWelding = ZcashRustBackend.self
 
     var dataDbURL: URL!
@@ -113,28 +116,21 @@ class BlockScanTests: XCTestCase {
         latestScannedheight = repository.lastScannedBlockHeight()
         XCTAssertEqual(latestScannedheight, range.upperBound)
     }
-    
-    @objc func observeBenchmark(_ notification: Notification) {
+
+    func observeBenchmark() {
         let reports = SDKMetrics.shared.popAllBlockReports(flush: true)
-        
+
         reports.forEach {
             print("observed benchmark: \($0)")
         }
     }
-    
+
     func testScanValidateDownload() async throws {
         let seed = "testreferencealicetestreferencealice"
 
         logger = OSLogger(logLevel: .debug)
 
         SDKMetrics.shared.enableMetrics()
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(observeBenchmark(_:)),
-            name: .blockProcessorUpdated,
-            object: nil
-        )
         
         guard try self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType) == .success else {
             XCTFail("Seed should not be required for this test")
@@ -198,7 +194,16 @@ class BlockScanTests: XCTestCase {
             backend: rustWelding,
             config: processorConfig
         )
-        
+
+        await compactBlockProcessor.eventStream
+            .sink { [weak self] event in
+                switch event {
+                case .progressUpdated: self?.observeBenchmark()
+                default: break
+                }
+            }
+            .store(in: &cancelables)
+
         let range = CompactBlockRange(
             uncheckedBounds: (walletBirthDay.height, walletBirthDay.height + 10000)
         )

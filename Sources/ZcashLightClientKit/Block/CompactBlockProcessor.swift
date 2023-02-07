@@ -8,6 +8,7 @@
 // swiftlint:disable file_length type_body_length
 
 import Foundation
+import Combine
 
 public typealias RefreshedUTXOs = (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 
@@ -32,28 +33,6 @@ public enum CompactBlockProcessorError: Error {
     case unknown
     case rewindAttemptWhileProcessing
     case wipeAttemptWhileProcessing
-}
-
-/**
-CompactBlockProcessor notification userInfo object keys.
-check Notification.Name extensions for more details.
-*/
-public enum CompactBlockProcessorNotificationKey {
-    public static let progress = "CompactBlockProcessorNotificationKey.progress"
-    public static let progressBlockTime = "CompactBlockProcessorNotificationKey.progressBlockTime"
-    public static let reorgHeight = "CompactBlockProcessorNotificationKey.reorgHeight"
-    public static let latestScannedBlockHeight = "CompactBlockProcessorNotificationKey.latestScannedBlockHeight"
-    public static let rewindHeight = "CompactBlockProcessorNotificationKey.rewindHeight"
-    public static let foundTransactions = "CompactBlockProcessorNotificationKey.foundTransactions"
-    public static let foundBlocks = "CompactBlockProcessorNotificationKey.foundBlocks"
-    public static let foundTransactionsRange = "CompactBlockProcessorNotificationKey.foundTransactionsRange"
-    public static let error = "error"
-    public static let refreshedUTXOs = "CompactBlockProcessorNotificationKey.refreshedUTXOs"
-    public static let enhancementProgress = "CompactBlockProcessorNotificationKey.enhancementProgress"
-    public static let previousStatus = "CompactBlockProcessorNotificationKey.previousStatus"
-    public static let newStatus = "CompactBlockProcessorNotificationKey.newStatus"
-    public static let currentConnectivityStatus = "CompactBlockProcessorNotificationKey.currentConnectivityStatus"
-    public static let previousConnectivityStatus = "CompactBlockProcessorNotificationKey.previousConnectivityStatus"
 }
 
 public enum CompactBlockProgress {
@@ -101,10 +80,6 @@ public enum CompactBlockProgress {
     }
 }
 
-protocol EnhancementStreamDelegate: AnyObject {
-    func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress) async
-}
-
 public protocol EnhancementProgress {
     var totalTransactions: Int { get }
     var enhancedTransactions: Int { get }
@@ -123,87 +98,43 @@ public struct EnhancementStreamProgress: EnhancementProgress {
     }
 }
 
-public extension Notification.Name {
-    /**
-    Processing progress update
-     
-    Query the userInfo object for the key CompactBlockProcessorNotificationKey.progress for a CompactBlockProgress struct
-    */
-    static let blockProcessorUpdated = Notification.Name(rawValue: "CompactBlockProcessorUpdated")
-    
-    /**
-    notification sent when processor status changed
-    */
-    static let blockProcessorStatusChanged = Notification.Name(rawValue: "CompactBlockProcessorStatusChanged")
-
-    /**
-    Notification sent when a compact block processor starts syncing
-    */
-    static let blockProcessorStartedSyncing = Notification.Name(rawValue: "CompactBlockProcessorStartedSyncing")
-
-    /**
-    Notification sent when the compact block processor stop() method is called
-    */
-    static let blockProcessorStopped = Notification.Name(rawValue: "CompactBlockProcessorStopped")
-    
-    /**
-    Notification sent when the compact block processor presented an error.
-     
-    Query userInfo object on the key CompactBlockProcessorNotificationKey.error
-    */
-    static let blockProcessorFailed = Notification.Name(rawValue: "CompactBlockProcessorFailed")
-
-    /**
-    Notification sent when the compact block processor has finished syncing the blockchain to latest height
-    */
-    static let blockProcessorFinished = Notification.Name(rawValue: "CompactBlockProcessorFinished")
-
-    /**
-    Notification sent when the compact block processor is doing nothing
-    */
-    static let blockProcessorIdle = Notification.Name(rawValue: "CompactBlockProcessorIdle")
-
-    /**
-    Notification sent when something odd happened. probably going from a state to another state that shouldn't be the next state.
-    */
-    static let blockProcessorUnknownTransition = Notification.Name(rawValue: "CompactBlockProcessorTransitionUnknown")
-
-    /**
-    Notification sent when the compact block processor handled a ReOrg.
-     
-    Query the userInfo object on the key CompactBlockProcessorNotificationKey.reorgHeight for the height on which the reorg was detected. CompactBlockProcessorNotificationKey.rewindHeight for the height that the processor backed to in order to solve the Reorg
-    */
-    static let blockProcessorHandledReOrg = Notification.Name(rawValue: "CompactBlockProcessorHandledReOrg")
-    
-    /**
-    Notification sent when the compact block processor enhanced a bunch of transactions
-    Query the user info object for CompactBlockProcessorNotificationKey.foundTransactions which will contain an [ConfirmedTransactionEntity] Array with the found transactions and CompactBlockProcessorNotificationKey.foundTransactionsrange
-    */
-    static let blockProcessorFoundTransactions = Notification.Name(rawValue: "CompactBlockProcessorFoundTransactions")
-    
-    /**
-    Notification sent when the compact block processor fetched utxos from lightwalletd attempted to store them
-    Query the user info object for CompactBlockProcessorNotificationKey.blockProcessorStoredUTXOs which will contain a RefreshedUTXOs tuple with the collection of UTXOs stored or skipped
-    */
-    static let blockProcessorStoredUTXOs = Notification.Name(rawValue: "CompactBlockProcessorStoredUTXOs")
-    
-    static let blockProcessorStartedEnhancing = Notification.Name(rawValue: "CompactBlockProcessorStartedEnhancing")
-    
-    static let blockProcessorEnhancementProgress = Notification.Name("CompactBlockProcessorEnhancementProgress")
-    
-    static let blockProcessorStartedFetching = Notification.Name(rawValue: "CompactBlockProcessorStartedFetching")
-    
-    static let blockProcessorHandlingSaplingFiles = Notification.Name(rawValue: "blockProcessorHandlingSaplingFiles")
-    
-    /**
-    Notification sent when the grpc service connection detects a change. Query the user info object  for status change details `currentConnectivityStatus` for current and previous with `previousConnectivityStatus`
-    */
-    static let blockProcessorConnectivityStateChanged = Notification.Name("CompactBlockProcessorConnectivityStateChanged")
-}
-
 /// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
 /// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
 actor CompactBlockProcessor {
+    enum Event {
+        /// Event sent when the CompactBlockProcessor presented an error.
+        case failed (CompactBlockProcessorError)
+
+        /// Event sent when the CompactBlockProcessor has finished syncing the blockchain to latest height
+        case finished (_ lastScannedHeight: BlockHeight, _ foundBlocks: Bool)
+
+        /// Event sent when the CompactBlockProcessor enhanced a bunch of transactions in some range.
+        case foundTransactions ([ZcashTransaction.Overview], CompactBlockRange)
+
+        /// Event sent when the CompactBlockProcessor handled a ReOrg.
+        /// `reorgHeight` is the height on which the reorg was detected.
+        /// `rewindHeight` is the height that the processor backed to in order to solve the Reorg.
+        case handledReorg (_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
+
+        /// Event sent when progress of the sync process changes.
+        case progressUpdated (CompactBlockProgress)
+
+        /// Event sent when the CompactBlockProcessor fetched utxos from lightwalletd attempted to store them.
+        case storedUTXOs ((inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))
+
+        /// Event sent when the CompactBlockProcessor starts enhancing of the transactions.
+        case startedEnhancing
+
+        /// Event sent when the CompactBlockProcessor starts fetching of the UTXOs.
+        case startedFetching
+
+        /// Event sent when the CompactBlockProcessor starts syncing.
+        case startedSyncing
+
+        /// Event sent when the CompactBlockProcessor stops syncing.
+        case stopped
+    }
+
     /// Compact Block Processor configuration
     ///
     /// - parameter fsBlockCacheRoot: absolute root path where the filesystem block cache will be stored.
@@ -343,6 +274,9 @@ actor CompactBlockProcessor {
             return false
         }
     }
+
+    var eventStream: AnyPublisher<Event, Never> { eventPublisher.eraseToAnyPublisher() }
+    private let eventPublisher = PassthroughSubject<Event, Never>()
 
     let blockDownloaderService: BlockDownloaderService
     let blockDownloader: BlockDownloader
@@ -720,7 +654,8 @@ actor CompactBlockProcessor {
                     anyActionExecuted = true
                     LoggerProxy.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
                     state = .fetching
-                    try await utxoFetcher.fetch(at: range)
+                    let result = try await utxoFetcher.fetch(at: range)
+                    eventPublisher.send(.storedUTXOs(result))
                 }
 
                 state = .handlingSaplingFiles
@@ -858,27 +793,12 @@ actor CompactBlockProcessor {
     }
 
     func notifyProgress(_ progress: CompactBlockProgress) {
-        var userInfo: [AnyHashable: Any] = [:]
-        userInfo[CompactBlockProcessorNotificationKey.progress] = progress
-
         LoggerProxy.debug("progress: \(progress)")
-
-        NotificationSender.default.post(
-            name: Notification.Name.blockProcessorUpdated,
-            object: self,
-            userInfo: userInfo
-        )
+        eventPublisher.send(.progressUpdated(progress))
     }
     
     func notifyTransactions(_ txs: [ZcashTransaction.Overview], in range: CompactBlockRange) {
-        NotificationSender.default.post(
-            name: .blockProcessorFoundTransactions,
-            object: self,
-            userInfo: [
-                CompactBlockProcessorNotificationKey.foundTransactions: txs,
-                CompactBlockProcessorNotificationKey.foundTransactionsRange: range
-            ]
-        )
+        eventPublisher.send(.foundTransactions(txs, range))
     }
 
     func determineLowerBound(
@@ -991,16 +911,9 @@ actor CompactBlockProcessor {
         do {
             try blockDownloaderService.rewind(to: rewindHeight)
             await internalSyncProgress.rewind(to: rewindHeight)
-            
-            // notify reorg
-            NotificationSender.default.post(
-                name: Notification.Name.blockProcessorHandledReOrg,
-                object: self,
-                userInfo: [
-                    CompactBlockProcessorNotificationKey.reorgHeight: height, CompactBlockProcessorNotificationKey.rewindHeight: rewindHeight
-                ]
-            )
-            
+
+            eventPublisher.send(.handledReorg(height, rewindHeight))
+
             // process next batch
             await self.nextBatch()
         } catch {
@@ -1020,21 +933,9 @@ actor CompactBlockProcessor {
     }
     
     private func processingFinished(height: BlockHeight) async {
-        NotificationSender.default.post(
-            name: Notification.Name.blockProcessorFinished,
-            object: self,
-            userInfo: [
-                CompactBlockProcessorNotificationKey.latestScannedBlockHeight: height,
-                CompactBlockProcessorNotificationKey.foundBlocks: self.foundBlocks
-            ]
-        )
+        eventPublisher.send(.finished(height, foundBlocks))
         state = .synced
         await setTimer()
-        NotificationSender.default.post(
-            name: Notification.Name.blockProcessorIdle,
-            object: self,
-            userInfo: nil
-        )
     }
 
     private func clearCompactBlockCache() async throws {
@@ -1077,40 +978,28 @@ actor CompactBlockProcessor {
             return
         }
 
-        NotificationSender.default.post(
-            name: .blockProcessorStatusChanged,
-            object: self,
-            userInfo: [
-                CompactBlockProcessorNotificationKey.previousStatus: oldValue,
-                CompactBlockProcessorNotificationKey.newStatus: newValue
-            ]
-        )
-        
         switch newValue {
         case .error(let err):
             notifyError(err)
         case .stopped:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorStopped, object: self)
+            eventPublisher.send(.stopped)
         case .enhancing:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedEnhancing, object: self)
+            eventPublisher.send(.startedEnhancing)
         case .fetching:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedFetching, object: self)
+            eventPublisher.send(.startedFetching)
         case .handlingSaplingFiles:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorHandlingSaplingFiles, object: self)
+            // We don't report this to outside world as separate phase for now.
+            break
         case .synced:
             // transition to this state is handled by `processingFinished(height: BlockHeight)`
             break
         case .syncing:
-            NotificationSender.default.post(name: Notification.Name.blockProcessorStartedSyncing, object: self)
+            eventPublisher.send(.startedSyncing)
         }
     }
 
     private func notifyError(_ err: Error) {
-        NotificationSender.default.post(
-            name: Notification.Name.blockProcessorFailed,
-            object: self,
-            userInfo: [CompactBlockProcessorNotificationKey.error: mapError(err)]
-        )
+        eventPublisher.send(.failed(mapError(err)))
     }
     // TODO: [#713] encapsulate service errors better, https://github.com/zcash/ZcashLightClientKit/issues/713
 }
@@ -1317,16 +1206,6 @@ extension CompactBlockProcessorError: LocalizedError {
     /// A localized message providing "help" text if the user requests help.
     public var helpAnchor: String? {
         self.localizedDescription
-    }
-}
-
-extension CompactBlockProcessor: EnhancementStreamDelegate {
-    func transactionEnhancementProgressUpdated(_ progress: EnhancementProgress) {
-        NotificationSender.default.post(
-            name: .blockProcessorEnhancementProgress,
-            object: self,
-            userInfo: [CompactBlockProcessorNotificationKey.enhancementProgress: progress]
-        )
     }
 }
 

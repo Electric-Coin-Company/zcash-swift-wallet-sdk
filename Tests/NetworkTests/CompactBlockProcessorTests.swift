@@ -6,6 +6,7 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -24,23 +25,26 @@ class CompactBlockProcessorTests: XCTestCase {
         )
     }()
 
+    var cancellables: [AnyCancellable] = []
+    let processorEventHandler = CompactBlockProcessorEventHandler()
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
-    var idleNotificationExpectation: XCTestExpectation!
+    var finishedNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-    let testFileManager = FileManager()
     let testTempDirectory = URL(fileURLWithPath: NSString(
         string: NSTemporaryDirectory()
     )
         .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
+    let testFileManager = FileManager()
+
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
         XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
@@ -81,6 +85,7 @@ class CompactBlockProcessorTests: XCTestCase {
             backend: realRustBackend,
             config: processorConfig
         )
+
         let dbInit = try realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
 
         guard case .success = dbInit else {
@@ -91,29 +96,29 @@ class CompactBlockProcessorTests: XCTestCase {
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
-        idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(processorFailed(_:)),
-            name: Notification.Name.blockProcessorFailed,
-            object: processor
-        )
+        finishedNotificationExpectation = XCTestExpectation(description: "\(self.description) finishedNotificationExpectation")
+
+        var stream: AnyPublisher<CompactBlockProcessor.Event, Never>!
+        XCTestCase.wait { await stream = self.processor.eventStream }
+        stream
+            .sink { [weak self] event in
+                switch event {
+                case .failed: self?.processorFailed(event: event)
+                default: break
+                }
+            }
+            .store(in: &cancellables)
     }
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        syncStartedExpect.unsubscribeFromNotifications()
-        stopNotificationExpectation.unsubscribeFromNotifications()
-        updatedNotificationExpectation.unsubscribeFromNotifications()
-        idleNotificationExpectation.unsubscribeFromNotifications()
         NotificationCenter.default.removeObserver(self)
     }
     
-    @objc func processorFailed(_ notification: Notification) {
-        XCTAssertNotNil(notification.userInfo)
-        if let error = notification.userInfo?["error"] {
+    func processorFailed(event: CompactBlockProcessor.Event) {
+        if case let .failed(error) = event {
             XCTFail("CompactBlockProcessor failed with Error: \(error)")
         } else {
             XCTFail("CompactBlockProcessor failed")
@@ -122,13 +127,15 @@ class CompactBlockProcessorTests: XCTestCase {
     
     private func startProcessing() async {
         XCTAssertNotNil(processor)
-        
-        // Subscribe to notifications
-        syncStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedSyncing, object: processor)
-        stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
-        updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorIdle, object: processor)
-        
+
+        let expectations: [CompactBlockProcessorEventHandler.EventIdentifier: XCTestExpectation] = [
+            .startedSyncing: syncStartedExpect,
+            .stopped: stopNotificationExpectation,
+            .progressUpdated: updatedNotificationExpectation,
+            .finished: finishedNotificationExpectation
+        ]
+        processorEventHandler.subscribe(to: await processor.eventStream, expectations: expectations)
+
         await processor.start()
     }
 
@@ -138,7 +145,7 @@ class CompactBlockProcessorTests: XCTestCase {
         wait(
             for: [
                 syncStartedExpect,
-                idleNotificationExpectation
+                finishedNotificationExpectation
             ],
             timeout: 30,
             enforceOrder: false
@@ -154,7 +161,7 @@ class CompactBlockProcessorTests: XCTestCase {
         updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
         
         await startProcessing()
-        wait(for: [updatedNotificationExpectation, idleNotificationExpectation], timeout: 300)
+        wait(for: [updatedNotificationExpectation, finishedNotificationExpectation], timeout: 300)
     }
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {

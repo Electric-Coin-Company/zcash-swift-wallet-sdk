@@ -6,6 +6,7 @@
 //
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -30,20 +31,22 @@ class CompactBlockReorgTests: XCTestCase {
         .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
     let testFileManager = FileManager()
+    var cancellables: [AnyCancellable] = []
+    let processorEventHandler = CompactBlockProcessorEventHandler()
 
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
-    var idleNotificationExpectation: XCTestExpectation!
+    var finishedNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
         XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
@@ -99,40 +102,31 @@ class CompactBlockReorgTests: XCTestCase {
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
-        idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
+        finishedNotificationExpectation = XCTestExpectation(description: "\(self.description) finishedNotificationExpectation")
         reorgNotificationExpectation = XCTestExpectation(description: "\(self.description) reorgNotificationExpectation")
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(processorHandledReorg(_:)),
-            name: Notification.Name.blockProcessorHandledReOrg,
-            object: processor
-        )
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(processorFailed(_:)),
-            name: Notification.Name.blockProcessorFailed,
-            object: processor
-        )
+        var stream: AnyPublisher<CompactBlockProcessor.Event, Never>!
+        XCTestCase.wait { await stream = self.processor.eventStream }
+        stream
+            .sink { [weak self] event in
+                switch event {
+                case .failed: self?.processorFailed(event: event)
+                case .handledReorg: self?.processorHandledReorg(event: event)
+                default: break
+                }
+            }
+            .store(in: &cancellables)
     }
     
     override func tearDown() {
         super.tearDown()
         try! FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        syncStartedExpect.unsubscribeFromNotifications()
-        stopNotificationExpectation.unsubscribeFromNotifications()
-        updatedNotificationExpectation.unsubscribeFromNotifications()
-        idleNotificationExpectation.unsubscribeFromNotifications()
-        reorgNotificationExpectation.unsubscribeFromNotifications()
         NotificationCenter.default.removeObserver(self)
     }
     
-    @objc func processorHandledReorg(_ notification: Notification) {
-        XCTAssertNotNil(notification.userInfo)
-        if  let reorg = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
-            let rewind = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight {
+    func processorHandledReorg(event: CompactBlockProcessor.Event) {
+        if case let .handledReorg(reorg, rewind) = event {
             XCTAssertTrue( reorg == 0 || reorg > self.network.constants.saplingActivationHeight)
             XCTAssertTrue( rewind == 0 || rewind > self.network.constants.saplingActivationHeight)
             XCTAssertTrue( rewind <= reorg )
@@ -142,9 +136,8 @@ class CompactBlockReorgTests: XCTestCase {
         }
     }
     
-    @objc func processorFailed(_ notification: Notification) {
-        XCTAssertNotNil(notification.userInfo)
-        if let error = notification.userInfo?["error"] {
+    func processorFailed(event: CompactBlockProcessor.Event) {
+        if case let .failed(error) = event {
             XCTFail("CompactBlockProcessor failed with Error: \(error)")
         } else {
             XCTFail("CompactBlockProcessor failed")
@@ -153,13 +146,15 @@ class CompactBlockReorgTests: XCTestCase {
     
     private func startProcessing() async {
         XCTAssertNotNil(processor)
-        
-        // Subscribe to notifications
-        syncStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedSyncing, object: processor)
-        stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
-        updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
-        idleNotificationExpectation.subscribe(to: Notification.Name.blockProcessorFinished, object: processor)
-        reorgNotificationExpectation.subscribe(to: Notification.Name.blockProcessorHandledReOrg, object: processor)
+
+        let expectations: [CompactBlockProcessorEventHandler.EventIdentifier: XCTestExpectation] = [
+            .startedSyncing: syncStartedExpect,
+            .stopped: stopNotificationExpectation,
+            .progressUpdated: updatedNotificationExpectation,
+            .finished: finishedNotificationExpectation,
+            .handleReorg: reorgNotificationExpectation
+        ]
+        processorEventHandler.subscribe(to: await processor.eventStream, expectations: expectations)
 
         await processor.start()
     }
@@ -171,7 +166,7 @@ class CompactBlockReorgTests: XCTestCase {
             for: [
                 syncStartedExpect,
                 reorgNotificationExpectation,
-                idleNotificationExpectation
+                finishedNotificationExpectation
             ],
             timeout: 300,
             enforceOrder: true

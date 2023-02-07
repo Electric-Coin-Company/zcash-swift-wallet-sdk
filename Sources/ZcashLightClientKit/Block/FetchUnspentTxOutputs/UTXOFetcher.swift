@@ -19,7 +19,7 @@ struct UTXOFetcherConfig {
 }
 
 protocol UTXOFetcher {
-    func fetch(at range: CompactBlockRange) async throws
+    func fetch(at range: CompactBlockRange) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 }
 
 struct UTXOFetcherImpl {
@@ -31,7 +31,7 @@ struct UTXOFetcherImpl {
 }
 
 extension UTXOFetcherImpl: UTXOFetcher {
-    func fetch(at range: CompactBlockRange) async throws {
+    func fetch(at range: CompactBlockRange) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
         try Task.checkCancellation()
 
         let tAddresses = try accountRepository.getAll()
@@ -96,16 +96,12 @@ extension UTXOFetcherImpl: UTXOFetcher {
 
         let result = (inserted: refreshed, skipped: skipped)
 
-        NotificationSender.default.post(
-            name: .blockProcessorStoredUTXOs,
-            object: self,
-            userInfo: [CompactBlockProcessorNotificationKey.refreshedUTXOs: result]
-        )
-
         await internalSyncProgress.set(range.upperBound, .latestUTXOFetchedHeight)
 
         if Task.isCancelled {
             LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
         }
+
+        return result
     }
 }

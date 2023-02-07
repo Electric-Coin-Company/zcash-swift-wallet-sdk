@@ -259,11 +259,11 @@ public class Initializer {
             endpoint: endpoint,
             connectionStateChange: { oldState, newState in
                 NotificationSender.default.post(
-                    name: .blockProcessorConnectivityStateChanged,
-                    object: nil,
+                    name: .synchronizerConnectionStateChanged,
+                    object: self,
                     userInfo: [
-                        CompactBlockProcessorNotificationKey.currentConnectivityStatus: newState,
-                        CompactBlockProcessorNotificationKey.previousConnectivityStatus: oldState
+                        SDKSynchronizer.NotificationKeys.previousConnectionState: oldState,
+                        SDKSynchronizer.NotificationKeys.currentConnectionState: newState
                     ]
                 )
             }

@@ -72,7 +72,7 @@ class SyncBlocksViewController: UIViewController {
                 .store(in: &notificationCancellables)
         }
 
-        NotificationCenter.default.publisher(for: .blockProcessorStartedEnhancing, object: nil)
+        NotificationCenter.default.publisher(for: .synchronizerEnhancing, object: nil)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 self?.accumulateMetrics()
@@ -82,7 +82,7 @@ class SyncBlocksViewController: UIViewController {
             }
             .store(in: &notificationCancellables)
 
-        NotificationCenter.default.publisher(for: .blockProcessorUpdated, object: nil)
+        NotificationCenter.default.publisher(for: .synchronizerProgressUpdated, object: nil)
             .throttle(for: 5, scheduler: DispatchQueue.main, latest: true)
             .receive(on: DispatchQueue.main)
             .map { [weak self] _ -> SDKMetrics.BlockMetricReport? in
@@ -94,7 +94,7 @@ class SyncBlocksViewController: UIViewController {
             }
             .store(in: &notificationCancellables)
 
-        NotificationCenter.default.publisher(for: .blockProcessorFinished, object: nil)
+        NotificationCenter.default.publisher(for: .synchronizerSynced, object: nil)
             .receive(on: DispatchQueue.main)
             .delay(for: 0.5, scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
