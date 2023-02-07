@@ -12,5 +12,6 @@ protocol ReceivedNoteRepository {
 }
 
 protocol SentNotesRepository {
+    func getRecipients(for id: Int) -> [TransactionRecipient]
     func count() throws -> Int
 }

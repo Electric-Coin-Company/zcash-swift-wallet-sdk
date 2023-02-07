@@ -1,3 +1,15 @@
+# 0.18.1-beta
+ - [#767] implement getRecipients() for Synchronizer.
+    
+This implements `getRecipients()` function which retrieves the possible
+recipients from a sent transaction. These can either be addresses or
+internal accounts depending on the transaction being a shielding tx
+or a regular outgoing transaction.
+
+ Other changes:
+    - Fix version of zcash-light-client-ffi to 0.1.1
+    
+    - Enhance error reporting on a test make Mock comply with protocol
 # 0.18.0-beta
 
 ## Farewell Cocoapods.

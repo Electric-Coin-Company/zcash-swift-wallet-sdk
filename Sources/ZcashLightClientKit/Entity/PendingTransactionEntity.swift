@@ -7,6 +7,8 @@
 
 import Foundation
 
+public typealias TransactionRecipient = PendingTransactionRecipient
+
 public enum PendingTransactionRecipient: Equatable {
     case address(Recipient)
     case internalAccount(UInt32)

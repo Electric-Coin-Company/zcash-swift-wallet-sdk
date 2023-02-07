@@ -56,7 +56,7 @@ class WalletTests: XCTestCase {
                 return
             }
         } catch {
-            XCTFail("shouldn't fail here")
+            XCTFail("shouldn't fail here. Got error: \(error)")
         }
         
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)

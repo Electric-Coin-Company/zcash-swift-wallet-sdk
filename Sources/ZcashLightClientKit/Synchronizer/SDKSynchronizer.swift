@@ -569,6 +569,14 @@ public class SDKSynchronizer: Synchronizer {
         return try transactionRepository.findMemos(for: sentTransaction)
     }
 
+    public func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient] {
+        return transactionRepository.getRecipients(for: transaction.id)
+    }
+
+    public func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient] {
+        return transactionRepository.getRecipients(for: transaction.id)
+    }
+
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         Task {
             do {

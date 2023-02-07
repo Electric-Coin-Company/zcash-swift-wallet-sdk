@@ -73,6 +73,10 @@ extension MockTransactionRepository.Kind: Equatable {}
 
 // MARK: - TransactionRepository
 extension MockTransactionRepository: TransactionRepository {
+    func getRecipients(for id: Int) -> [TransactionRecipient] {
+        []
+    }
+
     func closeDBConnection() { }
 
     func countAll() throws -> Int {
