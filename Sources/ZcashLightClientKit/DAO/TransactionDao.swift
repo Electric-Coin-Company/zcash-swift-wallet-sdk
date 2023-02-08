@@ -80,12 +80,12 @@ class TransactionSQLDAO: TransactionRepository {
         return try execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
+    func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
         let query = transactionsView
             .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, ZcashTransaction.Overview.Column.id.desc)
             .filter(
-                ZcashTransaction.Overview.Column.minedHeight >= BlockHeight(range.start.height) &&
-                ZcashTransaction.Overview.Column.minedHeight <= BlockHeight(range.end.height)
+                ZcashTransaction.Overview.Column.minedHeight >= BlockHeight(range.lowerBound) &&
+                ZcashTransaction.Overview.Column.minedHeight <= BlockHeight(range.upperBound)
             )
             .filterQueryFor(kind: kind)
             .limit(limit)
@@ -98,14 +98,18 @@ class TransactionSQLDAO: TransactionRepository {
             let transactionIndex = transaction.index,
             let transactionBlockTime = transaction.blockTime
         else { throw TransactionRepositoryError.transactionMissingRequiredFields }
-
+        
         let query = transactionsView
-            .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, ZcashTransaction.Overview.Column.id.desc)
-            .filter(Int64(transactionBlockTime) > ZcashTransaction.Overview.Column.blockTime
-            && transactionIndex > ZcashTransaction.Overview.Column.index)
+            .order(
+                (ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, ZcashTransaction.Overview.Column.id.desc
+            )
+            .filter(
+                Int64(transactionBlockTime) > ZcashTransaction.Overview.Column.blockTime
+                && transactionIndex > ZcashTransaction.Overview.Column.index
+            )
             .filterQueryFor(kind: kind)
             .limit(limit)
-
+        
         return try execute(query) { try ZcashTransaction.Overview(row: $0) }
     }
 

@@ -14,13 +14,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     private var outputParamsURL: URL
     private var spendParamsURL: URL
     private var dataDbURL: URL
-    private var cacheDbURL: URL
+    private var fsBlockDbRoot: URL
     private var networkType: NetworkType
     
     init(
         rust: ZcashRustBackendWelding.Type,
         dataDb: URL,
-        cacheDb: URL,
+        fsBlockDbRoot: URL,
         repository: TransactionRepository,
         outputParams: URL,
         spendParams: URL,
@@ -28,7 +28,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     ) {
         self.rustBackend = rust
         self.dataDbURL = dataDb
-        self.cacheDbURL = cacheDb
+        self.fsBlockDbRoot = fsBlockDbRoot
         self.repository = repository
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
@@ -39,7 +39,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.init(
             rust: initializer.rustBackend,
             dataDb: initializer.dataDbURL,
-            cacheDb: initializer.cacheDbURL,
+            fsBlockDbRoot: initializer.fsBlockDbRoot,
             repository: initializer.transactionRepository,
             outputParams: initializer.outputParamsURL,
             spendParams: initializer.spendParamsURL,
@@ -101,11 +101,13 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     func createShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
+        shieldingThreshold: Zatoshi,
         memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> ZcashTransaction.Overview {
         let txId = try createShieldingSpend(
             spendingKey: spendingKey,
+            shieldingThreshold: shieldingThreshold,
             memo: memoBytes,
             accountIndex: accountIndex
         )
@@ -120,6 +122,7 @@ class WalletTransactionEncoder: TransactionEncoder {
 
     func createShieldingSpend(
         spendingKey: UnifiedSpendingKey,
+        shieldingThreshold: Zatoshi,
         memo: MemoBytes?,
         accountIndex: Int
     ) throws -> Int {
@@ -128,10 +131,10 @@ class WalletTransactionEncoder: TransactionEncoder {
         }
         
         let txId = rustBackend.shieldFunds(
-            dbCache: self.cacheDbURL,
             dbData: self.dataDbURL,
             usk: spendingKey,
             memo: memo,
+            shieldingThreshold: shieldingThreshold,
             spendParamsPath: self.spendParamsURL.path,
             outputParamsPath: self.outputParamsURL.path,
             networkType: networkType

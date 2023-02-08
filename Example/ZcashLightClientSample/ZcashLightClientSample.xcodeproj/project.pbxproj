@@ -318,7 +318,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0D907F3A2322CC5B00D641FE /* Build configuration list for PBXNativeTarget "ZcashLightClientSample" */;
 			buildPhases = (
-				0DCB58A4237B5B580040096C /* ShellScript */,
+				0DCB58A4237B5B580040096C /* Swiftlint */,
 				0D907F0E2322CC5900D641FE /* Sources */,
 				0D907F0F2322CC5900D641FE /* Frameworks */,
 				0D907F102322CC5900D641FE /* Resources */,
@@ -361,7 +361,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0DA1C4D927D11D9500E5006E /* Build configuration list for PBXNativeTarget "ZcashLightClientSample-Mainnet" */;
 			buildPhases = (
-				0DA1C4BA27D11D9500E5006E /* ShellScript */,
+				0DA1C4BA27D11D9500E5006E /* Swiftlint */,
 				0DA1C4BB27D11D9500E5006E /* Sources */,
 				0DA1C4CE27D11D9500E5006E /* Frameworks */,
 				0DA1C4D427D11D9500E5006E /* Resources */,
@@ -459,7 +459,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0DA1C4BA27D11D9500E5006E /* ShellScript */ = {
+		0DA1C4BA27D11D9500E5006E /* Swiftlint */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -468,15 +468,16 @@
 			);
 			inputPaths = (
 			);
+			name = Swiftlint;
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../\nif which swiftlint >/dev/null; then\n  swiftlint lint --config .swiftlint.yml\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = "cd ../../\n./Tools/swiftlint lint --config .swiftlint.yml\n";
 		};
-		0DCB58A4237B5B580040096C /* ShellScript */ = {
+		0DCB58A4237B5B580040096C /* Swiftlint */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -486,13 +487,14 @@
 			);
 			inputPaths = (
 			);
+			name = Swiftlint;
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../\nif which swiftlint >/dev/null; then\n  swiftlint lint --config .swiftlint.yml\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = "cd ../../\n./Tools/swiftlint lint --config .swiftlint.yml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

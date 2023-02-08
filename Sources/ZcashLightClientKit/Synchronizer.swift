@@ -119,7 +119,8 @@ public protocol Synchronizer {
     /// - Parameter memo: the optional memo to include as part of the transaction.
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
-        memo: Memo
+        memo: Memo,
+        shieldingThreshold: Zatoshi
     ) async throws -> PendingTransactionEntity
 
     /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only

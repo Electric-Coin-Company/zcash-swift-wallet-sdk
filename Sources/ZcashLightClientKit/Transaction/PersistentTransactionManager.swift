@@ -67,11 +67,13 @@ class PersistentTransactionManager: OutboundTransactionManager {
     
     func encodeShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
+        shieldingThreshold: Zatoshi,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         do {
             let transaction = try await self.encoder.createShieldingTransaction(
                 spendingKey: spendingKey,
+                shieldingThreshold: shieldingThreshold,
                 memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
                 from: pendingTransaction.accountIndex
             )
@@ -86,7 +88,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             try self.repository.update(pending)
             
             return pending
-        } catch StorageError.updateFailed {
+        } catch DatabaseStorageError.updateFailed {
             throw TransactionManagerError.updateFailed(pendingTransaction)
         } catch MemoBytes.Errors.invalidUTF8 {
             throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")
@@ -135,7 +137,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             try self.repository.update(pending)
             
             return pending
-        } catch StorageError.updateFailed {
+        } catch DatabaseStorageError.updateFailed {
             throw TransactionManagerError.updateFailed(pendingTransaction)
         } catch {
             do {

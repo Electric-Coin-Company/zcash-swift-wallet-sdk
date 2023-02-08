@@ -305,8 +305,8 @@ public class SDKSynchronizer: Synchronizer {
     @objc func connectivityStateChanged(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let previous = userInfo[CompactBlockProcessorNotificationKey.previousConnectivityStatus] as? ConnectivityState,
-            let current = userInfo[CompactBlockProcessorNotificationKey.currentConnectivityStatus] as? ConnectivityState
+            let previous = userInfo[CompactBlockProcessorNotificationKey.previousConnectivityStatus] as? ConnectionState,
+            let current = userInfo[CompactBlockProcessorNotificationKey.currentConnectivityStatus] as? ConnectionState
         else {
             LoggerProxy.error(
                 "Found \(Notification.Name.blockProcessorConnectivityStateChanged) but lacks dictionary information." +
@@ -315,17 +315,16 @@ public class SDKSynchronizer: Synchronizer {
             return
         }
 
-        let currentState = ConnectionState(current)
         NotificationSender.default.post(
             name: .synchronizerConnectionStateChanged,
             object: self,
             userInfo: [
-                NotificationKeys.previousConnectionState: ConnectionState(previous),
-                NotificationKeys.currentConnectionState: currentState
+                NotificationKeys.previousConnectionState: previous,
+                NotificationKeys.currentConnectionState: current
             ]
         )
 
-        connectionState = currentState
+        connectionState = current
     }
 
     @objc func transactionsFound(_ notification: Notification) {
@@ -473,7 +472,8 @@ public class SDKSynchronizer: Synchronizer {
 
     public func shieldFunds(
         spendingKey: UnifiedSpendingKey,
-        memo: Memo
+        memo: Memo,
+        shieldingThreshold: Zatoshi
     ) async throws -> PendingTransactionEntity {
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
@@ -495,6 +495,7 @@ public class SDKSynchronizer: Synchronizer {
             // TODO: [#487] Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
             let transaction = try await transactionManager.encodeShieldingTransaction(
                 spendingKey: spendingKey,
+                shieldingThreshold: shieldingThreshold,
                 pendingTransaction: shieldingSpend
             )
 
@@ -580,7 +581,7 @@ public class SDKSynchronizer: Synchronizer {
     public func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void) {
         Task {
             do {
-                let latestBlockHeight = try await blockProcessor.downloader.latestBlockHeightAsync()
+                let latestBlockHeight = try await blockProcessor.blockDownloaderService.latestBlockHeightAsync()
                 result(.success(latestBlockHeight))
             } catch {
                 result(.failure(error))
@@ -589,7 +590,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.downloader.latestBlockHeight()
+        try await blockProcessor.blockDownloaderService.latestBlockHeightAsync()
     }
 
     public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
@@ -600,6 +601,7 @@ public class SDKSynchronizer: Synchronizer {
         let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
         
         do {
+            // swiftlint:disable:next array_constructor
             var utxos: [UnspentTransactionOutputEntity] = []
             for try await transactionEntity in stream {
                 utxos.append(transactionEntity)
@@ -691,7 +693,7 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager.closeDBConnection()
         transactionRepository.closeDBConnection()
 
-        try? FileManager.default.removeItem(at: initializer.cacheDbURL)
+        try? FileManager.default.removeItem(at: initializer.fsBlockDbRoot)
         try? FileManager.default.removeItem(at: initializer.pendingDbURL)
         try? FileManager.default.removeItem(at: initializer.dataDbURL)
 
@@ -892,24 +894,6 @@ extension SDKSynchronizer {
 
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
-    }
-}
-
-import GRPC
-extension ConnectionState {
-    init(_ connectivityState: ConnectivityState) {
-        switch connectivityState {
-        case .connecting:
-            self = .connecting
-        case .idle:
-            self = .idle
-        case .ready:
-            self = .online
-        case .shutdown:
-            self = .shutdown
-        case .transientFailure:
-            self = .reconnecting
-        }
     }
 }
 

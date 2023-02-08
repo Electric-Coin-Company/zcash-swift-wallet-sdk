@@ -50,7 +50,7 @@ class SynchronizerTests: XCTestCase {
         for _ in 1...5 {
             let databases = TemporaryDbBuilder.build()
             let initializer = Initializer(
-                cacheDbURL: databases.cacheDB,
+                fsBlockDbRoot: databases.fsCacheDbRoot,
                 dataDbURL: databases.dataDB,
                 pendingDbURL: databases.pendingDB,
                 endpoint: endpoint,
@@ -63,7 +63,7 @@ class SynchronizerTests: XCTestCase {
                 loggerProxy: OSLogger(logLevel: .debug)
             )
             
-            try? FileManager.default.removeItem(at: databases.cacheDB)
+            try? FileManager.default.removeItem(at: databases.fsCacheDbRoot)
             try? FileManager.default.removeItem(at: databases.dataDB)
             try? FileManager.default.removeItem(at: databases.pendingDB)
             

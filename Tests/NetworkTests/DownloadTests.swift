@@ -11,18 +11,44 @@ import SQLite
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_try
 class DownloadTests: XCTestCase {
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
     var network = ZcashNetworkBuilder.network(for: .testnet)
 
-    override func tearDown() {
-        super.tearDown()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+    }
+
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
+        try? testFileManager.removeItem(at: testTempDirectory)
     }
 
     func testSingleDownload() async throws {
-        let service = LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.eccTestnet)
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
-        let downloader = CompactBlockDownloader(service: service, storage: storage)
+        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let blockCount = 100
         let activationHeight = network.constants.saplingActivationHeight
         let range = activationHeight ... activationHeight + blockCount
@@ -31,19 +57,20 @@ class DownloadTests: XCTestCase {
             for: network,
             walletBirthday: network.constants.saplingActivationHeight
         )
+
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            backend: realRustBackend,
             config: processorConfig
         )
         
         do {
-            try await compactBlockProcessor.compactBlockDownload(downloader: downloader, range: range)
+            try await compactBlockProcessor.blockDownloaderService.downloadBlockRange(range)
         } catch {
             XCTFail("Download failed with error: \(error)")
         }
         
-        XCTAssertEqual(try! storage.latestHeight(), range.upperBound)
+        XCTAssertEqual(storage.latestHeight(), range.upperBound)
     }
 }

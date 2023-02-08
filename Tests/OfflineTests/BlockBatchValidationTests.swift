@@ -11,17 +11,48 @@ import XCTest
 
 // swiftlint:disable force_try type_body_length
 class BlockBatchValidationTests: XCTestCase {
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+    }
+
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
+        try? testFileManager.removeItem(at: testTempDirectory)
+    }
+
     func testBranchIdFailure() async throws {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -54,7 +85,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -70,13 +101,27 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -109,7 +154,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -125,13 +170,27 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .testnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -164,7 +223,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -180,13 +239,27 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         )
-        let storage = try! TestDbBuilder.inMemoryCompactBlockStorage()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+
+        try storage.create()
+
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -220,7 +293,7 @@ class BlockBatchValidationTests: XCTestCase {
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloader: downloader)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -241,7 +314,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1210000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         )
         let expectedStoredLatestHeight = BlockHeight(1220000)
         let expectedResult = CompactBlockProcessor.NextState.wait(
@@ -250,10 +323,10 @@ class BlockBatchValidationTests: XCTestCase {
         )
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoredLatestHeight)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
 
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -291,7 +364,7 @@ class BlockBatchValidationTests: XCTestCase {
         do {
             nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
-                downloader: downloader,
+                downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
@@ -325,7 +398,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         )
         let expectedStoreLatestHeight = BlockHeight(1220000)
         let walletBirthday = BlockHeight(1210000)
@@ -340,9 +413,9 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedResult = CompactBlockProcessor.NextState.processNewBlocks(ranges: ranges)
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -380,7 +453,7 @@ class BlockBatchValidationTests: XCTestCase {
         do {
             nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
-                downloader: downloader,
+                downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
@@ -414,15 +487,15 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletGRPCService(endpoint: LightWalletEndpointBuilder.default)
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         )
         let expectedStoreLatestHeight = BlockHeight(1230000)
         let walletBirthday = BlockHeight(1210000)
         let expectedResult = CompactBlockProcessor.NextState.finishProcessing(height: expectedStoreLatestHeight)
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
-        let downloader = CompactBlockDownloader(service: service, storage: repository)
+        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
-            cacheDb: try!  __cacheDbURL(),
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -464,7 +537,7 @@ class BlockBatchValidationTests: XCTestCase {
         do {
             nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
                 service: service,
-                downloader: downloader,
+                downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,

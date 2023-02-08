@@ -86,10 +86,6 @@ func __documentsDirectory() throws -> URL {
     try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
 }
 
-func __cacheDbURL() throws -> URL {
-    try __documentsDirectory().appendingPathComponent("cache.db", isDirectory: false)
-}
-
 func __dataDbURL() throws -> URL {
     try __documentsDirectory().appendingPathComponent("data.db", isDirectory: false)
 }

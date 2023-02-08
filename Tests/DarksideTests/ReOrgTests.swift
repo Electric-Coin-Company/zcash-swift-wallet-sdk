@@ -57,7 +57,6 @@ class ReOrgTests: XCTestCase {
         self.coordinator = try TestCoordinator(
             seed: self.seedPhrase,
             walletBirthday: self.birthday,
-            channelProvider: ChannelProvider(),
             network: self.network
         )
 
@@ -68,7 +67,7 @@ class ReOrgTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? FileManager.default.removeItem(at: coordinator.databases.cacheDB)
+        try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
@@ -159,7 +158,7 @@ class ReOrgTests: XCTestCase {
         verify that mock height has been reached
         */
         var latestDownloadedHeight = BlockHeight(0)
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.downloader.latestBlockHeight() }())
+        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
         XCTAssertTrue(latestDownloadedHeight > 0)
         
         /**
@@ -190,7 +189,7 @@ class ReOrgTests: XCTestCase {
         
         // now everything should be fine. latest block should be targetHeight
         
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.downloader.latestBlockHeight() }())
+        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
         XCTAssertEqual(latestDownloadedHeight, targetHeight)
     }
     

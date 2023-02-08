@@ -39,16 +39,16 @@ enum DarksideDataset: String {
 
 class DarksideWalletService: LightWalletService {
     var channel: Channel
-    var service: LightWalletGRPCService
+    var service: LightWalletService
     var darksideService: DarksideStreamerClient
 
     init(endpoint: LightWalletEndpoint) {
         self.channel = ChannelProvider().channel()
-        self.service = LightWalletGRPCService(endpoint: endpoint)
+        self.service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
 
-    init(service: LightWalletGRPCService) {
+    init(service: LightWalletService) {
         self.channel = ChannelProvider().channel()
         self.darksideService = DarksideStreamerClient(channel: channel)
         self.service = service
@@ -177,6 +177,8 @@ class DarksideWalletService: LightWalletService {
 }
 
 enum DarksideWalletDConstants: NetworkConstants {
+    static var defaultFsBlockDbRootName = "fs_cache"
+
     static var saplingActivationHeight: BlockHeight {
         663150
     }

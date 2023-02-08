@@ -66,7 +66,7 @@ actor InternalSyncProgress {
     }
 
     /// `InternalSyncProgress` is from now on used to track which block were already downloaded. Previous versions of the SDK were using cache DB to
-    /// track this. Because of this we have to migrace height of latest downloaded block from cache DB to here.
+    /// track this. Because of this we have to migrate height of latest downloaded block from cache DB to here.
     ///
     /// - Parameter latestDownloadedBlockHeight: Height of latest downloaded block from cache DB.
     func migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB latestDownloadedBlockHeight: BlockHeight) {

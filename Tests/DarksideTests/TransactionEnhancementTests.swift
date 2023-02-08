@@ -17,12 +17,18 @@ class TransactionEnhancementTests: XCTestCase {
     let network = DarksideWalletDNetwork()
     let branchID = "2bb40e60"
     let chainName = "main"
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
 
     var initializer: Initializer!
     var processorConfig: CompactBlockProcessor.Configuration!
     var processor: CompactBlockProcessor!
     var darksideWalletService: DarksideWalletService!
-    var downloader: CompactBlockDownloader!
+    var downloader: BlockDownloaderServiceImpl!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
@@ -34,6 +40,7 @@ class TransactionEnhancementTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
         logger = OSLogger(logLevel: .debug)
@@ -54,7 +61,7 @@ class TransactionEnhancementTests: XCTestCase {
         let rustBackend = ZcashRustBackend.self
         processorConfig = config
         
-        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
 
         let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
@@ -94,10 +101,19 @@ class TransactionEnhancementTests: XCTestCase {
         
         let service = DarksideWalletService()
         darksideWalletService = service
-        let storage = CompactBlockStorage.init(connectionProvider: SimpleConnectionProvider(path: processorConfig.cacheDb.absoluteString))
-        try! storage.createTable()
         
-        downloader = CompactBlockDownloader(service: service, storage: storage)
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: rustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
+        )
+        try! storage.create()
+        
+        downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         processor = CompactBlockProcessor(
             service: service,
             storage: storage,
@@ -115,7 +131,7 @@ class TransactionEnhancementTests: XCTestCase {
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? FileManager.default.removeItem(at: processorConfig.cacheDb)
+        try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         syncStartedExpect.unsubscribeFromNotifications()
         stopNotificationExpectation.unsubscribeFromNotifications()

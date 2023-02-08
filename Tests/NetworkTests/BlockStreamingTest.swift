@@ -11,25 +11,35 @@ import XCTest
 
 // swiftlint:disable print_function_usage
 class BlockStreamingTest: XCTestCase {
+    let testTempDirectory = URL(fileURLWithPath: NSString(
+        string: NSTemporaryDirectory()
+    )
+        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    let testFileManager = FileManager()
+
     override func setUpWithError() throws {
         try super.setUpWithError()
+        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? FileManager.default.removeItem(at: __dataDbURL())
+        try? testFileManager.removeItem(at: testTempDirectory)
     }
 
     func testStream() async throws {
-        let service = LightWalletGRPCService(
-            host: LightWalletEndpointBuilder.eccTestnet.host,
+        let endpoint = LightWalletEndpoint(
+            address: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
-            singleCallTimeout: 1000,
-            streamingCallTimeout: 100000
+            singleCallTimeoutInMillis: 1000,
+            streamingCallTimeoutInMillis: 100000
         )
-        
+        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+
         let latestHeight = try service.latestBlockHeight()
         
         let startHeight = latestHeight - 100_000
@@ -50,15 +60,29 @@ class BlockStreamingTest: XCTestCase {
     }
     
     func testStreamCancellation() async throws {
-        let service = LightWalletGRPCService(
-            host: LightWalletEndpointBuilder.eccTestnet.host,
+        let endpoint = LightWalletEndpoint(
+            address: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
-            singleCallTimeout: 10000,
-            streamingCallTimeout: 10000
+            singleCallTimeoutInMillis: 10000,
+            streamingCallTimeoutInMillis: 10000
+        )
+        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
         )
 
-        let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
+        try storage.create()
+
         let latestBlockHeight = try service.latestBlockHeight()
         let startHeight = latestBlockHeight - 100_000
         let processorConfig = CompactBlockProcessor.Configuration.standard(
@@ -69,18 +93,18 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            backend: realRustBackend,
             config: processorConfig
         )
         
         let cancelableTask = Task {
             do {
-                let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+                let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
                     startHeight: startHeight,
                     targetHeight: latestBlockHeight
                 )
 
-                try await compactBlockProcessor.downloadAndStoreBlocks(
+                try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
                     using: downloadStream,
                     at: startHeight...latestBlockHeight,
                     maxBlockBufferSize: 10,
@@ -96,16 +120,31 @@ class BlockStreamingTest: XCTestCase {
     }
     
     func testStreamTimeout() async throws {
-        let service = LightWalletGRPCService(
-            host: LightWalletEndpointBuilder.eccTestnet.host,
+        let endpoint = LightWalletEndpoint(
+            address: LightWalletEndpointBuilder.eccTestnet.host,
             port: 9067,
             secure: true,
-            singleCallTimeout: 1000,
-            streamingCallTimeout: 3000
+            singleCallTimeoutInMillis: 1000,
+            streamingCallTimeoutInMillis: 1000
+        )
+        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+
+        let realRustBackend = ZcashRustBackend.self
+
+        let storage = FSCompactBlockRepository(
+            cacheDirectory: testTempDirectory,
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: realRustBackend
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted
         )
 
-        let storage = try TestDbBuilder.inMemoryCompactBlockStorage()
+        try storage.create()
+
         let latestBlockHeight = try service.latestBlockHeight()
+
         let startHeight = latestBlockHeight - 100_000
         
         let processorConfig = CompactBlockProcessor.Configuration.standard(
@@ -116,19 +155,19 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            backend: realRustBackend,
             config: processorConfig
         )
         
         let date = Date()
         
         do {
-            let downloadStream = try await compactBlockProcessor.compactBlocksDownloadStream(
+            let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
                 startHeight: startHeight,
                 targetHeight: latestBlockHeight
             )
 
-            try await compactBlockProcessor.downloadAndStoreBlocks(
+            try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
                 using: downloadStream,
                 at: startHeight...latestBlockHeight,
                 maxBlockBufferSize: 10,

@@ -2,15 +2,16 @@
 # https://github.com/raywenderlich/swift-style-guide
 
 included:
-- Sources/ZcashLightClientKit/
-- Tests/
-- Example/ZcashLightClientSample/ZcashLightClientSample
-- Example/ZcashLightClientSample/ZcashLightClientSampleTests
+  - Sources/ZcashLightClientKit/
+  - Tests/
+  - Example/ZcashLightClientSample/ZcashLightClientSample
+  - Example/ZcashLightClientSample/ZcashLightClientSampleTests
+
 excluded:
   - xctemplates/
-  - Sources/ZcashLightClientKit/Service/ProtoBuf/compact_formats.pb.swift
-  - Sources/ZcashLightClientKit/Service/ProtoBuf/service.pb.swift
-  - Sources/ZcashLightClientKit/Service/ProtoBuf/service.grpc.swift
+  - Sources/ZcashLightClientKit/Modules/Service/GRPC/ProtoBuf/compact_formats.pb.swift
+  - Sources/ZcashLightClientKit/Modules/Service/GRPC/ProtoBuf/service.pb.swift
+  - Sources/ZcashLightClientKit/Modules/Service/GRPC/ProtoBuf/service.grpc.swift
   - Tests/TestUtils/proto
   - Tests/TestUtils/TestVector.swift
   - Tests/OfflineTests/BirthdayTests.swift

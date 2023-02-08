@@ -5,15 +5,14 @@
 //  Created by Francisco Gindre on 06/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
-
 import UIKit
 import ZcashLightClientKit
 import NotificationBubbles
 
 var loggerProxy = OSLogger(logLevel: .debug)
 
-@UIApplicationMain
 // swiftlint:disable force_cast force_try force_unwrapping
+@UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     private var wallet: Initializer?
@@ -38,7 +37,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 .deriveFullViewingKey()
 
             let wallet = Initializer(
-                cacheDbURL: try! cacheDbURLHelper(),
+                fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
                 pendingDbURL: try! pendingDbURLHelper(),
                 endpoint: DemoAppConfig.endpoint,
@@ -84,7 +83,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        _ = self.sharedWallet
         subscribeToMinedTxNotifications()
         
         return true
@@ -127,7 +125,13 @@ extension AppDelegate {
         } catch {
             loggerProxy.error("error clearing cache DB: \(error)")
         }
-        
+
+        do {
+            try FileManager.default.removeItem(at: try fsBlockDbRootURLHelper())
+        } catch {
+            loggerProxy.error("error clearing FsBlockDBRoot: \(error)")
+        }
+
         do {
             try FileManager.default.removeItem(at: try dataDbURLHelper())
         } catch {
@@ -156,6 +160,15 @@ extension Synchronizer {
 
 func documentsDirectoryHelper() throws -> URL {
     try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+}
+
+func fsBlockDbRootURLHelper() throws -> URL {
+    try documentsDirectoryHelper()
+        .appendingPathComponent(kZcashNetwork.networkType.chainName)
+        .appendingPathComponent(
+            ZcashSDK.defaultFsCacheName,
+            isDirectory: true
+        )
 }
 
 func cacheDbURLHelper() throws -> URL {

@@ -189,7 +189,7 @@ extension MockTransactionRepository: TransactionRepository {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func find(in range: BlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
+    func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) throws -> [ZcashTransaction.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
@@ -224,10 +224,8 @@ extension Array {
 
         var idx: [Int] = []
 
-        for index in 0 ..< self.count {
-            if function(self[index]) {
-                idx.append(index)
-            }
+        for index in 0 ..< self.count where function(self[index]) {
+            idx.append(index)
         }
         
         guard !idx.isEmpty else { return nil }
