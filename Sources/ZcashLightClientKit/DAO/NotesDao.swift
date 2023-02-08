@@ -91,8 +91,8 @@ struct SentNote: SentNoteEntity, Codable {
     var outputPool: Int
     var outputIndex: Int
     var fromAccount: Int
-    var toAddress: String
-    var toAccount: Int
+    var toAddress: String?
+    var toAccount: Int?
     var value: Int
     var memo: Data?
 }
@@ -130,5 +130,32 @@ class SentNotesSQLDAO: SentNotesRepository {
                 try row.decode()
             }
             .first
+    }
+
+    func getRecipients(for id: Int) -> [TransactionRecipient] {
+        guard let result = try? dbProvider.connection().prepare(
+            table.where(id == table[Expression<Int>("tx")])
+        ) else { return [] }
+
+        guard let rows = try? result.map({ row -> SentNote in
+            try row.decode()
+        }) else { return [] }
+
+        return rows.compactMap { (sentNote) -> TransactionRecipient? in
+            if sentNote.toAccount == nil {
+                guard
+                    let toAddress = sentNote.toAddress,
+                    let recipient = Recipient.forEncodedAddress(encoded: toAddress)
+                else { return nil }
+
+                return TransactionRecipient.address(recipient.0)
+            } else {
+                guard let toAccount = sentNote.toAccount else {
+                    return nil
+                }
+
+                return TransactionRecipient.internalAccount(UInt32(toAccount))
+            }
+        }
     }
 }

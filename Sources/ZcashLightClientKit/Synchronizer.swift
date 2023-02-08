@@ -154,6 +154,18 @@ public protocol Synchronizer {
     /// Get all memos for `sentTransaction`.
     func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
 
+    /// Attempt to get recipients from a Transaction Overview.
+    /// - parameter transaction: A transaction overview
+    /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
+    /// transaction
+    func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient]
+    
+    /// Get the recipients for the given a sent transaction
+    /// - parameter transaction: A transaction overview
+    /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
+    /// transaction
+    func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient]
+
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
@@ -335,3 +347,4 @@ extension SyncStatus {
         }
     }
 }
+

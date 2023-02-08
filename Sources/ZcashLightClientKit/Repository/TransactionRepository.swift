@@ -30,4 +30,5 @@ protocol TransactionRepository {
     func findMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
     func findMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
     func findMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
+    func getRecipients(for id: Int) -> [TransactionRecipient]
 }

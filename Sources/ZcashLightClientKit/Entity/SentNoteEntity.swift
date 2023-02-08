@@ -12,7 +12,8 @@ protocol SentNoteEntity {
     var transactionId: Int { get set }
     var outputIndex: Int { get set }
     var fromAccount: Int { get set }
-    var toAddress: String { get set }
+    var toAddress: String? { get set }
+    var toAccount: Int? { get set }
     var value: Int { get set }
     var memo: Data? { get set }
 }
@@ -24,6 +25,7 @@ extension SentNoteEntity {
             lhs.outputIndex == rhs.outputIndex,
             lhs.fromAccount == rhs.fromAccount,
             lhs.toAddress == rhs.toAddress,
+            lhs.toAccount == rhs.toAccount,
             lhs.value == rhs.value,
             lhs.memo == rhs.memo else { return false }
         return true
@@ -35,6 +37,7 @@ extension SentNoteEntity {
         hasher.combine(outputIndex)
         hasher.combine(fromAccount)
         hasher.combine(toAddress)
+        hasher.combine(toAccount)
         hasher.combine(value)
         if let memo = memo {
             hasher.combine(memo)

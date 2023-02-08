@@ -16,8 +16,9 @@ class TransactionSQLDAO: TransactionRepository {
 
     var dbProvider: ConnectionProvider
     var transactions = Table("transactions")
+    
     private var blockDao: BlockSQLDAO
-
+    private var sentNotesRepository: SentNotesRepository
     private let transactionsView = View("v_transactions")
     private let receivedTransactionsView = View("v_tx_received")
     private let sentTransactionsView = View("v_tx_sent")
@@ -27,6 +28,7 @@ class TransactionSQLDAO: TransactionRepository {
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
         self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
+        self.sentNotesRepository = SentNotesSQLDAO(dbProvider: dbProvider)
     }
 
     func closeDBConnection() {
@@ -137,6 +139,10 @@ class TransactionSQLDAO: TransactionRepository {
 
     func findMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo] {
         return try findMemos(for: sentTransaction.id, table: sentNotesTable)
+    }
+
+    func getRecipients(for id: Int) -> [TransactionRecipient] {
+        return self.sentNotesRepository.getRecipients(for: id)
     }
 
     private func findMemos(for transactionID: Int, table: Table) throws -> [Memo] {
