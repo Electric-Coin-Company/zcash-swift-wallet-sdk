@@ -132,7 +132,7 @@ public class Initializer {
                 caching: true
             ),
             storage: FSCompactBlockRepository(
-                cacheDirectory: fsBlockDbRoot,
+                fsBlockDbRoot: fsBlockDbRoot,
                 metadataStore: .live(
                     fsBlockDbRoot: fsBlockDbRoot,
                     rustBackend: ZcashRustBackend.self
@@ -193,7 +193,7 @@ public class Initializer {
                 caching: true
             ),
             storage: FSCompactBlockRepository(
-                cacheDirectory: fsBlockDbRoot,
+                fsBlockDbRoot: fsBlockDbRoot,
                 metadataStore: .live(
                     fsBlockDbRoot: fsBlockDbRoot,
                     rustBackend: ZcashRustBackend.self

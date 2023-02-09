@@ -76,7 +76,7 @@ class BlockScanTests: XCTestCase {
 
         let rustBackend = ZcashRustBackend.self
         let fsBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: fsDbRootURL,
+            fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: fsDbRootURL,
                 rustBackend: rustBackend
@@ -171,7 +171,7 @@ class BlockScanTests: XCTestCase {
         let fsDbRootURL = self.testTempDirectory
 
         let fsBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: fsDbRootURL,
+            fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: fsDbRootURL,
                 rustBackend: rustWelding

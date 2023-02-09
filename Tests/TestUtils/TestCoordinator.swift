@@ -92,7 +92,7 @@ class TestCoordinator {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: self.databases.fsCacheDbRoot,
+            fsBlockDbRoot: self.databases.fsCacheDbRoot,
             metadataStore: .live(
                 fsBlockDbRoot: self.databases.fsCacheDbRoot,
                 rustBackend: ZcashRustBackend.self

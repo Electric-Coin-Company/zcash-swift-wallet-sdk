@@ -38,7 +38,7 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: realRustBackend
@@ -107,7 +107,7 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: realRustBackend
@@ -176,7 +176,7 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: realRustBackend
@@ -245,7 +245,7 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: realRustBackend

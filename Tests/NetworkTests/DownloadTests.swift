@@ -38,7 +38,7 @@ class DownloadTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: realRustBackend

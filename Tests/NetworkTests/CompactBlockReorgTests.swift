@@ -12,10 +12,18 @@ import XCTest
 
 // swiftlint:disable implicitly_unwrapped_optional force_try
 class CompactBlockReorgTests: XCTestCase {
-    let processorConfig = CompactBlockProcessor.Configuration.standard(
-        for: ZcashNetworkBuilder.network(for: .testnet),
-        walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
-    )
+    lazy var processorConfig = {
+        let pathProvider = DefaultResourceProvider(network: network)
+        return CompactBlockProcessor.Configuration(
+            fsBlockCacheRoot: testTempDirectory,
+            dataDb: pathProvider.dataDbURL,
+            spendParamsURL: pathProvider.spendParamsURL,
+            outputParamsURL: pathProvider.outputParamsURL,
+            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight,
+            network: ZcashNetworkBuilder.network(for: .testnet)
+        )
+    }()
+
     let testTempDirectory = URL(fileURLWithPath: NSString(
         string: NSTemporaryDirectory()
     )
@@ -36,6 +44,8 @@ class CompactBlockReorgTests: XCTestCase {
         try super.setUpWithError()
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
+
+        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
         let service = MockLightWalletService(
@@ -58,9 +68,9 @@ class CompactBlockReorgTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let realCache = FSCompactBlockRepository(
-            cacheDirectory: processorConfig.fsBlockCacheRoot,
+            fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
+                fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
                 rustBackend: realRustBackend
             ),
             blockDescriptor: .live,
@@ -109,7 +119,6 @@ class CompactBlockReorgTests: XCTestCase {
     
     override func tearDown() {
         super.tearDown()
-        try? testFileManager.removeItem(at: testTempDirectory)
         try! FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         syncStartedExpect.unsubscribeFromNotifications()
