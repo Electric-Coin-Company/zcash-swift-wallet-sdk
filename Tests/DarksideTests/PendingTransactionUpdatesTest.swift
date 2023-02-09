@@ -25,7 +25,6 @@ class PendingTransactionUpdatesTest: XCTestCase {
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
     var expectedReorgHeight: BlockHeight = 665188
     var expectedRewindHeight: BlockHeight = 665188
-    var reorgExpectation = XCTestExpectation(description: "reorg")
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
@@ -47,18 +46,6 @@ class PendingTransactionUpdatesTest: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-    }
-    
-    @objc func handleReorg(_ notification: Notification) {
-        guard
-            let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight
-        else {
-            XCTFail("empty reorg notification")
-            return
-        }
-        
-        XCTAssertEqual(reorgHeight, expectedReorgHeight)
-        reorgExpectation.fulfill()
     }
     
     func testPendingTransactionMinedHeightUpdated() async throws {
@@ -239,14 +226,5 @@ class PendingTransactionUpdatesTest: XCTestCase {
             return
         }
         XCTFail("Failed with error: \(testError)")
-    }
-    
-    func hookToReOrgNotification() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleReorg(_:)),
-            name: .blockProcessorHandledReOrg,
-            object: nil
-        )
     }
 }

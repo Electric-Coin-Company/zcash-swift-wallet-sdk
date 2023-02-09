@@ -141,7 +141,7 @@ class SentNotesSQLDAO: SentNotesRepository {
             try row.decode()
         }) else { return [] }
 
-        return rows.compactMap { (sentNote) -> TransactionRecipient? in
+        return rows.compactMap { sentNote -> TransactionRecipient? in
             if sentNote.toAccount == nil {
                 guard
                     let toAddress = sentNote.toAddress,

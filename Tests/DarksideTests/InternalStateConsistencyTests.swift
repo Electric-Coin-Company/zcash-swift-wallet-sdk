@@ -8,6 +8,7 @@
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
+
 final class InternalStateConsistencyTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     // swiftlint:disable:next line_length
@@ -27,7 +28,6 @@ final class InternalStateConsistencyTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
-    var firstSyncContinuation: CheckedContinuation<(), Error>?
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
@@ -47,8 +47,8 @@ final class InternalStateConsistencyTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
 
-    func testInternalStateIsConsistentWhenMigrating() async throws {
-        NotificationCenter.default.addObserver(self, selector: #selector(self.processorStopped(_:)), name: .blockProcessorStopped, object: nil)
+    @MainActor func testInternalStateIsConsistentWhenMigrating() async throws {
+        NotificationCenter.default.addObserver(self, selector: #selector(self.synchronizerStopped(_:)), name: .synchronizerStopped, object: nil)
 
         let fullSyncLength = 1000
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: fullSyncLength)
@@ -60,29 +60,15 @@ final class InternalStateConsistencyTests: XCTestCase {
 
         sleep(1)
 
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { _ in
-                        XCTFail("shouldn't have completed")
-                        continuation.resume()
-                    }, error: { error in
-                        guard let error else {
-                            XCTFail("there was an unknown error")
-                            continuation.resume()
-                            return
-                        }
-                        continuation.resume(throwing: error)
-                    }
-                )
+        try coordinator.sync(
+            completion: { _ in
+                XCTFail("shouldn't have completed")
+            },
+            error: handleError
+        )
 
-                self.firstSyncContinuation = continuation
-                DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-                    self.coordinator.synchronizer.stop()
-                }
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        DispatchQueue.global().asyncAfter(deadline: .now() + 1) { [weak self] in
+            self?.coordinator.synchronizer.stop()
         }
 
         wait(for: [firstSyncExpectation], timeout: 2)
@@ -147,8 +133,15 @@ final class InternalStateConsistencyTests: XCTestCase {
         wait(for: [secondSyncAttemptExpectation], timeout: 10)
     }
 
-    @objc func processorStopped(_ notification: Notification) {
-        firstSyncContinuation?.resume()
+    @objc func synchronizerStopped(_ notification: Notification) {
         self.firstSyncExpectation.fulfill()
+    }
+
+    func handleError(_ error: Error?) {
+        guard let testError = error else {
+            XCTFail("failed with nil error")
+            return
+        }
+        XCTFail("Failed with error: \(testError)")
     }
 }

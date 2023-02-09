@@ -347,4 +347,3 @@ extension SyncStatus {
         }
     }
 }
-

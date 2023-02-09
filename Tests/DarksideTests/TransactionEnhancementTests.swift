@@ -5,12 +5,15 @@
 //  Created by Francisco Gindre on 4/15/20.
 //
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
 // swiftlint:disable implicitly_unwrapped_optional force_try
 class TransactionEnhancementTests: XCTestCase {
+    var cancellables: [AnyCancellable] = []
+    let processorEventHandler = CompactBlockProcessorEventHandler()
     let mockLatestHeight = BlockHeight(663250)
     let targetLatestHeight = BlockHeight(663251)
     let walletBirthday = BlockHeight(663150)
@@ -32,7 +35,7 @@ class TransactionEnhancementTests: XCTestCase {
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
-    var idleNotificationExpectation: XCTestExpectation!
+    var finishedNotificationExpectation: XCTestExpectation!
     var reorgNotificationExpectation: XCTestExpectation!
     var afterReorgIdleNotification: XCTestExpectation!
     var txFoundNotificationExpectation: XCTestExpectation!
@@ -48,19 +51,26 @@ class TransactionEnhancementTests: XCTestCase {
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
-        idleNotificationExpectation = XCTestExpectation(description: "\(self.description) idleNotificationExpectation")
+        finishedNotificationExpectation = XCTestExpectation(description: "\(self.description) finishedNotificationExpectation")
         afterReorgIdleNotification = XCTestExpectation(description: "\(self.description) afterReorgIdleNotification")
         reorgNotificationExpectation = XCTestExpectation(description: "\(self.description) reorgNotificationExpectation")
         txFoundNotificationExpectation = XCTestExpectation(description: "\(self.description) txFoundNotificationExpectation")
         
         waitExpectation = XCTestExpectation(description: "\(self.description) waitExpectation")
-        
-        let birthday = Checkpoint.birthday(with: walletBirthday, network: network)
-        
-        let config = CompactBlockProcessor.Configuration.standard(for: self.network, walletBirthday: birthday.height)
+
         let rustBackend = ZcashRustBackend.self
-        processorConfig = config
-        
+        let birthday = Checkpoint.birthday(with: walletBirthday, network: network)
+
+        let pathProvider = DefaultResourceProvider(network: network)
+        processorConfig = CompactBlockProcessor.Configuration(
+            fsBlockCacheRoot: testTempDirectory,
+            dataDb: pathProvider.dataDbURL,
+            spendParamsURL: pathProvider.spendParamsURL,
+            outputParamsURL: pathProvider.outputParamsURL,
+            walletBirthday: birthday.height,
+            network: network
+        )
+
         try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
 
@@ -120,38 +130,38 @@ class TransactionEnhancementTests: XCTestCase {
             backend: rustBackend,
             config: processorConfig
         )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(processorFailed(_:)),
-            name: Notification.Name.blockProcessorFailed,
-            object: processor
-        )
+
+        var stream: AnyPublisher<CompactBlockProcessor.Event, Never>!
+        XCTestCase.wait { await stream = self.processor.eventStream }
+        stream
+            .sink { [weak self] event in
+                switch event {
+                case .failed: self?.processorFailed(event: event)
+                default: break
+                }
+            }
+            .store(in: &cancellables)
     }
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        syncStartedExpect.unsubscribeFromNotifications()
-        stopNotificationExpectation.unsubscribeFromNotifications()
-        updatedNotificationExpectation.unsubscribeFromNotifications()
-        idleNotificationExpectation.unsubscribeFromNotifications()
-        reorgNotificationExpectation.unsubscribeFromNotifications()
-        afterReorgIdleNotification.unsubscribeFromNotifications()
         NotificationCenter.default.removeObserver(self)
     }
     
     private func startProcessing() async throws {
         XCTAssertNotNil(processor)
-        
-        // Subscribe to notifications
-        syncStartedExpect.subscribe(to: Notification.Name.blockProcessorStartedSyncing, object: processor)
-        stopNotificationExpectation.subscribe(to: Notification.Name.blockProcessorStopped, object: processor)
-        updatedNotificationExpectation.subscribe(to: Notification.Name.blockProcessorUpdated, object: processor)
 
-        txFoundNotificationExpectation.subscribe(to: .blockProcessorFoundTransactions, object: processor)
-        idleNotificationExpectation.subscribe(to: .blockProcessorIdle, object: processor)
+        let expectations: [CompactBlockProcessorEventHandler.EventIdentifier: XCTestExpectation] = [
+            .startedSyncing: syncStartedExpect,
+            .stopped: stopNotificationExpectation,
+            .progressUpdated: updatedNotificationExpectation,
+            .foundTransactions: txFoundNotificationExpectation,
+            .finished: finishedNotificationExpectation
+        ]
+        processorEventHandler.subscribe(to: await processor.eventStream, expectations: expectations)
+
         await processor.start()
     }
     
@@ -193,16 +203,14 @@ class TransactionEnhancementTests: XCTestCase {
             for: [
                 syncStartedExpect,
                 txFoundNotificationExpectation,
-                idleNotificationExpectation
+                finishedNotificationExpectation
             ],
             timeout: 30
         )
-        idleNotificationExpectation.unsubscribeFromNotifications()
     }
     
-    @objc func processorFailed(_ notification: Notification) {
-        XCTAssertNotNil(notification.userInfo)
-        if let error = notification.userInfo?["error"] {
+    func processorFailed(event: CompactBlockProcessor.Event) {
+        if case let .failed(error) = event {
             XCTFail("CompactBlockProcessor failed with Error: \(error)")
         } else {
             XCTFail("CompactBlockProcessor failed")

@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 5/14/20.
 //
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -30,6 +31,7 @@ class AdvancedReOrgTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
+    var cancellables: [AnyCancellable] = []
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -50,14 +52,8 @@ class AdvancedReOrgTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
     
-    @objc func handleReorg(_ notification: Notification) {
-        guard
-            let reorgHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
-            let rewindHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
-        else {
-            XCTFail("empty reorg notification")
-            return
-        }
+    func handleReorg(event: CompactBlockProcessor.Event) {
+        guard case let .handledReorg(reorgHeight, rewindHeight) = event else { return XCTFail("empty reorg event") }
 
         logger!.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
 
@@ -80,7 +76,7 @@ class AdvancedReOrgTests: XCTestCase {
     /// 10. sync up to received_Tx_height + 3
     /// 11. verify that balance equals initial balance + tx amount
     func testReOrgChangesInboundTxMinedHeight() async throws {
-        hookToReOrgNotification()
+        await hookToReOrgNotification()
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         var shouldContinue = false
         let receivedTxHeight: BlockHeight = 663188
@@ -462,8 +458,8 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(resultingBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
     }
     
-    func testIncomingTransactionIndexChange() throws {
-        hookToReOrgNotification()
+    @MainActor func testIncomingTransactionIndexChange() async throws {
+        await hookToReOrgNotification()
         self.expectedReorgHeight = 663196
         self.expectedRewindHeight = 663175
         try coordinator.reset(saplingActivation: birthday, branchID: "2bb40e60", chainName: "main")
@@ -725,7 +721,7 @@ class AdvancedReOrgTests: XCTestCase {
     /// 14. sync to latest height
     /// 15. verify that there's no pending transaction and that the tx is displayed on the sentTransactions collection
     func testReOrgChangesOutboundTxMinedHeight() async throws {
-        hookToReOrgNotification()
+        await hookToReOrgNotification()
 
         /*
         1. create fake chain
@@ -1037,8 +1033,8 @@ class AdvancedReOrgTests: XCTestCase {
     /// 4. sync to latest height
     /// 5. verify that reorg Happened at reorgHeight
     /// 6. verify that balances match initial balances
-    func testReOrgRemovesIncomingTxForever() throws {
-        hookToReOrgNotification()
+    @MainActor func testReOrgRemovesIncomingTxForever() async throws {
+        await hookToReOrgNotification()
         try coordinator.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txReOrgRemovesInboundTxBefore))
@@ -1111,7 +1107,7 @@ class AdvancedReOrgTests: XCTestCase {
     /// 8. sync to latest height
     /// 9. verify that there's an expired transaction as a pending transaction
     func testReOrgRemovesOutboundTxAndIsNeverMined() async throws {
-        hookToReOrgNotification()
+        await hookToReOrgNotification()
         
         /*
         1. create fake chain
@@ -1264,7 +1260,7 @@ class AdvancedReOrgTests: XCTestCase {
     }
     
     func testLongSync() async throws {
-        hookToReOrgNotification()
+        await hookToReOrgNotification()
         
         /*
         1. create fake chain
@@ -1318,7 +1314,14 @@ class AdvancedReOrgTests: XCTestCase {
         XCTFail("Failed with error: \(testError)")
     }
     
-    func hookToReOrgNotification() {
-        NotificationCenter.default.addObserver(self, selector: #selector(handleReorg(_:)), name: .blockProcessorHandledReOrg, object: nil)
+    func hookToReOrgNotification() async {
+        await coordinator.synchronizer.blockProcessor.eventStream
+            .sink { [weak self] event in
+                switch event {
+                case .handledReorg: self?.handleReorg(event: event)
+                default: break
+                }
+            }
+            .store(in: &cancellables)
     }
 }

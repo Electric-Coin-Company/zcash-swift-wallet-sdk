@@ -49,6 +49,11 @@ public extension Notification.Name {
     /// the `[ConfirmedTransactionEntity]`. This notification could arrive in a background thread.
     static let synchronizerFoundTransactions = Notification.Name("synchronizerFoundTransactions")
 
+    /// Notification sent when the synchronizer fetched utxos from lightwalletd attempted to store them
+    /// Query the user info object for CompactBlockProcessorNotificationKey.blockProcessorStoredUTXOs which will contain a RefreshedUTXOs tuple with
+    /// the collection of UTXOs stored or skipped
+    static let synchronizerStoredUTXOs = Notification.Name(rawValue: "synchronizerStoredUTXOs")
+
     /// Posted when the synchronizer presents an error
     /// - Note: query userInfo on NotificationKeys.error for an error
     static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
@@ -78,6 +83,7 @@ public class SDKSynchronizer: Synchronizer {
         public static let currentConnectionState = "SDKSynchronizer.currentConnectionState"
         public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
         public static let synchronizerState = "SDKSynchronizer.synchronizerState"
+        public static let refreshedUTXOs = "SDKSynchronizer.refreshedUTXOs"
     }
 
     private var underlyingStatus: SyncStatus
@@ -95,8 +101,11 @@ public class SDKSynchronizer: Synchronizer {
             notify(status: status)
         }
     }
-    public private(set) var progress: Float = 0.0
+
     let blockProcessor: CompactBlockProcessor
+    let blockProcessorEventProcessingQueue = DispatchQueue(label: "blockProcessorEventProcessingQueue")
+
+    public private(set) var progress: Float = 0.0
     public private(set) var initializer: Initializer
     public private(set) var latestScannedHeight: BlockHeight
     public private(set) var connectionState: ConnectionState
@@ -111,6 +120,8 @@ public class SDKSynchronizer: Synchronizer {
     private let statusUpdateLock = NSRecursiveLock()
 
     private var syncStartDate: Date?
+
+    private var longLivingCancelables: [AnyCancellable] = []
     
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
@@ -152,7 +163,9 @@ public class SDKSynchronizer: Synchronizer {
             )
         )
 
-        self.subscribeToProcessorNotifications(blockProcessor)
+        subscribeToProcessorNotifications(blockProcessor)
+
+        Task(priority: .high) { [weak self] in await self?.subscribeToProcessorEvents(blockProcessor) }
     }
 
     deinit {
@@ -224,137 +237,103 @@ public class SDKSynchronizer: Synchronizer {
 
         center.addObserver(
             self,
-            selector: #selector(processorUpdated(_:)),
-            name: Notification.Name.blockProcessorUpdated,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedSyncing(_:)),
-            name: Notification.Name.blockProcessorStartedSyncing,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedEnhancing(_:)),
-            name: Notification.Name.blockProcessorStartedEnhancing,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStartedFetching(_:)),
-            name: Notification.Name.blockProcessorStartedFetching,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorStopped(_:)),
-            name: Notification.Name.blockProcessorStopped,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorFailed(_:)),
-            name: Notification.Name.blockProcessorFailed,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorFinished(_:)),
-            name: Notification.Name.blockProcessorFinished,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(processorTransitionUnknown(_:)),
-            name: Notification.Name.blockProcessorUnknownTransition,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(reorgDetected(_:)),
-            name: Notification.Name.blockProcessorHandledReOrg,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(transactionsFound(_:)),
-            name: Notification.Name.blockProcessorFoundTransactions,
-            object: processor
-        )
-
-        center.addObserver(
-            self,
             selector: #selector(connectivityStateChanged(_:)),
-            name: Notification.Name.blockProcessorConnectivityStateChanged,
+            name: Notification.Name.synchronizerConnectionStateChanged,
             object: nil
         )
     }
 
-    // MARK: Block Processor notifications
+    // MARK: Connectivity State
 
     @objc func connectivityStateChanged(_ notification: Notification) {
         guard
             let userInfo = notification.userInfo,
-            let previous = userInfo[CompactBlockProcessorNotificationKey.previousConnectivityStatus] as? ConnectionState,
-            let current = userInfo[CompactBlockProcessorNotificationKey.currentConnectivityStatus] as? ConnectionState
+            let current = userInfo[NotificationKeys.currentConnectionState] as? ConnectionState
         else {
             LoggerProxy.error(
-                "Found \(Notification.Name.blockProcessorConnectivityStateChanged) but lacks dictionary information." +
+                "Found \(notification.name) but lacks dictionary information." +
                 "This is probably a programming error"
             )
             return
         }
 
-        NotificationSender.default.post(
-            name: .synchronizerConnectionStateChanged,
-            object: self,
-            userInfo: [
-                NotificationKeys.previousConnectionState: previous,
-                NotificationKeys.currentConnectionState: current
-            ]
-        )
-
         connectionState = current
     }
 
-    @objc func transactionsFound(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let foundTransactions = userInfo[CompactBlockProcessorNotificationKey.foundTransactions] as? [ZcashTransaction.Overview]
-        else {
-            return
-        }
+    // MARK: Handle CompactBlockProcessor.Flow
 
+    private func subscribeToProcessorEvents(_ processor: CompactBlockProcessor) async {
+        let stream = await processor.eventStream
+
+        stream
+            .receive(on: blockProcessorEventProcessingQueue)
+            .sink { [weak self] event in
+                switch event {
+                case let .failed(error):
+                    self?.failed(error: error)
+
+                case let .finished(height, foundBlocks):
+                    self?.finished(lastScannedHeight: height, foundBlocks: foundBlocks)
+
+                case let .foundTransactions(transactions, range):
+                    self?.foundTransactions(transactions: transactions, in: range)
+
+                case let .handledReorg(reorgHeight, rewindHeight):
+                    self?.handledReorg(reorgHeight: reorgHeight, rewindHeight: rewindHeight)
+
+                case let .progressUpdated(progress):
+                    self?.progressUpdated(progress: progress)
+
+                case let .storedUTXOs(utxos):
+                    self?.storedUTXOs(utxos: utxos)
+
+                case .startedEnhancing:
+                    self?.startedEnhancing()
+
+                case .startedFetching:
+                    self?.startedFetching()
+
+                case .startedSyncing:
+                    self?.startedSyncing()
+
+                case .stopped:
+                    self?.stopped()
+                }
+            }
+            .store(in: &longLivingCancelables)
+    }
+
+    private func failed(error: CompactBlockProcessorError) {
+        self.notifyFailure(error)
+        self.status = .error(self.mapError(error))
+    }
+
+    private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) {
+        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories see: https://github.com/zcash/ZcashLightClientKit/issues/450
+        self.latestScannedHeight = lastScannedHeight
+        self.refreshPendingTransactions()
+        self.status = .synced
+
+        if let syncStartDate {
+            SDKMetrics.shared.pushSyncReport(
+                start: syncStartDate,
+                end: Date()
+            )
+        }
+    }
+
+    private func foundTransactions(transactions: [ZcashTransaction.Overview], in range: CompactBlockRange) {
         NotificationSender.default.post(
             name: .synchronizerFoundTransactions,
             object: self,
             userInfo: [
-                NotificationKeys.foundTransactions: foundTransactions
+                NotificationKeys.foundTransactions: transactions
             ]
         )
     }
 
-    @objc func reorgDetected(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let progress = userInfo[CompactBlockProcessorNotificationKey.reorgHeight] as? BlockHeight,
-            let rewindHeight = userInfo[CompactBlockProcessorNotificationKey.rewindHeight] as? BlockHeight
-        else {
-            LoggerProxy.debug("error processing reorg notification")
-            return
-        }
-
-        LoggerProxy.debug("handling reorg at: \(progress) with rewind height: \(rewindHeight)")
+    private func handledReorg(reorgHeight: BlockHeight, rewindHeight: BlockHeight) {
+        LoggerProxy.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
         do {
             try transactionManager.handleReorg(at: rewindHeight)
@@ -364,26 +343,19 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    @objc func processorUpdated(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let progress = userInfo[CompactBlockProcessorNotificationKey.progress] as? CompactBlockProgress
-        else {
-            return
-        }
-
+    private func progressUpdated(progress: CompactBlockProgress) {
         self.notify(progress: progress)
     }
 
-    @objc func processorStartedSyncing(_ notification: Notification) {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .syncing(.nullProgress) else { return }
-        status = .syncing(.nullProgress)
+    private func storedUTXOs(utxos: (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])) {
+        NotificationSender.default.post(
+            name: .synchronizerStoredUTXOs,
+            object: self,
+            userInfo: [NotificationKeys.refreshedUTXOs: utxos]
+        )
     }
 
-    @objc func processorStartedEnhancing(_ notification: Notification) {
+    private func startedEnhancing() {
         statusUpdateLock.lock()
         defer { statusUpdateLock.unlock() }
 
@@ -391,7 +363,7 @@ public class SDKSynchronizer: Synchronizer {
         status = .enhancing(NullEnhancementProgress())
     }
 
-    @objc func processorStartedFetching(_ notification: Notification) {
+    private func startedFetching() {
         statusUpdateLock.lock()
         defer { statusUpdateLock.unlock() }
 
@@ -399,46 +371,20 @@ public class SDKSynchronizer: Synchronizer {
         status = .fetching
     }
 
-    @objc func processorStopped(_ notification: Notification) {
+    private func startedSyncing() {
+        statusUpdateLock.lock()
+        defer { statusUpdateLock.unlock() }
+
+        guard status != .syncing(.nullProgress) else { return }
+        status = .syncing(.nullProgress)
+    }
+
+    private func stopped() {
         statusUpdateLock.lock()
         defer { statusUpdateLock.unlock() }
 
         guard status != .stopped else { return }
         status = .stopped
-    }
-
-    @objc func processorFailed(_ notification: Notification) {
-        if let error = notification.userInfo?[CompactBlockProcessorNotificationKey.error] as? Error {
-            self.notifyFailure(error)
-            self.status = .error(self.mapError(error))
-        } else {
-            self.notifyFailure(
-                CompactBlockProcessorError.generalError(
-                    message: "This is strange. processorFailed Call received no error message"
-                )
-            )
-            self.status = .error(SynchronizerError.generalError(message: "This is strange. processorFailed Call received no error message"))
-        }
-    }
-
-    @objc func processorFinished(_ notification: Notification) {
-        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories see: https://github.com/zcash/ZcashLightClientKit/issues/450
-        if let blockHeight = notification.userInfo?[CompactBlockProcessorNotificationKey.latestScannedBlockHeight] as? BlockHeight {
-            self.latestScannedHeight = blockHeight
-        }
-        self.refreshPendingTransactions()
-        self.status = .synced
-        
-        if let syncStartDate {
-            SDKMetrics.shared.pushSyncReport(
-                start: syncStartDate,
-                end: Date()
-            )
-        }
-    }
-
-    @objc func processorTransitionUnknown(_ notification: Notification) {
-        self.status = .disconnected
     }
 
     // MARK: Synchronizer methods

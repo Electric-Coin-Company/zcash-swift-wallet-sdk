@@ -79,7 +79,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
                 do {
                     try self.fileWriter.writeToURL(block.data, blockURL)
                 } catch {
-                    LoggerProxy.error("Failed to write block: \(block.height) to path: \(blockURL.path).")
+                    LoggerProxy.error("Failed to write block: \(block.height) to path: \(blockURL.path) with error: \(error)")
                     throw CompactBlockRepositoryError.failedToWriteBlock(block)
                 }
 

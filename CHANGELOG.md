@@ -1,10 +1,18 @@
 # Unreleased
+- [#764] Refactor communication between components inside th SDK
+
+    This is mostly an internal change. A consequence of this change is that all the notifications
+delivered via `NotificationCenter` with the prefix `blockProcessor` are now gone. If affected
+notifications were used in your code use notifications with the prefix `synchronizer` now. 
+These notifications are defined in `SDKSynchronizer.swift`.
+
 - [#759] Remove Jazz-generated HTML docs
 
-We remove these documents since they are outdated and we rely on the docs in the 
+    We remove these documents since they are outdated and we rely on the docs in the 
 code itself.
 
 - [#726] Modularize GRPC layer
+
     This is mostly internal change. `LightWalletService` is no longer public. If it
 is used in your code replace it by using `SDKSynchronizer` API.
 
