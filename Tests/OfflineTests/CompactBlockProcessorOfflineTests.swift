@@ -41,7 +41,7 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
         )
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: realRustBackend

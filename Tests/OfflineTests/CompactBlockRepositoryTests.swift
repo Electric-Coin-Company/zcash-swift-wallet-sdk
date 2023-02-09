@@ -33,7 +33,7 @@ class CompactBlockRepositoryTests: XCTestCase {
 
     func testEmptyStorage() throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self
@@ -49,7 +49,7 @@ class CompactBlockRepositoryTests: XCTestCase {
 
     func testEmptyStorageAsync() async throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self
@@ -67,7 +67,7 @@ class CompactBlockRepositoryTests: XCTestCase {
 
     func testStoreThousandBlocks() async throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self
@@ -97,7 +97,7 @@ class CompactBlockRepositoryTests: XCTestCase {
     
     func testStoreThousandBlocksAsync() async throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self
@@ -122,7 +122,7 @@ class CompactBlockRepositoryTests: XCTestCase {
     
     func testStoreOneBlockFromEmpty() async throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self
@@ -146,7 +146,7 @@ class CompactBlockRepositoryTests: XCTestCase {
     
     func testStoreOneBlockFromEmptyAsync() async throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self
@@ -170,7 +170,7 @@ class CompactBlockRepositoryTests: XCTestCase {
     
     func testRewindTo() async throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self
@@ -204,7 +204,7 @@ class CompactBlockRepositoryTests: XCTestCase {
     
     func testRewindToAsync() async throws {
         let compactBlockRepository: CompactBlockRepository = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: ZcashRustBackend.self

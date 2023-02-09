@@ -62,7 +62,7 @@ final class FsBlockStorageTests: XCTestCase {
         let blockNameFixture = "This-is-a-fixture"
 
         let freshCache = FSCompactBlockRepository(
-            cacheDirectory: self.testTempDirectory,
+            fsBlockDbRoot: self.testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: ZcashCompactBlockDescriptor(
                 height: { _ in nil },
@@ -87,7 +87,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testWhenBlockIsStoredItFollowsTheFilenameConvention() async throws {
         let freshCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
@@ -112,7 +112,7 @@ final class FsBlockStorageTests: XCTestCase {
     func testRewindDeletesTheRightBlocks() async throws {
         let contentProvider = DirectoryListingProviders.defaultSorted
         let freshCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: .live,
             contentProvider: contentProvider
@@ -174,7 +174,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testGetLatestHeight() async throws {
         let freshCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
@@ -285,7 +285,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testClearTheCache() async throws {
         let fsBlockCache = FSCompactBlockRepository(
-            cacheDirectory: self.testTempDirectory,
+            fsBlockDbRoot: self.testTempDirectory,
             metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.naive
@@ -308,7 +308,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testCreateDoesntFailWhenAlreadyCreated() throws {
         let freshCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
@@ -323,7 +323,7 @@ final class FsBlockStorageTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let realCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: realRustBackend),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
@@ -353,7 +353,7 @@ final class FsBlockStorageTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let realCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: realRustBackend),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
@@ -379,7 +379,7 @@ final class FsBlockStorageTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let realCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: realRustBackend),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
@@ -481,7 +481,7 @@ final class FsBlockStorageTests: XCTestCase {
     func disable_testPerformanceExample() async throws {
         // NOTE: performance tests don't work with async code. Thanks Apple!
         let freshCache = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
@@ -510,7 +510,7 @@ final class FsBlockStorageTests: XCTestCase {
 extension FSCompactBlockRepository {
     static var emptyTemporaryCache: FSCompactBlockRepository {
         FSCompactBlockRepository(
-            cacheDirectory: URL(fileURLWithPath: NSString(
+            fsBlockDbRoot: URL(fileURLWithPath: NSString(
                 string: NSTemporaryDirectory()
             ).appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))")),
             metadataStore: .mock,

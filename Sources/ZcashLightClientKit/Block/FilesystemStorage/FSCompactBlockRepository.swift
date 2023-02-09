@@ -8,7 +8,7 @@
 import Foundation
 
 class FSCompactBlockRepository {
-    let cacheDirectory: URL
+    let fsBlockDbRoot: URL
     let blockDescriptor: ZcashCompactBlockDescriptor
     let contentProvider: SortedDirectoryListing
     let fileWriter: FSBlockFileWriter
@@ -18,24 +18,24 @@ class FSCompactBlockRepository {
     private let storageBatchSize = 10
 
     var blocksDirectory: URL {
-        cacheDirectory.appendingPathComponent("blocks", isDirectory: true)
+        fsBlockDbRoot.appendingPathComponent("blocks", isDirectory: true)
     }
 
     /// Initializes an instance of the Filesystem based compact block repository
-    /// - Parameter cacheDirectory: The `URL` pointing to where the blocks should be writen
+    /// - Parameter fsBlockDbRoot: The `URL` pointing to where the blocks should be writen
     /// write access must be **guaranteed**.
     /// - Parameter blockDescriptor: A `ZcashCompactBlockDescriptor` that is used to turn a
     /// `ZcashCompactBlock` into the filename that will hold it on cache
     /// - parameter contentProvider: `SortedDirectoryListing` implementation. This injects the
     /// behaviour of traversing a Directory in an ordered fashion which is not guaranteed by `Foundation`'s `FileManager`
     init(
-        cacheDirectory: URL,
+        fsBlockDbRoot: URL,
         metadataStore: FSMetadataStore,
         blockDescriptor: ZcashCompactBlockDescriptor,
         contentProvider: SortedDirectoryListing,
         fileWriter: FSBlockFileWriter = .atomic
     ) {
-        self.cacheDirectory = cacheDirectory
+        self.fsBlockDbRoot = fsBlockDbRoot
         self.metadataStore = metadataStore
         self.blockDescriptor = blockDescriptor
         self.contentProvider = contentProvider
@@ -49,7 +49,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
             try fileManager.createDirectory(at: blocksDirectory, withIntermediateDirectories: true)
         }
 
-        guard try self.metadataStore.initFsBlockDbRoot(self.cacheDirectory) else {
+        guard try self.metadataStore.initFsBlockDbRoot(self.fsBlockDbRoot) else {
             throw CompactBlockRepositoryError.failedToInitializeCache
         }
     }
@@ -126,7 +126,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
 
     func clear() async throws {
         try await Task {
-            try self.fileManager.removeItem(at: self.cacheDirectory)
+            try self.fileManager.removeItem(at: self.fsBlockDbRoot)
             try create()
         }.value
     }

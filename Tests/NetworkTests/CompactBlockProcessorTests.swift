@@ -12,10 +12,18 @@ import XCTest
 
 // swiftlint:disable implicitly_unwrapped_optional
 class CompactBlockProcessorTests: XCTestCase {
-    let processorConfig = CompactBlockProcessor.Configuration.standard(
-        for: ZcashNetworkBuilder.network(for: .testnet),
-        walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
-    )
+    lazy var processorConfig = {
+        let pathProvider = DefaultResourceProvider(network: network)
+        return CompactBlockProcessor.Configuration(
+            fsBlockCacheRoot: testTempDirectory,
+            dataDb: pathProvider.dataDbURL,
+            spendParamsURL: pathProvider.spendParamsURL,
+            outputParamsURL: pathProvider.outputParamsURL,
+            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight,
+            network: ZcashNetworkBuilder.network(for: .testnet)
+        )
+    }()
+
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -33,6 +41,8 @@ class CompactBlockProcessorTests: XCTestCase {
         try super.setUpWithError()
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
+
+        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
         let service = MockLightWalletService(
@@ -54,9 +64,9 @@ class CompactBlockProcessorTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            cacheDirectory: processorConfig.fsBlockCacheRoot,
+            fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
+                fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
                 rustBackend: realRustBackend
             ),
             blockDescriptor: .live,
@@ -144,7 +154,7 @@ class CompactBlockProcessorTests: XCTestCase {
         updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
         
         await startProcessing()
-        wait(for: [updatedNotificationExpectation], timeout: 300)
+        wait(for: [updatedNotificationExpectation, idleNotificationExpectation], timeout: 300)
     }
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {

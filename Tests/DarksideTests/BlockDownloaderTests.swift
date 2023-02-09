@@ -31,7 +31,7 @@ class BlockDownloaderTests: XCTestCase {
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
         storage = FSCompactBlockRepository(
-            cacheDirectory: testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
