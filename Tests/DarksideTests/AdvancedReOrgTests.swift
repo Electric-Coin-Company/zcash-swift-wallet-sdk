@@ -1190,7 +1190,7 @@ class AdvancedReOrgTests: XCTestCase {
         try coordinator.applyStaged(blockheight: sentTxHeight)
         
         sleep(2)
-        
+
         /*
         6. sync to latest height
         */
