@@ -11,12 +11,6 @@ import XCTest
 
 // swiftlint:disable type_body_length implicitly_unwrapped_optional force_unwrapping file_length
 class BalanceTests: XCTestCase {
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
-    // swiftlint:disable:next line_length
-    let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount = Zatoshi(1000)
     let defaultLatestHeight: BlockHeight = 663188
     let branchID = "2bb40e60"
@@ -31,7 +25,7 @@ class BalanceTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: self.seedPhrase,
+            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -90,7 +84,7 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: maxBalance,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "this is a test")
             )
             pendingTx = transaction
@@ -248,7 +242,7 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: maxBalanceMinusOne,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "\(self.description) \(Date().description)")
             )
             pendingTx = transaction
@@ -405,7 +399,7 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: maxBalanceMinusOne,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "test send \(self.description) \(Date().description)")
             )
             pendingTx = transaction
@@ -567,7 +561,7 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "this is a test")
             )
             pendingTx = transaction
@@ -747,7 +741,7 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "test send \(self.description) \(Date().description)")
             )
             pendingTx = transaction
@@ -915,7 +909,7 @@ class BalanceTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKeys,
                 zatoshi: sendAmount,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: memo
             )
             pendingTx = transaction
@@ -1088,7 +1082,7 @@ class BalanceTests: XCTestCase {
             let pending = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: sendAmount,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "test send \(self.description)")
             )
             pendingTx = pending

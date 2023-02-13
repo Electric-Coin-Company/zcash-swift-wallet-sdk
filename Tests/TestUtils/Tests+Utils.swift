@@ -15,6 +15,11 @@ import NIOTransportServices
 
 enum Environment {
     static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
+    static let seedPhrase = """
+    still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge \
+    solid fish spread
+    """
+    static let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 }
 
 public enum Constants {

@@ -11,13 +11,7 @@ import XCTest
 
 // swiftlint:disable force_unwrapping implicitly_unwrapped_optional force_try
 class Z2TReceiveTests: XCTestCase {
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
-    // swiftlint:disable:next line_length
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-    
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     let testRecipientAddress = "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
-    
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
@@ -33,7 +27,7 @@ class Z2TReceiveTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: self.seedPhrase,
+            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )

@@ -12,13 +12,6 @@ import XCTest
 
 // swiftlint:disable implicitly_unwrapped_optional force_unwrapping force_try type_body_length file_length cyclomatic_complexity
 class AdvancedReOrgTests: XCTestCase {
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    // swiftlint:disable:next line_length
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
-
     let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
@@ -36,7 +29,7 @@ class AdvancedReOrgTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: seedPhrase,
+            seed: Environment.seedPhrase,
             walletBirthday: birthday + 50, // don't use an exact birthday, users never do.
             network: network
         )
@@ -334,7 +327,7 @@ class AdvancedReOrgTests: XCTestCase {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: coordinator.spendingKeys!.first!,
                 zatoshi: sendAmount,
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "test transaction")
             )
             pendingEntity = pendingTx
@@ -761,7 +754,7 @@ class AdvancedReOrgTests: XCTestCase {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "this is a test")
             )
             pendingEntity = pendingTx
@@ -1149,7 +1142,7 @@ class AdvancedReOrgTests: XCTestCase {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
-                toAddress: try Recipient(testRecipientAddress, network: self.network.networkType),
+                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try! Memo(string: "this is a test")
         )
             pendingEntity = pendingTx
