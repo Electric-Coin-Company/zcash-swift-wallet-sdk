@@ -10,7 +10,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_unwrapping
 final class SynchronizerTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length

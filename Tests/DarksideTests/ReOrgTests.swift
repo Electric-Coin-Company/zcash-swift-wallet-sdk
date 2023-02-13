@@ -22,7 +22,6 @@ basic reorg test.  Scan, get a reorg and then reach latest height.
 * observe that the prev hash of that block does not match the hash that we have for 663250
 * rewind 10 blocks and request blocks 663241 to 663251
 */
-// swiftlint:disable implicitly_unwrapped_optional print_function_usage function_parameter_count
 class ReOrgTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length

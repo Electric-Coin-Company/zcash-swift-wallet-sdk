@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable type_body_length implicitly_unwrapped_optional force_unwrapping file_length
 class BalanceTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
@@ -529,7 +528,6 @@ class BalanceTests: XCTestCase {
     Sent:  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
     Error:  previous available funds  equals to current funds
     */
-    // swiftlint:disable cyclomatic_complexity
     func testVerifyAvailableBalanceDuringSend() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         

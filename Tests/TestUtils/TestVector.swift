@@ -76,7 +76,7 @@ public struct TestVector {
     }
 
     public static var testVectors: [TestVector]? {
-        var vectors = [TestVector]()
+        var vectors: [TestVector] = []
         for rawVector in testVector.dropFirst(2) {
             guard let vector = TestVector(from: rawVector) else {
                 return nil
@@ -92,13 +92,7 @@ public struct TestVector {
 
         for varIndex in Indices.allCases {
             switch varIndex {
-            case .p2pkh_bytes,
-                    .p2sh_bytes,
-                    .sapling_raw_addr,
-                    .orchard_raw_addr,
-                    .unknown_bytes,
-                    .root_seed:
-
+            case .p2pkh_bytes, .p2sh_bytes, .sapling_raw_addr, .orchard_raw_addr, .unknown_bytes, .root_seed:
                 guard let keyPath = Self.optionalByteArrayKeyPath(from: varIndex) else {
                     return nil
                 }
@@ -108,25 +102,23 @@ public struct TestVector {
                     break
                 }
 
-                guard let hexString = rawVector[varIndex.rawValue] as? String,
-                      let data = hexString.hexadecimal else {
-                    return nil
-                }
+                guard
+                    let hexString = rawVector[varIndex.rawValue] as? String,
+                    let data = hexString.hexadecimal
+                else { return nil }
 
                 self[keyPath: keyPath] = data.bytes
 
-            case .account,
-                 .diversifier_index:
-
+            case .account, .diversifier_index:
                 guard rawVector[varIndex.rawValue] != nil else { return nil }
 
                 guard let keyPath = Self.uintKeyPath(from: varIndex) else { return nil }
 
-                guard let optionalValue = rawVector[varIndex.rawValue],
-                      let intValue = optionalValue as? Int,
-                      let uintValue = UInt32(exactly: intValue) else {
-                    return nil
-                }
+                guard
+                    let optionalValue = rawVector[varIndex.rawValue],
+                    let intValue = optionalValue as? Int,
+                    let uintValue = UInt32(exactly: intValue)
+                else { return nil }
 
                 self[keyPath: keyPath] = uintValue
             case .unified_addr:
@@ -134,22 +126,21 @@ public struct TestVector {
 
                 guard let keyPath = Self.stringKeyPath(from: varIndex) else { return nil }
 
-                guard let optionalValue = rawVector[varIndex.rawValue],
-                      let stringValue = optionalValue as? String else {
-                    return nil
-                }
+                guard
+                    let optionalValue = rawVector[varIndex.rawValue],
+                    let stringValue = optionalValue as? String
+                else { return nil }
 
                 self[keyPath: keyPath] = stringValue
+
             case .unknown_typecode:
                 self.unknown_typecode = rawVector[varIndex.rawValue] as? UInt32
             }
-
         }
     }
 }
 
 public extension String {
-
     /// Create `Data` from hexadecimal string representation
     ///
     /// This creates a `Data` object from hex string. Note, if the string has any spaces or non-hex characters (e.g. starts with '<' and with a '>'), those are ignored and only hex characters are processed.
@@ -167,12 +158,13 @@ public extension String {
             data.append(num)
         }
 
-        guard data.count > 0 else { return nil }
+        guard !data.isEmpty else { return nil }
 
         return data
     }
 }
 
+// swiftlint:disable line_length
 public let testVector: [[Any?]] =
 [
     ["From https://github.com/zcash-hackworks/zcash-test-vectors/blob/master/unified_address.py"],

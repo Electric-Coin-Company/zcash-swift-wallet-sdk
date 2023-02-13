@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable print_function_usage
 class BlockStreamingTest: XCTestCase {
     let testTempDirectory = URL(fileURLWithPath: NSString(
         string: NSTemporaryDirectory()

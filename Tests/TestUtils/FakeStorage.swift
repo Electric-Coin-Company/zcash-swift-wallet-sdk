@@ -5,7 +5,6 @@
 //  Created by Francisco Gindre on 12/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
-// swiftlint:disable force_unwrapping
 import Foundation
 @testable import ZcashLightClientKit
 

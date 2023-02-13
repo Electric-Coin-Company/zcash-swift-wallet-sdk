@@ -10,7 +10,6 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional
 class DarksideSanityCheckTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length

@@ -20,7 +20,6 @@ struct EnclosingStruct {
     var someStructure: SomeStructure
 }
 
-// swiftlint:disable print_function_usage
 final class UndescribableTests: XCTestCase {
     func testDescriptionIsRedacted() throws {
         let info = "important info"

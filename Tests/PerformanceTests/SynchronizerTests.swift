@@ -22,7 +22,6 @@ class SynchronizerTests: XCTestCase {
         }
     }
 
-    // swiftlint:disable:next implicitly_unwrapped_optional
     var coordinator: TestCoordinator!
 
     let seedPhrase = """

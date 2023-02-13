@@ -12,7 +12,6 @@ enum FakeChainBuilderError: Error {
     case fakeHexDataConversionFailed
 }
 
-// swiftlint:disable force_unwrapping function_parameter_count
 enum FakeChainBuilder {
     static let someOtherTxUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/t-shielded-spend.txt"
     static let txMainnetBlockUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/663150.txt"

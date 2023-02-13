@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional
 class PagedTransactionRepositoryTests: XCTestCase {
     var pagedTransactionRepository: PaginatedTransactionRepository!
     var transactionRepository: TransactionRepository!

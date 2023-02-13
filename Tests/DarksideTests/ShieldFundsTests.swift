@@ -21,7 +21,6 @@ class ShieldFundsTests: XCTestCase {
 
     let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 1631000
-    // swiftlint:disable:next implicitly_unwrapped_optional
     var coordinator: TestCoordinator!
     var syncedExpectation = XCTestExpectation(description: "synced")
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
@@ -84,7 +83,6 @@ class ShieldFundsTests: XCTestCase {
     /// 15. sync up to the new chain tip
     /// verify that the shielded transactions are confirmed
     ///
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
     func testShieldFunds() async throws {
         // 1. load the dataset
         try coordinator.service.useDataset(from: "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/shield-funds/1631000.txt")

@@ -9,8 +9,6 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_try function_parameter_count force_unwrapping
-
 /// This is the TestCoordinator
 /// What does it do? quite a lot.
 /// Is it a nice "SOLID" "Clean Code" piece of source code?

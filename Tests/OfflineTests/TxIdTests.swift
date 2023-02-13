@@ -8,7 +8,6 @@
 import XCTest
 @testable import TestUtils
 
-// swiftlint:disable force_unwrapping
 class TxIdTests: XCTestCase {
     func testTxIdAsString() {
         let transactionId = "5cf915c5d01007c39d602e08ab59d98aba366e2fb7ac01f2cdad4bf4f8f300bb"

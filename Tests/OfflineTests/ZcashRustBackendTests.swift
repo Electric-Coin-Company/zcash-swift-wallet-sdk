@@ -10,7 +10,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_unwrapping implicitly_unwrapped_optional force_try
 class ZcashRustBackendTests: XCTestCase {
     var dbData: URL!
     var dataDbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedDataDbURL()!)

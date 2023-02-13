@@ -10,7 +10,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_cast
 class BlockDownloaderTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"

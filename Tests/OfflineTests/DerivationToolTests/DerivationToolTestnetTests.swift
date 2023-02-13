@@ -9,7 +9,6 @@
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_unwrapping
 class DerivationToolTestnetTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     var seedPhrase = """

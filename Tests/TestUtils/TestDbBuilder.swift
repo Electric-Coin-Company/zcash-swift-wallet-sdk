@@ -37,8 +37,7 @@ struct TestDbHandle {
 }
 
 // This requires reference semantics, an enum cannot be used
-// swiftlint:disable:next convenience_type
-class TestDbBuilder {
+enum TestDbBuilder {
     enum TestBuilderError: Error {
         case generalError
     }
@@ -127,7 +126,6 @@ class InMemoryDbProvider: ConnectionProvider {
 enum StubBlockCreator {
     static func createRandomBlockMeta() -> ZcashCompactBlock.Meta {
         ZcashCompactBlock.Meta(
-            // swiftlint:disable:next force_unwrapping
             hash: randomData(ofLength: 32)!,
             time: UInt32(Date().timeIntervalSince1970),
             saplingOutputs: UInt32.random(in: 0 ... 32),

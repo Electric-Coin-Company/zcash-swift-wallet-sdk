@@ -10,7 +10,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_try
 class TransactionEnhancementTests: XCTestCase {
     var cancellables: [AnyCancellable] = []
     let processorEventHandler = CompactBlockProcessorEventHandler()

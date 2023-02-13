@@ -10,7 +10,6 @@ import XCTest
 @testable import ZcashLightClientKit
 
 // FIXME: [#586] disabled until this is resolved https://github.com/zcash/ZcashLightClientKit/issues/586
-// swiftlint:disable type_body_length implicitly_unwrapped_optional force_try
 class RewindRescanTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
     // swiftlint:disable:next line_length
