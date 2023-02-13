@@ -24,11 +24,6 @@ basic reorg test.  Scan, get a reorg and then reach latest height.
 */
 // swiftlint:disable implicitly_unwrapped_optional print_function_usage function_parameter_count
 class ReOrgTests: XCTestCase {
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
-    // swiftlint:disable:next line_length
-    let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let network = DarksideWalletDNetwork()
@@ -51,7 +46,7 @@ class ReOrgTests: XCTestCase {
         try super.setUpWithError()
 
         self.coordinator = try TestCoordinator(
-            seed: self.seedPhrase,
+            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )

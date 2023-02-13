@@ -12,12 +12,6 @@ import XCTest
 // FIXME: [#586] disabled until this is resolved https://github.com/zcash/ZcashLightClientKit/issues/586
 // swiftlint:disable type_body_length implicitly_unwrapped_optional force_try
 class RewindRescanTests: XCTestCase {
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715?
-    // swiftlint:disable:next line_length
-    let seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    let testRecipientAddress = try! Recipient("zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a", network: .mainnet)
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let branchID = "2bb40e60"
@@ -35,7 +29,7 @@ class RewindRescanTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: self.seedPhrase,
+            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -198,7 +192,7 @@ class RewindRescanTests: XCTestCase {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: coordinator.spendingKey,
                 zatoshi: Zatoshi(1000),
-                toAddress: testRecipientAddress,
+                toAddress: try! Recipient(Environment.testRecipientAddress, network: .mainnet),
                 memo: .empty
             )
             XCTAssertEqual(Zatoshi(1000), pendingTx.value)
@@ -301,7 +295,7 @@ class RewindRescanTests: XCTestCase {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
                 zatoshi: maxBalance,
-                toAddress: testRecipientAddress,
+                toAddress: try! Recipient(Environment.testRecipientAddress, network: .mainnet),
                 memo: try Memo(string: "test send \(self.description) \(Date().description)")
             )
             pendingTx = transaction

@@ -6,21 +6,19 @@
 //
 
 import XCTest
+@testable import TestUtils
 @testable import ZcashLightClientKit
 
 // swiftlint:disable force_unwrapping
 class DerivationToolMainnetTests: XCTestCase {
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    var seedPhrase = """
-    still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge \
-    solid fish spread
-    """
+    var seedPhrase = Environment.seedPhrase
     var seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
 
-    // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    let testRecipientAddress = UnifiedAddress(validatedEncoding: """
-    u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj
-    """)
+    let testRecipientAddress = UnifiedAddress(
+        validatedEncoding: """
+        u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj
+        """
+    )
     
     let expectedSpendingKey = UnifiedSpendingKey(
         network: .mainnet,
