@@ -1175,18 +1175,25 @@ extension CompactBlockProcessorError: LocalizedError {
         case .missingDbPath(let path):
             return "CompactBlockProcessor was set up with path \(path) but that location couldn't be reached"
         case let .networkMismatch(expected, found):
-            // swiftlint:disable:next line_length
-            return "A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing to the right server"
+            return """
+            A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing \
+            to the right server
+            """
         case .rewindAttemptWhileProcessing:
             return "Can't execute rewind while sync process is in progress."
         case let .saplingActivationMismatch(expected, found):
-            // swiftlint:disable:next line_length
-            return "A server was reached, it's showing a different sapling activation. App expected sapling activation height to be \(expected) but instead it found \(found). Are you sure you are pointing to the right server?"
+            return """
+            A server was reached, it's showing a different sapling activation. App expected sapling activation height to be \(expected) but instead \
+            it found \(found). Are you sure you are pointing to the right server?
+            """
         case .unspecifiedError(let underlyingError):
             return "Unspecified error caused by this underlying error: \(underlyingError)"
         case let .wrongConsensusBranchId(expectedLocally, found):
-            // swiftlint:disable:next line_length
-            return "The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade."
+            return """
+            The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to \
+            be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a \
+            different network or out of date after a network upgrade.
+            """
         case .unknown: return "Unknown error occured."
         case .wipeAttemptWhileProcessing:
             return "Can't execute wipe while sync process is in progress."

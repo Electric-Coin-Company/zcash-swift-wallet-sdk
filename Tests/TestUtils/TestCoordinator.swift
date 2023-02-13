@@ -9,7 +9,7 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_try function_parameter_count
+// swiftlint:disable force_try function_parameter_count force_unwrapping
 
 /// This is the TestCoordinator
 /// What does it do? quite a lot.
@@ -365,5 +365,12 @@ enum TestSynchronizerBuilder {
             walletBirthday: walletBirthday,
             network: network
         )
+    }
+}
+
+extension TestCoordinator {
+    static func loadResource(name: String, extension: String) -> Data {
+        let url = Bundle.module.url(forResource: name, withExtension: `extension`)!
+        return try! Data(contentsOf: url)
     }
 }

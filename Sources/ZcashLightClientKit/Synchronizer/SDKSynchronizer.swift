@@ -668,8 +668,7 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
 
-    // swiftlint:disable:next strict_fileprivate
-    fileprivate func snapshotState() async -> SDKSynchronizer.SynchronizerState {
+    private func snapshotState() async -> SDKSynchronizer.SynchronizerState {
         SynchronizerState(
             shieldedBalance: WalletBalance(
                 verified: initializer.getVerifiedBalance(),

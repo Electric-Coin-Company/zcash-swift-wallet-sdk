@@ -9,28 +9,58 @@
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable line_length force_unwrapping
+// swiftlint:disable force_unwrapping
 class DerivationToolTestnetTests: XCTestCase {
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    var seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+    var seedPhrase = """
+    still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge \
+    solid fish spread
+    """
     
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
     var seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
     
     // TODO: [#715] Parameterize this from environment, https://github.com/zcash/ZcashLightClientKit/issues/715
-    let testRecipientAddress = UnifiedAddress(validatedEncoding: "utest1uqmec4a2njqz2z2rwppchsd06qe7a0jh4jmsqr0yy99m9er9646zlxunf3v8qr0hncgv86e8a62vxy0qa32qzetmj8s57yudmyx9zav6f52nurclsqjkqtjtpz6vg679p6wkczpl2wu")
+    let testRecipientAddress = UnifiedAddress(
+        validatedEncoding: """
+        utest1uqmec4a2njqz2z2rwppchsd06qe7a0jh4jmsqr0yy99m9er9646zlxunf3v8qr0hncgv86e8a62vxy0qa32qzetmj8s57yudmyx9zav6f52nurclsqjkqtjtpz6vg679p6wkcz\
+        pl2wu
+        """
+    )
 
     let expectedSpendingKey = UnifiedSpendingKey(
         network: .testnet,
-        bytes: Data(base64Encoded: "tNDWwgMg6xrWm9j+A47jcwGN5dh/XkFK6GKTy5TYam5Y8UF6o+kCqQNMS2+dAAAAgAiJqYeoNR3c8a4CGf86m/5GnI0AUAInWtAQ5HAKsbr9jmxmLayd6B/zoSQdJAxSHzFzKr4fZlFvfVlvs/mc8QwAqfuvRiaAmx95knjyp+RKfn8r72qMjYgzEWaj0ei+DGbvf/RToOR9wvevnpsPYkVN0dxg+RCDpqfUX+5K82uvByr+a0STltGka9zx5AiUuSBi/gC+rid7L5P123xTQ+AAQAJO8vbUxpLCW2IvT1HEYhBOtKJDvC1Wp+wmBUmTmhG1aw/JybD+N5IY6PgiY2fiU43KI7tW9HZAlQTKitT+9m8=")!.bytes,
+        bytes: Data(
+            base64Encoded: """
+            tNDWwgMg6xrWm9j+A47jcwGN5dh/XkFK6GKTy5TYam5Y8UF6o+kCqQNMS2+dAAAAgAiJqYeoNR3c8a4CGf86m/5GnI0AUAInWtAQ5HAKsbr9jmxmLayd6B/zoSQdJAxSHzFzKr4fZ\
+            lFvfVlvs/mc8QwAqfuvRiaAmx95knjyp+RKfn8r72qMjYgzEWaj0ei+DGbvf/RToOR9wvevnpsPYkVN0dxg+RCDpqfUX+5K82uvByr+a0STltGka9zx5AiUuSBi/gC+rid7L5P123\
+            xTQ+AAQAJO8vbUxpLCW2IvT1HEYhBOtKJDvC1Wp+wmBUmTmhG1aw/JybD+N5IY6PgiY2fiU43KI7tW9HZAlQTKitT+9m8=
+            """
+            )!.bytes,
         account: 0
         )
 
-    let expectedViewingKey = UnifiedFullViewingKey(validatedEncoding: "uviewtest12tkgzhaevmw78us4xj2cx6ehxjgpp5da2qwrjqvytztejqfjdmy3e6nryqggtwrjum5cefuuuky8rscuw5dynmjec2tx3kkupqexw4va879pf874kvp6r8kjeza26gysxllaqwl67hm9u0jjke06zc93asrpw4wmy3g0lr9r5cy9pz49q2g7y7wm2pls5akmzhuvqr7khftk93aa2kpvwp7n3sjtmef28mxg3n2rpctsjlgsrhc29g6r23qc0u4tzd8rz8vqq4j7jxummdts8zx0jatzw4l2tl7r3egxhlw587rtkjx0y6dvw4hf4vjprn0qv3hs0sulmavk84ajeewn7argyerpr4essqvgfd0d24jpz6phxlasnd58qazh9d3yc6ad3hc5atp0pkvlq053zga65gscp0pv2plhqj9y2tcmx43thw5g4v8z3unytkc2dhyttuhmnlh5dyz4rmhgfkc96tp8z8rpfe35whjvky0jagz5n7qx", account: 0)
+    let expectedViewingKey = UnifiedFullViewingKey(
+        validatedEncoding: """
+        uviewtest12tkgzhaevmw78us4xj2cx6ehxjgpp5da2qwrjqvytztejqfjdmy3e6nryqggtwrjum5cefuuuky8rscuw5dynmjec2tx3kkupqexw4va879pf874kvp6r8kjeza26gysxll\
+        aqwl67hm9u0jjke06zc93asrpw4wmy3g0lr9r5cy9pz49q2g7y7wm2pls5akmzhuvqr7khftk93aa2kpvwp7n3sjtmef28mxg3n2rpctsjlgsrhc29g6r23qc0u4tzd8rz8vqq4j7jxum\
+        mdts8zx0jatzw4l2tl7r3egxhlw587rtkjx0y6dvw4hf4vjprn0qv3hs0sulmavk84ajeewn7argyerpr4essqvgfd0d24jpz6phxlasnd58qazh9d3yc6ad3hc5atp0pkvlq053zga65\
+        gscp0pv2plhqj9y2tcmx43thw5g4v8z3unytkc2dhyttuhmnlh5dyz4rmhgfkc96tp8z8rpfe35whjvky0jagz5n7qx
+        """,
+        account: 0
+    )
 
-    let expectedSaplingExtendedViewingKey = SaplingExtendedFullViewingKey(validatedEncoding: "zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htfavqk72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqgegsaj")
+    let expectedSaplingExtendedViewingKey = SaplingExtendedFullViewingKey(
+        validatedEncoding: """
+        zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htfavqk72uc\
+        huuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm\
+        03f58cqgegsaj
+        """
+    )
 
-    let expectedSaplingAddress = SaplingAddress(validatedEncoding: "ztestsapling1475xtm56czrzmleqzzlu4cxvjjfsy2p6rv78q07232cpsx5ee52k0mn5jyndq09mampkgvrxnwg")
+    let expectedSaplingAddress = SaplingAddress(
+        validatedEncoding: "ztestsapling1475xtm56czrzmleqzzlu4cxvjjfsy2p6rv78q07232cpsx5ee52k0mn5jyndq09mampkgvrxnwg"
+    )
 
     let derivationTool = DerivationTool(networkType: NetworkType.testnet)
     let expectedTransparentAddress = TransparentAddress(validatedEncoding: "tmXuTnE11JojToagTqxXUn6KvdxDE3iLKbp")
@@ -75,9 +105,23 @@ class DerivationToolTestnetTests: XCTestCase {
     }
 
     func testIsValidViewingKey() throws {
-        XCTAssertTrue( DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey("zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htfavqk72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqgegsaj", networkType: .testnet))
+        XCTAssertTrue(
+            DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(
+                """
+                zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htf\
+                avqk72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrz\
+                lcqtat380vhe8awm03f58cqgegsaj
+                """,
+                networkType: .testnet
+            )
+        )
 
-        XCTAssertFalse( DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey("zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7", networkType: .testnet))
+        XCTAssertFalse(
+            DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(
+                "zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7",
+                networkType: .testnet
+            )
+        )
     }
 
     func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
@@ -106,7 +150,11 @@ class DerivationToolTestnetTests: XCTestCase {
     }
 
     func testSpendingKeyValidationFailsOnInvalidKey() {
-        let wrongSpendingKey = "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vvZzZzZz"
+        let wrongSpendingKey = """
+        secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajs\
+        g4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd\
+        4fsuaz686lgszc7nc9vvZzZzZz
+        """
 
         XCTAssertFalse(derivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey))
     }
