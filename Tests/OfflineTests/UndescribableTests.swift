@@ -87,8 +87,13 @@ final class UndescribableTests: XCTestCase {
     }
 
     func testSpendingKeyCantBeDescribed() {
-        // swiftlint:disable:next line_length
-        let key = SaplingExtendedFullViewingKey(validatedEncoding: "zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htfavqk72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat380vhe8awm03f58cqgegsaj")
+        let key = SaplingExtendedFullViewingKey(
+            validatedEncoding: """
+            zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htfavq\
+            k72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrzlcqtat\
+            380vhe8awm03f58cqgegsaj
+            """
+        )
 
         var str = ""
         debugPrint(key, to: &str)

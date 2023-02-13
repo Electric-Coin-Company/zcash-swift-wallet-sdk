@@ -9,7 +9,6 @@ import XCTest
 @testable import ZcashLightClientKit
 @testable import TestUtils
 
-// swiftlint:disable line_length
 class SynchronizerTests: XCTestCase {
     class MockLatestBlockHeightProvider: LatestBlockHeightProvider {
         let birthday: BlockHeight
@@ -26,7 +25,10 @@ class SynchronizerTests: XCTestCase {
     // swiftlint:disable:next implicitly_unwrapped_optional
     var coordinator: TestCoordinator!
 
-    let seedPhrase = "wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame"
+    let seedPhrase = """
+    wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame
+    """
+
     var birthday: BlockHeight = 1_730_000
 
     @MainActor
@@ -94,15 +96,16 @@ class SynchronizerTests: XCTestCase {
             let fetchUTXOsReport = cumulativeSummary.fetchUTXOsReport ?? .zero
             let totalSyncReport = cumulativeSummary.totalSyncReport ?? .zero
 
+            let downloadedBlockAVGTime = downloadedBlocksReport.avgTime
             LoggerProxy.debug("""
-                testHundredBlocksSync() SUMMARY min max avg REPORT:
-                downloadedBlocksTimes: min: \(downloadedBlocksReport.minTime) max: \(downloadedBlocksReport.maxTime) avg: \(downloadedBlocksReport.avgTime)
-                validatedBlocksTimes: min: \(validatedBlocksReport.minTime) max: \(validatedBlocksReport.maxTime) avg: \(validatedBlocksReport.avgTime)
-                scannedBlocksTimes: min: \(scannedBlocksReport.minTime) max: \(scannedBlocksReport.maxTime) avg: \(scannedBlocksReport.avgTime)
-                enhancementTimes: min: \(enhancementReport.minTime) max: \(enhancementReport.maxTime) avg: \(enhancementReport.avgTime)
-                fetchUTXOsTimes: min: \(fetchUTXOsReport.minTime) max: \(fetchUTXOsReport.maxTime) avg: \(fetchUTXOsReport.avgTime)
-                totalSyncTimes: min: \(totalSyncReport.minTime) max: \(totalSyncReport.maxTime) avg: \(totalSyncReport.avgTime)
-                """)
+            testHundredBlocksSync() SUMMARY min max avg REPORT:
+            downloadedBlocksTimes: min: \(downloadedBlocksReport.minTime) max: \(downloadedBlocksReport.maxTime) avg: \(downloadedBlockAVGTime)
+            validatedBlocksTimes: min: \(validatedBlocksReport.minTime) max: \(validatedBlocksReport.maxTime) avg: \(validatedBlocksReport.avgTime)
+            scannedBlocksTimes: min: \(scannedBlocksReport.minTime) max: \(scannedBlocksReport.maxTime) avg: \(scannedBlocksReport.avgTime)
+            enhancementTimes: min: \(enhancementReport.minTime) max: \(enhancementReport.maxTime) avg: \(enhancementReport.avgTime)
+            fetchUTXOsTimes: min: \(fetchUTXOsReport.minTime) max: \(fetchUTXOsReport.maxTime) avg: \(fetchUTXOsReport.avgTime)
+            totalSyncTimes: min: \(totalSyncReport.minTime) max: \(totalSyncReport.maxTime) avg: \(totalSyncReport.avgTime)
+            """)
         }
         
         SDKMetrics.shared.disableMetrics()
