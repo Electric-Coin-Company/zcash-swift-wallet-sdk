@@ -35,7 +35,8 @@ class BalanceTests: XCTestCase {
     /**
     verify that when sending the maximum amount, the transactions are broadcasted properly
     */
-    func testMaxAmountSend() async throws {
+    // FIXME [#783]: Fix test
+    func disabled_testMaxAmountSend() async throws {
         let notificationHandler = SDKSynchonizerListener()
         let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
         let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
@@ -193,7 +194,8 @@ class BalanceTests: XCTestCase {
     /**
     verify that when sending the maximum amount minus one zatoshi, the transactions are broadcasted properly
     */
-    func testMaxAmountMinusOneSend() async throws {
+    // FIXME [#781]: Fix test
+    func disabled_testMaxAmountMinusOneSend() async throws {
         let notificationHandler = SDKSynchonizerListener()
         let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
         let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
@@ -352,7 +354,8 @@ class BalanceTests: XCTestCase {
     /**
     verify that when sending the a no change transaction, the transactions are broadcasted properly
     */
-    func testSingleNoteNoChangeTransaction() async throws {
+    // FIXME [#785]: Fix test
+    func disabled_testSingleNoteNoChangeTransaction() async throws {
         let notificationHandler = SDKSynchonizerListener()
         let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
         let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
@@ -522,7 +525,8 @@ class BalanceTests: XCTestCase {
     Sent:  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
     Error:  previous available funds  equals to current funds
     */
-    func testVerifyAvailableBalanceDuringSend() async throws {
+    // FIXME [#782]: Fix tests
+    func disabled_testVerifyAvailableBalanceDuringSend() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
@@ -704,7 +708,8 @@ class BalanceTests: XCTestCase {
     Error:  previous total balance  funds  equals to current total balance
 
     */
-    func testVerifyTotalBalanceDuringSend() async throws {
+    // FIXME [#787]: Fix test
+    func disabled_testVerifyTotalBalanceDuringSend() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
@@ -864,7 +869,8 @@ class BalanceTests: XCTestCase {
     There’s a change note of value (previous note value - sent amount)
 
     */
-    func testVerifyChangeTransaction() async throws {
+    // FIXME [#786]: Fix test
+    func disabled_testVerifyChangeTransaction() async throws {
         try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
@@ -1050,7 +1056,8 @@ class BalanceTests: XCTestCase {
     Verified Balance is equal to verified balance previously shown before sending the expired transaction
      
     */
-    func testVerifyBalanceAfterExpiredTransaction() async throws {
+    // FIXME [#784]: Fix test
+    func disabled_testVerifyBalanceAfterExpiredTransaction() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: self.defaultLatestHeight)

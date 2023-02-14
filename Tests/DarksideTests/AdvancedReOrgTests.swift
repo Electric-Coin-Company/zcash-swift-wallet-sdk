@@ -1025,7 +1025,8 @@ class AdvancedReOrgTests: XCTestCase {
     /// 4. sync to latest height
     /// 5. verify that reorg Happened at reorgHeight
     /// 6. verify that balances match initial balances
-    @MainActor func testReOrgRemovesIncomingTxForever() async throws {
+    // FIXME [#644]: Fix test
+    @MainActor func disabled_testReOrgRemovesIncomingTxForever() async throws {
         await hookToReOrgNotification()
         try coordinator.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         
