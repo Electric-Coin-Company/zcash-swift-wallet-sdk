@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_try type_body_length
 class BlockBatchValidationTests: XCTestCase {
     let testTempDirectory = URL(fileURLWithPath: NSString(
         string: NSTemporaryDirectory()

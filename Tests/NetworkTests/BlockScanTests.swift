@@ -12,7 +12,6 @@ import SQLite
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_try print_function_usage
 class BlockScanTests: XCTestCase {
     var cancelables: [AnyCancellable] = []
 

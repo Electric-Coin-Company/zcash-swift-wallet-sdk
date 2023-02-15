@@ -10,7 +10,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_unwrapping force_try type_body_length file_length cyclomatic_complexity
 class AdvancedReOrgTests: XCTestCase {
     let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 663150

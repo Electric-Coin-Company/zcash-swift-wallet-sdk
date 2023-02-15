@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional
 class PendingTransactionUpdatesTest: XCTestCase {
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
@@ -82,7 +81,6 @@ class PendingTransactionUpdatesTest: XCTestCase {
         LoggerProxy.info("2. send transaction to recipient address")
         do {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
-                // swiftlint:disable:next force_unwrapping
                 spendingKey: self.coordinator.spendingKeys!.first!,
                 zatoshi: Zatoshi(20000),
                 toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),

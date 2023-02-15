@@ -4,7 +4,6 @@
 //
 //  Created by Francisco Gindre on 1/26/23.
 //
-// swiftlint:disable:all implicitly_unwrapped_optional force_unwrapping
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit

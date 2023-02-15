@@ -11,7 +11,6 @@ import XCTest
 @testable import ZcashLightClientKit
 import GRPC
 
-// swiftlint:disable implicitly_unwrapped_optional force_unwrapping
 class LightWalletServiceTests: XCTestCase {
     let network: ZcashNetwork = ZcashNetworkBuilder.network(for: .testnet)
 

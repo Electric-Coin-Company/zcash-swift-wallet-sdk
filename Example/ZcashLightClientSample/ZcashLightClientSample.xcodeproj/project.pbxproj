@@ -475,7 +475,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../\n./Tools/swiftlint lint --config .swiftlint.yml\n";
+			shellScript = "cd ../../\necho \"Linting the SDK code\"\n./Tools/swiftlint lint --config .swiftlint.yml\necho \"Linting tests\"\n./Tools/swiftlint lint --config .swiftlint_tests.yml\n";
 		};
 		0DCB58A4237B5B580040096C /* Swiftlint */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -494,7 +494,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd ../../\n./Tools/swiftlint lint --config .swiftlint.yml\n";
+			shellScript = "cd ../../\necho \"Linting the SDK code\"\n./Tools/swiftlint lint --config .swiftlint.yml\necho \"Linting tests\"\n./Tools/swiftlint lint --config .swiftlint_tests.yml\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

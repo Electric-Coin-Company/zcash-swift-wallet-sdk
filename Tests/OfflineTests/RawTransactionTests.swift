@@ -10,7 +10,6 @@ import XCTest
 @testable import ZcashLightClientKit
 @testable import SwiftProtobuf
 
-// swiftlint:disable implicitly_unwrapped_optional force_unwrapping
 class RawTransactionTests: XCTestCase {
     var rawTx: Data!
     var transactionRepository: TransactionSQLDAO!

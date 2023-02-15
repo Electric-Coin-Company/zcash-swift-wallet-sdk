@@ -10,7 +10,6 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional
 class DarksideSanityCheckTests: XCTestCase {
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150

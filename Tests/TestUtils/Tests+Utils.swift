@@ -26,7 +26,6 @@ public enum Constants {
     static let address: String = ProcessInfo.processInfo.environment[Environment.lightwalletdKey] ?? "localhost"
 }
 
-// swiftlint:disable identifier_name
 enum LightWalletEndpointBuilder {
     static var `default`: LightWalletEndpoint {
         LightWalletEndpoint(address: Constants.address, port: 9067, secure: false)
@@ -138,7 +137,6 @@ func parametersReady() -> Bool {
     return true
 }
 
-// swiftlint:disable force_unwrapping
 class TestSeed {
     /**
     test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"

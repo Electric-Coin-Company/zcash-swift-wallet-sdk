@@ -9,7 +9,6 @@
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional
 class InternalSyncProgressTests: XCTestCase {
     var storage: InternalSyncProgressStorage!
     var internalSyncProgress: InternalSyncProgress!

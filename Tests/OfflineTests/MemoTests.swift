@@ -8,7 +8,6 @@
 import XCTest
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_unwrapping print_function_usage
 class MemoTests: XCTestCase {
     /**
     Non-utf8 memos are properly ignored

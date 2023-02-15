@@ -10,7 +10,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable implicitly_unwrapped_optional force_unwrapping
 final class SynchronizerTests: XCTestCase {
     let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 663150

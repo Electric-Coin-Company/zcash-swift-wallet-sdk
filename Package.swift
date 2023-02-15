@@ -49,7 +49,8 @@ let package = Package(
                 .copy("Resources/darkside_pending.db"),
                 .copy("Resources/sandblasted_mainnet_block.json"),
                 .copy("Resources/txBase64String.txt"),
-                .copy("Resources/txFromAndroidSDK.txt")
+                .copy("Resources/txFromAndroidSDK.txt"),
+                .copy("Resources/integerOverflowJSON.json")
             ]
         ),
         .testTarget(

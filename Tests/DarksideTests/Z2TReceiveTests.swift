@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_unwrapping implicitly_unwrapped_optional force_try
 class Z2TReceiveTests: XCTestCase {
     let testRecipientAddress = "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
     let sendAmount: Int64 = 1000

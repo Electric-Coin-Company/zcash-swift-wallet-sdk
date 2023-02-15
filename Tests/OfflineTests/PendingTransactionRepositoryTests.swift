@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable force_try force_unwrapping implicitly_unwrapped_optional
 class PendingTransactionRepositoryTests: XCTestCase {
     let dbUrl = try! TestDbBuilder.pendingTransactionsDbURL()
     let recipient = SaplingAddress(validatedEncoding: "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6")

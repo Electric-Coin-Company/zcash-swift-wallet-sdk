@@ -9,7 +9,6 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-// swiftlint:disable type_body_length implicitly_unwrapped_optional force_unwrapping file_length
 class BalanceTests: XCTestCase {
     let sendAmount = Zatoshi(1000)
     let defaultLatestHeight: BlockHeight = 663188
@@ -523,7 +522,6 @@ class BalanceTests: XCTestCase {
     Sent:  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
     Error:  previous available funds  equals to current funds
     */
-    // swiftlint:disable cyclomatic_complexity
     func testVerifyAvailableBalanceDuringSend() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
