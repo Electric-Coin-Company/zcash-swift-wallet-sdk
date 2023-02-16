@@ -47,6 +47,7 @@ class BlockDownloaderTests: XCTestCase {
     override func tearDown() {
         super.tearDown()
         try? testFileManager.removeItem(at: testTempDirectory)
+        darksideWalletService = nil
         service = nil
         storage = nil
         downloader = nil

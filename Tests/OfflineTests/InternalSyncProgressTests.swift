@@ -19,6 +19,12 @@ class InternalSyncProgressTests: XCTestCase {
         internalSyncProgress = InternalSyncProgress(storage: storage)
     }
 
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
+        storage = nil
+        internalSyncProgress = nil
+    }
+
     func test__trackedValuesAreHigherThanLatestHeight__nextStateIsWait() async throws {
         let latestHeight = 623000
         await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 630000)

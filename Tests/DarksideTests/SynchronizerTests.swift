@@ -24,7 +24,7 @@ final class SynchronizerTests: XCTestCase {
     let chainName = "main"
     let network = DarksideWalletDNetwork()
     var cancellables: [AnyCancellable] = []
-    let processorEventHandler = CompactBlockProcessorEventHandler()
+    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -55,6 +55,9 @@ final class SynchronizerTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
+        coordinator = nil
+        cancellables = []
+        processorEventHandler = nil
     }
 
     func handleReorg(event: CompactBlockProcessor.Event) {

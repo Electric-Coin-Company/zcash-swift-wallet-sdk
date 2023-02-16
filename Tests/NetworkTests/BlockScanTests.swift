@@ -57,11 +57,12 @@ class BlockScanTests: XCTestCase {
     override func tearDownWithError() throws {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         try super.tearDownWithError()
-
         try? testFileManager.removeItem(at: dataDbURL)
         try? testFileManager.removeItem(at: spendParamsURL)
         try? testFileManager.removeItem(at: outputParamsURL)
         try? testFileManager.removeItem(at: testTempDirectory)
+        cancelables = []
+        blockRepository = nil
     }
     
     func testSingleDownloadAndScan() async throws {

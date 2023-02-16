@@ -20,6 +20,7 @@ final class InternalStateConsistencyTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
+
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
@@ -37,6 +38,7 @@ final class InternalStateConsistencyTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
+        coordinator = nil
     }
 
     @MainActor func testInternalStateIsConsistentWhenMigrating() async throws {

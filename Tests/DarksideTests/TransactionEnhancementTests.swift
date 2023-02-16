@@ -12,7 +12,7 @@ import XCTest
 
 class TransactionEnhancementTests: XCTestCase {
     var cancellables: [AnyCancellable] = []
-    let processorEventHandler = CompactBlockProcessorEventHandler()
+    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
     let mockLatestHeight = BlockHeight(663250)
     let targetLatestHeight = BlockHeight(663251)
     let walletBirthday = BlockHeight(663150)
@@ -144,9 +144,16 @@ class TransactionEnhancementTests: XCTestCase {
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
+        XCTestCase.wait { await self.processor.stop() }
         try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         NotificationCenter.default.removeObserver(self)
+        processorEventHandler = nil
+        initializer = nil
+        processorConfig = nil
+        processor = nil
+        darksideWalletService = nil
+        downloader = nil
     }
     
     private func startProcessing() async throws {

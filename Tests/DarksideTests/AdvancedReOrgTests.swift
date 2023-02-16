@@ -42,6 +42,8 @@ class AdvancedReOrgTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
+        coordinator = nil
+        cancellables = []
     }
     
     func handleReorg(event: CompactBlockProcessor.Event) {

@@ -658,9 +658,11 @@ actor CompactBlockProcessor {
                     eventPublisher.send(.storedUTXOs(result))
                 }
 
+                LoggerProxy.debug("Fetching sapling parameters")
                 state = .handlingSaplingFiles
                 try await saplingParametersHandler.handleIfNeeded()
 
+                LoggerProxy.debug("Clearning cache")
                 try await clearCompactBlockCache()
 
                 if !Task.isCancelled {

@@ -31,7 +31,7 @@ class CompactBlockReorgTests: XCTestCase {
 
     let testFileManager = FileManager()
     var cancellables: [AnyCancellable] = []
-    let processorEventHandler = CompactBlockProcessorEventHandler()
+    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
 
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
@@ -117,11 +117,15 @@ class CompactBlockReorgTests: XCTestCase {
             .store(in: &cancellables)
     }
     
-    override func tearDown() {
-        super.tearDown()
+    override func tearDownWithError() throws {
+        try super.tearDownWithError()
+        XCTestCase.wait { await self.processor.stop() }
         try! FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         NotificationCenter.default.removeObserver(self)
+        cancellables = []
+        processorEventHandler = nil
+        processor = nil
     }
     
     func processorHandledReorg(event: CompactBlockProcessor.Event) {

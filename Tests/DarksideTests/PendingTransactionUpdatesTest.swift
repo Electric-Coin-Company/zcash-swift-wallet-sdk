@@ -21,6 +21,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
+    
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
@@ -39,6 +40,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
+        coordinator = nil
     }
     
     func testPendingTransactionMinedHeightUpdated() async throws {

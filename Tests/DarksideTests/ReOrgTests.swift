@@ -31,7 +31,7 @@ class ReOrgTests: XCTestCase {
     let mockLatestHeight = BlockHeight(663250)
     let targetLatestHeight = BlockHeight(663251)
     let walletBirthday = BlockHeight(663150)
-
+    
     var birthday: BlockHeight = 663150
     var reorgExpectation = XCTestExpectation(description: "reorg")
     var coordinator: TestCoordinator!
@@ -68,9 +68,12 @@ class ReOrgTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
+        try coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
+        coordinator = nil
+        cancellables = []
     }
 
     func handleReOrgNotification(event: CompactBlockProcessor.Event) {
