@@ -58,6 +58,7 @@ class SynchronizerTests: XCTestCase {
                 network: network,
                 spendParamsURL: try __spendParamsURL(),
                 outputParamsURL: try __outputParamsURL(),
+                saplingParamsSourceURL: SaplingParamsSourceURL.tests,
                 viewingKeys: [ufvk],
                 walletBirthday: birthday,
                 alias: "",

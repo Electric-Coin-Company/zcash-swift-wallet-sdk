@@ -66,6 +66,7 @@ class TransactionEnhancementTests: XCTestCase {
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             walletBirthday: birthday.height,
             network: network
         )

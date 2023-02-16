@@ -84,7 +84,9 @@ class SaplingParametersViewController: UIViewController {
             do {
                 let urls = try await SaplingParameterDownloader.downloadParamsIfnotPresent(
                     spendURL: spendParameter,
-                    outputURL: outputParameter
+                    spendSourceURL: SaplingParamsSourceURL.default.spendParamFileURL,
+                    outputURL: outputParameter,
+                    outputSourceURL: SaplingParamsSourceURL.default.outputParamFileURL
                 )
                 spendPath.text = urls.spend.path
                 outputPath.text = urls.output.path

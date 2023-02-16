@@ -397,7 +397,9 @@ public class SDKSynchronizer: Synchronizer {
         do {
             try await SaplingParameterDownloader.downloadParamsIfnotPresent(
                 spendURL: initializer.spendParamsURL,
-                outputURL: initializer.outputParamsURL
+                spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+                outputURL: initializer.outputParamsURL,
+                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL
             )
         } catch {
             throw SynchronizerError.parameterMissing(underlyingError: error)

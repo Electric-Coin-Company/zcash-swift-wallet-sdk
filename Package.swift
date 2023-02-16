@@ -50,7 +50,9 @@ let package = Package(
                 .copy("Resources/sandblasted_mainnet_block.json"),
                 .copy("Resources/txBase64String.txt"),
                 .copy("Resources/txFromAndroidSDK.txt"),
-                .copy("Resources/integerOverflowJSON.json")
+                .copy("Resources/integerOverflowJSON.json"),
+                .copy("Resources/sapling-spend.params"),
+                .copy("Resources/sapling-output.params")
             ]
         ),
         .testTarget(

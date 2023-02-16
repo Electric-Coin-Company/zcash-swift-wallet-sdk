@@ -19,6 +19,7 @@ class CompactBlockReorgTests: XCTestCase {
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight,
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
