@@ -25,7 +25,7 @@ class CompactBlockProcessorTests: XCTestCase {
     }()
 
     var cancellables: [AnyCancellable] = []
-    let processorEventHandler = CompactBlockProcessorEventHandler()
+    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -111,9 +111,13 @@ class CompactBlockProcessorTests: XCTestCase {
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
+        XCTestCase.wait { await self.processor.stop() }
         try FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         NotificationCenter.default.removeObserver(self)
+        cancellables = []
+        processor = nil
+        processorEventHandler = nil
     }
     
     func processorFailed(event: CompactBlockProcessor.Event) {

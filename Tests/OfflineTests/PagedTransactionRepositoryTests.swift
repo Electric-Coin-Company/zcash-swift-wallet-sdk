@@ -25,6 +25,12 @@ class PagedTransactionRepositoryTests: XCTestCase {
         pagedTransactionRepository = PagedTransactionDAO(repository: transactionRepository)
     }
 
+    override func tearDown() {
+        super.tearDown()
+        pagedTransactionRepository = nil
+        transactionRepository = nil
+    }
+
     func testBrowsePages() {
         let pageSize = pagedTransactionRepository.pageSize
         let pageCount = pagedTransactionRepository.pageCount

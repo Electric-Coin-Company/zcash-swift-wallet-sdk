@@ -44,6 +44,8 @@ class SychronizerDarksideTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
+        coordinator = nil
+        foundTransactions = []
     }
    
     func testFoundTransactions() throws {

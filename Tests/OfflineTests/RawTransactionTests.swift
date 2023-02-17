@@ -24,6 +24,11 @@ class RawTransactionTests: XCTestCase {
         super.setUp()
         rawTx = Data(base64Encoded: txBase64String)
     }
+
+    override func tearDown() {
+        super.tearDown()
+        transactionRepository = nil
+    }
     
     func testDeserialize() {
         guard let raw = Data(base64Encoded: txFromAndroidSDK) else {

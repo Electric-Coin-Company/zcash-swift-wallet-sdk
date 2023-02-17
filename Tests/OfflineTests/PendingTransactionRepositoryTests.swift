@@ -27,6 +27,7 @@ class PendingTransactionRepositoryTests: XCTestCase {
     override func tearDown() {
         super.tearDown()
         cleanUpDb()
+        pendingRepository = nil
     }
     
     func cleanUpDb() {
