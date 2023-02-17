@@ -21,11 +21,17 @@ final class TransactionDetailModel {
 
     init(sendTransaction transaction: ZcashTransaction.Sent, memos: [Memo]) {
         self.id = transaction.rawID?.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight.description
+        self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
-        self.created = Date(timeIntervalSince1970: transaction.blockTime).description
+
         self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
         self.memo = memos.first?.toString()
+
+        if let blockTime = transaction.blockTime {
+            created = Date(timeIntervalSince1970: blockTime).description
+        } else {
+            created = nil
+        }
     }
 
     init(receivedTransaction transaction: ZcashTransaction.Received, memos: [Memo]) {
