@@ -28,13 +28,15 @@ class BlockDownloaderTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+
         storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted
         )
+        try storage.create()
+
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         darksideWalletService = DarksideWalletService(service: service as! LightWalletGRPCService)
         
@@ -53,8 +55,7 @@ class BlockDownloaderTests: XCTestCase {
         downloader = nil
     }
 
-    // FIXME [#788]: Fix test
-    func disabled_testSmallDownloadAsync() async {
+    func testSmallDownloadAsync() async {
         let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
         let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
         
@@ -69,7 +70,7 @@ class BlockDownloaderTests: XCTestCase {
             let resultHeight = try await self.downloader.lastDownloadedBlockHeightAsync()
             XCTAssertEqual(resultHeight, upperRange)
         } catch {
-            XCTFail("testSmallDownloadAsync() shouldn't fail")
+            XCTFail("testSmallDownloadAsync() shouldn't fail \(error)")
         }
     }
     
