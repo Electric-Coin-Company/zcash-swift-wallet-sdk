@@ -6,6 +6,7 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
 import UIKit
 
 class MainTableViewController: UITableViewController {
@@ -15,14 +16,17 @@ class MainTableViewController: UITableViewController {
         self.navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .trash,
             target: self,
-            action: #selector(clearDatabases(_:))
+            action: #selector(wipe(_:))
         )
     }
     
-    @objc func clearDatabases(_ sender: Any?) {
+    @objc func wipe(_ sender: Any?) {
         let alert = UIAlertController(
-            title: "Clear Databases?",
-            message: "You are about to clear existing databases. You will lose all synced blocks, stored TXs, etc",
+            title: "Wipe the wallet?",
+            message: """
+            You are about to clear existing databases. All synced blocks, stored TXs, etc will be removed form this device only. If the sync is in
+            progress it may take some time. Please be patient.
+            """,
             preferredStyle: .alert
         )
 
@@ -30,17 +34,49 @@ class MainTableViewController: UITableViewController {
             UIAlertAction(
                 title: "Drop it like it's FIAT",
                 style: UIAlertAction.Style.destructive
-            ) { _ in
-                guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
-                    return
+            ) { [weak self] _ in
+                guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+                appDelegate.wipe() { [weak self] possibleError in
+                    if let error = possibleError {
+                        self?.wipeFailedAlert(error: error)
+                    } else {
+                        self?.wipeSuccessfullAlert()
+                    }
                 }
-
-                appDelegate.clearDatabases()
             }
         )
 
         alert.addAction(UIAlertAction(title: "No please! Have mercy!", style: UIAlertAction.Style.cancel, handler: nil))
         
+        self.present(alert, animated: true, completion: nil)
+    }
+
+    private func wipeSuccessfullAlert() {
+        let alert = UIAlertController(
+            title: "Wipe is done!",
+            message: nil,
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Ok", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+
+    private func wipeFailedAlert(error: Error) {
+        loggerProxy.error("Wipe error: \(error)")
+
+        let alert = UIAlertController(
+            title: "Wipe FAILED!",
+            message: """
+            Something bad happened and wipe failed. This may happen only when some basic IO disk operations failed. The SDK may end up in \
+            inconsistent state. It's suggested to call the wipe again until it succeeds. Sorry.
+
+            \(error)
+            """,
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Ok", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     
