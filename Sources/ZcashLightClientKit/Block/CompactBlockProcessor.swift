@@ -142,6 +142,7 @@ actor CompactBlockProcessor {
     /// - parameter spendParamsURL: absolute file path of the sapling-spend.params file
     /// - parameter outputParamsURL: absolute file path of the sapling-output.params file
     struct Configuration {
+        let saplingParamsSourceURL: SaplingParamsSourceURL
         public var fsBlockCacheRoot: URL
         public var dataDb: URL
         public var spendParamsURL: URL
@@ -167,6 +168,7 @@ actor CompactBlockProcessor {
             dataDb: URL,
             spendParamsURL: URL,
             outputParamsURL: URL,
+            saplingParamsSourceURL: SaplingParamsSourceURL,
             downloadBatchSize: Int,
             retries: Int,
             maxBackoffInterval: TimeInterval,
@@ -179,6 +181,7 @@ actor CompactBlockProcessor {
             self.dataDb = dataDb
             self.spendParamsURL = spendParamsURL
             self.outputParamsURL = outputParamsURL
+            self.saplingParamsSourceURL = saplingParamsSourceURL
             self.network = network
             self.downloadBatchSize = downloadBatchSize
             self.retries = retries
@@ -195,6 +198,7 @@ actor CompactBlockProcessor {
             dataDb: URL,
             spendParamsURL: URL,
             outputParamsURL: URL,
+            saplingParamsSourceURL: SaplingParamsSourceURL,
             walletBirthday: BlockHeight,
             network: ZcashNetwork
         ) {
@@ -202,6 +206,7 @@ actor CompactBlockProcessor {
             self.dataDb = dataDb
             self.spendParamsURL = spendParamsURL
             self.outputParamsURL = outputParamsURL
+            self.saplingParamsSourceURL = saplingParamsSourceURL
             self.walletBirthday = walletBirthday
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
@@ -346,6 +351,7 @@ actor CompactBlockProcessor {
                 dataDb: initializer.dataDbURL,
                 spendParamsURL: initializer.spendParamsURL,
                 outputParamsURL: initializer.outputParamsURL,
+                saplingParamsSourceURL: initializer.saplingParamsSourceURL,
                 walletBirthday: Checkpoint.birthday(
                     with: initializer.walletBirthday,
                     network: initializer.network
@@ -417,7 +423,8 @@ actor CompactBlockProcessor {
             dataDb: config.dataDb,
             networkType: config.network.networkType,
             outputParamsURL: config.outputParamsURL,
-            spendParamsURL: config.spendParamsURL
+            spendParamsURL: config.spendParamsURL,
+            saplingParamsSourceURL: config.saplingParamsSourceURL
         )
         self.saplingParametersHandler = SaplingParametersHandlerImpl(config: saplingParametersHandlerConfig, rustBackend: backend)
 
@@ -1004,23 +1011,6 @@ actor CompactBlockProcessor {
         eventPublisher.send(.failed(mapError(err)))
     }
     // TODO: [#713] encapsulate service errors better, https://github.com/zcash/ZcashLightClientKit/issues/713
-}
-
-extension CompactBlockProcessor.Configuration {
-    /**
-    Standard configuration for most compact block processors
-    */
-    static func standard(for network: ZcashNetwork, walletBirthday: BlockHeight) -> CompactBlockProcessor.Configuration {
-        let pathProvider = DefaultResourceProvider(network: network)
-        return CompactBlockProcessor.Configuration(
-            fsBlockCacheRoot: pathProvider.fsCacheURL,
-            dataDb: pathProvider.dataDbURL,
-            spendParamsURL: pathProvider.spendParamsURL,
-            outputParamsURL: pathProvider.outputParamsURL,
-            walletBirthday: walletBirthday,
-            network: network
-        )
-    }
 }
 
 extension LightWalletServiceError {

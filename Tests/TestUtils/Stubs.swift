@@ -398,3 +398,26 @@ class MockRustBackend: ZcashRustBackendWelding {
         false
     }
 }
+
+extension SaplingParamsSourceURL {
+    static var tests = SaplingParamsSourceURL(
+        spendParamFileURL: Bundle.module.url(forResource: "sapling-spend", withExtension: "params")!,
+        outputParamFileURL: Bundle.module.url(forResource: "sapling-output", withExtension: "params")!
+    )
+}
+
+extension CompactBlockProcessor.Configuration {
+    /// Standard configuration for most compact block processors
+    static func standard(for network: ZcashNetwork, walletBirthday: BlockHeight) -> CompactBlockProcessor.Configuration {
+        let pathProvider = DefaultResourceProvider(network: network)
+        return CompactBlockProcessor.Configuration(
+            fsBlockCacheRoot: pathProvider.fsCacheURL,
+            dataDb: pathProvider.dataDbURL,
+            spendParamsURL: pathProvider.spendParamsURL,
+            outputParamsURL: pathProvider.outputParamsURL,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
+            walletBirthday: walletBirthday,
+            network: network
+        )
+    }
+}

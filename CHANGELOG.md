@@ -4,6 +4,12 @@
     `synchronizerStopped` notification is now sent after the sync process stops. It's
 not sent right when `stop()` method is called.
 
+- [#795] Include sapling-spend file into bundle for tests
+    
+    This is only an internal change and doesn't change the behavior of the SDK. `Initializer`'s
+constructor has a new parameter `saplingParamsSourceURL`. Use `SaplingParamsSourceURL.default` 
+value for this parameter.
+
 - [#764] Refactor communication between components inside th SDK
 
     This is mostly an internal change. A consequence of this change is that all the notifications

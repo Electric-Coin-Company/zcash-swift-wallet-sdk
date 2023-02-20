@@ -131,16 +131,20 @@ public enum ZcashSDK {
     /// Default name for pending transactions db
     public static var defaultPendingDbName = "pending.db"
 
-    /// File name for the sapling spend params
-    public static var spendParamFilename = "sapling-spend.params"
-
-    /// File name for the sapling output params
-    public static var outputParamFilename = "sapling-output.params"
-
     /// The Url that is used by default in zcashd.
     /// We'll want to make this externally configurable, rather than baking it into the SDK but
     /// this will do for now, since we're using a cloudfront URL that already redirects.
-    public static var cloudParameterURL = "https://z.cash/downloads/"
+    public static let cloudParameterURL = "https://z.cash/downloads/"
+
+    /// File name for the sapling spend params
+    public static let spendParamFilename = "sapling-spend.params"
+    // swiftlint:disable:next force_unwrapping
+    public static let spendParamFileURL = URL(string: cloudParameterURL)!.appendingPathComponent(spendParamFilename)
+
+    /// File name for the sapling output params
+    public static let outputParamFilename = "sapling-output.params"
+    // swiftlint:disable:next force_unwrapping
+    public static let outputParamFileURL = URL(string: cloudParameterURL)!.appendingPathComponent(outputParamFilename)
 }
 
 public protocol NetworkConstants {

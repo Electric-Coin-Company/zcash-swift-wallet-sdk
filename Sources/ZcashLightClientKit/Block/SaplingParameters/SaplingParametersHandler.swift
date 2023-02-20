@@ -12,6 +12,7 @@ struct SaplingParametersHandlerConfig {
     let networkType: NetworkType
     let outputParamsURL: URL
     let spendParamsURL: URL
+    let saplingParamsSourceURL: SaplingParamsSourceURL
 }
 
 protocol SaplingParametersHandler {
@@ -50,6 +51,11 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
             return
         }
 
-        try await SaplingParameterDownloader.downloadParamsIfnotPresent(spendURL: config.spendParamsURL, outputURL: config.outputParamsURL)
+        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+            spendURL: config.spendParamsURL,
+            spendSourceURL: config.saplingParamsSourceURL.spendParamFileURL,
+            outputURL: config.outputParamsURL,
+            outputSourceURL: config.saplingParamsSourceURL.outputParamFileURL
+        )
     }
 }

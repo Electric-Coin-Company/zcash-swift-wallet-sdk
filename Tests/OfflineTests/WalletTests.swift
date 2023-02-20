@@ -43,6 +43,7 @@ class WalletTests: XCTestCase {
         let derivationTool = DerivationTool(networkType: network.networkType)
         let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
             .map({ try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
+
         let wallet = Initializer(
             fsBlockDbRoot: self.testTempDirectory,
             dataDbURL: try __dataDbURL(),
@@ -51,6 +52,7 @@ class WalletTests: XCTestCase {
             network: network,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             viewingKeys: [ufvk],
             walletBirthday: 663194
         )

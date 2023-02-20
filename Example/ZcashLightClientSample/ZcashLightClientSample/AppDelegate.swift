@@ -44,6 +44,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 network: kZcashNetwork,
                 spendParamsURL: try! spendParamsURLHelper(),
                 outputParamsURL: try! outputParamsURLHelper(),
+                saplingParamsSourceURL: SaplingParamsSourceURL.default,
                 viewingKeys: [ufvk],
                 walletBirthday: DemoAppConfig.birthdayHeight,
                 loggerProxy: loggerProxy

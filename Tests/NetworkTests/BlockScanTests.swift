@@ -95,6 +95,7 @@ class BlockScanTests: XCTestCase {
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             walletBirthday: walletBirthDay.height,
             network: network
         )
@@ -183,6 +184,7 @@ class BlockScanTests: XCTestCase {
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             walletBirthday: network.constants.saplingActivationHeight,
             network: network
         )

@@ -57,6 +57,17 @@ extension Notification.Name {
     static let connectionStatusChanged = Notification.Name("LightWalletServiceConnectivityStatusChanged")
 }
 
+/// This contains URLs from which can the SDK fetch files that contain sapling parameters.
+/// Use `SaplingParamsSourceURL.default` when initilizing the SDK.
+public struct SaplingParamsSourceURL {
+    public let spendParamFileURL: URL
+    public let outputParamFileURL: URL
+
+    public static var `default`: SaplingParamsSourceURL {
+        return SaplingParamsSourceURL(spendParamFileURL: ZcashSDK.spendParamFileURL, outputParamFileURL: ZcashSDK.outputParamFileURL)
+    }
+}
+
 /**
 Wrapper for all the Rust backend functionality that does not involve processing blocks. This
 class initializes the Rust backend and the supporting data required to exercise those abilities.
@@ -70,26 +81,27 @@ public class Initializer {
         case seedRequired
     }
 
-    private(set) var rustBackend: ZcashRustBackendWelding.Type
-    private(set) var alias: String
-    private(set) var endpoint: LightWalletEndpoint
-    
-    private var lowerBoundHeight: BlockHeight
-    private(set) var fsBlockDbRoot: URL
-    private(set) var dataDbURL: URL
-    private(set) var pendingDbURL: URL
-    private(set) var spendParamsURL: URL
-    private(set) var outputParamsURL: URL
-    private(set) var lightWalletService: LightWalletService
-    private(set) var transactionRepository: TransactionRepository
-    private(set) var accountRepository: AccountRepository
-    private(set) var storage: CompactBlockRepository
-    private(set) var blockDownloaderService: BlockDownloaderService
-    private(set) var network: ZcashNetwork
-    private(set) public var viewingKeys: [UnifiedFullViewingKey]
+    let rustBackend: ZcashRustBackendWelding.Type
+    let alias: String
+    let endpoint: LightWalletEndpoint
+    let fsBlockDbRoot: URL
+    let dataDbURL: URL
+    let pendingDbURL: URL
+    let spendParamsURL: URL
+    let outputParamsURL: URL
+    let saplingParamsSourceURL: SaplingParamsSourceURL
+    let lightWalletService: LightWalletService
+    let transactionRepository: TransactionRepository
+    let accountRepository: AccountRepository
+    let storage: CompactBlockRepository
+    let blockDownloaderService: BlockDownloaderService
+    let network: ZcashNetwork
+    public let viewingKeys: [UnifiedFullViewingKey]
     /// The effective birthday of the wallet based on the height provided when initializing
     /// and the checkpoints available on this SDK
     private(set) public var walletBirthday: BlockHeight
+
+    private var lowerBoundHeight: BlockHeight
 
     /// The purpose of this to migrate from cacheDb to fsBlockDb
     private var cacheDbURL: URL?
@@ -110,6 +122,7 @@ public class Initializer {
         network: ZcashNetwork,
         spendParamsURL: URL,
         outputParamsURL: URL,
+        saplingParamsSourceURL: SaplingParamsSourceURL,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         alias: String = "",
@@ -142,6 +155,7 @@ public class Initializer {
             ),
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
+            saplingParamsSourceURL: saplingParamsSourceURL,
             viewingKeys: viewingKeys,
             walletBirthday: walletBirthday,
             alias: alias,
@@ -171,6 +185,7 @@ public class Initializer {
         network: ZcashNetwork,
         spendParamsURL: URL,
         outputParamsURL: URL,
+        saplingParamsSourceURL: SaplingParamsSourceURL,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         alias: String = "",
@@ -203,6 +218,7 @@ public class Initializer {
             ),
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
+            saplingParamsSourceURL: saplingParamsSourceURL,
             viewingKeys: viewingKeys,
             walletBirthday: walletBirthday,
             alias: alias,
@@ -228,6 +244,7 @@ public class Initializer {
         storage: CompactBlockRepository,
         spendParamsURL: URL,
         outputParamsURL: URL,
+        saplingParamsSourceURL: SaplingParamsSourceURL,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         alias: String = "",
@@ -243,6 +260,7 @@ public class Initializer {
         self.endpoint = endpoint
         self.spendParamsURL = spendParamsURL
         self.outputParamsURL = outputParamsURL
+        self.saplingParamsSourceURL = saplingParamsSourceURL
         self.alias = alias
         self.lightWalletService = service
         self.transactionRepository = repository
