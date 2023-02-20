@@ -42,13 +42,13 @@ public enum ZcashTransaction {
     }
 
     public struct Sent {
-        public let blockTime: TimeInterval
+        public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fromAccount: Int
         public let id: Int
-        public let index: Int
+        public let index: Int?
         public let memoCount: Int
-        public let minedHeight: BlockHeight
+        public let minedHeight: BlockHeight?
         public let noteCount: Int
         public let raw: Data?
         public let rawID: Data?
@@ -172,8 +172,8 @@ extension ZcashTransaction.Received {
 extension ZcashTransaction.Sent {
     enum Column {
         static let id = Expression<Int>("id_tx")
-        static let minedHeight = Expression<BlockHeight>("mined_height")
-        static let index = Expression<Int>("tx_index")
+        static let minedHeight = Expression<BlockHeight?>("mined_height")
+        static let index = Expression<Int?>("tx_index")
         static let rawID = Expression<Blob?>("txid")
         static let expiryHeight = Expression<BlockHeight?>("expiry_height")
         static let raw = Expression<Blob?>("raw")
@@ -182,11 +182,11 @@ extension ZcashTransaction.Sent {
         static let fee = Expression<Int64>("fee_paid")
         static let noteCount = Expression<Int>("sent_note_count")
         static let memoCount = Expression<Int>("memo_count")
-        static let blockTime = Expression<Int64>("block_time")
+        static let blockTime = Expression<Int64?>("block_time")
     }
 
     init(row: Row) throws {
-        self.blockTime = TimeInterval(try row.get(Column.blockTime))
+        self.blockTime = try row.get(Column.blockTime).map { TimeInterval($0) }
         self.expiryHeight = try row.get(Column.expiryHeight)
         self.fromAccount = try row.get(Column.fromAccount)
         self.id = try row.get(Column.id)

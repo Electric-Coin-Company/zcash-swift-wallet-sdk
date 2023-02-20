@@ -1064,20 +1064,24 @@ class BalanceTests: XCTestCase {
     There’s a pending transaction that has expired
     Total Balance is equal to total balance previously shown before sending the expired transaction
     Verified Balance is equal to verified balance previously shown before sending the expired transaction
-     
     */
-    // FIXME [#784]: Fix test
-    func disabled_testVerifyBalanceAfterExpiredTransaction() async throws {
+    func testVerifyBalanceAfterExpiredTransaction() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
-        try coordinator.applyStaged(blockheight: self.defaultLatestHeight)
+        try coordinator.applyStaged(blockheight: self.defaultLatestHeight + 10)
         sleep(2)
         try await withCheckedThrowingContinuation { continuation in
             do {
                 try coordinator.sync(completion: { _ in
                     self.syncedExpectation.fulfill()
                     continuation.resume()
-                }, error: self.handleError)
+                }, error: { err in
+                    guard let err else {
+                        continuation.resume()
+                        return
+                    }
+                    continuation.resume(throwing: err)
+                })
             } catch {
                 continuation.resume(throwing: error)
             }
@@ -1101,6 +1105,7 @@ class BalanceTests: XCTestCase {
                 memo: try Memo(string: "test send \(self.description)")
             )
             pendingTx = pending
+            sendExpectation.fulfill()
         } catch {
             // balance should be the same as before sending if transaction failed
             XCTAssertEqual(self.coordinator.synchronizer.initializer.getVerifiedBalance(), previousVerifiedBalance)
@@ -1117,8 +1122,6 @@ class BalanceTests: XCTestCase {
         
         let expirationSyncExpectation = XCTestExpectation(description: "expiration sync expectation")
         let expiryHeight = pendingTransaction.expiryHeight
-        let blockCount = abs(self.defaultLatestHeight - expiryHeight)
-        try coordinator.stageBlockCreate(height: self.defaultLatestHeight + 1, count: blockCount)
         try coordinator.applyStaged(blockheight: expiryHeight + 1)
         
         sleep(2)
@@ -1127,7 +1130,13 @@ class BalanceTests: XCTestCase {
                 try coordinator.sync(completion: { _ in
                     expirationSyncExpectation.fulfill()
                     continuation.resume()
-                }, error: self.handleError)
+                }, error: { err in
+                    guard let err else {
+                        continuation.resume()
+                        return
+                    }
+                    continuation.resume(throwing: err)
+                })
             } catch {
                 continuation.resume(throwing: error)
             }
@@ -1150,17 +1159,19 @@ class BalanceTests: XCTestCase {
             )
         )
         
-        guard let expiredPending = try? pendingRepo.find(by: pendingTransaction.id!),
-            let id = expiredPending.id else {
-                XCTFail("pending transaction not found")
-                return
+        guard
+            let expiredPending = try? pendingRepo.find(by: pendingTransaction.id!),
+            let id = expiredPending.id
+        else {
+            XCTFail("pending transaction not found")
+            return
         }
         
         /*
         there no sent transaction displayed
         */
-        XCTAssertNil( try coordinator.synchronizer.allSentTransactions().first(where: { $0.id == id }))
 
+        XCTAssertNil( try coordinator.synchronizer.allSentTransactions().first(where: { $0.id == id }))
         /*
         There’s a pending transaction that has expired
         */
