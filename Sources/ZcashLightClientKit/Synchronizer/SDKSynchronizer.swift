@@ -228,7 +228,6 @@ public class SDKSynchronizer: Synchronizer {
 
         Task(priority: .high) {
             await blockProcessor.stop()
-            self.status = .stopped
         }
     }
 

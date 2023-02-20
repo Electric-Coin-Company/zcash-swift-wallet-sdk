@@ -1,4 +1,9 @@
 # Unreleased
+- [#793] Send synchronizerStopped notification only when sync process stops
+    
+    `synchronizerStopped` notification is now sent after the sync process stops. It's
+not sent right when `stop()` method is called.
+
 - [#764] Refactor communication between components inside th SDK
 
     This is mostly an internal change. A consequence of this change is that all the notifications

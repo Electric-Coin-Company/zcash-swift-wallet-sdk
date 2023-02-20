@@ -84,12 +84,6 @@ final class SynchronizerTests: XCTestCase {
         let syncStoppedExpectation = XCTestExpectation(description: "SynchronizerStopped Expectation")
         syncStoppedExpectation.subscribe(to: .synchronizerStopped, object: nil)
 
-        let processorStoppedExpectation = XCTestExpectation(description: "ProcessorStopped Expectation")
-        processorEventHandler.subscribe(
-            to: await coordinator.synchronizer.blockProcessor.eventStream,
-            expectations: [.stopped: processorStoppedExpectation]
-        )
-
         /*
         sync to latest height
         */
@@ -108,7 +102,7 @@ final class SynchronizerTests: XCTestCase {
         try await Task.sleep(nanoseconds: 5_000_000_000)
         self.coordinator.synchronizer.stop()
 
-        wait(for: [syncStoppedExpectation, processorStoppedExpectation], timeout: 6, enforceOrder: true)
+        wait(for: [syncStoppedExpectation], timeout: 6, enforceOrder: true)
 
         XCTAssertEqual(coordinator.synchronizer.status, .stopped)
         let state = await coordinator.synchronizer.blockProcessor.state
