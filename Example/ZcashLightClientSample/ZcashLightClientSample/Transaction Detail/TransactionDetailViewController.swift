@@ -24,7 +24,7 @@ final class TransactionDetailModel {
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
 
-        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
+        self.zatoshi = transaction.value.decimalString()
         self.memo = memos.first?.toString()
 
         if let blockTime = transaction.blockTime {
@@ -39,16 +39,16 @@ final class TransactionDetailModel {
         self.minedHeight = transaction.minedHeight.description
         self.expiryHeight = transaction.expiryHeight?.description
         self.created = Date(timeIntervalSince1970: transaction.blockTime).description
-        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
+        self.zatoshi = transaction.value.decimalString()
         self.memo = memos.first?.toString()
     }
     
-    init(pendingTransaction: PendingTransactionEntity, memos: [Memo]) {
-        self.id = pendingTransaction.rawTransactionId?.toHexStringTxId()
-        self.minedHeight = pendingTransaction.minedHeight.description
-        self.expiryHeight = pendingTransaction.expiryHeight.description
-        self.created = Date(timeIntervalSince1970: pendingTransaction.createTime).description
-        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: pendingTransaction.value.amount))
+    init(pendingTransaction transaction: PendingTransactionEntity, memos: [Memo]) {
+        self.id = transaction.rawTransactionId?.toHexStringTxId()
+        self.minedHeight = transaction.minedHeight.description
+        self.expiryHeight = transaction.expiryHeight.description
+        self.created = Date(timeIntervalSince1970: transaction.createTime).description
+        self.zatoshi = transaction.value.decimalString()
         self.memo = memos.first?.toString()
     }
     
@@ -57,7 +57,7 @@ final class TransactionDetailModel {
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
         self.created = transaction.blockTime?.description
-        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
+        self.zatoshi = transaction.value.decimalString()
         self.memo = memos.first?.toString()
     }
 }
