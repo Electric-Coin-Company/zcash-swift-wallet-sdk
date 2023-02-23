@@ -6,6 +6,7 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
 import Foundation
 
 /// Represents errors thrown by a Synchronizer
@@ -212,8 +213,17 @@ public protocol Synchronizer {
     /// Wipes out internal data structures of the SDK. After this call, everything is the same as before any sync. The state of the synchronizer is
     /// switched to `unprepared`. So before the next sync, it's required to call `prepare()`.
     ///
-    /// If this is called while the sync process is in progress then `SynchronizerError.wipeAttemptWhileProcessing` is thrown.
-    func wipe() async throws
+    /// `wipe()` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant time
+    /// before wipe finishes. If `wipe()` is called don't call it again until publisher returned from first call finishes. Calling it again earlier
+    /// results in undefined behavior.
+    ///
+    /// Returned publisher either completes or fails when the wipe is done. It doesn't emits any value.
+    ///
+    /// Majority of wipe's work is to delete files. That is only operation that can throw error during wipe. This should succeed every time. If this
+    /// fails then something is seriously wrong. If the wipe fails then the SDK may be in inconsistent state. It's suggested to call wipe again until
+    /// it succeed.
+    ///
+    func wipe() -> AnyPublisher<Void, Error>
 }
 
 public enum SyncStatus: Equatable {

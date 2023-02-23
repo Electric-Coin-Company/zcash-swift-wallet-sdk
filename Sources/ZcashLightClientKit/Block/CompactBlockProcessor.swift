@@ -253,14 +253,15 @@ actor CompactBlockProcessor {
         */
         case synced
     }
+
+    private var afterSyncHooksManager = AfterSyncHooksManager()
     
     var state: State = .stopped {
         didSet {
             transitionState(from: oldValue, to: self.state)
         }
     }
-    
-    private var needsToStartScanningWhenStopped = false
+
     var config: Configuration {
         willSet {
             self.stop()
@@ -504,7 +505,7 @@ actor CompactBlockProcessor {
                 notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
-                self.needsToStartScanningWhenStopped = true
+                afterSyncHooksManager.insert(hook: .anotherSync)
             }
             return
         }
@@ -574,20 +575,44 @@ actor CompactBlockProcessor {
         return rewindBlockHeight
     }
 
-    func wipe() async throws {
+    func wipe(context: AfterSyncHooksManager.WipeContext) async {
+        LoggerProxy.debug("Starting wipe")
         switch self.state {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
-            throw CompactBlockProcessorError.wipeAttemptWhileProcessing
+            LoggerProxy.debug("Stopping sync because of wipe")
+            afterSyncHooksManager.insert(hook: .wipe(context))
+            stop()
+
         case .stopped, .error, .synced:
-            break
+            LoggerProxy.debug("Sync doesn't run. Executing wipe.")
+            await doWipe(context: context)
         }
+    }
+
+    private func doWipe(context: AfterSyncHooksManager.WipeContext) async {
+        context.prewipe()
 
         state = .stopped
 
-        try await self.storage.clear()
-        await internalSyncProgress.rewind(to: 0)
+        do {
+            try await self.storage.clear()
+            await internalSyncProgress.rewind(to: 0)
 
-        wipeLegacyCacheDbIfNeeded()
+            wipeLegacyCacheDbIfNeeded()
+
+            let fileManager = FileManager.default
+            if fileManager.fileExists(atPath: config.dataDb.path) {
+                try FileManager.default.removeItem(at: config.dataDb)
+            }
+
+            if fileManager.fileExists(atPath: context.pendingDbURL.path) {
+                try FileManager.default.removeItem(at: context.pendingDbURL)
+            }
+
+            context.completion(nil)
+        } catch {
+            context.completion(error)
+        }
     }
 
     func validateServer() async {
@@ -679,9 +704,17 @@ actor CompactBlockProcessor {
                 LoggerProxy.error("Sync failed with error: \(error)")
 
                 if Task.isCancelled {
-                    LoggerProxy.info("processing cancelled.")
+                    LoggerProxy.info("Processing cancelled.")
                     state = .stopped
-                    if needsToStartScanningWhenStopped {
+
+                    let afterSyncHooksManager = self.afterSyncHooksManager
+                    self.afterSyncHooksManager = AfterSyncHooksManager()
+
+                    if let wipeContext = afterSyncHooksManager.shouldExecuteWipeHook() {
+                        LoggerProxy.debug("Executing wipe.")
+                        await doWipe(context: wipeContext)
+                    } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
+                        LoggerProxy.debug("Starting new sync.")
                         await nextBatch()
                     }
                 } else {

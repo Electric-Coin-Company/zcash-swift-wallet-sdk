@@ -57,7 +57,7 @@ final class TransactionDetailModel {
         self.minedHeight = transaction.minedHeight?.description
         self.expiryHeight = transaction.expiryHeight?.description
         self.created = transaction.blockTime?.description
-        self.zatoshi = "not available in this entity"
+        self.zatoshi = NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: transaction.value.amount))
         self.memo = memos.first?.toString()
     }
 }

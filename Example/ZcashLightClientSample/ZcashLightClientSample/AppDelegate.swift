@@ -5,6 +5,8 @@
 //  Created by Francisco Gindre on 06/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
+
+import Combine
 import UIKit
 import ZcashLightClientKit
 import NotificationBubbles
@@ -14,6 +16,7 @@ var loggerProxy = OSLogger(logLevel: .debug)
 // swiftlint:disable force_cast force_try force_unwrapping
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
+    var cancellables: [AnyCancellable] = []
     var window: UIWindow?
     private var wallet: Initializer?
     private var synchronizer: SDKSynchronizer?
@@ -119,31 +122,29 @@ extension AppDelegate {
     static var shared: AppDelegate {
         UIApplication.shared.delegate as! AppDelegate
     }
-    
-    func clearDatabases() {
-        do {
-            try FileManager.default.removeItem(at: try cacheDbURLHelper())
-        } catch {
-            loggerProxy.error("error clearing cache DB: \(error)")
-        }
 
-        do {
-            try FileManager.default.removeItem(at: try fsBlockDbRootURLHelper())
-        } catch {
-            loggerProxy.error("error clearing FsBlockDBRoot: \(error)")
-        }
+    func wipe(completion completionClosure: @escaping (Error?) -> Void) {
+        guard let synchronizer = (UIApplication.shared.delegate as? AppDelegate)?.sharedSynchronizer else { return }
 
-        do {
-            try FileManager.default.removeItem(at: try dataDbURLHelper())
-        } catch {
-            loggerProxy.error("error clearing data db: \(error)")
-        }
-        
-        do {
-            try FileManager.default.removeItem(at: try pendingDbURLHelper())
-        } catch {
-            loggerProxy.error("error clearing data db: \(error)")
-        }
+        // At this point app should show some loader or some UI that indicates action. If the sync is not running then wipe happens immediately.
+        // But if the sync is in progress then the SDK must first stop it. And it may take some time.
+
+        synchronizer.wipe()
+            // Delay is here to be sure that previously showed alerts are gone and it's safe to show another. Or I want to show loading UI for at
+            // least one second in case that wipe happens immediately.
+            .delay(for: .seconds(1), scheduler: DispatchQueue.main, options: .none)
+            .sink(
+                receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        completionClosure(nil)
+                    case .failure(let error):
+                        completionClosure(error)
+                    }
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
     }
 }
 

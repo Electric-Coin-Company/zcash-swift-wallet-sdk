@@ -1,4 +1,10 @@
 # Unreleased
+- [#801] Improve how wipe call can be used
+
+    `SDKSynchronizer.wipe()` function can be now called anytime. It returns `AnyPublisher` which
+completes or fails when the wipe is done. For more details read the documentation for this method 
+in the code.
+
 - [#793] Send synchronizerStopped notification only when sync process stops
     
     `synchronizerStopped` notification is now sent after the sync process stops. It's

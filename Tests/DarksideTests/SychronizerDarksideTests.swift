@@ -25,6 +25,7 @@ class SychronizerDarksideTests: XCTestCase {
     var expectedRewindHeight: BlockHeight = 665188
     var reorgExpectation = XCTestExpectation(description: "reorg")
     var foundTransactions: [ZcashTransaction.Overview] = []
+    var cancellables: [AnyCancellable] = []
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -46,6 +47,7 @@ class SychronizerDarksideTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
         coordinator = nil
         foundTransactions = []
+        cancellables = []
     }
    
     func testFoundTransactions() throws {
@@ -193,7 +195,26 @@ class SychronizerDarksideTests: XCTestCase {
 
         wait(for: [firsSyncExpectation], timeout: 10)
 
-        try await coordinator.synchronizer.wipe()
+        let wipeFinished = XCTestExpectation(description: "SynchronizerWipeFinished Expectation")
+
+        coordinator.synchronizer.wipe()
+            .sink(
+                receiveCompletion: { completion in
+                    switch completion {
+                    case .finished:
+                        wipeFinished.fulfill()
+
+                    case .failure(let error):
+                        XCTFail("Wipe should finish successfully. \(error)")
+                    }
+                },
+                receiveValue: {
+                    XCTFail("No no value should be received from wipe.")
+                }
+            )
+            .store(in: &cancellables)
+
+        wait(for: [wipeFinished], timeout: 1)
 
         _ = try coordinator.synchronizer.prepare(with: nil)
 

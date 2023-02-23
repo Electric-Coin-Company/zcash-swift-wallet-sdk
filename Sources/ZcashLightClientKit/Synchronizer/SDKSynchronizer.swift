@@ -630,21 +630,29 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    public func wipe() async throws {
-        do {
-            try await blockProcessor.wipe()
-        } catch {
-            throw SynchronizerError.wipeAttemptWhileProcessing
+    public func wipe() -> AnyPublisher<Void, Error> {
+        let publisher = PassthroughSubject<Void, Error>()
+        Task(priority: .high) {
+            let context = AfterSyncHooksManager.WipeContext(
+                pendingDbURL: initializer.pendingDbURL,
+                prewipe: { [weak self] in
+                    self?.transactionManager.closeDBConnection()
+                    self?.transactionRepository.closeDBConnection()
+                },
+                completion: { [weak self] possibleError in
+                    self?.status = .unprepared
+                    if let error = possibleError {
+                        publisher.send(completion: .failure(error))
+                    } else {
+                        publisher.send(completion: .finished)
+                    }
+                }
+            )
+
+            await blockProcessor.wipe(context: context)
         }
 
-        transactionManager.closeDBConnection()
-        transactionRepository.closeDBConnection()
-
-        try? FileManager.default.removeItem(at: initializer.fsBlockDbRoot)
-        try? FileManager.default.removeItem(at: initializer.pendingDbURL)
-        try? FileManager.default.removeItem(at: initializer.dataDbURL)
-
-        status = .unprepared
+        return publisher.eraseToAnyPublisher()
     }
 
     // MARK: notify state
