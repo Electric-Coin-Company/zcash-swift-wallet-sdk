@@ -119,7 +119,7 @@ class RewindRescanTests: XCTestCase {
     }
 
     // FIXME [#789]: Fix test
-    func disabled_testRescanToHeight() async throws {
+    func testRescanToHeight() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChainWithTxsFarFromEachOther(
             darksideWallet: coordinator.service,
@@ -196,6 +196,7 @@ class RewindRescanTests: XCTestCase {
                 memo: .empty
             )
             XCTAssertEqual(Zatoshi(1000), pendingTx.value)
+            sendExpectation.fulfill()
         } catch {
             XCTFail("sending fail: \(error)")
         }
