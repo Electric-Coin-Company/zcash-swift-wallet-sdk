@@ -203,7 +203,7 @@ class RewindRescanTests: XCTestCase {
     }
 
     // FIX [#790]: Fix tests
-    func disabled_testRescanToTransaction() async throws {
+    @MainActor func testRescanToTransaction() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
@@ -212,9 +212,12 @@ class RewindRescanTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try coordinator.sync(completion: { _ in
-            firstSyncExpectation.fulfill()
-        }, error: handleError)
+        try coordinator.sync(
+            completion: { _ in
+                firstSyncExpectation.fulfill()
+            },
+            error: handleError
+        )
         
         wait(for: [firstSyncExpectation], timeout: 12)
         let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
@@ -231,17 +234,21 @@ class RewindRescanTests: XCTestCase {
 
         try await coordinator.synchronizer.rewind(.transaction(transaction))
         
-        // assert that after the new height is
-        XCTAssertEqual(
+        // assert that after the new height is lower or same as transaction, rewind doesn't have to be make exactly to transaction height, it can
+        // be done to nearest height provided by rust
+        XCTAssertLessThanOrEqual(
             try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),
-            transaction.anchor(network: network)
+            transaction.anchor(network: network) ?? -1
         )
         
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         
-        try coordinator.sync(completion: { _ in
-            secondScanExpectation.fulfill()
-        }, error: handleError)
+        try coordinator.sync(
+            completion: { _ in
+                secondScanExpectation.fulfill()
+            },
+            error: handleError
+        )
         
         wait(for: [secondScanExpectation], timeout: 12)
         
