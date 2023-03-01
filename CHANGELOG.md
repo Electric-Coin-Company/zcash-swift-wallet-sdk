@@ -1,4 +1,4 @@
-# Unreleased
+# 0.19.0-beta
 - [#816] Improve how rewind call can be used
 
     `SDKSynchronizer.rewind(policy:)` function can be now called anytime. It returns `AnyPublisher` which
@@ -39,6 +39,38 @@ code itself.
     This is mostly internal change. `LightWalletService` is no longer public. If it
 is used in your code replace it by using `SDKSynchronizer` API.
 
+- [#770] Update GRPC swift library
+    This updates to GRPC-Swift 1.14.0.
+
+
+Checkpoints added:
+
+Mainnet:
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1965000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1967500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1970000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1972500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1975000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1977500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1980000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1982500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1985000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1987500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1990000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1992500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1995000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/1997500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2000000.json
+````
+
+Testnet:
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2210000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2220000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2230000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2240000.json
+````
 ## File system backed block cache
 
 File system based block cache. Compact blocks will now be stored
