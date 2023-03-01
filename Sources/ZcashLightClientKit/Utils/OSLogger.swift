@@ -17,7 +17,7 @@ public class OSLogger: Logger {
         case info
     }
 
-    private(set) var oslog: OSLog?
+    public private(set) var oslog: OSLog?
     
     var level: LogLevel
     
