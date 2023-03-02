@@ -31,8 +31,6 @@ public enum CompactBlockProcessorError: Error {
     case networkMismatch(expected: NetworkType, found: NetworkType)
     case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
     case unknown
-    case rewindAttemptWhileProcessing
-    case wipeAttemptWhileProcessing
 }
 
 public enum CompactBlockProgress {
@@ -535,15 +533,30 @@ actor CompactBlockProcessor {
         self.retryAttempts = 0
     }
 
+    // MARK: Rewind
+
     /// Rewinds to provided height.
     /// - Parameter height: height to rewind to. If nil is provided, it will rescan to nearest height (quick rescan)
     ///
-    /// - Note: If this is called while sync is in progress then `CompactBlockProcessorError.rewindAttemptWhileProcessing` is thrown.
-    func rewindTo(_ height: BlockHeight?) async throws -> BlockHeight {
-        guard shouldStart else { throw CompactBlockProcessorError.rewindAttemptWhileProcessing }
+    /// - Note: If this is called while sync is in progress then the sync process is stopped first and then rewind is executed.
+    func rewind(context: AfterSyncHooksManager.RewindContext) async {
+        LoggerProxy.debug("Starting rewid")
+        switch self.state {
+        case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
+            LoggerProxy.debug("Stopping sync because of rewind")
+            afterSyncHooksManager.insert(hook: .rewind(context))
+            stop()
 
+        case .stopped, .error, .synced:
+            LoggerProxy.debug("Sync doesn't run. Executing rewind.")
+            await doRewind(context: context)
+        }
+    }
+
+    private func doRewind(context: AfterSyncHooksManager.RewindContext) async {
+        LoggerProxy.debug("Executing rewind.")
         let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
-        let height = Int32(height ?? lastDownloaded)
+        let height = Int32(context.height ?? lastDownloaded)
         let nearestHeight = rustBackend.getNearestRewindHeight(
             dbData: config.dataDb,
             height: height,
@@ -555,7 +568,7 @@ actor CompactBlockProcessor {
                 message: "unknown error getting nearest rewind height for height: \(height)"
             )
             await fail(error)
-            throw error
+            return context.completion(.failure(error))
         }
 
         // FIXME: [#719] this should be done on the rust layer, https://github.com/zcash/ZcashLightClientKit/issues/719
@@ -563,17 +576,24 @@ actor CompactBlockProcessor {
         guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
             await fail(error)
-            throw error
+            return context.completion(.failure(error))
         }
 
         // clear cache
         let rewindBlockHeight = BlockHeight(rewindHeight)
-        try blockDownloaderService.rewind(to: rewindBlockHeight)
+        do {
+            try blockDownloaderService.rewind(to: rewindBlockHeight)
+        } catch {
+            return context.completion(.failure(error))
+        }
+
         await internalSyncProgress.rewind(to: rewindBlockHeight)
 
         self.lastChainValidationFailure = nil
-        return rewindBlockHeight
+        context.completion(.success(rewindBlockHeight))
     }
+
+    // MARK: Wipe
 
     func wipe(context: AfterSyncHooksManager.WipeContext) async {
         LoggerProxy.debug("Starting wipe")
@@ -590,6 +610,7 @@ actor CompactBlockProcessor {
     }
 
     private func doWipe(context: AfterSyncHooksManager.WipeContext) async {
+        LoggerProxy.debug("Executing wipe.")
         context.prewipe()
 
         state = .stopped
@@ -614,6 +635,8 @@ actor CompactBlockProcessor {
             context.completion(error)
         }
     }
+
+    // MARK: Sync
 
     func validateServer() async {
         do {
@@ -706,17 +729,7 @@ actor CompactBlockProcessor {
                 if Task.isCancelled {
                     LoggerProxy.info("Processing cancelled.")
                     state = .stopped
-
-                    let afterSyncHooksManager = self.afterSyncHooksManager
-                    self.afterSyncHooksManager = AfterSyncHooksManager()
-
-                    if let wipeContext = afterSyncHooksManager.shouldExecuteWipeHook() {
-                        LoggerProxy.debug("Executing wipe.")
-                        await doWipe(context: wipeContext)
-                    } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
-                        LoggerProxy.debug("Starting new sync.")
-                        await nextBatch()
-                    }
+                    await handleAfterSyncHooks()
                 } else {
                     if case BlockValidatorError.validationFailed(let height) = error {
                         await validationFailed(at: height)
@@ -726,6 +739,20 @@ actor CompactBlockProcessor {
                     }
                 }
             }
+        }
+    }
+
+    private func handleAfterSyncHooks() async {
+        let afterSyncHooksManager = self.afterSyncHooksManager
+        self.afterSyncHooksManager = AfterSyncHooksManager()
+
+        if let wipeContext = afterSyncHooksManager.shouldExecuteWipeHook() {
+            await doWipe(context: wipeContext)
+        } else if let rewindContext = afterSyncHooksManager.shouldExecuteRewindHook() {
+            await doRewind(context: rewindContext)
+        } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
+            LoggerProxy.debug("Starting new sync.")
+            await nextBatch()
         }
     }
 
@@ -1204,8 +1231,6 @@ extension CompactBlockProcessorError: LocalizedError {
             A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing \
             to the right server
             """
-        case .rewindAttemptWhileProcessing:
-            return "Can't execute rewind while sync process is in progress."
         case let .saplingActivationMismatch(expected, found):
             return """
             A server was reached, it's showing a different sapling activation. App expected sapling activation height to be \(expected) but instead \
@@ -1220,8 +1245,6 @@ extension CompactBlockProcessorError: LocalizedError {
             different network or out of date after a network upgrade.
             """
         case .unknown: return "Unknown error occured."
-        case .wipeAttemptWhileProcessing:
-            return "Can't execute wipe while sync process is in progress."
         }
     }
 

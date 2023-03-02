@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 3/25/21.
 //
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -16,6 +17,7 @@ class RewindRescanTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
 
+    var cancellables: [AnyCancellable] = []
     var birthday: BlockHeight = 663150
     var coordinator: TestCoordinator!
     var syncedExpectation = XCTestExpectation(description: "synced")
@@ -44,6 +46,7 @@ class RewindRescanTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
         coordinator = nil
+        cancellables = []
     }
     
     func handleError(_ error: Error?) {
@@ -85,10 +88,31 @@ class RewindRescanTests: XCTestCase {
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
-        
-        // rewind to birthday
-        try await coordinator.synchronizer.rewind(.birthday)
-        
+
+        let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
+
+        try await withCheckedThrowingContinuation { continuation in
+            // rewind to birthday
+            coordinator.synchronizer.rewind(.birthday)
+                .sink(
+                    receiveCompletion: { result in
+                        rewindExpectation.fulfill()
+                        switch result {
+                        case .finished:
+                            continuation.resume()
+
+                        case let .failure(error):
+                            XCTFail("Rewind failed with error: \(error)")
+                            continuation.resume(with: .failure(error))
+                        }
+                    },
+                    receiveValue: { _ in }
+                )
+                .store(in: &cancellables)
+        }
+
+        wait(for: [rewindExpectation], timeout: 2)
+
         // assert that after the new height is
         XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
         
@@ -157,8 +181,30 @@ class RewindRescanTests: XCTestCase {
             height: Int32(targetHeight),
             networkType: network.networkType
         )
-        try await coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
-        
+
+        let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
+
+        try await withCheckedThrowingContinuation { continuation in
+            coordinator.synchronizer.rewind(.height(blockheight: targetHeight))
+                .sink(
+                    receiveCompletion: { result in
+                        rewindExpectation.fulfill()
+                        switch result {
+                        case .finished:
+                            continuation.resume()
+
+                        case let .failure(error):
+                            XCTFail("Rewind failed with error: \(error)")
+                            continuation.resume(with: .failure(error))
+                        }
+                    },
+                    receiveValue: { _ in }
+                )
+                .store(in: &cancellables)
+        }
+
+        wait(for: [rewindExpectation], timeout: 2)
+
         guard rewindHeight > 0 else {
             XCTFail("get nearest height failed error: \(ZcashRustBackend.getLastError() ?? "null")")
             return
@@ -233,8 +279,29 @@ class RewindRescanTests: XCTestCase {
             return
         }
 
-        try await coordinator.synchronizer.rewind(.transaction(transaction))
-        
+        let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
+
+        try await withCheckedThrowingContinuation { continuation in
+            coordinator.synchronizer.rewind(.transaction(transaction))
+                .sink(
+                    receiveCompletion: { result in
+                        rewindExpectation.fulfill()
+                        switch result {
+                        case .finished:
+                            continuation.resume()
+
+                        case let .failure(error):
+                            XCTFail("Rewind failed with error: \(error)")
+                            continuation.resume(with: .failure(error))
+                        }
+                    },
+                    receiveValue: { _ in }
+                )
+                .store(in: &cancellables)
+        }
+
+        wait(for: [rewindExpectation], timeout: 2)
+
         // assert that after the new height is lower or same as transaction, rewind doesn't have to be make exactly to transaction height, it can
         // be done to nearest height provided by rust
         XCTAssertLessThanOrEqual(
@@ -382,11 +449,31 @@ class RewindRescanTests: XCTestCase {
         try coordinator.applyStaged(blockheight: sentTxHeight + 10)
         
         sleep(2)
-        
-        // rewind 5 blocks prior to sending
-        
-        try await coordinator.synchronizer.rewind(.height(blockheight: sentTxHeight - 5))
-        
+
+        let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
+
+        try await withCheckedThrowingContinuation { continuation in
+            // rewind 5 blocks prior to sending
+            coordinator.synchronizer.rewind(.height(blockheight: sentTxHeight - 5))
+                .sink(
+                    receiveCompletion: { result in
+                        rewindExpectation.fulfill()
+                        switch result {
+                        case .finished:
+                            continuation.resume()
+
+                        case let .failure(error):
+                            XCTFail("Rewind failed with error: \(error)")
+                            continuation.resume(with: .failure(error))
+                        }
+                    },
+                    receiveValue: { _ in }
+                )
+                .store(in: &cancellables)
+        }
+
+        wait(for: [rewindExpectation], timeout: 2)
+
         guard
             let pendingEntity = try coordinator.synchronizer.allPendingTransactions()
                 .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
