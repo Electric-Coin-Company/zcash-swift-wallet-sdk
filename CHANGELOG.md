@@ -1,4 +1,10 @@
 # Unreleased
+- [#816] Improve how rewind call can be used
+
+    `SDKSynchronizer.rewind(policy:)` function can be now called anytime. It returns `AnyPublisher` which
+completes or fails when the rewind is done. For more details read the documentation for this method 
+in the code.
+
 - [#801] Improve how wipe call can be used
 
     `SDKSynchronizer.wipe()` function can be now called anytime. It returns `AnyPublisher` which

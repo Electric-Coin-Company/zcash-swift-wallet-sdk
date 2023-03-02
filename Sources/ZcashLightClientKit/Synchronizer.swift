@@ -201,14 +201,23 @@ public protocol Synchronizer {
     /// Returns the shielded verified balance (anchor is 10 blocks back)
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
 
-    /// Rescans the known blocks with the current keys. If this is called while sync process is in progress then
-    /// `SynchronizerError.rewindError(CompactBlockProcessorError.rewindAttemptWhileProcessing)` is thrown.
+    /// Rescans the known blocks with the current keys.
+    ///
+    /// `rewind(policy:)` can be called anytime. If the sync process is in progress then it is stopped first. In this case, it make some significant
+    /// time before rewind finishes. If `rewind(policy:)` is called don't call it again until publisher returned from first call finishes. Calling it
+    /// again earlier results in undefined behavior.
+    ///
+    /// Returned publisher either completes or fails when the wipe is done. It doesn't emits any value.
+    ///
+    /// Possible errors:
+    /// - Emits rewindErrorUnknownAnchorHeight when the rewind points to an invalid height.
+    /// - Emits rewindError for other errors
+    ///
+    /// `rewind(policy:)` itself doesn't start the sync process when it's done and it doesn't trigger notifications as regorg would. After it is done
+    /// you have start the sync process by calling `start()`.
     ///
     /// - Parameter policy: the rewind policy
-    /// - Throws rewindErrorUnknownAnchorHeight when the rewind points to an invalid height
-    /// - Throws rewindError for other errors
-    /// - Note rewind does not trigger notifications as a reorg would. You need to restart the synchronizer afterwards
-    func rewind(_ policy: RewindPolicy) async throws
+    func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error>
 
     /// Wipes out internal data structures of the SDK. After this call, everything is the same as before any sync. The state of the synchronizer is
     /// switched to `unprepared`. So before the next sync, it's required to call `prepare()`.

@@ -105,6 +105,8 @@ final class SynchronizerTests: XCTestCase {
         XCTAssertEqual(state, .stopped)
     }
 
+    // MARK: Wipe tests
+
     @MainActor func testWipeCalledWhichSyncDoesntRun() async throws {
         /*
          create fake chain
@@ -251,5 +253,89 @@ final class SynchronizerTests: XCTestCase {
             return
         }
         XCTFail("Failed with error: \(testError)")
+    }
+
+    // MARK: Rewind tests
+
+    @MainActor func testRewindCalledWhileSyncRuns() async throws {
+        // 1 sync and get spendable funds
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
+
+        try coordinator.applyStaged(blockheight: defaultLatestHeight)
+        let initialVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        sleep(1)
+        let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
+
+        do {
+            try coordinator.sync(
+                completion: { _ in
+                    firstSyncExpectation.fulfill()
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
+        }
+
+        wait(for: [firstSyncExpectation], timeout: 12)
+
+        // Add more blocks to the chain so the long sync can start.
+        try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: 10000)
+        try coordinator.applyStaged(blockheight: birthday + 10000)
+
+        sleep(2)
+
+        do {
+            // Start the long sync.
+            try coordinator.sync(
+                completion: { _ in },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
+        }
+
+        // Wait 0.5 second and then start rewind while sync is in progress.
+        let waitExpectation = XCTestExpectation()
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
+            waitExpectation.fulfill()
+        }
+
+        wait(for: [waitExpectation], timeout: 1)
+
+        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
+        let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        // 2 check that there are no unconfirmed funds
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertEqual(verifiedBalance, totalBalance)
+
+        let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
+
+        // rewind to birthday
+        coordinator.synchronizer.rewind(.birthday)
+            .sink(
+                receiveCompletion: { result in
+                    rewindExpectation.fulfill()
+                    switch result {
+                    case .finished:
+                        break
+                    case let .failure(error):
+                        XCTFail("Rewind failed with error: \(error)")
+                    }
+                    rewindExpectation.fulfill()
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
+
+        wait(for: [rewindExpectation], timeout: 5)
+
+        // assert that after the new height is
+        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
+
+        // check that the balance is cleared
+        XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
+        XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
     }
 }

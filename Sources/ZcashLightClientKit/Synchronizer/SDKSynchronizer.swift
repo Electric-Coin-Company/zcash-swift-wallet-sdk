@@ -599,39 +599,58 @@ public class SDKSynchronizer: Synchronizer {
         try await blockProcessor.getTransparentBalance(accountIndex: accountIndex)
     }
 
-    public func rewind(_ policy: RewindPolicy) async throws {
-        self.stop()
+    // MARK: Rewind
 
-        var height: BlockHeight?
+    public func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error> {
+        let subject = PassthroughSubject<Void, Error>()
+        Task {
+            let height: BlockHeight?
 
-        switch policy {
-        case .quick:
-            break
+            switch policy {
+            case .quick:
+                height = nil
 
-        case .birthday:
-            let birthday = await self.blockProcessor.config.walletBirthday
-            height = birthday
+            case .birthday:
+                let birthday = await self.blockProcessor.config.walletBirthday
+                height = birthday
 
-        case .height(let rewindHeight):
-            height = rewindHeight
+            case .height(let rewindHeight):
+                height = rewindHeight
 
-        case .transaction(let transaction):
-            guard let txHeight = transaction.anchor(network: self.network) else {
-                throw SynchronizerError.rewindErrorUnknownArchorHeight
+            case .transaction(let transaction):
+                guard let txHeight = transaction.anchor(network: self.network) else {
+                    throw SynchronizerError.rewindErrorUnknownArchorHeight
+                }
+                height = txHeight
             }
-            height = txHeight
-        }
 
-        do {
-            let rewindHeight = try await self.blockProcessor.rewindTo(height)
-            try self.transactionManager.handleReorg(at: rewindHeight)
-        } catch {
-            throw SynchronizerError.rewindError(underlyingError: error)
+            let context = AfterSyncHooksManager.RewindContext(
+                height: height,
+                completion: { [weak self] result in
+                    switch result {
+                    case let .success(rewindHeight):
+                        do {
+                            try self?.transactionManager.handleReorg(at: rewindHeight)
+                            subject.send(completion: .finished)
+                        } catch {
+                            subject.send(completion: .failure(SynchronizerError.rewindError(underlyingError: error)))
+                        }
+
+                    case let .failure(error):
+                        subject.send(completion: .failure(error))
+                    }
+                }
+            )
+
+            await blockProcessor.rewind(context: context)
         }
+        return subject.eraseToAnyPublisher()
     }
 
+    // MARK: Wipe
+
     public func wipe() -> AnyPublisher<Void, Error> {
-        let publisher = PassthroughSubject<Void, Error>()
+        let subject = PassthroughSubject<Void, Error>()
         Task(priority: .high) {
             let context = AfterSyncHooksManager.WipeContext(
                 pendingDbURL: initializer.pendingDbURL,
@@ -642,9 +661,9 @@ public class SDKSynchronizer: Synchronizer {
                 completion: { [weak self] possibleError in
                     self?.status = .unprepared
                     if let error = possibleError {
-                        publisher.send(completion: .failure(error))
+                        subject.send(completion: .failure(error))
                     } else {
-                        publisher.send(completion: .finished)
+                        subject.send(completion: .finished)
                     }
                 }
             )
@@ -652,7 +671,7 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.wipe(context: context)
         }
 
-        return publisher.eraseToAnyPublisher()
+        return subject.eraseToAnyPublisher()
     }
 
     // MARK: notify state
@@ -796,13 +815,9 @@ public class SDKSynchronizer: Synchronizer {
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .networkMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
-            case .rewindAttemptWhileProcessing:
-                break
             case .saplingActivationMismatch:
                 return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
             case .unknown:
-                break
-            case .wipeAttemptWhileProcessing:
                 break
             }
         }

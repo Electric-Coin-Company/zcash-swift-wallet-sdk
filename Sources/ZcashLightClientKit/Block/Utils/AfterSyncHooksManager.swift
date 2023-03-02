@@ -14,15 +14,23 @@ class AfterSyncHooksManager {
         let completion: (Error?) -> Void
     }
 
+    struct RewindContext {
+        let height: BlockHeight?
+        let completion: (Result<BlockHeight, Error>) -> Void
+    }
+
     enum Hook: Equatable, Hashable {
-        case wipe(WipeContext)
         case anotherSync
+        case rewind(RewindContext)
+        case wipe(WipeContext)
 
         static func == (lhs: Hook, rhs: Hook) -> Bool {
             switch (lhs, rhs) {
-            case (.wipe, .wipe):
-                return true
             case (.anotherSync, .anotherSync):
+                return true
+            case (.rewind, .rewind):
+                return true
+            case (.wipe, .wipe):
                 return true
             default:
                 return false
@@ -31,9 +39,14 @@ class AfterSyncHooksManager {
 
         func hash(into hasher: inout Hasher) {
             switch self {
-            case .wipe: hasher.combine(0)
-            case .anotherSync: hasher.combine(1)
+            case .anotherSync: hasher.combine(0)
+            case .rewind: hasher.combine(1)
+            case .wipe: hasher.combine(2)
             }
+        }
+
+        static var emptyRewind: Hook {
+            return .rewind(RewindContext(height: nil, completion: { _ in }))
         }
 
         static var emptyWipe: Hook {
@@ -55,6 +68,10 @@ class AfterSyncHooksManager {
         hooks.insert(hook)
     }
 
+    func shouldExecuteAnotherSyncHook() -> Bool {
+        return hooks.first(where: { $0 == .anotherSync }) != nil
+    }
+
     func shouldExecuteWipeHook() -> WipeContext? {
         if case let .wipe(wipeContext) = hooks.first(where: { $0 == Hook.emptyWipe }) {
             return wipeContext
@@ -63,7 +80,11 @@ class AfterSyncHooksManager {
         }
     }
 
-    func shouldExecuteAnotherSyncHook() -> Bool {
-        return hooks.first(where: { $0 == .anotherSync }) != nil
+    func shouldExecuteRewindHook() -> RewindContext? {
+        if case let .rewind(rewindContext) = hooks.first(where: { $0 == Hook.emptyRewind }) {
+            return rewindContext
+        } else {
+            return nil
+        }
     }
 }
