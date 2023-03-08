@@ -1,3 +1,14 @@
+# unreleased
+
+- [#821] `failedToWriteMetadata` at sync startup
+contains no public API changes.
+Adds `func shouldClearBlockCacheAndUpdateInternalState() -> BlockHeight?` to `SyncRanges`
+so that the compact block processor can advert internal states that are not consistent and
+recover from such state. 
+
+For concrete examples check out the tests in:
+`Tests/NetworkTests/CompactBlockProcessorTests.swift`
+
 # 0.19.0-beta
 - [#816] Improve how rewind call can be used
 

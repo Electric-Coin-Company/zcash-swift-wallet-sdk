@@ -19,6 +19,10 @@ struct SyncRanges: Equatable {
     let enhanceRange: CompactBlockRange?
     /// Range of blocks for which no UTXOs are fetched yet.
     let fetchUTXORange: CompactBlockRange?
+
+    let latestScannedHeight: BlockHeight?
+
+    let latestDownloadedBlockHeight: BlockHeight?
 }
 
 protocol InternalSyncProgressStorage {
@@ -142,16 +146,36 @@ actor InternalSyncProgress {
             downloadedButUnscannedRange = nil
         }
 
+        if latestScannedHeight > latestDownloadedBlockHeight {
+            LoggerProxy.warn("""
+                             InternalSyncProgress found inconsistent state.
+                                 latestBlockHeight:       \(latestBlockHeight)
+                             --> latestDownloadedHeight:  \(latestDownloadedBlockHeight)
+                                 latestScannedHeight:     \(latestScannedHeight)
+                                 latestEnhancedHeight:    \(latestEnhancedHeight)
+                                 latestUTXOFetchedHeight: \(latestUTXOFetchedHeight)
+
+                             latest downloaded height
+                             """)
+        }
+
+        // compute the range that must be downloaded and scanned based on
+        // birthday, `latestDownloadedBlockHeight`, `latestScannedHeight` and
+        // latest block height fetched from the chain.
+        let downloadAndScanRange = computeRange(
+            latestHeight: max(latestDownloadedBlockHeight, latestScannedHeight),
+            birthday: birthday,
+            latestBlockHeight: latestBlockHeight
+        )
+
         return SyncRanges(
             latestBlockHeight: latestBlockHeight,
             downloadedButUnscannedRange: downloadedButUnscannedRange,
-            downloadAndScanRange: computeRange(
-                latestHeight: latestDownloadedBlockHeight,
-                birthday: birthday,
-                latestBlockHeight: latestBlockHeight
-            ),
+            downloadAndScanRange: downloadAndScanRange,
             enhanceRange: computeRange(latestHeight: latestEnhancedHeight, birthday: birthday, latestBlockHeight: latestBlockHeight),
-            fetchUTXORange: computeRange(latestHeight: latestUTXOFetchedHeight, birthday: birthday, latestBlockHeight: latestBlockHeight)
+            fetchUTXORange: computeRange(latestHeight: latestUTXOFetchedHeight, birthday: birthday, latestBlockHeight: latestBlockHeight),
+            latestScannedHeight: latestScannedHeight,
+            latestDownloadedBlockHeight: latestDownloadedBlockHeight
         )
     }
 
