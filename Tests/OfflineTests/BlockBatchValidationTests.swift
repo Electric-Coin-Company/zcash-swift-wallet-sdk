@@ -412,7 +412,9 @@ class BlockBatchValidationTests: XCTestCase {
             downloadedButUnscannedRange: nil,
             downloadAndScanRange: expectedStoreLatestHeight + 1...expectedLatestHeight,
             enhanceRange: walletBirthday...expectedLatestHeight,
-            fetchUTXORange: walletBirthday...expectedLatestHeight
+            fetchUTXORange: walletBirthday...expectedLatestHeight,
+            latestScannedHeight: expectedStoreLatestHeight,
+            latestDownloadedBlockHeight: expectedStoreLatestHeight
         )
         let expectedResult = CompactBlockProcessor.NextState.processNewBlocks(ranges: ranges)
 

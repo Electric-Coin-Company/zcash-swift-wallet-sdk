@@ -182,7 +182,9 @@ class CompactBlockProcessorTests: XCTestCase {
             downloadedButUnscannedRange: 1...latestDownloadedHeight,
             downloadAndScanRange: latestDownloadedHeight...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
+            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
+            latestScannedHeight: 0,
+            latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
         var internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
@@ -209,7 +211,9 @@ class CompactBlockProcessorTests: XCTestCase {
             downloadedButUnscannedRange: 1...latestDownloadedHeight,
             downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
+            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
+            latestScannedHeight: 0,
+            latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
         internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
@@ -237,7 +241,9 @@ class CompactBlockProcessorTests: XCTestCase {
             downloadedButUnscannedRange: 1...latestDownloadedHeight,
             downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight
+            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
+            latestScannedHeight: 0,
+            latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
         internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
@@ -254,6 +260,72 @@ class CompactBlockProcessorTests: XCTestCase {
             syncRanges,
             "Failure when testing last range"
         )
+    }
+
+    func testShouldClearBlockCacheReturnsNilWhenScannedHeightEqualsDownloadedHeight() {
+        /*
+         downloaded but not scanned: -1...-1
+         download and scan:          1493120...2255953
+         enhance range:              1410000...2255953
+         fetchUTXO range:            1410000...2255953
+         total progress range:       1493120...2255953
+         */
+
+        let range = SyncRanges(
+            latestBlockHeight: 2255953,
+            downloadedButUnscannedRange: -1 ... -1,
+            downloadAndScanRange: 1493120...2255953,
+            enhanceRange: 1410000...2255953,
+            fetchUTXORange: 1410000...2255953,
+            latestScannedHeight: 1493119,
+            latestDownloadedBlockHeight: 1493119
+        )
+
+        XCTAssertNil(range.shouldClearBlockCacheAndUpdateInternalState())
+    }
+
+    func testShouldClearBlockCacheReturnsAHeightWhenScannedIsGreaterThanDownloaded() {
+        /*
+         downloaded but not scanned: -1...-1
+         download and scan:          1493120...2255953
+         enhance range:              1410000...2255953
+         fetchUTXO range:            1410000...2255953
+         total progress range:       1493120...2255953
+         */
+
+        let range = SyncRanges(
+            latestBlockHeight: 2255953,
+            downloadedButUnscannedRange: -1 ... -1,
+            downloadAndScanRange: 1493120...2255953,
+            enhanceRange: 1410000...2255953,
+            fetchUTXORange: 1410000...2255953,
+            latestScannedHeight: 1493129,
+            latestDownloadedBlockHeight: 1493119
+        )
+
+        XCTAssertEqual(range.shouldClearBlockCacheAndUpdateInternalState(), BlockHeight(1493129))
+    }
+
+    func testShouldClearBlockCacheReturnsNilWhenScannedIsGreaterThanDownloaded() {
+        /*
+         downloaded but not scanned: 1493120...1494120
+         download and scan:          1494121...2255953
+         enhance range:              1410000...2255953
+         fetchUTXO range:            1410000...2255953
+         total progress range:       1493120...2255953
+         */
+
+        let range = SyncRanges(
+            latestBlockHeight: 2255953,
+            downloadedButUnscannedRange: 1493120...1494120,
+            downloadAndScanRange: 1494121...2255953,
+            enhanceRange: 1410000...2255953,
+            fetchUTXORange: 1410000...2255953,
+            latestScannedHeight: 1493119,
+            latestDownloadedBlockHeight: 1494120
+        )
+
+        XCTAssertNil(range.shouldClearBlockCacheAndUpdateInternalState())
     }
     
     func testDetermineLowerBoundPastBirthday() async {

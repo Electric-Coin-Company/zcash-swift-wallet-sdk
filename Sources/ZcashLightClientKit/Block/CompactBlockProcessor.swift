@@ -676,7 +676,16 @@ actor CompactBlockProcessor {
 
                 var anyActionExecuted = false
 
-                try storage.create()
+                // clear any present cached state if needed.
+                // this checks if there was a sync in progress that was
+                // interrupted abruptly and cache was not able to be cleared
+                // properly and internal state set to the appropriate value
+                if let newLatestDownloadedHeight = ranges.shouldClearBlockCacheAndUpdateInternalState() {
+                        try await storage.clear()
+                        await internalSyncProgress.set(newLatestDownloadedHeight, .latestDownloadedBlockHeight) 
+                } else {
+                    try storage.create()
+                }
 
                 if let range = ranges.downloadedButUnscannedRange {
                     LoggerProxy.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
@@ -717,7 +726,7 @@ actor CompactBlockProcessor {
                 state = .handlingSaplingFiles
                 try await saplingParametersHandler.handleIfNeeded()
 
-                LoggerProxy.debug("Clearning cache")
+                LoggerProxy.debug("Clearing cache")
                 try await clearCompactBlockCache()
 
                 if !Task.isCancelled {
@@ -1402,4 +1411,31 @@ extension CompactBlockProcessor {
 
         try? FileManager.default.removeItem(at: cacheDbURL)
     }
+}
+
+extension SyncRanges {
+
+    /// Tells whether the state represented by these sync ranges evidence some sort of
+    /// outdated state on the cache or the internal state of the compact block processor.
+    ///
+    /// - Note: this can mean that the processor has synced over the height that the internal
+    /// state knows of because the sync process was interrupted before it could reflect
+    /// it in the internal state storage. This could happen because of many factors, the
+    /// most feasible being OS shutting down a background process or the user abruptly
+    /// exiting the app.
+    /// - Returns: an ``Optional<BlockHeight>`` where Some represents what's the
+    /// new state the internal state should reflect and indicating that the cache should be cleared
+    /// as well. c`None` means that no action is required.
+    func shouldClearBlockCacheAndUpdateInternalState() -> BlockHeight? {
+        guard self.downloadedButUnscannedRange != nil else {
+            return nil
+        }
+
+        guard let latestScannedHeight = self.latestScannedHeight,
+              let latestDownloadedHeight = self.latestDownloadedBlockHeight,
+              latestScannedHeight > latestDownloadedHeight else { return nil }
+
+        return latestScannedHeight
+    }
+
 }
