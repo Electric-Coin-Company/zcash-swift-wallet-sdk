@@ -1,5 +1,18 @@
-# unreleased
+# 0.19.1-beta
+## Checkpoints added
+Mainnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2002500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2005000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2007500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2010000.json
+````
 
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2250000.json
+````
+## Fixed
 - [#821] `failedToWriteMetadata` at sync startup
 contains no public API changes.
 Adds `func shouldClearBlockCacheAndUpdateInternalState() -> BlockHeight?` to `SyncRanges`
@@ -8,6 +21,10 @@ recover from such state.
 
 For concrete examples check out the tests in:
 `Tests/NetworkTests/CompactBlockProcessorTests.swift`
+
+
+## Deleted
+Removed linter binary from repository
 
 # 0.19.0-beta
 - [#816] Improve how rewind call can be used
