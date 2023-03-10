@@ -69,6 +69,15 @@ public class SDKSynchronizer: Synchronizer {
         public var transparentBalance: WalletBalance
         public var syncStatus: SyncStatus
         public var latestScannedHeight: BlockHeight
+
+        public static var zero: SynchronizerState {
+            SynchronizerState(
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .unprepared,
+                latestScannedHeight: .zero
+            )
+        }
     }
 
     public enum NotificationKeys {
@@ -107,7 +116,8 @@ public class SDKSynchronizer: Synchronizer {
 
     public private(set) var progress: Float = 0.0
     public private(set) var initializer: Initializer
-    public private(set) var latestScannedHeight: BlockHeight
+    // Valid value is stored here after `prepare` is called.
+    public private(set) var latestScannedHeight: BlockHeight = .zero
     public private(set) var connectionState: ConnectionState
     public private(set) var network: ZcashNetwork
     public var lastState: AnyPublisher<SynchronizerState, Never> { lastStateSubject.eraseToAnyPublisher() }
@@ -125,14 +135,17 @@ public class SDKSynchronizer: Synchronizer {
     
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
-    public convenience init(initializer: Initializer) throws {
-        try self.init(
+    public convenience init(initializer: Initializer) {
+        self.init(
             status: .unprepared,
             initializer: initializer,
-            transactionManager: try OutboundTransactionManagerBuilder.build(initializer: initializer),
+            transactionManager: OutboundTransactionManagerBuilder.build(initializer: initializer),
             transactionRepository: initializer.transactionRepository,
-            utxoRepository: try UTXORepositoryBuilder.build(initializer: initializer),
-            blockProcessor: CompactBlockProcessor(initializer: initializer)
+            utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
+            blockProcessor: CompactBlockProcessor(
+                initializer: initializer,
+                walletBirthdayProvider: { initializer.walletBirthday }
+            )
         )
     }
 
@@ -143,7 +156,7 @@ public class SDKSynchronizer: Synchronizer {
         transactionRepository: TransactionRepository,
         utxoRepository: UnspentTransactionOutputRepository,
         blockProcessor: CompactBlockProcessor
-    ) throws {
+    ) {
         self.connectionState = .idle
         self.underlyingStatus = status
         self.initializer = initializer
@@ -151,17 +164,8 @@ public class SDKSynchronizer: Synchronizer {
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
-        let lastScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
-        self.latestScannedHeight = lastScannedHeight
         self.network = initializer.network
-        self.lastStateSubject = CurrentValueSubject(
-            SynchronizerState(
-                shieldedBalance: .zero,
-                transparentBalance: .zero,
-                syncStatus: .unprepared,
-                latestScannedHeight: lastScannedHeight
-            )
-        )
+        self.lastStateSubject = CurrentValueSubject(.zero)
 
         subscribeToProcessorNotifications(blockProcessor)
 
@@ -175,12 +179,22 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    public func prepare(with seed: [UInt8]?) throws -> Initializer.InitializationResult {
-        if case .seedRequired = try self.initializer.initialize(with: seed) {
+    public func prepare(
+        with seed: [UInt8]?,
+        viewingKeys: [UnifiedFullViewingKey],
+        walletBirthday: BlockHeight
+    ) throws -> Initializer.InitializationResult {
+        guard status == .unprepared else { return .success }
+
+        try utxoRepository.initialise()
+
+        if case .seedRequired = try self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
             return .seedRequired
         }
 
         self.status = .disconnected
+
+        latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
 
         return .success
     }

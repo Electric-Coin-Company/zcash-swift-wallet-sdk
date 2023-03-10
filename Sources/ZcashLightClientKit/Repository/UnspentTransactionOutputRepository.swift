@@ -8,11 +8,9 @@
 import Foundation
 
 protocol UnspentTransactionOutputRepository {
+    func initialise() throws
     func getAll(address: String?) throws -> [UnspentTransactionOutputEntity]
-    
     func balance(address: String, latestHeight: BlockHeight) throws -> WalletBalance
-    
     func store(utxos: [UnspentTransactionOutputEntity]) throws
-    
     func clearAll(address: String?) throws
 }

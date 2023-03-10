@@ -59,8 +59,6 @@ class SynchronizerTests: XCTestCase {
                 spendParamsURL: try __spendParamsURL(),
                 outputParamsURL: try __outputParamsURL(),
                 saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-                viewingKeys: [ufvk],
-                walletBirthday: birthday,
                 alias: "",
                 loggerProxy: OSLogger(logLevel: .debug)
             )
@@ -69,8 +67,8 @@ class SynchronizerTests: XCTestCase {
             try? FileManager.default.removeItem(at: databases.dataDB)
             try? FileManager.default.removeItem(at: databases.pendingDB)
             
-            let synchronizer = try SDKSynchronizer(initializer: initializer)
-            _ = try synchronizer.prepare(with: seedBytes)
+            let synchronizer = SDKSynchronizer(initializer: initializer)
+            _ = try synchronizer.prepare(with: seedBytes, viewingKeys: [ufvk], walletBirthday: birthday)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             syncSyncedExpectation.subscribe(to: .synchronizerSynced, object: nil)

@@ -19,6 +19,13 @@ enum Environment {
     still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge \
     solid fish spread
     """
+
+    // Seed bytes for `seedPhrase`.
+    static var seedBytes: [UInt8] {
+        let seedString = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
+        return [UInt8](seedString)
+    }
+
     static let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 }
 
@@ -135,15 +142,4 @@ func parametersReady() -> Bool {
     }
 
     return true
-}
-
-class TestSeed {
-    /**
-    test account: "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
-    */
-    let seedString = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==")!
-    
-    func seed() -> [UInt8] {
-        [UInt8](seedString)
-    }
 }

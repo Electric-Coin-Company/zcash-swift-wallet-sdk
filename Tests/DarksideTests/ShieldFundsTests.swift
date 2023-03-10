@@ -25,7 +25,6 @@ class ShieldFundsTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: birthday,
             network: network
         )

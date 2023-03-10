@@ -268,18 +268,18 @@ class PersistentTransactionManager: OutboundTransactionManager {
 }
 
 enum OutboundTransactionManagerBuilder {
-    static func build(initializer: Initializer) throws -> OutboundTransactionManager {
+    static func build(initializer: Initializer) -> OutboundTransactionManager {
         PersistentTransactionManager(
             encoder: TransactionEncoderbuilder.build(initializer: initializer),
             service: initializer.lightWalletService,
-            repository: try PendingTransactionRepositoryBuilder.build(initializer: initializer),
+            repository: PendingTransactionRepositoryBuilder.build(initializer: initializer),
             networkType: initializer.network.networkType
         )
     }
 }
 
 enum PendingTransactionRepositoryBuilder {
-    static func build(initializer: Initializer) throws -> PendingTransactionRepository {
+    static func build(initializer: Initializer) -> PendingTransactionRepository {
         PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
     }
 }

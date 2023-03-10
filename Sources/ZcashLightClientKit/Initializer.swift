@@ -74,7 +74,6 @@ class initializes the Rust backend and the supporting data required to exercise 
 The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
 functionality, related to processing blocks.
 */
-// swiftlint:disable:next type_body_length
 public class Initializer {
     public enum InitializationResult {
         case success
@@ -96,12 +95,11 @@ public class Initializer {
     let storage: CompactBlockRepository
     let blockDownloaderService: BlockDownloaderService
     let network: ZcashNetwork
-    public let viewingKeys: [UnifiedFullViewingKey]
-    /// The effective birthday of the wallet based on the height provided when initializing
-    /// and the checkpoints available on this SDK
-    private(set) public var walletBirthday: BlockHeight
 
-    private var lowerBoundHeight: BlockHeight
+    /// The effective birthday of the wallet based on the height provided when initializing and the checkpoints available on this SDK.
+    ///
+    /// This contains valid value only after `initialize` function is called.
+    private(set) public var walletBirthday: BlockHeight
 
     /// The purpose of this to migrate from cacheDb to fsBlockDb
     private var cacheDbURL: URL?
@@ -123,14 +121,11 @@ public class Initializer {
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
-        viewingKeys: [UnifiedFullViewingKey],
-        walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
     ) {
         self.init(
             rustBackend: ZcashRustBackend.self,
-            lowerBoundHeight: walletBirthday,
             network: network,
             cacheDbURL: nil,
             fsBlockDbRoot: fsBlockDbRoot,
@@ -156,8 +151,6 @@ public class Initializer {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
-            viewingKeys: viewingKeys,
-            walletBirthday: walletBirthday,
             alias: alias,
             loggerProxy: loggerProxy
         )
@@ -175,7 +168,7 @@ public class Initializer {
     ///  - outputParamsURL: location of the output parameters
     ///
     /// - note: If you don't know what a cacheDb is and you are adopting
-    /// this SDK for the first time then you just need to invoke `convenience init(fsBlockDbRoot: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, network: ZcashNetwork, spendParamsURL: URL, outputParamsURL: URL, viewingKeys: [UnifiedFullViewingKey], walletBirthday: BlockHeight, alias: String = "", loggerProxy: Logger? = nil)` instead
+    /// this SDK for the first time then you just need to invoke `convenience init(fsBlockDbRoot: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, network: ZcashNetwork, spendParamsURL: URL, outputParamsURL: URL, alias: String = "", loggerProxy: Logger? = nil)` instead
     convenience public init (
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
@@ -186,14 +179,11 @@ public class Initializer {
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
-        viewingKeys: [UnifiedFullViewingKey],
-        walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
     ) {
         self.init(
             rustBackend: ZcashRustBackend.self,
-            lowerBoundHeight: walletBirthday,
             network: network,
             cacheDbURL: cacheDbURL,
             fsBlockDbRoot: fsBlockDbRoot,
@@ -219,8 +209,6 @@ public class Initializer {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
-            viewingKeys: viewingKeys,
-            walletBirthday: walletBirthday,
             alias: alias,
             loggerProxy: loggerProxy
         )
@@ -231,7 +219,6 @@ public class Initializer {
     */
     init(
         rustBackend: ZcashRustBackendWelding.Type,
-        lowerBoundHeight: BlockHeight,
         network: ZcashNetwork,
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
@@ -245,15 +232,12 @@ public class Initializer {
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
-        viewingKeys: [UnifiedFullViewingKey],
-        walletBirthday: BlockHeight,
         alias: String = "",
         loggerProxy: Logger? = nil
     ) {
         logger = loggerProxy
         self.cacheDbURL = cacheDbURL
         self.rustBackend = rustBackend
-        self.lowerBoundHeight = lowerBoundHeight
         self.fsBlockDbRoot = fsBlockDbRoot
         self.dataDbURL = dataDbURL
         self.pendingDbURL = pendingDbURL
@@ -267,9 +251,8 @@ public class Initializer {
         self.accountRepository = accountRepository
         self.storage = storage
         self.blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
-        self.viewingKeys = viewingKeys
-        self.walletBirthday = walletBirthday
         self.network = network
+        self.walletBirthday = Checkpoint.birthday(with: 0, network: network).height
     }
 
     private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
@@ -301,7 +284,7 @@ public class Initializer {
     /// - Parameter seed: ZIP-32 Seed bytes for the wallet that will be initialized
     /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
     /// `InitializerError.accountInitFailed` if the account table can't be initialized. 
-    public func initialize(with seed: [UInt8]?) throws -> InitializationResult {
+    func initialize(with seed: [UInt8]?, viewingKeys: [UnifiedFullViewingKey], walletBirthday: BlockHeight) throws -> InitializationResult {
         do {
             try storage.create()
         } catch {
@@ -316,7 +299,7 @@ public class Initializer {
             throw InitializerError.dataDbInitFailed(error)
         }
 
-        let checkpoint = Checkpoint.birthday(with: self.walletBirthday, network: network)
+        let checkpoint = Checkpoint.birthday(with: walletBirthday, network: network)
         do {
             try rustBackend.initBlocksTable(
                 dbData: dataDbURL,
@@ -331,6 +314,7 @@ public class Initializer {
         } catch {
             throw InitializerError.dataDbInitFailed(error)
         }
+
         self.walletBirthday = checkpoint.height
  
         do {
@@ -353,9 +337,6 @@ public class Initializer {
         )
 
         try migrationManager.performMigration()
-
-        // resume from last downloaded block
-        lowerBoundHeight = max(walletBirthday, storage.latestHeight())
 
         return .success
     }

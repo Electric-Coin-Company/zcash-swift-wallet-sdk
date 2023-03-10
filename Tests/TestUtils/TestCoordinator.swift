@@ -36,21 +36,21 @@ class TestCoordinator {
     var completionHandler: ((SDKSynchronizer) throws -> Void)?
     var errorHandler: ((Error?) -> Void)?
     var spendingKey: UnifiedSpendingKey
+    let viewingKey: UnifiedFullViewingKey
     var birthday: BlockHeight
     var synchronizer: SDKSynchronizer
     var service: DarksideWalletService
-    var spendingKeys: [UnifiedSpendingKey]?
     var databases: TemporaryTestDatabases
     let network: ZcashNetwork
+
     convenience init(
-        seed: String,
         walletBirthday: BlockHeight,
         network: ZcashNetwork
     ) throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
         let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
-            seed: TestSeed().seed(),
+            seed: Environment.seedBytes,
             accountIndex: 0
         )
 
@@ -73,6 +73,7 @@ class TestCoordinator {
         XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
 
         self.spendingKey = spendingKey
+        self.viewingKey = unifiedFullViewingKey
         self.birthday = walletBirthday
         self.databases = TemporaryDbBuilder.build()
         self.network = network
@@ -99,9 +100,8 @@ class TestCoordinator {
             contentProvider: DirectoryListingProviders.defaultSorted
         )
 
-        let buildResult = try TestSynchronizerBuilder.build(
+        let synchronizer = TestSynchronizerBuilder.build(
             rustBackend: realRustBackend,
-            lowerBoundHeight: self.birthday,
             fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
             pendingDbURL: databases.pendingDB,
@@ -115,16 +115,19 @@ class TestCoordinator {
             storage: storage,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
-            spendingKey: spendingKey,
-            unifiedFullViewingKey: unifiedFullViewingKey,
-            walletBirthday: walletBirthday,
             network: network,
             loggerProxy: OSLogger(logLevel: .debug)
         )
         
-        self.synchronizer = buildResult.synchronizer
-        self.spendingKeys = buildResult.spendingKeys
+        self.synchronizer = synchronizer
         subscribeToNotifications(synchronizer: self.synchronizer)
+        if case .seedRequired = try prepare(seed: Environment.seedBytes) {
+            throw TestCoordinator.CoordinatorError.seedRequiredForMigration
+        }
+    }
+
+    func prepare(seed: [UInt8]) throws -> Initializer.InitializationResult {
+        return try synchronizer.prepare(with: seed, viewingKeys: [viewingKey], walletBirthday: self.birthday)
     }
     
     func stop() throws {
@@ -228,7 +231,7 @@ extension TestCoordinator {
                 retries: config.retries,
                 maxBackoffInterval: config.maxBackoffInterval,
                 rewindDistance: config.rewindDistance,
-                walletBirthday: config.walletBirthday,
+                walletBirthdayProvider: config.walletBirthdayProvider,
                 saplingActivation: saplingActivation,
                 network: config.network
             )
@@ -266,7 +269,6 @@ enum TemporaryDbBuilder {
 enum TestSynchronizerBuilder {
     static func build(
         rustBackend: ZcashRustBackendWelding.Type,
-        lowerBoundHeight: BlockHeight,
         fsBlockDbRoot: URL,
         dataDbURL: URL,
         pendingDbURL: URL,
@@ -277,13 +279,9 @@ enum TestSynchronizerBuilder {
         storage: CompactBlockRepository,
         spendParamsURL: URL,
         outputParamsURL: URL,
-        spendingKey: UnifiedSpendingKey,
-        unifiedFullViewingKey: UnifiedFullViewingKey,
-        walletBirthday: BlockHeight,
         network: ZcashNetwork,
-        seed: [UInt8]? = nil,
         loggerProxy: Logger? = nil
-    ) throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
+    ) -> SDKSynchronizer {
         let initializer = Initializer(
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
@@ -293,62 +291,11 @@ enum TestSynchronizerBuilder {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            viewingKeys: [unifiedFullViewingKey],
-            walletBirthday: walletBirthday,
             alias: "",
             loggerProxy: loggerProxy
         )
 
-        let synchronizer = try SDKSynchronizer(initializer: initializer)
-        if case .seedRequired = try synchronizer.prepare(with: seed) {
-            throw TestCoordinator.CoordinatorError.seedRequiredForMigration
-        }
-        
-        return ([spendingKey], synchronizer)
-    }
-
-    static func build(
-        rustBackend: ZcashRustBackendWelding.Type,
-        lowerBoundHeight: BlockHeight,
-        fsBlockDbRoot: URL,
-        dataDbURL: URL,
-        pendingDbURL: URL,
-        endpoint: LightWalletEndpoint,
-        service: LightWalletService,
-        repository: TransactionRepository,
-        accountRepository: AccountRepository,
-        storage: CompactBlockRepository,
-        spendParamsURL: URL,
-        outputParamsURL: URL,
-        seedBytes: [UInt8],
-        walletBirthday: BlockHeight,
-        network: ZcashNetwork,
-        loggerProxy: Logger? = nil
-    ) async throws -> (spendingKeys: [UnifiedSpendingKey]?, synchronizer: SDKSynchronizer) {
-        let spendingKey = try DerivationTool(networkType: network.networkType)
-            .deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
-
-        let uvk = try DerivationTool(networkType: network.networkType)
-            .deriveUnifiedFullViewingKey(from: spendingKey)
-
-        return try build(
-            rustBackend: rustBackend,
-            lowerBoundHeight: lowerBoundHeight,
-            fsBlockDbRoot: fsBlockDbRoot,
-            dataDbURL: dataDbURL,
-            pendingDbURL: pendingDbURL,
-            endpoint: endpoint,
-            service: service,
-            repository: repository,
-            accountRepository: accountRepository,
-            storage: storage,
-            spendParamsURL: spendParamsURL,
-            outputParamsURL: outputParamsURL,
-            spendingKey: spendingKey,
-            unifiedFullViewingKey: uvk,
-            walletBirthday: walletBirthday,
-            network: network
-        )
+        return SDKSynchronizer(initializer: initializer)
     }
 }
 

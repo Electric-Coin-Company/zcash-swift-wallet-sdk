@@ -75,9 +75,27 @@ public protocol Synchronizer {
     /// reflects current connection state to LightwalletEndpoint
     var connectionState: ConnectionState { get }
 
-    /// prepares this initializer to operate. Initializes the internal state with the given
-    /// Extended Viewing Keys and a wallet birthday found in the initializer object
-    func prepare(with seed: [UInt8]?) async throws -> Initializer.InitializationResult
+    /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
+    /// database migrations. most of the times the seed won't be needed. If they do and are
+    /// not provided this will fail with `InitializationResult.seedRequired`. It could
+    /// be the case that this method is invoked by a wallet that does not contain the seed phrase
+    /// and is view-only, or by a wallet that does have the seed but the process does not have the
+    /// consent of the OS to fetch the keys from the secure storage, like on background tasks.
+    ///
+    /// 'cache.db' and 'data.db' files are created by this function (if they
+    /// do not already exist). These files can be given a prefix for scenarios where multiple wallets
+    ///
+    /// - Parameters:
+    ///   - seed: ZIP-32 Seed bytes for the wallet that will be initialized.
+    ///   - viewingKeys: Viewing key derived from seed.
+    ///   - walletBirthday: Birthday of wallet.
+    /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
+    /// `InitializerError.accountInitFailed` if the account table can't be initialized.
+    func prepare(
+        with seed: [UInt8]?,
+        viewingKeys: [UnifiedFullViewingKey],
+        walletBirthday: BlockHeight
+    ) throws -> Initializer.InitializationResult
 
     /// Starts this synchronizer within the given scope.
     ///

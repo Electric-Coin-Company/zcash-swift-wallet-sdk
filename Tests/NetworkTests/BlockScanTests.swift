@@ -96,7 +96,7 @@ class BlockScanTests: XCTestCase {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            walletBirthday: walletBirthDay.height,
+            walletBirthdayProvider: { [weak self] in self?.walletBirthDay.height ?? .zero },
             network: network
         )
 
@@ -185,7 +185,7 @@ class BlockScanTests: XCTestCase {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            walletBirthday: network.constants.saplingActivationHeight,
+            walletBirthdayProvider: { [weak self] in self?.network.constants.saplingActivationHeight ?? .zero },
             network: network
         )
         processorConfig.scanningBatchSize = 1000

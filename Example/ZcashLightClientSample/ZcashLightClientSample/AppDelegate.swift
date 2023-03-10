@@ -25,20 +25,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if let sync = synchronizer {
             return sync
         } else {
-            let sync = try! SDKSynchronizer(initializer: sharedWallet) // this must break if fails
+            let sync = SDKSynchronizer(initializer: sharedWallet) // this must break if fails
             self.synchronizer = sync
             return sync
         }
+    }
+
+    var sharedViewingKey: UnifiedFullViewingKey {
+        return try! DerivationTool(networkType: kZcashNetwork.networkType)
+            .deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
+            .deriveFullViewingKey()
     }
     
     var sharedWallet: Initializer {
         if let wallet = wallet {
             return wallet
         } else {
-            let ufvk = try! DerivationTool(networkType: kZcashNetwork.networkType)
-                .deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
-                .deriveFullViewingKey()
-
             let wallet = Initializer(
                 fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
@@ -48,12 +50,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 spendParamsURL: try! spendParamsURLHelper(),
                 outputParamsURL: try! outputParamsURLHelper(),
                 saplingParamsSourceURL: SaplingParamsSourceURL.default,
-                viewingKeys: [ufvk],
-                walletBirthday: DemoAppConfig.birthdayHeight,
                 loggerProxy: loggerProxy
             )
-            
-            _ = try! wallet.initialize(with: DemoAppConfig.seed)
            
             self.wallet = wallet
             return wallet

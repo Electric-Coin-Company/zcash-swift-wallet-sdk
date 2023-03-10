@@ -24,7 +24,6 @@ class BalanceTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -84,10 +83,7 @@ class BalanceTests: XCTestCase {
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
-        guard let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create spending keys")
-            return
-        }
+        let spendingKey = coordinator.spendingKey
 
         var pendingTx: PendingTransactionEntity?
         do {
@@ -243,11 +239,7 @@ class BalanceTests: XCTestCase {
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
-        guard let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create spending keys")
-            return
-        }
-        
+        let spendingKey = coordinator.spendingKey
         var pendingTx: PendingTransactionEntity?
         do {
             let transaction = try await coordinator.synchronizer.sendToAddress(
@@ -402,10 +394,7 @@ class BalanceTests: XCTestCase {
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
-        guard let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create spending keys")
-            return
-        }
+        let spendingKey = coordinator.spendingKey
         var pendingTx: PendingTransactionEntity?
         do {
             let transaction = try await coordinator.synchronizer.sendToAddress(
@@ -556,10 +545,7 @@ class BalanceTests: XCTestCase {
         
         wait(for: [syncedExpectation], timeout: 60)
         
-        guard let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create spending keys")
-            return
-        }
+        let spendingKey = coordinator.spendingKey
         
         let presendVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         
@@ -738,11 +724,8 @@ class BalanceTests: XCTestCase {
         
         wait(for: [syncedExpectation], timeout: 5)
         
-        guard let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create spending keys")
-            return
-        }
-        
+        let spendingKey = coordinator.spendingKey
+
         let presendBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
 
         // there's more zatoshi to send than network fee
@@ -909,10 +892,7 @@ class BalanceTests: XCTestCase {
         let previousVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         let previousTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         
-        guard let spendingKeys = coordinator.spendingKeys?.first else {
-            XCTFail("null spending keys")
-            return
-        }
+        let spendingKey = coordinator.spendingKey
         
         /*
         Send
@@ -921,7 +901,7 @@ class BalanceTests: XCTestCase {
         var pendingTx: PendingTransactionEntity?
         do {
             let transaction = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: spendingKeys,
+                spendingKey: spendingKey,
                 zatoshi: sendAmount,
                 toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: memo
@@ -1088,10 +1068,7 @@ class BalanceTests: XCTestCase {
         }
         wait(for: [syncedExpectation], timeout: 5)
         
-        guard let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("no synchronizer or spending keys")
-            return
-        }
+        let spendingKey = coordinator.spendingKey
         
         let previousVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
         let previousTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()

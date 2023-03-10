@@ -26,7 +26,6 @@ class Z2TReceiveTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -96,7 +95,7 @@ class Z2TReceiveTests: XCTestCase {
         */
         do {
             _ = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: coordinator.spendingKeys!.first!,
+                spendingKey: coordinator.spendingKey,
                 zatoshi: sendAmount,
                 toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "test transaction")
@@ -152,7 +151,7 @@ class Z2TReceiveTests: XCTestCase {
         */
         do {
             let pending = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: coordinator.spendingKeys!.first!,
+                spendingKey: coordinator.spendingKey,
                 zatoshi: sendAmount,
                 toAddress: try! Recipient(testRecipientAddress, network: self.network.networkType),
                 memo: nil

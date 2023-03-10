@@ -52,14 +52,12 @@ class WalletTests: XCTestCase {
             network: network,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
-            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            viewingKeys: [ufvk],
-            walletBirthday: 663194
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests
         )
         
-        let synchronizer = try SDKSynchronizer(initializer: wallet)
+        let synchronizer = SDKSynchronizer(initializer: wallet)
         do {
-            guard case .success = try synchronizer.prepare(with: seedData.bytes) else {
+            guard case .success = try synchronizer.prepare(with: seedData.bytes, viewingKeys: [ufvk], walletBirthday: 663194) else {
                 XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
                 return
             }

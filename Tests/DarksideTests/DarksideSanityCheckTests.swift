@@ -27,7 +27,6 @@ class DarksideSanityCheckTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )

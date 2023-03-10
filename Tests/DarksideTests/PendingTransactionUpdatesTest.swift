@@ -25,7 +25,6 @@ class PendingTransactionUpdatesTest: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -83,7 +82,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         LoggerProxy.info("2. send transaction to recipient address")
         do {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: self.coordinator.spendingKeys!.first!,
+                spendingKey: self.coordinator.spendingKey,
                 zatoshi: Zatoshi(20000),
                 toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "this is a test")

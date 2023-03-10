@@ -28,7 +28,6 @@ class AdvancedReOrgTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: birthday + 50, // don't use an exact birthday, users never do.
             network: network
         )
@@ -326,7 +325,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         do {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: coordinator.spendingKeys!.first!,
+                spendingKey: coordinator.spendingKey,
                 zatoshi: sendAmount,
                 toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "test transaction")
@@ -753,7 +752,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         do {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: self.coordinator.spendingKeys!.first!,
+                spendingKey: self.coordinator.spendingKey,
                 zatoshi: Zatoshi(20000),
                 toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "this is a test")
@@ -1142,7 +1141,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         do {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: self.coordinator.spendingKeys!.first!,
+                spendingKey: self.coordinator.spendingKey,
                 zatoshi: Zatoshi(20000),
                 toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try! Memo(string: "this is a test")
