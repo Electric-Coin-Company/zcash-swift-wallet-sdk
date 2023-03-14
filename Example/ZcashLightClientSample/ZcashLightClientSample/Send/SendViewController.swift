@@ -38,7 +38,11 @@ class SendViewController: UIViewController {
         setUp()
         Task { @MainActor in
             // swiftlint:disable:next force_try
-            try! await synchronizer.prepare(with: DemoAppConfig.seed)
+            try! synchronizer.prepare(
+                with: DemoAppConfig.seed,
+                viewingKeys: [AppDelegate.shared.sharedViewingKey],
+                walletBirthday: DemoAppConfig.birthdayHeight
+            )
         }
     }
     

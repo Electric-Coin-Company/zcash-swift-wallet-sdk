@@ -24,7 +24,6 @@ final class InternalStateConsistencyTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: birthday + 50, // don't use an exact birthday, users never do.
             network: network
         )

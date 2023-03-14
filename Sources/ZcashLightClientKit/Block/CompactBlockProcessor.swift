@@ -151,7 +151,8 @@ actor CompactBlockProcessor {
         public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
         public var maxReorgSize = ZcashSDK.maxReorgSize
         public var rewindDistance = ZcashSDK.defaultRewindDistance
-        public var walletBirthday: BlockHeight
+        let walletBirthdayProvider: () -> BlockHeight
+        public var walletBirthday: BlockHeight { walletBirthdayProvider() }
         public private(set) var downloadBufferSize: Int = 10
         private(set) var network: ZcashNetwork
         private(set) var saplingActivation: BlockHeight
@@ -171,7 +172,7 @@ actor CompactBlockProcessor {
             retries: Int,
             maxBackoffInterval: TimeInterval,
             rewindDistance: Int,
-            walletBirthday: BlockHeight,
+            walletBirthdayProvider: @escaping () -> BlockHeight,
             saplingActivation: BlockHeight,
             network: ZcashNetwork
         ) {
@@ -185,7 +186,7 @@ actor CompactBlockProcessor {
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
-            self.walletBirthday = walletBirthday
+            self.walletBirthdayProvider = walletBirthdayProvider
             self.saplingActivation = saplingActivation
             self.cacheDbURL = cacheDbURL
             assert(downloadBatchSize >= scanningBatchSize)
@@ -197,7 +198,7 @@ actor CompactBlockProcessor {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
-            walletBirthday: BlockHeight,
+            walletBirthdayProvider: @escaping () -> BlockHeight,
             network: ZcashNetwork
         ) {
             self.fsBlockCacheRoot = fsBlockCacheRoot
@@ -205,7 +206,7 @@ actor CompactBlockProcessor {
             self.spendParamsURL = spendParamsURL
             self.outputParamsURL = outputParamsURL
             self.saplingParamsSourceURL = saplingParamsSourceURL
-            self.walletBirthday = walletBirthday
+            self.walletBirthdayProvider = walletBirthdayProvider
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
             self.cacheDbURL = nil
@@ -340,7 +341,7 @@ actor CompactBlockProcessor {
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    init(initializer: Initializer) {
+    init(initializer: Initializer, walletBirthdayProvider: @escaping () -> BlockHeight) {
         self.init(
             service: initializer.lightWalletService,
             storage: initializer.storage,
@@ -351,10 +352,7 @@ actor CompactBlockProcessor {
                 spendParamsURL: initializer.spendParamsURL,
                 outputParamsURL: initializer.outputParamsURL,
                 saplingParamsSourceURL: initializer.saplingParamsSourceURL,
-                walletBirthday: Checkpoint.birthday(
-                    with: initializer.walletBirthday,
-                    network: initializer.network
-                ).height,
+                walletBirthdayProvider: walletBirthdayProvider,
                 network: initializer.network
             ),
             repository: initializer.transactionRepository,
@@ -408,7 +406,7 @@ actor CompactBlockProcessor {
         let utxoFetcherConfig = UTXOFetcherConfig(
             dataDb: config.dataDb,
             networkType: config.network.networkType,
-            walletBirthday: config.walletBirthday
+            walletBirthdayProvider: config.walletBirthdayProvider
         )
         self.utxoFetcher = UTXOFetcherImpl(
             accountRepository: accountRepository,
@@ -681,8 +679,8 @@ actor CompactBlockProcessor {
                 // interrupted abruptly and cache was not able to be cleared
                 // properly and internal state set to the appropriate value
                 if let newLatestDownloadedHeight = ranges.shouldClearBlockCacheAndUpdateInternalState() {
-                        try await storage.clear()
-                        await internalSyncProgress.set(newLatestDownloadedHeight, .latestDownloadedBlockHeight) 
+                    try await storage.clear()
+                    await internalSyncProgress.set(newLatestDownloadedHeight, .latestDownloadedBlockHeight)
                 } else {
                     try storage.create()
                 }
@@ -1414,7 +1412,6 @@ extension CompactBlockProcessor {
 }
 
 extension SyncRanges {
-
     /// Tells whether the state represented by these sync ranges evidence some sort of
     /// outdated state on the cache or the internal state of the compact block processor.
     ///
@@ -1431,11 +1428,12 @@ extension SyncRanges {
             return nil
         }
 
-        guard let latestScannedHeight = self.latestScannedHeight,
-              let latestDownloadedHeight = self.latestDownloadedBlockHeight,
-              latestScannedHeight > latestDownloadedHeight else { return nil }
+        guard
+            let latestScannedHeight = self.latestScannedHeight,
+            let latestDownloadedHeight = self.latestDownloadedBlockHeight,
+            latestScannedHeight > latestDownloadedHeight
+        else { return nil }
 
         return latestScannedHeight
     }
-
 }

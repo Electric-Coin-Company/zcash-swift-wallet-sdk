@@ -45,7 +45,6 @@ class ReOrgTests: XCTestCase {
         try super.setUpWithError()
 
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )

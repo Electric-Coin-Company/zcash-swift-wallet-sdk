@@ -1,3 +1,15 @@
+# unreleased 
+- [#826] Change how the SDK is initialized
+    
+    - `viewingKeys` and `walletBirthday` are removed from `Initializer` constuctor. These parameters
+are moved to `SDKSynchronizer.prepare` function.
+    - Constructor of the `SDKSynchronizer` no longer throws exception.
+    - Any value emitted from `lastState` stream before `SDKSynchronizer.prepare` is called has 
+`latestScannedHeight` set to 0.
+    - `Initializer.initialize` function isn't public anymore. To initialize SDK call `SDKSynchronizer.prepare` 
+instead. 
+
+
 # 0.19.1-beta
 ## Checkpoints added
 Mainnet

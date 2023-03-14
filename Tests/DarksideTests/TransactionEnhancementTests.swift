@@ -67,7 +67,7 @@ class TransactionEnhancementTests: XCTestCase {
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            walletBirthday: birthday.height,
+            walletBirthdayProvider: { birthday.height },
             network: network
         )
 
@@ -78,7 +78,7 @@ class TransactionEnhancementTests: XCTestCase {
         
         let ufvks = [
             try DerivationTool(networkType: network.networkType)
-                .deriveUnifiedSpendingKey(seed: TestSeed().seed(), accountIndex: 0)
+                .deriveUnifiedSpendingKey(seed: Environment.seedBytes, accountIndex: 0)
                 .map {
                     try DerivationTool(networkType: network.networkType)
                         .deriveUnifiedFullViewingKey(from: $0)

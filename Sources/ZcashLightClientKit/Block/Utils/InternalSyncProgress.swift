@@ -148,15 +148,15 @@ actor InternalSyncProgress {
 
         if latestScannedHeight > latestDownloadedBlockHeight {
             LoggerProxy.warn("""
-                             InternalSyncProgress found inconsistent state.
-                                 latestBlockHeight:       \(latestBlockHeight)
-                             --> latestDownloadedHeight:  \(latestDownloadedBlockHeight)
-                                 latestScannedHeight:     \(latestScannedHeight)
-                                 latestEnhancedHeight:    \(latestEnhancedHeight)
-                                 latestUTXOFetchedHeight: \(latestUTXOFetchedHeight)
+            InternalSyncProgress found inconsistent state.
+                latestBlockHeight:       \(latestBlockHeight)
+            --> latestDownloadedHeight:  \(latestDownloadedBlockHeight)
+                latestScannedHeight:     \(latestScannedHeight)
+                latestEnhancedHeight:    \(latestEnhancedHeight)
+                latestUTXOFetchedHeight: \(latestUTXOFetchedHeight)
 
-                             latest downloaded height
-                             """)
+            latest downloaded height
+            """)
         }
 
         // compute the range that must be downloaded and scanned based on

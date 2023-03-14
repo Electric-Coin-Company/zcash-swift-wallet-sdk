@@ -173,7 +173,11 @@ class SyncBlocksViewController: UIViewController {
         case .stopped, .unprepared:
             do {
                 if synchronizer.status == .unprepared {
-                    _ = try synchronizer.prepare(with: DemoAppConfig.seed)
+                    _ = try synchronizer.prepare(
+                        with: DemoAppConfig.seed,
+                        viewingKeys: [AppDelegate.shared.sharedViewingKey],
+                        walletBirthday: DemoAppConfig.birthdayHeight
+                    )
                 }
 
                 SDKMetrics.shared.enableMetrics()

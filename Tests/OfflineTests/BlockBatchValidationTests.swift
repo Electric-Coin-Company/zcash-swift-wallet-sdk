@@ -60,7 +60,7 @@ class BlockBatchValidationTests: XCTestCase {
             retries: 5,
             maxBackoffInterval: 10,
             rewindDistance: 100,
-            walletBirthday: 1210000,
+            walletBirthdayProvider: { 1210000 },
             saplingActivation: network.constants.saplingActivationHeight,
             network: network
         )
@@ -130,7 +130,7 @@ class BlockBatchValidationTests: XCTestCase {
             retries: 5,
             maxBackoffInterval: 10,
             rewindDistance: 100,
-            walletBirthday: 1210000,
+            walletBirthdayProvider: { 1210000 },
             saplingActivation: network.constants.saplingActivationHeight,
             network: network
         )
@@ -200,7 +200,7 @@ class BlockBatchValidationTests: XCTestCase {
             retries: 5,
             maxBackoffInterval: 10,
             rewindDistance: 100,
-            walletBirthday: 1210000,
+            walletBirthdayProvider: { 1210000 },
             saplingActivation: network.constants.saplingActivationHeight,
             network: network
         )
@@ -270,7 +270,7 @@ class BlockBatchValidationTests: XCTestCase {
             retries: 5,
             maxBackoffInterval: 10,
             rewindDistance: 100,
-            walletBirthday: 1210000,
+            walletBirthdayProvider: { 1210000 },
             saplingActivation: network.constants.saplingActivationHeight,
             network: network
         )
@@ -338,7 +338,7 @@ class BlockBatchValidationTests: XCTestCase {
             retries: 5,
             maxBackoffInterval: 10,
             rewindDistance: 100,
-            walletBirthday: 1210000,
+            walletBirthdayProvider: { 1210000 },
             saplingActivation: network.constants.saplingActivationHeight,
             network: network
         )
@@ -430,7 +430,7 @@ class BlockBatchValidationTests: XCTestCase {
             retries: 5,
             maxBackoffInterval: 10,
             rewindDistance: 100,
-            walletBirthday: walletBirthday,
+            walletBirthdayProvider: { walletBirthday },
             saplingActivation: network.constants.saplingActivationHeight,
             network: network
         )
@@ -511,7 +511,7 @@ class BlockBatchValidationTests: XCTestCase {
             retries: 5,
             maxBackoffInterval: 10,
             rewindDistance: 100,
-            walletBirthday: walletBirthday,
+            walletBirthdayProvider: { walletBirthday },
             saplingActivation: network.constants.saplingActivationHeight,
             network: network
         )

@@ -30,7 +30,6 @@ class SychronizerDarksideTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -159,7 +158,7 @@ class SychronizerDarksideTests: XCTestCase {
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .unprepared,
-                latestScannedHeight: self.birthday
+                latestScannedHeight: .zero
             ),
             SDKSynchronizer.SynchronizerState(
                 shieldedBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
@@ -216,7 +215,7 @@ class SychronizerDarksideTests: XCTestCase {
 
         wait(for: [wipeFinished], timeout: 1)
 
-        _ = try coordinator.synchronizer.prepare(with: nil)
+        _ = try coordinator.prepare(seed: Environment.seedBytes)
 
         let secondSyncExpectation = XCTestExpectation(description: "second sync")
 

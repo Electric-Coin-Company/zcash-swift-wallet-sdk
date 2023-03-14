@@ -26,7 +26,6 @@ final class SynchronizerTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday + 50, // don't use an exact birthday, users never do.
             network: self.network
         )
@@ -230,7 +229,8 @@ final class SynchronizerTests: XCTestCase {
         let fm = FileManager.default
         XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.dataDbURL.path))
         XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.pendingDbURL.path))
-        XCTAssertFalse(fm.fileExists(atPath: storage.blocksDirectory.path))
+        XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path))
+        XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [])
 
         let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
 
@@ -244,6 +244,8 @@ final class SynchronizerTests: XCTestCase {
 
         let blockProcessorState = await coordinator.synchronizer.blockProcessor.state
         XCTAssertEqual(blockProcessorState, .stopped)
+
+        XCTAssertEqual(coordinator.synchronizer.status, .unprepared)
     }
 
     func handleError(_ error: Error?) {

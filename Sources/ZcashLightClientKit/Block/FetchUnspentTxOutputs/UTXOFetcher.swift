@@ -15,7 +15,7 @@ enum UTXOFetcherError: Error {
 struct UTXOFetcherConfig {
     let dataDb: URL
     let networkType: NetworkType
-    let walletBirthday: Int
+    let walletBirthdayProvider: () -> BlockHeight
 }
 
 protocol UTXOFetcher {
@@ -48,7 +48,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
         var utxos: [UnspentTransactionOutputEntity] = []
         let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
             tAddresses: tAddresses.map { $0.stringEncoded },
-            startHeight: config.walletBirthday
+            startHeight: config.walletBirthdayProvider()
         )
 
         for try await transaction in stream {

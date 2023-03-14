@@ -20,7 +20,7 @@ class CompactBlockProcessorTests: XCTestCase {
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight,
+            walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
     }()

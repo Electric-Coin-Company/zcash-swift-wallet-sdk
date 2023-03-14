@@ -30,7 +30,6 @@ class RewindRescanTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         self.coordinator = try TestCoordinator(
-            seed: Environment.seedPhrase,
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -363,10 +362,7 @@ class RewindRescanTests: XCTestCase {
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
-        guard let spendingKey = coordinator.spendingKeys?.first else {
-            XCTFail("failed to create spending keys")
-            return
-        }
+        let spendingKey = coordinator.spendingKey
         var pendingTx: PendingTransactionEntity?
         do {
             let transaction = try await coordinator.synchronizer.sendToAddress(

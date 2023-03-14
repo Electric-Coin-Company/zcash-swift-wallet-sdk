@@ -65,7 +65,7 @@ enum TestDbBuilder {
 
         let initResult = try ZcashRustBackend.initDataDb(
             dbData: url,
-            seed: TestSeed().seed(),
+            seed: Environment.seedBytes,
             networkType: .mainnet
         )
         

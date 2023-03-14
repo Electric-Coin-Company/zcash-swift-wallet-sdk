@@ -86,6 +86,10 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     init (dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
+
+    func initialise() throws {
+        try createTableIfNeeded()
+    }
     
     func createTableIfNeeded() throws {
         let stringStatement =
@@ -182,9 +186,7 @@ struct TransparentBalance {
 }
 
 enum UTXORepositoryBuilder {
-    static func build(initializer: Initializer) throws -> UnspentTransactionOutputRepository {
-        let dao = UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path))
-        try dao.createTableIfNeeded()
-        return dao
+    static func build(initializer: Initializer) -> UnspentTransactionOutputRepository {
+        return UnspentTransactionOutputSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.dataDbURL.path))
     }
 }

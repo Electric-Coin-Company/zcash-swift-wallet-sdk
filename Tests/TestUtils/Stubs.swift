@@ -416,7 +416,7 @@ extension CompactBlockProcessor.Configuration {
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            walletBirthday: walletBirthday,
+            walletBirthdayProvider: { walletBirthday },
             network: network
         )
     }
