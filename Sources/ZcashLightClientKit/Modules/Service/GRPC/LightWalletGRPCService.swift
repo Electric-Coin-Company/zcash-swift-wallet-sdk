@@ -240,7 +240,7 @@ extension LightWalletGRPCService: LightWalletService {
         ) -> Void
     ) {
         queue.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
             let arg = GetAddressUtxosArg.with { utxoArgs in
                 utxoArgs.addresses = [tAddress]
                 utxoArgs.startHeight = UInt64(height)

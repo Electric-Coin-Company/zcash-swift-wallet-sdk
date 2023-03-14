@@ -104,7 +104,7 @@ class BalanceTests: XCTestCase {
         }
 
         wait(for: [sentTransactionExpectation], timeout: 20)
-        guard let pendingTx = pendingTx else {
+        guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
         }
@@ -151,7 +151,7 @@ class BalanceTests: XCTestCase {
                         mineExpectation.fulfill()
                         continuation.resume()
                     }, error: { error in
-                        guard let error = error else {
+                        guard let error else {
                             XCTFail("unknown error syncing after sending transaction")
                             return
                         }
@@ -263,7 +263,7 @@ class BalanceTests: XCTestCase {
         }
 
         wait(for: [sentTransactionExpectation], timeout: 20)
-        guard let pendingTx = pendingTx else {
+        guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
         }
@@ -310,7 +310,7 @@ class BalanceTests: XCTestCase {
                         mineExpectation.fulfill()
                         continuation.resume()
                     }, error: { error in
-                        guard let error = error else {
+                        guard let error else {
                             XCTFail("unknown error syncing after sending transaction")
                             return
                         }
@@ -421,7 +421,7 @@ class BalanceTests: XCTestCase {
         }
 
         wait(for: [sentTransactionExpectation], timeout: 20)
-        guard let pendingTx = pendingTx else {
+        guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
         }
@@ -468,7 +468,7 @@ class BalanceTests: XCTestCase {
                         mineExpectation.fulfill()
                         continuation.resume()
                     }, error: { error in
-                        guard let error = error else {
+                        guard let error else {
                             XCTFail("unknown error syncing after sending transaction")
                             return
                         }

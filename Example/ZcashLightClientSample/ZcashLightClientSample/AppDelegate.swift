@@ -32,7 +32,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     var sharedWallet: Initializer {
-        if let wallet = wallet {
+        if let wallet {
             return wallet
         } else {
             let ufvk = try! DerivationTool(networkType: kZcashNetwork.networkType)

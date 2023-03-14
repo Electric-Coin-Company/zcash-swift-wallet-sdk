@@ -775,7 +775,7 @@ public class SDKSynchronizer: Synchronizer {
 
     private func notifyMinedTransaction(_ transaction: PendingTransactionEntity) {
         DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
 
             NotificationSender.default.post(
                 name: Notification.Name.synchronizerMinedTransaction,

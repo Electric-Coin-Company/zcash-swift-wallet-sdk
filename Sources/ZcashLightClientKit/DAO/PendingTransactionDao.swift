@@ -181,7 +181,7 @@ extension PendingTransaction {
     init(value: Zatoshi, recipient: PendingTransactionRecipient, memo: MemoBytes?, account index: Int) {
         var memoData: Data?
 
-        if let memo = memo {
+        if let memo {
             memoData = Data(memo.bytes)
         }
 

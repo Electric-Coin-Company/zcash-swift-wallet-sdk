@@ -33,7 +33,7 @@ extension BlockRange {
     init(startHeight: Int, endHeight: Int? = nil) {
         self = BlockRange()
         self.start = BlockID(height: UInt64(startHeight))
-        if let endHeight = endHeight {
+        if let endHeight {
             self.end = BlockID(height: UInt64(endHeight))
         }
     }
