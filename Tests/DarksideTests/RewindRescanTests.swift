@@ -377,7 +377,7 @@ class RewindRescanTests: XCTestCase {
             XCTFail("sendToAddress failed: \(error)")
         }
         wait(for: [sentTransactionExpectation], timeout: 20)
-        guard let pendingTx = pendingTx else {
+        guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
         }

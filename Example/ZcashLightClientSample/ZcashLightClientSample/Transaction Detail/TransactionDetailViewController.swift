@@ -96,7 +96,7 @@ class TransactionDetailViewController: UITableViewController {
     }
     
     func heightToString(height: BlockHeight?) -> String {
-        guard let height = height else { return "NULL" }
+        guard let height else { return "NULL" }
         return String(height)
     }
 }

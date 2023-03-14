@@ -134,7 +134,7 @@ private extension SaplingParameterDownloader {
     ) {
         LoggerProxy.debug("Downloading sapling file from \(request.url)")
         let task = URLSession.shared.downloadTask(with: request) { url, _, error in
-            if let error = error {
+            if let error {
                 result(.failure(Errors.failed(error: error)))
                 return
             } else if let localUrl = url {

@@ -39,7 +39,7 @@ extension SentNoteEntity {
         hasher.combine(toAddress)
         hasher.combine(toAccount)
         hasher.combine(value)
-        if let memo = memo {
+        if let memo {
             hasher.combine(memo)
         } else {
             hasher.combine(Int(0))
