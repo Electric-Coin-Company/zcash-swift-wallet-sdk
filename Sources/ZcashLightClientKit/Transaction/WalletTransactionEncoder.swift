@@ -77,7 +77,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         memoBytes: MemoBytes?,
         from accountIndex: Int
     ) throws -> Int {
-        guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
+        guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
                 
@@ -126,7 +126,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         memo: MemoBytes?,
         accountIndex: Int
     ) throws -> Int {
-        guard ensureParams(spend: self.spendParamsURL, output: self.spendParamsURL) else {
+        guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
         
