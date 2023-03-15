@@ -20,7 +20,7 @@ struct BlockEnhancerConfig {
 }
 
 protocol BlockEnhancer {
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementStreamProgress) async -> Void) async throws -> [ZcashTransaction.Overview]
+    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]
 }
 
 struct BlockEnhancerImpl {
@@ -75,7 +75,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
         case txIdNotFound(txId: Data)
     }
 
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementStreamProgress) async -> Void) async throws -> [ZcashTransaction.Overview] {
+    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview] {
         try Task.checkCancellation()
         
         LoggerProxy.debug("Started Enhancing range: \(range)")
@@ -103,7 +103,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     do {
                         let confirmedTx = try await enhance(transaction: transaction)
                         retry = false
-                        let progress = EnhancementStreamProgress(
+                        let progress = EnhancementProgress(
                             totalTransactions: transactions.count,
                             enhancedTransactions: index + 1,
                             lastFoundTransaction: confirmedTx,

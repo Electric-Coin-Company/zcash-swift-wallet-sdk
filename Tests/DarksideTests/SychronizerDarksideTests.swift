@@ -50,13 +50,15 @@ class SychronizerDarksideTests: XCTestCase {
     }
    
     func testFoundTransactions() throws {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleFoundTransactions(_:)),
-            name: Notification.Name.synchronizerFoundTransactions,
-            object: nil
-        )
-        
+        coordinator.synchronizer.eventStream
+            .map { event in
+                guard case let .foundTransactions(transactions, _) = event else { return nil }
+                return transactions
+            }
+            .compactMap { $0 }
+            .sink(receiveValue: { [weak self] transactions in self?.handleFoundTransactions(transactions: transactions) })
+            .store(in: &cancellables)
+
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
     
@@ -75,12 +77,14 @@ class SychronizerDarksideTests: XCTestCase {
     }
     
     func testFoundManyTransactions() throws {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleFoundTransactions(_:)),
-            name: Notification.Name.synchronizerFoundTransactions,
-            object: nil
-        )
+        coordinator.synchronizer.eventStream
+            .map { event in
+                guard case let .foundTransactions(transactions, _) = event else { return nil }
+                return transactions
+            }
+            .compactMap { $0 }
+            .sink(receiveValue: { [weak self] transactions in self?.handleFoundTransactions(transactions: transactions) })
+            .store(in: &cancellables)
         
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName, length: 1000)
         let receivedTxHeight: BlockHeight = 663229
@@ -128,9 +132,9 @@ class SychronizerDarksideTests: XCTestCase {
     }
 
     func testLastStates() throws {
-        var disposeBag: [AnyCancellable] = []
+        var cancellables: [AnyCancellable] = []
 
-        var states: [SDKSynchronizer.SynchronizerState] = []
+        var states: [SynchronizerState] = []
 
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
@@ -140,12 +144,11 @@ class SychronizerDarksideTests: XCTestCase {
         sleep(2)
         let preTxExpectation = XCTestExpectation(description: "pre receive")
 
-        coordinator.synchronizer.lastState
-            .receive(on: DispatchQueue.main)
+        coordinator.synchronizer.stateStream
             .sink { state in
                 states.append(state)
             }
-            .store(in: &disposeBag)
+            .store(in: &cancellables)
 
         try coordinator.sync(completion: { _ in
             preTxExpectation.fulfill()
@@ -153,26 +156,102 @@ class SychronizerDarksideTests: XCTestCase {
 
         wait(for: [preTxExpectation], timeout: 5)
 
-        XCTAssertEqual(states, [
-            SDKSynchronizer.SynchronizerState(
+        let expectedStates: [SynchronizerState] = [
+            SynchronizerState(
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
-                syncStatus: .unprepared,
-                latestScannedHeight: .zero
-            ),
-            SDKSynchronizer.SynchronizerState(
-                shieldedBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                syncStatus: SyncStatus.disconnected,
+                syncStatus: .disconnected,
                 latestScannedHeight: 663150
             ),
-            SDKSynchronizer.SynchronizerState(
+            SynchronizerState(
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                syncStatus: SyncStatus.synced,
+                syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .enhancing(
+                    EnhancementProgress(
+                        totalTransactions: 2,
+                        enhancedTransactions: 1,
+                        lastFoundTransaction: ZcashTransaction.Overview(
+                            blockTime: 1.0,
+                            expiryHeight: 663206,
+                            fee: Zatoshi(0),
+                            id: 2,
+                            index: 1,
+                            isWalletInternal: true,
+                            hasChange: false,
+                            memoCount: 1,
+                            minedHeight: 663188,
+                            raw: Data(),
+                            rawID: Data(),
+                            receivedNoteCount: 1,
+                            sentNoteCount: 0,
+                            value: Zatoshi(100000)
+                        ),
+                        range: 663150...663189
+                    )
+                ),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .enhancing(
+                    EnhancementProgress(
+                        totalTransactions: 2,
+                        enhancedTransactions: 2,
+                        lastFoundTransaction: ZcashTransaction.Overview(
+                            blockTime: 1.0,
+                            expiryHeight: 663192,
+                            fee: Zatoshi(0),
+                            id: 1,
+                            index: 1,
+                            isWalletInternal: true,
+                            hasChange: false,
+                            memoCount: 1,
+                            minedHeight: 663174,
+                            raw: Data(),
+                            rawID: Data(),
+                            receivedNoteCount: 1,
+                            sentNoteCount: 0,
+                            value: Zatoshi(100000)
+                        ),
+                        range: 663150...663189
+                    )
+                ),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .fetching,
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .synced,
                 latestScannedHeight: 663189
             )
-        ])
+        ]
+
+        XCTAssertEqual(states, expectedStates)
     }
 
     @MainActor func testSyncAfterWipeWorks() async throws {
@@ -229,13 +308,7 @@ class SychronizerDarksideTests: XCTestCase {
         wait(for: [secondSyncExpectation], timeout: 10)
     }
     
-    @objc func handleFoundTransactions(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let transactions = userInfo[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ZcashTransaction.Overview]
-        else {
-            return
-        }
+    func handleFoundTransactions(transactions: [ZcashTransaction.Overview]) {
         self.foundTransactions.append(contentsOf: transactions)
     }
     

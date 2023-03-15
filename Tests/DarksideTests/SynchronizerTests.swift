@@ -22,6 +22,7 @@ final class SynchronizerTests: XCTestCase {
     let chainName = "main"
     let network = DarksideWalletDNetwork()
     var cancellables: [AnyCancellable] = []
+    var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -52,6 +53,7 @@ final class SynchronizerTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
         coordinator = nil
+        sdkSynchronizerSyncStatusHandler = nil
         cancellables = []
     }
 
@@ -77,7 +79,10 @@ final class SynchronizerTests: XCTestCase {
         sleep(10)
 
         let syncStoppedExpectation = XCTestExpectation(description: "SynchronizerStopped Expectation")
-        syncStoppedExpectation.subscribe(to: .synchronizerStopped, object: nil)
+        sdkSynchronizerSyncStatusHandler.subscribe(
+            to: coordinator.synchronizer.stateStream,
+            expectations: [.stopped: syncStoppedExpectation]
+        )
 
         /*
         sync to latest height
@@ -227,10 +232,11 @@ final class SynchronizerTests: XCTestCase {
     private func checkThatWipeWorked() async {
         let storage = await self.coordinator.synchronizer.blockProcessor.storage as! FSCompactBlockRepository
         let fm = FileManager.default
-        XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.dataDbURL.path))
-        XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.pendingDbURL.path))
-        XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path))
-        XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [])
+        print(coordinator.synchronizer.initializer.dataDbURL.path)
+        XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.pendingDbURL.path), "Pending DB should be deleted")
+        XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.dataDbURL.path), "Data DB should be deleted.")
+        XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
+        XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [], "FS Cache directory should be empty")
 
         let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
 
@@ -238,14 +244,14 @@ final class SynchronizerTests: XCTestCase {
         let latestEnhancedHeight = await internalSyncProgress.load(.latestEnhancedHeight)
         let latestUTXOFetchedHeight = await internalSyncProgress.load(.latestUTXOFetchedHeight)
 
-        XCTAssertEqual(latestDownloadedBlockHeight, 0)
-        XCTAssertEqual(latestEnhancedHeight, 0)
-        XCTAssertEqual(latestUTXOFetchedHeight, 0)
+        XCTAssertEqual(latestDownloadedBlockHeight, 0, "internalSyncProgress latestDownloadedBlockHeight should be 0")
+        XCTAssertEqual(latestEnhancedHeight, 0, "internalSyncProgress latestEnhancedHeight should be 0")
+        XCTAssertEqual(latestUTXOFetchedHeight, 0, "internalSyncProgress latestUTXOFetchedHeight should be 0")
 
         let blockProcessorState = await coordinator.synchronizer.blockProcessor.state
-        XCTAssertEqual(blockProcessorState, .stopped)
+        XCTAssertEqual(blockProcessorState, .stopped, "CompactBlockProcessor state should be stopped")
 
-        XCTAssertEqual(coordinator.synchronizer.status, .unprepared)
+        XCTAssertEqual(coordinator.synchronizer.status, .unprepared, "SDKSynchronizer state should be unprepared")
     }
 
     func handleError(_ error: Error?) {

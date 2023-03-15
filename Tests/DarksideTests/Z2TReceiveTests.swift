@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 8/4/21.
 //
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -20,6 +21,7 @@ class Z2TReceiveTests: XCTestCase {
     var foundTransactionsExpectation = XCTestExpectation(description: "found transactions")
     let branchID = "2bb40e60"
     let chainName = "main"
+    var cancellables: [AnyCancellable] = []
     
     let network = DarksideWalletDNetwork()
     
@@ -41,25 +43,19 @@ class Z2TReceiveTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
         coordinator = nil
+        cancellables = []
     }
     
     func subscribeToFoundTransactions() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(foundTransactions(_:)),
-            name: .synchronizerFoundTransactions,
-            object: nil
-        )
+        coordinator.synchronizer.eventStream
+            .filter { event in
+                guard case .foundTransactions = event else { return false }
+                return true
+            }
+            .sink(receiveValue: { [weak self] _ in self?.self.foundTransactionsExpectation.fulfill() })
+            .store(in: &cancellables)
     }
-    
-    @objc func foundTransactions(_ notification: Notification) {
-        guard notification.userInfo?[SDKSynchronizer.NotificationKeys.foundTransactions] != nil else {
-            XCTFail("found transactions notification is empty")
-            return
-        }
-        self.foundTransactionsExpectation.fulfill()
-    }
-    
+
     func testSendingZ2TWithMemoFails() async throws {
         subscribeToFoundTransactions()
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)

@@ -5,6 +5,7 @@
 //  Created by Lukáš Korba on 13.12.2022.
 //
 
+import Combine
 import XCTest
 @testable import ZcashLightClientKit
 @testable import TestUtils
@@ -23,12 +24,21 @@ class SynchronizerTests: XCTestCase {
     }
 
     var coordinator: TestCoordinator!
+    var cancellables: [AnyCancellable] = []
+    var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
 
     let seedPhrase = """
     wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame
     """
 
     var birthday: BlockHeight = 1_730_000
+
+    override func tearDown() {
+        super.tearDown()
+        coordinator = nil
+        cancellables = []
+        sdkSynchronizerSyncStatusHandler = nil
+    }
 
     @MainActor
     func testHundredBlocksSync() async throws {
@@ -71,7 +81,7 @@ class SynchronizerTests: XCTestCase {
             _ = try synchronizer.prepare(with: seedBytes, viewingKeys: [ufvk], walletBirthday: birthday)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
-            syncSyncedExpectation.subscribe(to: .synchronizerSynced, object: nil)
+            sdkSynchronizerSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
             
             let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
             await internalSyncProgress.rewind(to: birthday)

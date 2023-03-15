@@ -35,7 +35,7 @@ public enum CompactBlockProcessorError: Error {
 
 public enum CompactBlockProgress {
     case syncing(_ progress: BlockProgress)
-    case enhance(_ progress: EnhancementStreamProgress)
+    case enhance(_ progress: EnhancementProgress)
     case fetch
     
     public var progress: Float {
@@ -78,21 +78,33 @@ public enum CompactBlockProgress {
     }
 }
 
-public protocol EnhancementProgress {
-    var totalTransactions: Int { get }
-    var enhancedTransactions: Int { get }
-    var lastFoundTransaction: ZcashTransaction.Overview? { get }
-    var range: CompactBlockRange { get }
-}
-
-public struct EnhancementStreamProgress: EnhancementProgress {
+public struct EnhancementProgress: Equatable {
     public var totalTransactions: Int
     public var enhancedTransactions: Int
     public var lastFoundTransaction: ZcashTransaction.Overview?
     public var range: CompactBlockRange
+
+    public init(totalTransactions: Int, enhancedTransactions: Int, lastFoundTransaction: ZcashTransaction.Overview?, range: CompactBlockRange) {
+        self.totalTransactions = totalTransactions
+        self.enhancedTransactions = enhancedTransactions
+        self.lastFoundTransaction = lastFoundTransaction
+        self.range = range
+    }
     
     public var progress: Float {
         totalTransactions > 0 ? Float(enhancedTransactions) / Float(totalTransactions) : 0
+    }
+
+    public static var zero: EnhancementProgress {
+        EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)
+    }
+
+    public static func == (lhs: EnhancementProgress, rhs: EnhancementProgress) -> Bool {
+        return
+            lhs.totalTransactions == rhs.totalTransactions &&
+            lhs.enhancedTransactions == rhs.enhancedTransactions &&
+            lhs.lastFoundTransaction?.id == rhs.lastFoundTransaction?.id &&
+            lhs.range == rhs.range
     }
 }
 
@@ -621,11 +633,11 @@ actor CompactBlockProcessor {
 
             let fileManager = FileManager.default
             if fileManager.fileExists(atPath: config.dataDb.path) {
-                try FileManager.default.removeItem(at: config.dataDb)
+                try fileManager.removeItem(at: config.dataDb)
             }
 
             if fileManager.fileExists(atPath: context.pendingDbURL.path) {
-                try FileManager.default.removeItem(at: context.pendingDbURL)
+                try fileManager.removeItem(at: context.pendingDbURL)
             }
 
             context.completion(nil)
@@ -979,7 +991,7 @@ actor CompactBlockProcessor {
 
         self.consecutiveChainValidationErrors += 1
 
-            guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network.networkType) else {
+        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network.networkType) else {
             await fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }
