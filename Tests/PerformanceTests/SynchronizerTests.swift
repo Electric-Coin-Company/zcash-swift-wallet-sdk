@@ -78,7 +78,7 @@ class SynchronizerTests: XCTestCase {
             try? FileManager.default.removeItem(at: databases.pendingDB)
             
             let synchronizer = SDKSynchronizer(initializer: initializer)
-            _ = try synchronizer.prepare(with: seedBytes, viewingKeys: [ufvk], walletBirthday: birthday)
+            _ = try await synchronizer.prepare(with: seedBytes, viewingKeys: [ufvk], walletBirthday: birthday)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             sdkSynchronizerSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
@@ -89,7 +89,7 @@ class SynchronizerTests: XCTestCase {
                 birthday: self.birthday + 99
             )
             
-            try synchronizer.start()
+            try await synchronizer.start()
             
             wait(for: [syncSyncedExpectation], timeout: 100)
             

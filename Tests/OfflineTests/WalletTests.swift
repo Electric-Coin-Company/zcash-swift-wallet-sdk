@@ -39,7 +39,7 @@ class WalletTests: XCTestCase {
         try? self.testFileManager.removeItem(at: self.testTempDirectory)
     }
     
-    func testWalletInitialization() throws {
+    func testWalletInitialization() async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
         let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
             .map({ try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
@@ -57,7 +57,7 @@ class WalletTests: XCTestCase {
         
         let synchronizer = SDKSynchronizer(initializer: wallet)
         do {
-            guard case .success = try synchronizer.prepare(with: seedData.bytes, viewingKeys: [ufvk], walletBirthday: 663194) else {
+            guard case .success = try await synchronizer.prepare(with: seedData.bytes, viewingKeys: [ufvk], walletBirthday: 663194) else {
                 XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
                 return
             }

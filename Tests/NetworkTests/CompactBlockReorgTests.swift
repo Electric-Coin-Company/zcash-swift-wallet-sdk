@@ -105,17 +105,15 @@ class CompactBlockReorgTests: XCTestCase {
         finishedNotificationExpectation = XCTestExpectation(description: "\(self.description) finishedNotificationExpectation")
         reorgNotificationExpectation = XCTestExpectation(description: "\(self.description) reorgNotificationExpectation")
 
-        var stream: AnyPublisher<CompactBlockProcessor.Event, Never>!
-        XCTestCase.wait { await stream = self.processor.eventStream }
-        stream
-            .sink { [weak self] event in
-                switch event {
-                case .failed: self?.processorFailed(event: event)
-                case .handledReorg: self?.processorHandledReorg(event: event)
-                default: break
-                }
+        let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
+            switch event {
+            case .failed: self?.processorFailed(event: event)
+            case .handledReorg: self?.processorHandledReorg(event: event)
+            default: break
             }
-            .store(in: &cancellables)
+        }
+
+        XCTestCase.wait { await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure) }
     }
     
     override func tearDownWithError() throws {
@@ -158,8 +156,8 @@ class CompactBlockReorgTests: XCTestCase {
             .finished: finishedNotificationExpectation,
             .handleReorg: reorgNotificationExpectation
         ]
-        processorEventHandler.subscribe(to: await processor.eventStream, expectations: expectations)
 
+        await processorEventHandler.subscribe(to: processor, expectations: expectations)
         await processor.start()
     }
     

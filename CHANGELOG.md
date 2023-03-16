@@ -1,4 +1,18 @@
 # unreleased 
+- [#831] Add support for alternative APIs
+
+    There are two new protocols (`ClosureSynchronizer` and `CombineSynchronizer`). And there are two new 
+objects which conform to respective protocols (`ClosureSDKSynchronizer` and `CombineSDKSynchronizer`). These
+new objects offer alternative API for the `SDKSynchronizer`. Now the client app can choose which technology 
+it wants to use to communicate with Zcash SDK and it isn't forced to use async.
+
+These methods in the `SDKSynchronizer` are now async:
+- `prepare(with:viewingKeys:walletBirthday:)`
+- `start(retry:)`
+- `stop()`
+
+Non async `SDKsynchronizer.latestHeight(result:)` were moved to `ClosureSDKSynchronizer`.
+
 - [#724] Switch from event based notifications to state based notifications
 
     The `SDKSynchronizer` no longer uses `NotificationCenter` to send notifications.

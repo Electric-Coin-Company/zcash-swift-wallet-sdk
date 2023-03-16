@@ -38,6 +38,7 @@ class SyncBlocksViewController: UIViewController {
     var cancellables: [AnyCancellable] = []
 
     let synchronizer = AppDelegate.shared.sharedSynchronizer
+    let closureSynchronizer = ClosureSDKSynchronizer(synchronizer: AppDelegate.shared.sharedSynchronizer)
 
     deinit {
         cancellables.forEach { $0.cancel() }
@@ -64,7 +65,7 @@ class SyncBlocksViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         cancellables.forEach { $0.cancel() }
-        synchronizer.stop()
+        closureSynchronizer.stop() { }
     }
 
     private func synchronizerStateUpdated(_ state: SynchronizerState) {
@@ -154,7 +155,8 @@ class SyncBlocksViewController: UIViewController {
         case .stopped, .unprepared:
             do {
                 if syncStatus == .unprepared {
-                    _ = try synchronizer.prepare(
+                    // swiftlint:disable:next force_try
+                    _ = try! await synchronizer.prepare(
                         with: DemoAppConfig.seed,
                         viewingKeys: [AppDelegate.shared.sharedViewingKey],
                         walletBirthday: DemoAppConfig.birthdayHeight
@@ -162,14 +164,14 @@ class SyncBlocksViewController: UIViewController {
                 }
 
                 SDKMetrics.shared.enableMetrics()
-                try synchronizer.start()
+                try await synchronizer.start()
                 updateUI()
             } catch {
                 loggerProxy.error("Can't start synchronizer: \(error)")
                 updateUI()
             }
         default:
-            synchronizer.stop()
+            await synchronizer.stop()
             SDKMetrics.shared.disableMetrics()
             updateUI()
         }

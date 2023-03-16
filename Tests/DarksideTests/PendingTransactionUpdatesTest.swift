@@ -24,7 +24,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        self.coordinator = try TestCoordinator(
+        self.coordinator = TestCoordinator.make(
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -35,7 +35,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -59,15 +59,15 @@ class PendingTransactionUpdatesTest: XCTestCase {
         1a. sync to latest height
         */
         LoggerProxy.info("1a. sync to latest height")
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     firstSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            await handleError(error)
         }
         wait(for: [firstSyncExpectation], timeout: 5)
         
@@ -90,14 +90,14 @@ class PendingTransactionUpdatesTest: XCTestCase {
             pendingEntity = pendingTx
             sendExpectation.fulfill()
         } catch {
-            self.handleError(error)
+            await self.handleError(error)
         }
         
         wait(for: [sendExpectation], timeout: 11)
         
         guard let pendingUnconfirmedTx = pendingEntity else {
             XCTFail("no pending transaction after sending")
-            try coordinator.stop()
+            try await coordinator.stop()
             return
         }
         
@@ -121,7 +121,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         LoggerProxy.info("3. getIncomingTransaction")
         guard let incomingTx = try coordinator.getIncomingTransactions()?.first else {
             XCTFail("no incoming transaction")
-            try coordinator.stop()
+            try await coordinator.stop()
             return
         }
         
@@ -149,15 +149,15 @@ class PendingTransactionUpdatesTest: XCTestCase {
         LoggerProxy.info("6. sync to latest height")
         let secondSyncExpectation = XCTestExpectation(description: "after send expectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     secondSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            await handleError(error)
         }
 
         wait(for: [secondSyncExpectation], timeout: 5)
@@ -193,15 +193,15 @@ class PendingTransactionUpdatesTest: XCTestCase {
         */
         LoggerProxy.info("last sync to latest height: \(lastStageHeight)")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     syncToConfirmExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            await handleError(error)
         }
 
         wait(for: [syncToConfirmExpectation], timeout: 6)
@@ -212,8 +212,8 @@ class PendingTransactionUpdatesTest: XCTestCase {
         XCTAssertNil(supposedlyPendingUnexistingTransaction)
     }
     
-    func handleError(_ error: Error?) {
-        _ = try? coordinator.stop()
+    func handleError(_ error: Error?) async {
+        _ = try? await coordinator.stop()
         guard let testError = error else {
             XCTFail("failed with nil error")
             return

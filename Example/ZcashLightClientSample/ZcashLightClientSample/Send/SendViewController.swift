@@ -30,33 +30,39 @@ class SendViewController: UIViewController {
 
     // swiftlint:disable:next implicitly_unwrapped_optional
     var synchronizer: Synchronizer!
+    // swiftlint:disable:next implicitly_unwrapped_optional
+    var closureSynchronizer: ClosureSynchronizer!
 
     var cancellables: [AnyCancellable] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
         synchronizer = AppDelegate.shared.sharedSynchronizer
+        closureSynchronizer = ClosureSDKSynchronizer(synchronizer: AppDelegate.shared.sharedSynchronizer)
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(viewTapped(_:)))
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
-        Task { @MainActor in
-            // swiftlint:disable:next force_try
-            try! synchronizer.prepare(
-                with: DemoAppConfig.seed,
-                viewingKeys: [AppDelegate.shared.sharedViewingKey],
-                walletBirthday: DemoAppConfig.birthdayHeight
-            )
+        
+        closureSynchronizer.prepare(
+            with: DemoAppConfig.seed,
+            viewingKeys: [AppDelegate.shared.sharedViewingKey],
+            walletBirthday: DemoAppConfig.birthdayHeight
+        ) { result in
+            loggerProxy.debug("Prepare result: \(result)")
         }
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        do {
-            try synchronizer.start(retry: false)
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.latestState.syncStatus)
-        } catch {
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.latestState.syncStatus)
-            fail(error)
+        closureSynchronizer.start(retry: false) { [weak self] error in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.latestState.syncStatus)
+
+                if let error {
+                    self.fail(error)
+                }
+            }
         }
     }
     
