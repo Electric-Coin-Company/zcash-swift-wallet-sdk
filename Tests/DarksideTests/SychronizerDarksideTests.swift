@@ -29,7 +29,7 @@ class SychronizerDarksideTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        self.coordinator = try TestCoordinator(
+        self.coordinator = TestCoordinator.make(
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -40,7 +40,7 @@ class SychronizerDarksideTests: XCTestCase {
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -49,7 +49,7 @@ class SychronizerDarksideTests: XCTestCase {
         cancellables = []
     }
    
-    func testFoundTransactions() throws {
+    func testFoundTransactions() async throws {
         coordinator.synchronizer.eventStream
             .map { event in
                 guard case let .foundTransactions(transactions, _) = event else { return nil }
@@ -67,16 +67,19 @@ class SychronizerDarksideTests: XCTestCase {
         sleep(2)
         let preTxExpectation = XCTestExpectation(description: "pre receive")
 
-        try coordinator.sync(completion: { _ in
-            preTxExpectation.fulfill()
-        }, error: self.handleError)
+        try await coordinator.sync(
+            completion: { _ in
+                preTxExpectation.fulfill()
+            },
+            error: self.handleError
+        )
         
         wait(for: [preTxExpectation], timeout: 5)
         
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
     
-    func testFoundManyTransactions() throws {
+    func testFoundManyTransactions() async throws {
         coordinator.synchronizer.eventStream
             .map { event in
                 guard case let .foundTransactions(transactions, _) = event else { return nil }
@@ -94,9 +97,12 @@ class SychronizerDarksideTests: XCTestCase {
         sleep(2)
         let firsTxExpectation = XCTestExpectation(description: "first sync")
 
-        try coordinator.sync(completion: { _ in
-            firsTxExpectation.fulfill()
-        }, error: self.handleError)
+        try await coordinator.sync(
+            completion: { _ in
+                firsTxExpectation.fulfill()
+            },
+            error: self.handleError
+        )
         
         wait(for: [firsTxExpectation], timeout: 10)
         
@@ -109,9 +115,12 @@ class SychronizerDarksideTests: XCTestCase {
         
         let preTxExpectation = XCTestExpectation(description: "intermediate sync")
 
-        try coordinator.sync(completion: { _ in
-            preTxExpectation.fulfill()
-        }, error: self.handleError)
+        try await coordinator.sync(
+            completion: { _ in
+                preTxExpectation.fulfill()
+            },
+            error: self.handleError
+        )
         
         wait(for: [preTxExpectation], timeout: 10)
         
@@ -122,16 +131,19 @@ class SychronizerDarksideTests: XCTestCase {
         try coordinator.applyStaged(blockheight: 664010)
         sleep(2)
         
-        try coordinator.sync(completion: { _ in
-            findManyTxExpectation.fulfill()
-        }, error: self.handleError)
+        try await coordinator.sync(
+            completion: { _ in
+                findManyTxExpectation.fulfill()
+            },
+            error: self.handleError
+        )
         
         wait(for: [findManyTxExpectation], timeout: 10)
         
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
 
-    func testLastStates() throws {
+    func testLastStates() async throws {
         var cancellables: [AnyCancellable] = []
 
         var states: [SynchronizerState] = []
@@ -150,9 +162,12 @@ class SychronizerDarksideTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        try coordinator.sync(completion: { _ in
-            preTxExpectation.fulfill()
-        }, error: self.handleError)
+        try await coordinator.sync(
+            completion: { _ in
+                preTxExpectation.fulfill()
+            },
+            error: self.handleError
+        )
 
         wait(for: [preTxExpectation], timeout: 5)
 
@@ -264,7 +279,7 @@ class SychronizerDarksideTests: XCTestCase {
 
         let firsSyncExpectation = XCTestExpectation(description: "first sync")
 
-        try coordinator.sync(
+        try await coordinator.sync(
             completion: { _ in
                 firsSyncExpectation.fulfill()
             },
@@ -294,11 +309,11 @@ class SychronizerDarksideTests: XCTestCase {
 
         wait(for: [wipeFinished], timeout: 1)
 
-        _ = try coordinator.prepare(seed: Environment.seedBytes)
+        _ = try await coordinator.prepare(seed: Environment.seedBytes)
 
         let secondSyncExpectation = XCTestExpectation(description: "second sync")
 
-        try coordinator.sync(
+        try await coordinator.sync(
             completion: { _ in
                 secondSyncExpectation.fulfill()
             },
@@ -312,8 +327,8 @@ class SychronizerDarksideTests: XCTestCase {
         self.foundTransactions.append(contentsOf: transactions)
     }
     
-    func handleError(_ error: Error?) {
-        _ = try? coordinator.stop()
+    func handleError(_ error: Error?) async {
+        _ = try? await coordinator.stop()
         guard let testError = error else {
             XCTFail("failed with nil error")
             return

@@ -27,7 +27,7 @@ class Z2TReceiveTests: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        self.coordinator = try TestCoordinator(
+        self.coordinator = TestCoordinator.make(
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -38,7 +38,7 @@ class Z2TReceiveTests: XCTestCase {
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -72,15 +72,15 @@ class Z2TReceiveTests: XCTestCase {
         /*
         3. sync up to received_Tx_height
         */
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     preTxExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            await handleError(error)
         }
         wait(for: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
         
@@ -126,15 +126,15 @@ class Z2TReceiveTests: XCTestCase {
         /*
         3. sync up to received_Tx_height
         */
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     preTxExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            await handleError(error)
         }
         wait(for: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
 
@@ -195,25 +195,25 @@ class Z2TReceiveTests: XCTestCase {
         */
         let sentTxSyncExpectation = XCTestExpectation(description: "sent tx sync expectation")
 
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { synchronizer in
+        do {
+            try await coordinator.sync(
+                completion: { synchronizer in
                     let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
                     XCTAssertEqual(pMinedHeight, sentTxHeight)
 
                     sentTxSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            await handleError(error)
         }
 
         wait(for: [sentTxSyncExpectation, foundTransactionsExpectation], timeout: 5)
     }
 
-    func handleError(_ error: Error?) {
-        _ = try? coordinator.stop()
+    func handleError(_ error: Error?) async {
+        _ = try? await coordinator.stop()
         guard let testError = error else {
             XCTFail("failed with nil error")
             return

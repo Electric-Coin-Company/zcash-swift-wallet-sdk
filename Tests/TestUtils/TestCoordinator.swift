@@ -36,7 +36,7 @@ class TestCoordinator {
 
     var cancellables: [AnyCancellable] = []
     var completionHandler: ((SDKSynchronizer) throws -> Void)?
-    var errorHandler: ((Error?) -> Void)?
+    var errorHandler: ((Error?) async -> Void)?
     var spendingKey: UnifiedSpendingKey
     let viewingKey: UnifiedFullViewingKey
     var birthday: BlockHeight
@@ -45,10 +45,36 @@ class TestCoordinator {
     var databases: TemporaryTestDatabases
     let network: ZcashNetwork
 
+    static func make(walletBirthday: BlockHeight, network: ZcashNetwork) -> TestCoordinator {
+        var coordinator: TestCoordinator!
+        XCTestCase.wait {
+            coordinator = try await TestCoordinator(walletBirthday: walletBirthday, network: network)
+        }
+        return coordinator
+    }
+
+    static func make(
+        spendingKey: UnifiedSpendingKey,
+        unifiedFullViewingKey: UnifiedFullViewingKey,
+        walletBirthday: BlockHeight,
+        network: ZcashNetwork
+    ) -> TestCoordinator {
+        var coordinator: TestCoordinator!
+        XCTestCase.wait {
+            coordinator = try await TestCoordinator(
+                spendingKey: spendingKey,
+                unifiedFullViewingKey: unifiedFullViewingKey,
+                walletBirthday: walletBirthday,
+                network: network
+            )
+        }
+        return coordinator
+    }
+
     convenience init(
         walletBirthday: BlockHeight,
         network: ZcashNetwork
-    ) throws {
+    ) async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
         let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
@@ -58,7 +84,7 @@ class TestCoordinator {
 
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
-        try self.init(
+        try await self.init(
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
@@ -71,8 +97,8 @@ class TestCoordinator {
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork
-    ) throws {
-        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
+    ) async throws {
+        await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0)
 
         self.spendingKey = spendingKey
         self.viewingKey = unifiedFullViewingKey
@@ -123,7 +149,7 @@ class TestCoordinator {
         
         self.synchronizer = synchronizer
         subscribeToState(synchronizer: self.synchronizer)
-        if case .seedRequired = try prepare(seed: Environment.seedBytes) {
+        if case .seedRequired = try await prepare(seed: Environment.seedBytes) {
             throw TestCoordinator.CoordinatorError.seedRequiredForMigration
         }
     }
@@ -133,12 +159,12 @@ class TestCoordinator {
         cancellables = []
     }
 
-    func prepare(seed: [UInt8]) throws -> Initializer.InitializationResult {
-        return try synchronizer.prepare(with: seed, viewingKeys: [viewingKey], walletBirthday: self.birthday)
+    func prepare(seed: [UInt8]) async throws -> Initializer.InitializationResult {
+        return try await synchronizer.prepare(with: seed, viewingKeys: [viewingKey], walletBirthday: self.birthday)
     }
     
-    func stop() throws {
-        synchronizer.stop()
+    func stop() async throws {
+        await synchronizer.stop()
         self.completionHandler = nil
         self.errorHandler = nil
     }
@@ -158,11 +184,11 @@ class TestCoordinator {
         try service.applyStaged(nextLatestHeight: height)
     }
     
-    func sync(completion: @escaping (SDKSynchronizer) throws -> Void, error: @escaping (Error?) -> Void) throws {
+    func sync(completion: @escaping (SDKSynchronizer) throws -> Void, error: @escaping (Error?) async -> Void) async throws {
         self.completionHandler = completion
         self.errorHandler = error
         
-        try synchronizer.start(retry: true)
+        try await synchronizer.start(retry: true)
     }
     
     // MARK: notifications
@@ -185,7 +211,9 @@ class TestCoordinator {
     }
     
     func synchronizerFailed(error: Error) {
-        self.errorHandler?(error)
+        Task {
+            await self.errorHandler?(error)
+        }
     }
     
     func synchronizerSynced() throws {

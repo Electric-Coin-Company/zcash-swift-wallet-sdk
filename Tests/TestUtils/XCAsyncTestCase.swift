@@ -14,7 +14,7 @@ extension XCTestCase {
     static func wait(asyncBlock: @escaping (() async throws -> Void)) {
         let semaphore = DispatchSemaphore(value: 0)
         Task.init {
-            try await asyncBlock()
+            try! await asyncBlock()
             semaphore.signal()
         }
         semaphore.wait()
