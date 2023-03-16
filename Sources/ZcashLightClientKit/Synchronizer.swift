@@ -132,16 +132,16 @@ public protocol Synchronizer {
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
-    ) throws -> Initializer.InitializationResult
+    ) async throws -> Initializer.InitializationResult
 
     /// Starts this synchronizer within the given scope.
     ///
     /// Implementations should leverage structured concurrency and
     /// cancel all jobs when this scope completes.
-    func start(retry: Bool) throws
+    func start(retry: Bool) async throws
 
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
-    func stop() throws
+    func stop()
 
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.

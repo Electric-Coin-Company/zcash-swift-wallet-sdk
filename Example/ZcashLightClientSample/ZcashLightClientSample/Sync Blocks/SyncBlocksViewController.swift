@@ -154,7 +154,8 @@ class SyncBlocksViewController: UIViewController {
         case .stopped, .unprepared:
             do {
                 if syncStatus == .unprepared {
-                    _ = try synchronizer.prepare(
+                    // swiftlint:disable:next force_try
+                    _ = try! await synchronizer.prepare(
                         with: DemoAppConfig.seed,
                         viewingKeys: [AppDelegate.shared.sharedViewingKey],
                         walletBirthday: DemoAppConfig.birthdayHeight
@@ -162,7 +163,7 @@ class SyncBlocksViewController: UIViewController {
                 }
 
                 SDKMetrics.shared.enableMetrics()
-                try synchronizer.start()
+                try await synchronizer.start()
                 updateUI()
             } catch {
                 loggerProxy.error("Can't start synchronizer: \(error)")

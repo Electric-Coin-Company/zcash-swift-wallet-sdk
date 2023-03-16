@@ -111,7 +111,7 @@ public class SDKSynchronizer: Synchronizer {
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
-    ) throws -> Initializer.InitializationResult {
+    ) async throws -> Initializer.InitializationResult {
         guard status == .unprepared else { return .success }
 
         try utxoRepository.initialise()
@@ -129,25 +129,21 @@ public class SDKSynchronizer: Synchronizer {
 
     /// Starts the synchronizer
     /// - Throws: CompactBlockProcessorError when failures occur
-    public func start(retry: Bool = false) throws {
+    public func start(retry: Bool = false) async throws {
         switch status {
         case .unprepared:
             throw SynchronizerError.notPrepared
 
         case .syncing, .enhancing, .fetching:
             LoggerProxy.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
-            Task {
-                /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
-                /// it's start here.
-                await blockProcessor.start(retry: retry)
-            }
+            /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
+            /// it's start here.
+            await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
-            Task {
-                status = .syncing(.nullProgress)
-                syncStartDate = Date()
-                await blockProcessor.start(retry: retry)
-            }
+            status = .syncing(.nullProgress)
+            syncStartDate = Date()
+            await blockProcessor.start(retry: retry)
         }
     }
 
