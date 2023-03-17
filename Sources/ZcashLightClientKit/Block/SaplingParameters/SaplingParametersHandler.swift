@@ -29,20 +29,19 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
         try Task.checkCancellation()
 
         do {
-            let verifiedBalance = try rustBackend.getVerifiedBalance(
+            let totalShieldedBalance = try rustBackend.getBalance(
                 dbData: config.dataDb,
                 account: Int32(0),
                 networkType: config.networkType
             )
-
-            let totalBalance = try rustBackend.getBalance(
+            let totalTransparentBalance = try rustBackend.getTransparentBalance(
                 dbData: config.dataDb,
                 account: Int32(0),
                 networkType: config.networkType
             )
 
             // Download Sapling parameters only if sapling funds are detected.
-            guard verifiedBalance > 0 || totalBalance > 0 else { return }
+            guard totalShieldedBalance > 0 || totalTransparentBalance > 0 else { return }
         } catch {
             // if sapling balance can't be detected of we fail to obtain the balance
             // for some reason we shall not proceed to download the parameters and
