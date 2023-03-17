@@ -19,8 +19,9 @@ class SyncBlocksViewController: UIViewController {
     @IBOutlet weak var startPause: UIButton!
     @IBOutlet weak var metricLabel: UILabel!
     @IBOutlet weak var summaryLabel: UILabel!
-    
+
     private var queue = DispatchQueue(label: "metrics.queue", qos: .default)
+    private var enhancingStarted = false
     private var accumulatedMetrics: ProcessorMetrics = .initial
     private var currentMetric: SDKMetrics.Operation?
     private var currentMetricName: String {
@@ -34,12 +35,12 @@ class SyncBlocksViewController: UIViewController {
         }
     }
 
+    var cancellables: [AnyCancellable] = []
+
     let synchronizer = AppDelegate.shared.sharedSynchronizer
 
-    var notificationCancellables: [AnyCancellable] = []
-
     deinit {
-        notificationCancellables.forEach { $0.cancel() }
+        cancellables.forEach { $0.cancel() }
     }
 
     override func viewDidLoad() {
@@ -51,83 +52,62 @@ class SyncBlocksViewController: UIViewController {
             action: #selector(wipe(_:))
         )
 
-        statusLabel.text = textFor(state: synchronizer.status)
+        statusLabel.text = textFor(state: synchronizer.latestState.syncStatus)
         progressBar.progress = 0
-        let center = NotificationCenter.default
-        let subscribeToNotifications: [Notification.Name] = [
-            .synchronizerStarted,
-            .synchronizerProgressUpdated,
-            .synchronizerStatusWillUpdate,
-            .synchronizerSynced,
-            .synchronizerStopped,
-            .synchronizerDisconnected,
-            .synchronizerSyncing,
-            .synchronizerEnhancing,
-            .synchronizerFetching,
-            .synchronizerFailed
-        ]
 
-        for notificationName in subscribeToNotifications {
-            center.publisher(for: notificationName)
-                .receive(on: DispatchQueue.main)
-                .sink { [weak self] notification in
-                    DispatchQueue.main.async {
-                        self?.processorNotification(notification)
-                    }
-                }
-                .store(in: &notificationCancellables)
-        }
-
-        NotificationCenter.default.publisher(for: .synchronizerEnhancing, object: nil)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.accumulateMetrics()
-                self?.summaryLabel.text = "scan: \((self?.accumulatedMetrics.debugDescription ?? "No summary"))"
-                self?.accumulatedMetrics = .initial
-                self?.currentMetric = .enhancement
-            }
-            .store(in: &notificationCancellables)
-
-        NotificationCenter.default.publisher(for: .synchronizerProgressUpdated, object: nil)
-            .throttle(for: 5, scheduler: DispatchQueue.main, latest: true)
-            .receive(on: DispatchQueue.main)
-            .map { [weak self] _ -> SDKMetrics.BlockMetricReport? in
-                guard let currentMetric = self?.currentMetric else { return nil }
-                return SDKMetrics.shared.popBlock(operation: currentMetric)?.last
-            }
-            .sink { [weak self] report in
-                self?.metricLabel.text = (self?.currentMetricName ?? "") + report.debugDescription
-            }
-            .store(in: &notificationCancellables)
-
-        NotificationCenter.default.publisher(for: .synchronizerSynced, object: nil)
-            .receive(on: DispatchQueue.main)
-            .delay(for: 0.5, scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.accumulateMetrics()
-                self?.summaryLabel.text = "enhancement: \((self?.accumulatedMetrics.debugDescription ?? "No summary"))"
-                self?.overallSummary()
-            }
-            .store(in: &notificationCancellables)
+        synchronizer.stateStream
+            .throttle(for: .seconds(0.2), scheduler: DispatchQueue.main, latest: true)
+            .sink(receiveValue: { [weak self] state in self?.synchronizerStateUpdated(state) })
+            .store(in: &cancellables)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-
-        notificationCancellables.forEach { $0.cancel() }
+        cancellables.forEach { $0.cancel() }
         synchronizer.stop()
     }
 
-    @objc func processorNotification(_ notification: Notification) {
+    private func synchronizerStateUpdated(_ state: SynchronizerState) {
         self.updateUI()
 
-        switch notification.name {
-        case let not where not == Notification.Name.synchronizerProgressUpdated:
-            guard let progress = notification.userInfo?[SDKSynchronizer.NotificationKeys.progress] as? CompactBlockProgress else { return }
-            self.progressBar.progress = progress.progress
-            self.progressLabel.text = "\(floor(progress.progress * 1000) / 10)%"
-        default:
-            return
+        switch state.syncStatus {
+        case .unprepared:
+            break
+
+        case let .syncing(progress):
+            enhancingStarted = false
+
+            progressBar.progress = progress.progress
+            progressLabel.text = "\(floor(progress.progress * 1000) / 10)%"
+
+            if let currentMetric {
+                let report = SDKMetrics.shared.popBlock(operation: currentMetric)?.last
+                metricLabel.text = currentMetricName + report.debugDescription
+            }
+
+        case .enhancing:
+            guard !enhancingStarted else { return }
+            enhancingStarted = true
+
+            accumulateMetrics()
+            summaryLabel.text = "scan: \(accumulatedMetrics.debugDescription)"
+            accumulatedMetrics = .initial
+            currentMetric = .enhancement
+
+        case .fetching:
+            break
+
+        case .synced:
+            accumulateMetrics()
+            summaryLabel.text = "enhancement: \(accumulatedMetrics.debugDescription)"
+            overallSummary()
+
+        case .stopped:
+            break
+        case .disconnected:
+            break
+        case .error:
+            break
         }
     }
     
@@ -169,10 +149,11 @@ class SyncBlocksViewController: UIViewController {
     }
 
     func doStartStop() async {
-        switch synchronizer.status {
+        let syncStatus = synchronizer.latestState.syncStatus
+        switch syncStatus {
         case .stopped, .unprepared:
             do {
-                if synchronizer.status == .unprepared {
+                if syncStatus == .unprepared {
                     _ = try synchronizer.prepare(
                         with: DemoAppConfig.seed,
                         viewingKeys: [AppDelegate.shared.sharedViewingKey],
@@ -214,11 +195,11 @@ class SyncBlocksViewController: UIViewController {
     }
 
     func updateUI() {
-        let state = synchronizer.status
+        let syncStatus = synchronizer.latestState.syncStatus
 
-        statusLabel.text = textFor(state: state)
-        startPause.setTitle(buttonText(for: state), for: .normal)
-        if case SyncStatus.synced = state {
+        statusLabel.text = textFor(state: syncStatus)
+        startPause.setTitle(buttonText(for: syncStatus), for: .normal)
+        if case SyncStatus.synced = syncStatus {
             startPause.isEnabled = false
         } else {
             startPause.isEnabled = true
@@ -229,9 +210,9 @@ class SyncBlocksViewController: UIViewController {
         switch state {
         case .syncing:
             return "Pause"
-        case .stopped:
+        case .stopped, .unprepared:
             return "Start"
-        case .error, .unprepared, .disconnected:
+        case .error, .disconnected:
             return "Retry"
         case .synced:
             return "Chill!"

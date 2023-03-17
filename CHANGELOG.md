@@ -1,4 +1,10 @@
 # unreleased 
+- [#724] Switch from event based notifications to state based notifications
+
+    The `SDKSynchronizer` no longer uses `NotificationCenter` to send notifications.
+Notifications are replaced with `Combine` publishers. Check the migrating document and
+documentation in the code to get more information.
+
 - [#826] Change how the SDK is initialized
     
     - `viewingKeys` and `walletBirthday` are removed from `Initializer` constuctor. These parameters

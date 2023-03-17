@@ -1,4 +1,32 @@
-# Migrating from previous versions to <Unreleased>
+# Migrating from previous versions to <unreleased>
+The `SDKSynchronizer` no longer uses `NotificationCenter` to send notifications.
+Notifications are replaced with `Combine` publishers.
+
+`stateStream` publisher replaces notifications related to `SyncStatus` changes.
+These notifications are replaced by `stateStream`:
+- .synchronizerStarted
+- .synchronizerProgressUpdated
+- .synchronizerStatusWillUpdate
+- .synchronizerSynced
+- .synchronizerStopped
+- .synchronizerDisconnected
+- .synchronizerSyncing
+- .synchronizerEnhancing
+- .synchronizerFetching
+- .synchronizerFailed
+
+`eventStream` publisher replaces notifications related to transactions and other stuff.
+These notifications are replaced by `eventStream`:
+- .synchronizerMinedTransaction
+- .synchronizerFoundTransactions
+- .synchronizerStoredUTXOs
+- .synchronizerConnectionStateChanged
+
+`latestState` is also new property that can be used to get the latest SDK state in a synchronous way.
+`SDKSynchronizer.status` is no longer public. To get `SyncStatus` either subscribe to `stateStream` 
+or use `latestState`. 
+
+# Migrating from previous versions to 0.18.x
 Compact block cache no longer uses a sqlite database. The existing database
 should be deleted. `Initializer` now takes an `fsBlockDbRootURL` which is a 
 URL pointing to a RW directory in the filesystem that will be used to store

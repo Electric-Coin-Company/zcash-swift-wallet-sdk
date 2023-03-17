@@ -66,11 +66,48 @@ public enum ConnectionState {
     case shutdown
 }
 
+public struct SynchronizerState: Equatable {
+    public var shieldedBalance: WalletBalance
+    public var transparentBalance: WalletBalance
+    public var syncStatus: SyncStatus
+    public var latestScannedHeight: BlockHeight
+
+    public static var zero: SynchronizerState {
+        SynchronizerState(
+            shieldedBalance: .zero,
+            transparentBalance: .zero,
+            syncStatus: .unprepared,
+            latestScannedHeight: .zero
+        )
+    }
+}
+
+public enum SynchronizerEvent {
+    // Sent when the synchronizer finds a pendingTransaction that hast been newly mined.
+    case minedTransaction(PendingTransactionEntity)
+    // Sent when the synchronizer finds a mined transaction
+    case foundTransactions(_ transactions: [ZcashTransaction.Overview], _ inRange: CompactBlockRange)
+    // Sent when the synchronizer fetched utxos from lightwalletd attempted to store them.
+    case storedUTXOs(_ inserted: [UnspentTransactionOutputEntity], _ skipped: [UnspentTransactionOutputEntity])
+    // Connection state to LightwalletEndpoint changed.
+    case connectionStateChanged
+}
+
 /// Primary interface for interacting with the SDK. Defines the contract that specific
 /// implementations like SdkSynchronizer fulfill.
 public protocol Synchronizer {
-    /// Value representing the Status of this Synchronizer. As the status changes, it will be also notified
-    var status: SyncStatus { get }
+    /// This stream is backed by `CurrentValueSubject`. This is primary source of information about what is the SDK doing. New values are emitted when
+    /// `SyncStatus` is changed inside the SDK.
+    ///
+    /// Synchronization progress is part of the `SyncStatus` so this stream emits lot of values. `throttle` can be used to control amout of values
+    /// delivered. Values are delivered on random background thread.
+    var stateStream: AnyPublisher<SynchronizerState, Never> { get }
+
+    /// Latest state of the SDK which can be get in synchronous manner.
+    var latestState: SynchronizerState { get }
+
+    /// This stream is backed by `PassthroughSubject`. Check `SynchronizerEvent` to see which events may be emitted.
+    var eventStream: AnyPublisher<SynchronizerEvent, Never> { get }
 
     /// reflects current connection state to LightwalletEndpoint
     var connectionState: ConnectionState { get }
@@ -279,7 +316,7 @@ public enum SyncStatus: Equatable {
     /// When set, a UI element may want to turn red.
     case disconnected
 
-    case error(_ error: Error)
+    case error(_ error: SynchronizerError)
     
     public var isSyncing: Bool {
         switch self {
@@ -317,57 +354,17 @@ public enum RewindPolicy {
 }
 
 extension SyncStatus {
-    // swiftlint:disable cyclomatic_complexity
     public static func == (lhs: SyncStatus, rhs: SyncStatus) -> Bool {
-        switch lhs {
-        case .unprepared:
-            if case .unprepared = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .disconnected:
-            if case .disconnected = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .syncing:
-            if case .syncing = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .enhancing:
-            if case .enhancing = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .fetching:
-            if case .fetching = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .synced:
-            if case .synced = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .stopped:
-            if case .stopped = rhs {
-                return true
-            } else {
-                return false
-            }
-        case .error:
-            if case .error = rhs {
-                return true
-            } else {
-                return false
-            }
+        switch (lhs, rhs) {
+        case (.unprepared, .unprepared): return true
+        case let (.syncing(lhsProgress), .syncing(rhsProgress)): return lhsProgress == rhsProgress
+        case let (.enhancing(lhsProgress), .enhancing(rhsProgress)): return lhsProgress == rhsProgress
+        case (.fetching, .fetching): return true
+        case (.synced, .synced): return true
+        case (.stopped, .stopped): return true
+        case (.disconnected, .disconnected): return true
+        case (.error, .error): return true
+        default: return false
         }
     }
 }

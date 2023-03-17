@@ -59,20 +59,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func subscribeToMinedTxNotifications() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(txMinedNotification(_:)),
-            name: Notification.Name.synchronizerMinedTransaction,
-            object: nil
-        )
+        sharedSynchronizer.eventStream
+            .map { event in
+                guard case let .minedTransaction(transaction) = event else { return nil }
+                return transaction
+            }
+            .compactMap { $0 }
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveValue: { [weak self] transaction in self?.txMined(transaction) }
+            )
+            .store(in: &cancellables)
     }
     
-    @objc func txMinedNotification(_ notification: Notification) {
-        guard let transaction = notification.userInfo?[SDKSynchronizer.NotificationKeys.minedTransaction] as? PendingTransactionEntity else {
-            loggerProxy.error("no tx information on notification")
-            return
-        }
-
+    func txMined(_ transaction: PendingTransactionEntity) {
         NotificationBubble.display(
             in: window!.rootViewController!.view,
             options: NotificationBubble.sucessOptions(

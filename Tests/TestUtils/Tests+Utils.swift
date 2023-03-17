@@ -6,6 +6,7 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
 import Foundation
 import GRPC
 import ZcashLightClientKit
@@ -76,20 +77,6 @@ enum MockDbInit {
     
     static func destroy(at path: String) throws {
         try FileManager.default.removeItem(atPath: path)
-    }
-}
-
-extension XCTestExpectation {
-    func subscribe(to notification: Notification.Name, object: Any?) {
-        NotificationCenter.default.addObserver(self, selector: #selector(fulfill), name: notification, object: object)
-    }
-    
-    func unsubscribe(from notification: Notification.Name) {
-        NotificationCenter.default.removeObserver(self, name: notification, object: nil)
-    }
-    
-    func unsubscribeFromNotifications() {
-        NotificationCenter.default.removeObserver(self)
     }
 }
 

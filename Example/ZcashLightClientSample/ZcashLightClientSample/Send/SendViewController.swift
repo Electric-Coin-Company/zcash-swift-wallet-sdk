@@ -6,6 +6,7 @@
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
 
+import Combine
 import UIKit
 import ZcashLightClientKit
 import KRProgressHUD
@@ -29,6 +30,8 @@ class SendViewController: UIViewController {
 
     // swiftlint:disable:next implicitly_unwrapped_optional
     var synchronizer: Synchronizer!
+
+    var cancellables: [AnyCancellable] = []
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,9 +53,9 @@ class SendViewController: UIViewController {
         super.viewDidAppear(animated)
         do {
             try synchronizer.start(retry: false)
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.latestState.syncStatus)
         } catch {
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.status)
+            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: synchronizer.latestState.syncStatus)
             fail(error)
         }
     }
@@ -78,35 +81,15 @@ class SendViewController: UIViewController {
         memoField.layer.borderWidth = 1
         memoField.layer.cornerRadius = 5
         charactersLeftLabel.text = textForCharacterCount(0)
-        let center = NotificationCenter.default
-        
-        center.addObserver(
-            self,
-            selector: #selector(synchronizerStarted(_:)),
-            name: Notification.Name.synchronizerStarted,
-            object: synchronizer
-        )
 
-        center.addObserver(
-            self,
-            selector: #selector(synchronizerSynced(_:)),
-            name: Notification.Name.synchronizerSynced,
-            object: synchronizer
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(synchronizerStopped(_:)),
-            name: Notification.Name.synchronizerStopped,
-            object: synchronizer
-        )
-
-        center.addObserver(
-            self,
-            selector: #selector(synchronizerUpdated(_:)),
-            name: Notification.Name.synchronizerProgressUpdated,
-            object: synchronizer
-        )
+        synchronizer.stateStream
+            .throttle(for: .seconds(0.2), scheduler: DispatchQueue.main, latest: true)
+            .sink(
+                receiveValue: { [weak self] state in
+                    self?.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: state.syncStatus)
+                }
+            )
+            .store(in: &cancellables)
     }
     
     func format(balance: Zatoshi = Zatoshi()) -> String {
@@ -129,7 +112,7 @@ class SendViewController: UIViewController {
     }
     
     func isFormValid() -> Bool {
-        switch synchronizer.status {
+        switch synchronizer.latestState.syncStatus {
         case .synced:
             return isBalanceValid() && isAmountValid() && isRecipientValid()
         default:
@@ -262,43 +245,6 @@ class SendViewController: UIViewController {
     }
     
     func cancel() {}
-    
-    // MARK: synchronizer notifications
-    @objc func synchronizerUpdated(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else {
-                return
-            }
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
-        }
-    }
-    
-    @objc func synchronizerStarted(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else {
-                return
-            }
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
-        }
-    }
-    
-    @objc func synchronizerStopped(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else {
-                return
-            }
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
-        }
-    }
-    
-    @objc func synchronizerSynced(_ notification: Notification) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else {
-                return
-            }
-            self.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: self.synchronizer.status)
-        }
-    }
     
     func textForCharacterCount(_ count: Int) -> String {
         "\(count) of \(characterLimit) bytes left"

@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 4/28/20.
 //
 
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -20,6 +21,7 @@ class BalanceTests: XCTestCase {
     var sentTransactionExpectation = XCTestExpectation(description: "sent")
     var syncedExpectation = XCTestExpectation(description: "synced")
     var coordinator: TestCoordinator!
+    var cancellables: [AnyCancellable] = []
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -39,6 +41,7 @@ class BalanceTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
         coordinator = nil
+        cancellables = []
     }
     
     /**
@@ -1188,34 +1191,39 @@ class BalanceTests: XCTestCase {
 class SDKSynchonizerListener {
     var transactionsFound: (([ZcashTransaction.Overview]) -> Void)?
     var synchronizerMinedTransaction: ((PendingTransactionEntity) -> Void)?
+    var cancellables: [AnyCancellable] = []
     
     func subscribeToSynchronizer(_ synchronizer: SDKSynchronizer) {
-        NotificationCenter.default.addObserver(self, selector: #selector(txFound(_:)), name: .synchronizerFoundTransactions, object: synchronizer)
-        NotificationCenter.default.addObserver(self, selector: #selector(txMined(_:)), name: .synchronizerMinedTransaction, object: synchronizer)
+        synchronizer.eventStream
+            .sink(
+                receiveValue: { [weak self] event in
+                    switch event {
+                    case let .minedTransaction(transaction):
+                        self?.txMined(transaction)
+
+                    case let .foundTransactions(transactions, _):
+                        self?.txFound(transactions)
+
+                    case .storedUTXOs, .connectionStateChanged:
+                        break
+                    }
+                }
+            )
+            .store(in: &cancellables)
     }
     
     func unsubscribe() {
         NotificationCenter.default.removeObserver(self)
     }
     
-    @objc func txFound(_ notification: Notification) {
+    func txFound(_ txs: [ZcashTransaction.Overview]) {
         DispatchQueue.main.async { [weak self] in
-            guard let txs = notification.userInfo?[SDKSynchronizer.NotificationKeys.foundTransactions] as? [ZcashTransaction.Overview] else {
-                XCTFail("expected [ConfirmedTransactionEntity] array")
-                return
-            }
-            
             self?.transactionsFound?(txs)
         }
     }
     
-    @objc func txMined(_ notification: Notification) {
+    func txMined(_ transaction: PendingTransactionEntity) {
         DispatchQueue.main.async { [weak self] in
-            guard let transaction = notification.userInfo?[SDKSynchronizer.NotificationKeys.minedTransaction] as? PendingTransactionEntity else {
-                XCTFail("expected transaction")
-                return
-            }
-            
             self?.synchronizerMinedTransaction?(transaction)
         }
     }

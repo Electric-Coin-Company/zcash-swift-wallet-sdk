@@ -9,125 +9,54 @@
 import Foundation
 import Combine
 
-public extension Notification.Name {
-    /// Posted when the synchronizer is started.
-    /// - note: Query userInfo object for `NotificationKeys.synchronizerState`
-    static let synchronizerStarted = Notification.Name("SDKSyncronizerStarted")
-
-    /// Posted when there are progress updates.
-    ///
-    /// - Note: Query userInfo object for NotificationKeys.progress for Float
-    /// progress percentage and NotificationKeys.blockHeight  /// for the current progress height
-    static let synchronizerProgressUpdated = Notification.Name("SDKSyncronizerProgressUpdated")
-
-    static let synchronizerStatusWillUpdate = Notification.Name("SDKSynchronizerStatusWillUpdate")
-
-    /// Posted when the synchronizer is synced to latest height
-    static let synchronizerSynced = Notification.Name("SDKSyncronizerSynced")
-
-    /// Posted when the synchronizer is stopped
-    static let synchronizerStopped = Notification.Name("SDKSyncronizerStopped")
-
-    /// Posted when the synchronizer loses connection
-    static let synchronizerDisconnected = Notification.Name("SDKSyncronizerDisconnected")
-
-    /// Posted when the synchronizer starts syncing
-    static let synchronizerSyncing = Notification.Name("SDKSynchronizerSyncing")
-
-    /// Posted when the synchronizer starts Enhancing
-    static let synchronizerEnhancing = Notification.Name("SDKSyncronizerEnhancing")
-
-    /// Posted when the synchronizer starts fetching UTXOs
-    static let synchronizerFetching = Notification.Name("SDKSyncronizerFetching")
-
-    /// Posted when the synchronizer finds a pendingTransaction that hast been newly mined
-    /// - Note: query userInfo on NotificationKeys.minedTransaction for the transaction
-    static let synchronizerMinedTransaction = Notification.Name("synchronizerMinedTransaction")
-
-    /// Posted when the synchronizer finds a mined transaction
-    /// - Note: query userInfo on NotificationKeys.foundTransactions for
-    /// the `[ConfirmedTransactionEntity]`. This notification could arrive in a background thread.
-    static let synchronizerFoundTransactions = Notification.Name("synchronizerFoundTransactions")
-
-    /// Notification sent when the synchronizer fetched utxos from lightwalletd attempted to store them
-    /// Query the user info object for CompactBlockProcessorNotificationKey.blockProcessorStoredUTXOs which will contain a RefreshedUTXOs tuple with
-    /// the collection of UTXOs stored or skipped
-    static let synchronizerStoredUTXOs = Notification.Name(rawValue: "synchronizerStoredUTXOs")
-
-    /// Posted when the synchronizer presents an error
-    /// - Note: query userInfo on NotificationKeys.error for an error
-    static let synchronizerFailed = Notification.Name("SDKSynchronizerFailed")
-
+extension Notification.Name {
     static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
 }
 
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
-    public struct SynchronizerState: Equatable {
-        public var shieldedBalance: WalletBalance
-        public var transparentBalance: WalletBalance
-        public var syncStatus: SyncStatus
-        public var latestScannedHeight: BlockHeight
-
-        public static var zero: SynchronizerState {
-            SynchronizerState(
-                shieldedBalance: .zero,
-                transparentBalance: .zero,
-                syncStatus: .unprepared,
-                latestScannedHeight: .zero
-            )
-        }
-    }
-
     public enum NotificationKeys {
-        public static let progress = "SDKSynchronizer.progress"
-        public static let blockHeight = "SDKSynchronizer.blockHeight"
-        public static let blockDate = "SDKSynchronizer.blockDate"
-        public static let minedTransaction = "SDKSynchronizer.minedTransaction"
-        public static let foundTransactions = "SDKSynchronizer.foundTransactions"
-        public static let error = "SDKSynchronizer.error"
-        public static let currentStatus = "SDKSynchronizer.currentStatus"
-        public static let nextStatus = "SDKSynchronizer.nextStatus"
         public static let currentConnectionState = "SDKSynchronizer.currentConnectionState"
         public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
-        public static let synchronizerState = "SDKSynchronizer.synchronizerState"
-        public static let refreshedUTXOs = "SDKSynchronizer.refreshedUTXOs"
     }
 
+    private let streamsUpdateQueue = DispatchQueue(label: "streamsUpdateQueue")
+    private let stateSubject = CurrentValueSubject<SynchronizerState, Never>(.zero)
+    public var stateStream: AnyPublisher<SynchronizerState, Never> { stateSubject.eraseToAnyPublisher() }
+    public private(set) var latestState: SynchronizerState = .zero
+
+    private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
+    public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
+
+    private let statusUpdateLock = NSRecursiveLock()
     private var underlyingStatus: SyncStatus
-    public private(set) var status: SyncStatus {
+    var status: SyncStatus {
         get {
             statusUpdateLock.lock()
             defer { statusUpdateLock.unlock() }
             return underlyingStatus
         }
         set {
-            notifyStatusChange(newValue: newValue, oldValue: underlyingStatus)
             statusUpdateLock.lock()
+            let oldValue = underlyingStatus
             underlyingStatus = newValue
+            notify(oldStatus: oldValue, newStatus: newValue)
             statusUpdateLock.unlock()
-            notify(status: status)
         }
     }
 
     let blockProcessor: CompactBlockProcessor
     let blockProcessorEventProcessingQueue = DispatchQueue(label: "blockProcessorEventProcessingQueue")
 
-    public private(set) var progress: Float = 0.0
     public private(set) var initializer: Initializer
     // Valid value is stored here after `prepare` is called.
     public private(set) var latestScannedHeight: BlockHeight = .zero
     public private(set) var connectionState: ConnectionState
     public private(set) var network: ZcashNetwork
-    public var lastState: AnyPublisher<SynchronizerState, Never> { lastStateSubject.eraseToAnyPublisher() }
-
-    private var lastStateSubject: CurrentValueSubject<SynchronizerState, Never>
     private var transactionManager: OutboundTransactionManager
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
-
-    private let statusUpdateLock = NSRecursiveLock()
 
     private var syncStartDate: Date?
 
@@ -165,7 +94,6 @@ public class SDKSynchronizer: Synchronizer {
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
         self.network = initializer.network
-        self.lastStateSubject = CurrentValueSubject(.zero)
 
         subscribeToProcessorNotifications(blockProcessor)
 
@@ -192,9 +120,9 @@ public class SDKSynchronizer: Synchronizer {
             return .seedRequired
         }
 
-        self.status = .disconnected
-
         latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
+
+        self.status = .disconnected
 
         return .success
     }
@@ -216,17 +144,7 @@ public class SDKSynchronizer: Synchronizer {
 
         case .stopped, .synced, .disconnected, .error:
             Task {
-                let state = await snapshotState()
-                lastStateSubject.send(state)
-
-                NotificationSender.default.post(
-                    name: .synchronizerStarted,
-                    object: self,
-                    userInfo: [
-                        NotificationKeys.synchronizerState: state
-                    ]
-                )
-
+                status = .syncing(.nullProgress)
                 syncStartDate = Date()
                 await blockProcessor.start(retry: retry)
             }
@@ -271,6 +189,9 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         connectionState = current
+        streamsUpdateQueue.async { [weak self] in
+            self?.eventSubject.send(.connectionStateChanged)
+        }
     }
 
     // MARK: Handle CompactBlockProcessor.Flow
@@ -301,24 +222,23 @@ public class SDKSynchronizer: Synchronizer {
                     self?.storedUTXOs(utxos: utxos)
 
                 case .startedEnhancing:
-                    self?.startedEnhancing()
+                    self?.status = .enhancing(.zero)
 
                 case .startedFetching:
-                    self?.startedFetching()
+                    self?.status = .fetching
 
                 case .startedSyncing:
-                    self?.startedSyncing()
+                    self?.status = .syncing(.nullProgress)
 
                 case .stopped:
-                    self?.stopped()
+                    self?.status = .stopped
                 }
             }
             .store(in: &longLivingCancelables)
     }
 
     private func failed(error: CompactBlockProcessorError) {
-        self.notifyFailure(error)
-        self.status = .error(self.mapError(error))
+        status = .error(self.mapError(error))
     }
 
     private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) {
@@ -336,13 +256,9 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func foundTransactions(transactions: [ZcashTransaction.Overview], in range: CompactBlockRange) {
-        NotificationSender.default.post(
-            name: .synchronizerFoundTransactions,
-            object: self,
-            userInfo: [
-                NotificationKeys.foundTransactions: transactions
-            ]
-        )
+        streamsUpdateQueue.async { [weak self] in
+            self?.eventSubject.send(.foundTransactions(transactions, range))
+        }
     }
 
     private func handledReorg(reorgHeight: BlockHeight, rewindHeight: BlockHeight) {
@@ -352,52 +268,24 @@ public class SDKSynchronizer: Synchronizer {
             try transactionManager.handleReorg(at: rewindHeight)
         } catch {
             LoggerProxy.debug("error handling reorg: \(error)")
-            notifyFailure(error)
         }
     }
 
     private func progressUpdated(progress: CompactBlockProgress) {
-        self.notify(progress: progress)
+        switch progress {
+        case let .syncing(progress):
+            status = .syncing(progress)
+        case let .enhance(progress):
+            status = .enhancing(progress)
+        case .fetch:
+            status = .fetching
+        }
     }
 
     private func storedUTXOs(utxos: (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])) {
-        NotificationSender.default.post(
-            name: .synchronizerStoredUTXOs,
-            object: self,
-            userInfo: [NotificationKeys.refreshedUTXOs: utxos]
-        )
-    }
-
-    private func startedEnhancing() {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .enhancing(NullEnhancementProgress()) else { return }
-        status = .enhancing(NullEnhancementProgress())
-    }
-
-    private func startedFetching() {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .fetching else { return }
-        status = .fetching
-    }
-
-    private func startedSyncing() {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .syncing(.nullProgress) else { return }
-        status = .syncing(.nullProgress)
-    }
-
-    private func stopped() {
-        statusUpdateLock.lock()
-        defer { statusUpdateLock.unlock() }
-
-        guard status != .stopped else { return }
-        status = .stopped
+        streamsUpdateQueue.async { [weak self] in
+            self?.eventSubject.send(.storedUTXOs(utxos.inserted, utxos.skipped))
+        }
     }
 
     // MARK: Synchronizer methods
@@ -689,28 +577,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     // MARK: notify state
-    private func notify(progress: CompactBlockProgress) {
-        var userInfo: [AnyHashable: Any] = .init()
-        userInfo[NotificationKeys.progress] = progress
-        userInfo[NotificationKeys.blockHeight] = progress.progressHeight
 
-        self.status = SyncStatus(progress)
-        NotificationSender.default.post(name: Notification.Name.synchronizerProgressUpdated, object: self, userInfo: userInfo)
-    }
-
-    private func notifyStatusChange(newValue: SyncStatus, oldValue: SyncStatus) {
-        NotificationSender.default.post(
-            name: .synchronizerStatusWillUpdate,
-            object: self,
-            userInfo:
-                [
-                    NotificationKeys.currentStatus: oldValue,
-                    NotificationKeys.nextStatus: newValue
-                ]
-        )
-    }
-
-    private func snapshotState() async -> SDKSynchronizer.SynchronizerState {
+    private func snapshotState(status: SyncStatus) async -> SynchronizerState {
         SynchronizerState(
             shieldedBalance: WalletBalance(
                 verified: initializer.getVerifiedBalance(),
@@ -722,38 +590,55 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
 
-    private func notify(status: SyncStatus) {
-        switch status {
-        case .disconnected:
-            NotificationSender.default.post(name: Notification.Name.synchronizerDisconnected, object: self)
-        case .stopped:
-            NotificationSender.default.post(name: Notification.Name.synchronizerStopped, object: self)
-        case .synced:
-            Task {
-                let state = await self.snapshotState()
-                self.lastStateSubject.send(state)
+    private func notify(oldStatus: SyncStatus, newStatus: SyncStatus) {
+        guard oldStatus != newStatus else { return }
 
-                NotificationSender.default.post(
-                    name: Notification.Name.synchronizerSynced,
-                    object: self,
-                    userInfo: [
-                        SDKSynchronizer.NotificationKeys.blockHeight: self.latestScannedHeight,
-                        SDKSynchronizer.NotificationKeys.synchronizerState: state
-                    ]
+        // When the wipe happens status is switched to `unprepared`. And we expect that everything is deleted. All the databases including data DB.
+        // When new snapshot is created balance is checked. And when balance is checked and data DB doesn't exist then rust initialise new database.
+        // So it's necessary to not create new snapshot after status is switched to `unprepared` otherwise data DB exists after wipe
+        if newStatus == .unprepared {
+            latestState = SynchronizerState.zero
+            updateStateStream(with: latestState)
+        } else {
+            let didStatusChange = areTwoStatusesDifferent(firstStatus: oldStatus, secondStatus: newStatus)
+
+            if didStatusChange {
+                Task {
+                    latestState = await snapshotState(status: newStatus)
+                    updateStateStream(with: latestState)
+                }
+            } else {
+                latestState = SynchronizerState(
+                    shieldedBalance: latestState.shieldedBalance,
+                    transparentBalance: latestState.transparentBalance,
+                    syncStatus: newStatus,
+                    latestScannedHeight: latestState.latestScannedHeight
                 )
+                updateStateStream(with: latestState)
             }
-        case .unprepared:
-            break
-        case .syncing:
-            NotificationSender.default.post(name: Notification.Name.synchronizerSyncing, object: self)
-        case .enhancing:
-            NotificationSender.default.post(name: Notification.Name.synchronizerEnhancing, object: self)
-        case .fetching:
-            NotificationSender.default.post(name: Notification.Name.synchronizerFetching, object: self)
-        case .error(let error):
-            self.notifyFailure(error)
         }
     }
+
+    private func areTwoStatusesDifferent(firstStatus: SyncStatus, secondStatus: SyncStatus) -> Bool {
+        switch (firstStatus, secondStatus) {
+        case (.unprepared, .unprepared): return false
+        case (.syncing, .syncing): return false
+        case (.enhancing, .enhancing): return false
+        case (.fetching, .fetching): return false
+        case (.synced, .synced): return false
+        case (.stopped, .stopped): return false
+        case (.disconnected, .disconnected): return false
+        case (.error, .error): return false
+        default: return true
+        }
+    }
+
+    private func updateStateStream(with newState: SynchronizerState) {
+        streamsUpdateQueue.async { [weak self] in
+            self?.stateSubject.send(newState)
+        }
+    }
+
     // MARK: book keeping
 
     private func updateMinedTransactions() throws {
@@ -788,19 +673,13 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func notifyMinedTransaction(_ transaction: PendingTransactionEntity) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-
-            NotificationSender.default.post(
-                name: Notification.Name.synchronizerMinedTransaction,
-                object: self,
-                userInfo: [NotificationKeys.minedTransaction: transaction]
-            )
+        streamsUpdateQueue.async { [weak self] in
+            self?.eventSubject.send(.minedTransaction(transaction))
         }
     }
 
     // swiftlint:disable cyclomatic_complexity
-    private func mapError(_ error: Error) -> Error {
+    private func mapError(_ error: Error) -> SynchronizerError {
         if let compactBlockProcessorError = error as? CompactBlockProcessorError {
             switch compactBlockProcessorError {
             case .dataDbInitFailed(let path):
@@ -838,14 +717,6 @@ public class SDKSynchronizer: Synchronizer {
 
         return SynchronizerError.uncategorized(underlyingError: error)
     }
-
-    private func notifyFailure(_ error: Error) {
-        NotificationSender.default.post(
-            name: Notification.Name.synchronizerFailed,
-            object: self,
-            userInfo: [NotificationKeys.error: self.mapError(error)]
-        )
-    }
 }
 
 extension SDKSynchronizer {
@@ -878,11 +749,4 @@ extension SDKSynchronizer {
     public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
         self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
-}
-
-private struct NullEnhancementProgress: EnhancementProgress {
-    var totalTransactions: Int { 0 }
-    var enhancedTransactions: Int { 0 }
-    var lastFoundTransaction: ZcashTransaction.Overview? { nil }
-    var range: CompactBlockRange { 0 ... 0 }
 }

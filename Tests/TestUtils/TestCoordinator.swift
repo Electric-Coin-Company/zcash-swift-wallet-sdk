@@ -5,6 +5,7 @@
 //  Created by Francisco Gindre on 4/29/20.
 //
 
+import Combine
 import Foundation
 import XCTest
 @testable import ZcashLightClientKit
@@ -32,7 +33,8 @@ class TestCoordinator {
         case predefined(dataset: DarksideDataset)
         case url(urlString: String, startHeigth: BlockHeight)
     }
-    
+
+    var cancellables: [AnyCancellable] = []
     var completionHandler: ((SDKSynchronizer) throws -> Void)?
     var errorHandler: ((Error?) -> Void)?
     var spendingKey: UnifiedSpendingKey
@@ -120,10 +122,15 @@ class TestCoordinator {
         )
         
         self.synchronizer = synchronizer
-        subscribeToNotifications(synchronizer: self.synchronizer)
+        subscribeToState(synchronizer: self.synchronizer)
         if case .seedRequired = try prepare(seed: Environment.seedBytes) {
             throw TestCoordinator.CoordinatorError.seedRequiredForMigration
         }
+    }
+
+    deinit {
+        cancellables.forEach { $0.cancel() }
+        cancellables = []
     }
 
     func prepare(seed: [UInt8]) throws -> Initializer.InitializationResult {
@@ -160,17 +167,29 @@ class TestCoordinator {
     
     // MARK: notifications
 
-    func subscribeToNotifications(synchronizer: Synchronizer) {
-        NotificationCenter.default.addObserver(self, selector: #selector(synchronizerFailed(_:)), name: .synchronizerFailed, object: synchronizer)
-        NotificationCenter.default.addObserver(self, selector: #selector(synchronizerSynced(_:)), name: .synchronizerSynced, object: synchronizer)
+    func subscribeToState(synchronizer: Synchronizer) {
+        synchronizer.stateStream
+            .sink(
+                receiveValue: { [weak self] state in
+                    switch state.syncStatus {
+                    case let .error(error):
+                        self?.synchronizerFailed(error: error)
+                    case .synced:
+                        try! self?.synchronizerSynced()
+                    default:
+                        break
+                    }
+                }
+            )
+            .store(in: &cancellables)
     }
     
-    @objc func synchronizerFailed(_ notification: Notification) {
-        self.errorHandler?(notification.userInfo?[SDKSynchronizer.NotificationKeys.error] as? Error)
+    func synchronizerFailed(error: Error) {
+        self.errorHandler?(error)
     }
     
-    @objc func synchronizerSynced(_ notification: Notification) throws {
-        if case .stopped = self.synchronizer.status {
+    func synchronizerSynced() throws {
+        if case .stopped = self.synchronizer.latestState.syncStatus {
             LoggerProxy.debug("WARNING: notification received after synchronizer was stopped")
             return
         }

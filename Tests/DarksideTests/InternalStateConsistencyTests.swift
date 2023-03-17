@@ -4,6 +4,8 @@
 //
 //  Created by Francisco Gindre on 1/26/23.
 //
+
+import Combine
 import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
@@ -20,6 +22,7 @@ final class InternalStateConsistencyTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
+    var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -38,10 +41,14 @@ final class InternalStateConsistencyTests: XCTestCase {
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
         coordinator = nil
+        sdkSynchronizerSyncStatusHandler = nil
     }
 
     @MainActor func testInternalStateIsConsistentWhenMigrating() async throws {
-        NotificationCenter.default.addObserver(self, selector: #selector(self.synchronizerStopped(_:)), name: .synchronizerStopped, object: nil)
+        sdkSynchronizerSyncStatusHandler.subscribe(
+            to: coordinator.synchronizer.stateStream,
+            expectations: [.stopped: firstSyncExpectation]
+        )
 
         let fullSyncLength = 1000
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: fullSyncLength)
@@ -124,10 +131,6 @@ final class InternalStateConsistencyTests: XCTestCase {
         }
 
         wait(for: [secondSyncAttemptExpectation], timeout: 10)
-    }
-
-    @objc func synchronizerStopped(_ notification: Notification) {
-        self.firstSyncExpectation.fulfill()
     }
 
     func handleError(_ error: Error?) {
