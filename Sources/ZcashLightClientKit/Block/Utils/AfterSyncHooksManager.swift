@@ -11,7 +11,7 @@ class AfterSyncHooksManager {
     struct WipeContext {
         let pendingDbURL: URL
         let prewipe: () -> Void
-        let completion: (Error?) -> Void
+        let completion: (Error?) async -> Void
     }
 
     struct RewindContext {

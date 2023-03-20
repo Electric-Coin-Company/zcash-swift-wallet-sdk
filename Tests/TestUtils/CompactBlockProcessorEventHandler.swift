@@ -27,11 +27,12 @@ class CompactBlockProcessorEventHandler {
     private let queue = DispatchQueue(label: "CompactBlockProcessorEventHandler")
     private var cancelables: [AnyCancellable] = []
 
-    func subscribe(to eventStream: AnyPublisher<CompactBlockProcessor.Event, Never>, expectations: [EventIdentifier: XCTestExpectation]) {
-        eventStream
-            .receive(on: queue)
-            .sink { event in expectations[event.identifier]?.fulfill() }
-            .store(in: &cancelables)
+    func subscribe(to blockProcessor: CompactBlockProcessor, expectations: [EventIdentifier: XCTestExpectation]) async {
+        let closure: CompactBlockProcessor.EventClosure = { event in
+            expectations[event.identifier]?.fulfill()
+        }
+
+        await blockProcessor.updateEventClosure(identifier: "CompactBlockProcessorEventHandler", closure: closure)
     }
 }
 

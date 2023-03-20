@@ -50,16 +50,14 @@ class ReOrgTests: XCTestCase {
 
         try self.coordinator.resetBlocks(dataset: .default)
 
-        var stream: AnyPublisher<CompactBlockProcessor.Event, Never>!
-        XCTestCase.wait { await stream = self.coordinator.synchronizer.blockProcessor.eventStream }
-        stream
-            .sink { [weak self] event in
-                switch event {
-                case .handledReorg: self?.handleReOrgNotification(event: event)
-                default: break
-                }
+        let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
+            switch event {
+            case .handledReorg: self?.handleReOrgNotification(event: event)
+            default: break
             }
-            .store(in: &cancellables)
+        }
+
+        XCTestCase.wait { await self.coordinator.synchronizer.blockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure) }
     }
 
     override func tearDownWithError() throws {

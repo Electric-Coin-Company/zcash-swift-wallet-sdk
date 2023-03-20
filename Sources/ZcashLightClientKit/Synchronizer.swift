@@ -330,6 +330,19 @@ public enum SyncStatus: Equatable {
         default:        return false
         }
     }
+
+    public var briefDebugDescription: String {
+        switch self {
+        case .unprepared: return "unprepared"
+        case .syncing: return "syncing"
+        case .enhancing: return "enhancing"
+        case .fetching: return "fetching"
+        case .synced: return "synced"
+        case .stopped: return "stopped"
+        case .disconnected: return "disconnected"
+        case .error: return "error"
+        }
+    }
 }
 
 /// Kind of transactions handled by a Synchronizer

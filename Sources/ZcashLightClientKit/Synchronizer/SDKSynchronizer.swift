@@ -29,21 +29,10 @@ public class SDKSynchronizer: Synchronizer {
     private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
-    private let statusUpdateLock = NSRecursiveLock()
-    private var underlyingStatus: SyncStatus
+    // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
+    private var underlyingStatus: GenericActor<SyncStatus>
     var status: SyncStatus {
-        get {
-            statusUpdateLock.lock()
-            defer { statusUpdateLock.unlock() }
-            return underlyingStatus
-        }
-        set {
-            statusUpdateLock.lock()
-            let oldValue = underlyingStatus
-            underlyingStatus = newValue
-            notify(oldStatus: oldValue, newStatus: newValue)
-            statusUpdateLock.unlock()
-        }
+        get async { await underlyingStatus.value }
     }
 
     let blockProcessor: CompactBlockProcessor
@@ -60,8 +49,6 @@ public class SDKSynchronizer: Synchronizer {
 
     private var syncStartDate: Date?
 
-    private var longLivingCancelables: [AnyCancellable] = []
-    
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) {
@@ -87,7 +74,7 @@ public class SDKSynchronizer: Synchronizer {
         blockProcessor: CompactBlockProcessor
     ) {
         self.connectionState = .idle
-        self.underlyingStatus = status
+        self.underlyingStatus = GenericActor(status)
         self.initializer = initializer
         self.transactionManager = transactionManager
         self.transactionRepository = transactionRepository
@@ -107,12 +94,17 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
+    func updateStatus(_ newValue: SyncStatus) async {
+        let oldValue = await underlyingStatus.update(newValue)
+        await notify(oldStatus: oldValue, newStatus: newValue)
+    }
+
     public func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
     ) async throws -> Initializer.InitializationResult {
-        guard status == .unprepared else { return .success }
+        guard await status == .unprepared else { return .success }
 
         try utxoRepository.initialise()
 
@@ -122,7 +114,7 @@ public class SDKSynchronizer: Synchronizer {
 
         latestScannedHeight = (try? transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
 
-        self.status = .disconnected
+        await updateStatus(.disconnected)
 
         return .success
     }
@@ -130,7 +122,7 @@ public class SDKSynchronizer: Synchronizer {
     /// Starts the synchronizer
     /// - Throws: CompactBlockProcessorError when failures occur
     public func start(retry: Bool = false) async throws {
-        switch status {
+        switch await status {
         case .unprepared:
             throw SynchronizerError.notPrepared
 
@@ -141,7 +133,7 @@ public class SDKSynchronizer: Synchronizer {
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
-            status = .syncing(.nullProgress)
+            await updateStatus(.syncing(.nullProgress))
             syncStartDate = Date()
             await blockProcessor.start(retry: retry)
         }
@@ -149,6 +141,7 @@ public class SDKSynchronizer: Synchronizer {
 
     /// Stops the synchronizer
     public func stop() async {
+        let status = await self.status
         guard status != .stopped, status != .disconnected else {
             LoggerProxy.info("attempted to stop when status was: \(status)")
             return
@@ -191,55 +184,52 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: Handle CompactBlockProcessor.Flow
 
     private func subscribeToProcessorEvents(_ processor: CompactBlockProcessor) async {
-        let stream = await processor.eventStream
+        let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
+            switch event {
+            case let .failed(error):
+                await self?.failed(error: error)
 
-        stream
-            .receive(on: blockProcessorEventProcessingQueue)
-            .sink { [weak self] event in
-                switch event {
-                case let .failed(error):
-                    self?.failed(error: error)
+            case let .finished(height, foundBlocks):
+                await self?.finished(lastScannedHeight: height, foundBlocks: foundBlocks)
 
-                case let .finished(height, foundBlocks):
-                    self?.finished(lastScannedHeight: height, foundBlocks: foundBlocks)
+            case let .foundTransactions(transactions, range):
+                self?.foundTransactions(transactions: transactions, in: range)
 
-                case let .foundTransactions(transactions, range):
-                    self?.foundTransactions(transactions: transactions, in: range)
+            case let .handledReorg(reorgHeight, rewindHeight):
+                self?.handledReorg(reorgHeight: reorgHeight, rewindHeight: rewindHeight)
 
-                case let .handledReorg(reorgHeight, rewindHeight):
-                    self?.handledReorg(reorgHeight: reorgHeight, rewindHeight: rewindHeight)
+            case let .progressUpdated(progress):
+                await self?.progressUpdated(progress: progress)
 
-                case let .progressUpdated(progress):
-                    self?.progressUpdated(progress: progress)
+            case let .storedUTXOs(utxos):
+                self?.storedUTXOs(utxos: utxos)
 
-                case let .storedUTXOs(utxos):
-                    self?.storedUTXOs(utxos: utxos)
+            case .startedEnhancing:
+                await self?.updateStatus(.enhancing(.zero))
 
-                case .startedEnhancing:
-                    self?.status = .enhancing(.zero)
+            case .startedFetching:
+                await self?.updateStatus(.fetching)
 
-                case .startedFetching:
-                    self?.status = .fetching
+            case .startedSyncing:
+                await self?.updateStatus(.syncing(.nullProgress))
 
-                case .startedSyncing:
-                    self?.status = .syncing(.nullProgress)
-
-                case .stopped:
-                    self?.status = .stopped
-                }
+            case .stopped:
+                await self?.updateStatus(.stopped)
             }
-            .store(in: &longLivingCancelables)
+        }
+
+        await processor.updateEventClosure(identifier: "SDKSynchronizer", closure: eventClosure)
     }
 
-    private func failed(error: CompactBlockProcessorError) {
-        status = .error(self.mapError(error))
+    private func failed(error: CompactBlockProcessorError) async {
+        await updateStatus(.error(self.mapError(error)))
     }
 
-    private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) {
+    private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) async {
         // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories see: https://github.com/zcash/ZcashLightClientKit/issues/450
         self.latestScannedHeight = lastScannedHeight
         self.refreshPendingTransactions()
-        self.status = .synced
+        await updateStatus(.synced)
 
         if let syncStartDate {
             SDKMetrics.shared.pushSyncReport(
@@ -265,15 +255,9 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    private func progressUpdated(progress: CompactBlockProgress) {
-        switch progress {
-        case let .syncing(progress):
-            status = .syncing(progress)
-        case let .enhance(progress):
-            status = .enhancing(progress)
-        case .fetch:
-            status = .fetching
-        }
+    private func progressUpdated(progress: CompactBlockProgress) async {
+        let newStatus = SyncStatus(progress)
+        await updateStatus(newStatus)
     }
 
     private func storedUTXOs(utxos: (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])) {
@@ -544,7 +528,7 @@ public class SDKSynchronizer: Synchronizer {
                     self?.transactionRepository.closeDBConnection()
                 },
                 completion: { [weak self] possibleError in
-                    self?.status = .unprepared
+                    await self?.updateStatus(.unprepared)
                     if let error = possibleError {
                         subject.send(completion: .failure(error))
                     } else {
@@ -573,33 +557,31 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
 
-    private func notify(oldStatus: SyncStatus, newStatus: SyncStatus) {
+    private func notify(oldStatus: SyncStatus, newStatus: SyncStatus) async {
         guard oldStatus != newStatus else { return }
+
+        let newState: SynchronizerState
 
         // When the wipe happens status is switched to `unprepared`. And we expect that everything is deleted. All the databases including data DB.
         // When new snapshot is created balance is checked. And when balance is checked and data DB doesn't exist then rust initialise new database.
         // So it's necessary to not create new snapshot after status is switched to `unprepared` otherwise data DB exists after wipe
         if newStatus == .unprepared {
-            latestState = SynchronizerState.zero
-            updateStateStream(with: latestState)
+            newState = SynchronizerState.zero
         } else {
-            let didStatusChange = areTwoStatusesDifferent(firstStatus: oldStatus, secondStatus: newStatus)
-
-            if didStatusChange {
-                Task {
-                    latestState = await snapshotState(status: newStatus)
-                    updateStateStream(with: latestState)
-                }
+            if areTwoStatusesDifferent(firstStatus: oldStatus, secondStatus: newStatus) {
+                newState = await snapshotState(status: newStatus)
             } else {
-                latestState = SynchronizerState(
+                newState = SynchronizerState(
                     shieldedBalance: latestState.shieldedBalance,
                     transparentBalance: latestState.transparentBalance,
                     syncStatus: newStatus,
                     latestScannedHeight: latestState.latestScannedHeight
                 )
-                updateStateStream(with: latestState)
             }
         }
+
+        latestState = newState
+        updateStateStream(with: latestState)
     }
 
     private func areTwoStatusesDifferent(firstStatus: SyncStatus, secondStatus: SyncStatus) -> Bool {

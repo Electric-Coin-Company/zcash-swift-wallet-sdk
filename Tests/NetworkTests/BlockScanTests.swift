@@ -197,14 +197,14 @@ class BlockScanTests: XCTestCase {
             config: processorConfig
         )
 
-        await compactBlockProcessor.eventStream
-            .sink { [weak self] event in
-                switch event {
-                case .progressUpdated: self?.observeBenchmark()
-                default: break
-                }
+        let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
+            switch event {
+            case .progressUpdated: self?.observeBenchmark()
+            default: break
             }
-            .store(in: &cancelables)
+        }
+
+        await compactBlockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure)
 
         let range = CompactBlockRange(
             uncheckedBounds: (walletBirthDay.height, walletBirthDay.height + 10000)

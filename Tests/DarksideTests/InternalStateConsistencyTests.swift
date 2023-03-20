@@ -77,8 +77,10 @@ final class InternalStateConsistencyTests: XCTestCase {
 
         wait(for: [firstSyncExpectation], timeout: 2)
 
-        XCTAssertFalse(coordinator.synchronizer.status.isSyncing)
-        XCTAssertEqual(coordinator.synchronizer.status, .stopped)
+        let isSyncing = await coordinator.synchronizer.status.isSyncing
+        let status = await coordinator.synchronizer.status
+        XCTAssertFalse(isSyncing, "SDKSynchronizer shouldn't be syncing")
+        XCTAssertEqual(status, .stopped)
 
         let internalSyncState = InternalSyncProgress(storage: UserDefaults.standard)
 
