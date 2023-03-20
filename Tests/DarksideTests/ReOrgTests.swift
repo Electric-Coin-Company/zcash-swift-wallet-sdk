@@ -44,10 +44,7 @@ class ReOrgTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
 
-        self.coordinator = try TestCoordinator(
-            walletBirthday: self.birthday,
-            network: self.network
-        )
+        self.coordinator = TestCoordinator.make(walletBirthday: self.birthday, network: self.network)
 
         try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
 
@@ -67,7 +64,7 @@ class ReOrgTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -87,13 +84,13 @@ class ReOrgTests: XCTestCase {
         XCTAssertNoThrow(rewindHeight > 0)
     }
     
-    func testBasicReOrg() throws {
+    func testBasicReOrg() async throws {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663202)
         let reOrgHeight = BlockHeight(663195)
         let walletBirthday = Checkpoint.birthday(with: 663150, network: network).height
         
-        try basicReOrgTest(
+        try await basicReOrgTest(
             baseDataset: .beforeReOrg,
             reorgDataset: .afterSmallReorg,
             firstLatestHeight: mockLatestHeight,
@@ -103,13 +100,13 @@ class ReOrgTests: XCTestCase {
         )
     }
     
-    func testTenPlusBlockReOrg() throws {
+    func testTenPlusBlockReOrg() async throws {
         let mockLatestHeight = BlockHeight(663200)
         let targetLatestHeight = BlockHeight(663250)
         let reOrgHeight = BlockHeight(663180)
         let walletBirthday = Checkpoint.birthday(with: BlockHeight(663150), network: network).height
         
-        try basicReOrgTest(
+        try await basicReOrgTest(
             baseDataset: .beforeReOrg,
             reorgDataset: .afterLargeReorg,
             firstLatestHeight: mockLatestHeight,
@@ -126,7 +123,7 @@ class ReOrgTests: XCTestCase {
         reorgHeight: BlockHeight,
         walletBirthday: BlockHeight,
         targetHeight: BlockHeight
-    ) throws {
+    ) async throws {
         do {
             try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
             try coordinator.resetBlocks(dataset: .predefined(dataset: .beforeReOrg))
@@ -143,7 +140,7 @@ class ReOrgTests: XCTestCase {
         download and sync blocks from walletBirthday to firstLatestHeight
         */
         var synchronizer: SDKSynchronizer?
-        try coordinator.sync(
+        try await coordinator.sync(
             completion: { synchro in
                 synchronizer = synchro
                 firstSyncExpectation.fulfill()
@@ -180,7 +177,7 @@ class ReOrgTests: XCTestCase {
         let secondSyncExpectation = XCTestExpectation(description: "second sync")
         
         sleep(2)
-        try coordinator.sync(
+        try await coordinator.sync(
             completion: { _ in
                 secondSyncExpectation.fulfill()
             },

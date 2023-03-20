@@ -26,7 +26,7 @@ final class SynchronizerTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        self.coordinator = try TestCoordinator(
+        self.coordinator = TestCoordinator.make(
             walletBirthday: self.birthday + 50, // don't use an exact birthday, users never do.
             network: self.network
         )
@@ -48,7 +48,7 @@ final class SynchronizerTests: XCTestCase {
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -87,20 +87,15 @@ final class SynchronizerTests: XCTestCase {
         /*
         sync to latest height
         */
-        try coordinator.sync(completion: { _ in
-            XCTFail("Sync should have stopped")
-        }, error: { error in
-            _ = try? self.coordinator.stop()
-
-            guard let testError = error else {
-                XCTFail("failed with nil error")
-                return
-            }
-            XCTFail("Failed with error: \(testError)")
-        })
+        try await coordinator.sync(
+            completion: { _ in
+                XCTFail("Sync should have stopped")
+            },
+            error: self.handleError
+        )
 
         try await Task.sleep(nanoseconds: 5_000_000_000)
-        self.coordinator.synchronizer.stop()
+        await self.coordinator.synchronizer.stop()
 
         wait(for: [syncStoppedExpectation], timeout: 6)
 
@@ -128,7 +123,7 @@ final class SynchronizerTests: XCTestCase {
         /*
          sync to latest height
          */
-        try coordinator.sync(
+        try await coordinator.sync(
             completion: { _ in
                 syncFinished.fulfill()
             },
@@ -182,17 +177,12 @@ final class SynchronizerTests: XCTestCase {
         /*
          Start sync
          */
-        try coordinator.sync(completion: { _ in
-            XCTFail("Sync should have stopped")
-        }, error: { error in
-            _ = try? self.coordinator.stop()
-
-            guard let testError = error else {
-                XCTFail("failed with nil error")
-                return
-            }
-            XCTFail("Failed with error: \(testError)")
-        })
+        try await coordinator.sync(
+            completion: { _ in
+                XCTFail("Sync should have stopped")
+            },
+            error: self.handleError
+        )
 
         try await Task.sleep(nanoseconds: 2_000_000_000)
 
@@ -254,8 +244,8 @@ final class SynchronizerTests: XCTestCase {
         XCTAssertEqual(coordinator.synchronizer.status, .unprepared, "SDKSynchronizer state should be unprepared")
     }
 
-    func handleError(_ error: Error?) {
-        _ = try? coordinator.stop()
+    func handleError(_ error: Error?) async {
+        _ = try? await coordinator.stop()
         guard let testError = error else {
             XCTFail("failed with nil error")
             return
@@ -276,14 +266,14 @@ final class SynchronizerTests: XCTestCase {
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
 
         do {
-            try coordinator.sync(
+            try await coordinator.sync(
                 completion: { _ in
                     firstSyncExpectation.fulfill()
                 },
                 error: self.handleError
             )
         } catch {
-            handleError(error)
+            await handleError(error)
         }
 
         wait(for: [firstSyncExpectation], timeout: 12)
@@ -296,12 +286,12 @@ final class SynchronizerTests: XCTestCase {
 
         do {
             // Start the long sync.
-            try coordinator.sync(
+            try await coordinator.sync(
                 completion: { _ in },
                 error: self.handleError
             )
         } catch {
-            handleError(error)
+            await handleError(error)
         }
 
         // Wait 0.5 second and then start rewind while sync is in progress.

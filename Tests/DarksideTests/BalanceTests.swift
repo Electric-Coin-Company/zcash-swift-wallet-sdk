@@ -25,7 +25,7 @@ class BalanceTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        self.coordinator = try TestCoordinator(
+        self.coordinator = TestCoordinator.make(
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -36,7 +36,7 @@ class BalanceTests: XCTestCase {
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -63,17 +63,17 @@ class BalanceTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     firstSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
@@ -139,30 +139,21 @@ class BalanceTests: XCTestCase {
         sleep(2) // add enhance breakpoint here
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { synchronizer in
-                        let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
-                        XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
-                        XCTAssertTrue(pendingEntity?.isMined ?? false)
-                        XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
-                        mineExpectation.fulfill()
-                        continuation.resume()
-                    }, error: { error in
-                        guard let error else {
-                            XCTFail("unknown error syncing after sending transaction")
-                            return
-                        }
-                        
-                        XCTFail("Error: \(error)")
-                    }
-                )
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        do {
+            try await coordinator.sync(
+                completion: { synchronizer in
+                    let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                    XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
+                    XCTAssertTrue(pendingEntity?.isMined ?? false)
+                    XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
+                    mineExpectation.fulfill()
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
         // 7 advance to confirmation
@@ -178,15 +169,16 @@ class BalanceTests: XCTestCase {
         notificationHandler.synchronizerMinedTransaction = { transaction in
             XCTFail("We shouldn't find any mined transactions at this point but found \(transaction)")
         }
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     confirmExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
 
         wait(for: [confirmExpectation], timeout: 5)
@@ -219,17 +211,17 @@ class BalanceTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     firstSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
@@ -294,30 +286,21 @@ class BalanceTests: XCTestCase {
         sleep(2) // add enhance breakpoint here
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { synchronizer in
-                        let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
-                        XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
-                        XCTAssertTrue(pendingEntity?.isMined ?? false)
-                        XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
-                        mineExpectation.fulfill()
-                        continuation.resume()
-                    }, error: { error in
-                        guard let error else {
-                            XCTFail("unknown error syncing after sending transaction")
-                            return
-                        }
-                        
-                        XCTFail("Error: \(error)")
-                    }
-                )
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        do {
+            try await coordinator.sync(
+                completion: { synchronizer in
+                    let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                    XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
+                    XCTAssertTrue(pendingEntity?.isMined ?? false)
+                    XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
+                    mineExpectation.fulfill()
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
         // 7 advance to confirmation
@@ -333,15 +316,16 @@ class BalanceTests: XCTestCase {
         notificationHandler.synchronizerMinedTransaction = { transaction in
             XCTFail("We shouldn't find any mined transactions at this point but found \(transaction)")
         }
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     confirmExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
         
         wait(for: [confirmExpectation], timeout: 5)
@@ -375,16 +359,17 @@ class BalanceTests: XCTestCase {
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     firstSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
+
         wait(for: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
@@ -449,30 +434,21 @@ class BalanceTests: XCTestCase {
         sleep(2) // add enhance breakpoint here
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { synchronizer in
-                        let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
-                        XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
-                        XCTAssertTrue(pendingEntity?.isMined ?? false)
-                        XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
-                        mineExpectation.fulfill()
-                        continuation.resume()
-                    }, error: { error in
-                        guard let error else {
-                            XCTFail("unknown error syncing after sending transaction")
-                            return
-                        }
-                        
-                        XCTFail("Error: \(error)")
-                    }
-                )
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        do {
+            try await coordinator.sync(
+                completion: { synchronizer in
+                    let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                    XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
+                    XCTAssertTrue(pendingEntity?.isMined ?? false)
+                    XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
+                    mineExpectation.fulfill()
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
         // 7 advance to confirmation
@@ -488,15 +464,16 @@ class BalanceTests: XCTestCase {
         notificationHandler.synchronizerMinedTransaction = { transaction in
             XCTFail("We shouldn't find any mined transactions at this point but found \(transaction)")
         }
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     confirmExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
         
         wait(for: [confirmExpectation], timeout: 5)
@@ -535,17 +512,17 @@ class BalanceTests: XCTestCase {
 
         sleep(1)
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     self.syncedExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [syncedExpectation], timeout: 60)
         
         let spendingKey = coordinator.spendingKey
@@ -592,26 +569,17 @@ class BalanceTests: XCTestCase {
         sleep(1)
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { _ in
-                        mineExpectation.fulfill()
-                        continuation.resume()
-                    }, error: { error in
-                        guard let error else {
-                            XCTFail("unknown error syncing after sending transaction")
-                            return
-                        }
-                        
-                        XCTFail("Error: \(error)")
-                    }
-                )
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        do {
+            try await coordinator.sync(
+                completion: { _ in
+                    mineExpectation.fulfill()
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [mineExpectation], timeout: 5)
         
         XCTAssertEqual(
@@ -714,15 +682,15 @@ class BalanceTests: XCTestCase {
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         
         sleep(2)
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     self.syncedExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
         
         wait(for: [syncedExpectation], timeout: 5)
@@ -786,26 +754,17 @@ class BalanceTests: XCTestCase {
         sleep(2)
         let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
         
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { _ in
-                        mineExpectation.fulfill()
-                        continuation.resume()
-                    }, error: { error in
-                        guard let error else {
-                            XCTFail("unknown error syncing after sending transaction")
-                            return
-                        }
-                        
-                        XCTFail("Error: \(error)")
-                    }
-                )
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        do {
+            try await coordinator.sync(
+                completion: { _ in
+                    mineExpectation.fulfill()
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [mineExpectation], timeout: 5)
         
         XCTAssertEqual(
@@ -829,13 +788,17 @@ class BalanceTests: XCTestCase {
     Balance matches expected balance
 
     */
-    func testVerifyIncomingTransaction() throws {
+    func testVerifyIncomingTransaction() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         sleep(1)
-        try coordinator.sync(completion: { _ in
-            self.syncedExpectation.fulfill()
-        }, error: self.handleError)
+
+        try await coordinator.sync(
+            completion: { _ in
+                self.syncedExpectation.fulfill()
+            },
+            error: self.handleError
+        )
         
         wait(for: [syncedExpectation], timeout: 5)
         
@@ -879,17 +842,17 @@ class BalanceTests: XCTestCase {
         /*
         sync to current tip
         */
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     self.syncedExpectation.fulfill()
-                    continuation.resume()
-                }, error: self.handleError)
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
-        
+
         wait(for: [syncedExpectation], timeout: 6)
         
         let previousVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
@@ -936,91 +899,88 @@ class BalanceTests: XCTestCase {
         /*
         Sync to that block
         */
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { synchronizer in
-                        let confirmedTx: ZcashTransaction.Overview!
-                        do {
-                            confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
-                                confirmed.rawID == pendingTx?.rawTransactionId
-                            })
-                        } catch {
-                            XCTFail("Error  retrieving cleared transactions")
-                            return
-                        }
+        do {
+            try await coordinator.sync(
+                completion: { synchronizer in
+                    let confirmedTx: ZcashTransaction.Overview!
+                    do {
+                        confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
+                            confirmed.rawID == pendingTx?.rawTransactionId
+                        })
+                    } catch {
+                        XCTFail("Error  retrieving cleared transactions")
+                        return
+                    }
 
-                        /*
-                        There’s a sent transaction matching the amount sent to the given zAddr
-                        */
-                        XCTAssertEqual(confirmedTx.value, self.sendAmount)
-                        // TODO [#683]: Add API to SDK to fetch memos.
-                        //                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
-                        //                    XCTAssertEqual(confirmedMemo, memo)
+                    /*
+                    There’s a sent transaction matching the amount sent to the given zAddr
+                    */
+                    XCTAssertEqual(confirmedTx.value, self.sendAmount)
+                    // TODO [#683]: Add API to SDK to fetch memos.
+                    //                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
+                    //                    XCTAssertEqual(confirmedMemo, memo)
 
-                        /*
-                        Find out what note was used
-                        */
-                        let sentNotesRepo = SentNotesSQLDAO(
-                            dbProvider: SimpleConnectionProvider(
-                                path: synchronizer.initializer.dataDbURL.absoluteString,
-                                readonly: true
-                            )
+                    /*
+                    Find out what note was used
+                    */
+                    let sentNotesRepo = SentNotesSQLDAO(
+                        dbProvider: SimpleConnectionProvider(
+                            path: synchronizer.initializer.dataDbURL.absoluteString,
+                            readonly: true
                         )
+                    )
 
-                        guard let sentNote = try? sentNotesRepo.sentNote(byRawTransactionId: confirmedTx.rawID) else {
-                            XCTFail("Could not finde sent note with transaction Id \(confirmedTx.rawID)")
-                            return
-                        }
+                    guard let sentNote = try? sentNotesRepo.sentNote(byRawTransactionId: confirmedTx.rawID) else {
+                        XCTFail("Could not finde sent note with transaction Id \(confirmedTx.rawID)")
+                        return
+                    }
 
-                        let receivedNotesRepo = ReceivedNotesSQLDAO(
-                            dbProvider: SimpleConnectionProvider(
-                                path: self.coordinator.synchronizer.initializer.dataDbURL.absoluteString,
-                                readonly: true
-                            )
+                    let receivedNotesRepo = ReceivedNotesSQLDAO(
+                        dbProvider: SimpleConnectionProvider(
+                            path: self.coordinator.synchronizer.initializer.dataDbURL.absoluteString,
+                            readonly: true
                         )
+                    )
 
-                        /*
-                        get change note
-                        */
-                        guard let receivedNote = try? receivedNotesRepo.receivedNote(byRawTransactionId: confirmedTx.rawID) else {
-                            XCTFail("Could not find received not with change for transaction Id \(confirmedTx.rawID)")
-                            return
-                        }
+                    /*
+                    get change note
+                    */
+                    guard let receivedNote = try? receivedNotesRepo.receivedNote(byRawTransactionId: confirmedTx.rawID) else {
+                        XCTFail("Could not find received not with change for transaction Id \(confirmedTx.rawID)")
+                        return
+                    }
 
-                        /*
-                        There’s a change note of value (previous note value - sent amount)
-                        */
-                        XCTAssertEqual(
-                            previousVerifiedBalance - self.sendAmount - self.network.constants.defaultFee(for: self.defaultLatestHeight),
-                            Zatoshi(Int64(receivedNote.value))
-                        )
+                    /*
+                    There’s a change note of value (previous note value - sent amount)
+                    */
+                    XCTAssertEqual(
+                        previousVerifiedBalance - self.sendAmount - self.network.constants.defaultFee(for: self.defaultLatestHeight),
+                        Zatoshi(Int64(receivedNote.value))
+                    )
 
-                        /*
-                        Balance meets verified Balance and total balance criteria
-                        */
-                        self.verifiedBalanceValidation(
-                            previousBalance: previousVerifiedBalance,
-                            spentNoteValue: Zatoshi(Int64(sentNote.value)),
-                            changeValue: Zatoshi(Int64(receivedNote.value)),
-                            sentAmount: self.sendAmount,
-                            currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance()
-                        )
+                    /*
+                    Balance meets verified Balance and total balance criteria
+                    */
+                    self.verifiedBalanceValidation(
+                        previousBalance: previousVerifiedBalance,
+                        spentNoteValue: Zatoshi(Int64(sentNote.value)),
+                        changeValue: Zatoshi(Int64(receivedNote.value)),
+                        sentAmount: self.sendAmount,
+                        currentVerifiedBalance: synchronizer.initializer.getVerifiedBalance()
+                    )
 
-                        self.totalBalanceValidation(
-                            totalBalance: synchronizer.initializer.getBalance(),
-                            previousTotalbalance: previousTotalBalance,
-                            sentAmount: self.sendAmount
-                        )
+                    self.totalBalanceValidation(
+                        totalBalance: synchronizer.initializer.getBalance(),
+                        previousTotalbalance: previousTotalBalance,
+                        sentAmount: self.sendAmount
+                    )
 
-                        syncToMinedheightExpectation.fulfill()
-                        continuation.resume()
-                    },
-                    error: self.handleError
-                )
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                    syncToMinedheightExpectation.fulfill()
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
         
         wait(for: [syncToMinedheightExpectation], timeout: 5)
@@ -1053,22 +1013,18 @@ class BalanceTests: XCTestCase {
         
         try coordinator.applyStaged(blockheight: self.defaultLatestHeight + 10)
         sleep(2)
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     self.syncedExpectation.fulfill()
-                    continuation.resume()
-                }, error: { err in
-                    guard let err else {
-                        continuation.resume()
-                        return
-                    }
-                    continuation.resume(throwing: err)
-                })
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
+
         wait(for: [syncedExpectation], timeout: 5)
         
         let spendingKey = coordinator.spendingKey
@@ -1105,22 +1061,18 @@ class BalanceTests: XCTestCase {
         try coordinator.applyStaged(blockheight: expiryHeight + 1)
         
         sleep(2)
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(completion: { _ in
+        
+        do {
+            try await coordinator.sync(
+                completion: { _ in
                     expirationSyncExpectation.fulfill()
-                    continuation.resume()
-                }, error: { err in
-                    guard let err else {
-                        continuation.resume()
-                        return
-                    }
-                    continuation.resume(throwing: err)
-                })
-            } catch {
-                continuation.resume(throwing: error)
-            }
+                },
+                error: self.handleError
+            )
+        } catch {
+            handleError(error)
         }
+
         wait(for: [expirationSyncExpectation], timeout: 5)
         
         /*

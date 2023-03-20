@@ -95,7 +95,13 @@ public enum SynchronizerEvent {
 
 /// Primary interface for interacting with the SDK. Defines the contract that specific
 /// implementations like SdkSynchronizer fulfill.
-public protocol Synchronizer {
+public protocol Synchronizer: AnyObject {
+    /// Latest state of the SDK which can be get in synchronous manner.
+    var latestState: SynchronizerState { get }
+
+    /// reflects current connection state to LightwalletEndpoint
+    var connectionState: ConnectionState { get }
+
     /// This stream is backed by `CurrentValueSubject`. This is primary source of information about what is the SDK doing. New values are emitted when
     /// `SyncStatus` is changed inside the SDK.
     ///
@@ -103,14 +109,8 @@ public protocol Synchronizer {
     /// delivered. Values are delivered on random background thread.
     var stateStream: AnyPublisher<SynchronizerState, Never> { get }
 
-    /// Latest state of the SDK which can be get in synchronous manner.
-    var latestState: SynchronizerState { get }
-
     /// This stream is backed by `PassthroughSubject`. Check `SynchronizerEvent` to see which events may be emitted.
     var eventStream: AnyPublisher<SynchronizerEvent, Never> { get }
-
-    /// reflects current connection state to LightwalletEndpoint
-    var connectionState: ConnectionState { get }
 
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
@@ -132,16 +132,16 @@ public protocol Synchronizer {
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
-    ) throws -> Initializer.InitializationResult
+    ) async throws -> Initializer.InitializationResult
 
     /// Starts this synchronizer within the given scope.
     ///
     /// Implementations should leverage structured concurrency and
     /// cancel all jobs when this scope completes.
-    func start(retry: Bool) throws
+    func start(retry: Bool) async throws
 
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
-    func stop() throws
+    func stop() async
 
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
@@ -228,9 +228,6 @@ public protocol Synchronizer {
     ///     - limit: the maximum amount of items this should return if available
     ///     - Returns: an array with the given Transactions or nil
     func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview]
-
-    /// Returns the latest block height from the provided Lightwallet endpoint
-    func latestHeight(result: @escaping (Result<BlockHeight, Error>) -> Void)
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking

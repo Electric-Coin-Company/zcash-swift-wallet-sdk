@@ -26,7 +26,7 @@ class DarksideSanityCheckTests: XCTestCase {
     
     override func setUpWithError() throws {
         try super.setUpWithError()
-        self.coordinator = try TestCoordinator(
+        self.coordinator = TestCoordinator.make(
             walletBirthday: self.birthday,
             network: self.network
         )
@@ -37,14 +37,14 @@ class DarksideSanityCheckTests: XCTestCase {
     
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
         coordinator = nil
     }
     
-    func testDarkside() throws {
+    func testDarkside() async throws {
         let expectedFirstBlock = (height: BlockHeight(663150), hash: "0000000002fd3be4c24c437bd22620901617125ec2a3a6c902ec9a6c06f734fc")
         let expectedLastBlock = (height: BlockHeight(663200), hash: "2fc7b4682f5ba6ba6f86e170b40f0aa9302e1d3becb2a6ee0db611ff87835e4a")
         
@@ -54,7 +54,7 @@ class DarksideSanityCheckTests: XCTestCase {
         
         let syncExpectation = XCTestExpectation(description: "sync to \(expectedLastBlock.height)")
         
-        try coordinator.sync(
+        try await coordinator.sync(
             completion: { _ in
                 syncExpectation.fulfill()
             },
