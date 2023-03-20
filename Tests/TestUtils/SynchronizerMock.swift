@@ -24,7 +24,9 @@ class SynchronizerMock: Synchronizer {
     var underlyingConnectionState: ConnectionState! = nil
     var connectionState: ConnectionState { underlyingConnectionState }
 
-    var prepareWithSeedViewingKeysWalletBirthdayClosure: (([UInt8]?, [UnifiedFullViewingKey], BlockHeight) async throws -> Initializer.InitializationResult)! = nil
+    var prepareWithSeedViewingKeysWalletBirthdayClosure: (
+        ([UInt8]?, [UnifiedFullViewingKey], BlockHeight) async throws -> Initializer.InitializationResult
+    )! = nil
     func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
@@ -58,7 +60,9 @@ class SynchronizerMock: Synchronizer {
         return await getTransparentAddressAccountIndexClosure(accountIndex)
     }
 
-    var sendToAddressSpendingKeyZatoshiToAddressMemoClosure: ((UnifiedSpendingKey, Zatoshi, Recipient, Memo?) async throws -> PendingTransactionEntity)! = nil
+    var sendToAddressSpendingKeyZatoshiToAddressMemoClosure: (
+        (UnifiedSpendingKey, Zatoshi, Recipient, Memo?) async throws -> PendingTransactionEntity
+    )! = nil
     func sendToAddress(spendingKey: UnifiedSpendingKey, zatoshi: Zatoshi, toAddress: Recipient, memo: Memo?) async throws -> PendingTransactionEntity {
         return try await sendToAddressSpendingKeyZatoshiToAddressMemoClosure(spendingKey, zatoshi, toAddress, memo)
     }

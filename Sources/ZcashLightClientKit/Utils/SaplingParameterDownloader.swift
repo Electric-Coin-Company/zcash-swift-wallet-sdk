@@ -132,7 +132,7 @@ private extension SaplingParameterDownloader {
         at destination: URL,
         result: @escaping (Result<URL, Error>) -> Void
     ) {
-        LoggerProxy.debug("Downloading sapling file from \(request.url)")
+        LoggerProxy.debug("Downloading sapling file from \(String(describing: request.url))")
         let task = URLSession.shared.downloadTask(with: request) { url, _, error in
             if let error {
                 result(.failure(Errors.failed(error: error)))

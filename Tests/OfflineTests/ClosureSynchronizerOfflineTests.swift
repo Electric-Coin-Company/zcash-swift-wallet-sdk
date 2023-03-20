@@ -91,8 +91,8 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { event in
-                    if case .connectionStateChanged = event { }
-                    else {
+                    if case .connectionStateChanged = event {
+                    } else {
                         XCTFail("Unexpected event: \(event)")
                     }
                 }
@@ -131,7 +131,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareThrowsError() throws {
-        synchronizerMock.prepareWithSeedViewingKeysWalletBirthdayClosure = { receivedSeed, receivedViewingKeys, receivedWalletBirthday in
+        synchronizerMock.prepareWithSeedViewingKeysWalletBirthdayClosure = { _, _, _ in
             throw "Some error"
         }
 
@@ -167,7 +167,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testStartThrowsError() {
-        synchronizerMock.startRetryClosure = { retry in
+        synchronizerMock.startRetryClosure = { _ in
             throw "Some error"
         }
 
@@ -250,13 +250,14 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         let recipient: Recipient = .transparent(data.transparentAddress)
         let memo: Memo = .text(try MemoText("Some message"))
 
-        synchronizerMock.sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { receivedSpendingKey, receivedZatoshi, receivedToAddress, receivedMemo in
-            XCTAssertEqual(receivedSpendingKey, self.data.spendingKey)
-            XCTAssertEqual(receivedZatoshi, amount)
-            XCTAssertEqual(receivedToAddress, recipient)
-            XCTAssertEqual(receivedMemo, memo)
-            return self.data.pendingTransactionEntity
-        }
+        synchronizerMock
+            .sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { receivedSpendingKey, receivedZatoshi, receivedToAddress, receivedMemo in
+                XCTAssertEqual(receivedSpendingKey, self.data.spendingKey)
+                XCTAssertEqual(receivedZatoshi, amount)
+                XCTAssertEqual(receivedToAddress, recipient)
+                XCTAssertEqual(receivedMemo, memo)
+                return self.data.pendingTransactionEntity
+            }
 
         let expectation = XCTestExpectation()
 
@@ -499,7 +500,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testAllConfirmedTransactionsThrowsError() throws {
-        synchronizerMock.allConfirmedTransactionsFromTransactionClosure = { receivedTransaction, limit in
+        synchronizerMock.allConfirmedTransactionsFromTransactionClosure = { _, _ in
             throw "Some error"
         }
 
@@ -672,8 +673,8 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
     func testRewindSucceed() {
         synchronizerMock.rewindPolicyClosure = { receivedPolicy in
-            if case .quick = receivedPolicy { }
-            else {
+            if case .quick = receivedPolicy {
+            } else {
                 XCTFail("Unexpected policy \(receivedPolicy)")
             }
 
