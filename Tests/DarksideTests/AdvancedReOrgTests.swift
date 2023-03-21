@@ -1330,13 +1330,13 @@ class AdvancedReOrgTests: XCTestCase {
     }
     
     func hookToReOrgNotification() async {
-        await coordinator.synchronizer.blockProcessor.eventStream
-            .sink { [weak self] event in
-                switch event {
-                case .handledReorg: self?.handleReorg(event: event)
-                default: break
-                }
+        let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
+            switch event {
+            case .handledReorg: self?.handleReorg(event: event)
+            default: break
             }
-            .store(in: &cancellables)
+        }
+
+        await coordinator.synchronizer.blockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure)
     }
 }

@@ -33,16 +33,14 @@ final class SynchronizerTests: XCTestCase {
 
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
 
-        var stream: AnyPublisher<CompactBlockProcessor.Event, Never>!
-        XCTestCase.wait { await stream = self.coordinator.synchronizer.blockProcessor.eventStream }
-        stream
-            .sink { [weak self] event in
-                switch event {
-                case .handledReorg: self?.handleReorg(event: event)
-                default: break
-                }
+        let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
+            switch event {
+            case .handledReorg: self?.handleReorg(event: event)
+            default: break
             }
-            .store(in: &cancellables)
+        }
+
+        XCTestCase.wait { await self.coordinator.synchronizer.blockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure) }
     }
 
     override func tearDownWithError() throws {
@@ -99,7 +97,8 @@ final class SynchronizerTests: XCTestCase {
 
         wait(for: [syncStoppedExpectation], timeout: 6)
 
-        XCTAssertEqual(coordinator.synchronizer.status, .stopped)
+        let status = await coordinator.synchronizer.status
+        XCTAssertEqual(status, .stopped)
         let state = await coordinator.synchronizer.blockProcessor.state
         XCTAssertEqual(state, .stopped)
     }
@@ -241,7 +240,8 @@ final class SynchronizerTests: XCTestCase {
         let blockProcessorState = await coordinator.synchronizer.blockProcessor.state
         XCTAssertEqual(blockProcessorState, .stopped, "CompactBlockProcessor state should be stopped")
 
-        XCTAssertEqual(coordinator.synchronizer.status, .unprepared, "SDKSynchronizer state should be unprepared")
+        let status = await coordinator.synchronizer.status
+        XCTAssertEqual(status, .unprepared, "SDKSynchronizer state should be unprepared")
     }
 
     func handleError(_ error: Error?) async {
