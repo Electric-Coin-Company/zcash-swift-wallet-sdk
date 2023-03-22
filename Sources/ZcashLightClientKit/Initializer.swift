@@ -68,6 +68,18 @@ public struct SaplingParamsSourceURL {
     }
 }
 
+/// This identifies different instances of the synchronizer. It is usefull when the client app wants to support multiple wallets (with different
+/// seeds) in one app. If the client app support only one wallet then it doesn't have to care about alias atall.
+///
+/// When custom alias is used to create instance of the synchronizer then paths to all resources (databases, storages...) are updated accordingly to
+/// be sure that each instance is using unique paths to resources.
+///
+/// IMPORTANT: Always use `default` alias for one of the instances of the synchronizer.
+public enum ZcashSynchronizerAlias {
+    case `default`
+    case custom(String)
+}
+
 /**
 Wrapper for all the Rust backend functionality that does not involve processing blocks. This
 class initializes the Rust backend and the supporting data required to exercise those abilities.
@@ -81,7 +93,7 @@ public class Initializer {
     }
 
     let rustBackend: ZcashRustBackendWelding.Type
-    let alias: String
+    let alias: ZcashSynchronizerAlias
     let endpoint: LightWalletEndpoint
     let fsBlockDbRoot: URL
     let dataDbURL: URL
@@ -121,7 +133,7 @@ public class Initializer {
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
-        alias: String = "",
+        alias: ZcashSynchronizerAlias = .default,
         loggerProxy: Logger? = nil
     ) {
         self.init(
@@ -179,7 +191,7 @@ public class Initializer {
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
-        alias: String = "",
+        alias: ZcashSynchronizerAlias = .default,
         loggerProxy: Logger? = nil
     ) {
         self.init(
@@ -232,7 +244,7 @@ public class Initializer {
         spendParamsURL: URL,
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
-        alias: String = "",
+        alias: ZcashSynchronizerAlias = .default,
         loggerProxy: Logger? = nil
     ) {
         logger = loggerProxy
