@@ -69,7 +69,7 @@ class SynchronizerTests: XCTestCase {
                 spendParamsURL: try __spendParamsURL(),
                 outputParamsURL: try __outputParamsURL(),
                 saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-                alias: "",
+                alias: .default,
                 loggerProxy: OSLogger(logLevel: .debug)
             )
             
