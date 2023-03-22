@@ -86,7 +86,8 @@ class SaplingParametersViewController: UIViewController {
                     spendURL: spendParameter,
                     spendSourceURL: SaplingParamsSourceURL.default.spendParamFileURL,
                     outputURL: outputParameter,
-                    outputSourceURL: SaplingParamsSourceURL.default.outputParamFileURL
+                    outputSourceURL: SaplingParamsSourceURL.default.outputParamFileURL,
+                    logger: loggerProxy
                 )
                 spendPath.text = urls.spend.path
                 outputPath.text = urls.output.path

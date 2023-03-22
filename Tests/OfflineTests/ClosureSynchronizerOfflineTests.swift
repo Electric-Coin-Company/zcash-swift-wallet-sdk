@@ -33,6 +33,11 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         data = nil
     }
 
+    func testAliasIsAsExpected() {
+        synchronizerMock.underlyingAlias = .custom("some_alias")
+        XCTAssertEqual(synchronizer.alias, .custom("some_alias"))
+    }
+
     func testStateStreamEmitsAsExpected() {
         let state = SynchronizerState(
             shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
@@ -76,7 +81,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testEventStreamEmitsAsExpected() {
-        synchronizerMock.underlyingEventStream = Just(.connectionStateChanged).eraseToAnyPublisher()
+        synchronizerMock.underlyingEventStream = Just(.connectionStateChanged(.connecting)).eraseToAnyPublisher()
 
         let expectation = XCTestExpectation()
 

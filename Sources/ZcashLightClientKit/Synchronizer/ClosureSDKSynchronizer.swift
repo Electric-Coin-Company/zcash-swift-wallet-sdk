@@ -23,6 +23,8 @@ public struct ClosureSDKSynchronizer {
 }
 
 extension ClosureSDKSynchronizer: ClosureSynchronizer {
+    public var alias: ZcashSynchronizerAlias { synchronizer.alias }
+
     public var latestState: SynchronizerState { synchronizer.latestState }
     public var connectionState: ConnectionState { synchronizer.connectionState }
 

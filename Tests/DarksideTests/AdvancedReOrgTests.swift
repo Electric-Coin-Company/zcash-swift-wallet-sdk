@@ -48,7 +48,7 @@ class AdvancedReOrgTests: XCTestCase {
     func handleReorg(event: CompactBlockProcessor.Event) {
         guard case let .handledReorg(reorgHeight, rewindHeight) = event else { return XCTFail("empty reorg event") }
 
-        logger!.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
+        logger.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
 
         XCTAssertEqual(reorgHeight, expectedReorgHeight)
         reorgExpectation.fulfill()

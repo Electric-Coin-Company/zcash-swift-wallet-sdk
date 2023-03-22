@@ -61,16 +61,20 @@ class LightWalletGRPCService {
     let streamingCallTimeout: TimeLimit
     var latestBlockHeightProvider: LatestBlockHeightProvider = LiveLatestBlockHeightProvider()
 
+    var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)? {
+        get { connectionManager.connectionStateChange }
+        set { connectionManager.connectionStateChange = newValue }
+    }
+
     var queue: DispatchQueue
     
-    convenience init(endpoint: LightWalletEndpoint, connectionStateChange: @escaping (_ from: ConnectionState, _ to: ConnectionState) -> Void) {
+    convenience init(endpoint: LightWalletEndpoint) {
         self.init(
             host: endpoint.host,
             port: endpoint.port,
             secure: endpoint.secure,
             singleCallTimeout: endpoint.singleCallTimeoutInMillis,
-            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis,
-            connectionStateChange: connectionStateChange
+            streamingCallTimeout: endpoint.streamingCallTimeoutInMillis
         )
     }
 
@@ -86,10 +90,9 @@ class LightWalletGRPCService {
         port: Int = 9067,
         secure: Bool = true,
         singleCallTimeout: Int64,
-        streamingCallTimeout: Int64,
-        connectionStateChange: @escaping (_ from: ConnectionState, _ to: ConnectionState) -> Void
+        streamingCallTimeout: Int64
     ) {
-        self.connectionManager = ConnectionStatusManager(connectionStateChange: connectionStateChange)
+        self.connectionManager = ConnectionStatusManager()
         self.queue = DispatchQueue.init(label: "LightWalletGRPCService")
         self.streamingCallTimeout = TimeLimit.timeout(.milliseconds(streamingCallTimeout))
         self.singleCallTimeout = TimeLimit.timeout(.milliseconds(singleCallTimeout))
@@ -344,12 +347,10 @@ extension LightWalletServiceError {
 }
 
 class ConnectionStatusManager: ConnectivityStateDelegate {
-    let connectionStateChange: (_ from: ConnectionState, _ to: ConnectionState) -> Void
-    init(connectionStateChange: @escaping (_ from: ConnectionState, _ to: ConnectionState) -> Void) {
-        self.connectionStateChange = connectionStateChange
-    }
+    var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)?
+    init() { }
 
     func connectivityStateDidChange(from oldState: ConnectivityState, to newState: ConnectivityState) {
-        connectionStateChange(oldState.toConnectionState(), newState.toConnectionState())
+        connectionStateChange?(oldState.toConnectionState(), newState.toConnectionState())
     }
 }

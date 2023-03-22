@@ -31,7 +31,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -40,10 +40,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -51,6 +53,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -81,7 +84,9 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -101,7 +106,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -110,10 +115,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -121,6 +128,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -151,7 +159,9 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -171,7 +181,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .testnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -180,10 +190,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -191,6 +203,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -221,7 +234,9 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -241,7 +256,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -250,10 +265,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -261,6 +278,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -292,7 +310,9 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -317,7 +337,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1210000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
         let expectedStoredLatestHeight = BlockHeight(1220000)
         let expectedResult = CompactBlockProcessor.NextState.wait(
@@ -329,6 +349,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
 
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -372,7 +393,11 @@ class BlockBatchValidationTests: XCTestCase {
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
-                internalSyncProgress: InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+                internalSyncProgress: InternalSyncProgress(
+                    alias: .default,
+                    storage: InternalSyncProgressMemoryStorage(),
+                    logger: logger
+                )
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -402,7 +427,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
         let expectedStoreLatestHeight = BlockHeight(1220000)
         let walletBirthday = BlockHeight(1210000)
@@ -421,6 +446,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -464,7 +490,11 @@ class BlockBatchValidationTests: XCTestCase {
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
-                internalSyncProgress: InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+                internalSyncProgress: InternalSyncProgress(
+                    alias: .default,
+                    storage: InternalSyncProgressMemoryStorage(),
+                    logger: logger
+                )
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -494,7 +524,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
         let expectedStoreLatestHeight = BlockHeight(1230000)
         let walletBirthday = BlockHeight(1210000)
@@ -502,6 +532,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -516,7 +547,11 @@ class BlockBatchValidationTests: XCTestCase {
             network: network
         )
 
-        let internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        let internalSyncProgress = InternalSyncProgress(
+            alias: .default,
+            storage: InternalSyncProgressMemoryStorage(),
+            logger: logger
+        )
         await internalSyncProgress.set(expectedStoreLatestHeight, .latestEnhancedHeight)
         await internalSyncProgress.set(expectedStoreLatestHeight, .latestUTXOFetchedHeight)
 

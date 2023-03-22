@@ -28,6 +28,8 @@ struct UTXOFetcherImpl {
     let config: UTXOFetcherConfig
     let internalSyncProgress: InternalSyncProgress
     let rustBackend: ZcashRustBackendWelding.Type
+    let metrics: SDKMetrics
+    let logger: Logger
 }
 
 extension UTXOFetcherImpl: UTXOFetcher {
@@ -77,12 +79,12 @@ extension UTXOFetcherImpl: UTXOFetcher {
 
                 await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
             } catch {
-                LoggerProxy.error("failed to put utxo - error: \(error)")
+                logger.error("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
             }
         }
 
-        SDKMetrics.shared.pushProgressReport(
+        metrics.pushProgressReport(
             progress: BlockProgress(
                 startHeight: range.lowerBound,
                 targetHeight: range.upperBound,
@@ -99,7 +101,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
         await internalSyncProgress.set(range.upperBound, .latestUTXOFetchedHeight)
 
         if Task.isCancelled {
-            LoggerProxy.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
+            logger.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")
         }
 
         return result

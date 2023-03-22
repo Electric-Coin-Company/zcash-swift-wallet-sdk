@@ -30,8 +30,8 @@ public enum SaplingParameterDownloader {
     /// - Parameters:
     ///     - at: The destination URL for the download
     @discardableResult
-    public static func downloadSpendParameter(_ at: URL, sourceURL: URL) async throws -> URL {
-        let resultURL = try await downloadFileWithRequestWithContinuation(URLRequest(url: sourceURL), at: at)
+    public static func downloadSpendParameter(_ at: URL, sourceURL: URL, logger: Logger) async throws -> URL {
+        let resultURL = try await downloadFileWithRequestWithContinuation(URLRequest(url: sourceURL), logger: logger, at: at)
         try isSpendParamsSHA1Valid(url: resultURL)
         return resultURL
     }
@@ -40,8 +40,8 @@ public enum SaplingParameterDownloader {
     /// - Parameters:
     ///     - at: The destination URL for the download
     @discardableResult
-    public static func downloadOutputParameter(_ at: URL, sourceURL: URL) async throws -> URL {
-        let resultURL = try await downloadFileWithRequestWithContinuation(URLRequest(url: sourceURL), at: at)
+    public static func downloadOutputParameter(_ at: URL, sourceURL: URL, logger: Logger) async throws -> URL {
+        let resultURL = try await downloadFileWithRequestWithContinuation(URLRequest(url: sourceURL), logger: logger, at: at)
         try isOutputParamsSHA1Valid(url: resultURL)
         return resultURL
     }
@@ -55,11 +55,12 @@ public enum SaplingParameterDownloader {
         spendURL: URL,
         spendSourceURL: URL,
         outputURL: URL,
-        outputSourceURL: URL
+        outputSourceURL: URL,
+        logger: Logger
     ) async throws -> (spend: URL, output: URL) {
         do {
-            async let spendResultURL = ensureSpendParameter(at: spendURL, sourceURL: spendSourceURL)
-            async let outputResultURL = ensureOutputParameter(at: outputURL, sourceURL: outputSourceURL)
+            async let spendResultURL = ensureSpendParameter(at: spendURL, sourceURL: spendSourceURL, logger: logger)
+            async let outputResultURL = ensureOutputParameter(at: outputURL, sourceURL: outputSourceURL, logger: logger)
             
             let results = try await [spendResultURL, outputResultURL]
             return (spend: results[0], output: results[1])
@@ -68,21 +69,21 @@ public enum SaplingParameterDownloader {
         }
     }
         
-    static func ensureSpendParameter(at url: URL, sourceURL: URL) async throws -> URL {
+    static func ensureSpendParameter(at url: URL, sourceURL: URL, logger: Logger) async throws -> URL {
         if isFilePresent(url: url) {
             try isSpendParamsSHA1Valid(url: url)
             return url
         } else {
-            return try await downloadSpendParameter(url, sourceURL: sourceURL)
+            return try await downloadSpendParameter(url, sourceURL: sourceURL, logger: logger)
         }
     }
     
-    static func ensureOutputParameter(at url: URL, sourceURL: URL) async throws -> URL {
+    static func ensureOutputParameter(at url: URL, sourceURL: URL, logger: Logger) async throws -> URL {
         if isFilePresent(url: url) {
             try isOutputParamsSHA1Valid(url: url)
             return url
         } else {
-            return try await downloadOutputParameter(url, sourceURL: sourceURL)
+            return try await downloadOutputParameter(url, sourceURL: sourceURL, logger: logger)
         }
     }
     
@@ -113,10 +114,11 @@ private extension SaplingParameterDownloader {
 
     static func downloadFileWithRequestWithContinuation(
     _ request: URLRequest,
+    logger: Logger,
     at destination: URL
     ) async throws -> URL {
         return try await withCheckedThrowingContinuation { continuation in
-            downloadFileWithRequest(request, at: destination) { result in
+            downloadFileWithRequest(request, at: destination, logger: logger) { result in
                 switch result {
                 case .success(let outputResultURL):
                     continuation.resume(returning: outputResultURL)
@@ -130,9 +132,10 @@ private extension SaplingParameterDownloader {
     static func downloadFileWithRequest(
         _ request: URLRequest,
         at destination: URL,
+        logger: Logger,
         result: @escaping (Result<URL, Error>) -> Void
     ) {
-        LoggerProxy.debug("Downloading sapling file from \(String(describing: request.url))")
+        logger.debug("Downloading sapling file from \(String(describing: request.url))")
         let task = URLSession.shared.downloadTask(with: request) { url, _, error in
             if let error {
                 result(.failure(Errors.failed(error: error)))

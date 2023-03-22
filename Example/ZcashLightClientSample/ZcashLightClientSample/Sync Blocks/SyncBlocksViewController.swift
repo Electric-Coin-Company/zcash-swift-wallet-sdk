@@ -82,7 +82,7 @@ class SyncBlocksViewController: UIViewController {
             progressLabel.text = "\(floor(progress.progress * 1000) / 10)%"
 
             if let currentMetric {
-                let report = SDKMetrics.shared.popBlock(operation: currentMetric)?.last
+                let report = synchronizer.metrics.popBlock(operation: currentMetric)?.last
                 metricLabel.text = currentMetricName + report.debugDescription
             }
 
@@ -114,7 +114,7 @@ class SyncBlocksViewController: UIViewController {
     
     func accumulateMetrics() {
         guard let currentMetric else { return }
-        if let reports = SDKMetrics.shared.popBlock(operation: currentMetric) {
+        if let reports = synchronizer.metrics.popBlock(operation: currentMetric) {
             for report in reports {
                 accumulatedMetrics = .accumulate(accumulatedMetrics, current: report)
             }
@@ -122,7 +122,7 @@ class SyncBlocksViewController: UIViewController {
     }
     
     func overallSummary() {
-        let cumulativeSummary = SDKMetrics.shared.cumulativeSummary()
+        let cumulativeSummary = synchronizer.metrics.cumulativeSummary()
         
         let downloadedBlocksReport = cumulativeSummary.downloadedBlocksReport ?? SDKMetrics.ReportSummary.zero
         let validatedBlocksReport = cumulativeSummary.validatedBlocksReport ?? SDKMetrics.ReportSummary.zero
@@ -157,13 +157,13 @@ class SyncBlocksViewController: UIViewController {
                 if syncStatus == .unprepared {
                     // swiftlint:disable:next force_try
                     _ = try! await synchronizer.prepare(
-                        with: DemoAppConfig.seed,
+                        with: DemoAppConfig.defaultSeed,
                         viewingKeys: [AppDelegate.shared.sharedViewingKey],
-                        walletBirthday: DemoAppConfig.birthdayHeight
+                        walletBirthday: DemoAppConfig.defaultBirthdayHeight
                     )
                 }
 
-                SDKMetrics.shared.enableMetrics()
+                synchronizer.metrics.enableMetrics()
                 try await synchronizer.start()
                 updateUI()
             } catch {
@@ -172,7 +172,7 @@ class SyncBlocksViewController: UIViewController {
             }
         default:
             await synchronizer.stop()
-            SDKMetrics.shared.disableMetrics()
+            synchronizer.metrics.disableMetrics()
             updateUI()
         }
 

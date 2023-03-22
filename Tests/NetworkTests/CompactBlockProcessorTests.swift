@@ -15,6 +15,7 @@ class CompactBlockProcessorTests: XCTestCase {
     lazy var processorConfig = {
         let pathProvider = DefaultResourceProvider(network: network)
         return CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
@@ -46,9 +47,15 @@ class CompactBlockProcessorTests: XCTestCase {
         logger = OSLogger(logLevel: .debug)
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
-        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
+        XCTestCase.wait {
+            await InternalSyncProgress(
+                alias: .default,
+                storage: UserDefaults.standard,
+                logger: logger
+            ).rewind(to: 0)
+        }
 
-        let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+        let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
             latestBlockHeight: mockLatestHeight,
             service: liveService
@@ -71,10 +78,12 @@ class CompactBlockProcessorTests: XCTestCase {
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -83,7 +92,9 @@ class CompactBlockProcessorTests: XCTestCase {
             service: service,
             storage: storage,
             backend: realRustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics(),
+            logger: logger
         )
 
         let dbInit = try realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
@@ -185,7 +196,11 @@ class CompactBlockProcessorTests: XCTestCase {
             latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
-        var internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        var internalSyncProgress = InternalSyncProgress(
+            alias: .default,
+            storage: InternalSyncProgressMemoryStorage(),
+            logger: logger
+        )
         await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
 
         var syncRanges = await internalSyncProgress.computeSyncRanges(
@@ -214,7 +229,11 @@ class CompactBlockProcessorTests: XCTestCase {
             latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
-        internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        internalSyncProgress = InternalSyncProgress(
+            alias: .default,
+            storage: InternalSyncProgressMemoryStorage(),
+            logger: logger
+        )
         await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
 
         syncRanges = await internalSyncProgress.computeSyncRanges(
@@ -244,7 +263,11 @@ class CompactBlockProcessorTests: XCTestCase {
             latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
-        internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        internalSyncProgress = InternalSyncProgress(
+            alias: .default,
+            storage: InternalSyncProgressMemoryStorage(),
+            logger: logger
+        )
         await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
 
         syncRanges = await internalSyncProgress.computeSyncRanges(

@@ -93,6 +93,8 @@ class ZcashRustBackendTests: XCTestCase {
         let tempDBs = TemporaryDbBuilder.build()
         let seed = testVector[0].root_seed!
 
+        try? FileManager.default.removeItem(at: tempDBs.dataDB)
+
         XCTAssertEqual(
             try ZcashRustBackend.initDataDb(
                 dbData: tempDBs.dataDB,
@@ -159,8 +161,6 @@ class ZcashRustBackendTests: XCTestCase {
             expectedReceivers.sorted(),
             actualReceivers.sorted()
         )
-
-        try? FileManager.default.removeItem(at: tempDBs.dataDB)
     }
 
     func testGetMetadataFromAddress() throws {

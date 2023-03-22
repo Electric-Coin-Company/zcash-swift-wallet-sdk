@@ -9,19 +9,12 @@
 import Foundation
 import Combine
 
-extension Notification.Name {
-    static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
-}
-
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
-    public enum NotificationKeys {
-        public static let currentConnectionState = "SDKSynchronizer.currentConnectionState"
-        public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
-    }
+    public var alias: ZcashSynchronizerAlias { initializer.alias }
 
-    private let streamsUpdateQueue = DispatchQueue(label: "streamsUpdateQueue")
+    private lazy var streamsUpdateQueue = { DispatchQueue(label: "streamsUpdateQueue_\(initializer.alias.description)") }()
     private let stateSubject = CurrentValueSubject<SynchronizerState, Never>(.zero)
     public var stateStream: AnyPublisher<SynchronizerState, Never> { stateSubject.eraseToAnyPublisher() }
     public private(set) var latestState: SynchronizerState = .zero
@@ -29,6 +22,9 @@ public class SDKSynchronizer: Synchronizer {
     private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
+    public let metrics: SDKMetrics
+    public let logger: Logger
+    
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<SyncStatus>
     var status: SyncStatus {
@@ -36,7 +32,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     let blockProcessor: CompactBlockProcessor
-    let blockProcessorEventProcessingQueue = DispatchQueue(label: "blockProcessorEventProcessingQueue")
+    lazy var blockProcessorEventProcessingQueue = { DispatchQueue(label: "blockProcessorEventProcessingQueue_\(initializer.alias.description)") }()
 
     public private(set) var initializer: Initializer
     // Valid value is stored here after `prepare` is called.
@@ -52,6 +48,7 @@ public class SDKSynchronizer: Synchronizer {
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) {
+        let metrics = SDKMetrics()
         self.init(
             status: .unprepared,
             initializer: initializer,
@@ -60,8 +57,11 @@ public class SDKSynchronizer: Synchronizer {
             utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
             blockProcessor: CompactBlockProcessor(
                 initializer: initializer,
+                metrics: metrics,
+                logger: initializer.logger,
                 walletBirthdayProvider: { initializer.walletBirthday }
-            )
+            ),
+            metrics: metrics
         )
     }
 
@@ -71,7 +71,8 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager: OutboundTransactionManager,
         transactionRepository: TransactionRepository,
         utxoRepository: UnspentTransactionOutputRepository,
-        blockProcessor: CompactBlockProcessor
+        blockProcessor: CompactBlockProcessor,
+        metrics: SDKMetrics
     ) {
         self.connectionState = .idle
         self.underlyingStatus = GenericActor(status)
@@ -81,13 +82,18 @@ public class SDKSynchronizer: Synchronizer {
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
         self.network = initializer.network
+        self.metrics = metrics
+        self.logger = initializer.logger
 
-        subscribeToProcessorNotifications(blockProcessor)
+        initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
+            self?.connectivityStateChanged(oldState: oldState, newState: newState)
+        }
 
         Task(priority: .high) { [weak self] in await self?.subscribeToProcessorEvents(blockProcessor) }
     }
 
     deinit {
+        UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
         NotificationCenter.default.removeObserver(self)
         Task { [blockProcessor] in
             await blockProcessor.stop()
@@ -99,12 +105,34 @@ public class SDKSynchronizer: Synchronizer {
         await notify(oldStatus: oldValue, newStatus: newValue)
     }
 
+    func throwIfUnprepared() throws {
+        if !latestState.syncStatus.isPrepared {
+            throw SynchronizerError.notPrepared
+        }
+    }
+
+    func checkIfCanContinueInitialisation() -> InitializerError? {
+        if let initialisationError = initializer.urlsParsingError {
+            return initialisationError
+        }
+
+        if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
+            return InitializerError.aliasAlreadyInUse(initializer.alias)
+        }
+
+        return nil
+    }
+
     public func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
     ) async throws -> Initializer.InitializationResult {
         guard await status == .unprepared else { return .success }
+
+        if let error = checkIfCanContinueInitialisation() {
+            throw error
+        }
 
         try utxoRepository.initialise()
 
@@ -127,7 +155,7 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.notPrepared
 
         case .syncing, .enhancing, .fetching:
-            LoggerProxy.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
+            logger.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
             /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
             /// it's start here.
             await blockProcessor.start(retry: retry)
@@ -143,41 +171,19 @@ public class SDKSynchronizer: Synchronizer {
     public func stop() async {
         let status = await self.status
         guard status != .stopped, status != .disconnected else {
-            LoggerProxy.info("attempted to stop when status was: \(status)")
+            logger.info("attempted to stop when status was: \(status)")
             return
         }
 
         await blockProcessor.stop()
     }
 
-    private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
-        let center = NotificationCenter.default
-
-        center.addObserver(
-            self,
-            selector: #selector(connectivityStateChanged(_:)),
-            name: Notification.Name.synchronizerConnectionStateChanged,
-            object: nil
-        )
-    }
-
     // MARK: Connectivity State
 
-    @objc func connectivityStateChanged(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let current = userInfo[NotificationKeys.currentConnectionState] as? ConnectionState
-        else {
-            LoggerProxy.error(
-                "Found \(notification.name) but lacks dictionary information." +
-                "This is probably a programming error"
-            )
-            return
-        }
-
-        connectionState = current
+    func connectivityStateChanged(oldState: ConnectionState, newState: ConnectionState) {
+        connectionState = newState
         streamsUpdateQueue.async { [weak self] in
-            self?.eventSubject.send(.connectionStateChanged)
+            self?.eventSubject.send(.connectionStateChanged(newState))
         }
     }
 
@@ -232,7 +238,7 @@ public class SDKSynchronizer: Synchronizer {
         await updateStatus(.synced)
 
         if let syncStartDate {
-            SDKMetrics.shared.pushSyncReport(
+            metrics.pushSyncReport(
                 start: syncStartDate,
                 end: Date()
             )
@@ -246,12 +252,12 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func handledReorg(reorgHeight: BlockHeight, rewindHeight: BlockHeight) {
-        LoggerProxy.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
+        logger.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
         do {
             try transactionManager.handleReorg(at: rewindHeight)
         } catch {
-            LoggerProxy.debug("error handling reorg: \(error)")
+            logger.debug("error handling reorg: \(error)")
         }
     }
 
@@ -274,12 +280,15 @@ public class SDKSynchronizer: Synchronizer {
         toAddress: Recipient,
         memo: Memo?
     ) async throws -> PendingTransactionEntity {
+        try throwIfUnprepared()
+
         do {
             try await SaplingParameterDownloader.downloadParamsIfnotPresent(
                 spendURL: initializer.spendParamsURL,
                 spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
                 outputURL: initializer.outputParamsURL,
-                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL
+                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+                logger: logger
             )
         } catch {
             throw SynchronizerError.parameterMissing(underlyingError: error)
@@ -302,6 +311,8 @@ public class SDKSynchronizer: Synchronizer {
         memo: Memo,
         shieldingThreshold: Zatoshi
     ) async throws -> PendingTransactionEntity {
+        try throwIfUnprepared()
+
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
         do {
@@ -410,6 +421,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
+        try throwIfUnprepared()
+
         guard initializer.isValidTransparentAddress(address) else {
             throw SynchronizerError.generalError(message: "invalid t-address")
         }
@@ -431,7 +444,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
-        try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
+        try throwIfUnprepared()
+        return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
@@ -472,7 +486,12 @@ public class SDKSynchronizer: Synchronizer {
 
     public func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error> {
         let subject = PassthroughSubject<Void, Error>()
-        Task {
+        Task(priority: .high) {
+            if !latestState.syncStatus.isPrepared {
+                subject.send(completion: .failure(SynchronizerError.notPrepared))
+                return
+            }
+
             let height: BlockHeight?
 
             switch policy {
@@ -521,6 +540,11 @@ public class SDKSynchronizer: Synchronizer {
     public func wipe() -> AnyPublisher<Void, Error> {
         let subject = PassthroughSubject<Void, Error>()
         Task(priority: .high) {
+            if let error = checkIfCanContinueInitialisation() {
+                subject.send(completion: .failure(error))
+                return
+            }
+
             let context = AfterSyncHooksManager.WipeContext(
                 pendingDbURL: initializer.pendingDbURL,
                 prewipe: { [weak self] in
@@ -633,7 +657,7 @@ public class SDKSynchronizer: Synchronizer {
             try updateMinedTransactions()
             try removeConfirmedTransactions()
         } catch {
-            LoggerProxy.debug("error refreshing pending transactions: \(error)")
+            logger.debug("error refreshing pending transactions: \(error)")
         }
     }
 

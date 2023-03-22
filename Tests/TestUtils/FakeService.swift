@@ -21,6 +21,10 @@ struct MockCancellable: CancellableCall {
 }
 
 class MockLightWalletService: LightWalletService {
+    var connectionStateChange: ((ZcashLightClientKit.ConnectionState, ZcashLightClientKit.ConnectionState) -> Void)? {
+        get { service.connectionStateChange }
+        set { service.connectionStateChange = newValue }
+    }
     var mockLightDInfo: LightWalletdInfo?
     var queue = DispatchQueue(label: "mock service queue")
 

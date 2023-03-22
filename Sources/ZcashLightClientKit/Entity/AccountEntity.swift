@@ -55,9 +55,11 @@ class AccountSQDAO: AccountRepository {
     let table = Table("accounts")
 
     var dbProvider: ConnectionProvider
+    let logger: Logger
     
-    init (dbProvider: ConnectionProvider) {
+    init (dbProvider: ConnectionProvider, logger: Logger) {
         self.dbProvider = dbProvider
+        self.logger = logger
     }
     
     func getAll() throws -> [AccountEntity] {
@@ -79,7 +81,7 @@ class AccountSQDAO: AccountRepository {
         }
         let updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
         if updatedRows == 0 {
-            LoggerProxy.error("attempted to update pending transactions but no rows were updated")
+            logger.error("attempted to update pending transactions but no rows were updated")
             throw DatabaseStorageError.updateFailed
         }
     }
@@ -135,11 +137,19 @@ class CachingAccountDao: AccountRepository {
 }
 
 enum AccountRepositoryBuilder {
-    static func build(dataDbURL: URL, readOnly: Bool = false, caching: Bool = false) -> AccountRepository {
+    static func build(dataDbURL: URL, readOnly: Bool = false, caching: Bool = false, logger: Logger) -> AccountRepository {
         if caching {
-            return CachingAccountDao(dao: AccountSQDAO(dbProvider: SimpleConnectionProvider(path: dataDbURL.path, readonly: readOnly)))
+            return CachingAccountDao(
+                dao: AccountSQDAO(
+                    dbProvider: SimpleConnectionProvider(path: dataDbURL.path, readonly: readOnly),
+                    logger: logger
+                )
+            )
         } else {
-            return AccountSQDAO(dbProvider: SimpleConnectionProvider(path: dataDbURL.path, readonly: readOnly))
+            return AccountSQDAO(
+                dbProvider: SimpleConnectionProvider(path: dataDbURL.path, readonly: readOnly),
+                logger: logger
+            )
         }
     }
 }

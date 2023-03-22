@@ -28,6 +28,8 @@ protocol BlockValidator {
 struct BlockValidatorImpl {
     let config: BlockValidatorConfig
     let rustBackend: ZcashRustBackendWelding.Type
+    let metrics: SDKMetrics
+    let logger: Logger
 }
 
 extension BlockValidatorImpl: BlockValidator {
@@ -43,7 +45,7 @@ extension BlockValidatorImpl: BlockValidator {
         )
         let finishTime = Date()
 
-        SDKMetrics.shared.pushProgressReport(
+        metrics.pushProgressReport(
             progress: BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0),
             start: startTime,
             end: finishTime,
@@ -54,7 +56,7 @@ extension BlockValidatorImpl: BlockValidator {
         switch result {
         case 0:
             let rustError = rustBackend.lastError()
-            LoggerProxy.debug("Block validation failed with error: \(String(describing: rustError))")
+            logger.debug("Block validation failed with error: \(String(describing: rustError))")
             if let rustError {
                 throw BlockValidatorError.failedWithError(rustError)
             } else {
@@ -62,11 +64,11 @@ extension BlockValidatorImpl: BlockValidator {
             }
 
         case ZcashRustBackendWeldingConstants.validChain:
-            LoggerProxy.debug("validateChainFinished")
+            logger.debug("validateChainFinished")
             return
 
         default:
-            LoggerProxy.debug("Block validation failed at height: \(result)")
+            logger.debug("Block validation failed at height: \(result)")
             throw BlockValidatorError.validationFailed(height: BlockHeight(result))
         }
     }

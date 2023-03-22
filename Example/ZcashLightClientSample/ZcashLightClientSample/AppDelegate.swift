@@ -33,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var sharedViewingKey: UnifiedFullViewingKey {
         return try! DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
+            .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
             .deriveFullViewingKey()
     }
     
@@ -42,6 +42,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return wallet
         } else {
             let wallet = Initializer(
+                cacheDbURL: nil,
                 fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
                 pendingDbURL: try! pendingDbURLHelper(),
@@ -49,8 +50,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 network: kZcashNetwork,
                 spendParamsURL: try! spendParamsURLHelper(),
                 outputParamsURL: try! outputParamsURLHelper(),
-                saplingParamsSourceURL: SaplingParamsSourceURL.default,
-                loggerProxy: loggerProxy
+                saplingParamsSourceURL: SaplingParamsSourceURL.default
             )
            
             self.wallet = wallet

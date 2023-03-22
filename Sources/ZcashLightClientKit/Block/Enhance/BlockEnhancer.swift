@@ -29,15 +29,17 @@ struct BlockEnhancerImpl {
     let internalSyncProgress: InternalSyncProgress
     let rustBackend: ZcashRustBackendWelding.Type
     let transactionRepository: TransactionRepository
+    let metrics: SDKMetrics
+    let logger: Logger
 
     private func enhance(transaction: ZcashTransaction.Overview) async throws -> ZcashTransaction.Overview {
-        LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.rawID.toHexStringTxId())")
+        logger.debug("Zoom.... Enhance... Tx: \(transaction.rawID.toHexStringTxId())")
 
         let fetchedTransaction = try await blockDownloaderService.fetchTransaction(txId: transaction.rawID)
 
         let transactionID = fetchedTransaction.rawID.toHexStringTxId()
         let block = String(describing: transaction.minedHeight)
-        LoggerProxy.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
+        logger.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
 
         let decryptionResult = rustBackend.decryptAndStoreTransaction(
             dbData: config.dataDb,
@@ -78,7 +80,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
     func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview] {
         try Task.checkCancellation()
         
-        LoggerProxy.debug("Started Enhancing range: \(range)")
+        logger.debug("Started Enhancing range: \(range)")
 
         var retries = 0
         let maxRetries = 5
@@ -90,7 +92,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
 
             guard !transactions.isEmpty else {
                 await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
-                LoggerProxy.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
+                logger.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
                 return []
             }
             
@@ -116,7 +118,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                         }
                     } catch {
                         retries += 1
-                        LoggerProxy.error("could not enhance txId \(transaction.rawID.toHexStringTxId()) - Error: \(error)")
+                        logger.error("could not enhance txId \(transaction.rawID.toHexStringTxId()) - Error: \(error)")
                         if retries > maxRetries {
                             throw error
                         }
@@ -124,7 +126,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 }
             }
             
-            SDKMetrics.shared.pushProgressReport(
+            metrics.pushProgressReport(
                 progress: BlockProgress(
                     startHeight: range.lowerBound,
                     targetHeight: range.upperBound,
@@ -136,14 +138,14 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 operation: .enhancement
             )
         } catch {
-            LoggerProxy.error("error enhancing transactions! \(error)")
+            logger.error("error enhancing transactions! \(error)")
             throw error
         }
 
         await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
         
         if Task.isCancelled {
-            LoggerProxy.debug("Warning: compactBlockEnhancement on range \(range) cancelled")
+            logger.debug("Warning: compactBlockEnhancement on range \(range) cancelled")
         }
 
         return (try? transactionRepository.find(in: range, limit: Int.max, kind: .all)) ?? []

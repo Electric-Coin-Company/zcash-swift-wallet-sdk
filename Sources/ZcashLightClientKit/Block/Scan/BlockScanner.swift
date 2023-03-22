@@ -22,6 +22,8 @@ struct BlockScannerImpl {
     let config: BlockScannerConfig
     let rustBackend: ZcashRustBackendWelding.Type
     let transactionRepository: TransactionRepository
+    let metrics: SDKMetrics
+    let logger: Logger
 }
 
 extension BlockScannerImpl: BlockScanner {
@@ -50,7 +52,7 @@ extension BlockScannerImpl: BlockScanner {
                 networkType: config.networkType
             ) else {
                 let error: Error = rustBackend.lastError() ?? CompactBlockProcessorError.unknown
-                LoggerProxy.debug("block scanning failed with error: \(String(describing: error))")
+                logger.debug("block scanning failed with error: \(String(describing: error))")
                 throw error
             }
             let scanFinishTime = Date()
@@ -67,7 +69,7 @@ extension BlockScannerImpl: BlockScanner {
                     progressHeight: lastScannedHeight
                 )
 
-                SDKMetrics.shared.pushProgressReport(
+                metrics.pushProgressReport(
                     progress: progress,
                     start: scanStartTime,
                     end: scanFinishTime,
@@ -77,7 +79,7 @@ extension BlockScannerImpl: BlockScanner {
 
                 let heightCount = lastScannedHeight - previousScannedHeight
                 let seconds = scanFinishTime.timeIntervalSinceReferenceDate - scanStartTime.timeIntervalSinceReferenceDate
-                LoggerProxy.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
+                logger.debug("Scanned \(heightCount) blocks in \(seconds) seconds")
             }
 
             await Task.yield()

@@ -7,6 +7,7 @@
 
 import Foundation
 import SQLite
+
 struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     enum CodingKeys: String, CodingKey {
         case toAddress = "to_address"
@@ -230,9 +231,11 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
     static let table = Table("pending_transactions")
     
     var dbProvider: ConnectionProvider
+    let logger: Logger
     
-    init(dbProvider: ConnectionProvider) {
+    init(dbProvider: ConnectionProvider, logger: Logger) {
         self.dbProvider = dbProvider
+        self.logger = logger
     }
 
     func closeDBConnection() {
@@ -253,7 +256,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
         
         let updatedRows = try dbProvider.connection().run(Self.table.filter(TableColumns.id == id).update(pendingTx))
         if updatedRows == 0 {
-            LoggerProxy.error("attempted to update pending transactions but no rows were updated")
+            logger.error("attempted to update pending transactions but no rows were updated")
         }
     }
     
@@ -308,7 +311,7 @@ class PendingTransactionSQLDAO: PendingTransactionRepository {
             .run(transaction.update([TableColumns.minedHeight <- height]))
         
         if updatedRows == 0 {
-            LoggerProxy.error("attempted to update a row but none was updated")
+            logger.error("attempted to update a row but none was updated")
         }
     }
 }

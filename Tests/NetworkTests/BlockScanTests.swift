@@ -71,7 +71,7 @@ class BlockScanTests: XCTestCase {
         XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType))
 
         let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
-        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: endpoint).make()
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
 
@@ -82,15 +82,18 @@ class BlockScanTests: XCTestCase {
             fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: fsDbRootURL,
-                rustBackend: rustBackend
+                rustBackend: rustBackend,
+                logger: logger
             ),
             blockDescriptor: ZcashCompactBlockDescriptor.live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try fsBlockRepository.create()
 
         let processorConfig = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: fsDbRootURL,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
@@ -104,7 +107,9 @@ class BlockScanTests: XCTestCase {
             service: service,
             storage: fsBlockRepository,
             backend: rustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         let repository = BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
@@ -118,8 +123,8 @@ class BlockScanTests: XCTestCase {
         XCTAssertEqual(latestScannedheight, range.upperBound)
     }
 
-    func observeBenchmark() {
-        let reports = SDKMetrics.shared.popAllBlockReports(flush: true)
+    func observeBenchmark(_ metrics: SDKMetrics) {
+        let reports = metrics.popAllBlockReports(flush: true)
 
         reports.forEach {
             print("observed benchmark: \($0)")
@@ -131,7 +136,8 @@ class BlockScanTests: XCTestCase {
 
         logger = OSLogger(logLevel: .debug)
 
-        SDKMetrics.shared.enableMetrics()
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
         
         guard try self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType) == .success else {
             XCTFail("Seed should not be required for this test")
@@ -163,7 +169,7 @@ class BlockScanTests: XCTestCase {
             networkType: network.networkType
         )
         
-        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
 
         let fsDbRootURL = self.testTempDirectory
 
@@ -171,15 +177,18 @@ class BlockScanTests: XCTestCase {
             fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: fsDbRootURL,
-                rustBackend: rustWelding
+                rustBackend: rustWelding,
+                logger: logger
             ),
             blockDescriptor: ZcashCompactBlockDescriptor.live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try fsBlockRepository.create()
         
         var processorConfig = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: fsDbRootURL,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
@@ -194,12 +203,14 @@ class BlockScanTests: XCTestCase {
             service: service,
             storage: fsBlockRepository,
             backend: rustWelding,
-            config: processorConfig
+            config: processorConfig,
+            metrics: metrics,
+            logger: logger
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {
-            case .progressUpdated: self?.observeBenchmark()
+            case .progressUpdated: self?.observeBenchmark(metrics)
             default: break
             }
         }
@@ -242,6 +253,6 @@ class BlockScanTests: XCTestCase {
             }
         }
         
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
 }

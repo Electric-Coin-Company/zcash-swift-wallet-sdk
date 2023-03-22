@@ -40,8 +40,6 @@ extension SynchronizerError: LocalizedError {
             return "We couldn't find this account number."
         case .lightwalletdValidationFailed(underlyingError: let underlyingError):
             return "We connected to the network but we couldn't verify the server. `lightwalletdValidationFailed` error: \(underlyingError)."
-        case .wipeAttemptWhileProcessing:
-            return "Can't execute wipe while sync process is in progress."
         }
     }
 }

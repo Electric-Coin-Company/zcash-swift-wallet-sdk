@@ -44,9 +44,9 @@ class SendViewController: UIViewController {
         setUp()
         
         closureSynchronizer.prepare(
-            with: DemoAppConfig.seed,
+            with: DemoAppConfig.defaultSeed,
             viewingKeys: [AppDelegate.shared.sharedViewingKey],
-            walletBirthday: DemoAppConfig.birthdayHeight
+            walletBirthday: DemoAppConfig.defaultBirthdayHeight
         ) { result in
             loggerProxy.debug("Prepare result: \(result)")
         }
@@ -209,7 +209,7 @@ class SendViewController: UIViewController {
             networkType: kZcashNetwork.networkType
         )
             .deriveUnifiedSpendingKey(
-                seed: DemoAppConfig.seed,
+                seed: DemoAppConfig.defaultSeed,
                 accountIndex: 0
             )
         else {
