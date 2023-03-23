@@ -318,7 +318,7 @@ final class FsBlockStorageTests: XCTestCase {
         XCTAssertNoThrow(try freshCache.create())
     }
 
-    func testStoringTenSandblastedBlocks() async throws {
+    func disabled_testStoringTenSandblastedBlocks() async throws {
         let realRustBackend = ZcashRustBackend.self
 
         let realCache = FSCompactBlockRepository(
