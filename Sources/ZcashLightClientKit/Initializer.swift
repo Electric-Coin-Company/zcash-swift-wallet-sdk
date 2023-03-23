@@ -80,6 +80,17 @@ public enum ZcashSynchronizerAlias {
     case custom(String)
 }
 
+extension ZcashSynchronizerAlias: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .`default`:
+            return "default"
+        case let .custom(alias):
+            return "c_\(alias)"
+        }
+    }
+}
+
 /**
 Wrapper for all the Rust backend functionality that does not involve processing blocks. This
 class initializes the Rust backend and the supporting data required to exercise those abilities.
