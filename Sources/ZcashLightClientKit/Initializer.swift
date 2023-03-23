@@ -279,19 +279,7 @@ public class Initializer {
     }
 
     private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
-        return LightWalletServiceFactory(
-            endpoint: endpoint,
-            connectionStateChange: { oldState, newState in
-                NotificationSender.default.post(
-                    name: .synchronizerConnectionStateChanged,
-                    object: self,
-                    userInfo: [
-                        SDKSynchronizer.NotificationKeys.previousConnectionState: oldState,
-                        SDKSynchronizer.NotificationKeys.currentConnectionState: newState
-                    ]
-                )
-            }
-        )
+        return LightWalletServiceFactory(endpoint: endpoint)
     }
 
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform

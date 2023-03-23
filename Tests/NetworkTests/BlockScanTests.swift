@@ -71,7 +71,7 @@ class BlockScanTests: XCTestCase {
         XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType))
 
         let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
-        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: endpoint).make()
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
 
@@ -163,7 +163,7 @@ class BlockScanTests: XCTestCase {
             networkType: network.networkType
         )
         
-        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
 
         let fsDbRootURL = self.testTempDirectory
 

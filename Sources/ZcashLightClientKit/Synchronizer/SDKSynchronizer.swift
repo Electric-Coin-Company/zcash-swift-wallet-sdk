@@ -9,18 +9,9 @@
 import Foundation
 import Combine
 
-extension Notification.Name {
-    static let synchronizerConnectionStateChanged = Notification.Name("SynchronizerConnectionStateChanged")
-}
-
 /// Synchronizer implementation for UIKit and iOS 13+
 // swiftlint:disable type_body_length
 public class SDKSynchronizer: Synchronizer {
-    public enum NotificationKeys {
-        public static let currentConnectionState = "SDKSynchronizer.currentConnectionState"
-        public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
-    }
-
     private lazy var streamsUpdateQueue = { DispatchQueue(label: "streamsUpdateQueue_\(initializer.alias.description)") }()
     private let stateSubject = CurrentValueSubject<SynchronizerState, Never>(.zero)
     public var stateStream: AnyPublisher<SynchronizerState, Never> { stateSubject.eraseToAnyPublisher() }
@@ -82,7 +73,9 @@ public class SDKSynchronizer: Synchronizer {
         self.blockProcessor = blockProcessor
         self.network = initializer.network
 
-        subscribeToProcessorNotifications(blockProcessor)
+        initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
+            self?.connectivityStateChanged(oldState: oldState, newState: newState)
+        }
 
         Task(priority: .high) { [weak self] in await self?.subscribeToProcessorEvents(blockProcessor) }
     }
@@ -150,34 +143,12 @@ public class SDKSynchronizer: Synchronizer {
         await blockProcessor.stop()
     }
 
-    private func subscribeToProcessorNotifications(_ processor: CompactBlockProcessor) {
-        let center = NotificationCenter.default
-
-        center.addObserver(
-            self,
-            selector: #selector(connectivityStateChanged(_:)),
-            name: Notification.Name.synchronizerConnectionStateChanged,
-            object: nil
-        )
-    }
-
     // MARK: Connectivity State
 
-    @objc func connectivityStateChanged(_ notification: Notification) {
-        guard
-            let userInfo = notification.userInfo,
-            let current = userInfo[NotificationKeys.currentConnectionState] as? ConnectionState
-        else {
-            LoggerProxy.error(
-                "Found \(notification.name) but lacks dictionary information." +
-                "This is probably a programming error"
-            )
-            return
-        }
-
-        connectionState = current
+    func connectivityStateChanged(oldState: ConnectionState, newState: ConnectionState) {
+        connectionState = newState
         streamsUpdateQueue.async { [weak self] in
-            self?.eventSubject.send(.connectionStateChanged)
+            self?.eventSubject.send(.connectionStateChanged(newState))
         }
     }
 

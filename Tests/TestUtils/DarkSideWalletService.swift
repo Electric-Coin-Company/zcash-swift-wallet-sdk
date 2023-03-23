@@ -38,13 +38,17 @@ enum DarksideDataset: String {
 }
 
 class DarksideWalletService: LightWalletService {
+    var connectionStateChange: ((ZcashLightClientKit.ConnectionState, ZcashLightClientKit.ConnectionState) -> Void)? {
+        get { service.connectionStateChange }
+        set { service.connectionStateChange = newValue }
+    }
     var channel: Channel
     var service: LightWalletService
     var darksideService: DarksideStreamerClient
 
     init(endpoint: LightWalletEndpoint) {
         self.channel = ChannelProvider().channel()
-        self.service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        self.service = LightWalletServiceFactory(endpoint: endpoint).make()
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
 
