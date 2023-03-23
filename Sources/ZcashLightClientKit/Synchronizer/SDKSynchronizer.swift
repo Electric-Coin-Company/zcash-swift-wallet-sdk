@@ -81,6 +81,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     deinit {
+        UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
         NotificationCenter.default.removeObserver(self)
         Task { [blockProcessor] in
             await blockProcessor.stop()
@@ -92,12 +93,22 @@ public class SDKSynchronizer: Synchronizer {
         await notify(oldStatus: oldValue, newStatus: newValue)
     }
 
+    func throwIfUnprepared() throws {
+        if !latestState.syncStatus.isPrepared {
+            throw SynchronizerError.notPrepared
+        }
+    }
+
     public func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
     ) async throws -> Initializer.InitializationResult {
         guard await status == .unprepared else { return .success }
+
+        if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
+            throw InitializerError.aliasAlreadyInUse(initializer.alias)
+        }
 
         try utxoRepository.initialise()
 
@@ -245,6 +256,8 @@ public class SDKSynchronizer: Synchronizer {
         toAddress: Recipient,
         memo: Memo?
     ) async throws -> PendingTransactionEntity {
+        try throwIfUnprepared()
+
         do {
             try await SaplingParameterDownloader.downloadParamsIfnotPresent(
                 spendURL: initializer.spendParamsURL,
@@ -273,6 +286,8 @@ public class SDKSynchronizer: Synchronizer {
         memo: Memo,
         shieldingThreshold: Zatoshi
     ) async throws -> PendingTransactionEntity {
+        try throwIfUnprepared()
+
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
         do {
@@ -381,6 +396,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
+        try throwIfUnprepared()
+
         guard initializer.isValidTransparentAddress(address) else {
             throw SynchronizerError.generalError(message: "invalid t-address")
         }
@@ -402,7 +419,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
-        try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
+        try throwIfUnprepared()
+        return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
     public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
@@ -443,7 +461,12 @@ public class SDKSynchronizer: Synchronizer {
 
     public func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error> {
         let subject = PassthroughSubject<Void, Error>()
-        Task {
+        Task(priority: .high) {
+            if !latestState.syncStatus.isPrepared {
+                subject.send(completion: .failure(SynchronizerError.notPrepared))
+                return
+            }
+
             let height: BlockHeight?
 
             switch policy {
@@ -492,6 +515,11 @@ public class SDKSynchronizer: Synchronizer {
     public func wipe() -> AnyPublisher<Void, Error> {
         let subject = PassthroughSubject<Void, Error>()
         Task(priority: .high) {
+            if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
+                subject.send(completion: .failure(InitializerError.aliasAlreadyInUse(initializer.alias)))
+                return
+            }
+
             let context = AfterSyncHooksManager.WipeContext(
                 pendingDbURL: initializer.pendingDbURL,
                 prewipe: { [weak self] in

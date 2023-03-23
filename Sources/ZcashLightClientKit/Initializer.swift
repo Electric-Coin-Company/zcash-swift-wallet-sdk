@@ -17,6 +17,7 @@ public enum InitializerError: Error {
     case dataDbInitFailed(Error)
     case accountInitFailed(Error)
     case invalidViewingKey(key: String)
+    case aliasAlreadyInUse(ZcashSynchronizerAlias)
 }
 
 /**
@@ -74,8 +75,11 @@ public struct SaplingParamsSourceURL {
 /// When custom alias is used to create instance of the synchronizer then paths to all resources (databases, storages...) are updated accordingly to
 /// be sure that each instance is using unique paths to resources.
 ///
+/// Custom alias identifiers shouldn't contain any confidential information because it may be logged. It also should have a reasonable length and
+/// form. It will be part of the paths to the files (databases, storage...)
+///
 /// IMPORTANT: Always use `default` alias for one of the instances of the synchronizer.
-public enum ZcashSynchronizerAlias {
+public enum ZcashSynchronizerAlias: Hashable {
     case `default`
     case custom(String)
 }
@@ -102,6 +106,9 @@ public class Initializer {
         case success
         case seedRequired
     }
+
+    // This is used to uniquely identify instance of the SDKSynchronizer. It's used when checking if the Alias is already used or not.
+    let id = UUID()
 
     let rustBackend: ZcashRustBackendWelding.Type
     let alias: ZcashSynchronizerAlias
@@ -426,6 +433,11 @@ extension InitializerError: LocalizedError {
             return "account table init failed with error: \(error.localizedDescription)"
         case .fsCacheInitFailed(let error):
             return "Compact Block Cache failed to initialize with error: \(error.localizedDescription)"
+        case let .aliasAlreadyInUse(alias):
+            return """
+            The Alias \(alias) used for this instance of the SDKSynchronizer is already in use. Each instance of the SDKSynchronizer must use unique \
+            Alias.
+            """
         }
     }
 }

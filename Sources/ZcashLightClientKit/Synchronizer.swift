@@ -26,7 +26,6 @@ public enum SynchronizerError: Error {
     case rewindErrorUnknownArchorHeight // ZcashLightClientKit.SynchronizerError error 13.
     case invalidAccount // ZcashLightClientKit.SynchronizerError error 14.
     case lightwalletdValidationFailed(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 8.
-    case wipeAttemptWhileProcessing
 }
 
 public enum ShieldFundsError: Error {
@@ -126,8 +125,10 @@ public protocol Synchronizer: AnyObject {
     ///   - seed: ZIP-32 Seed bytes for the wallet that will be initialized.
     ///   - viewingKeys: Viewing key derived from seed.
     ///   - walletBirthday: Birthday of wallet.
-    /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
+    /// - Throws:
+    /// `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
     /// `InitializerError.accountInitFailed` if the account table can't be initialized.
+    /// `InitializerError.aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance
     func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
@@ -163,6 +164,9 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter zatoshi: the amount to send in Zatoshi.
     /// - Parameter toAddress: the recipient's address.
     /// - Parameter memo: an `Optional<Memo>`with the memo to include as part of the transaction. send `nil` when sending to transparent receivers otherwise the function will throw an error
+    ///
+    /// If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -173,6 +177,9 @@ public protocol Synchronizer: AnyObject {
     /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows to spend transparent funds
     /// - Parameter memo: the optional memo to include as part of the transaction.
+    ///
+    /// If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
@@ -232,8 +239,11 @@ public protocol Synchronizer: AnyObject {
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking
     func latestHeight() async throws -> BlockHeight
-    
+
     /// Returns the latests UTXOs for the given address from the specified height on
+    ///
+    /// If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then this method throws
+    /// `SynchronizerErrors.notPrepared`.
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs
 
     /// Returns the last stored transparent balance
@@ -266,7 +276,10 @@ public protocol Synchronizer: AnyObject {
     /// - Emits rewindError for other errors
     ///
     /// `rewind(policy:)` itself doesn't start the sync process when it's done and it doesn't trigger notifications as regorg would. After it is done
-    /// you have start the sync process by calling `start()`.
+    /// you have start the sync process by calling `start()`
+    ///
+    /// If `prepare()` hasn't already been called since creating of synchronizer instance or since the last wipe then returned publisher emits
+    /// `SynchronizerErrors.notPrepared` error.
     ///
     /// - Parameter policy: the rewind policy
     func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error>
@@ -284,6 +297,8 @@ public protocol Synchronizer: AnyObject {
     /// fails then something is seriously wrong. If the wipe fails then the SDK may be in inconsistent state. It's suggested to call wipe again until
     /// it succeed.
     ///
+    /// Returned publisher emits `InitializerError.aliasAlreadyInUse` error if the Alias used to create this instance is already used by other
+    /// instance.
     func wipe() -> AnyPublisher<Void, Error>
 }
 
@@ -328,6 +343,14 @@ public enum SyncStatus: Equatable {
         switch self {
         case .synced:   return true
         default:        return false
+        }
+    }
+
+    public var isPrepared: Bool {
+        if case .unprepared = self {
+            return false
+        } else {
+            return true
         }
     }
 
