@@ -338,7 +338,7 @@ enum TestSynchronizerBuilder {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            alias: "",
+            alias: .default,
             loggerProxy: loggerProxy
         )
 
