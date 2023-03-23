@@ -159,6 +159,8 @@ class ZcashRustBackendTests: XCTestCase {
             expectedReceivers.sorted(),
             actualReceivers.sorted()
         )
+
+        try? FileManager.default.removeItem(at: tempDBs.dataDB)
     }
 
     func testGetMetadataFromAddress() throws {
