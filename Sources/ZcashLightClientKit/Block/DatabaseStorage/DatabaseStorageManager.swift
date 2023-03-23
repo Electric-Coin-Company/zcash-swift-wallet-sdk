@@ -10,8 +10,6 @@ import Foundation
 import SQLite
 
 class DatabaseStorageManager {
-    static var shared = DatabaseStorageManager()
-    
     private var readOnly: [URL: Connection] = [:]
     private var readWrite: [URL: Connection] = [:]
     
