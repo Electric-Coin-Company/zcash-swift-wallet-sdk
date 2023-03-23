@@ -21,7 +21,7 @@ public class SDKSynchronizer: Synchronizer {
         public static let previousConnectionState = "SDKSynchronizer.previousConnectionState"
     }
 
-    private let streamsUpdateQueue = DispatchQueue(label: "streamsUpdateQueue")
+    private lazy var streamsUpdateQueue = { DispatchQueue(label: "streamsUpdateQueue_\(initializer.alias.description)") }()
     private let stateSubject = CurrentValueSubject<SynchronizerState, Never>(.zero)
     public var stateStream: AnyPublisher<SynchronizerState, Never> { stateSubject.eraseToAnyPublisher() }
     public private(set) var latestState: SynchronizerState = .zero
@@ -36,7 +36,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     let blockProcessor: CompactBlockProcessor
-    let blockProcessorEventProcessingQueue = DispatchQueue(label: "blockProcessorEventProcessingQueue")
+    lazy var blockProcessorEventProcessingQueue = { DispatchQueue(label: "blockProcessorEventProcessingQueue_\(initializer.alias.description)") }()
 
     public private(set) var initializer: Initializer
     // Valid value is stored here after `prepare` is called.
