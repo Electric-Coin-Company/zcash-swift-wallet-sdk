@@ -26,7 +26,8 @@ final class InternalStateConsistencyTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        self.coordinator = try TestCoordinator(
+
+        self.coordinator = TestCoordinator.make(
             walletBirthday: birthday + 50, // don't use an exact birthday, users never do.
             network: network
         )
@@ -36,7 +37,7 @@ final class InternalStateConsistencyTests: XCTestCase {
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         NotificationCenter.default.removeObserver(self)
-        try coordinator.stop()
+        wait { try await self.coordinator.stop() }
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
@@ -60,21 +61,26 @@ final class InternalStateConsistencyTests: XCTestCase {
 
         sleep(1)
 
-        try coordinator.sync(
+        try await coordinator.sync(
             completion: { _ in
                 XCTFail("shouldn't have completed")
             },
             error: handleError
         )
 
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) { [weak self] in
-            self?.coordinator.synchronizer.stop()
+        let coordinator = self.coordinator!
+        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+            Task {
+                await coordinator.synchronizer.stop()
+            }
         }
 
         wait(for: [firstSyncExpectation], timeout: 2)
 
-        XCTAssertFalse(coordinator.synchronizer.status.isSyncing)
-        XCTAssertEqual(coordinator.synchronizer.status, .stopped)
+        let isSyncing = await coordinator.synchronizer.status.isSyncing
+        let status = await coordinator.synchronizer.status
+        XCTAssertFalse(isSyncing, "SDKSynchronizer shouldn't be syncing")
+        XCTAssertEqual(status, .stopped)
 
         let internalSyncState = InternalSyncProgress(storage: UserDefaults.standard)
 
@@ -107,27 +113,19 @@ final class InternalStateConsistencyTests: XCTestCase {
         // Now let's resume scanning and see how it goes.
         let secondSyncAttemptExpectation = XCTestExpectation(description: "second sync attempt")
 
-        try await withCheckedThrowingContinuation { continuation in
-            do {
-                try coordinator.sync(
-                    completion: { _ in
-                        XCTAssertTrue(true)
-                        secondSyncAttemptExpectation.fulfill()
-                        continuation.resume()
-                    },
-                    error: { error in
-                        secondSyncAttemptExpectation.fulfill()
-                        guard let error else {
-                            XCTFail("there was an unknown error")
-                            continuation.resume()
-                            return
-                        }
-                        continuation.resume(throwing: error)
-                    }
-                )
-            } catch {
-                continuation.resume(throwing: error)
-            }
+        do {
+            try await coordinator.sync(
+                completion: { _ in
+                    XCTAssertTrue(true)
+                    secondSyncAttemptExpectation.fulfill()
+                },
+                error: { [weak self] error in
+                    secondSyncAttemptExpectation.fulfill()
+                    self?.handleError(error)
+                }
+            )
+        } catch {
+            handleError(error)
         }
 
         wait(for: [secondSyncAttemptExpectation], timeout: 10)

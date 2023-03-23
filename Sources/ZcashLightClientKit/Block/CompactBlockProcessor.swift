@@ -111,6 +111,8 @@ public struct EnhancementProgress: Equatable {
 /// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
 /// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
 actor CompactBlockProcessor {
+    typealias EventClosure = (Event) async -> Void
+
     enum Event {
         /// Event sent when the CompactBlockProcessor presented an error.
         case failed (CompactBlockProcessorError)
@@ -235,7 +237,7 @@ actor CompactBlockProcessor {
         connected and downloading blocks
         */
         case syncing
-        
+
         /**
         was doing something but was paused
         */
@@ -266,12 +268,9 @@ actor CompactBlockProcessor {
     }
 
     private var afterSyncHooksManager = AfterSyncHooksManager()
-    
-    var state: State = .stopped {
-        didSet {
-            transitionState(from: oldValue, to: self.state)
-        }
-    }
+
+    /// Don't update this variable directly. Use `updateState()` method.
+    var state: State = .stopped
 
     var config: Configuration {
         willSet {
@@ -292,8 +291,10 @@ actor CompactBlockProcessor {
         }
     }
 
-    var eventStream: AnyPublisher<Event, Never> { eventPublisher.eraseToAnyPublisher() }
-    private let eventPublisher = PassthroughSubject<Event, Never>()
+    // It would be better to use Combine here but Combine doesn't work great with async. When this runs regularly only one closure is stored here
+    // and that is one provided by `SDKSynchronizer`. But while running tests more "subscribers" is required here. Therefore it's required to handle
+    // more closures here.
+    var eventClosures: [String: EventClosure] = [:]
 
     let blockDownloaderService: BlockDownloaderService
     let blockDownloader: BlockDownloader
@@ -449,6 +450,22 @@ actor CompactBlockProcessor {
         cancelableTask?.cancel()
     }
 
+    func updateState(_ newState: State) async -> Void {
+        let oldState = state
+        state = newState
+        await transitionState(from: oldState, to: newState)
+    }
+
+    func updateEventClosure(identifier: String, closure: @escaping (Event) async -> Void) async {
+        eventClosures[identifier] = closure
+    }
+
+    func send(event: Event) async {
+        for item in eventClosures {
+            await item.value(event)
+        }
+    }
+
     static func validateServerInfo(
         _ info: LightWalletdInfo,
         saplingActivation: BlockHeight,
@@ -501,16 +518,16 @@ actor CompactBlockProcessor {
             case .error(let error):
                 // max attempts have been reached
                 LoggerProxy.info("max retry attempts reached with error: \(error)")
-                notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
-                state = .stopped
+                await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+                await updateState(.stopped)
             case .stopped:
                 // max attempts have been reached
                 LoggerProxy.info("max retry attempts reached")
-                notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+                await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .synced:
                 // max attempts have been reached
                 LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
-                notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+                await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
                 LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
                 afterSyncHooksManager.insert(hook: .anotherSync)
@@ -623,7 +640,7 @@ actor CompactBlockProcessor {
         LoggerProxy.debug("Executing wipe.")
         context.prewipe()
 
-        state = .stopped
+        await updateState(.stopped)
 
         do {
             try await self.storage.clear()
@@ -640,9 +657,9 @@ actor CompactBlockProcessor {
                 try fileManager.removeItem(at: context.pendingDbURL)
             }
 
-            context.completion(nil)
+            await context.completion(nil)
         } catch {
-            context.completion(error)
+            await context.completion(error)
         }
     }
 
@@ -658,9 +675,9 @@ actor CompactBlockProcessor {
                 rustBackend: self.rustBackend
             )
         } catch let error as LightWalletServiceError {
-            self.severeFailure(error.mapToProcessorError())
+            await self.severeFailure(error.mapToProcessorError())
         } catch {
-            self.severeFailure(error)
+            await self.severeFailure(error)
         }
     }
     
@@ -717,23 +734,23 @@ actor CompactBlockProcessor {
                 if let range = ranges.enhanceRange {
                     anyActionExecuted = true
                     LoggerProxy.debug("Enhancing with range: \(range.lowerBound)...\(range.upperBound)")
-                    state = .enhancing
+                    await updateState(.enhancing)
                     let transactions = try await blockEnhancer.enhance(at: range) { [weak self] progress in
                         await self?.notifyProgress(.enhance(progress))
                     }
-                    notifyTransactions(transactions, in: range)
+                    await notifyTransactions(transactions, in: range)
                 }
 
                 if let range = ranges.fetchUTXORange {
                     anyActionExecuted = true
                     LoggerProxy.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
-                    state = .fetching
+                    await updateState(.fetching)
                     let result = try await utxoFetcher.fetch(at: range)
-                    eventPublisher.send(.storedUTXOs(result))
+                    await send(event: .storedUTXOs(result))
                 }
 
                 LoggerProxy.debug("Fetching sapling parameters")
-                state = .handlingSaplingFiles
+                await updateState(.handlingSaplingFiles)
                 try await saplingParametersHandler.handleIfNeeded()
 
                 LoggerProxy.debug("Clearing cache")
@@ -747,7 +764,7 @@ actor CompactBlockProcessor {
 
                 if Task.isCancelled {
                     LoggerProxy.info("Processing cancelled.")
-                    state = .stopped
+                    await updateState(.stopped)
                     await handleAfterSyncHooks()
                 } else {
                     if case BlockValidatorError.validationFailed(let height) = error {
@@ -843,7 +860,7 @@ actor CompactBlockProcessor {
                 targetHeight: totalProgressRange.upperBound,
                 progressHeight: processingRange.upperBound
             )
-            notifyProgress(.syncing(progress))
+            await notifyProgress(.syncing(progress))
         }
     }
 
@@ -880,13 +897,13 @@ actor CompactBlockProcessor {
         return lowerBound...upperBound
     }
 
-    func notifyProgress(_ progress: CompactBlockProgress) {
+    func notifyProgress(_ progress: CompactBlockProgress) async {
         LoggerProxy.debug("progress: \(progress)")
-        eventPublisher.send(.progressUpdated(progress))
+        await send(event: .progressUpdated(progress))
     }
     
-    func notifyTransactions(_ txs: [ZcashTransaction.Overview], in range: CompactBlockRange) {
-        eventPublisher.send(.foundTransactions(txs, range))
+    func notifyTransactions(_ txs: [ZcashTransaction.Overview], in range: CompactBlockRange) async {
+        await send(event: .foundTransactions(txs, range))
     }
 
     func determineLowerBound(
@@ -898,14 +915,14 @@ actor CompactBlockProcessor {
         return max(errorHeight - offset, walletBirthday - ZcashSDK.maxReorgSize)
     }
 
-    func severeFailure(_ error: Error) {
+    func severeFailure(_ error: Error) async {
         cancelableTask?.cancel()
         LoggerProxy.error("show stopper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error
-        state = .error(error)
-        self.notifyError(error)
+        await updateState(.error(error))
+        await self.notifyError(error)
     }
 
     func fail(_ error: Error) async {
@@ -916,11 +933,11 @@ actor CompactBlockProcessor {
         self.processingError = error
         switch self.state {
         case .error:
-            notifyError(error)
+            await notifyError(error)
         default:
             break
         }
-        state = .error(error)
+        await updateState(.error(error))
         guard self.maxAttemptsReached else { return }
         // don't set a new timer if there are no more attempts.
         await self.setTimer()
@@ -947,7 +964,7 @@ actor CompactBlockProcessor {
     }
 
     private func nextBatch() async {
-        state = .syncing
+        await updateState(.syncing)
         do {
             let nextState = try await NextStateHelper.nextStateAsync(
                 service: self.service,
@@ -971,7 +988,7 @@ actor CompactBlockProcessor {
                 await self.processingFinished(height: latestDownloadHeight)
             }
         } catch {
-            self.severeFailure(error)
+            await self.severeFailure(error)
         }
     }
 
@@ -1000,7 +1017,7 @@ actor CompactBlockProcessor {
             try blockDownloaderService.rewind(to: rewindHeight)
             await internalSyncProgress.rewind(to: rewindHeight)
 
-            eventPublisher.send(.handledReorg(height, rewindHeight))
+            await send(event: .handledReorg(height, rewindHeight))
 
             // process next batch
             await self.nextBatch()
@@ -1021,8 +1038,8 @@ actor CompactBlockProcessor {
     }
     
     private func processingFinished(height: BlockHeight) async {
-        eventPublisher.send(.finished(height, foundBlocks))
-        state = .synced
+        await send(event: .finished(height, foundBlocks))
+        await updateState(.synced)
         await setTimer()
     }
 
@@ -1061,20 +1078,20 @@ actor CompactBlockProcessor {
         self.backoffTimer = timer
     }
     
-    private func transitionState(from oldValue: State, to newValue: State) {
+    private func transitionState(from oldValue: State, to newValue: State) async {
         guard oldValue != newValue else {
             return
         }
 
         switch newValue {
         case .error(let err):
-            notifyError(err)
+            await notifyError(err)
         case .stopped:
-            eventPublisher.send(.stopped)
+            await send(event: .stopped)
         case .enhancing:
-            eventPublisher.send(.startedEnhancing)
+            await send(event: .startedEnhancing)
         case .fetching:
-            eventPublisher.send(.startedFetching)
+            await send(event: .startedFetching)
         case .handlingSaplingFiles:
             // We don't report this to outside world as separate phase for now.
             break
@@ -1082,12 +1099,12 @@ actor CompactBlockProcessor {
             // transition to this state is handled by `processingFinished(height: BlockHeight)`
             break
         case .syncing:
-            eventPublisher.send(.startedSyncing)
+            await send(event: .startedSyncing)
         }
     }
 
-    private func notifyError(_ err: Error) {
-        eventPublisher.send(.failed(mapError(err)))
+    private func notifyError(_ err: Error) async {
+        await send(event: .failed(mapError(err)))
     }
     // TODO: [#713] encapsulate service errors better, https://github.com/zcash/ZcashLightClientKit/issues/713
 }
