@@ -118,7 +118,7 @@ class TestCoordinator {
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true
     ) async throws {
-        await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0)
+        await InternalSyncProgress(alias: alias, storage: UserDefaults.standard).rewind(to: 0)
 
         self.spendingKey = spendingKey
         self.viewingKey = unifiedFullViewingKey
@@ -293,6 +293,7 @@ extension TestCoordinator {
             let config = await self.synchronizer.blockProcessor.config
 
             let newConfig = CompactBlockProcessor.Configuration(
+                alias: config.alias,
                 fsBlockCacheRoot: config.fsBlockCacheRoot,
                 dataDb: config.dataDb,
                 spendParamsURL: config.spendParamsURL,

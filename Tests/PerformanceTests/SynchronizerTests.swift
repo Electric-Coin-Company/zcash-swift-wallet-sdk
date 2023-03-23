@@ -83,7 +83,7 @@ class SynchronizerTests: XCTestCase {
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             sdkSynchronizerSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
             
-            let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
+            let internalSyncProgress = InternalSyncProgress(alias: .default, storage: UserDefaults.standard)
             await internalSyncProgress.rewind(to: birthday)
             await (synchronizer.blockProcessor.service as? LightWalletGRPCService)?.latestBlockHeightProvider = MockLatestBlockHeightProvider(
                 birthday: self.birthday + 99
