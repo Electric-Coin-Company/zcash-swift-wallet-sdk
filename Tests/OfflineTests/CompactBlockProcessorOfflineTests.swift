@@ -37,7 +37,7 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
 
         let service = MockLightWalletService(
             latestBlockHeight: 690000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         )
 
         let storage = FSCompactBlockRepository(

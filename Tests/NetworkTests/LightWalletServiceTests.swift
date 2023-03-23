@@ -19,7 +19,7 @@ class LightWalletServiceTests: XCTestCase {
     override func setUp() {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         super.setUp()
-        service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+        service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
     }
 
     override func tearDownWithError() throws {

@@ -31,7 +31,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -101,7 +101,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -171,7 +171,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .testnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -241,7 +241,7 @@ class BlockBatchValidationTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let service = MockLightWalletService(
             latestBlockHeight: 1210000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
         let realRustBackend = ZcashRustBackend.self
@@ -317,7 +317,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1210000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
         let expectedStoredLatestHeight = BlockHeight(1220000)
         let expectedResult = CompactBlockProcessor.NextState.wait(
@@ -402,7 +402,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
         let expectedStoreLatestHeight = BlockHeight(1220000)
         let walletBirthday = BlockHeight(1210000)
@@ -494,7 +494,7 @@ class BlockBatchValidationTests: XCTestCase {
         let expectedLatestHeight = BlockHeight(1230000)
         let service = MockLightWalletService(
             latestBlockHeight: expectedLatestHeight,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
         let expectedStoreLatestHeight = BlockHeight(1230000)
         let walletBirthday = BlockHeight(1210000)

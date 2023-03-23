@@ -37,7 +37,7 @@ class BlockStreamingTest: XCTestCase {
             singleCallTimeoutInMillis: 1000,
             streamingCallTimeoutInMillis: 100000
         )
-        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
         let latestHeight = try service.latestBlockHeight()
         
@@ -66,7 +66,7 @@ class BlockStreamingTest: XCTestCase {
             singleCallTimeoutInMillis: 10000,
             streamingCallTimeoutInMillis: 10000
         )
-        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
         let realRustBackend = ZcashRustBackend.self
 
@@ -126,7 +126,7 @@ class BlockStreamingTest: XCTestCase {
             singleCallTimeoutInMillis: 1000,
             streamingCallTimeoutInMillis: 1000
         )
-        let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
         let realRustBackend = ZcashRustBackend.self
 

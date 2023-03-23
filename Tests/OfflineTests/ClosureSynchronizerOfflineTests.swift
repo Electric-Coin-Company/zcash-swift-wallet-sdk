@@ -76,7 +76,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testEventStreamEmitsAsExpected() {
-        synchronizerMock.underlyingEventStream = Just(.connectionStateChanged).eraseToAnyPublisher()
+        synchronizerMock.underlyingEventStream = Just(.connectionStateChanged(.connecting)).eraseToAnyPublisher()
 
         let expectation = XCTestExpectation()
 

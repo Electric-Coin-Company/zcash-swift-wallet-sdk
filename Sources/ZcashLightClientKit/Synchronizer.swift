@@ -90,7 +90,7 @@ public enum SynchronizerEvent {
     // Sent when the synchronizer fetched utxos from lightwalletd attempted to store them.
     case storedUTXOs(_ inserted: [UnspentTransactionOutputEntity], _ skipped: [UnspentTransactionOutputEntity])
     // Connection state to LightwalletEndpoint changed.
-    case connectionStateChanged
+    case connectionStateChanged(ConnectionState)
 }
 
 /// Primary interface for interacting with the SDK. Defines the contract that specific

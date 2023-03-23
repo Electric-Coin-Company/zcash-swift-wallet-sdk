@@ -113,7 +113,7 @@ class TestCoordinator {
             singleCallTimeoutInMillis: 10000,
             streamingCallTimeoutInMillis: 1000000
         )
-        let liveService = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        let liveService = LightWalletServiceFactory(endpoint: endpoint).make()
         self.service = DarksideWalletService(service: liveService)
 
         let realRustBackend = ZcashRustBackend.self
