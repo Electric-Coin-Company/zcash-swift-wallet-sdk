@@ -105,7 +105,8 @@ class BlockScanTests: XCTestCase {
             service: service,
             storage: fsBlockRepository,
             backend: rustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics()
         )
         
         let repository = BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
@@ -119,8 +120,8 @@ class BlockScanTests: XCTestCase {
         XCTAssertEqual(latestScannedheight, range.upperBound)
     }
 
-    func observeBenchmark() {
-        let reports = SDKMetrics.shared.popAllBlockReports(flush: true)
+    func observeBenchmark(_ metrics: SDKMetrics) {
+        let reports = metrics.popAllBlockReports(flush: true)
 
         reports.forEach {
             print("observed benchmark: \($0)")
@@ -132,7 +133,8 @@ class BlockScanTests: XCTestCase {
 
         logger = OSLogger(logLevel: .debug)
 
-        SDKMetrics.shared.enableMetrics()
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
         
         guard try self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType) == .success else {
             XCTFail("Seed should not be required for this test")
@@ -196,12 +198,13 @@ class BlockScanTests: XCTestCase {
             service: service,
             storage: fsBlockRepository,
             backend: rustWelding,
-            config: processorConfig
+            config: processorConfig,
+            metrics: metrics
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {
-            case .progressUpdated: self?.observeBenchmark()
+            case .progressUpdated: self?.observeBenchmark(metrics)
             default: break
             }
         }
@@ -244,6 +247,6 @@ class BlockScanTests: XCTestCase {
             }
         }
         
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
 }

@@ -24,6 +24,8 @@ class SynchronizerMock: Synchronizer {
     var underlyingConnectionState: ConnectionState! = nil
     var connectionState: ConnectionState { underlyingConnectionState }
 
+    let metrics = SDKMetrics()
+    
     var prepareWithSeedViewingKeysWalletBirthdayClosure: (
         ([UInt8]?, [UnifiedFullViewingKey], BlockHeight) async throws -> Initializer.InitializationResult
     )! = nil

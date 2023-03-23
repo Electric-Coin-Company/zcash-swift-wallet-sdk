@@ -10,9 +10,10 @@ import XCTest
 
 final class SDKMetricsTests: XCTestCase {
     func testPushDownloadBlocksReport() throws {
-        SDKMetrics.shared.enableMetrics()
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
                 
-        SDKMetrics.shared.pushProgressReport(
+        metrics.pushProgressReport(
             progress: BlockProgress(
                 startHeight: 1_730_000,
                 targetHeight: 1_730_099,
@@ -24,35 +25,37 @@ final class SDKMetricsTests: XCTestCase {
             operation: .downloadBlocks
         )
 
-        XCTAssertTrue(SDKMetrics.shared.popBlock(operation: .downloadBlocks)?.count == 1)
+        XCTAssertTrue(metrics.popBlock(operation: .downloadBlocks)?.count == 1)
         
-        if let reports = SDKMetrics.shared.reports[.downloadBlocks], let report = reports.first {
+        if let reports = metrics.reports[.downloadBlocks], let report = reports.first {
             XCTAssertEqual(report, SDKMetrics.BlockMetricReport.placeholderA)
         } else {
             XCTFail("Not expected to fail.")
         }
         
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
     
     func testPopDownloadBlocksReport() throws {
-        SDKMetrics.shared.enableMetrics()
-           
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
+
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
         
-        if let reports = SDKMetrics.shared.popBlock(operation: .downloadBlocks), let report = reports.first {
+        if let reports = metrics.popBlock(operation: .downloadBlocks), let report = reports.first {
             XCTAssertEqual(report, SDKMetrics.BlockMetricReport.placeholderA)
         } else {
             XCTFail("Not expected to fail.")
         }
         
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
 
     func testCumulativeSummary() throws {
-        SDKMetrics.shared.enableMetrics()
-           
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
+
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
         
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 1.0, avgTime: 1.0),
@@ -63,24 +66,25 @@ final class SDKMetricsTests: XCTestCase {
             totalSyncReport: nil
         )
         
-        XCTAssertEqual(summary, SDKMetrics.shared.cumulativeSummary())
+        XCTAssertEqual(summary, metrics.cumulativeSummary())
 
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
 
     func testCumulateAndStartNewSet() throws {
-        SDKMetrics.shared.enableMetrics()
-           
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
-        SDKMetrics.shared.cumulateReportsAndStartNewSet()
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
 
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
-        SDKMetrics.shared.cumulateReportsAndStartNewSet()
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
+        metrics.cumulateReportsAndStartNewSet()
 
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
-        SDKMetrics.shared.cumulateReportsAndStartNewSet()
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
+        metrics.cumulateReportsAndStartNewSet()
 
-        XCTAssertTrue(SDKMetrics.shared.cumulativeSummaries.count == 3)
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
+        metrics.cumulateReportsAndStartNewSet()
+
+        XCTAssertTrue(metrics.cumulativeSummaries.count == 3)
         
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 1.0, avgTime: 1.0),
@@ -92,15 +96,16 @@ final class SDKMetricsTests: XCTestCase {
         )
         let summaries = [summary, summary, summary]
 
-        XCTAssertEqual(summaries, SDKMetrics.shared.cumulativeSummaries)
+        XCTAssertEqual(summaries, metrics.cumulativeSummaries)
 
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
     
     func testCumulativeSummaryMinMaxAvg() throws {
-        SDKMetrics.shared.enableMetrics()
-           
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA, SDKMetrics.BlockMetricReport.placeholderB]
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
+
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA, SDKMetrics.BlockMetricReport.placeholderB]
         
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 6.0, avgTime: 3.5),
@@ -111,19 +116,20 @@ final class SDKMetricsTests: XCTestCase {
             totalSyncReport: nil
         )
         
-        XCTAssertEqual(summary, SDKMetrics.shared.cumulativeSummary())
+        XCTAssertEqual(summary, metrics.cumulativeSummary())
 
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
     
     func testSummarizedCumulativeReports() throws {
-        SDKMetrics.shared.enableMetrics()
-           
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
-        SDKMetrics.shared.cumulateReportsAndStartNewSet()
+        let metrics = SDKMetrics()
+        metrics.enableMetrics()
 
-        SDKMetrics.shared.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderB]
-        SDKMetrics.shared.cumulateReportsAndStartNewSet()
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderA]
+        metrics.cumulateReportsAndStartNewSet()
+
+        metrics.reports[.downloadBlocks] = [SDKMetrics.BlockMetricReport.placeholderB]
+        metrics.cumulateReportsAndStartNewSet()
 
         let summary = SDKMetrics.CumulativeSummary(
             downloadedBlocksReport: SDKMetrics.ReportSummary(minTime: 1.0, maxTime: 6.0, avgTime: 3.5),
@@ -134,9 +140,9 @@ final class SDKMetricsTests: XCTestCase {
             totalSyncReport: nil
         )
 
-        XCTAssertEqual(SDKMetrics.shared.summarizedCumulativeReports(), summary)
+        XCTAssertEqual(metrics.summarizedCumulativeReports(), summary)
 
-        SDKMetrics.shared.disableMetrics()
+        metrics.disableMetrics()
     }
 }
 

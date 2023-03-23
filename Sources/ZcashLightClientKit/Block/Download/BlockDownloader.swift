@@ -46,6 +46,7 @@ struct BlockDownloaderImpl {
     let downloaderService: BlockDownloaderService
     let storage: CompactBlockRepository
     let internalSyncProgress: InternalSyncProgress
+    let metrics: SDKMetrics
 }
 
 extension BlockDownloaderImpl: BlockDownloader {
@@ -69,7 +70,7 @@ extension BlockDownloaderImpl: BlockDownloader {
         var lastDownloadedBlockHeight = -1
 
         let pushMetrics: (BlockHeight, Date, Date) -> Void = { lastDownloadedBlockHeight, startTime, finishTime in
-            SDKMetrics.shared.pushProgressReport(
+            metrics.pushProgressReport(
                 progress: BlockProgress(
                     startHeight: totalProgressRange.lowerBound,
                     targetHeight: totalProgressRange.upperBound,

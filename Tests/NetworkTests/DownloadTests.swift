@@ -62,7 +62,8 @@ class DownloadTests: XCTestCase {
             service: service,
             storage: storage,
             backend: realRustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics()
         )
         
         do {

@@ -84,7 +84,8 @@ class CompactBlockProcessorTests: XCTestCase {
             service: service,
             storage: storage,
             backend: realRustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics()
         )
 
         let dbInit = try realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)

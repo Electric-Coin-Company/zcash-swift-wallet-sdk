@@ -29,6 +29,7 @@ struct BlockEnhancerImpl {
     let internalSyncProgress: InternalSyncProgress
     let rustBackend: ZcashRustBackendWelding.Type
     let transactionRepository: TransactionRepository
+    let metrics: SDKMetrics
 
     private func enhance(transaction: ZcashTransaction.Overview) async throws -> ZcashTransaction.Overview {
         LoggerProxy.debug("Zoom.... Enhance... Tx: \(transaction.rawID.toHexStringTxId())")
@@ -124,7 +125,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 }
             }
             
-            SDKMetrics.shared.pushProgressReport(
+            metrics.pushProgressReport(
                 progress: BlockProgress(
                     startHeight: range.lowerBound,
                     targetHeight: range.upperBound,

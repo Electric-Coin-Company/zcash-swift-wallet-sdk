@@ -93,7 +93,8 @@ class BlockStreamingTest: XCTestCase {
             service: service,
             storage: storage,
             backend: realRustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics()
         )
         
         let cancelableTask = Task {
@@ -155,7 +156,8 @@ class BlockStreamingTest: XCTestCase {
             service: service,
             storage: storage,
             backend: realRustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics()
         )
         
         let date = Date()
