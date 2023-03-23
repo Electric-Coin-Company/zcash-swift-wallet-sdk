@@ -45,6 +45,7 @@ class WalletTests: XCTestCase {
             .map({ try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
 
         let wallet = Initializer(
+            cacheDbURL: nil,
             fsBlockDbRoot: self.testTempDirectory,
             dataDbURL: try __dataDbURL(),
             pendingDbURL: try TestDbBuilder.pendingTransactionsDbURL(),
@@ -64,7 +65,7 @@ class WalletTests: XCTestCase {
         } catch {
             XCTFail("shouldn't fail here. Got error: \(error)")
         }
-        
+
         // fileExists actually sucks, so attempting to delete the file and checking what happens is far better :)
         XCTAssertNoThrow( try FileManager.default.removeItem(at: dbData!) )
     }

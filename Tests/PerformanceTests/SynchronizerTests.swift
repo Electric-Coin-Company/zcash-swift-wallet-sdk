@@ -61,6 +61,7 @@ class SynchronizerTests: XCTestCase {
         for _ in 1...5 {
             let databases = TemporaryDbBuilder.build()
             let initializer = Initializer(
+                cacheDbURL: nil,
                 fsBlockDbRoot: databases.fsCacheDbRoot,
                 dataDbURL: databases.dataDB,
                 pendingDbURL: databases.pendingDB,
