@@ -91,6 +91,7 @@ class BlockScanTests: XCTestCase {
         try fsBlockRepository.create()
 
         let processorConfig = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: fsDbRootURL,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
@@ -180,6 +181,7 @@ class BlockScanTests: XCTestCase {
         try fsBlockRepository.create()
         
         var processorConfig = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: fsDbRootURL,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,

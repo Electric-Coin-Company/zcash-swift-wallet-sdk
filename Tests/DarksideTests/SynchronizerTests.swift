@@ -227,7 +227,7 @@ final class SynchronizerTests: XCTestCase {
         XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
         XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [], "FS Cache directory should be empty")
 
-        let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
+        let internalSyncProgress = InternalSyncProgress(alias: .default, storage: UserDefaults.standard)
 
         let latestDownloadedBlockHeight = await internalSyncProgress.load(.latestDownloadedBlockHeight)
         let latestEnhancedHeight = await internalSyncProgress.load(.latestEnhancedHeight)

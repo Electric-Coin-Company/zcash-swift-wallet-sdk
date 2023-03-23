@@ -43,7 +43,7 @@ class TransactionEnhancementTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
-        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
+        XCTestCase.wait { await InternalSyncProgress(alias: .default, storage: UserDefaults.standard).rewind(to: 0) }
 
         logger = OSLogger(logLevel: .debug)
         
@@ -62,6 +62,7 @@ class TransactionEnhancementTests: XCTestCase {
 
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,

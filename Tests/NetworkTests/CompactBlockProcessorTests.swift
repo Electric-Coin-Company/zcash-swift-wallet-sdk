@@ -15,6 +15,7 @@ class CompactBlockProcessorTests: XCTestCase {
     lazy var processorConfig = {
         let pathProvider = DefaultResourceProvider(network: network)
         return CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
@@ -46,7 +47,7 @@ class CompactBlockProcessorTests: XCTestCase {
         logger = OSLogger(logLevel: .debug)
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
-        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
+        XCTestCase.wait { await InternalSyncProgress(alias: .default, storage: UserDefaults.standard).rewind(to: 0) }
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
@@ -185,7 +186,7 @@ class CompactBlockProcessorTests: XCTestCase {
             latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
-        var internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        var internalSyncProgress = InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
         await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
 
         var syncRanges = await internalSyncProgress.computeSyncRanges(
@@ -214,7 +215,7 @@ class CompactBlockProcessorTests: XCTestCase {
             latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
-        internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        internalSyncProgress = InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
         await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
 
         syncRanges = await internalSyncProgress.computeSyncRanges(
@@ -244,7 +245,7 @@ class CompactBlockProcessorTests: XCTestCase {
             latestDownloadedBlockHeight: latestDownloadedHeight
         )
 
-        internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        internalSyncProgress = InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
         await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
 
         syncRanges = await internalSyncProgress.computeSyncRanges(

@@ -41,24 +41,35 @@ actor InternalSyncProgress {
         case latestDownloadedBlockHeight
         case latestEnhancedHeight
         case latestUTXOFetchedHeight
+
+        func with(_ alias: ZcashSynchronizerAlias) -> String {
+            switch alias {
+            case .`default`:
+                return self.rawValue
+            case let .custom(rawAlias):
+                return "\(self.rawValue)_\(rawAlias)"
+            }
+        }
     }
 
+    private let alias: ZcashSynchronizerAlias
     private let storage: InternalSyncProgressStorage
 
     var latestDownloadedBlockHeight: BlockHeight { load(.latestDownloadedBlockHeight) }
     var latestEnhancedHeight: BlockHeight { load(.latestEnhancedHeight) }
     var latestUTXOFetchedHeight: BlockHeight { load(.latestUTXOFetchedHeight) }
 
-    init(storage: InternalSyncProgressStorage) {
+    init(alias: ZcashSynchronizerAlias, storage: InternalSyncProgressStorage) {
+        self.alias = alias
         self.storage = storage
     }
 
     func load(_ key: Key) -> BlockHeight {
-        storage.integer(forKey: key.rawValue)
+        storage.integer(forKey: key.with(alias))
     }
 
     func set(_ value: BlockHeight, _ key: Key) {
-        storage.set(value, forKey: key.rawValue)
+        storage.set(value, forKey: key.with(alias))
         storage.synchronize()
     }
 

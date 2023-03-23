@@ -154,6 +154,7 @@ actor CompactBlockProcessor {
     /// - parameter spendParamsURL: absolute file path of the sapling-spend.params file
     /// - parameter outputParamsURL: absolute file path of the sapling-output.params file
     struct Configuration {
+        let alias: ZcashSynchronizerAlias
         let saplingParamsSourceURL: SaplingParamsSourceURL
         public var fsBlockCacheRoot: URL
         public var dataDb: URL
@@ -176,6 +177,7 @@ actor CompactBlockProcessor {
         }
         
         init (
+            alias: ZcashSynchronizerAlias,
             cacheDbURL: URL? = nil,
             fsBlockCacheRoot: URL,
             dataDb: URL,
@@ -190,6 +192,7 @@ actor CompactBlockProcessor {
             saplingActivation: BlockHeight,
             network: ZcashNetwork
         ) {
+            self.alias = alias
             self.fsBlockCacheRoot = fsBlockCacheRoot
             self.dataDb = dataDb
             self.spendParamsURL = spendParamsURL
@@ -207,6 +210,7 @@ actor CompactBlockProcessor {
         }
         
         init(
+            alias: ZcashSynchronizerAlias,
             fsBlockCacheRoot: URL,
             dataDb: URL,
             spendParamsURL: URL,
@@ -215,6 +219,7 @@ actor CompactBlockProcessor {
             walletBirthdayProvider: @escaping () -> BlockHeight,
             network: ZcashNetwork
         ) {
+            self.alias = alias
             self.fsBlockCacheRoot = fsBlockCacheRoot
             self.dataDb = dataDb
             self.spendParamsURL = spendParamsURL
@@ -325,7 +330,7 @@ actor CompactBlockProcessor {
 
     private var cancelableTask: Task<Void, Error>?
 
-    let internalSyncProgress = InternalSyncProgress(storage: UserDefaults.standard)
+    private let internalSyncProgress: InternalSyncProgress
 
     /// Initializes a CompactBlockProcessor instance
     /// - Parameters:
@@ -360,6 +365,7 @@ actor CompactBlockProcessor {
             storage: initializer.storage,
             backend: initializer.rustBackend,
             config: Configuration(
+                alias: initializer.alias,
                 fsBlockCacheRoot: initializer.fsBlockDbRoot,
                 dataDb: initializer.dataDbURL,
                 spendParamsURL: initializer.spendParamsURL,
@@ -381,6 +387,9 @@ actor CompactBlockProcessor {
         repository: TransactionRepository,
         accountRepository: AccountRepository
     ) {
+        let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard)
+        self.internalSyncProgress = internalSyncProgress
+
         let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
         let blockDownloader = BlockDownloaderImpl(
             service: service,

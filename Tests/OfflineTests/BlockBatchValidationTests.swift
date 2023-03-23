@@ -51,6 +51,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -121,6 +122,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -191,6 +193,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -261,6 +264,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -329,6 +333,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
 
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -372,7 +377,7 @@ class BlockBatchValidationTests: XCTestCase {
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
-                internalSyncProgress: InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+                internalSyncProgress: InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -421,6 +426,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -464,7 +470,7 @@ class BlockBatchValidationTests: XCTestCase {
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
-                internalSyncProgress: InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+                internalSyncProgress: InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -502,6 +508,7 @@ class BlockBatchValidationTests: XCTestCase {
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: expectedStoreLatestHeight)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
@@ -516,7 +523,7 @@ class BlockBatchValidationTests: XCTestCase {
             network: network
         )
 
-        let internalSyncProgress = InternalSyncProgress(storage: InternalSyncProgressMemoryStorage())
+        let internalSyncProgress = InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
         await internalSyncProgress.set(expectedStoreLatestHeight, .latestEnhancedHeight)
         await internalSyncProgress.set(expectedStoreLatestHeight, .latestUTXOFetchedHeight)
 
