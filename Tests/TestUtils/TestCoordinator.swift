@@ -45,35 +45,51 @@ class TestCoordinator {
     var databases: TemporaryTestDatabases
     let network: ZcashNetwork
 
-    static func make(walletBirthday: BlockHeight, network: ZcashNetwork) -> TestCoordinator {
+    static func make(
+        alias: ZcashSynchronizerAlias = .default,
+        walletBirthday: BlockHeight,
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
+    ) -> TestCoordinator {
         var coordinator: TestCoordinator!
         XCTestCase.wait {
-            coordinator = try await TestCoordinator(walletBirthday: walletBirthday, network: network)
+            coordinator = try await TestCoordinator(
+                alias: alias,
+                walletBirthday: walletBirthday,
+                network: network,
+                callPrepareInConstructor: callPrepareInConstructor
+            )
         }
         return coordinator
     }
 
     static func make(
+        alias: ZcashSynchronizerAlias = .default,
         spendingKey: UnifiedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
-        network: ZcashNetwork
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
     ) -> TestCoordinator {
         var coordinator: TestCoordinator!
         XCTestCase.wait {
             coordinator = try await TestCoordinator(
+                alias: alias,
                 spendingKey: spendingKey,
                 unifiedFullViewingKey: unifiedFullViewingKey,
                 walletBirthday: walletBirthday,
-                network: network
+                network: network,
+                callPrepareInConstructor: callPrepareInConstructor
             )
         }
         return coordinator
     }
 
     convenience init(
+        alias: ZcashSynchronizerAlias = .default,
         walletBirthday: BlockHeight,
-        network: ZcashNetwork
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
     ) async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
@@ -85,18 +101,22 @@ class TestCoordinator {
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         try await self.init(
+            alias: alias,
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
-            network: network
+            network: network,
+            callPrepareInConstructor: callPrepareInConstructor
         )
     }
     
     required init(
+        alias: ZcashSynchronizerAlias = .default,
         spendingKey: UnifiedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
-        network: ZcashNetwork
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
     ) async throws {
         await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0)
 
@@ -129,6 +149,7 @@ class TestCoordinator {
         )
 
         let synchronizer = TestSynchronizerBuilder.build(
+            alias: alias,
             rustBackend: realRustBackend,
             fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
@@ -149,8 +170,11 @@ class TestCoordinator {
         
         self.synchronizer = synchronizer
         subscribeToState(synchronizer: self.synchronizer)
-        if case .seedRequired = try await prepare(seed: Environment.seedBytes) {
-            throw TestCoordinator.CoordinatorError.seedRequiredForMigration
+
+        if callPrepareInConstructor {
+            if case .seedRequired = try await prepare(seed: Environment.seedBytes) {
+                throw TestCoordinator.CoordinatorError.seedRequiredForMigration
+            }
         }
     }
 
@@ -315,6 +339,7 @@ enum TemporaryDbBuilder {
 
 enum TestSynchronizerBuilder {
     static func build(
+        alias: ZcashSynchronizerAlias = .default,
         rustBackend: ZcashRustBackendWelding.Type,
         fsBlockDbRoot: URL,
         dataDbURL: URL,
@@ -338,7 +363,7 @@ enum TestSynchronizerBuilder {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            alias: .default,
+            alias: alias,
             loggerProxy: loggerProxy
         )
 

@@ -126,7 +126,9 @@ extension FSCompactBlockRepository: CompactBlockRepository {
 
     func clear() async throws {
         try await Task {
-            try self.fileManager.removeItem(at: self.fsBlockDbRoot)
+            if self.fileManager.fileExists(atPath: self.fsBlockDbRoot.path) {
+                try self.fileManager.removeItem(at: self.fsBlockDbRoot)
+            }
             try create()
         }.value
     }
