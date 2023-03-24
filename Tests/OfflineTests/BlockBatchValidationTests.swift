@@ -82,7 +82,8 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics()
         )
         
         do {
@@ -153,7 +154,8 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics()
         )
         
         do {
@@ -224,7 +226,8 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics()
         )
         
         do {
@@ -296,7 +299,8 @@ class BlockBatchValidationTests: XCTestCase {
             service: service,
             storage: storage,
             backend: mockRust,
-            config: config
+            config: config,
+            metrics: SDKMetrics()
         )
         
         do {

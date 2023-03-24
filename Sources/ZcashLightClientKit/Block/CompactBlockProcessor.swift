@@ -274,6 +274,8 @@ actor CompactBlockProcessor {
 
     private var afterSyncHooksManager = AfterSyncHooksManager()
 
+    let metrics: SDKMetrics
+    
     /// Don't update this variable directly. Use `updateState()` method.
     var state: State = .stopped
 
@@ -342,7 +344,8 @@ actor CompactBlockProcessor {
         service: LightWalletService,
         storage: CompactBlockRepository,
         backend: ZcashRustBackendWelding.Type,
-        config: Configuration
+        config: Configuration,
+        metrics: SDKMetrics
     ) {
         self.init(
             service: service,
@@ -352,14 +355,15 @@ actor CompactBlockProcessor {
             repository: TransactionRepositoryBuilder.build(
                 dataDbURL: config.dataDb
             ),
-            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true)
+            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true),
+            metrics: metrics
         )
     }
 
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    init(initializer: Initializer, walletBirthdayProvider: @escaping () -> BlockHeight) {
+    init(initializer: Initializer, metrics: SDKMetrics, walletBirthdayProvider: @escaping () -> BlockHeight) {
         self.init(
             service: initializer.lightWalletService,
             storage: initializer.storage,
@@ -375,7 +379,8 @@ actor CompactBlockProcessor {
                 network: initializer.network
             ),
             repository: initializer.transactionRepository,
-            accountRepository: initializer.accountRepository
+            accountRepository: initializer.accountRepository,
+            metrics: metrics
         )
     }
     
@@ -385,17 +390,19 @@ actor CompactBlockProcessor {
         backend: ZcashRustBackendWelding.Type,
         config: Configuration,
         repository: TransactionRepository,
-        accountRepository: AccountRepository
+        accountRepository: AccountRepository,
+        metrics: SDKMetrics
     ) {
+        self.metrics = metrics
         let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard)
         self.internalSyncProgress = internalSyncProgress
-
         let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
         let blockDownloader = BlockDownloaderImpl(
             service: service,
             downloaderService: blockDownloaderService,
             storage: storage,
-            internalSyncProgress: internalSyncProgress
+            internalSyncProgress: internalSyncProgress,
+            metrics: metrics
         )
 
         self.blockDownloaderService = blockDownloaderService
@@ -406,7 +413,11 @@ actor CompactBlockProcessor {
             dataDB: config.dataDb,
             networkType: config.network.networkType
         )
-        self.blockValidator = BlockValidatorImpl(config: blockValidatorConfig, rustBackend: backend)
+        self.blockValidator = BlockValidatorImpl(
+            config: blockValidatorConfig,
+            rustBackend: backend,
+            metrics: metrics
+        )
 
         let blockScannerConfig = BlockScannerConfig(
             fsBlockCacheRoot: config.fsBlockCacheRoot,
@@ -414,7 +425,12 @@ actor CompactBlockProcessor {
             networkType: config.network.networkType,
             scanningBatchSize: config.scanningBatchSize
         )
-        self.blockScanner = BlockScannerImpl(config: blockScannerConfig, rustBackend: backend, transactionRepository: repository)
+        self.blockScanner = BlockScannerImpl(
+            config: blockScannerConfig,
+            rustBackend: backend,
+            transactionRepository: repository,
+            metrics: metrics
+        )
 
         let blockEnhancerConfig = BlockEnhancerConfig(dataDb: config.dataDb, networkType: config.network.networkType)
         self.blockEnhancer = BlockEnhancerImpl(
@@ -422,7 +438,8 @@ actor CompactBlockProcessor {
             config: blockEnhancerConfig,
             internalSyncProgress: internalSyncProgress,
             rustBackend: backend,
-            transactionRepository: repository
+            transactionRepository: repository,
+            metrics: metrics
         )
 
         let utxoFetcherConfig = UTXOFetcherConfig(
@@ -435,7 +452,8 @@ actor CompactBlockProcessor {
             blockDownloaderService: blockDownloaderService,
             config: utxoFetcherConfig,
             internalSyncProgress: internalSyncProgress,
-            rustBackend: backend
+            rustBackend: backend,
+            metrics: metrics
         )
 
         let saplingParametersHandlerConfig = SaplingParametersHandlerConfig(

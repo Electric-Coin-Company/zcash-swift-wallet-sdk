@@ -102,6 +102,7 @@ class initializes the Rust backend and the supporting data required to exercise 
 The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
 functionality, related to processing blocks.
 */
+// swiftlint:disable type_body_length
 public class Initializer {
     struct URLs {
         let fsBlockDbRoot: URL

@@ -129,7 +129,8 @@ class TransactionEnhancementTests: XCTestCase {
             service: service,
             storage: storage,
             backend: rustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics()
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in

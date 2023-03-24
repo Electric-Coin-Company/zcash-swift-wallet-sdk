@@ -531,7 +531,8 @@ enum FixtureError: Error, Equatable {
 }
 
 extension FSMetadataStore {
-    static let mock = FSMetadataStore { _ in }
+    static let mock = FSMetadataStore { _ in
+    }
     rewindToHeight: { _ in }
     initFsBlockDbRoot: { _ in true }
     latestHeightAsync: { .empty() }

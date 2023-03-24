@@ -28,6 +28,7 @@ protocol BlockValidator {
 struct BlockValidatorImpl {
     let config: BlockValidatorConfig
     let rustBackend: ZcashRustBackendWelding.Type
+    let metrics: SDKMetrics
 }
 
 extension BlockValidatorImpl: BlockValidator {
@@ -43,7 +44,7 @@ extension BlockValidatorImpl: BlockValidator {
         )
         let finishTime = Date()
 
-        SDKMetrics.shared.pushProgressReport(
+        metrics.pushProgressReport(
             progress: BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0),
             start: startTime,
             end: finishTime,

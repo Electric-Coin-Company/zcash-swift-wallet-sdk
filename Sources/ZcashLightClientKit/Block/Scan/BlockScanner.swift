@@ -22,6 +22,7 @@ struct BlockScannerImpl {
     let config: BlockScannerConfig
     let rustBackend: ZcashRustBackendWelding.Type
     let transactionRepository: TransactionRepository
+    let metrics: SDKMetrics
 }
 
 extension BlockScannerImpl: BlockScanner {
@@ -67,7 +68,7 @@ extension BlockScannerImpl: BlockScanner {
                     progressHeight: lastScannedHeight
                 )
 
-                SDKMetrics.shared.pushProgressReport(
+                metrics.pushProgressReport(
                     progress: progress,
                     start: scanStartTime,
                     end: scanFinishTime,

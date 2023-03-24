@@ -97,7 +97,8 @@ class CompactBlockReorgTests: XCTestCase {
             service: service,
             storage: realCache,
             backend: mockBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics()
         )
         
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")

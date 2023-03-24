@@ -50,7 +50,13 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted
         )
         
-        let processor = CompactBlockProcessor(service: service, storage: storage, backend: ZcashRustBackend.self, config: processorConfig)
+        let processor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: ZcashRustBackend.self,
+            config: processorConfig,
+            metrics: SDKMetrics()
+        )
 
         let fullRange = 0...1000
 

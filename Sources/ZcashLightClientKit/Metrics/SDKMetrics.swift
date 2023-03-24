@@ -31,8 +31,6 @@ import Foundation
 ///
 /// We encourage you to check`SDKMetricsTests` and other tests in the Test/PerformanceTests/ folder.
 public class SDKMetrics {
-    public static let shared = SDKMetrics()
-    
     public struct BlockMetricReport: Equatable {
         public let startHeight: BlockHeight
         public let progressHeight: BlockHeight
@@ -62,6 +60,8 @@ public class SDKMetrics {
     var isEnabled = false
     var reports: [Operation: [BlockMetricReport]] = [:]
 
+    public init() { }
+    
     /// `SDKMetrics` is disabled by default. Any pushed data are simply ignored until `enableMetrics()` is called.
     public func enableMetrics() {
         isEnabled = true
@@ -183,7 +183,7 @@ extension SDKMetrics {
         let fetchUTXOsReport = summaryFor(reports: reports[.fetchUTXOs])
         var totalSyncReport: ReportSummary?
         
-        if let duration = SDKMetrics.shared.syncReport?.duration {
+        if let duration = syncReport?.duration {
             totalSyncReport = ReportSummary(minTime: duration, maxTime: duration, avgTime: duration)
         }
         

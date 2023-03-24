@@ -56,8 +56,7 @@ class SynchronizerTests: XCTestCase {
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let endpoint = LightWalletEndpoint(address: "lightwalletd.electriccoin.co", port: 9067, secure: true)
 
-        SDKMetrics.shared.enableMetrics()
-        
+        var synchronizer: SDKSynchronizer?
         for _ in 1...5 {
             let databases = TemporaryDbBuilder.build()
             let initializer = Initializer(
@@ -78,7 +77,11 @@ class SynchronizerTests: XCTestCase {
             try? FileManager.default.removeItem(at: databases.dataDB)
             try? FileManager.default.removeItem(at: databases.pendingDB)
             
-            let synchronizer = SDKSynchronizer(initializer: initializer)
+            synchronizer = SDKSynchronizer(initializer: initializer)
+            
+            guard let synchronizer else { fatalError("Synchronizer not initialized.") }
+            
+            synchronizer.metrics.enableMetrics()
             _ = try await synchronizer.prepare(with: seedBytes, viewingKeys: [ufvk], walletBirthday: birthday)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
@@ -94,10 +97,10 @@ class SynchronizerTests: XCTestCase {
             
             wait(for: [syncSyncedExpectation], timeout: 100)
             
-            SDKMetrics.shared.cumulateReportsAndStartNewSet()
+            synchronizer.metrics.cumulateReportsAndStartNewSet()
         }
 
-        if let cumulativeSummary = SDKMetrics.shared.summarizedCumulativeReports() {
+        if let cumulativeSummary = synchronizer?.metrics.summarizedCumulativeReports() {
             let downloadedBlocksReport = cumulativeSummary.downloadedBlocksReport ?? .zero
             let validatedBlocksReport = cumulativeSummary.validatedBlocksReport ?? .zero
             let scannedBlocksReport = cumulativeSummary.scannedBlocksReport ?? .zero
@@ -117,6 +120,6 @@ class SynchronizerTests: XCTestCase {
             """)
         }
         
-        SDKMetrics.shared.disableMetrics()
+        synchronizer?.metrics.disableMetrics()
     }
 }

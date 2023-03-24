@@ -28,6 +28,7 @@ struct UTXOFetcherImpl {
     let config: UTXOFetcherConfig
     let internalSyncProgress: InternalSyncProgress
     let rustBackend: ZcashRustBackendWelding.Type
+    let metrics: SDKMetrics
 }
 
 extension UTXOFetcherImpl: UTXOFetcher {
@@ -82,7 +83,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
             }
         }
 
-        SDKMetrics.shared.pushProgressReport(
+        metrics.pushProgressReport(
             progress: BlockProgress(
                 startHeight: range.lowerBound,
                 targetHeight: range.upperBound,

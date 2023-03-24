@@ -20,6 +20,8 @@ public class SDKSynchronizer: Synchronizer {
     private let eventSubject = PassthroughSubject<SynchronizerEvent, Never>()
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
+    public let metrics: SDKMetrics
+    
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<SyncStatus>
     var status: SyncStatus {
@@ -43,6 +45,7 @@ public class SDKSynchronizer: Synchronizer {
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) {
+        let metrics = SDKMetrics()
         self.init(
             status: .unprepared,
             initializer: initializer,
@@ -51,8 +54,10 @@ public class SDKSynchronizer: Synchronizer {
             utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
             blockProcessor: CompactBlockProcessor(
                 initializer: initializer,
+                metrics: metrics,
                 walletBirthdayProvider: { initializer.walletBirthday }
-            )
+            ),
+            metrics: metrics
         )
     }
 
@@ -62,7 +67,8 @@ public class SDKSynchronizer: Synchronizer {
         transactionManager: OutboundTransactionManager,
         transactionRepository: TransactionRepository,
         utxoRepository: UnspentTransactionOutputRepository,
-        blockProcessor: CompactBlockProcessor
+        blockProcessor: CompactBlockProcessor,
+        metrics: SDKMetrics
     ) {
         self.connectionState = .idle
         self.underlyingStatus = GenericActor(status)
@@ -72,6 +78,7 @@ public class SDKSynchronizer: Synchronizer {
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
         self.network = initializer.network
+        self.metrics = metrics
 
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -226,7 +233,7 @@ public class SDKSynchronizer: Synchronizer {
         await updateStatus(.synced)
 
         if let syncStartDate {
-            SDKMetrics.shared.pushSyncReport(
+            metrics.pushSyncReport(
                 start: syncStartDate,
                 end: Date()
             )
