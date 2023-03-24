@@ -232,4 +232,91 @@ class SynchronizerOfflineTests: XCTestCase {
 
         wait(for: [expectation], timeout: 1)
     }
+
+    func testURLsParsingFailsInInitialierPrepareThenThrowsError() async throws {
+        let validFileURL = URL(fileURLWithPath: "/some/valid/path/to.file")
+        let validDirectoryURL = URL(fileURLWithPath: "/some/valid/path/to/directory")
+        let invalidPathURL = URL(string: "https://whatever")!
+
+        let initializer = Initializer(
+            cacheDbURL: nil,
+            fsBlockDbRoot: validDirectoryURL,
+            dataDbURL: validFileURL,
+            pendingDbURL: invalidPathURL,
+            endpoint: LightWalletEndpointBuilder.default,
+            network: ZcashNetworkBuilder.network(for: .testnet),
+            spendParamsURL: validFileURL,
+            outputParamsURL: validFileURL,
+            saplingParamsSourceURL: .default,
+            alias: .default,
+            loggerProxy: nil
+        )
+
+        XCTAssertNotNil(initializer.urlsParsingError)
+
+        let synchronizer = SDKSynchronizer(initializer: initializer)
+
+        do {
+            let derivationTool = DerivationTool(networkType: network.networkType)
+            let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
+                seed: Environment.seedBytes,
+                accountIndex: 0
+            )
+            let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+            _ = try await synchronizer.prepare(with: Environment.seedBytes, viewingKeys: [viewingKey], walletBirthday: 123000)
+            XCTFail("Failure of prepare is expected.")
+        } catch {
+            if let error = error as? InitializerError, case let .cantUpdateURLWithAlias(failedURL) = error {
+                XCTAssertEqual(failedURL, invalidPathURL)
+            } else {
+                XCTFail("Failed with unexpected error: \(error)")
+            }
+        }
+    }
+
+    func testURLsParsingFailsInInitialierWipeThenThrowsError() async throws {
+        let validFileURL = URL(fileURLWithPath: "/some/valid/path/to.file")
+        let validDirectoryURL = URL(fileURLWithPath: "/some/valid/path/to/directory")
+        let invalidPathURL = URL(string: "https://whatever")!
+
+        let initializer = Initializer(
+            cacheDbURL: nil,
+            fsBlockDbRoot: validDirectoryURL,
+            dataDbURL: validFileURL,
+            pendingDbURL: invalidPathURL,
+            endpoint: LightWalletEndpointBuilder.default,
+            network: ZcashNetworkBuilder.network(for: .testnet),
+            spendParamsURL: validFileURL,
+            outputParamsURL: validFileURL,
+            saplingParamsSourceURL: .default,
+            alias: .default,
+            loggerProxy: nil
+        )
+
+        XCTAssertNotNil(initializer.urlsParsingError)
+
+        let synchronizer = SDKSynchronizer(initializer: initializer)
+        let expectation = XCTestExpectation()
+
+        synchronizer.wipe()
+            .sink(
+                receiveCompletion: { result in
+                    switch result {
+                    case .finished:
+                        XCTFail("Failure of wipe is expected.")
+                    case let .failure(error):
+                        if let error = error as? InitializerError, case let .cantUpdateURLWithAlias(failedURL) = error {
+                            XCTAssertEqual(failedURL, invalidPathURL)
+                            expectation.fulfill()
+                        } else {
+                            XCTFail("Failed with unexpected error: \(error)")
+                        }
+                    }
+                },
+                receiveValue: { _ in }
+            )
+            .store(in: &cancellables)
+
+        wait(for: [expectation], timeout: 1)
+    }
 }

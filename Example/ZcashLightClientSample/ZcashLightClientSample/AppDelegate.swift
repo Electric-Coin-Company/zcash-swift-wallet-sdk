@@ -42,6 +42,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return wallet
         } else {
             let wallet = Initializer(
+                cacheDbURL: nil,
                 fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
                 pendingDbURL: try! pendingDbURLHelper(),

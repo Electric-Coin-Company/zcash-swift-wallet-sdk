@@ -99,6 +99,18 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
+    func checkIfCanContinueInitialisation() -> InitializerError? {
+        if let initialisationError = initializer.urlsParsingError {
+            return initialisationError
+        }
+
+        if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
+            return InitializerError.aliasAlreadyInUse(initializer.alias)
+        }
+
+        return nil
+    }
+
     public func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
@@ -106,8 +118,8 @@ public class SDKSynchronizer: Synchronizer {
     ) async throws -> Initializer.InitializationResult {
         guard await status == .unprepared else { return .success }
 
-        if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
-            throw InitializerError.aliasAlreadyInUse(initializer.alias)
+        if let error = checkIfCanContinueInitialisation() {
+            throw error
         }
 
         try utxoRepository.initialise()
@@ -515,8 +527,8 @@ public class SDKSynchronizer: Synchronizer {
     public func wipe() -> AnyPublisher<Void, Error> {
         let subject = PassthroughSubject<Void, Error>()
         Task(priority: .high) {
-            if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
-                subject.send(completion: .failure(InitializerError.aliasAlreadyInUse(initializer.alias)))
+            if let error = checkIfCanContinueInitialisation() {
+                subject.send(completion: .failure(error))
                 return
             }
 

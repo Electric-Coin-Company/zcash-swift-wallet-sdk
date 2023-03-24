@@ -18,6 +18,7 @@ public enum InitializerError: Error {
     case accountInitFailed(Error)
     case invalidViewingKey(key: String)
     case aliasAlreadyInUse(ZcashSynchronizerAlias)
+    case cantUpdateURLWithAlias(URL)
 }
 
 /**
@@ -102,6 +103,14 @@ The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Ru
 functionality, related to processing blocks.
 */
 public class Initializer {
+    struct URLs {
+        let fsBlockDbRoot: URL
+        let dataDbURL: URL
+        let pendingDbURL: URL
+        let spendParamsURL: URL
+        let outputParamsURL: URL
+    }
+
     public enum InitializationResult {
         case success
         case seedRequired
@@ -134,71 +143,20 @@ public class Initializer {
     /// The purpose of this to migrate from cacheDb to fsBlockDb
     private var cacheDbURL: URL?
 
-    /// Constructs the Initializer
-    /// - Parameters:
-    ///  - fsBlockDbRoot: location of the compact blocks cache
-    ///  - dataDbURL: Location of the data db
-    ///  - pendingDbURL: location of the pending transactions database
-    ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
-    ///  - spendParamsURL: location of the spend parameters
-    ///  - outputParamsURL: location of the output parameters
-    convenience public init (
-        fsBlockDbRoot: URL,
-        dataDbURL: URL,
-        pendingDbURL: URL,
-        endpoint: LightWalletEndpoint,
-        network: ZcashNetwork,
-        spendParamsURL: URL,
-        outputParamsURL: URL,
-        saplingParamsSourceURL: SaplingParamsSourceURL,
-        alias: ZcashSynchronizerAlias = .default,
-        loggerProxy: Logger? = nil
-    ) {
-        self.init(
-            rustBackend: ZcashRustBackend.self,
-            network: network,
-            cacheDbURL: nil,
-            fsBlockDbRoot: fsBlockDbRoot,
-            dataDbURL: dataDbURL,
-            pendingDbURL: pendingDbURL,
-            endpoint: endpoint,
-            service: Self.makeLightWalletServiceFactory(endpoint: endpoint).make(),
-            repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
-            accountRepository: AccountRepositoryBuilder.build(
-                dataDbURL: dataDbURL,
-                readOnly: true,
-                caching: true
-            ),
-            storage: FSCompactBlockRepository(
-                fsBlockDbRoot: fsBlockDbRoot,
-                metadataStore: .live(
-                    fsBlockDbRoot: fsBlockDbRoot,
-                    rustBackend: ZcashRustBackend.self
-                ),
-                blockDescriptor: .live,
-                contentProvider: DirectoryListingProviders.defaultSorted
-            ),
-            spendParamsURL: spendParamsURL,
-            outputParamsURL: outputParamsURL,
-            saplingParamsSourceURL: saplingParamsSourceURL,
-            alias: alias,
-            loggerProxy: loggerProxy
-        )
-    }
+    /// Error that can be created when updating URLs according to alias. If this error is created then it is thrown from `SDKSynchronizer.prepare()`
+    /// or `SDKSynchronizer.wipe()`.
+    var urlsParsingError: InitializerError?
 
-    /// Constructs the Initializer and migrates an old cacheDb to the new file system block cache if
-    /// a `cacheDbURL` is provided.
+    /// Constructs the Initializer and migrates an old cacheDb to the new file system block cache if a `cacheDbURL` is provided.
     /// - Parameters:
-    ///  - cacheDbURL: previous location of the cacheDb. Use this constru
+    ///  - cacheDbURL: previous location of the cacheDb. If you don't know what a cacheDb is and you are adopting this SDK for the first time then
+    ///                just pass `nil` here.
     ///  - fsBlockDbRoot: location of the compact blocks cache
     ///  - dataDbURL: Location of the data db
     ///  - pendingDbURL: location of the pending transactions database
     ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
     ///  - spendParamsURL: location of the spend parameters
     ///  - outputParamsURL: location of the output parameters
-    ///
-    /// - note: If you don't know what a cacheDb is and you are adopting
-    /// this SDK for the first time then you just need to invoke `convenience init(fsBlockDbRoot: URL, dataDbURL: URL, pendingDbURL: URL, endpoint: LightWalletEndpoint, network: ZcashNetwork, spendParamsURL: URL, outputParamsURL: URL, alias: String = "", loggerProxy: Logger? = nil)` instead
     convenience public init (
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
@@ -212,68 +170,74 @@ public class Initializer {
         alias: ZcashSynchronizerAlias = .default,
         loggerProxy: Logger? = nil
     ) {
+        let urls = URLs(
+            fsBlockDbRoot: fsBlockDbRoot,
+            dataDbURL: dataDbURL,
+            pendingDbURL: pendingDbURL,
+            spendParamsURL: spendParamsURL,
+            outputParamsURL: outputParamsURL
+        )
+
+        // It's not possible to fail from constructor. Technically it's possible but it can be pain for the client apps to handle errors thrown
+        // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
+        let (updatedURLs, parsingError) = Self.tryToUpdateURLs(with: alias, urls: urls)
+
         self.init(
             rustBackend: ZcashRustBackend.self,
             network: network,
             cacheDbURL: cacheDbURL,
-            fsBlockDbRoot: fsBlockDbRoot,
-            dataDbURL: dataDbURL,
-            pendingDbURL: pendingDbURL,
+            urls: updatedURLs,
             endpoint: endpoint,
             service: Self.makeLightWalletServiceFactory(endpoint: endpoint).make(),
             repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
             accountRepository: AccountRepositoryBuilder.build(
-                dataDbURL: dataDbURL,
+                dataDbURL: updatedURLs.dataDbURL,
                 readOnly: true,
                 caching: true
             ),
             storage: FSCompactBlockRepository(
-                fsBlockDbRoot: fsBlockDbRoot,
+                fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
                 metadataStore: .live(
-                    fsBlockDbRoot: fsBlockDbRoot,
+                    fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
                     rustBackend: ZcashRustBackend.self
                 ),
                 blockDescriptor: .live,
                 contentProvider: DirectoryListingProviders.defaultSorted
             ),
-            spendParamsURL: spendParamsURL,
-            outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggerProxy: loggerProxy
+            loggerProxy: loggerProxy,
+            urlsParsingError: parsingError
         )
     }
 
-    /**
-    Internal for dependency injection purposes
-    */
+    /// Internal for dependency injection purposes.
+    ///
+    /// !!! It's expected that URLs put here are already update with the Alias.
     init(
         rustBackend: ZcashRustBackendWelding.Type,
         network: ZcashNetwork,
         cacheDbURL: URL?,
-        fsBlockDbRoot: URL,
-        dataDbURL: URL,
-        pendingDbURL: URL,
+        urls: URLs,
         endpoint: LightWalletEndpoint,
         service: LightWalletService,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
         storage: CompactBlockRepository,
-        spendParamsURL: URL,
-        outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
-        alias: ZcashSynchronizerAlias = .default,
-        loggerProxy: Logger? = nil
+        alias: ZcashSynchronizerAlias,
+        loggerProxy: Logger?,
+        urlsParsingError: InitializerError?
     ) {
         logger = loggerProxy
         self.cacheDbURL = cacheDbURL
         self.rustBackend = rustBackend
-        self.fsBlockDbRoot = fsBlockDbRoot
-        self.dataDbURL = dataDbURL
-        self.pendingDbURL = pendingDbURL
+        self.fsBlockDbRoot = urls.fsBlockDbRoot
+        self.dataDbURL = urls.dataDbURL
+        self.pendingDbURL = urls.pendingDbURL
         self.endpoint = endpoint
-        self.spendParamsURL = spendParamsURL
-        self.outputParamsURL = outputParamsURL
+        self.spendParamsURL = urls.spendParamsURL
+        self.outputParamsURL = urls.outputParamsURL
         self.saplingParamsSourceURL = saplingParamsSourceURL
         self.alias = alias
         self.lightWalletService = service
@@ -283,10 +247,76 @@ public class Initializer {
         self.blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
         self.network = network
         self.walletBirthday = Checkpoint.birthday(with: 0, network: network).height
+        self.urlsParsingError = urlsParsingError
     }
 
     private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
         return LightWalletServiceFactory(endpoint: endpoint)
+    }
+
+    /// Try to update URLs with `alias`.
+    ///
+    /// If the `default` alias is used then the URLs are changed at all.
+    /// If the `custom("anotherInstance")` is used then last path component or the URL is updated like this:
+    /// - /some/path/to.file -> /some/path/c_anotherInstance_to.file
+    /// - /some/path/to/directory -> /some/path/to/c_anotherInstance_directory
+    ///
+    /// If any of the URLs can't be parsed then returned error isn't nil.
+    private static func tryToUpdateURLs(
+        with alias: ZcashSynchronizerAlias,
+        urls: URLs
+    ) -> (URLs, InitializerError?) {
+        let updatedURLsResult = Self.updateURLs(with: alias, urls: urls)
+
+        let parsingError: InitializerError?
+        let updatedURLs: URLs
+        switch updatedURLsResult {
+        case let .success(updated):
+            parsingError = nil
+            updatedURLs = updated
+        case let .failure(error):
+            parsingError = error
+            // When failure happens just use original URLs because something must be used. But this shouldn't be a problem because
+            // `SDKSynchronizer.prepare()` handles this error. And the SDK won't work if it isn't switched from `unprepared` state.
+            updatedURLs = urls
+        }
+
+        return (updatedURLs, parsingError)
+    }
+
+    private static func updateURLs(
+        with alias: ZcashSynchronizerAlias,
+        urls: URLs
+    ) -> Result<URLs, InitializerError> {
+        guard let updatedFsBlockDbRoot = urls.fsBlockDbRoot.updateLastPathComponent(with: alias) else {
+            return .failure(.cantUpdateURLWithAlias(urls.fsBlockDbRoot))
+        }
+
+        guard let updatedDataDbURL = urls.dataDbURL.updateLastPathComponent(with: alias) else {
+            return .failure(.cantUpdateURLWithAlias(urls.dataDbURL))
+        }
+
+        guard let updatedPendingDbURL = urls.pendingDbURL.updateLastPathComponent(with: alias) else {
+            return .failure(.cantUpdateURLWithAlias(urls.pendingDbURL))
+        }
+
+        guard let updatedSpendParamsURL = urls.spendParamsURL.updateLastPathComponent(with: alias) else {
+            return .failure(.cantUpdateURLWithAlias(urls.spendParamsURL))
+        }
+
+        guard let updateOutputParamsURL = urls.outputParamsURL.updateLastPathComponent(with: alias) else {
+            return .failure(.cantUpdateURLWithAlias(urls.outputParamsURL))
+        }
+
+        return .success(
+            URLs(
+                fsBlockDbRoot: updatedFsBlockDbRoot,
+                dataDbURL: updatedDataDbURL,
+                pendingDbURL: updatedPendingDbURL,
+                spendParamsURL: updatedSpendParamsURL,
+                outputParamsURL: updateOutputParamsURL
+            )
+        )
     }
 
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
@@ -438,6 +468,8 @@ extension InitializerError: LocalizedError {
             The Alias \(alias) used for this instance of the SDKSynchronizer is already in use. Each instance of the SDKSynchronizer must use unique \
             Alias.
             """
+        case .cantUpdateURLWithAlias(let url):
+            return "Can't update path URL with alias. \(url)"
         }
     }
 }

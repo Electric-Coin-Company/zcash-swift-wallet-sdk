@@ -356,6 +356,7 @@ enum TestSynchronizerBuilder {
         loggerProxy: Logger? = nil
     ) -> SDKSynchronizer {
         let initializer = Initializer(
+            cacheDbURL: nil,
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
