@@ -14,6 +14,8 @@ import Foundation
 ///
 /// If you are looking for documentation for a specific method or property look for it in the `Synchronizer` protocol.
 public protocol ClosureSynchronizer {
+    var alias: ZcashSynchronizerAlias { get }
+
     var latestState: SynchronizerState { get }
     var connectionState: ConnectionState { get }
 

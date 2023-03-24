@@ -42,7 +42,7 @@ class GetUTXOsViewController: UIViewController {
         do {
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
 
-            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
+            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
 
             KRProgressHUD.showMessage("🛡 Shielding 🛡")
 

@@ -12,6 +12,9 @@ import Foundation
 class SynchronizerMock: Synchronizer {
     init() { }
 
+    var underlyingAlias: ZcashSynchronizerAlias! = nil
+    var alias: ZcashLightClientKit.ZcashSynchronizerAlias { underlyingAlias }
+
     var underlyingStateStream: AnyPublisher<SynchronizerState, Never>! = nil
     var stateStream: AnyPublisher<SynchronizerState, Never> { underlyingStateStream }
 

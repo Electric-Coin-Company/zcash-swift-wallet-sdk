@@ -157,9 +157,9 @@ class SyncBlocksViewController: UIViewController {
                 if syncStatus == .unprepared {
                     // swiftlint:disable:next force_try
                     _ = try! await synchronizer.prepare(
-                        with: DemoAppConfig.seed,
+                        with: DemoAppConfig.defaultSeed,
                         viewingKeys: [AppDelegate.shared.sharedViewingKey],
-                        walletBirthday: DemoAppConfig.birthdayHeight
+                        walletBirthday: DemoAppConfig.defaultBirthdayHeight
                     )
                 }
 

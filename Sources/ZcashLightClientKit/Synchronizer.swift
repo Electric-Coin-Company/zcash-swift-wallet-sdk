@@ -95,6 +95,9 @@ public enum SynchronizerEvent {
 /// Primary interface for interacting with the SDK. Defines the contract that specific
 /// implementations like SdkSynchronizer fulfill.
 public protocol Synchronizer: AnyObject {
+    /// Alias used for this instance.
+    var alias: ZcashSynchronizerAlias { get }
+
     /// Latest state of the SDK which can be get in synchronous manner.
     var latestState: SynchronizerState { get }
 

@@ -33,7 +33,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var sharedViewingKey: UnifiedFullViewingKey {
         return try! DerivationTool(networkType: kZcashNetwork.networkType)
-            .deriveUnifiedSpendingKey(seed: DemoAppConfig.seed, accountIndex: 0)
+            .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
             .deriveFullViewingKey()
     }
     

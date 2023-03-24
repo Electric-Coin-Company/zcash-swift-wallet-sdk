@@ -31,6 +31,11 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         data = nil
     }
 
+    func testAliasIsAsExpected() {
+        synchronizerMock.underlyingAlias = .custom("some_alias")
+        XCTAssertEqual(synchronizer.alias, .custom("some_alias"))
+    }
+
     func testStateStreamEmitsAsExpected() {
         let state = SynchronizerState(
             shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
