@@ -1403,6 +1403,13 @@ extension CompactBlockProcessor {
             throw CacheDbMigrationError.fsCacheMigrationFailedSameURL
         }
 
+        // Instance with alias `default` is same as instance before the Alias was introduced. So it makes sense that only this instance handles
+        // legacy cache DB. Any instance with different than `default` alias was created after the Alias was introduced and at this point legacy
+        // cache DB is't anymore. So there is nothing to migrate for instances with not default Alias.
+        guard config.alias == .default else {
+            return
+        }
+
         // if the URL provided is not readable, it means that the client has a reference
         // to the cacheDb file but it has been deleted in a prior sync cycle. there's
         // nothing to do here.
