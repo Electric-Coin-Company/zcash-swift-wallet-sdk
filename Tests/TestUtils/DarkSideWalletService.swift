@@ -158,10 +158,6 @@ class DarksideWalletService: LightWalletService {
         try await service.getInfo()
     }
 
-    func latestBlockHeightAsync() async throws -> BlockHeight {
-        try await service.latestBlockHeight()
-    }
-    
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         service.blockRange(range)
     }

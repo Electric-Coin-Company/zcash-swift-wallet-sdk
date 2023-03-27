@@ -12,20 +12,12 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
     func create() throws {}
 
     func clear() async throws {}
-    
-    func latestHeightAsync() async -> BlockHeight {
-        latestBlockHeight
-    }
-    
+
     func write(blocks: [ZcashCompactBlock]) async throws {
         fakeSave(blocks: blocks)
     }
-    
-    func rewindAsync(to height: BlockHeight) async throws {
-        fakeRewind(to: height)
-    }
-    
-    func latestHeight() -> Int {
+
+    func latestHeight() async -> BlockHeight {
         return self.latestBlockHeight
     }
 
@@ -42,7 +34,7 @@ class ZcashConsoleFakeStorage: CompactBlockRepository {
         )
     }
 
-    func rewind(to height: BlockHeight) throws {
+    func rewind(to height: BlockHeight) async throws {
         fakeRewind(to: height)
     }
     

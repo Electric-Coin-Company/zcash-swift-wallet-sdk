@@ -55,7 +55,7 @@ class BlockDownloaderTests: XCTestCase {
         downloader = nil
     }
 
-    func testSmallDownloadAsync() async {
+    func testSmallDownload() async {
         let lowerRange: BlockHeight = self.network.constants.saplingActivationHeight
         let upperRange: BlockHeight = self.network.constants.saplingActivationHeight + 99
         
@@ -64,13 +64,13 @@ class BlockDownloaderTests: XCTestCase {
             try await downloader.downloadBlockRange(range)
             
             // check what was 'stored'
-            let latestHeight = await self.storage.latestHeightAsync()
+            let latestHeight = await self.storage.latestHeight()
             XCTAssertEqual(latestHeight, upperRange)
             
             let resultHeight = try await self.downloader.lastDownloadedBlockHeight()
             XCTAssertEqual(resultHeight, upperRange)
         } catch {
-            XCTFail("testSmallDownloadAsync() shouldn't fail \(error)")
+            XCTFail("testSmallDownload() shouldn't fail \(error)")
         }
     }
     

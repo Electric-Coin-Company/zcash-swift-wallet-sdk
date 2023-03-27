@@ -609,7 +609,7 @@ actor CompactBlockProcessor {
         // clear cache
         let rewindBlockHeight = BlockHeight(rewindHeight)
         do {
-            try blockDownloaderService.rewind(to: rewindBlockHeight)
+            try await blockDownloaderService.rewind(to: rewindBlockHeight)
         } catch {
             return context.completion(.failure(error))
         }
@@ -966,7 +966,7 @@ actor CompactBlockProcessor {
     private func nextBatch() async {
         await updateState(.syncing)
         do {
-            let nextState = try await NextStateHelper.nextStateAsync(
+            let nextState = try await NextStateHelper.nextState(
                 service: self.service,
                 downloaderService: blockDownloaderService,
                 transactionRepository: transactionRepository,
@@ -1014,7 +1014,7 @@ actor CompactBlockProcessor {
         }
         
         do {
-            try blockDownloaderService.rewind(to: rewindHeight)
+            try await blockDownloaderService.rewind(to: rewindHeight)
             await internalSyncProgress.rewind(to: rewindHeight)
 
             await send(event: .handledReorg(height, rewindHeight))
@@ -1314,7 +1314,7 @@ extension CompactBlockProcessor {
         try Task.checkCancellation()
 
         do {
-            return try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+            return try await CompactBlockProcessor.NextStateHelper.nextState(
                 service: service,
                 downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
@@ -1331,7 +1331,7 @@ extension CompactBlockProcessor {
 extension CompactBlockProcessor {
     enum NextStateHelper {
         // swiftlint:disable:next function_parameter_count
-        static func nextStateAsync(
+        static func nextState(
             service: LightWalletService,
             downloaderService: BlockDownloaderService,
             transactionRepository: TransactionRepository,

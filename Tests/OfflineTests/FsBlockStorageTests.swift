@@ -33,28 +33,21 @@ final class FsBlockStorageTests: XCTestCase {
         try? testFileManager.removeItem(at: testTempDirectory)
     }
 
-    func testLatestHeightEmptyCache() throws {
+    func testLatestHeightEmptyCache() async throws {
         let emptyCache: FSCompactBlockRepository = .emptyTemporaryCache
 
         try emptyCache.create()
 
-        XCTAssertEqual(emptyCache.latestHeight(), .empty())
+        let latestHeight = await emptyCache.latestHeight()
+        XCTAssertEqual(latestHeight, .empty())
     }
 
-    func testRewindEmptyCacheDoesNothing() throws {
+    func testRewindEmptyCacheDoesNothing() async throws {
         let emptyCache: FSCompactBlockRepository = .emptyTemporaryCache
 
         try emptyCache.create()
 
-        try emptyCache.rewind(to: 1000000)
-    }
-
-    func testRewindEmptyCacheDoesNothingAsync() async throws {
-        let emptyCache: FSCompactBlockRepository = .emptyTemporaryCache
-
-        try emptyCache.create()
-
-        try await emptyCache.rewindAsync(to: 1000000)
+        try await emptyCache.rewind(to: 1000000)
     }
 
     func testWhenBlockIsStoredItFollowsTheDescribedFormat() async throws {
@@ -150,7 +143,7 @@ final class FsBlockStorageTests: XCTestCase {
 
         XCTAssertEqual(ZcashCompactBlockDescriptor.live.height(lastStoredBlock.lastPathComponent), 2000)
 
-        try await freshCache.rewindAsync(to: rewindHeight)
+        try await freshCache.rewind(to: rewindHeight)
 
         let afterRewindContents = try contentProvider.listContents(of: freshCache.blocksDirectory)
 
@@ -187,7 +180,7 @@ final class FsBlockStorageTests: XCTestCase {
 
         try await freshCache.write(blocks: fakeBlocks)
 
-        let latestHeight = freshCache.latestHeight()
+        let latestHeight = await freshCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 2000)
     }
@@ -298,11 +291,13 @@ final class FsBlockStorageTests: XCTestCase {
         }
 
         try await fsBlockCache.write(blocks: stubBlocks)
-        XCTAssertEqual(fsBlockCache.latestHeight(), 1010)
+        var latestHeight = await fsBlockCache.latestHeight()
+        XCTAssertEqual(latestHeight, 1010)
 
         try await fsBlockCache.clear()
 
-        XCTAssertEqual(fsBlockCache.latestHeight(), .empty())
+        latestHeight = await fsBlockCache.latestHeight()
+        XCTAssertEqual(latestHeight, .empty())
     }
 
     func testCreateDoesntFailWhenAlreadyCreated() throws {
@@ -343,7 +338,7 @@ final class FsBlockStorageTests: XCTestCase {
 
         XCTAssertLessThan(timePassed, 0.5)
 
-        let latestHeight = await realCache.latestHeightAsync()
+        let latestHeight = await realCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 19)
     }
@@ -399,20 +394,20 @@ final class FsBlockStorageTests: XCTestCase {
 
         XCTAssertLessThan(timePassed, 0.5)
 
-        let latestHeight = await realCache.latestHeightAsync()
+        let latestHeight = await realCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 19)
 
-        try realCache.rewind(to: 14)
+        try await realCache.rewind(to: 14)
 
-        let rewoundHeight = await realCache.latestHeightAsync()
+        let rewoundHeight = await realCache.latestHeight()
 
         XCTAssertEqual(rewoundHeight, 14)
 
         let blockSlice = [ZcashCompactBlock](sandblastedBlocks[5...])
         try await realCache.write(blocks: blockSlice)
 
-        let newLatestHeight = await realCache.latestHeightAsync()
+        let newLatestHeight = await realCache.latestHeight()
 
         XCTAssertEqual(newLatestHeight, 19)
     }
@@ -496,7 +491,7 @@ final class FsBlockStorageTests: XCTestCase {
         try await freshCache.write(blocks: fakeBlocks)
         let endTime = Date()
 
-        let latestHeight = await freshCache.latestHeightAsync()
+        let latestHeight = await freshCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 2000)
 
@@ -531,11 +526,10 @@ enum FixtureError: Error, Equatable {
 }
 
 extension FSMetadataStore {
-    static let mock = FSMetadataStore { _ in }
-    rewindToHeight: { _ in }
-    initFsBlockDbRoot: { _ in true }
-    latestHeightAsync: { .empty() }
-    latestHeight: {
-        .empty()
-    }
+    static let mock = FSMetadataStore(
+        saveBlocksMeta: { _ in },
+        rewindToHeight: { _ in },
+        initFsBlockDbRoot: { _ in true },
+        latestHeight: { .empty() }
+    )
 }

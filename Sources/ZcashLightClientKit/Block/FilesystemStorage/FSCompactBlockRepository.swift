@@ -54,12 +54,8 @@ extension FSCompactBlockRepository: CompactBlockRepository {
         }
     }
 
-    func latestHeight() -> BlockHeight {
-        metadataStore.latestHeight()
-    }
-
-    func latestHeightAsync() async -> BlockHeight {
-        await metadataStore.latestHeightAsync()
+    func latestHeight() async -> BlockHeight {
+        await metadataStore.latestHeight()
     }
 
     func write(blocks: [ZcashCompactBlock]) async throws {
@@ -99,7 +95,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
         }
     }
 
-    func rewind(to height: BlockHeight) throws {
+    func rewind(to height: BlockHeight) async throws {
         try metadataStore.rewindToHeight(height)
         // Reverse the cached contents to browse from higher to lower heights
         let sortedCachedContents = try contentProvider.listContents(of: blocksDirectory)
@@ -118,17 +114,9 @@ extension FSCompactBlockRepository: CompactBlockRepository {
         }
     }
 
-    func rewindAsync(to height: BlockHeight) async throws {
-        try await Task {
-            try rewind(to: height)
-        }.value
-    }
-
     func clear() async throws {
-        try await Task {
-            try self.fileManager.removeItem(at: self.fsBlockDbRoot)
-            try create()
-        }.value
+        try self.fileManager.removeItem(at: self.fsBlockDbRoot)
+        try create()
     }
 }
 
@@ -218,8 +206,7 @@ struct FSMetadataStore {
     var saveBlocksMeta: ([ZcashCompactBlock]) async throws -> Void
     var rewindToHeight: (BlockHeight) throws -> Void
     var initFsBlockDbRoot: (URL) throws -> Bool
-    var latestHeightAsync: () async -> BlockHeight
-    var latestHeight: () -> BlockHeight
+    var latestHeight: () async -> BlockHeight
 }
 
 extension FSMetadataStore {
@@ -236,8 +223,6 @@ extension FSMetadataStore {
             }
         } initFsBlockDbRoot: { dbRootURL in
             try rustBackend.initBlockMetadataDb(fsBlockDbRoot: dbRootURL)
-        } latestHeightAsync: {
-            await Task { rustBackend.latestCachedBlockHeight(fsBlockDbRoot: fsBlockDbRoot) }.value
         } latestHeight: {
             rustBackend.latestCachedBlockHeight(fsBlockDbRoot: fsBlockDbRoot)
         }
