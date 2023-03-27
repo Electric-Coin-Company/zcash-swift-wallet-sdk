@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  LoggerProxy.swift
 //  
 //
 //  Created by Lukáš Korba on 27.03.2023.

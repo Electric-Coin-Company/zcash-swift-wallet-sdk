@@ -614,7 +614,7 @@ actor CompactBlockProcessor {
     ///
     /// - Note: If this is called while sync is in progress then the sync process is stopped first and then rewind is executed.
     func rewind(context: AfterSyncHooksManager.RewindContext) async {
-        logger.debug("Starting rewid")
+        logger.debug("Starting rewind")
         switch self.state {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
             logger.debug("Stopping sync because of rewind")
