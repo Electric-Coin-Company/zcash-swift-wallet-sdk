@@ -26,13 +26,7 @@ protocol BlockDownloaderService {
     /**
     Restore the download progress up to the given height.
     */
-    func rewind(to height: BlockHeight) throws
-
-    /**
-    Remove newer blocks and go back to the given height
-    - Parameter height: the given height to rewind to
-    */
-    func rewindAsync(to height: BlockHeight) async throws
+    func rewind(to height: BlockHeight) async throws
 
     /**
     Returns the height of the latest compact block stored locally.
@@ -108,21 +102,13 @@ extension BlockDownloaderServiceImpl: BlockDownloaderService {
             throw error
         }
     }
-    
-    func rewindAsync(to height: BlockHeight) async throws {
-        do {
-            try await storage.rewindAsync(to: height)
-        } catch {
-            throw error
-        }
+
+    func rewind(to height: BlockHeight) async throws {
+        try await self.storage.rewind(to: height)
     }
 
-    func rewind(to height: BlockHeight) throws {
-        try self.storage.rewind(to: height)
-    }
-
-    func lastDownloadedBlockHeight() -> BlockHeight {
-        self.storage.latestHeight()
+    func lastDownloadedBlockHeight() async -> BlockHeight {
+        await self.storage.latestHeight()
     }
     
     func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {

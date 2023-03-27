@@ -70,7 +70,8 @@ class DownloadTests: XCTestCase {
         } catch {
             XCTFail("Download failed with error: \(error)")
         }
-        
-        XCTAssertEqual(storage.latestHeight(), range.upperBound)
+
+        let latestHeight = await storage.latestHeight()
+        XCTAssertEqual(latestHeight, range.upperBound)
     }
 }

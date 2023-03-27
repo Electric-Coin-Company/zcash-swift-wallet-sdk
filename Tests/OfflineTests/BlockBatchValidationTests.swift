@@ -366,7 +366,7 @@ class BlockBatchValidationTests: XCTestCase {
 
         var nextBatch: CompactBlockProcessor.NextState?
         do {
-            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextState(
                 service: service,
                 downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
@@ -458,7 +458,7 @@ class BlockBatchValidationTests: XCTestCase {
         
         var nextBatch: CompactBlockProcessor.NextState?
         do {
-            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextState(
                 service: service,
                 downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
@@ -543,7 +543,7 @@ class BlockBatchValidationTests: XCTestCase {
         
         var nextBatch: CompactBlockProcessor.NextState?
         do {
-            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextStateAsync(
+            nextBatch = try await CompactBlockProcessor.NextStateHelper.nextState(
                 service: service,
                 downloaderService: downloaderService,
                 transactionRepository: transactionRepository,

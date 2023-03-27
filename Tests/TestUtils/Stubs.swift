@@ -12,14 +12,10 @@ import SwiftProtobuf
 @testable import ZcashLightClientKit
 
 class AwfulLightWalletService: MockLightWalletService {
-    override func latestBlockHeight() throws -> BlockHeight {
+    override func latestBlockHeight() async throws -> BlockHeight {
         throw LightWalletServiceError.criticalError
     }
-    
-    override func latestBlockHeightAsync() async throws -> BlockHeight {
-        throw LightWalletServiceError.invalidBlock
-    }
-    
+
     override func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         AsyncThrowingStream { continuation in continuation.finish(throwing: LightWalletServiceError.invalidBlock) }
     }

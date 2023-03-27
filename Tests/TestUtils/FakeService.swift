@@ -48,7 +48,7 @@ class MockLightWalletService: LightWalletService {
         self.service = service
     }
     
-    func latestBlockHeight() throws -> BlockHeight {
+    func latestBlockHeight() async throws -> BlockHeight {
         return self.latestHeight
     }
     
@@ -59,10 +59,6 @@ class MockLightWalletService: LightWalletService {
         return info
     }
 
-    func latestBlockHeightAsync() async throws -> BlockHeight {
-        latestHeight
-    }
-    
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         service.blockRange(range)
     }
