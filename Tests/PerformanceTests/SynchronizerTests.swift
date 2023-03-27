@@ -70,7 +70,7 @@ class SynchronizerTests: XCTestCase {
                 outputParamsURL: try __outputParamsURL(),
                 saplingParamsSourceURL: SaplingParamsSourceURL.tests,
                 alias: .default,
-                loggerProxy: OSLogger(logLevel: .debug)
+                logLevel: .debug
             )
             
             try? FileManager.default.removeItem(at: databases.fsCacheDbRoot)
@@ -87,7 +87,11 @@ class SynchronizerTests: XCTestCase {
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             sdkSynchronizerSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
             
-            let internalSyncProgress = InternalSyncProgress(alias: .default, storage: UserDefaults.standard)
+            let internalSyncProgress = InternalSyncProgress(
+                alias: .default,
+                storage: UserDefaults.standard,
+                logger: logger
+            )
             await internalSyncProgress.rewind(to: birthday)
             await (synchronizer.blockProcessor.service as? LightWalletGRPCService)?.latestBlockHeightProvider = MockLatestBlockHeightProvider(
                 birthday: self.birthday + 99

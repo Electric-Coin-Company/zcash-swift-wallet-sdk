@@ -135,6 +135,7 @@ public class Initializer {
     let storage: CompactBlockRepository
     let blockDownloaderService: BlockDownloaderService
     let network: ZcashNetwork
+    let logger: Logger
 
     /// The effective birthday of the wallet based on the height provided when initializing and the checkpoints available on this SDK.
     ///
@@ -169,7 +170,7 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        loggerProxy: Logger? = nil
+        logLevel: OSLogger.LogLevel = .debug
     ) {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
@@ -183,6 +184,7 @@ public class Initializer {
         // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
         let (updatedURLs, parsingError) = Self.tryToUpdateURLs(with: alias, urls: urls)
 
+        let logger = OSLogger(logLevel: logLevel, alias: alias)
         self.init(
             rustBackend: ZcashRustBackend.self,
             network: network,
@@ -194,21 +196,24 @@ public class Initializer {
             accountRepository: AccountRepositoryBuilder.build(
                 dataDbURL: updatedURLs.dataDbURL,
                 readOnly: true,
-                caching: true
+                caching: true,
+                logger: logger
             ),
             storage: FSCompactBlockRepository(
                 fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
                 metadataStore: .live(
                     fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-                    rustBackend: ZcashRustBackend.self
+                    rustBackend: ZcashRustBackend.self,
+                    logger: logger
                 ),
                 blockDescriptor: .live,
-                contentProvider: DirectoryListingProviders.defaultSorted
+                contentProvider: DirectoryListingProviders.defaultSorted,
+                logger: logger
             ),
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            loggerProxy: loggerProxy,
-            urlsParsingError: parsingError
+            urlsParsingError: parsingError,
+            logger: logger
         )
     }
 
@@ -227,10 +232,9 @@ public class Initializer {
         storage: CompactBlockRepository,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
-        loggerProxy: Logger?,
-        urlsParsingError: InitializerError?
+        urlsParsingError: InitializerError?,
+        logger: Logger
     ) {
-        logger = loggerProxy
         self.cacheDbURL = cacheDbURL
         self.rustBackend = rustBackend
         self.fsBlockDbRoot = urls.fsBlockDbRoot
@@ -249,6 +253,7 @@ public class Initializer {
         self.network = network
         self.walletBirthday = Checkpoint.birthday(with: 0, network: network).height
         self.urlsParsingError = urlsParsingError
+        self.logger = logger
     }
 
     private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
@@ -382,7 +387,8 @@ public class Initializer {
 
         let migrationManager = MigrationManager(
             pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
-            networkType: self.network.networkType
+            networkType: self.network.networkType,
+            logger: logger
         )
 
         try migrationManager.performMigration()

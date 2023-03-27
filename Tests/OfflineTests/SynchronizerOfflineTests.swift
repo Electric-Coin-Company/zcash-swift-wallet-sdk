@@ -249,7 +249,7 @@ class SynchronizerOfflineTests: XCTestCase {
             outputParamsURL: validFileURL,
             saplingParamsSourceURL: .default,
             alias: .default,
-            loggerProxy: nil
+            logLevel: .debug
         )
 
         XCTAssertNotNil(initializer.urlsParsingError)
@@ -290,7 +290,7 @@ class SynchronizerOfflineTests: XCTestCase {
             outputParamsURL: validFileURL,
             saplingParamsSourceURL: .default,
             alias: .default,
-            loggerProxy: nil
+            logLevel: .debug
         )
 
         XCTAssertNotNil(initializer.urlsParsingError)

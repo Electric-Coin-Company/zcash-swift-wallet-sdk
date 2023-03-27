@@ -49,7 +49,13 @@ class CompactBlockReorgTests: XCTestCase {
         logger = OSLogger(logLevel: .debug)
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
-        XCTestCase.wait { await InternalSyncProgress(alias: .default, storage: UserDefaults.standard).rewind(to: 0) }
+        XCTestCase.wait {
+            await InternalSyncProgress(
+                alias: .default,
+                storage: UserDefaults.standard,
+                logger: logger
+            ).rewind(to: 0)
+        }
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
@@ -75,10 +81,12 @@ class CompactBlockReorgTests: XCTestCase {
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try realCache.create()
@@ -98,7 +106,8 @@ class CompactBlockReorgTests: XCTestCase {
             storage: realCache,
             backend: mockBackend,
             config: processorConfig,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")

@@ -21,6 +21,7 @@ public class SDKSynchronizer: Synchronizer {
     public var eventStream: AnyPublisher<SynchronizerEvent, Never> { eventSubject.eraseToAnyPublisher() }
 
     public let metrics: SDKMetrics
+    public let logger: Logger
     
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<SyncStatus>
@@ -55,6 +56,7 @@ public class SDKSynchronizer: Synchronizer {
             blockProcessor: CompactBlockProcessor(
                 initializer: initializer,
                 metrics: metrics,
+                logger: initializer.logger,
                 walletBirthdayProvider: { initializer.walletBirthday }
             ),
             metrics: metrics
@@ -79,6 +81,7 @@ public class SDKSynchronizer: Synchronizer {
         self.blockProcessor = blockProcessor
         self.network = initializer.network
         self.metrics = metrics
+        self.logger = initializer.logger
 
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -150,7 +153,7 @@ public class SDKSynchronizer: Synchronizer {
             throw SynchronizerError.notPrepared
 
         case .syncing, .enhancing, .fetching:
-            LoggerProxy.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
+            logger.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
             /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
             /// it's start here.
             await blockProcessor.start(retry: retry)
@@ -166,7 +169,7 @@ public class SDKSynchronizer: Synchronizer {
     public func stop() async {
         let status = await self.status
         guard status != .stopped, status != .disconnected else {
-            LoggerProxy.info("attempted to stop when status was: \(status)")
+            logger.info("attempted to stop when status was: \(status)")
             return
         }
 
@@ -247,12 +250,12 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func handledReorg(reorgHeight: BlockHeight, rewindHeight: BlockHeight) {
-        LoggerProxy.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
+        logger.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
         do {
             try transactionManager.handleReorg(at: rewindHeight)
         } catch {
-            LoggerProxy.debug("error handling reorg: \(error)")
+            logger.debug("error handling reorg: \(error)")
         }
     }
 
@@ -282,7 +285,8 @@ public class SDKSynchronizer: Synchronizer {
                 spendURL: initializer.spendParamsURL,
                 spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
                 outputURL: initializer.outputParamsURL,
-                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL
+                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+                logger: logger
             )
         } catch {
             throw SynchronizerError.parameterMissing(underlyingError: error)
@@ -651,7 +655,7 @@ public class SDKSynchronizer: Synchronizer {
             try updateMinedTransactions()
             try removeConfirmedTransactions()
         } catch {
-            LoggerProxy.debug("error refreshing pending transactions: \(error)")
+            logger.debug("error refreshing pending transactions: \(error)")
         }
     }
 

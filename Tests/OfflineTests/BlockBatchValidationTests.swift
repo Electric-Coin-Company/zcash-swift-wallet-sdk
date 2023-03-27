@@ -40,10 +40,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -83,7 +85,8 @@ class BlockBatchValidationTests: XCTestCase {
             storage: storage,
             backend: mockRust,
             config: config,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -112,10 +115,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -155,7 +160,8 @@ class BlockBatchValidationTests: XCTestCase {
             storage: storage,
             backend: mockRust,
             config: config,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -184,10 +190,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -227,7 +235,8 @@ class BlockBatchValidationTests: XCTestCase {
             storage: storage,
             backend: mockRust,
             config: config,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -256,10 +265,12 @@ class BlockBatchValidationTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -300,7 +311,8 @@ class BlockBatchValidationTests: XCTestCase {
             storage: storage,
             backend: mockRust,
             config: config,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {
@@ -381,7 +393,11 @@ class BlockBatchValidationTests: XCTestCase {
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
-                internalSyncProgress: InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
+                internalSyncProgress: InternalSyncProgress(
+                    alias: .default,
+                    storage: InternalSyncProgressMemoryStorage(),
+                    logger: logger
+                )
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -474,7 +490,11 @@ class BlockBatchValidationTests: XCTestCase {
                 transactionRepository: transactionRepository,
                 config: config,
                 rustBackend: mockRust,
-                internalSyncProgress: InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
+                internalSyncProgress: InternalSyncProgress(
+                    alias: .default,
+                    storage: InternalSyncProgressMemoryStorage(),
+                    logger: logger
+                )
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -527,7 +547,11 @@ class BlockBatchValidationTests: XCTestCase {
             network: network
         )
 
-        let internalSyncProgress = InternalSyncProgress(alias: .default, storage: InternalSyncProgressMemoryStorage())
+        let internalSyncProgress = InternalSyncProgress(
+            alias: .default,
+            storage: InternalSyncProgressMemoryStorage(),
+            logger: logger
+        )
         await internalSyncProgress.set(expectedStoreLatestHeight, .latestEnhancedHeight)
         await internalSyncProgress.set(expectedStoreLatestHeight, .latestUTXOFetchedHeight)
 

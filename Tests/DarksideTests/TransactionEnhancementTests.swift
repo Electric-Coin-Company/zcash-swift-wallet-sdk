@@ -43,7 +43,13 @@ class TransactionEnhancementTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
-        XCTestCase.wait { await InternalSyncProgress(alias: .default, storage: UserDefaults.standard).rewind(to: 0) }
+        XCTestCase.wait {
+            await InternalSyncProgress(
+                alias: .default,
+                storage: UserDefaults.standard,
+                logger: logger
+            ).rewind(to: 0)
+        }
 
         logger = OSLogger(logLevel: .debug)
         
@@ -117,10 +123,12 @@ class TransactionEnhancementTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: rustBackend
+                rustBackend: rustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
         try! storage.create()
         
@@ -130,7 +138,8 @@ class TransactionEnhancementTests: XCTestCase {
             storage: storage,
             backend: rustBackend,
             config: processorConfig,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in

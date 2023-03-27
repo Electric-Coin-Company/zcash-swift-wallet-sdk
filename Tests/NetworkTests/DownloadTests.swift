@@ -41,10 +41,12 @@ class DownloadTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -63,7 +65,8 @@ class DownloadTests: XCTestCase {
             storage: storage,
             backend: realRustBackend,
             config: processorConfig,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {

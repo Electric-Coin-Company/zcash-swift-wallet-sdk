@@ -58,7 +58,7 @@ final class SynchronizerTests: XCTestCase {
     func handleReorg(event: CompactBlockProcessor.Event) {
         guard case let .handledReorg(reorgHeight, rewindHeight) = event else { return XCTFail("empty reorg notification") }
 
-        logger!.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
+        logger.debug("--- REORG DETECTED \(reorgHeight)--- RewindHeight: \(rewindHeight)", file: #file, function: #function, line: #line)
 
         XCTAssertEqual(reorgHeight, expectedReorgHeight)
         reorgExpectation.fulfill()
@@ -227,7 +227,11 @@ final class SynchronizerTests: XCTestCase {
         XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
         XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [], "FS Cache directory should be empty")
 
-        let internalSyncProgress = InternalSyncProgress(alias: .default, storage: UserDefaults.standard)
+        let internalSyncProgress = InternalSyncProgress(
+            alias: .default,
+            storage: UserDefaults.standard,
+            logger: logger
+        )
 
         let latestDownloadedBlockHeight = await internalSyncProgress.load(.latestDownloadedBlockHeight)
         let latestEnhancedHeight = await internalSyncProgress.load(.latestEnhancedHeight)

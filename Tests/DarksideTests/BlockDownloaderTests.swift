@@ -31,9 +31,14 @@ class BlockDownloaderTests: XCTestCase {
 
         storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
-            metadataStore: FSMetadataStore.live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self),
+            metadataStore: FSMetadataStore.live(
+                fsBlockDbRoot: testTempDirectory,
+                rustBackend: ZcashRustBackend.self,
+                logger: logger
+            ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
         try storage.create()
 

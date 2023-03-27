@@ -82,10 +82,12 @@ class BlockScanTests: XCTestCase {
             fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: fsDbRootURL,
-                rustBackend: rustBackend
+                rustBackend: rustBackend,
+                logger: logger
             ),
             blockDescriptor: ZcashCompactBlockDescriptor.live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try fsBlockRepository.create()
@@ -106,7 +108,8 @@ class BlockScanTests: XCTestCase {
             storage: fsBlockRepository,
             backend: rustBackend,
             config: processorConfig,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         let repository = BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
@@ -174,10 +177,12 @@ class BlockScanTests: XCTestCase {
             fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: fsDbRootURL,
-                rustBackend: rustWelding
+                rustBackend: rustWelding,
+                logger: logger
             ),
             blockDescriptor: ZcashCompactBlockDescriptor.live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try fsBlockRepository.create()
@@ -199,7 +204,8 @@ class BlockScanTests: XCTestCase {
             storage: fsBlockRepository,
             backend: rustWelding,
             config: processorConfig,
-            metrics: metrics
+            metrics: metrics,
+            logger: logger
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in

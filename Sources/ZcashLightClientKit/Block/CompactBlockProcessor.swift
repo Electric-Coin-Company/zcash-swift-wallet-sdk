@@ -275,6 +275,7 @@ actor CompactBlockProcessor {
     private var afterSyncHooksManager = AfterSyncHooksManager()
 
     let metrics: SDKMetrics
+    let logger: Logger
     
     /// Don't update this variable directly. Use `updateState()` method.
     var state: State = .stopped
@@ -345,7 +346,8 @@ actor CompactBlockProcessor {
         storage: CompactBlockRepository,
         backend: ZcashRustBackendWelding.Type,
         config: Configuration,
-        metrics: SDKMetrics
+        metrics: SDKMetrics,
+        logger: Logger
     ) {
         self.init(
             service: service,
@@ -355,15 +357,21 @@ actor CompactBlockProcessor {
             repository: TransactionRepositoryBuilder.build(
                 dataDbURL: config.dataDb
             ),
-            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true),
-            metrics: metrics
+            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: logger),
+            metrics: metrics,
+            logger: logger
         )
     }
 
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    init(initializer: Initializer, metrics: SDKMetrics, walletBirthdayProvider: @escaping () -> BlockHeight) {
+    init(
+        initializer: Initializer,
+        metrics: SDKMetrics,
+        logger: Logger,
+        walletBirthdayProvider: @escaping () -> BlockHeight
+    ) {
         self.init(
             service: initializer.lightWalletService,
             storage: initializer.storage,
@@ -380,7 +388,8 @@ actor CompactBlockProcessor {
             ),
             repository: initializer.transactionRepository,
             accountRepository: initializer.accountRepository,
-            metrics: metrics
+            metrics: metrics,
+            logger: logger
         )
     }
     
@@ -391,10 +400,12 @@ actor CompactBlockProcessor {
         config: Configuration,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
-        metrics: SDKMetrics
+        metrics: SDKMetrics,
+        logger: Logger
     ) {
         self.metrics = metrics
-        let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard)
+        self.logger = logger
+        let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard, logger: logger)
         self.internalSyncProgress = internalSyncProgress
         let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
         let blockDownloader = BlockDownloaderImpl(
@@ -402,7 +413,8 @@ actor CompactBlockProcessor {
             downloaderService: blockDownloaderService,
             storage: storage,
             internalSyncProgress: internalSyncProgress,
-            metrics: metrics
+            metrics: metrics,
+            logger: logger
         )
 
         self.blockDownloaderService = blockDownloaderService
@@ -416,7 +428,8 @@ actor CompactBlockProcessor {
         self.blockValidator = BlockValidatorImpl(
             config: blockValidatorConfig,
             rustBackend: backend,
-            metrics: metrics
+            metrics: metrics,
+            logger: logger
         )
 
         let blockScannerConfig = BlockScannerConfig(
@@ -429,7 +442,8 @@ actor CompactBlockProcessor {
             config: blockScannerConfig,
             rustBackend: backend,
             transactionRepository: repository,
-            metrics: metrics
+            metrics: metrics,
+            logger: logger
         )
 
         let blockEnhancerConfig = BlockEnhancerConfig(dataDb: config.dataDb, networkType: config.network.networkType)
@@ -439,7 +453,8 @@ actor CompactBlockProcessor {
             internalSyncProgress: internalSyncProgress,
             rustBackend: backend,
             transactionRepository: repository,
-            metrics: metrics
+            metrics: metrics,
+            logger: logger
         )
 
         let utxoFetcherConfig = UTXOFetcherConfig(
@@ -453,7 +468,8 @@ actor CompactBlockProcessor {
             config: utxoFetcherConfig,
             internalSyncProgress: internalSyncProgress,
             rustBackend: backend,
-            metrics: metrics
+            metrics: metrics,
+            logger: logger
         )
 
         let saplingParametersHandlerConfig = SaplingParametersHandlerConfig(
@@ -463,7 +479,11 @@ actor CompactBlockProcessor {
             spendParamsURL: config.spendParamsURL,
             saplingParamsSourceURL: config.saplingParamsSourceURL
         )
-        self.saplingParametersHandler = SaplingParametersHandlerImpl(config: saplingParametersHandlerConfig, rustBackend: backend)
+        self.saplingParametersHandler = SaplingParametersHandlerImpl(
+            config: saplingParametersHandlerConfig,
+            rustBackend: backend,
+            logger: logger
+        )
 
         self.service = service
         self.rustBackend = backend
@@ -544,19 +564,19 @@ actor CompactBlockProcessor {
             switch self.state {
             case .error(let error):
                 // max attempts have been reached
-                LoggerProxy.info("max retry attempts reached with error: \(error)")
+                logger.info("max retry attempts reached with error: \(error)")
                 await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
                 await updateState(.stopped)
             case .stopped:
                 // max attempts have been reached
-                LoggerProxy.info("max retry attempts reached")
+                logger.info("max retry attempts reached")
                 await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .synced:
                 // max attempts have been reached
-                LoggerProxy.warn("max retry attempts reached on synced state, this indicates malfunction")
+                logger.warn("max retry attempts reached on synced state, this indicates malfunction")
                 await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
             case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
-                LoggerProxy.debug("Warning: compact block processor was started while busy!!!!")
+                logger.debug("Warning: compact block processor was started while busy!!!!")
                 afterSyncHooksManager.insert(hook: .anotherSync)
             }
             return
@@ -594,21 +614,21 @@ actor CompactBlockProcessor {
     ///
     /// - Note: If this is called while sync is in progress then the sync process is stopped first and then rewind is executed.
     func rewind(context: AfterSyncHooksManager.RewindContext) async {
-        LoggerProxy.debug("Starting rewid")
+        logger.debug("Starting rewid")
         switch self.state {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
-            LoggerProxy.debug("Stopping sync because of rewind")
+            logger.debug("Stopping sync because of rewind")
             afterSyncHooksManager.insert(hook: .rewind(context))
             stop()
 
         case .stopped, .error, .synced:
-            LoggerProxy.debug("Sync doesn't run. Executing rewind.")
+            logger.debug("Sync doesn't run. Executing rewind.")
             await doRewind(context: context)
         }
     }
 
     private func doRewind(context: AfterSyncHooksManager.RewindContext) async {
-        LoggerProxy.debug("Executing rewind.")
+        logger.debug("Executing rewind.")
         let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
         let height = Int32(context.height ?? lastDownloaded)
         let nearestHeight = rustBackend.getNearestRewindHeight(
@@ -650,21 +670,21 @@ actor CompactBlockProcessor {
     // MARK: Wipe
 
     func wipe(context: AfterSyncHooksManager.WipeContext) async {
-        LoggerProxy.debug("Starting wipe")
+        logger.debug("Starting wipe")
         switch self.state {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
-            LoggerProxy.debug("Stopping sync because of wipe")
+            logger.debug("Stopping sync because of wipe")
             afterSyncHooksManager.insert(hook: .wipe(context))
             stop()
 
         case .stopped, .error, .synced:
-            LoggerProxy.debug("Sync doesn't run. Executing wipe.")
+            logger.debug("Sync doesn't run. Executing wipe.")
             await doWipe(context: context)
         }
     }
 
     private func doWipe(context: AfterSyncHooksManager.WipeContext) async {
-        LoggerProxy.debug("Executing wipe.")
+        logger.debug("Executing wipe.")
         context.prewipe()
 
         await updateState(.stopped)
@@ -718,7 +738,7 @@ actor CompactBlockProcessor {
             do {
                 let totalProgressRange = computeTotalProgressRange(from: ranges)
 
-                LoggerProxy.debug("""
+                logger.debug("""
                 Syncing with ranges:
                 downloaded but not scanned: \
                 \(ranges.downloadedButUnscannedRange?.lowerBound ?? -1)...\(ranges.downloadedButUnscannedRange?.upperBound ?? -1)
@@ -742,7 +762,7 @@ actor CompactBlockProcessor {
                 }
 
                 if let range = ranges.downloadedButUnscannedRange {
-                    LoggerProxy.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
+                    logger.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
                     try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
                         let progress = BlockProgress(
                             startHeight: totalProgressRange.lowerBound,
@@ -754,13 +774,13 @@ actor CompactBlockProcessor {
                 }
 
                 if let range = ranges.downloadAndScanRange {
-                    LoggerProxy.debug("Starting sync with range: \(range.lowerBound)...\(range.upperBound)")
+                    logger.debug("Starting sync with range: \(range.lowerBound)...\(range.upperBound)")
                     try await downloadAndScanBlocks(at: range, totalProgressRange: totalProgressRange)
                 }
 
                 if let range = ranges.enhanceRange {
                     anyActionExecuted = true
-                    LoggerProxy.debug("Enhancing with range: \(range.lowerBound)...\(range.upperBound)")
+                    logger.debug("Enhancing with range: \(range.lowerBound)...\(range.upperBound)")
                     await updateState(.enhancing)
                     let transactions = try await blockEnhancer.enhance(at: range) { [weak self] progress in
                         await self?.notifyProgress(.enhance(progress))
@@ -770,34 +790,34 @@ actor CompactBlockProcessor {
 
                 if let range = ranges.fetchUTXORange {
                     anyActionExecuted = true
-                    LoggerProxy.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
+                    logger.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
                     await updateState(.fetching)
                     let result = try await utxoFetcher.fetch(at: range)
                     await send(event: .storedUTXOs(result))
                 }
 
-                LoggerProxy.debug("Fetching sapling parameters")
+                logger.debug("Fetching sapling parameters")
                 await updateState(.handlingSaplingFiles)
                 try await saplingParametersHandler.handleIfNeeded()
 
-                LoggerProxy.debug("Clearing cache")
+                logger.debug("Clearing cache")
                 try await clearCompactBlockCache()
 
                 if !Task.isCancelled {
                     await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
                 }
             } catch {
-                LoggerProxy.error("Sync failed with error: \(error)")
+                logger.error("Sync failed with error: \(error)")
 
                 if Task.isCancelled {
-                    LoggerProxy.info("Processing cancelled.")
+                    logger.info("Processing cancelled.")
                     await updateState(.stopped)
                     await handleAfterSyncHooks()
                 } else {
                     if case BlockValidatorError.validationFailed(let height) = error {
                         await validationFailed(at: height)
                     } else {
-                        LoggerProxy.error("processing failed with error: \(error)")
+                        logger.error("processing failed with error: \(error)")
                         await fail(error)
                     }
                 }
@@ -814,7 +834,7 @@ actor CompactBlockProcessor {
         } else if let rewindContext = afterSyncHooksManager.shouldExecuteRewindHook() {
             await doRewind(context: rewindContext)
         } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
-            LoggerProxy.debug("Starting new sync.")
+            logger.debug("Starting new sync.")
             await nextBatch()
         }
     }
@@ -836,7 +856,7 @@ actor CompactBlockProcessor {
         for i in 0..<loopsCount {
             let processingRange = computeSingleLoopDownloadRange(fullRange: range, loopCounter: i, batchSize: batchSize)
 
-            LoggerProxy.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
+            logger.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
 
             try await blockDownloader.downloadAndStoreBlocks(
                 using: downloadStream,
@@ -849,7 +869,7 @@ actor CompactBlockProcessor {
                 try await blockValidator.validate()
             } catch {
                 guard let validationError = error as? BlockValidatorError else {
-                    LoggerProxy.error("Block validation failed with generic error: \(error)")
+                    logger.error("Block validation failed with generic error: \(error)")
                     throw error
                 }
 
@@ -861,7 +881,7 @@ actor CompactBlockProcessor {
                     throw genericError
 
                 case .failedWithUnknownError:
-                    LoggerProxy.error("validation failed without a specific error")
+                    logger.error("validation failed without a specific error")
                     throw CompactBlockProcessorError.generalError(message: "validation failed without a specific error")
                 }
             }
@@ -876,7 +896,7 @@ actor CompactBlockProcessor {
                     await self?.notifyProgress(.syncing(progress))
                 }
             } catch {
-                LoggerProxy.error("Scanning failed with error: \(error)")
+                logger.error("Scanning failed with error: \(error)")
                 throw error
             }
 
@@ -925,7 +945,7 @@ actor CompactBlockProcessor {
     }
 
     func notifyProgress(_ progress: CompactBlockProgress) async {
-        LoggerProxy.debug("progress: \(progress)")
+        logger.debug("progress: \(progress)")
         await send(event: .progressUpdated(progress))
     }
     
@@ -944,7 +964,7 @@ actor CompactBlockProcessor {
 
     func severeFailure(_ error: Error) async {
         cancelableTask?.cancel()
-        LoggerProxy.error("show stopper failure: \(error)")
+        logger.error("show stopper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
         self.processingError = error
@@ -954,7 +974,7 @@ actor CompactBlockProcessor {
 
     func fail(_ error: Error) async {
         // TODO: [#713] specify: failure. https://github.com/zcash/ZcashLightClientKit/issues/713
-        LoggerProxy.error("\(error)")
+        logger.error("\(error)")
         cancelableTask?.cancel()
         self.retryAttempts += 1
         self.processingError = error
@@ -1008,7 +1028,7 @@ actor CompactBlockProcessor {
                 await self.processNewBlocks(ranges: ranges)
             case let .wait(latestHeight, latestDownloadHeight):
                 // Lightwalletd might be syncing
-                LoggerProxy.info(
+                logger.info(
                     "Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight) " +
                     "while latest blockheight is reported at: \(latestHeight)"
                 )
@@ -1072,7 +1092,7 @@ actor CompactBlockProcessor {
 
     private func clearCompactBlockCache() async throws {
         try await storage.clear()
-        LoggerProxy.info("Cache removed")
+        logger.info("Cache removed")
     }
     
     private func setTimer() async {
@@ -1085,7 +1105,7 @@ actor CompactBlockProcessor {
                 Task { [self] in
                     guard let self else { return }
                     if await self.shouldStart {
-                        LoggerProxy.debug(
+                        self.logger.debug(
                             """
                             Timer triggered: Starting compact Block processor!.
                             Processor State: \(await self.state)
@@ -1257,7 +1277,7 @@ extension CompactBlockProcessor {
                     skipped.append(utxo)
                 }
             } catch {
-                LoggerProxy.info("failed to put utxo - error: \(error)")
+                logger.info("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
             }
         }

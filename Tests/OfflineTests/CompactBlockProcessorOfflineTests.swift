@@ -44,10 +44,12 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
         
         let processor = CompactBlockProcessor(
@@ -55,7 +57,8 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             storage: storage,
             backend: ZcashRustBackend.self,
             config: processorConfig,
-            metrics: SDKMetrics()
+            metrics: SDKMetrics(),
+            logger: logger
         )
 
         let fullRange = 0...1000

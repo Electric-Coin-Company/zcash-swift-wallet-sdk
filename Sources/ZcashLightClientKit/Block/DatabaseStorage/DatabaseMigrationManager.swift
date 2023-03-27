@@ -20,13 +20,16 @@ class MigrationManager {
 
     var pendingDb: ConnectionProvider
     var network: NetworkType
+    let logger: Logger
 
     init(
         pendingDbConnection: ConnectionProvider,
-        networkType: NetworkType
+        networkType: NetworkType,
+        logger: Logger
     ) {
         self.pendingDb = pendingDbConnection
         self.network = networkType
+        self.logger = logger
     }
 
     func performMigration() throws {
@@ -39,7 +42,7 @@ private extension MigrationManager {
         // getUserVersion returns a default value of zero for an unmigrated database.
         let currentPendingDbVersion = try pendingDb.connection().getUserVersion()
 
-        LoggerProxy.debug(
+        logger.debug(
             "Attempting to perform migration for pending Db - currentVersion: \(currentPendingDbVersion)." +
             "Latest version is: \(Self.nextPendingDbMigration.rawValue - 1)"
         )

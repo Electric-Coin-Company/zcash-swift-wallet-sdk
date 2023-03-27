@@ -54,14 +54,16 @@ actor InternalSyncProgress {
 
     private let alias: ZcashSynchronizerAlias
     private let storage: InternalSyncProgressStorage
+    let logger: Logger
 
     var latestDownloadedBlockHeight: BlockHeight { load(.latestDownloadedBlockHeight) }
     var latestEnhancedHeight: BlockHeight { load(.latestEnhancedHeight) }
     var latestUTXOFetchedHeight: BlockHeight { load(.latestUTXOFetchedHeight) }
 
-    init(alias: ZcashSynchronizerAlias, storage: InternalSyncProgressStorage) {
+    init(alias: ZcashSynchronizerAlias, storage: InternalSyncProgressStorage, logger: Logger) {
         self.alias = alias
         self.storage = storage
+        self.logger = logger
     }
 
     func load(_ key: Key) -> BlockHeight {
@@ -114,7 +116,7 @@ actor InternalSyncProgress {
         latestScannedHeight: BlockHeight,
         walletBirthday: BlockHeight
     ) throws -> CompactBlockProcessor.NextState {
-        LoggerProxy.debug("""
+        logger.debug("""
             Init numbers:
             latestBlockHeight:       \(latestBlockHeight)
             latestDownloadedHeight:  \(latestDownloadedBlockHeight)
@@ -158,7 +160,7 @@ actor InternalSyncProgress {
         }
 
         if latestScannedHeight > latestDownloadedBlockHeight {
-            LoggerProxy.warn("""
+            logger.warn("""
             InternalSyncProgress found inconsistent state.
                 latestBlockHeight:       \(latestBlockHeight)
             --> latestDownloadedHeight:  \(latestDownloadedBlockHeight)

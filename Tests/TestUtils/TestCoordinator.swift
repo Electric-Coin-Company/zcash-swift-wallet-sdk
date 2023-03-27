@@ -118,7 +118,7 @@ class TestCoordinator {
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true
     ) async throws {
-        await InternalSyncProgress(alias: alias, storage: UserDefaults.standard).rewind(to: 0)
+        await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
         self.spendingKey = spendingKey
         self.viewingKey = unifiedFullViewingKey
@@ -142,10 +142,12 @@ class TestCoordinator {
             fsBlockDbRoot: self.databases.fsCacheDbRoot,
             metadataStore: .live(
                 fsBlockDbRoot: self.databases.fsCacheDbRoot,
-                rustBackend: ZcashRustBackend.self
+                rustBackend: ZcashRustBackend.self,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         let synchronizer = TestSynchronizerBuilder.build(
@@ -159,13 +161,14 @@ class TestCoordinator {
             repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
             accountRepository: AccountRepositoryBuilder.build(
                 dataDbURL: databases.dataDB,
-                readOnly: true
+                readOnly: true,
+                logger: logger
             ),
             storage: storage,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
             network: network,
-            loggerProxy: OSLogger(logLevel: .debug)
+            logLevel: .debug
         )
         
         self.synchronizer = synchronizer
@@ -353,7 +356,7 @@ enum TestSynchronizerBuilder {
         spendParamsURL: URL,
         outputParamsURL: URL,
         network: ZcashNetwork,
-        loggerProxy: Logger? = nil
+        logLevel: OSLogger.LogLevel
     ) -> SDKSynchronizer {
         let initializer = Initializer(
             cacheDbURL: nil,
@@ -366,7 +369,7 @@ enum TestSynchronizerBuilder {
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             alias: alias,
-            loggerProxy: loggerProxy
+            logLevel: logLevel
         )
 
         return SDKSynchronizer(initializer: initializer)

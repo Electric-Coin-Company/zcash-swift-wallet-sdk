@@ -36,7 +36,7 @@ class InitializerOfflineTests: XCTestCase {
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: .default,
             alias: alias,
-            loggerProxy: nil
+            logLevel: .debug
         )
     }
 

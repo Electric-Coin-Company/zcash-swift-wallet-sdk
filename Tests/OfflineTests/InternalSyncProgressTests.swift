@@ -16,7 +16,7 @@ class InternalSyncProgressTests: XCTestCase {
     override func setUp() {
         super.setUp()
         storage = InternalSyncProgressMemoryStorage()
-        internalSyncProgress = InternalSyncProgress(alias: .default, storage: storage)
+        internalSyncProgress = InternalSyncProgress(alias: .default, storage: storage, logger: logger)
     }
 
     override func tearDownWithError() throws {
@@ -141,12 +141,12 @@ class InternalSyncProgressTests: XCTestCase {
     }
 
     func test__usingDifferentAliasesStoreValuesIndependently() async {
-        let internalSyncProgress1 = InternalSyncProgress(alias: .custom("alias1"), storage: storage)
+        let internalSyncProgress1 = InternalSyncProgress(alias: .custom("alias1"), storage: storage, logger: logger)
         await internalSyncProgress1.set(121000, .latestDownloadedBlockHeight)
         await internalSyncProgress1.set(121000, .latestUTXOFetchedHeight)
         await internalSyncProgress1.set(121000, .latestEnhancedHeight)
 
-        let internalSyncProgress2 = InternalSyncProgress(alias: .custom("alias2"), storage: storage)
+        let internalSyncProgress2 = InternalSyncProgress(alias: .custom("alias2"), storage: storage, logger: logger)
         await internalSyncProgress2.set(630000, .latestDownloadedBlockHeight)
         await internalSyncProgress2.set(630000, .latestUTXOFetchedHeight)
         await internalSyncProgress2.set(630000, .latestEnhancedHeight)
