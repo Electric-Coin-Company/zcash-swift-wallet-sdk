@@ -122,7 +122,7 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let latestHeight = try coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
@@ -269,7 +269,7 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let latestHeight = try coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
@@ -417,7 +417,7 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let latestHeight = try coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in
@@ -560,7 +560,7 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let latestHeight = try coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
         try coordinator.stageBlockCreate(height: sentTxHeight)
         
@@ -741,7 +741,7 @@ class BalanceTests: XCTestCase {
         
         XCTAssertNil(transaction.errorCode)
         
-        let latestHeight = try coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
         try coordinator.stageBlockCreate(height: sentTxHeight)
         guard let rawTx = try coordinator.getIncomingTransactions()?.first else {
@@ -889,7 +889,7 @@ class BalanceTests: XCTestCase {
             return
         }
         
-        let latestHeight = try coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
         try coordinator.stageBlockCreate(height: sentTxHeight, count: 12)
         try coordinator.stageTransaction(rawTx, at: sentTxHeight)

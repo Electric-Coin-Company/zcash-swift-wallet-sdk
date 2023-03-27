@@ -1351,11 +1351,11 @@ extension CompactBlockProcessor {
                     rustBackend: rustBackend
                 )
 
-                let latestDownloadHeight = try downloaderService.lastDownloadedBlockHeight()
+                let latestDownloadHeight = try await downloaderService.lastDownloadedBlockHeight()
 
                 await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight)
 
-                let latestBlockHeight = try service.latestBlockHeight()
+                let latestBlockHeight = try await service.latestBlockHeight()
                 let latestScannedHeight = try transactionRepository.lastScannedHeight()
 
                 return try await internalSyncProgress.computeNextState(
