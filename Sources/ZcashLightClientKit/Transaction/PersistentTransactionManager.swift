@@ -210,9 +210,8 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func handleReorg(at height: BlockHeight) throws {
-        guard let affectedTxs = try self.allPendingTransactions()?.filter({ $0.minedHeight >= height }) else {
-            return
-        }
+        let affectedTxs = try allPendingTransactions()
+            .filter({ $0.minedHeight >= height })
         
         try affectedTxs
             .map { transaction -> PendingTransactionEntity in
@@ -235,7 +234,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         return true
     }
     
-    func allPendingTransactions() throws -> [PendingTransactionEntity]? {
+    func allPendingTransactions() throws -> [PendingTransactionEntity] {
         try repository.getAll()
     }
     

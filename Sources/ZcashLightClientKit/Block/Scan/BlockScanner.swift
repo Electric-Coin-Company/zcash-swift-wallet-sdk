@@ -30,7 +30,7 @@ extension BlockScannerImpl: BlockScanner {
     func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: @escaping (BlockHeight) async -> Void) async throws {
         try Task.checkCancellation()
 
-        let scanStartHeight = try transactionRepository.lastScannedHeight()
+        let scanStartHeight = try await transactionRepository.lastScannedHeight()
         let targetScanHeight = range.upperBound
 
         var scannedNewBlocks = false
@@ -57,7 +57,7 @@ extension BlockScannerImpl: BlockScanner {
             }
             let scanFinishTime = Date()
 
-            lastScannedHeight = try transactionRepository.lastScannedHeight()
+            lastScannedHeight = try await transactionRepository.lastScannedHeight()
 
             scannedNewBlocks = previousScannedHeight != lastScannedHeight
             if scannedNewBlocks {

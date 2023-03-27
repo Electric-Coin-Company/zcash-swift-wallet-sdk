@@ -45,13 +45,13 @@ final class InternalStateConsistencyTests: XCTestCase {
         sdkSynchronizerSyncStatusHandler = nil
     }
 
-    @MainActor func testInternalStateIsConsistentWhenMigrating() async throws {
+    func testInternalStateIsConsistentWhenMigrating() async throws {
         sdkSynchronizerSyncStatusHandler.subscribe(
             to: coordinator.synchronizer.stateStream,
             expectations: [.stopped: firstSyncExpectation]
         )
 
-        let fullSyncLength = 1000
+        let fullSyncLength = 10000
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: fullSyncLength)
 
         sleep(1)
@@ -70,7 +70,7 @@ final class InternalStateConsistencyTests: XCTestCase {
 
         let coordinator = self.coordinator!
         DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-            Task {
+            Task(priority: .userInitiated) {
                 await coordinator.synchronizer.stop()
             }
         }
@@ -89,7 +89,7 @@ final class InternalStateConsistencyTests: XCTestCase {
         )
 
         let latestDownloadHeight = await internalSyncState.latestDownloadedBlockHeight
-        let latestScanHeight = try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()
+        let latestScanHeight = try await coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()
         let dbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedDarksideCacheDb()!)
         try dbHandle.setUp()
 

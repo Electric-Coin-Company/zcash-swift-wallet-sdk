@@ -105,7 +105,7 @@ final class SynchronizerTests: XCTestCase {
 
     // MARK: Wipe tests
 
-    @MainActor func testWipeCalledWhichSyncDoesntRun() async throws {
+    func testWipeCalledWhichSyncDoesntRun() async throws {
         /*
          create fake chain
          */
@@ -161,7 +161,7 @@ final class SynchronizerTests: XCTestCase {
         await checkThatWipeWorked()
     }
 
-    @MainActor func testWipeCalledWhileSyncRuns() async throws {
+    func testWipeCalledWhileSyncRuns() async throws {
         /*
          1. create fake chain
          */
@@ -259,7 +259,7 @@ final class SynchronizerTests: XCTestCase {
 
     // MARK: Rewind tests
 
-    @MainActor func testRewindCalledWhileSyncRuns() async throws {
+    func testRewindCalledWhileSyncRuns() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
 
@@ -334,7 +334,8 @@ final class SynchronizerTests: XCTestCase {
         wait(for: [rewindExpectation], timeout: 5)
 
         // assert that after the new height is
-        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
+        let lastScannedHeight = try await coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()
+        XCTAssertEqual(lastScannedHeight, self.birthday)
 
         // check that the balance is cleared
         XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())

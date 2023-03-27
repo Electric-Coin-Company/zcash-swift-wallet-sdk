@@ -56,7 +56,7 @@ struct BlockEnhancerImpl {
 
         let confirmedTx: ZcashTransaction.Overview
         do {
-            confirmedTx = try transactionRepository.find(rawID: fetchedTransaction.rawID)
+            confirmedTx = try await transactionRepository.find(rawID: fetchedTransaction.rawID)
         } catch {
             if let err = error as? TransactionRepositoryError, case .notFound = err {
                 throw BlockEnhancerError.txIdNotFound(txId: fetchedTransaction.rawID)
@@ -88,7 +88,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
         // fetch transactions
         do {
             let startTime = Date()
-            let transactions = try transactionRepository.find(in: range, limit: Int.max, kind: .all)
+            let transactions = try await transactionRepository.find(in: range, limit: Int.max, kind: .all)
 
             guard !transactions.isEmpty else {
                 await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
@@ -148,6 +148,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
             logger.debug("Warning: compactBlockEnhancement on range \(range) cancelled")
         }
 
-        return (try? transactionRepository.find(in: range, limit: Int.max, kind: .all)) ?? []
+        return (try? await transactionRepository.find(in: range, limit: Int.max, kind: .all)) ?? []
     }
 }

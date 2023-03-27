@@ -801,8 +801,9 @@ class BalanceTests: XCTestCase {
         )
         
         wait(for: [syncedExpectation], timeout: 5)
-        
-        XCTAssertEqual(coordinator.synchronizer.clearedTransactions.count, 2)
+
+        let clearedTransactions = await coordinator.synchronizer.clearedTransactions
+        XCTAssertEqual(clearedTransactions.count, 2)
         XCTAssertEqual(coordinator.synchronizer.initializer.getBalance(), Zatoshi(200000))
     }
     
@@ -904,7 +905,7 @@ class BalanceTests: XCTestCase {
                 completion: { synchronizer in
                     let confirmedTx: ZcashTransaction.Overview!
                     do {
-                        confirmedTx = try synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
+                        confirmedTx = try await synchronizer.allClearedTransactions().first(where: { confirmed -> Bool in
                             confirmed.rawID == pendingTx?.rawTransactionId
                         })
                     } catch {
@@ -1104,7 +1105,8 @@ class BalanceTests: XCTestCase {
         there no sent transaction displayed
         */
 
-        XCTAssertNil( try coordinator.synchronizer.allSentTransactions().first(where: { $0.id == id }))
+        let sentTransactions = try await coordinator.synchronizer.allSentTransactions()
+        XCTAssertNil(sentTransactions.first(where: { $0.id == id }))
         /*
         There’s a pending transaction that has expired
         */

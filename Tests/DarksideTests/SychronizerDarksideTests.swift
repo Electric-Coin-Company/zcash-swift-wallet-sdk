@@ -269,7 +269,7 @@ class SychronizerDarksideTests: XCTestCase {
         XCTAssertEqual(states, expectedStates)
     }
 
-    @MainActor func testSyncAfterWipeWorks() async throws {
+    func testSyncAfterWipeWorks() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
 

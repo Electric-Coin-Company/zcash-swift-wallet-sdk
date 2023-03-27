@@ -32,40 +32,50 @@ class TransactionsDataSource: NSObject {
         self.synchronizer = synchronizer
     }
 
-    func load() throws {
+    // swiftlint:disable:next cyclomatic_complexity
+    func load() async throws {
+        transactions = []
         switch status {
         case .pending:
-            transactions = try synchronizer.pendingTransactions.map { pendingTransaction in
+            let rawTransactions = await synchronizer.pendingTransactions
+            for pendingTransaction in rawTransactions {
                 let defaultFee: Zatoshi = kZcashNetwork.constants.defaultFee(for: pendingTransaction.minedHeight)
                 let transaction = pendingTransaction.makeTransactionEntity(defaultFee: defaultFee)
-                let memos = try synchronizer.getMemos(for: transaction)
-                return TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos)
+                let memos = try await synchronizer.getMemos(for: transaction)
+                transactions.append(TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos))
             }
+
         case .cleared:
-            transactions = try synchronizer.clearedTransactions.map { transaction in
-                let memos = try synchronizer.getMemos(for: transaction)
-                return TransactionDetailModel(transaction: transaction, memos: memos)
+            let rawTransactions = await synchronizer.clearedTransactions
+            for transaction in rawTransactions {
+                let memos = try await synchronizer.getMemos(for: transaction)
+                transactions.append(TransactionDetailModel(transaction: transaction, memos: memos))
             }
         case .received:
-            transactions = try synchronizer.receivedTransactions.map { transaction in
-                let memos = try synchronizer.getMemos(for: transaction)
-                return TransactionDetailModel(receivedTransaction: transaction, memos: memos)
+            let rawTransactions = await synchronizer.receivedTransactions
+            for transaction in rawTransactions {
+                let memos = try await synchronizer.getMemos(for: transaction)
+                transactions.append(TransactionDetailModel(receivedTransaction: transaction, memos: memos))
             }
         case .sent:
-            transactions = try synchronizer.sentTransactions.map { transaction in
-                let memos = try synchronizer.getMemos(for: transaction)
-                return TransactionDetailModel(sendTransaction: transaction, memos: memos)
+            let rawTransactions = await synchronizer.sentTransactions
+            for transaction in rawTransactions {
+                let memos = try await synchronizer.getMemos(for: transaction)
+                transactions.append(TransactionDetailModel(sendTransaction: transaction, memos: memos))
             }
         case .all:
-            transactions = try synchronizer.pendingTransactions.map { pendingTransaction in
+            let rawPendingTransactions = await synchronizer.pendingTransactions
+            for pendingTransaction in rawPendingTransactions {
                 let defaultFee: Zatoshi = kZcashNetwork.constants.defaultFee(for: pendingTransaction.minedHeight)
                 let transaction = pendingTransaction.makeTransactionEntity(defaultFee: defaultFee)
-                let memos = try synchronizer.getMemos(for: transaction)
-                return TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos)
+                let memos = try await synchronizer.getMemos(for: transaction)
+                transactions.append(TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos))
             }
-            transactions += try synchronizer.clearedTransactions.map { transaction in
-                let memos = try synchronizer.getMemos(for: transaction)
-                return TransactionDetailModel(transaction: transaction, memos: memos)
+
+            let rawClearedTransactions = await synchronizer.clearedTransactions
+            for transaction in rawClearedTransactions {
+                let memos = try await synchronizer.getMemos(for: transaction)
+                transactions.append(TransactionDetailModel(transaction: transaction, memos: memos))
             }
         }
     }

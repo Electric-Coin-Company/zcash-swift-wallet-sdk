@@ -31,13 +31,13 @@ class PagedTransactionRepositoryTests: XCTestCase {
         transactionRepository = nil
     }
 
-    func testBrowsePages() {
+    func testBrowsePages() async {
         let pageSize = pagedTransactionRepository.pageSize
-        let pageCount = pagedTransactionRepository.pageCount
-        let totalItems = pagedTransactionRepository.itemCount
+        let pageCount = await pagedTransactionRepository.pageCount
+        let totalItems = await pagedTransactionRepository.itemCount
 
         for index in 0 ..< pageCount / pageSize {
-            guard let page = try? pagedTransactionRepository.page(index) else {
+            guard let page = try? await pagedTransactionRepository.page(index) else {
                 XCTFail("page failed to get page \(index)")
                 return
             }

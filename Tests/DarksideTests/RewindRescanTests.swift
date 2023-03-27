@@ -110,7 +110,8 @@ class RewindRescanTests: XCTestCase {
         wait(for: [rewindExpectation], timeout: 2)
 
         // assert that after the new height is
-        XCTAssertEqual(try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(), self.birthday)
+        let lastScannedHeight = try await coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()
+        XCTAssertEqual(lastScannedHeight, self.birthday)
         
         // check that the balance is cleared
         XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
@@ -244,7 +245,7 @@ class RewindRescanTests: XCTestCase {
     }
 
     // FIX [#790]: Fix tests
-    @MainActor func testRescanToTransaction() async throws {
+    func testRescanToTransaction() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
@@ -268,7 +269,7 @@ class RewindRescanTests: XCTestCase {
         XCTAssertEqual(verifiedBalance, totalBalance)
         
         // rewind to transaction
-        guard let transaction = try coordinator.synchronizer.allClearedTransactions().first else {
+        guard let transaction = try await coordinator.synchronizer.allClearedTransactions().first else {
             XCTFail("failed to get a transaction to rewind to")
             return
         }
@@ -298,10 +299,8 @@ class RewindRescanTests: XCTestCase {
 
         // assert that after the new height is lower or same as transaction, rewind doesn't have to be make exactly to transaction height, it can
         // be done to nearest height provided by rust
-        XCTAssertLessThanOrEqual(
-            try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight(),
-            transaction.anchor(network: network) ?? -1
-        )
+        let lastScannedHeight = try await coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()
+        XCTAssertLessThanOrEqual(lastScannedHeight, transaction.anchor(network: network) ?? -1)
         
         let secondScanExpectation = XCTestExpectation(description: "rescan")
         

@@ -77,56 +77,64 @@ class SynchronizerMock: Synchronizer {
         return try await shieldFundsSpendingKeyMemoShieldingThresholdClosure(spendingKey, memo, shieldingThreshold)
     }
 
-    var cancelSpendTransactionClosure: ((PendingTransactionEntity) -> Bool)! = nil
-    func cancelSpend(transaction: PendingTransactionEntity) -> Bool {
-        return cancelSpendTransactionClosure(transaction)
+    var cancelSpendTransactionClosure: ((PendingTransactionEntity) async -> Bool)! = nil
+    func cancelSpend(transaction: PendingTransactionEntity) async -> Bool {
+        return await cancelSpendTransactionClosure(transaction)
     }
 
     var underlyingPendingTransactions: [PendingTransactionEntity]! = nil
-    var pendingTransactions: [PendingTransactionEntity] { underlyingPendingTransactions }
+    var pendingTransactions: [PendingTransactionEntity] {
+        get async { underlyingPendingTransactions }
+    }
 
     var underlyingClearedTransactions: [ZcashTransaction.Overview]! = nil
-    var clearedTransactions: [ZcashTransaction.Overview] { underlyingClearedTransactions }
+    var clearedTransactions: [ZcashTransaction.Overview] {
+        get async { underlyingClearedTransactions }
+    }
 
     var underlyingSentTransactions: [ZcashTransaction.Sent]! = nil
-    var sentTransactions: [ZcashTransaction.Sent] { underlyingSentTransactions }
+    var sentTransactions: [ZcashTransaction.Sent] {
+        get async { underlyingSentTransactions }
+    }
 
     var underlyingReceivedTransactions: [ZcashTransaction.Received]! = nil
-    var receivedTransactions: [ZcashTransaction.Received] { underlyingReceivedTransactions }
+    var receivedTransactions: [ZcashTransaction.Received] {
+        get async { underlyingReceivedTransactions }
+    }
 
     var paginatedTransactionsOfKindClosure: ((TransactionKind) -> PaginatedTransactionRepository)! = nil
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository {
         return paginatedTransactionsOfKindClosure(kind)
     }
 
-    var getMemosForTransactionClosure: ((ZcashTransaction.Overview) throws -> [Memo])! = nil
-    func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo] {
-        return try getMemosForTransactionClosure(transaction)
+    var getMemosForTransactionClosure: ((ZcashTransaction.Overview) async throws -> [Memo])! = nil
+    func getMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo] {
+        return try await getMemosForTransactionClosure(transaction)
     }
 
-    var getMemosForReceivedTransactionClosure: ((ZcashTransaction.Received) throws -> [Memo])! = nil
-    func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo] {
-        return try getMemosForReceivedTransactionClosure(receivedTransaction)
+    var getMemosForReceivedTransactionClosure: ((ZcashTransaction.Received) async throws -> [Memo])! = nil
+    func getMemos(for receivedTransaction: ZcashTransaction.Received) async throws -> [Memo] {
+        return try await getMemosForReceivedTransactionClosure(receivedTransaction)
     }
 
-    var getMemosForSentTransactionClosure: ((ZcashTransaction.Sent) throws -> [Memo])! = nil
-    func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo] {
-        return try getMemosForSentTransactionClosure(sentTransaction)
+    var getMemosForSentTransactionClosure: ((ZcashTransaction.Sent) async throws -> [Memo])! = nil
+    func getMemos(for sentTransaction: ZcashTransaction.Sent) async throws -> [Memo] {
+        return try await getMemosForSentTransactionClosure(sentTransaction)
     }
 
-    var getRecipientsForClearedTransactionClosure: ((ZcashTransaction.Overview) -> [TransactionRecipient])! = nil
-    func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient] {
-        return getRecipientsForClearedTransactionClosure(transaction)
+    var getRecipientsForClearedTransactionClosure: ((ZcashTransaction.Overview) async -> [TransactionRecipient])! = nil
+    func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient] {
+        return await getRecipientsForClearedTransactionClosure(transaction)
     }
 
-    var getRecipientsForSentTransactionClosure: ((ZcashTransaction.Sent) -> [TransactionRecipient])! = nil
-    func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient] {
-        return getRecipientsForSentTransactionClosure(transaction)
+    var getRecipientsForSentTransactionClosure: ((ZcashTransaction.Sent) async -> [TransactionRecipient])! = nil
+    func getRecipients(for transaction: ZcashTransaction.Sent) async -> [TransactionRecipient] {
+        return await getRecipientsForSentTransactionClosure(transaction)
     }
 
-    var allConfirmedTransactionsFromTransactionClosure: ((ZcashTransaction.Overview, Int) throws -> [ZcashTransaction.Overview])! = nil
-    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview] {
-        return try allConfirmedTransactionsFromTransactionClosure(transaction, limit)
+    var allConfirmedTransactionsFromTransactionClosure: ((ZcashTransaction.Overview, Int) async throws -> [ZcashTransaction.Overview])! = nil
+    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview] {
+        return try await allConfirmedTransactionsFromTransactionClosure(transaction, limit)
     }
 
     var latestHeightClosure: (() async throws -> BlockHeight)! = nil

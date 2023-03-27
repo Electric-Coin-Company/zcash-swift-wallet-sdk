@@ -35,7 +35,7 @@ class TestCoordinator {
     }
 
     var cancellables: [AnyCancellable] = []
-    var completionHandler: ((SDKSynchronizer) throws -> Void)?
+    var completionHandler: ((SDKSynchronizer) async throws -> Void)?
     var errorHandler: ((Error?) async -> Void)?
     var spendingKey: UnifiedSpendingKey
     let viewingKey: UnifiedFullViewingKey
@@ -211,7 +211,7 @@ class TestCoordinator {
         try service.applyStaged(nextLatestHeight: height)
     }
     
-    func sync(completion: @escaping (SDKSynchronizer) throws -> Void, error: @escaping (Error?) async -> Void) async throws {
+    func sync(completion: @escaping (SDKSynchronizer) async throws -> Void, error: @escaping (Error?) async -> Void) async throws {
         self.completionHandler = completion
         self.errorHandler = error
         
@@ -219,7 +219,6 @@ class TestCoordinator {
     }
     
     // MARK: notifications
-
     func subscribeToState(synchronizer: Synchronizer) {
         synchronizer.stateStream
             .sink(
@@ -238,7 +237,7 @@ class TestCoordinator {
     }
     
     func synchronizerFailed(error: Error) {
-        Task {
+        Task(priority: .high) {
             await self.errorHandler?(error)
         }
     }
@@ -248,7 +247,9 @@ class TestCoordinator {
             LoggerProxy.debug("WARNING: notification received after synchronizer was stopped")
             return
         }
-        try self.completionHandler?(self.synchronizer)
+        Task(priority: .high) {
+            try await self.completionHandler?(self.synchronizer)
+        }
     }
 }
 

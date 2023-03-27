@@ -45,11 +45,11 @@ protocol OutboundTransactionManager {
     Attempts to Cancel a transaction. Returns true if successful
     */
     func cancel(pendingTransaction: PendingTransactionEntity) -> Bool
-    
-    func allPendingTransactions() throws -> [PendingTransactionEntity]?
-    
+
+    func allPendingTransactions() throws -> [PendingTransactionEntity]
+
     func handleReorg(at blockHeight: BlockHeight) throws
-    
+
     /**
     Deletes a pending transaction from the database
     */

@@ -13,9 +13,13 @@ class TransactionsTableViewController: UITableViewController {
     var datasource: TransactionsDataSource? {
         didSet {
             self.tableView.dataSource = datasource
-            try? datasource?.load()
-            if viewIfLoaded != nil {
-                self.tableView.reloadData()
+            Task {
+                try? await datasource?.load()
+                DispatchQueue.main.async { [weak self] in
+                    if self?.viewIfLoaded != nil {
+                        self?.tableView.reloadData()
+                    }
+                }
             }
         }
     }
@@ -26,8 +30,14 @@ class TransactionsTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.tableView.dataSource = datasource
-        try? datasource?.load()
         self.tableView.reloadData()
+
+        Task {
+            try? await datasource?.load()
+            DispatchQueue.main.async { [weak self] in
+                self?.tableView.reloadData()
+            }
+        }
     }
 }
 
