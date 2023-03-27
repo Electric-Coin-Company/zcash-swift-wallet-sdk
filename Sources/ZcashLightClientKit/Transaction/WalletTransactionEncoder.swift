@@ -10,6 +10,7 @@ import Foundation
 class WalletTransactionEncoder: TransactionEncoder {
     var rustBackend: ZcashRustBackendWelding.Type
     var repository: TransactionRepository
+    let logger: Logger
 
     private var outputParamsURL: URL
     private var spendParamsURL: URL
@@ -24,7 +25,8 @@ class WalletTransactionEncoder: TransactionEncoder {
         repository: TransactionRepository,
         outputParams: URL,
         spendParams: URL,
-        networkType: NetworkType
+        networkType: NetworkType,
+        logger: Logger
     ) {
         self.rustBackend = rust
         self.dataDbURL = dataDb
@@ -33,6 +35,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
         self.networkType = networkType
+        self.logger = logger
     }
     
     convenience init(initializer: Initializer) {
@@ -43,7 +46,8 @@ class WalletTransactionEncoder: TransactionEncoder {
             repository: initializer.transactionRepository,
             outputParams: initializer.outputParamsURL,
             spendParams: initializer.spendParamsURL,
-            networkType: initializer.network.networkType
+            networkType: initializer.network.networkType,
+            logger: initializer.logger
         )
     }
     
@@ -63,7 +67,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         )
 
         do {
-            LoggerProxy.debug("transaction id: \(txId)")
+            logger.debug("transaction id: \(txId)")
             return try repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
@@ -113,7 +117,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         )
         
         do {
-            LoggerProxy.debug("transaction id: \(txId)")
+            logger.debug("transaction id: \(txId)")
             return try repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)

@@ -41,24 +41,37 @@ actor InternalSyncProgress {
         case latestDownloadedBlockHeight
         case latestEnhancedHeight
         case latestUTXOFetchedHeight
+
+        func with(_ alias: ZcashSynchronizerAlias) -> String {
+            switch alias {
+            case .`default`:
+                return self.rawValue
+            case let .custom(rawAlias):
+                return "\(self.rawValue)_\(rawAlias)"
+            }
+        }
     }
 
+    private let alias: ZcashSynchronizerAlias
     private let storage: InternalSyncProgressStorage
+    let logger: Logger
 
     var latestDownloadedBlockHeight: BlockHeight { load(.latestDownloadedBlockHeight) }
     var latestEnhancedHeight: BlockHeight { load(.latestEnhancedHeight) }
     var latestUTXOFetchedHeight: BlockHeight { load(.latestUTXOFetchedHeight) }
 
-    init(storage: InternalSyncProgressStorage) {
+    init(alias: ZcashSynchronizerAlias, storage: InternalSyncProgressStorage, logger: Logger) {
+        self.alias = alias
         self.storage = storage
+        self.logger = logger
     }
 
     func load(_ key: Key) -> BlockHeight {
-        storage.integer(forKey: key.rawValue)
+        storage.integer(forKey: key.with(alias))
     }
 
     func set(_ value: BlockHeight, _ key: Key) {
-        storage.set(value, forKey: key.rawValue)
+        storage.set(value, forKey: key.with(alias))
         storage.synchronize()
     }
 
@@ -103,7 +116,7 @@ actor InternalSyncProgress {
         latestScannedHeight: BlockHeight,
         walletBirthday: BlockHeight
     ) throws -> CompactBlockProcessor.NextState {
-        LoggerProxy.debug("""
+        logger.debug("""
             Init numbers:
             latestBlockHeight:       \(latestBlockHeight)
             latestDownloadedHeight:  \(latestDownloadedBlockHeight)
@@ -147,7 +160,7 @@ actor InternalSyncProgress {
         }
 
         if latestScannedHeight > latestDownloadedBlockHeight {
-            LoggerProxy.warn("""
+            logger.warn("""
             InternalSyncProgress found inconsistent state.
                 latestBlockHeight:       \(latestBlockHeight)
             --> latestDownloadedHeight:  \(latestDownloadedBlockHeight)

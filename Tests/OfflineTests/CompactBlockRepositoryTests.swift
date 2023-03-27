@@ -36,16 +36,17 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self
+                rustBackend: ZcashRustBackend.self,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try compactBlockRepository.create()
 
         let latestHeight = await compactBlockRepository.latestHeight()
-
         XCTAssertEqual(latestHeight, BlockHeight.empty())
     }
     
@@ -54,10 +55,12 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self
+                rustBackend: ZcashRustBackend.self,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try compactBlockRepository.create()
@@ -79,10 +82,12 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self
+                rustBackend: ZcashRustBackend.self,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try compactBlockRepository.create()
@@ -103,10 +108,12 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self
+                rustBackend: ZcashRustBackend.self,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try compactBlockRepository.create()

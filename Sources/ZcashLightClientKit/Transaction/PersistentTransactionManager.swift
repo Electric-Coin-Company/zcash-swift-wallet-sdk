@@ -25,18 +25,21 @@ class PersistentTransactionManager: OutboundTransactionManager {
     var service: LightWalletService
     var queue: DispatchQueue
     var network: NetworkType
+    let logger: Logger
     
     init(
         encoder: TransactionEncoder,
         service: LightWalletService,
         repository: PendingTransactionRepository,
-        networkType: NetworkType
+        networkType: NetworkType,
+        logger: Logger
     ) {
         self.repository = repository
         self.encoder = encoder
         self.service = service
         self.network = networkType
         self.queue = DispatchQueue.init(label: "PersistentTransactionManager.serial.queue", qos: .userInitiated)
+        self.logger = logger
     }
     
     func initSpend(
@@ -61,7 +64,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 zatoshi: zatoshi
             )
         }
-        LoggerProxy.debug("pending transaction \(String(describing: insertedTx.id)) created")
+        logger.debug("pending transaction \(String(describing: insertedTx.id)) created")
         return insertedTx
     }
     
@@ -162,12 +165,12 @@ class PersistentTransactionManager: OutboundTransactionManager {
             }
             
             guard !storedTx.isCancelled  else {
-                LoggerProxy.debug("ignoring cancelled transaction \(storedTx)")
+                logger.debug("ignoring cancelled transaction \(storedTx)")
                 throw TransactionManagerError.cancelled(storedTx)
             }
             
             guard let raw = storedTx.raw else {
-                LoggerProxy.debug("INCONSISTENCY: attempt to send pending transaction \(txId) that has not raw data")
+                logger.debug("INCONSISTENCY: attempt to send pending transaction \(txId) that has not raw data")
                 throw TransactionManagerError.internalInconsistency(storedTx)
             }
             
@@ -273,14 +276,18 @@ enum OutboundTransactionManagerBuilder {
             encoder: TransactionEncoderbuilder.build(initializer: initializer),
             service: initializer.lightWalletService,
             repository: PendingTransactionRepositoryBuilder.build(initializer: initializer),
-            networkType: initializer.network.networkType
+            networkType: initializer.network.networkType,
+            logger: initializer.logger
         )
     }
 }
 
 enum PendingTransactionRepositoryBuilder {
     static func build(initializer: Initializer) -> PendingTransactionRepository {
-        PendingTransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false))
+        PendingTransactionSQLDAO(
+            dbProvider: SimpleConnectionProvider(path: initializer.pendingDbURL.path, readonly: false),
+            logger: initializer.logger
+        )
     }
 }
 

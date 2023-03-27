@@ -15,6 +15,7 @@ class CompactBlockReorgTests: XCTestCase {
     lazy var processorConfig = {
         let pathProvider = DefaultResourceProvider(network: network)
         return CompactBlockProcessor.Configuration(
+            alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
@@ -48,9 +49,15 @@ class CompactBlockReorgTests: XCTestCase {
         logger = OSLogger(logLevel: .debug)
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
-        XCTestCase.wait { await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0) }
+        XCTestCase.wait {
+            await InternalSyncProgress(
+                alias: .default,
+                storage: UserDefaults.standard,
+                logger: logger
+            ).rewind(to: 0)
+        }
 
-        let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+        let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
             latestBlockHeight: mockLatestHeight,
             service: liveService
@@ -74,10 +81,12 @@ class CompactBlockReorgTests: XCTestCase {
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try realCache.create()
@@ -96,7 +105,9 @@ class CompactBlockReorgTests: XCTestCase {
             service: service,
             storage: realCache,
             backend: mockBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")

@@ -22,6 +22,7 @@ protocol SaplingParametersHandler {
 struct SaplingParametersHandlerImpl {
     let config: SaplingParametersHandlerConfig
     let rustBackend: ZcashRustBackendWelding.Type
+    let logger: Logger
 }
 
 extension SaplingParametersHandlerImpl: SaplingParametersHandler {
@@ -46,7 +47,7 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
             // if sapling balance can't be detected of we fail to obtain the balance
             // for some reason we shall not proceed to download the parameters and
             // retry in the following attempt to sync.
-            LoggerProxy.error("Couldn't Fetch shielded balance. Won't attempt to download sapling parameters")
+            logger.error("Couldn't Fetch shielded balance. Won't attempt to download sapling parameters")
             return
         }
 
@@ -54,7 +55,8 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
             spendURL: config.spendParamsURL,
             spendSourceURL: config.saplingParamsSourceURL.spendParamFileURL,
             outputURL: config.outputParamsURL,
-            outputSourceURL: config.saplingParamsSourceURL.outputParamFileURL
+            outputSourceURL: config.saplingParamsSourceURL.outputParamFileURL,
+            logger: logger
         )
     }
 }

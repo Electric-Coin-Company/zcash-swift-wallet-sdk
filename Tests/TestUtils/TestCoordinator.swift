@@ -45,35 +45,51 @@ class TestCoordinator {
     var databases: TemporaryTestDatabases
     let network: ZcashNetwork
 
-    static func make(walletBirthday: BlockHeight, network: ZcashNetwork) -> TestCoordinator {
+    static func make(
+        alias: ZcashSynchronizerAlias = .default,
+        walletBirthday: BlockHeight,
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
+    ) -> TestCoordinator {
         var coordinator: TestCoordinator!
         XCTestCase.wait {
-            coordinator = try await TestCoordinator(walletBirthday: walletBirthday, network: network)
+            coordinator = try await TestCoordinator(
+                alias: alias,
+                walletBirthday: walletBirthday,
+                network: network,
+                callPrepareInConstructor: callPrepareInConstructor
+            )
         }
         return coordinator
     }
 
     static func make(
+        alias: ZcashSynchronizerAlias = .default,
         spendingKey: UnifiedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
-        network: ZcashNetwork
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
     ) -> TestCoordinator {
         var coordinator: TestCoordinator!
         XCTestCase.wait {
             coordinator = try await TestCoordinator(
+                alias: alias,
                 spendingKey: spendingKey,
                 unifiedFullViewingKey: unifiedFullViewingKey,
                 walletBirthday: walletBirthday,
-                network: network
+                network: network,
+                callPrepareInConstructor: callPrepareInConstructor
             )
         }
         return coordinator
     }
 
     convenience init(
+        alias: ZcashSynchronizerAlias = .default,
         walletBirthday: BlockHeight,
-        network: ZcashNetwork
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
     ) async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
@@ -85,20 +101,24 @@ class TestCoordinator {
         let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         try await self.init(
+            alias: alias,
             spendingKey: spendingKey,
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
-            network: network
+            network: network,
+            callPrepareInConstructor: callPrepareInConstructor
         )
     }
     
     required init(
+        alias: ZcashSynchronizerAlias = .default,
         spendingKey: UnifiedSpendingKey,
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
-        network: ZcashNetwork
+        network: ZcashNetwork,
+        callPrepareInConstructor: Bool = true
     ) async throws {
-        await InternalSyncProgress(storage: UserDefaults.standard).rewind(to: 0)
+        await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
         self.spendingKey = spendingKey
         self.viewingKey = unifiedFullViewingKey
@@ -113,7 +133,7 @@ class TestCoordinator {
             singleCallTimeoutInMillis: 10000,
             streamingCallTimeoutInMillis: 1000000
         )
-        let liveService = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
+        let liveService = LightWalletServiceFactory(endpoint: endpoint).make()
         self.service = DarksideWalletService(service: liveService)
 
         let realRustBackend = ZcashRustBackend.self
@@ -122,13 +142,16 @@ class TestCoordinator {
             fsBlockDbRoot: self.databases.fsCacheDbRoot,
             metadataStore: .live(
                 fsBlockDbRoot: self.databases.fsCacheDbRoot,
-                rustBackend: ZcashRustBackend.self
+                rustBackend: ZcashRustBackend.self,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         let synchronizer = TestSynchronizerBuilder.build(
+            alias: alias,
             rustBackend: realRustBackend,
             fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
@@ -138,19 +161,23 @@ class TestCoordinator {
             repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
             accountRepository: AccountRepositoryBuilder.build(
                 dataDbURL: databases.dataDB,
-                readOnly: true
+                readOnly: true,
+                logger: logger
             ),
             storage: storage,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
             network: network,
-            loggerProxy: OSLogger(logLevel: .debug)
+            logLevel: .debug
         )
         
         self.synchronizer = synchronizer
         subscribeToState(synchronizer: self.synchronizer)
-        if case .seedRequired = try await prepare(seed: Environment.seedBytes) {
-            throw TestCoordinator.CoordinatorError.seedRequiredForMigration
+
+        if callPrepareInConstructor {
+            if case .seedRequired = try await prepare(seed: Environment.seedBytes) {
+                throw TestCoordinator.CoordinatorError.seedRequiredForMigration
+            }
         }
     }
 
@@ -269,6 +296,7 @@ extension TestCoordinator {
             let config = await self.synchronizer.blockProcessor.config
 
             let newConfig = CompactBlockProcessor.Configuration(
+                alias: config.alias,
                 fsBlockCacheRoot: config.fsBlockCacheRoot,
                 dataDb: config.dataDb,
                 spendParamsURL: config.spendParamsURL,
@@ -315,6 +343,7 @@ enum TemporaryDbBuilder {
 
 enum TestSynchronizerBuilder {
     static func build(
+        alias: ZcashSynchronizerAlias = .default,
         rustBackend: ZcashRustBackendWelding.Type,
         fsBlockDbRoot: URL,
         dataDbURL: URL,
@@ -327,9 +356,10 @@ enum TestSynchronizerBuilder {
         spendParamsURL: URL,
         outputParamsURL: URL,
         network: ZcashNetwork,
-        loggerProxy: Logger? = nil
+        logLevel: OSLogger.LogLevel
     ) -> SDKSynchronizer {
         let initializer = Initializer(
+            cacheDbURL: nil,
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
             pendingDbURL: pendingDbURL,
@@ -338,8 +368,8 @@ enum TestSynchronizerBuilder {
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            alias: "",
-            loggerProxy: loggerProxy
+            alias: alias,
+            logLevel: logLevel
         )
 
         return SDKSynchronizer(initializer: initializer)

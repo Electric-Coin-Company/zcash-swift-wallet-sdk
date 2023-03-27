@@ -404,9 +404,14 @@ extension SaplingParamsSourceURL {
 
 extension CompactBlockProcessor.Configuration {
     /// Standard configuration for most compact block processors
-    static func standard(for network: ZcashNetwork, walletBirthday: BlockHeight) -> CompactBlockProcessor.Configuration {
+    static func standard(
+        alias: ZcashSynchronizerAlias = .default,
+        for network: ZcashNetwork,
+        walletBirthday: BlockHeight
+    ) -> CompactBlockProcessor.Configuration {
         let pathProvider = DefaultResourceProvider(network: network)
         return CompactBlockProcessor.Configuration(
+            alias: alias,
             fsBlockCacheRoot: pathProvider.fsCacheURL,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,

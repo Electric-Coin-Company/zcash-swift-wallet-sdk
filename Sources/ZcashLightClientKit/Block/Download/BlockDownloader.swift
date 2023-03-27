@@ -46,6 +46,8 @@ struct BlockDownloaderImpl {
     let downloaderService: BlockDownloaderService
     let storage: CompactBlockRepository
     let internalSyncProgress: InternalSyncProgress
+    let metrics: SDKMetrics
+    let logger: Logger
 }
 
 extension BlockDownloaderImpl: BlockDownloader {
@@ -62,14 +64,14 @@ extension BlockDownloaderImpl: BlockDownloader {
         totalProgressRange: CompactBlockRange
     ) async throws {
         var buffer: [ZcashCompactBlock] = []
-        LoggerProxy.debug("Downloading blocks in range: \(range.lowerBound)...\(range.upperBound)")
+        logger.debug("Downloading blocks in range: \(range.lowerBound)...\(range.upperBound)")
 
         var startTime = Date()
         var counter = 0
         var lastDownloadedBlockHeight = -1
 
         let pushMetrics: (BlockHeight, Date, Date) -> Void = { lastDownloadedBlockHeight, startTime, finishTime in
-            SDKMetrics.shared.pushProgressReport(
+            metrics.pushProgressReport(
                 progress: BlockProgress(
                     startHeight: totalProgressRange.lowerBound,
                     targetHeight: totalProgressRange.upperBound,

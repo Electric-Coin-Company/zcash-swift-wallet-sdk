@@ -33,7 +33,7 @@ class DownloadTests: XCTestCase {
     }
 
     func testSingleDownload() async throws {
-        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
 
         let realRustBackend = ZcashRustBackend.self
 
@@ -41,10 +41,12 @@ class DownloadTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
 
         try storage.create()
@@ -62,7 +64,9 @@ class DownloadTests: XCTestCase {
             service: service,
             storage: storage,
             backend: realRustBackend,
-            config: processorConfig
+            config: processorConfig,
+            metrics: SDKMetrics(),
+            logger: logger
         )
         
         do {

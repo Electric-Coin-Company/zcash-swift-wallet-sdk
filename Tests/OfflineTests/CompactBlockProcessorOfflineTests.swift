@@ -37,20 +37,29 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
 
         let service = MockLightWalletService(
             latestBlockHeight: 690000,
-            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet, connectionStateChange: { _, _ in }).make()
+            service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         )
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend
+                rustBackend: realRustBackend,
+                logger: logger
             ),
             blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
         )
         
-        let processor = CompactBlockProcessor(service: service, storage: storage, backend: ZcashRustBackend.self, config: processorConfig)
+        let processor = CompactBlockProcessor(
+            service: service,
+            storage: storage,
+            backend: ZcashRustBackend.self,
+            config: processorConfig,
+            metrics: SDKMetrics(),
+            logger: logger
+        )
 
         let fullRange = 0...1000
 

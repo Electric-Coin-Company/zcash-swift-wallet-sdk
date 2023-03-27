@@ -13,6 +13,7 @@ class FSCompactBlockRepository {
     let contentProvider: SortedDirectoryListing
     let fileWriter: FSBlockFileWriter
     let metadataStore: FSMetadataStore
+    let logger: Logger
 
     private let fileManager = FileManager()
     private let storageBatchSize = 10
@@ -33,13 +34,15 @@ class FSCompactBlockRepository {
         metadataStore: FSMetadataStore,
         blockDescriptor: ZcashCompactBlockDescriptor,
         contentProvider: SortedDirectoryListing,
-        fileWriter: FSBlockFileWriter = .atomic
+        fileWriter: FSBlockFileWriter = .atomic,
+        logger: Logger
     ) {
         self.fsBlockDbRoot = fsBlockDbRoot
         self.metadataStore = metadataStore
         self.blockDescriptor = blockDescriptor
         self.contentProvider = contentProvider
         self.fileWriter = fileWriter
+        self.logger = logger
     }
 }
 
@@ -75,7 +78,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
                 do {
                     try self.fileWriter.writeToURL(block.data, blockURL)
                 } catch {
-                    LoggerProxy.error("Failed to write block: \(block.height) to path: \(blockURL.path) with error: \(error)")
+                    logger.error("Failed to write block: \(block.height) to path: \(blockURL.path) with error: \(error)")
                     throw CompactBlockRepositoryError.failedToWriteBlock(block)
                 }
 
@@ -90,7 +93,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
             // if there are any remaining blocks on the cache store them
             try await self.metadataStore.saveBlocksMeta(savedBlocks)
         } catch {
-            LoggerProxy.error("failed to Block save to cache error: \(error.localizedDescription)")
+            logger.error("failed to Block save to cache error: \(error.localizedDescription)")
             throw error
         }
     }
@@ -115,7 +118,9 @@ extension FSCompactBlockRepository: CompactBlockRepository {
     }
 
     func clear() async throws {
-        try self.fileManager.removeItem(at: self.fsBlockDbRoot)
+        if self.fileManager.fileExists(atPath: self.fsBlockDbRoot.path) {
+            try self.fileManager.removeItem(at: self.fsBlockDbRoot)
+        }
         try create()
     }
 }
@@ -210,12 +215,13 @@ struct FSMetadataStore {
 }
 
 extension FSMetadataStore {
-    static func live(fsBlockDbRoot: URL, rustBackend: ZcashRustBackendWelding.Type) -> FSMetadataStore {
+    static func live(fsBlockDbRoot: URL, rustBackend: ZcashRustBackendWelding.Type, logger: Logger) -> FSMetadataStore {
         FSMetadataStore { blocks in
             try await FSMetadataStore.saveBlocksMeta(
                 blocks,
                 fsBlockDbRoot: fsBlockDbRoot,
-                rustBackend: rustBackend
+                rustBackend: rustBackend,
+                logger: logger
             )
         } rewindToHeight: { height in
             guard rustBackend.rewindCacheToHeight(fsBlockDbRoot: fsBlockDbRoot, height: Int32(height)) else {
@@ -235,7 +241,12 @@ extension FSMetadataStore {
     /// - Throws `CompactBlockRepositoryError.failedToWriteMetadata` if the
     /// operation fails. the underlying error is logged through `LoggerProxy`
     /// - Note: This shouldn't be called in parallel by many threads or workers. Won't do anything if `blocks` is empty
-    static func saveBlocksMeta(_ blocks: [ZcashCompactBlock], fsBlockDbRoot: URL, rustBackend: ZcashRustBackendWelding.Type) async throws {
+    static func saveBlocksMeta(
+        _ blocks: [ZcashCompactBlock],
+        fsBlockDbRoot: URL,
+        rustBackend: ZcashRustBackendWelding.Type,
+        logger: Logger
+    ) async throws {
         guard !blocks.isEmpty else { return }
 
         do {
@@ -243,7 +254,7 @@ extension FSMetadataStore {
                 throw CompactBlockRepositoryError.failedToWriteMetadata
             }
         } catch {
-            LoggerProxy.error("Failed to write metadata with error: \(error)")
+            logger.error("Failed to write metadata with error: \(error)")
             throw CompactBlockRepositoryError.failedToWriteMetadata
         }
     }

@@ -136,19 +136,20 @@ protocol LightWalletServiceResponse {
 
 struct LightWalletServiceFactory {
     let endpoint: LightWalletEndpoint
-    let connectionStateChange: (_ from: ConnectionState, _ to: ConnectionState) -> Void
 
-    init(endpoint: LightWalletEndpoint, connectionStateChange: @escaping (_ from: ConnectionState, _ to: ConnectionState) -> Void) {
+    init(endpoint: LightWalletEndpoint) {
         self.endpoint = endpoint
-        self.connectionStateChange = connectionStateChange
     }
 
     func make() -> LightWalletService {
-        return LightWalletGRPCService(endpoint: endpoint, connectionStateChange: connectionStateChange)
+        return LightWalletGRPCService(endpoint: endpoint)
     }
 }
 
-protocol LightWalletService {
+protocol LightWalletService: AnyObject {
+    /// Closure which is called when connection state changes.
+    var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)? { get set }
+
     /// Returns the info for this lightwalletd server
     func getInfo() async throws -> LightWalletdInfo
 

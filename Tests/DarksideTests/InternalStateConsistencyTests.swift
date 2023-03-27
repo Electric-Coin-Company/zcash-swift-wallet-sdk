@@ -82,7 +82,11 @@ final class InternalStateConsistencyTests: XCTestCase {
         XCTAssertFalse(isSyncing, "SDKSynchronizer shouldn't be syncing")
         XCTAssertEqual(status, .stopped)
 
-        let internalSyncState = InternalSyncProgress(storage: UserDefaults.standard)
+        let internalSyncState = InternalSyncProgress(
+            alias: .default,
+            storage: UserDefaults.standard,
+            logger: logger
+        )
 
         let latestDownloadHeight = await internalSyncState.latestDownloadedBlockHeight
         let latestScanHeight = try coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()

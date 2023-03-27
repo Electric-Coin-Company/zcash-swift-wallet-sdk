@@ -1088,7 +1088,8 @@ class BalanceTests: XCTestCase {
         let pendingRepo = PendingTransactionSQLDAO(
             dbProvider: SimpleConnectionProvider(
                 path: coordinator.synchronizer.initializer.pendingDbURL.absoluteString
-            )
+            ),
+            logger: logger
         )
         
         guard

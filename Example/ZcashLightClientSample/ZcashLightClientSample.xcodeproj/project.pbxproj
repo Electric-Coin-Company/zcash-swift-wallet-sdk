@@ -49,6 +49,10 @@
 		0DDFB33C236B743000AED892 /* LatestHeightViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33B236B743000AED892 /* LatestHeightViewController.swift */; };
 		0DDFB33E236B844900AED892 /* DemoAppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DDFB33D236B844900AED892 /* DemoAppConfig.swift */; };
 		0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */; };
+		343CB69729CDC05D0063BF41 /* SyncBlocksListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343CB69629CDC05D0063BF41 /* SyncBlocksListViewController.swift */; };
+		343CB69829CDC05D0063BF41 /* SyncBlocksListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343CB69629CDC05D0063BF41 /* SyncBlocksListViewController.swift */; };
+		34CC8FD029CDC212001E06E9 /* SynchronizerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC8FCF29CDC212001E06E9 /* SynchronizerCell.swift */; };
+		34CC8FD129CDC212001E06E9 /* SynchronizerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34CC8FCF29CDC212001E06E9 /* SynchronizerCell.swift */; };
 		F94912632790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F94912622790D7C4004BB3DE /* ZcashLightClientSample-Mainnet-Info.plist */; };
 		F9D63D1F27CD114A00F4DC5F /* ZcashLightClientKit in Frameworks */ = {isa = PBXBuildFile; productRef = F9D63D1E27CD114A00F4DC5F /* ZcashLightClientKit */; };
 		F9D63D2227CD125300F4DC5F /* KRProgressHUD in Frameworks */ = {isa = PBXBuildFile; productRef = F9D63D2127CD125300F4DC5F /* KRProgressHUD */; };
@@ -95,6 +99,8 @@
 		0DDFB33D236B844900AED892 /* DemoAppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoAppConfig.swift; sourceTree = "<group>"; };
 		0DF53E6623A438F100D7249C /* PaginatedTransactionsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaginatedTransactionsViewController.swift; sourceTree = "<group>"; };
 		22AE1E6F756FD3EA41A397FC /* Pods_ZcashLightClientSampleTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSampleTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		343CB69629CDC05D0063BF41 /* SyncBlocksListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncBlocksListViewController.swift; sourceTree = "<group>"; };
+		34CC8FCF29CDC212001E06E9 /* SynchronizerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SynchronizerCell.swift; sourceTree = "<group>"; };
 		372CC57DB80CC242BA556A30 /* Pods_ZcashLightClientSampleUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSampleUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		541D36743362A797BF085D14 /* Pods_ZcashLightClientSample_Mainnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample_Mainnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		EBA186B246C4205F9BF71EED /* Pods_ZcashLightClientSample.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ZcashLightClientSample.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -182,6 +188,8 @@
 			isa = PBXGroup;
 			children = (
 				0D7A4A82236CCD88001F4DD8 /* SyncBlocksViewController.swift */,
+				343CB69629CDC05D0063BF41 /* SyncBlocksListViewController.swift */,
+				34CC8FCF29CDC212001E06E9 /* SynchronizerCell.swift */,
 			);
 			path = "Sync Blocks";
 			sourceTree = "<group>";
@@ -518,6 +526,8 @@
 				0D1BE47F2581937100F78BE3 /* GetUTXOsViewController.swift in Sources */,
 				0DA58B962397F2CB004596EA /* TransactionsDataSource.swift in Sources */,
 				0DF53E6723A438F100D7249C /* PaginatedTransactionsViewController.swift in Sources */,
+				34CC8FD029CDC212001E06E9 /* SynchronizerCell.swift in Sources */,
+				343CB69729CDC05D0063BF41 /* SyncBlocksListViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -548,6 +558,8 @@
 				0DA1C4C827D11D9500E5006E /* GetUTXOsViewController.swift in Sources */,
 				0DA1C4CC27D11D9500E5006E /* TransactionsDataSource.swift in Sources */,
 				0DA1C4CD27D11D9500E5006E /* PaginatedTransactionsViewController.swift in Sources */,
+				34CC8FD129CDC212001E06E9 /* SynchronizerCell.swift in Sources */,
+				343CB69829CDC05D0063BF41 /* SyncBlocksListViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -710,7 +722,7 @@
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "$(inherited)";
 				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -733,7 +745,7 @@
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "$(inherited)";
 				INFOPLIST_FILE = ZcashLightClientSample/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -796,7 +808,7 @@
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "$(inherited)";
 				INFOPLIST_FILE = "ZcashLightClientSample-Mainnet-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -819,7 +831,7 @@
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "$(inherited)";
 				INFOPLIST_FILE = "ZcashLightClientSample-Mainnet-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 13.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
