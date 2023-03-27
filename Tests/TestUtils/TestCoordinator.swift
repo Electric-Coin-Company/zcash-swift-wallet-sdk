@@ -259,8 +259,8 @@ extension TestCoordinator {
         try service.stageTransaction(from: url, at: height)
     }
     
-    func latestHeight() throws -> BlockHeight {
-        try service.latestBlockHeight()
+    func latestHeight() async throws -> BlockHeight {
+        try await service.latestBlockHeight()
     }
     
     func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {

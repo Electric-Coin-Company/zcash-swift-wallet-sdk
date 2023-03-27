@@ -18,7 +18,7 @@ class SynchronizerTests: XCTestCase {
             self.birthday = birthday
         }
 
-        func latestBlockHeight(streamer: ZcashLightClientKit.CompactTxStreamerNIOClient?) throws -> ZcashLightClientKit.BlockHeight {
+        func latestBlockHeight(streamer: CompactTxStreamerAsyncClient) async throws -> BlockHeight {
             self.birthday
         }
     }

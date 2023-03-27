@@ -392,7 +392,7 @@ class RewindRescanTests: XCTestCase {
             return
         }
         
-        let latestHeight = try coordinator.latestHeight()
+        let latestHeight = try await coordinator.latestHeight()
         let sentTxHeight = latestHeight + 1
         
         notificationHandler.transactionsFound = { txs in

@@ -67,7 +67,7 @@ class BlockDownloaderTests: XCTestCase {
             let latestHeight = await self.storage.latestHeightAsync()
             XCTAssertEqual(latestHeight, upperRange)
             
-            let resultHeight = try await self.downloader.lastDownloadedBlockHeightAsync()
+            let resultHeight = try await self.downloader.lastDownloadedBlockHeight()
             XCTAssertEqual(resultHeight, upperRange)
         } catch {
             XCTFail("testSmallDownloadAsync() shouldn't fail \(error)")

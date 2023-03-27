@@ -68,7 +68,7 @@ class LightWalletServiceTests: XCTestCase {
     }
     
     func testLatestBlock() async throws {
-        let height = try await service.latestBlockHeightAsync()
+        let height = try await service.latestBlockHeight()
         XCTAssertTrue(height > self.network.constants.saplingActivationHeight)
     }
 }

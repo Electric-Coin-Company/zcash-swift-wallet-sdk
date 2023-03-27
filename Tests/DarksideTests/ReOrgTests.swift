@@ -157,8 +157,12 @@ class ReOrgTests: XCTestCase {
         verify that mock height has been reached
         */
         var latestDownloadedHeight = BlockHeight(0)
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
-        XCTAssertTrue(latestDownloadedHeight > 0)
+        do {
+            latestDownloadedHeight = try await syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight()
+            XCTAssertTrue(latestDownloadedHeight > 0)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
         
         /**
         trigger reorg!
@@ -187,9 +191,13 @@ class ReOrgTests: XCTestCase {
         wait(for: [reorgExpectation, secondSyncExpectation], timeout: 5)
         
         // now everything should be fine. latest block should be targetHeight
-        
-        XCTAssertNoThrow(try { latestDownloadedHeight = try syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight() }())
-        XCTAssertEqual(latestDownloadedHeight, targetHeight)
+
+        do {
+            latestDownloadedHeight = try await syncedSynchronizer.initializer.blockDownloaderService.latestBlockHeight()
+            XCTAssertEqual(latestDownloadedHeight, targetHeight)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
     }
     
     func handleError(_ error: Error?) {

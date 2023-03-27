@@ -39,7 +39,7 @@ class BlockStreamingTest: XCTestCase {
         )
         let service = LightWalletServiceFactory(endpoint: endpoint, connectionStateChange: { _, _ in }).make()
 
-        let latestHeight = try service.latestBlockHeight()
+        let latestHeight = try await service.latestBlockHeight()
         
         let startHeight = latestHeight - 100_000
         var blocks: [ZcashCompactBlock] = []
@@ -82,7 +82,7 @@ class BlockStreamingTest: XCTestCase {
 
         try storage.create()
 
-        let latestBlockHeight = try service.latestBlockHeight()
+        let latestBlockHeight = try await service.latestBlockHeight()
         let startHeight = latestBlockHeight - 100_000
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: ZcashNetworkBuilder.network(for: .testnet),
@@ -142,7 +142,7 @@ class BlockStreamingTest: XCTestCase {
 
         try storage.create()
 
-        let latestBlockHeight = try service.latestBlockHeight()
+        let latestBlockHeight = try await service.latestBlockHeight()
 
         let startHeight = latestBlockHeight - 100_000
         

@@ -154,10 +154,7 @@ protocol LightWalletService {
 
     /// Return the latest block height known to the service.
     /// Blocking API
-    func latestBlockHeight() throws -> BlockHeight
-
-    /// Return the latest block height known to the service.
-    func latestBlockHeightAsync() async throws -> BlockHeight
+    func latestBlockHeight() async throws -> BlockHeight
 
     /// Return the given range of blocks.
     /// - Parameter range: the inclusive range to fetch.

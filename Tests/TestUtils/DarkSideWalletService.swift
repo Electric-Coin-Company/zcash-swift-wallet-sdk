@@ -73,8 +73,8 @@ class DarksideWalletService: LightWalletService {
         service.fetchUTXOs(for: tAddresses, height: height)
     }
 
-    func latestBlockHeight() throws -> BlockHeight {
-        try service.latestBlockHeight()
+    func latestBlockHeight() async throws -> BlockHeight {
+        try await service.latestBlockHeight()
     }
 
     func useDataset(_ datasetUrl: String) throws {
@@ -159,7 +159,7 @@ class DarksideWalletService: LightWalletService {
     }
 
     func latestBlockHeightAsync() async throws -> BlockHeight {
-        try service.latestBlockHeight()
+        try await service.latestBlockHeight()
     }
     
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {

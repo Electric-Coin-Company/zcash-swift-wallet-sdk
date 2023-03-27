@@ -189,7 +189,7 @@ class TransactionEnhancementTests: XCTestCase {
         request latest height -> receive firstLatestHeight
         */
         do {
-            dump("first latest height:  \(try darksideWalletService.latestBlockHeight())")
+            dump("first latest height:  \(try await darksideWalletService.latestBlockHeight())")
         } catch {
             XCTFail("Error: \(error)")
             return

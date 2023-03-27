@@ -406,7 +406,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.blockDownloaderService.latestBlockHeightAsync()
+        try await blockProcessor.blockDownloaderService.latestBlockHeight()
     }
 
     public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {
