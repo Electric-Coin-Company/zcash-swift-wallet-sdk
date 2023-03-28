@@ -156,17 +156,6 @@ protocol ZcashRustBackendWelding {
     /// - parameter dbData: location of the data db file
     /// - parameter idNote: note_id of note where the memo is located
     /// - parameter networkType: network type of this key
-    @available(*, deprecated, message: "This function will be deprecated soon. Use `getReceivedMemo(dbData:idNote:networkType)` instead")
-    static func getReceivedMemoAsUTF8(
-        dbData: URL,
-        idNote: Int64,
-        networkType: NetworkType
-    ) -> String?
-
-    /// get received memo from note
-    /// - parameter dbData: location of the data db file
-    /// - parameter idNote: note_id of note where the memo is located
-    /// - parameter networkType: network type of this key
     static func getReceivedMemo(
         dbData: URL,
         idNote: Int64,

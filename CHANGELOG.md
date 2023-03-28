@@ -17,6 +17,10 @@ ZcashSDK.NetworkConstants:
 use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
 Int64 value.
 
+ZcashRustBackendWelding:
+- `func getReceivedMemoAsUTF8(dbData:idNote:networkType:) -> String?`
+ Use `getReceivedMemo(dbData:idNote:networkType)` instead
+ 
 ### [#209] Support Initializer Aliases
 
 Added `ZcashSynchronizerAlias` enum which is used to identify an instance of the `SDKSynchronizer`. All the paths

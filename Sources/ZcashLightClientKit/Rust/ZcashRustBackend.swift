@@ -175,24 +175,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return UnifiedAddress(validatedEncoding: address)
     }
 
-    @available(*, deprecated, message: "This function will be deprecated soon. Use `getReceivedMemo(dbData:idNote:networkType)` instead")
-    static func getReceivedMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {
-        let dbData = dbData.osStr()
-
-        guard let memoCStr = zcashlc_get_received_memo_as_utf8(
-            dbData.0,
-            dbData.1,
-            idNote,
-            networkType.networkId
-        ) else { return  nil }
-
-        defer {
-            zcashlc_string_free(memoCStr)
-        }
-
-        return String(validatingUTF8: memoCStr)
-    }
-
     static func getReceivedMemo(
         dbData: URL,
         idNote: Int64,
