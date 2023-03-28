@@ -262,10 +262,6 @@ public protocol Synchronizer: AnyObject {
     func getShieldedBalance(accountIndex: Int) -> Zatoshi
 
     /// Returns the shielded verified balance (anchor is 10 blocks back)
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    func getShieldedVerifiedBalance(accountIndex: Int) -> Int64
-
-    /// Returns the shielded verified balance (anchor is 10 blocks back)
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
 
     /// Rescans the known blocks with the current keys.

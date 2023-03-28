@@ -157,11 +157,6 @@ class SynchronizerMock: Synchronizer {
         return getShieldedBalanceAccountIndexClosure(accountIndex)
     }
 
-    var getShieldedVerifiedBalanceAccountIndexDeprecatedClosure: ((Int) -> Int64)! = nil
-    func getShieldedVerifiedBalance(accountIndex: Int) -> Int64 {
-        return getShieldedVerifiedBalanceAccountIndexDeprecatedClosure(accountIndex)
-    }
-
     var getShieldedVerifiedBalanceAccountIndexClosure: ((Int) -> Zatoshi)! = nil
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi {
         return getShieldedVerifiedBalanceAccountIndexClosure(accountIndex)
