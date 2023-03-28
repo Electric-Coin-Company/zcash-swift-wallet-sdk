@@ -3,6 +3,7 @@
 ### Deprecations made effective:
 Synchronizer
 - `func getShieldedBalance(accountIndex: Int) -> Int64`
+- `func getShieldedVerifiedBalance(accountIndex: Int) -> Int64`
 use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
 Int64 value.
 
