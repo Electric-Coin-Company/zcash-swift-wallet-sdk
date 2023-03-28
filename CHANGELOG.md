@@ -1,4 +1,31 @@
 # unreleased 
+
+### Deprecations made effective:
+Synchronizer
+- `func getShieldedBalance(accountIndex: Int) -> Int64`
+- `func getShieldedVerifiedBalance(accountIndex: Int) -> Int64`
+use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+Int64 value.
+
+Initializer:
+- `func getBalance(account index: Int = 0) -> Int64`
+use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+Int64 value.
+- `func getVerifiedBalance(account index: Int = 0) -> Int64`
+use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+Int64 value.
+
+ZcashSDK.NetworkConstants:
+- `func defaultFee(for height: BlockHeight) -> Int64`
+use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+Int64 value.
+
+ZcashRustBackendWelding:
+- `func getReceivedMemoAsUTF8(dbData:idNote:networkType:) -> String?`
+ Use `getReceivedMemo(dbData:idNote:networkType)` instead
+- `func getSentMemoAsUTF8(dbData:idNote:networkType:) -> String?`
+ Use `getSentMemo(dbData:idNote:networkType)` instead
+
 ### [#209] Support Initializer Aliases
 
 Added `ZcashSynchronizerAlias` enum which is used to identify an instance of the `SDKSynchronizer`. All the paths

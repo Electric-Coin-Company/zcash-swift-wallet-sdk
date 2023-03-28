@@ -756,15 +756,6 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testGetShieldedBalanceDeprecatedSucceed() {
-        synchronizerMock.getShieldedBalanceAccountIndexDeprecatedClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
-            return 333
-        }
-
-        XCTAssertEqual(synchronizer.getShieldedBalance(accountIndex: 3), 333)
-    }
-
     func testGetShieldedBalanceSucceed() {
         synchronizerMock.getShieldedBalanceAccountIndexClosure = { receivedAccountIndex in
             XCTAssertEqual(receivedAccountIndex, 3)
@@ -772,15 +763,6 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         }
 
         XCTAssertEqual(synchronizer.getShieldedBalance(accountIndex: 3), Zatoshi(333))
-    }
-
-    func testGetShieldedVerifiedBalanceDeprecatedSucceed() {
-        synchronizerMock.getShieldedVerifiedBalanceAccountIndexDeprecatedClosure = { receivedAccountIndex in
-            XCTAssertEqual(receivedAccountIndex, 3)
-            return 333
-        }
-
-        XCTAssertEqual(synchronizer.getShieldedVerifiedBalance(accountIndex: 3), 333)
     }
 
     func testGetShieldedVerifiedBalanceSucceed() {

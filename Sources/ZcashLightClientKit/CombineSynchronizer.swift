@@ -79,12 +79,8 @@ public protocol CombineSynchronizer {
 
     func getTransparentBalance(accountIndex: Int) -> Single<WalletBalance, Error>
 
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    func getShieldedBalance(accountIndex: Int) -> Int64
     func getShieldedBalance(accountIndex: Int) -> Zatoshi
 
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    func getShieldedVerifiedBalance(accountIndex: Int) -> Int64
     func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
 
     func rewind(_ policy: RewindPolicy) -> Completable<Error>

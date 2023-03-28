@@ -447,18 +447,9 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    public func getShieldedBalance(accountIndex: Int = 0) -> Int64 {
-        initializer.getBalance(account: accountIndex).amount
-    }
-
+    
     public func getShieldedBalance(accountIndex: Int = 0) -> Zatoshi {
         initializer.getBalance(account: accountIndex)
-    }
-
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Int64 {
-        initializer.getVerifiedBalance(account: accountIndex).amount
     }
 
     public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Zatoshi {

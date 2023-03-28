@@ -171,21 +171,11 @@ public protocol NetworkConstants {
     /// for librustzcash not figuring out the tx fee from the tx itself.
     static var feeChangeHeight: BlockHeight { get }
 
-    @available(*, deprecated, message: "This function will be removed soon. Use the one returning `Zatoshi` instead")
-    static func defaultFee(for height: BlockHeight) -> Int64
-
     /// Returns the default fee according to the blockheight. see [ZIP-313](https://zips.z.cash/zip-0313)
     static func defaultFee(for height: BlockHeight) -> Zatoshi
 }
 
 public extension NetworkConstants {
-    @available(*, deprecated, message: "This function will be removed soon. Use the one returning `Zatoshi` instead")
-    static func defaultFee(for height: BlockHeight = BlockHeight.max) -> Int64 {
-        guard height >= feeChangeHeight else { return 10_000 }
-        
-        return 1_000
-    }
-
     static func defaultFee(for height: BlockHeight = BlockHeight.max) -> Zatoshi {
         guard height >= feeChangeHeight else { return Zatoshi(10_000) }
 

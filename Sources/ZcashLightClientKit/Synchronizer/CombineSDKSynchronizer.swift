@@ -178,12 +178,8 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    public func getShieldedBalance(accountIndex: Int) -> Int64 { synchronizer.getShieldedBalance(accountIndex: accountIndex) }
     public func getShieldedBalance(accountIndex: Int) -> Zatoshi { synchronizer.getShieldedBalance(accountIndex: accountIndex) }
 
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    public func getShieldedVerifiedBalance(accountIndex: Int) -> Int64 { synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex) }
     public func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi { synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex) }
 
     public func rewind(_ policy: RewindPolicy) -> Completable<Error> { synchronizer.rewind(policy) }
