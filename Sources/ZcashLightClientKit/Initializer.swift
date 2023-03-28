@@ -192,7 +192,7 @@ public class Initializer {
             urls: updatedURLs,
             endpoint: endpoint,
             service: Self.makeLightWalletServiceFactory(endpoint: endpoint).make(),
-            repository: TransactionRepositoryBuilder.build(dataDbURL: dataDbURL),
+            repository: TransactionRepositoryBuilder.build(dataDbURL: updatedURLs.dataDbURL),
             accountRepository: AccountRepositoryBuilder.build(
                 dataDbURL: updatedURLs.dataDbURL,
                 readOnly: true,

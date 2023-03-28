@@ -68,6 +68,13 @@ let package = Package(
             dependencies: ["ZcashLightClientKit", "TestUtils"]
         ),
         .testTarget(
+            name: "AliasDarksideTests",
+            dependencies: ["ZcashLightClientKit", "TestUtils"],
+            exclude: [
+                "scripts/"
+            ]
+        ),
+        .testTarget(
             name: "PerformanceTests",
             dependencies: ["ZcashLightClientKit", "TestUtils"]
         )

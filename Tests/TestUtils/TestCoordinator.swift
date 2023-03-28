@@ -45,11 +45,20 @@ class TestCoordinator {
     var databases: TemporaryTestDatabases
     let network: ZcashNetwork
 
+    static let defaultEndpoint = LightWalletEndpoint(
+        address: Constants.address,
+        port: 9067,
+        secure: false,
+        singleCallTimeoutInMillis: 10000,
+        streamingCallTimeoutInMillis: 1000000
+    )
+
     static func make(
         alias: ZcashSynchronizerAlias = .default,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
-        callPrepareInConstructor: Bool = true
+        callPrepareInConstructor: Bool = true,
+        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
     ) -> TestCoordinator {
         var coordinator: TestCoordinator!
         XCTestCase.wait {
@@ -57,7 +66,8 @@ class TestCoordinator {
                 alias: alias,
                 walletBirthday: walletBirthday,
                 network: network,
-                callPrepareInConstructor: callPrepareInConstructor
+                callPrepareInConstructor: callPrepareInConstructor,
+                endpoint: endpoint
             )
         }
         return coordinator
@@ -69,7 +79,8 @@ class TestCoordinator {
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
-        callPrepareInConstructor: Bool = true
+        callPrepareInConstructor: Bool = true,
+        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
     ) -> TestCoordinator {
         var coordinator: TestCoordinator!
         XCTestCase.wait {
@@ -79,7 +90,8 @@ class TestCoordinator {
                 unifiedFullViewingKey: unifiedFullViewingKey,
                 walletBirthday: walletBirthday,
                 network: network,
-                callPrepareInConstructor: callPrepareInConstructor
+                callPrepareInConstructor: callPrepareInConstructor,
+                endpoint: endpoint
             )
         }
         return coordinator
@@ -89,7 +101,8 @@ class TestCoordinator {
         alias: ZcashSynchronizerAlias = .default,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
-        callPrepareInConstructor: Bool = true
+        callPrepareInConstructor: Bool = true,
+        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
     ) async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
@@ -106,7 +119,8 @@ class TestCoordinator {
             unifiedFullViewingKey: ufvk,
             walletBirthday: walletBirthday,
             network: network,
-            callPrepareInConstructor: callPrepareInConstructor
+            callPrepareInConstructor: callPrepareInConstructor,
+            endpoint: endpoint
         )
     }
     
@@ -116,7 +130,8 @@ class TestCoordinator {
         unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
-        callPrepareInConstructor: Bool = true
+        callPrepareInConstructor: Bool = true,
+        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
     ) async throws {
         await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
@@ -126,50 +141,24 @@ class TestCoordinator {
         self.databases = TemporaryDbBuilder.build()
         self.network = network
 
-        let endpoint = LightWalletEndpoint(
-            address: Constants.address,
-            port: 9067,
-            secure: false,
-            singleCallTimeoutInMillis: 10000,
-            streamingCallTimeoutInMillis: 1000000
-        )
         let liveService = LightWalletServiceFactory(endpoint: endpoint).make()
-        self.service = DarksideWalletService(service: liveService)
+        self.service = DarksideWalletService(endpoint: endpoint, service: liveService)
 
-        let realRustBackend = ZcashRustBackend.self
-
-        let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: self.databases.fsCacheDbRoot,
-            metadataStore: .live(
-                fsBlockDbRoot: self.databases.fsCacheDbRoot,
-                rustBackend: ZcashRustBackend.self,
-                logger: logger
-            ),
-            blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted,
-            logger: logger
-        )
-
-        let synchronizer = TestSynchronizerBuilder.build(
-            alias: alias,
-            rustBackend: realRustBackend,
+        let initializer = Initializer(
+            cacheDbURL: nil,
             fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
             pendingDbURL: databases.pendingDB,
-            endpoint: LightWalletEndpointBuilder.default,
-            service: self.service,
-            repository: TransactionSQLDAO(dbProvider: SimpleConnectionProvider(path: databases.dataDB.absoluteString)),
-            accountRepository: AccountRepositoryBuilder.build(
-                dataDbURL: databases.dataDB,
-                readOnly: true,
-                logger: logger
-            ),
-            storage: storage,
+            endpoint: endpoint,
+            network: network,
             spendParamsURL: try __spendParamsURL(),
             outputParamsURL: try __outputParamsURL(),
-            network: network,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
+            alias: alias,
             logLevel: .debug
         )
+
+        let synchronizer = SDKSynchronizer(initializer: initializer)
         
         self.synchronizer = synchronizer
         subscribeToState(synchronizer: self.synchronizer)
@@ -339,41 +328,6 @@ enum TemporaryDbBuilder {
             dataDB: tempUrl.appendingPathComponent("data_db_\(timestamp).db"),
             pendingDB: tempUrl.appendingPathComponent("pending_db_\(timestamp).db")
         )
-    }
-}
-
-enum TestSynchronizerBuilder {
-    static func build(
-        alias: ZcashSynchronizerAlias = .default,
-        rustBackend: ZcashRustBackendWelding.Type,
-        fsBlockDbRoot: URL,
-        dataDbURL: URL,
-        pendingDbURL: URL,
-        endpoint: LightWalletEndpoint,
-        service: LightWalletService,
-        repository: TransactionRepository,
-        accountRepository: AccountRepository,
-        storage: CompactBlockRepository,
-        spendParamsURL: URL,
-        outputParamsURL: URL,
-        network: ZcashNetwork,
-        logLevel: OSLogger.LogLevel
-    ) -> SDKSynchronizer {
-        let initializer = Initializer(
-            cacheDbURL: nil,
-            fsBlockDbRoot: fsBlockDbRoot,
-            dataDbURL: dataDbURL,
-            pendingDbURL: pendingDbURL,
-            endpoint: endpoint,
-            network: network,
-            spendParamsURL: spendParamsURL,
-            outputParamsURL: outputParamsURL,
-            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            alias: alias,
-            logLevel: logLevel
-        )
-
-        return SDKSynchronizer(initializer: initializer)
     }
 }
 
