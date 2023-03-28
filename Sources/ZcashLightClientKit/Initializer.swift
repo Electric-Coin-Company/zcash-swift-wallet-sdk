@@ -413,17 +413,6 @@ public class Initializer {
 
     /// get verified balance from the given account index
     /// - Parameter account: the index of the account
-    @available(*, deprecated, message: "This function will be removed soon. Use the one returning `Zatoshi` instead")
-    public func getVerifiedBalance(account index: Int = 0) -> Int64 {
-        guard let balance = try? rustBackend.getVerifiedBalance(dbData: dataDbURL, account: Int32(index), networkType: network.networkType) else {
-            return 0
-        }
-
-        return balance
-    }
-
-    /// get verified balance from the given account index
-    /// - Parameter account: the index of the account
     /// - Returns: balance in `Zatoshi`
     public func getVerifiedBalance(account index: Int = 0) -> Zatoshi {
         guard let balance = try? rustBackend.getVerifiedBalance(

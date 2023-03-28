@@ -11,6 +11,9 @@ Initializer:
 - `func getBalance(account index: Int = 0) -> Int64`
 use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
 Int64 value.
+- `func getVerifiedBalance(account index: Int = 0) -> Int64`
+use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+Int64 value.
 
 ZcashSDK.NetworkConstants:
 - `func defaultFee(for height: BlockHeight) -> Int64`
