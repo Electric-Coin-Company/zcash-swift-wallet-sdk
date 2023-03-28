@@ -40,7 +40,6 @@ class SynchronizerTests: XCTestCase {
         sdkSynchronizerSyncStatusHandler = nil
     }
 
-    @MainActor
     func testHundredBlocksSync() async throws {
         let derivationTool = DerivationTool(networkType: .mainnet)
         guard let seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==") else {

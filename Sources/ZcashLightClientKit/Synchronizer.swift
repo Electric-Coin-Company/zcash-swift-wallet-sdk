@@ -199,51 +199,51 @@ public protocol Synchronizer: AnyObject {
     /// an option if the transaction has not yet been submitted to the server.
     /// - Parameter transaction: the transaction to cancel.
     /// - Returns: true when the cancellation request was successful. False when it is too late.
-    func cancelSpend(transaction: PendingTransactionEntity) -> Bool
+    func cancelSpend(transaction: PendingTransactionEntity) async -> Bool
 
     /// all outbound pending transactions that have been sent but are awaiting confirmations
-    var pendingTransactions: [PendingTransactionEntity] { get }
+    var pendingTransactions: [PendingTransactionEntity] { get async }
 
     /// all the transactions that are on the blockchain
-    var clearedTransactions: [ZcashTransaction.Overview] { get }
+    var clearedTransactions: [ZcashTransaction.Overview] { get async }
 
     /// All transactions that are related to sending funds
-    var sentTransactions: [ZcashTransaction.Sent] { get }
+    var sentTransactions: [ZcashTransaction.Sent] { get async }
 
     /// all transactions related to receiving funds
-    var receivedTransactions: [ZcashTransaction.Received] { get }
+    var receivedTransactions: [ZcashTransaction.Received] { get async }
     
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
     /// Get all memos for `transaction`.
-    func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
+    func getMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo]
 
     /// Get all memos for `receivedTransaction`.
-    func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
+    func getMemos(for receivedTransaction: ZcashTransaction.Received) async throws -> [Memo]
 
     /// Get all memos for `sentTransaction`.
-    func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
+    func getMemos(for sentTransaction: ZcashTransaction.Sent) async throws -> [Memo]
 
     /// Attempt to get recipients from a Transaction Overview.
     /// - parameter transaction: A transaction overview
     /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
     /// transaction
-    func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient]
+    func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient]
     
     /// Get the recipients for the given a sent transaction
     /// - parameter transaction: A transaction overview
     /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
     /// transaction
-    func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient]
+    func getRecipients(for transaction: ZcashTransaction.Sent) async -> [TransactionRecipient]
 
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
     ///     - Returns: an array with the given Transactions or nil
-    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview]
+    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     /// Blocking

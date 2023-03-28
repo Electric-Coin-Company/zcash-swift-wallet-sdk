@@ -68,7 +68,7 @@ class WalletTransactionEncoder: TransactionEncoder {
 
         do {
             logger.debug("transaction id: \(txId)")
-            return try repository.find(id: txId)
+            return try await repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }
@@ -118,7 +118,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         
         do {
             logger.debug("transaction id: \(txId)")
-            return try repository.find(id: txId)
+            return try await repository.find(id: txId)
         } catch {
             throw TransactionEncoderError.notFound(transactionId: txId)
         }

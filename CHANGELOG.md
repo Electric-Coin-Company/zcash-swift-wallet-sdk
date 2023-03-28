@@ -33,6 +33,16 @@ These methods in the `SDKSynchronizer` are now async:
 - `prepare(with:viewingKeys:walletBirthday:)`
 - `start(retry:)`
 - `stop()`
+- `cancelSpend(transaction:)`
+- All the variants of the `getMemos(for:)` method.
+- All the variants fo the `getRecipients(for:)` method.
+- `allConfirmedTransactions(from:limit:)`
+
+These properties in the `SDKSynchronizer` are now async:
+- `pendingTransactions`
+- `clearedTransactions`
+- `sentTransactions`
+- `receivedTransactions`
 
 Non async `SDKsynchronizer.latestHeight(result:)` were moved to `ClosureSDKSynchronizer`.
 

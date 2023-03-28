@@ -142,7 +142,7 @@ class AdvancedReOrgTests: XCTestCase {
             return
         }
         sleep(5)
-        guard let receivedTx = syncedSynchronizer.receivedTransactions.first, receivedTx.minedHeight == receivedTxHeight else {
+        guard let receivedTx = await syncedSynchronizer.receivedTransactions.first, receivedTx.minedHeight == receivedTxHeight else {
             XCTFail("did not receive transaction")
             return
         }
@@ -241,7 +241,7 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [finalsyncExpectation], timeout: 5)
         sleep(3)
         
-        guard let reorgedTx = coordinator.synchronizer.receivedTransactions.first else {
+        guard let reorgedTx = await coordinator.synchronizer.receivedTransactions.first else {
             XCTFail("no transactions found")
             return
         }
@@ -275,7 +275,7 @@ class AdvancedReOrgTests: XCTestCase {
     /// 11. verify that the sent tx is mined and balance is correct
     /// 12. applyStaged(sentTx + 10)
     /// 13. verify that there's no more pending transaction
-    @MainActor func testReorgChangesOutboundTxIndex() async throws {
+    func testReorgChangesOutboundTxIndex() async throws {
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
         var initialTotalBalance = Zatoshi(-1)
@@ -443,7 +443,7 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(resultingBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
     }
     
-    @MainActor func testIncomingTransactionIndexChange() async throws {
+    func testIncomingTransactionIndexChange() async throws {
         await hookToReOrgNotification()
         self.expectedReorgHeight = 663196
         self.expectedRewindHeight = 663175
@@ -525,8 +525,9 @@ class AdvancedReOrgTests: XCTestCase {
             completion: { synchronizer in
                 afterTxBalance = synchronizer.initializer.getBalance()
                 afterTxVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+                let receivedTransactions = await synchronizer.receivedTransactions
                 XCTAssertNotNil(
-                    synchronizer.receivedTransactions.first { $0.minedHeight == receivedTxHeight },
+                    receivedTransactions.first { $0.minedHeight == receivedTxHeight },
                     "Transaction not found at \(receivedTxHeight)"
                 )
                 afterTxSyncExpectation.fulfill()
@@ -554,8 +555,9 @@ class AdvancedReOrgTests: XCTestCase {
             completion: { synchronizer in
                 afterReOrgBalance = synchronizer.initializer.getBalance()
                 afterReOrgVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
+                let receivedTransactions = await synchronizer.receivedTransactions
                 XCTAssertNil(
-                    synchronizer.receivedTransactions.first { $0.minedHeight == receivedTxHeight },
+                    receivedTransactions.first { $0.minedHeight == receivedTxHeight },
                     "Transaction found at \(receivedTxHeight) after reorg"
                 )
                 afterReorgExpectation.fulfill()
@@ -609,7 +611,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         initialBalance = coordinator.synchronizer.initializer.getBalance()
         initialVerifiedBalance = coordinator.synchronizer.initializer.getVerifiedBalance()
-        incomingTx = coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == incomingTxHeight })
+        incomingTx = await coordinator.synchronizer.receivedTransactions.first(where: { $0.minedHeight == incomingTxHeight })
 
         let txRawData = incomingTx.raw ?? Data()
         
@@ -952,7 +954,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
 
-        let sentTransactions = coordinator.synchronizer.sentTransactions
+        let sentTransactions = await coordinator.synchronizer.sentTransactions
             .first(
                 where: { transaction in
                     return transaction.rawID == newlyPendingTx.rawTransactionId
@@ -1008,7 +1010,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         let initialBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
         let initialVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
-        guard let initialTxHeight = try coordinator.synchronizer.allReceivedTransactions().first?.minedHeight else {
+        guard let initialTxHeight = try await coordinator.synchronizer.allReceivedTransactions().first?.minedHeight else {
             XCTFail("no incoming transaction found!")
             return
         }
@@ -1031,7 +1033,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         wait(for: [afterReOrgExpectation], timeout: 5)
         
-        guard let afterReOrgTxHeight = coordinator.synchronizer.receivedTransactions.first?.minedHeight else {
+        guard let afterReOrgTxHeight = await coordinator.synchronizer.receivedTransactions.first?.minedHeight else {
             XCTFail("no incoming transaction found after re org!")
             return
         }
@@ -1049,7 +1051,7 @@ class AdvancedReOrgTests: XCTestCase {
     /// 5. verify that reorg Happened at reorgHeight
     /// 6. verify that balances match initial balances
     // FIXME [#644]: Test works with lightwalletd v0.4.13 but is broken when using newer lightwalletd. More info is in #644.
-    @MainActor func testReOrgRemovesIncomingTxForever() async throws {
+    func testReOrgRemovesIncomingTxForever() async throws {
         await hookToReOrgNotification()
         try coordinator.reset(saplingActivation: 663150, branchID: branchID, chainName: chainName)
         

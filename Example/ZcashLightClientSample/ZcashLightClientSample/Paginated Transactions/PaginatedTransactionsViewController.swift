@@ -32,24 +32,27 @@ class PaginatedTransactionsViewController: UIViewController {
     }
     
     func loadMore(_ pageNumber: Int, _ pageSize: Int, onSuccess: ((Bool) -> Void)?, onError: ((Error) -> Void)?) {
-        // Call your api here
-        // Send true in onSuccess in case new data exists, sending false will disable pagination
-        do {
-            guard let txs = try paginatedRepository.page(pageNumber) else {
-                DispatchQueue.main.async {
-                    onSuccess?(false)
+        Task {
+            // Call your api here
+            // Send true in onSuccess in case new data exists, sending false will disable pagination
+            do {
+                guard let txs = try await paginatedRepository.page(pageNumber) else {
+                    DispatchQueue.main.async {
+                        onSuccess?(false)
+                    }
+                    return
                 }
-                return
-            }
-            if pageNumber == 0 { transactions.removeAll() }
-            
-            transactions.append(contentsOf: txs)
-            DispatchQueue.main.async {
-                onSuccess?(pageNumber < self.paginatedRepository.pageCount)
-            }
-        } catch {
-            DispatchQueue.main.async {
-                onError?(error)
+                if pageNumber == 0 { transactions.removeAll() }
+
+                transactions.append(contentsOf: txs)
+                let pageCount = await self.paginatedRepository.pageCount
+                DispatchQueue.main.async {
+                    onSuccess?(pageNumber < pageCount)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    onError?(error)
+                }
             }
         }
     }
@@ -73,16 +76,7 @@ class PaginatedTransactionsViewController: UIViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? TransactionDetailViewController, let row = selectedRow {
             let transaction = transactions[row]
-
-            let memos: [Memo]
-            do {
-                memos = try AppDelegate.shared.sharedSynchronizer.getMemos(for: transaction)
-            } catch {
-                loggerProxy.warn("Can't load memos \(error)")
-                memos = []
-            }
-
-            destination.model = TransactionDetailModel(transaction: transaction, memos: memos)
+            destination.model = TransactionDetailModel(transaction: transaction, memos: [])
             selectedRow = nil
         }
     }

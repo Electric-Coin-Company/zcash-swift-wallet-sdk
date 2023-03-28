@@ -16,7 +16,7 @@ class AfterSyncHooksManager {
 
     struct RewindContext {
         let height: BlockHeight?
-        let completion: (Result<BlockHeight, Error>) -> Void
+        let completion: (Result<BlockHeight, Error>) async -> Void
     }
 
     enum Hook: Equatable, Hashable {

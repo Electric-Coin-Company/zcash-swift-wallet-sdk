@@ -55,23 +55,23 @@ public protocol CombineSynchronizer {
         shieldingThreshold: Zatoshi
     ) -> Single<PendingTransactionEntity, Error>
 
-    func cancelSpend(transaction: PendingTransactionEntity) -> Bool
+    func cancelSpend(transaction: PendingTransactionEntity) -> Single<Bool, Never>
 
-    var pendingTransactions: [PendingTransactionEntity] { get }
-    var clearedTransactions: [ZcashTransaction.Overview] { get }
-    var sentTransactions: [ZcashTransaction.Sent] { get }
-    var receivedTransactions: [ZcashTransaction.Received] { get }
-    
+    var pendingTransactions: Single<[PendingTransactionEntity], Never> { get }
+    var clearedTransactions: Single<[ZcashTransaction.Overview], Never> { get }
+    var sentTransactions: Single<[ZcashTransaction.Sent], Never> { get }
+    var receivedTransactions: Single<[ZcashTransaction.Received], Never> { get }
+
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
-    func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
-    func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
-    func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
+    func getMemos(for transaction: ZcashTransaction.Overview) -> Single<[Memo], Error>
+    func getMemos(for receivedTransaction: ZcashTransaction.Received) -> Single<[Memo], Error>
+    func getMemos(for sentTransaction: ZcashTransaction.Sent) -> Single<[Memo], Error>
 
-    func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient]
-    func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient]
+    func getRecipients(for transaction: ZcashTransaction.Overview) -> Single<[TransactionRecipient], Never>
+    func getRecipients(for transaction: ZcashTransaction.Sent) -> Single<[TransactionRecipient], Never>
 
-    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview]
+    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> Single<[ZcashTransaction.Overview], Error>
 
     func latestHeight() -> Single<BlockHeight, Error>
 

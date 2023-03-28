@@ -92,24 +92,72 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity) -> Bool { synchronizer.cancelSpend(transaction: transaction) }
+    public func cancelSpend(transaction: PendingTransactionEntity) -> Single<Bool, Never> {
+        executeAction() {
+            await self.synchronizer.cancelSpend(transaction: transaction)
+        }
+    }
 
-    public var pendingTransactions: [PendingTransactionEntity] { synchronizer.pendingTransactions }
-    public var clearedTransactions: [ZcashTransaction.Overview] { synchronizer.clearedTransactions }
-    public var sentTransactions: [ZcashTransaction.Sent] { synchronizer.sentTransactions }
-    public var receivedTransactions: [ZcashTransaction.Received] { synchronizer.receivedTransactions }
+    public var pendingTransactions: Single<[PendingTransactionEntity], Never> {
+        executeAction() {
+            await self.synchronizer.pendingTransactions
+        }
+    }
+
+    public var clearedTransactions: Single<[ZcashTransaction.Overview], Never> {
+        executeAction() {
+            await self.synchronizer.clearedTransactions
+        }
+    }
+
+    public var sentTransactions: Single<[ZcashTransaction.Sent], Never> {
+        executeAction() {
+            await self.synchronizer.sentTransactions
+        }
+    }
+
+    public var receivedTransactions: Single<[ZcashTransaction.Received], Never> {
+        executeAction() {
+            await self.synchronizer.receivedTransactions
+        }
+    }
     
     public func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository { synchronizer.paginatedTransactions(of: kind) }
 
-    public func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo] { try synchronizer.getMemos(for: transaction) }
-    public func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo] { try synchronizer.getMemos(for: receivedTransaction) }
-    public func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo] { try synchronizer.getMemos(for: sentTransaction) }
+    public func getMemos(for transaction: ZcashTransaction.Overview) -> Single<[Memo], Error> {
+        executeThrowingAction() {
+            try await self.synchronizer.getMemos(for: transaction)
+        }
+    }
 
-    public func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient] { synchronizer.getRecipients(for: transaction) }
-    public func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient] { synchronizer.getRecipients(for: transaction) }
+    public func getMemos(for receivedTransaction: ZcashTransaction.Received) -> Single<[Memo], Error> {
+        executeThrowingAction() {
+            try await self.synchronizer.getMemos(for: receivedTransaction)
+        }
+    }
 
-    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview] {
-        try synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
+    public func getMemos(for sentTransaction: ZcashTransaction.Sent) -> Single<[Memo], Error> {
+        executeThrowingAction() {
+            try await self.synchronizer.getMemos(for: sentTransaction)
+        }
+    }
+
+    public func getRecipients(for transaction: ZcashTransaction.Overview) -> Single<[TransactionRecipient], Never> {
+        executeAction() {
+            await self.synchronizer.getRecipients(for: transaction)
+        }
+    }
+
+    public func getRecipients(for transaction: ZcashTransaction.Sent) -> Single<[TransactionRecipient], Never> {
+        executeAction() {
+            await self.synchronizer.getRecipients(for: transaction)
+        }
+    }
+
+    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> Single<[ZcashTransaction.Overview], Error> {
+        executeThrowingAction() {
+            try await self.synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
+        }
     }
 
     public func latestHeight() -> Single<BlockHeight, Error> {

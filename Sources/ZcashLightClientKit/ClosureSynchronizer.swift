@@ -51,23 +51,27 @@ public protocol ClosureSynchronizer {
         completion: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     )
 
-    func cancelSpend(transaction: PendingTransactionEntity) -> Bool
+    func cancelSpend(transaction: PendingTransactionEntity, completion: @escaping (Bool) -> Void)
 
-    var pendingTransactions: [PendingTransactionEntity] { get }
-    var clearedTransactions: [ZcashTransaction.Overview] { get }
-    var sentTransactions: [ZcashTransaction.Sent] { get }
-    var receivedTransactions: [ZcashTransaction.Received] { get }
-    
+    func pendingTransactions(completion: @escaping ([PendingTransactionEntity]) -> Void)
+    func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
+    func sentTranscations(completion: @escaping ([ZcashTransaction.Sent]) -> Void)
+    func receivedTransactions(completion: @escaping ([ZcashTransaction.Received]) -> Void)
+
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
-    func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo]
-    func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo]
-    func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo]
+    func getMemos(for transaction: ZcashTransaction.Overview, completion: @escaping (Result<[Memo], Error>) -> Void)
+    func getMemos(for receivedTransaction: ZcashTransaction.Received, completion: @escaping (Result<[Memo], Error>) -> Void)
+    func getMemos(for sentTransaction: ZcashTransaction.Sent, completion: @escaping (Result<[Memo], Error>) -> Void)
 
-    func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient]
-    func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient]
+    func getRecipients(for transaction: ZcashTransaction.Overview, completion: @escaping ([TransactionRecipient]) -> Void)
+    func getRecipients(for transaction: ZcashTransaction.Sent, completion: @escaping ([TransactionRecipient]) -> Void)
 
-    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview]
+    func allConfirmedTransactions(
+        from transaction: ZcashTransaction.Overview,
+        limit: Int,
+        completion: @escaping (Result<[ZcashTransaction.Overview], Error>) -> Void
+    )
 
     func latestHeight(completion: @escaping (Result<BlockHeight, Error>) -> Void)
 

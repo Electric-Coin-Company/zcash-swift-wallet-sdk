@@ -95,24 +95,76 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity) -> Bool { synchronizer.cancelSpend(transaction: transaction) }
+    public func cancelSpend(transaction: PendingTransactionEntity, completion: @escaping (Bool) -> Void) {
+        executeAction(completion) {
+            await self.synchronizer.cancelSpend(transaction: transaction)
+        }
+    }
 
-    public var pendingTransactions: [PendingTransactionEntity] { synchronizer.pendingTransactions }
-    public var clearedTransactions: [ZcashTransaction.Overview] { synchronizer.clearedTransactions }
-    public var sentTransactions: [ZcashTransaction.Sent] { synchronizer.sentTransactions }
-    public var receivedTransactions: [ZcashTransaction.Received] { synchronizer.receivedTransactions }
+    public func pendingTransactions(completion: @escaping ([PendingTransactionEntity]) -> Void) {
+        executeAction(completion) {
+            await self.synchronizer.pendingTransactions
+        }
+    }
+
+    public func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
+        executeAction(completion) {
+            await self.synchronizer.clearedTransactions
+        }
+    }
+
+    public func sentTranscations(completion: @escaping ([ZcashTransaction.Sent]) -> Void) {
+        executeAction(completion) {
+            await self.synchronizer.sentTransactions
+        }
+    }
+
+    public func receivedTransactions(completion: @escaping ([ZcashTransaction.Received]) -> Void) {
+        executeAction(completion) {
+            await self.synchronizer.receivedTransactions
+        }
+    }
     
     public func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository { synchronizer.paginatedTransactions(of: kind) }
 
-    public func getMemos(for transaction: ZcashTransaction.Overview) throws -> [Memo] { try synchronizer.getMemos(for: transaction) }
-    public func getMemos(for receivedTransaction: ZcashTransaction.Received) throws -> [Memo] { try synchronizer.getMemos(for: receivedTransaction) }
-    public func getMemos(for sentTransaction: ZcashTransaction.Sent) throws -> [Memo] { try synchronizer.getMemos(for: sentTransaction) }
+    public func getMemos(for transaction: ZcashTransaction.Overview, completion: @escaping (Result<[Memo], Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getMemos(for: transaction)
+        }
+    }
 
-    public func getRecipients(for transaction: ZcashTransaction.Overview) -> [TransactionRecipient] { synchronizer.getRecipients(for: transaction) }
-    public func getRecipients(for transaction: ZcashTransaction.Sent) -> [TransactionRecipient] { synchronizer.getRecipients(for: transaction) }
+    public func getMemos(for receivedTransaction: ZcashTransaction.Received, completion: @escaping (Result<[Memo], Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getMemos(for: receivedTransaction)
+        }
+    }
 
-    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) throws -> [ZcashTransaction.Overview] {
-        try synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
+    public func getMemos(for sentTransaction: ZcashTransaction.Sent, completion: @escaping (Result<[Memo], Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getMemos(for: sentTransaction)
+        }
+    }
+
+    public func getRecipients(for transaction: ZcashTransaction.Overview, completion: @escaping ([TransactionRecipient]) -> Void) {
+        executeAction(completion) {
+            await self.synchronizer.getRecipients(for: transaction)
+        }
+    }
+
+    public func getRecipients(for transaction: ZcashTransaction.Sent, completion: @escaping ([TransactionRecipient]) -> Void) {
+        executeAction(completion) {
+            await self.synchronizer.getRecipients(for: transaction)
+        }
+    }
+
+    public func allConfirmedTransactions(
+        from transaction: ZcashTransaction.Overview,
+        limit: Int,
+        completion: @escaping (Result<[ZcashTransaction.Overview], Error>) -> Void
+    ) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
+        }
     }
 
     public func latestHeight(completion: @escaping (Result<BlockHeight, Error>) -> Void) {

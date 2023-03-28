@@ -16,17 +16,17 @@ public protocol PaginatedTransactionRepository {
     /**
     How many pages are in total
     */
-    var pageCount: Int { get }
+    var pageCount: Int { get async }
     
     /**
     How many items are to be displayed in total
     */
-    var itemCount: Int { get }
+    var itemCount: Int { get async }
 
     /**
     Returns the page number if exists. Blocking
     */
-    func page(_ number: Int) throws -> [ZcashTransaction.Overview]?
+    func page(_ number: Int) async throws -> [ZcashTransaction.Overview]?
     
     /**
     Returns the page number if exists. Non-blocking

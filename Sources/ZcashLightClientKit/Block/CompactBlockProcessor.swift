@@ -642,7 +642,7 @@ actor CompactBlockProcessor {
                 message: "unknown error getting nearest rewind height for height: \(height)"
             )
             await fail(error)
-            return context.completion(.failure(error))
+            return await context.completion(.failure(error))
         }
 
         // FIXME: [#719] this should be done on the rust layer, https://github.com/zcash/ZcashLightClientKit/issues/719
@@ -650,7 +650,7 @@ actor CompactBlockProcessor {
         guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
             await fail(error)
-            return context.completion(.failure(error))
+            return await context.completion(.failure(error))
         }
 
         // clear cache
@@ -658,13 +658,13 @@ actor CompactBlockProcessor {
         do {
             try await blockDownloaderService.rewind(to: rewindBlockHeight)
         } catch {
-            return context.completion(.failure(error))
+            return await context.completion(.failure(error))
         }
 
         await internalSyncProgress.rewind(to: rewindBlockHeight)
 
         self.lastChainValidationFailure = nil
-        context.completion(.success(rewindBlockHeight))
+        await context.completion(.success(rewindBlockHeight))
     }
 
     // MARK: Wipe
@@ -1403,7 +1403,7 @@ extension CompactBlockProcessor {
                 await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight)
 
                 let latestBlockHeight = try await service.latestBlockHeight()
-                let latestScannedHeight = try transactionRepository.lastScannedHeight()
+                let latestScannedHeight = try await transactionRepository.lastScannedHeight()
 
                 return try await internalSyncProgress.computeNextState(
                     latestBlockHeight: latestBlockHeight,
@@ -1473,7 +1473,7 @@ extension CompactBlockProcessor {
         // `CompactBlockProcessor` so that it doesn't rely on download heights set
         // by a previous processing cycle.
         do {
-            let lastScannedHeight = try self.transactionRepository.lastScannedHeight()
+            let lastScannedHeight = try await transactionRepository.lastScannedHeight()
 
             await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
         } catch {

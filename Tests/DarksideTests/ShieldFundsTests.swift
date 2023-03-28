@@ -319,7 +319,7 @@ class ShieldFundsTests: XCTestCase {
         guard shouldContinue else { return }
 
         // verify that there's a confirmed transaction that's the shielding transaction
-        let clearedTransaction = coordinator.synchronizer.clearedTransactions.first(
+        let clearedTransaction = await coordinator.synchronizer.clearedTransactions.first(
             where: { $0.rawID == shieldingPendingTx?.rawTransactionId }
         )
 
