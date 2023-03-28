@@ -259,10 +259,6 @@ public protocol Synchronizer: AnyObject {
     func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance
 
     /// Returns the shielded total balance (includes verified and unverified balance)
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    func getShieldedBalance(accountIndex: Int) -> Int64
-
-    /// Returns the shielded total balance (includes verified and unverified balance)
     func getShieldedBalance(accountIndex: Int) -> Zatoshi
 
     /// Returns the shielded verified balance (anchor is 10 blocks back)

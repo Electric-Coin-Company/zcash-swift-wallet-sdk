@@ -1,4 +1,11 @@
 # unreleased 
+
+### Deprecations made effective:
+Synchronizer
+- `func getShieldedBalance(accountIndex: Int) -> Int64`
+use the API retuning Zatoshi instead. If needed `zatoshi.amount` would return an
+Int64 value.
+
 ### [#209] Support Initializer Aliases
 
 Added `ZcashSynchronizerAlias` enum which is used to identify an instance of the `SDKSynchronizer`. All the paths

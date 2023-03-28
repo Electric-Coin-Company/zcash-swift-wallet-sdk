@@ -79,8 +79,6 @@ public protocol ClosureSynchronizer {
 
     func getTransparentBalance(accountIndex: Int, completion: @escaping (Result<WalletBalance, Error>) -> Void)
 
-    @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
-    func getShieldedBalance(accountIndex: Int) -> Int64
     func getShieldedBalance(accountIndex: Int) -> Zatoshi
 
     @available(*, deprecated, message: "This function will be removed soon, use the one returning a `Zatoshi` value instead")
