@@ -210,23 +210,6 @@ class ZcashRustBackend: ZcashRustBackendWelding {
         return SaplingAddress(validatedEncoding: saplingReceiverStr)
     }
 
-    @available(*, deprecated, message: "This function will be deprecated soon. Use `getSentMemo(dbData:idNote:networkType)` instead")
-    static func getSentMemoAsUTF8(
-        dbData: URL,
-        idNote: Int64,
-        networkType: NetworkType
-    ) -> String? {
-        let dbData = dbData.osStr()
-
-        guard let memoCStr = zcashlc_get_sent_memo_as_utf8(dbData.0, dbData.1, idNote, networkType.networkId) else { return nil }
-
-        defer {
-            zcashlc_string_free(memoCStr)
-        }
-
-        return String(validatingUTF8: memoCStr)
-    }
-
     static func getSentMemo(
         dbData: URL,
         idNote: Int64,

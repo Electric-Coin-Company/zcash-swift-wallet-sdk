@@ -303,10 +303,6 @@ class MockRustBackend: ZcashRustBackendWelding {
         return try rustBackend.getVerifiedBalance(dbData: dbData, account: account, networkType: networkType)
     }
     
-    static func getSentMemoAsUTF8(dbData: URL, idNote: Int64, networkType: NetworkType) -> String? {
-        mockSentMemo ?? getSentMemoAsUTF8(dbData: dbData, idNote: idNote, networkType: networkType)
-    }
-    
     static func validateCombinedChain(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType, limit: UInt32 = 0) -> Int32 {
         if let rate = self.mockValidateCombinedChainSuccessRate {
             if shouldSucceed(successRate: rate) {

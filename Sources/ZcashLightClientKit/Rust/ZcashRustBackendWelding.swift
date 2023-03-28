@@ -172,17 +172,6 @@ protocol ZcashRustBackendWelding {
     /// - parameter dbData: location of the data db file
     /// - parameter idNote: note_id of note where the memo is located
     /// - parameter networkType: network type of this key
-    @available(*, deprecated, message: "This function will be deprecated soon. Use `getSentMemo(dbData:idNote:networkType)` instead")
-    static func getSentMemoAsUTF8(
-        dbData: URL,
-        idNote: Int64,
-        networkType: NetworkType
-    ) -> String?
-
-    /// get sent memo from note
-    /// - parameter dbData: location of the data db file
-    /// - parameter idNote: note_id of note where the memo is located
-    /// - parameter networkType: network type of this key
     /// - Returns: a `Memo` if any
     static func getSentMemo(
         dbData: URL,
