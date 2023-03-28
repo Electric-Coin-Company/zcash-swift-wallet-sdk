@@ -43,7 +43,7 @@ class BlockDownloaderTests: XCTestCase {
         try storage.create()
 
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
-        darksideWalletService = DarksideWalletService(service: service as! LightWalletGRPCService)
+        darksideWalletService = DarksideWalletService(endpoint: LightWalletEndpointBuilder.default, service: service as! LightWalletGRPCService)
         
         try FakeChainBuilder.buildChain(darksideWallet: darksideWalletService, branchID: branchID, chainName: chainName)
         try darksideWalletService.applyStaged(nextLatestHeight: 663250)

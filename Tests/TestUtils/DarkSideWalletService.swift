@@ -47,13 +47,13 @@ class DarksideWalletService: LightWalletService {
     var darksideService: DarksideStreamerClient
 
     init(endpoint: LightWalletEndpoint) {
-        self.channel = ChannelProvider().channel()
+        self.channel = ChannelProvider().channel(endpoint: endpoint)
         self.service = LightWalletServiceFactory(endpoint: endpoint).make()
         self.darksideService = DarksideStreamerClient(channel: channel)
     }
 
-    init(service: LightWalletService) {
-        self.channel = ChannelProvider().channel()
+    init(endpoint: LightWalletEndpoint, service: LightWalletService) {
+        self.channel = ChannelProvider().channel(endpoint: endpoint)
         self.darksideService = DarksideStreamerClient(channel: channel)
         self.service = service
     }

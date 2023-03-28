@@ -49,9 +49,7 @@ enum LightWalletEndpointBuilder {
 }
 
 class ChannelProvider {
-    func channel(secure: Bool = false) -> GRPCChannel {
-        let endpoint = LightWalletEndpointBuilder.default
-
+    func channel(endpoint: LightWalletEndpoint = LightWalletEndpointBuilder.default, secure: Bool = false) -> GRPCChannel {
         let connectionBuilder = secure ?
         ClientConnection.usingPlatformAppropriateTLS(for: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default)) :
         ClientConnection.insecure(group: NIOTSEventLoopGroup(loopCount: 1, defaultQoS: .default))
