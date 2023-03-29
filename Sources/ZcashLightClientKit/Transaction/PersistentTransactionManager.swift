@@ -203,7 +203,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     // MARK: other functions
     private func updateOnFailure(transaction: PendingTransactionEntity, error: Error) async throws {
         var pending = transaction
-        pending.errorMessage = error.localizedDescription
+        pending.errorMessage = "\(error)"
         pending.encodeAttempts = transaction.encodeAttempts + 1
         try self.repository.update(pending)
     }

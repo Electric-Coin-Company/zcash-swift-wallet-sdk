@@ -48,10 +48,8 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func stop(completion: @escaping () -> Void) {
-        AsyncToClosureGateway.executeAction(completion) {
-            await self.synchronizer.stop()
-        }
+    public func stop() {
+        synchronizer.stop()
     }
 
     public func getSaplingAddress(accountIndex: Int, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {

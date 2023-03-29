@@ -215,27 +215,9 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         synchronizerMock.stopClosure = {
             stopCalled = true
         }
-
-        let expectation = XCTestExpectation()
-
+        
         synchronizer.stop()
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        XCTAssertTrue(stopCalled)
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { _ in
-                    XCTFail("No value is expected")
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
+        XCTAssertTrue(stopCalled)
     }
 
     func testGetSaplingAddressSucceed() {

@@ -29,7 +29,7 @@ public protocol CombineSynchronizer {
     ) -> SinglePublisher<Initializer.InitializationResult, Error>
 
     func start(retry: Bool) -> CompletablePublisher<Error>
-    func stop() -> CompletablePublisher<Never>
+    func stop()
 
     func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress, Error>
     func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error>

@@ -271,11 +271,7 @@ actor CompactBlockProcessor {
     /// Don't update this variable directly. Use `updateState()` method.
     var state: State = .stopped
 
-    var config: Configuration {
-        willSet {
-            self.stop()
-        }
-    }
+    private(set) var config: Configuration
 
     var maxAttemptsReached: Bool {
         self.retryAttempts >= self.config.retries
@@ -404,7 +400,7 @@ actor CompactBlockProcessor {
         let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard, logger: logger)
         self.internalSyncProgress = internalSyncProgress
         let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
-        let blockDownloader = BlockDownloaderImpl(
+        self.blockDownloader = BlockDownloaderImpl(
             service: service,
             downloaderService: blockDownloaderService,
             storage: storage,
@@ -414,7 +410,6 @@ actor CompactBlockProcessor {
         )
 
         self.blockDownloaderService = blockDownloaderService
-        self.blockDownloader = blockDownloader
 
         self.blockValidator = BlockValidatorImpl(
             rustBackend: rustBackend,
@@ -476,6 +471,11 @@ actor CompactBlockProcessor {
     
     deinit {
         cancelableTask?.cancel()
+    }
+
+    func update(config: Configuration) async {
+        self.config = config
+        await stop()
     }
 
     func updateState(_ newState: State) async -> Void {
@@ -576,11 +576,12 @@ actor CompactBlockProcessor {
 
     Note: retry count is reset
     */
-    func stop() {
+    func stop() async {
         self.backoffTimer?.invalidate()
         self.backoffTimer = nil
 
         cancelableTask?.cancel()
+        await blockDownloader.stopDownload()
 
         self.retryAttempts = 0
     }
@@ -597,7 +598,7 @@ actor CompactBlockProcessor {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
             logger.debug("Stopping sync because of rewind")
             afterSyncHooksManager.insert(hook: .rewind(context))
-            stop()
+            await stop()
 
         case .stopped, .error, .synced:
             logger.debug("Sync doesn't run. Executing rewind.")
@@ -650,7 +651,7 @@ actor CompactBlockProcessor {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
             logger.debug("Stopping sync because of wipe")
             afterSyncHooksManager.insert(hook: .wipe(context))
-            stop()
+            await stop()
 
         case .stopped, .error, .synced:
             logger.debug("Sync doesn't run. Executing wipe.")
@@ -746,6 +747,7 @@ actor CompactBlockProcessor {
 
                 if let range = ranges.downloadAndScanRange {
                     logger.debug("Starting sync with range: \(range.lowerBound)...\(range.upperBound)")
+                    try await blockDownloader.setSyncRange(range)
                     try await downloadAndScanBlocks(at: range, totalProgressRange: totalProgressRange)
                 }
 
@@ -812,11 +814,6 @@ actor CompactBlockProcessor {
     }
 
     private func downloadAndScanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
-        let downloadStream = try await blockDownloader.compactBlocksDownloadStream(
-            startHeight: range.lowerBound,
-            targetHeight: range.upperBound
-        )
-
         // Divide `range` by `batchSize` and compute how many time do we need to run to download and scan all the blocks.
         // +1 must be done here becase `range` is closed range. So even if upperBound and lowerBound are same there is one block to sync.
         let blocksCountToSync = (range.upperBound - range.lowerBound) + 1
@@ -825,33 +822,42 @@ actor CompactBlockProcessor {
             loopsCount += 1
         }
 
+        var lastScannedHeight: BlockHeight = .zero
         for i in 0..<loopsCount {
             let processingRange = computeSingleLoopDownloadRange(fullRange: range, loopCounter: i, batchSize: batchSize)
 
             logger.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
 
+            // This is important. We must be sure that no new download is executed when this Task is canceled. Without this line `stop()` doesn't
+            // work.
+            try Task.checkCancellation()
+
             do {
-                try await blockDownloader.downloadAndStoreBlocks(
-                    using: downloadStream,
-                    at: processingRange,
-                    maxBlockBufferSize: config.downloadBufferSize,
-                    totalProgressRange: totalProgressRange
-                )
+                await blockDownloader.setDownloadLimit(processingRange.upperBound + (2 * batchSize))
+                await blockDownloader.startDownload(maxBlockBufferSize: config.downloadBufferSize, syncRange: range)
+
+                try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: processingRange)
             } catch {
-                await ifTaskIsNotCanceledClearCompactBlockCache()
+                await ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: lastScannedHeight)
                 throw error
             }
 
             do {
                 try await blockValidator.validate()
             } catch {
-                await ifTaskIsNotCanceledClearCompactBlockCache()
+                await ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: lastScannedHeight)
                 logger.error("Block validation failed with error: \(error)")
                 throw error
             }
 
+            // Without this `stop()` would work. But this line improves support for Task cancelation.
+            try Task.checkCancellation()
+
             do {
-                try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
+                lastScannedHeight = try await blockScanner.scanBlocks(
+                    at: processingRange,
+                    totalProgressRange: totalProgressRange
+                ) { [weak self] lastScannedHeight in
                     let progress = BlockProgress(
                         startHeight: totalProgressRange.lowerBound,
                         targetHeight: totalProgressRange.upperBound,
@@ -861,11 +867,11 @@ actor CompactBlockProcessor {
                 }
             } catch {
                 logger.error("Scanning failed with error: \(error)")
-                await ifTaskIsNotCanceledClearCompactBlockCache()
+                await ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: lastScannedHeight)
                 throw error
             }
 
-            try await clearCompactBlockCache()
+            try await clearCompactBlockCache(upTo: lastScannedHeight)
 
             let progress = BlockProgress(
                 startHeight: totalProgressRange.lowerBound,
@@ -929,6 +935,7 @@ actor CompactBlockProcessor {
 
     func severeFailure(_ error: Error) async {
         cancelableTask?.cancel()
+        await blockDownloader.stopDownload()
         logger.error("show stopper failure: \(error)")
         self.backoffTimer?.invalidate()
         self.retryAttempts = config.retries
@@ -941,6 +948,7 @@ actor CompactBlockProcessor {
         // TODO: [#713] specify: failure. https://github.com/zcash/ZcashLightClientKit/issues/713
         logger.error("\(error)")
         cancelableTask?.cancel()
+        await blockDownloader.stopDownload()
         self.retryAttempts += 1
         self.processingError = error
         switch self.state {
@@ -998,6 +1006,7 @@ actor CompactBlockProcessor {
     internal func validationFailed(at height: BlockHeight) async {
         // cancel all Tasks
         cancelableTask?.cancel()
+        await blockDownloader.stopDownload()
 
         // register latest failure
         self.lastChainValidationFailure = height
@@ -1048,16 +1057,34 @@ actor CompactBlockProcessor {
         await setTimer()
     }
 
-    private func ifTaskIsNotCanceledClearCompactBlockCache() async {
+    private func ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: BlockHeight) async {
         guard !Task.isCancelled else { return }
         do {
+            // Blocks download work in parallel with scanning. So imagine this scenario:
+            //
+            // Scanning is done until height 10300. Blocks are downloaded until height 10400.
+            // And now validation fails and this method is called. And `.latestDownloadedBlockHeight` in `internalSyncProgress` is set to 10400. And
+            // all the downloaded blocks are removed here.
+            //
+            // If this line doesn't happen then when sync starts next time it thinks that all the blocks are downloaded until 10400. But all were
+            // removed. So blocks between 10300 and 10400 wouldn't ever be scanned.
+            //
+            // Scanning is done until 10300 so the SDK can be sure that blocks with height below 10300 are not required. So it makes sense to set
+            // `.latestDownloadedBlockHeight` to `lastScannedHeight`. And sync will work fine in next run.
+            await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
             try await clearCompactBlockCache()
         } catch {
-            logger.error("`clearCompactBlockCache` failed after error: \(error.localizedDescription)")
+            logger.error("`clearCompactBlockCache` failed after error: \(error)")
         }
     }
 
+    private func clearCompactBlockCache(upTo height: BlockHeight) async throws {
+        try await storage.clear(upTo: height)
+        logger.info("Cache removed upTo \(height)")
+    }
+
     private func clearCompactBlockCache() async throws {
+        await blockDownloader.stopDownload()
         try await storage.clear()
         logger.info("Cache removed")
     }

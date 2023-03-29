@@ -318,7 +318,7 @@ public enum ZcashError: Equatable, Error {
     case accountDAOUpdatedZeroRows
     /// Failed to write block to disk.
     /// ZBLRP00001
-    case blockRepositoryWriteBlock(_ block: ZcashCompactBlock)
+    case blockRepositoryWriteBlock(_ block: ZcashCompactBlock, _ error: Error)
     /// Failed to get filename for the block from file URL.
     /// ZBLRP0002
     case blockRepositoryGetFilename(_ url: URL)
@@ -327,22 +327,28 @@ public enum ZcashError: Equatable, Error {
     case blockRepositoryParseHeightFromFilename(_ filename: String)
     /// Failed to remove existing block from disk.
     /// ZBLRP0004
-    case blockRepositoryRemoveExistingBlock(_ error: Error)
+    case blockRepositoryRemoveExistingBlock(_ url: URL, _ error: Error)
     /// Failed to get filename and information if url points to directory from file URL.
     /// ZBLRP0005
     case blockRepositoryGetFilenameAndIsDirectory(_ url: URL)
     /// Failed to create blocks cache directory.
     /// ZBLRP0006
-    case blockRepositoryCreateBlocksCacheDirectory(_ url: URL)
+    case blockRepositoryCreateBlocksCacheDirectory(_ url: URL, _ error: Error)
     /// Failed to read content of directory.
     /// ZBLRP0007
-    case blockRepositoryReadDirectoryContent(_ url: URL)
+    case blockRepositoryReadDirectoryContent(_ url: URL, _ error: Error)
     /// Failed to remove block from disk after rewind operation.
     /// ZBLRP0008
-    case blockRepositoryRemoveBlockAfterRewind(_ url: URL)
+    case blockRepositoryRemoveBlockAfterRewind(_ url: URL, _ error: Error)
     /// Failed to remove blocks cache directory while clearing storage.
     /// ZBLRP0009
-    case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL)
+    case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL, _ error: Error)
+    /// Failed to remove block from cache when clearing cache up to some height.
+    /// ZBLRP0010
+    case blockRepositoryRemoveBlockClearingCache(_ url: URL, _ error: Error)
+    /// Trying to download blocks before sync range is set in `BlockDownloaderImpl`. This means that download stream is not created and download cant' start.
+    /// ZBDWN0001
+    case blockDownloadSyncRangeNotSet
     /// Stream downloading the given block range failed.
     /// ZBDSEO0001
     case blockDownloaderServiceDownloadBlockRange(_ error: Error)
@@ -697,6 +703,8 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryReadDirectoryContent: return "Failed to read content of directory."
         case .blockRepositoryRemoveBlockAfterRewind: return "Failed to remove block from disk after rewind operation."
         case .blockRepositoryRemoveBlocksCacheDirectory: return "Failed to remove blocks cache directory while clearing storage."
+        case .blockRepositoryRemoveBlockClearingCache: return "Failed to remove block from cache when clearing cache up to some height."
+        case .blockDownloadSyncRangeNotSet: return "Trying to download blocks before sync range is set in `BlockDownloaderImpl`. This means that download stream is not created and download cant' start."
         case .blockDownloaderServiceDownloadBlockRange: return "Stream downloading the given block range failed."
         case .zcashTransactionOverviewInit: return "Initialization of `ZcashTransaction.Overview` failed."
         case .zcashTransactionReceivedInit: return "Initialization of `ZcashTransaction.Received` failed."
@@ -875,6 +883,8 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryReadDirectoryContent: return .blockRepositoryReadDirectoryContent
         case .blockRepositoryRemoveBlockAfterRewind: return .blockRepositoryRemoveBlockAfterRewind
         case .blockRepositoryRemoveBlocksCacheDirectory: return .blockRepositoryRemoveBlocksCacheDirectory
+        case .blockRepositoryRemoveBlockClearingCache: return .blockRepositoryRemoveBlockClearingCache
+        case .blockDownloadSyncRangeNotSet: return .blockDownloadSyncRangeNotSet
         case .blockDownloaderServiceDownloadBlockRange: return .blockDownloaderServiceDownloadBlockRange
         case .zcashTransactionOverviewInit: return .zcashTransactionOverviewInit
         case .zcashTransactionReceivedInit: return .zcashTransactionReceivedInit

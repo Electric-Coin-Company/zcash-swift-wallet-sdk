@@ -1,3 +1,5 @@
+# Unreleased
+
 ### [#1013] Enable more granular control over logging behavior
 
 Now the SDK allows for more fine-tuning of its logging behavior. The `LoggingPolicy` enum
@@ -8,6 +10,13 @@ Lastly, `noLogging` disables logging entirely.
 
 To utilize this new configuration option, pass a `loggingPolicy` into the `Initializer`. If unspecified, the SDK
 will utilize an internal `Logger` implementation with an `OSLogger.LogLevel` of `.debug`
+
+### [#442] Implement parallel downloading and scanning
+
+The SDK now parallelizes the download and scanning of blocks. If the network connection of the client device is fast enough then the scanning
+process doesn't have to wait for blocks to be downloaded. This makes the whole sync process faster. 
+
+`Synchronizer.stop()` method is not async anymore.
 
 # 0.21.0-beta
 

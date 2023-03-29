@@ -322,7 +322,7 @@ extension SDKSynchronizer {
             return "Unprepared 😅"
 
         case .error(let error):
-            return "Error: \(error.localizedDescription)"
+            return "Error: \(error)"
         }
     }
 }

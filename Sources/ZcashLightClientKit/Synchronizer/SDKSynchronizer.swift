@@ -185,14 +185,19 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     /// Stops the synchronizer
-    public func stop() async {
-        let status = await self.status
-        guard status != .stopped, status != .disconnected else {
-            logger.info("attempted to stop when status was: \(status)")
-            return
-        }
+    public func stop() {
+        // Calling `await blockProcessor.stop()` make take some time. If the downloading of blocks is in progress then this method inside waits until
+        // downloading is really done. Which could block execution of the code on the client side. So it's better strategy to spin up new task and
+        // exit fast on client side.
+        Task(priority: .high) {
+            let status = await self.status
+            guard status != .stopped, status != .disconnected else {
+                logger.info("attempted to stop when status was: \(status)")
+                return
+            }
 
-        await blockProcessor.stop()
+            await blockProcessor.stop()
+        }
     }
 
     // MARK: Connectivity State

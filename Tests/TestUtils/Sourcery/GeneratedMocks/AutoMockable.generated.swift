@@ -102,11 +102,11 @@ class SynchronizerMock: Synchronizer {
     var stopCalled: Bool {
         return stopCallsCount > 0
     }
-    var stopClosure: (() async -> Void)?
+    var stopClosure: (() -> Void)?
 
-    func stop() async {
+    func stop() {
         stopCallsCount += 1
-        await stopClosure?()
+        stopClosure?()
     }
 
     // MARK: - getSaplingAddress

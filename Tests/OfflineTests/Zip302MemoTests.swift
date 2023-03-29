@@ -92,7 +92,7 @@ class Zip302MemoTests: XCTestCase {
 
         XCTAssertThrowsError(try Memo(string: tooLongString)) { err in
             guard let error = err as? ZcashError else {
-                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err.localizedDescription)")
+                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err)")
                 return
             }
 
@@ -100,7 +100,7 @@ class Zip302MemoTests: XCTestCase {
             case .memoTextInputTooLong(let length):
                 XCTAssertEqual(length, 513)
             default:
-                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err.localizedDescription)")
+                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err)")
             }
         }
     }
@@ -139,7 +139,7 @@ class Zip302MemoTests: XCTestCase {
             case .memoTextInputTooLong(let count):
                 XCTAssertEqual(count, 515)
             default:
-                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err.localizedDescription)")
+                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err)")
             }
         }
     }
@@ -171,7 +171,7 @@ class Zip302MemoTests: XCTestCase {
             case .memoTextInputEndsWithNullBytes:
                 return
             default:
-                XCTFail("Expected `ZCashError.memoTextInputEndsWithNullBytes` error but found \(thrownError.localizedDescription)")
+                XCTFail("Expected `ZCashError.memoTextInputEndsWithNullBytes` error but found \(thrownError)")
             }
         }
     }
@@ -189,7 +189,7 @@ class Zip302MemoTests: XCTestCase {
             case .memoTextInputEndsWithNullBytes:
                 return
             default:
-                XCTFail("Expected `ZCashError.memoTextInputEndsWithNullBytes` error but found \(thrownError.localizedDescription)")
+                XCTFail("Expected `ZCashError.memoTextInputEndsWithNullBytes` error but found \(thrownError)")
             }
         }
     }

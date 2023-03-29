@@ -360,7 +360,7 @@ enum ZcashErrorDefinition {
 
     /// Failed to write block to disk.
     // sourcery: code="ZBLRP00001"
-    case blockRepositoryWriteBlock(_ block: ZcashCompactBlock)
+    case blockRepositoryWriteBlock(_ block: ZcashCompactBlock, _ error: Error)
     /// Failed to get filename for the block from file URL.
     // sourcery: code="ZBLRP0002"
     case blockRepositoryGetFilename(_ url: URL)
@@ -369,22 +369,31 @@ enum ZcashErrorDefinition {
     case blockRepositoryParseHeightFromFilename(_ filename: String)
     /// Failed to remove existing block from disk.
     // sourcery: code="ZBLRP0004"
-    case blockRepositoryRemoveExistingBlock(_ error: Error)
+    case blockRepositoryRemoveExistingBlock(_ url: URL, _ error: Error)
     /// Failed to get filename and information if url points to directory from file URL.
     // sourcery: code="ZBLRP0005"
     case blockRepositoryGetFilenameAndIsDirectory(_ url: URL)
     /// Failed to create blocks cache directory.
     // sourcery: code="ZBLRP0006"
-    case blockRepositoryCreateBlocksCacheDirectory(_ url: URL)
+    case blockRepositoryCreateBlocksCacheDirectory(_ url: URL, _ error: Error)
     /// Failed to read content of directory.
     // sourcery: code="ZBLRP0007"
-    case blockRepositoryReadDirectoryContent(_ url: URL)
+    case blockRepositoryReadDirectoryContent(_ url: URL, _ error: Error)
     /// Failed to remove block from disk after rewind operation.
     // sourcery: code="ZBLRP0008"
-    case blockRepositoryRemoveBlockAfterRewind(_ url: URL)
+    case blockRepositoryRemoveBlockAfterRewind(_ url: URL, _ error: Error)
     /// Failed to remove blocks cache directory while clearing storage.
     // sourcery: code="ZBLRP0009"
-    case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL)
+    case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL, _ error: Error)
+    /// Failed to remove block from cache when clearing cache up to some height.
+    // sourcery: code="ZBLRP0010"
+    case blockRepositoryRemoveBlockClearingCache(_ url: URL, _ error: Error)
+
+    // MARK: - Block Download
+
+    /// Trying to download blocks before sync range is set in `BlockDownloaderImpl`. This means that download stream is not created and download cant' start.
+    // sourcery: code="ZBDWN0001"
+    case blockDownloadSyncRangeNotSet
     
     // MARK: - BlockDownloaderService
 

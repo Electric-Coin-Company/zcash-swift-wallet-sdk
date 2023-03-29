@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+scriptDir=${0:a:h}
+cd "${scriptDir}"
+
 source servers_config.zsh
 
 for syncAlias in $syncAliases; do

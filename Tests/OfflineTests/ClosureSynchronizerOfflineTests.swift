@@ -182,14 +182,8 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
             stopCalled = true
         }
 
-        let expectation = XCTestExpectation()
-
-        synchronizer.stop() {
-            XCTAssertTrue(stopCalled)
-            expectation.fulfill()
-        }
-
-        wait(for: [expectation], timeout: 0.5)
+        synchronizer.stop()
+        XCTAssertTrue(stopCalled)
     }
 
     func testGetSaplingAddressSucceed() {

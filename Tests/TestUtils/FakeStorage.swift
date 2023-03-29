@@ -11,6 +11,8 @@ import Foundation
 class ZcashConsoleFakeStorage: CompactBlockRepository {
     func create() throws {}
 
+    func clear(upTo height: ZcashLightClientKit.BlockHeight) async throws { }
+    
     func clear() async throws {}
 
     func write(blocks: [ZcashCompactBlock]) async throws {

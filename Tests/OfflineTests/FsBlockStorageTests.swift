@@ -369,7 +369,11 @@ final class FsBlockStorageTests: XCTestCase {
             try await realCache.write(blocks: sandblastedBlocks)
             XCTFail("This call should have failed")
         } catch {
-            XCTAssertEqual(error as? ZcashError, ZcashError.blockRepositoryWriteBlock(sandblastedBlocks[0]))
+            if let error = error as? ZcashError, case let .blockRepositoryWriteBlock(url, _) = error {
+                XCTAssertEqual(url, sandblastedBlocks[0])
+            } else {
+                XCTFail("Unexpected error thrown: \(error)")
+            }
         }
     }
 

@@ -221,7 +221,7 @@ class ShieldFundsTests: XCTestCase {
             shieldFundsExpectation.fulfill()
         } catch {
             shieldFundsExpectation.fulfill()
-            XCTFail("Failed With error: \(error.localizedDescription)")
+            XCTFail("Failed With error: \(error)")
         }
 
         await fulfillment(of: [shieldFundsExpectation], timeout: 30)

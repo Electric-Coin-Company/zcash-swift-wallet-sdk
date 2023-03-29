@@ -50,10 +50,8 @@ class SyncBlocksListViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         cancellables = []
-        Task(priority: .userInitiated) {
-            for synchronizer in synchronizers {
-                await synchronizer.stop()
-            }
+        for synchronizer in synchronizers {
+            synchronizer.stop()
         }
     }
 
@@ -85,7 +83,7 @@ class SyncBlocksListViewController: UIViewController {
                     loggerProxy.error("Can't start synchronizer: \(error)")
                 }
             case .syncing, .enhancing, .fetching:
-                await synchronizer.stop()
+                synchronizer.stop()
             }
         }
     }
@@ -178,7 +176,7 @@ extension SyncStatus {
         case let .syncing(progress):
             return "Syncing 🤖 \(floor(progress.progress * 1000) / 10)%"
         case let .error(error):
-            return "error 💔 \(error.localizedDescription)"
+            return "error 💔 \(error)"
         case .stopped:
             return "Stopped 🚫"
         case .synced:
