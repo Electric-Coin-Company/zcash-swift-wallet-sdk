@@ -1,4 +1,27 @@
-# unreleased 
+# 0.20.0-beta
+
+### New Checkpoints:
+
+Mainnet:
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2012500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2015000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2017500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2020000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2022500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2025000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2027500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2030000.json
+````
+
+Testnet:
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2260000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2270000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2280000.json
+````
 
 ### Deprecations made effective:
 Synchronizer

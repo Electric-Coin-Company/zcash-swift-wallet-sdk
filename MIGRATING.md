@@ -1,4 +1,4 @@
-# Migrating from previous versions to <unreleased>
+# Migrating from previous versions to 0.20.0-beta
 The `SDKSynchronizer` no longer uses `NotificationCenter` to send notifications.
 Notifications are replaced with `Combine` publishers.
 
