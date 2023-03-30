@@ -116,10 +116,10 @@ class CompactBlockProcessorTests: XCTestCase {
 
         await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure)
     }
-    
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        XCTestCase.wait { await self.processor.stop() }
+
+    override func tearDown() async throws {
+        try await super.tearDown()
+        await self.processor.stop()
         try FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         NotificationCenter.default.removeObserver(self)

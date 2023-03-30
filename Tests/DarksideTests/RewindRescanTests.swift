@@ -27,25 +27,23 @@ class RewindRescanTests: XCTestCase {
     var reorgExpectation = XCTestExpectation(description: "reorg")
     var network = ZcashNetworkBuilder.network(for: .mainnet)
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        self.coordinator = TestCoordinator.make(
-            walletBirthday: self.birthday,
-            network: self.network
-        )
+    override func setUp() async throws {
+        try await super.setUp()
 
+        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
-    
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        NotificationCenter.default.removeObserver(self)
-        wait { try await self.coordinator.stop() }
+
+    override func tearDown() async throws {
+        try await super.tearDown()
+        let coordinator = self.coordinator!
+        self.coordinator = nil
+        cancellables = []
+
+        try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-        coordinator = nil
-        cancellables = []
     }
     
     func handleError(_ error: Error?) {
