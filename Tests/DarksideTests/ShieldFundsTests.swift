@@ -112,8 +112,8 @@ class ShieldFundsTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    initialVerifiedBalance = synchronizer.initializer.getVerifiedBalance()
-                    initialTotalBalance = synchronizer.initializer.getBalance()
+                    initialVerifiedBalance = try await synchronizer.getShieldedVerifiedBalance()
+                    initialTotalBalance = try await synchronizer.getShieldedBalance()
                     preTxExpectation.fulfill()
                     shouldContinue = true
                 },
@@ -237,7 +237,8 @@ class ShieldFundsTests: XCTestCase {
         XCTAssertEqual(postShieldingBalance.verified, Zatoshi(10000))
         // FIXME: [#720] this should be zero, https://github.com/zcash/ZcashLightClientKit/issues/720
         XCTAssertEqual(postShieldingBalance.total, Zatoshi(10000))
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), .zero)
+        var expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        XCTAssertEqual(expectedBalance, .zero)
 
         // 10. clear the UTXO from darksidewalletd's cache
         try coordinator.service.clearAddedUTXOs()
@@ -290,7 +291,8 @@ class ShieldFundsTests: XCTestCase {
         
         XCTAssertEqual(postShieldingShieldedBalance.verified, .zero)
 
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), Zatoshi(9000))
+        expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        XCTAssertEqual(expectedBalance, Zatoshi(9000))
 
         // 14. proceed confirm the shielded funds by staging ten more blocks
         try coordinator.service.applyStaged(nextLatestHeight: utxoHeight + 10 + 1 + 10)
@@ -325,7 +327,8 @@ class ShieldFundsTests: XCTestCase {
 
         XCTAssertNotNil(clearedTransaction)
 
-        XCTAssertEqual(coordinator.synchronizer.getShieldedBalance(), Zatoshi(9000))
+        expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        XCTAssertEqual(expectedBalance, Zatoshi(9000))
         let postShieldingConfirmationShieldedBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
         XCTAssertEqual(postShieldingConfirmationShieldedBalance.total, .zero)
         XCTAssertEqual(postShieldingConfirmationShieldedBalance.verified, .zero)

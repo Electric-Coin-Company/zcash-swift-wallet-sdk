@@ -58,12 +58,12 @@ enum TestDbBuilder {
         Bundle.module.url(forResource: "darkside_caches", withExtension: "db")
     }
     
-    static func prepopulatedDataDbProvider() throws -> ConnectionProvider? {
+    static func prepopulatedDataDbProvider() async throws -> ConnectionProvider? {
         guard let url = prePopulatedMainnetDataDbURL() else { return nil }
 
         let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
 
-        let initResult = try ZcashRustBackend.initDataDb(
+        let initResult = try await ZcashRustBackend.initDataDb(
             dbData: url,
             seed: Environment.seedBytes,
             networkType: .mainnet
@@ -76,19 +76,19 @@ enum TestDbBuilder {
         }
     }
     
-    static func transactionRepository() throws -> TransactionRepository? {
-        guard let provider = try prepopulatedDataDbProvider() else { return nil }
+    static func transactionRepository() async throws -> TransactionRepository? {
+        guard let provider = try await prepopulatedDataDbProvider() else { return nil }
         
         return TransactionSQLDAO(dbProvider: provider)
     }
     
-    static func sentNotesRepository() throws -> SentNotesRepository? {
-        guard let provider = try prepopulatedDataDbProvider() else { return nil }
+    static func sentNotesRepository() async throws -> SentNotesRepository? {
+        guard let provider = try await prepopulatedDataDbProvider() else { return nil }
         return SentNotesSQLDAO(dbProvider: provider)
     }
     
-    static func receivedNotesRepository() throws -> ReceivedNoteRepository? {
-        guard let provider = try prepopulatedDataDbProvider() else { return nil }
+    static func receivedNotesRepository() async throws -> ReceivedNoteRepository? {
+        guard let provider = try await prepopulatedDataDbProvider() else { return nil }
         return ReceivedNotesSQLDAO(dbProvider: provider)
     }
         

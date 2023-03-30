@@ -30,12 +30,12 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
         try Task.checkCancellation()
 
         do {
-            let totalShieldedBalance = try rustBackend.getBalance(
+            let totalShieldedBalance = try await rustBackend.getBalance(
                 dbData: config.dataDb,
                 account: Int32(0),
                 networkType: config.networkType
             )
-            let totalTransparentBalance = try rustBackend.getTransparentBalance(
+            let totalTransparentBalance = try await rustBackend.getTransparentBalance(
                 dbData: config.dataDb,
                 account: Int32(0),
                 networkType: config.networkType

@@ -28,7 +28,7 @@ class NullBytesTests: XCTestCase {
         XCTAssertFalse(ZcashRustBackend.isValidTransparentAddress(tAddrWithNullBytes, networkType: networkType))
     }
     
-    func testInitAccountTableNullBytes() throws {
+    func testInitAccountTableNullBytes() async throws {
         let wrongHash = "000000000\015c597fab53f\058b9e1ededbe8bd83ca0203788e2039eceeb0d65ca6"
         let goodHash = "00000000015c597fab53f58b9e1ededbe8bd83ca0203788e2039eceeb0d65ca6"
         let time: UInt32 = 1582235356
@@ -49,23 +49,23 @@ class NullBytesTests: XCTestCase {
         bccb48b14b544e770f21d48f2d3ad8d6ca54eccc92f60634e3078eb48013a1f7fb005388ac6f04099b647ed85d8b025d8ae4b178c2376b473b121b8c052000001d2ea556f49fb\
         934dc76f087935a5c07788000b4e3aae24883adfec51b5f4d260
         """
-        
-        XCTAssertThrowsError(
-            try ZcashRustBackend.initBlocksTable(
+
+        do {
+            _ = try await ZcashRustBackend.initBlocksTable(
                 dbData: __dataDbURL(),
                 height: height,
                 hash: wrongHash,
                 time: time,
                 saplingTree: goodTree,
                 networkType: networkType
-            ),
-            "InitBlocksTable with Null bytes on hash string should have failed"
-        ) { error in
+            )
+            XCTFail("InitBlocksTable with Null bytes on hash string should have failed")
+        } catch {
             guard let rustError = error as? RustWeldingError else {
                 XCTFail("Expected RustWeldingError")
                 return
             }
-            
+
             switch rustError {
             case .invalidInput:
                 XCTAssertTrue(true)
@@ -73,23 +73,23 @@ class NullBytesTests: XCTestCase {
                 XCTFail("expected \(String(describing: RustWeldingError.invalidInput)) and got \(rustError)")
             }
         }
-        
-        XCTAssertThrowsError(
-            try ZcashRustBackend.initBlocksTable(
+
+        do {
+            try await ZcashRustBackend.initBlocksTable(
                 dbData: __dataDbURL(),
                 height: height,
                 hash: goodHash,
                 time: time,
                 saplingTree: wrongTree,
                 networkType: networkType
-            ),
-            "InitBlocksTable with Null bytes on saplingTree string should have failed"
-        ) { error in
+            )
+            XCTFail("InitBlocksTable with Null bytes on saplingTree string should have failed")
+        } catch {
             guard let rustError = error as? RustWeldingError else {
                 XCTFail("Expected RustWeldingError")
                 return
             }
-            
+
             switch rustError {
             case .invalidInput:
                 XCTAssertTrue(true)

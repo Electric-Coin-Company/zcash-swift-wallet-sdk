@@ -11,11 +11,10 @@ import XCTest
 
 class TransactionRepositoryTests: XCTestCase {
     var transactionRepository: TransactionRepository!
-    
-    override func setUp() {
-        super.setUp()
 
-        transactionRepository = try! TestDbBuilder.transactionRepository()
+    override func setUp() async throws {
+        try await super.setUp()
+        transactionRepository = try! await TestDbBuilder.transactionRepository()
     }
     
     override func tearDown() {

@@ -38,9 +38,9 @@ public protocol CombineSynchronizer {
     func start(retry: Bool) -> Completable<Error>
     func stop() -> Completable<Never>
 
-    func getSaplingAddress(accountIndex: Int) -> Single<SaplingAddress?, Never>
-    func getUnifiedAddress(accountIndex: Int) -> Single<UnifiedAddress?, Never>
-    func getTransparentAddress(accountIndex: Int) -> Single<TransparentAddress?, Never>
+    func getSaplingAddress(accountIndex: Int) -> Single<SaplingAddress, Error>
+    func getUnifiedAddress(accountIndex: Int) -> Single<UnifiedAddress, Error>
+    func getTransparentAddress(accountIndex: Int) -> Single<TransparentAddress, Error>
 
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
@@ -78,10 +78,8 @@ public protocol CombineSynchronizer {
     func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) -> Single<RefreshedUTXOs, Error>
 
     func getTransparentBalance(accountIndex: Int) -> Single<WalletBalance, Error>
-
-    func getShieldedBalance(accountIndex: Int) -> Zatoshi
-
-    func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
+    func getShieldedBalance(accountIndex: Int) -> Single<Zatoshi, Error>
+    func getShieldedVerifiedBalance(accountIndex: Int) -> Single<Zatoshi, Error>
 
     func rewind(_ policy: RewindPolicy) -> Completable<Error>
     func wipe() -> Completable<Error>

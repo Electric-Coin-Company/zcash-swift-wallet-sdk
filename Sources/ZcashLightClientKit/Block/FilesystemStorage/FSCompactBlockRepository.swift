@@ -47,12 +47,12 @@ class FSCompactBlockRepository {
 }
 
 extension FSCompactBlockRepository: CompactBlockRepository {
-    func create() throws {
+    func create() async throws {
         if !fileManager.fileExists(atPath: blocksDirectory.path) {
             try fileManager.createDirectory(at: blocksDirectory, withIntermediateDirectories: true)
         }
 
-        guard try self.metadataStore.initFsBlockDbRoot(self.fsBlockDbRoot) else {
+        guard try await self.metadataStore.initFsBlockDbRoot(self.fsBlockDbRoot) else {
             throw CompactBlockRepositoryError.failedToInitializeCache
         }
     }
@@ -99,7 +99,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
     }
 
     func rewind(to height: BlockHeight) async throws {
-        try metadataStore.rewindToHeight(height)
+        try await metadataStore.rewindToHeight(height)
         // Reverse the cached contents to browse from higher to lower heights
         let sortedCachedContents = try contentProvider.listContents(of: blocksDirectory)
 
@@ -121,7 +121,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
         if self.fileManager.fileExists(atPath: self.fsBlockDbRoot.path) {
             try self.fileManager.removeItem(at: self.fsBlockDbRoot)
         }
-        try create()
+        try await create()
     }
 }
 
@@ -209,8 +209,8 @@ extension FSBlockFileWriter {
 
 struct FSMetadataStore {
     var saveBlocksMeta: ([ZcashCompactBlock]) async throws -> Void
-    var rewindToHeight: (BlockHeight) throws -> Void
-    var initFsBlockDbRoot: (URL) throws -> Bool
+    var rewindToHeight: (BlockHeight) async throws -> Void
+    var initFsBlockDbRoot: (URL) async throws -> Bool
     var latestHeight: () async -> BlockHeight
 }
 
@@ -224,13 +224,13 @@ extension FSMetadataStore {
                 logger: logger
             )
         } rewindToHeight: { height in
-            guard rustBackend.rewindCacheToHeight(fsBlockDbRoot: fsBlockDbRoot, height: Int32(height)) else {
+            guard await rustBackend.rewindCacheToHeight(fsBlockDbRoot: fsBlockDbRoot, height: Int32(height)) else {
                 throw CompactBlockRepositoryError.failedToRewind(height)
             }
         } initFsBlockDbRoot: { dbRootURL in
-            try rustBackend.initBlockMetadataDb(fsBlockDbRoot: dbRootURL)
+            try await rustBackend.initBlockMetadataDb(fsBlockDbRoot: dbRootURL)
         } latestHeight: {
-            rustBackend.latestCachedBlockHeight(fsBlockDbRoot: fsBlockDbRoot)
+            await rustBackend.latestCachedBlockHeight(fsBlockDbRoot: fsBlockDbRoot)
         }
     }
 }
@@ -250,7 +250,7 @@ extension FSMetadataStore {
         guard !blocks.isEmpty else { return }
 
         do {
-            guard try rustBackend.writeBlocksMetadata(fsBlockDbRoot: fsBlockDbRoot, blocks: blocks) else {
+            guard try await rustBackend.writeBlocksMetadata(fsBlockDbRoot: fsBlockDbRoot, blocks: blocks) else {
                 throw CompactBlockRepositoryError.failedToWriteMetadata
             }
         } catch {

@@ -55,7 +55,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         seed: [UInt8],
         networkType: NetworkType
-    ) throws -> UnifiedSpendingKey
+    ) async throws -> UnifiedSpendingKey
 
     /// Creates a transaction to the given address from the given account
     /// - Parameter dbData: URL for the Data DB
@@ -76,7 +76,7 @@ protocol ZcashRustBackendWelding {
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
-    ) -> Int64 // swiftlint:disable function_parameter_count
+    ) async -> Int64 // swiftlint:disable function_parameter_count
 
     /// Scans a transaction for any information that can be decrypted by the accounts in the
     /// wallet, and saves it to the wallet.
@@ -90,7 +90,7 @@ protocol ZcashRustBackendWelding {
         txBytes: [UInt8],
         minedHeight: Int32,
         networkType: NetworkType
-    ) -> Bool
+    ) async -> Bool
 
     /// Derives and returns a unified spending key from the given seed for the given account ID.
     /// Returns the binary encoding of the spending key. The caller should manage the memory of (and store, if necessary) the returned spending key in a secure fashion.
@@ -112,7 +112,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) throws -> Int64
+    ) async throws -> Int64
 
     /// Returns the most-recently-generated unified payment address for the specified account.
     /// - parameter dbData: location of the data db
@@ -122,7 +122,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) throws -> UnifiedAddress
+    ) async throws -> UnifiedAddress
 
     /// Wallets might need to be rewound because of a reorg, or by user request.
     /// There are times where the wallet could get out of sync for many reasons and
@@ -140,7 +140,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         height: Int32,
         networkType: NetworkType
-    ) -> Int32
+    ) async -> Int32
 
     /// Returns a newly-generated unified payment address for the specified account, with the next available diversifier.
     /// - parameter dbData: location of the data db
@@ -150,7 +150,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) throws -> UnifiedAddress
+    ) async throws -> UnifiedAddress
 
     /// get received memo from note
     /// - parameter dbData: location of the data db file
@@ -160,13 +160,13 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         idNote: Int64,
         networkType: NetworkType
-    ) -> Memo?
+    ) async -> Memo?
 
     /// Returns the Sapling receiver within the given Unified Address, if any.
     /// - Parameter uAddr: a `UnifiedAddress`
     /// - Returns a `SaplingAddress` if any
     /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress?
+    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress
 
     /// get sent memo from note
     /// - parameter dbData: location of the data db file
@@ -177,7 +177,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         idNote: Int64,
         networkType: NetworkType
-    ) -> Memo?
+    ) async -> Memo?
 
     /// Get the verified cached transparent balance for the given address
     /// - parameter dbData: location of the data db file
@@ -187,13 +187,13 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) throws -> Int64
+    ) async throws -> Int64
 
     /// Returns the transparent receiver within the given Unified Address, if any.
     /// - parameter uAddr: a `UnifiedAddress`
     /// - Returns a `TransparentAddress` if any
     /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress?
+    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress
 
     /// gets the latest error if available. Clear the existing error
     ///  - Returns a `RustWeldingError` if exists
@@ -212,7 +212,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         ufvks: [UnifiedFullViewingKey],
         networkType: NetworkType
-    ) throws
+    ) async throws
 
     /// initializes the data db. This will performs any migrations needed on the sqlite file
     /// provided. Some migrations might need that callers provide the seed bytes.
@@ -226,7 +226,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         seed: [UInt8]?,
         networkType: NetworkType
-    ) throws -> DbInitResult
+    ) async throws -> DbInitResult
 
     /// Returns the network and address type for the given Zcash address string,
     /// if the string represents a valid Zcash address.
@@ -288,7 +288,7 @@ protocol ZcashRustBackendWelding {
         time: UInt32,
         saplingTree: String,
         networkType: NetworkType
-    ) throws // swiftlint:disable function_parameter_count
+    ) async throws // swiftlint:disable function_parameter_count
 
     /// Returns a list of the transparent receivers for the diversified unified addresses that have
     /// been allocated for the provided account.
@@ -299,7 +299,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) throws -> [TransparentAddress]
+    ) async throws -> [TransparentAddress]
 
     /// get the verified balance from the given account
     /// - parameter dbData: location of the data db
@@ -309,7 +309,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) throws -> Int64
+    ) async throws -> Int64
 
     /// Get the verified cached transparent balance for the given account
     /// - parameter dbData: location of the data db
@@ -319,7 +319,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         account: Int32,
         networkType: NetworkType
-    ) throws -> Int64
+    ) async throws -> Int64
 
     /// Checks that the scanned blocks in the data database, when combined with the recent
     /// `CompactBlock`s in the cache database, form a valid chain.
@@ -344,7 +344,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         networkType: NetworkType,
         limit: UInt32
-    ) -> Int32
+    ) async -> Int32
 
     /// Resets the state of the database to only contain block and transaction information up to the given height. clears up all derived data as well
     /// - parameter dbData: `URL` pointing to the filesystem root directory where the fsBlock cache is.
@@ -355,7 +355,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         height: Int32,
         networkType: NetworkType
-    ) -> Bool
+    ) async -> Bool
 
     /// Resets the state of the FsBlock database to only contain block and transaction information up to the given height.
     /// - Note: this does not delete the files. Only rolls back the database.
@@ -365,7 +365,7 @@ protocol ZcashRustBackendWelding {
     static func rewindCacheToHeight(
         fsBlockDbRoot: URL,
         height: Int32
-    ) -> Bool
+    ) async -> Bool
 
     /// Scans new blocks added to the cache for any transactions received by the tracked
     /// accounts.
@@ -391,7 +391,7 @@ protocol ZcashRustBackendWelding {
         dbData: URL,
         limit: UInt32,
         networkType: NetworkType
-    ) -> Bool
+    ) async -> Bool
 
     /// Upserts a UTXO into the data db database
     /// - parameter dbData: location of the data db file
@@ -410,7 +410,7 @@ protocol ZcashRustBackendWelding {
         value: Int64,
         height: BlockHeight,
         networkType: NetworkType
-    ) throws -> Bool
+    ) async throws -> Bool
 
     /// Creates a transaction to shield all found UTXOs in data db for the account the provided `UnifiedSpendingKey` has spend authority for.
     /// - Parameter dbData: URL for the Data DB
@@ -427,7 +427,7 @@ protocol ZcashRustBackendWelding {
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
-    ) -> Int64
+    ) async -> Int64
 
     /// Obtains the available receiver typecodes for the given String encoded Unified Address
     /// - Parameter address: public key represented as a String
@@ -459,7 +459,7 @@ protocol ZcashRustBackendWelding {
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - returns `true` when successful, `false` when fails but no throwing information was found
     /// - throws `RustWeldingError` when fails to initialize
-    static func initBlockMetadataDb(fsBlockDbRoot: URL) throws -> Bool
+    static func initBlockMetadataDb(fsBlockDbRoot: URL) async throws -> Bool
 
     /// Write compact block metadata to a database known to the Rust layer
     /// - Parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
@@ -468,12 +468,12 @@ protocol ZcashRustBackendWelding {
     /// - Parameter blocks: The `ZcashCompactBlock`s that are going to be marked as stored by the
     /// metadata Db.
     /// - Returns `true` if the operation was successful, `false` otherwise.
-    static func writeBlocksMetadata(fsBlockDbRoot: URL, blocks: [ZcashCompactBlock]) throws -> Bool
+    static func writeBlocksMetadata(fsBlockDbRoot: URL, blocks: [ZcashCompactBlock]) async throws -> Bool
 
     /// Gets the latest block height stored in the filesystem based cache.
     /// -  Parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
     /// this directory  is expected to contain a `/blocks` sub-directory with the blocks stored in the convened filename
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - Returns `BlockHeight` of the latest cached block or `.empty` if no blocks are stored.
-    static func latestCachedBlockHeight(fsBlockDbRoot: URL) -> BlockHeight
+    static func latestCachedBlockHeight(fsBlockDbRoot: URL) async -> BlockHeight
 }

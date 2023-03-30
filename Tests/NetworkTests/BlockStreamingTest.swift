@@ -82,7 +82,7 @@ class BlockStreamingTest: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
 
         let latestBlockHeight = try await service.latestBlockHeight()
         let startHeight = latestBlockHeight - 100_000
@@ -146,7 +146,7 @@ class BlockStreamingTest: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
 
         let latestBlockHeight = try await service.latestBlockHeight()
 

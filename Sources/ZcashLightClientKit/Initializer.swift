@@ -102,7 +102,6 @@ class initializes the Rust backend and the supporting data required to exercise 
 The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
 functionality, related to processing blocks.
 */
-// swiftlint:disable type_body_length
 public class Initializer {
     struct URLs {
         let fsBlockDbRoot: URL
@@ -338,15 +337,15 @@ public class Initializer {
     /// - Parameter seed: ZIP-32 Seed bytes for the wallet that will be initialized
     /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
     /// `InitializerError.accountInitFailed` if the account table can't be initialized. 
-    func initialize(with seed: [UInt8]?, viewingKeys: [UnifiedFullViewingKey], walletBirthday: BlockHeight) throws -> InitializationResult {
+    func initialize(with seed: [UInt8]?, viewingKeys: [UnifiedFullViewingKey], walletBirthday: BlockHeight) async throws -> InitializationResult {
         do {
-            try storage.create()
+            try await storage.create()
         } catch {
             throw InitializerError.fsCacheInitFailed(error)
         }
         
         do {
-            if case .seedRequired = try rustBackend.initDataDb(dbData: dataDbURL, seed: seed, networkType: network.networkType) {
+            if case .seedRequired = try await rustBackend.initDataDb(dbData: dataDbURL, seed: seed, networkType: network.networkType) {
                 return .seedRequired
             }
         } catch {
@@ -355,7 +354,7 @@ public class Initializer {
 
         let checkpoint = Checkpoint.birthday(with: walletBirthday, network: network)
         do {
-            try rustBackend.initBlocksTable(
+            try await rustBackend.initBlocksTable(
                 dbData: dataDbURL,
                 height: Int32(checkpoint.height),
                 hash: checkpoint.hash,
@@ -372,7 +371,7 @@ public class Initializer {
         self.walletBirthday = checkpoint.height
  
         do {
-            try rustBackend.initAccountsTable(
+            try await rustBackend.initAccountsTable(
                 dbData: dataDbURL,
                 ufvks: viewingKeys,
                 networkType: network.networkType
@@ -394,34 +393,6 @@ public class Initializer {
         try migrationManager.performMigration()
 
         return .success
-    }
-
-    /// get (unverified) balance from the given account index
-    /// - Parameter account: the index of the account
-    /// - Returns: balance in `Zatoshi`
-    public func getBalance(account index: Int = 0) -> Zatoshi {
-        guard let balance = try? rustBackend.getBalance(
-            dbData: dataDbURL,
-            account: Int32(index),
-            networkType: network.networkType
-        ) else {
-            return .zero
-        }
-
-        return Zatoshi(balance)
-    }
-
-    /// get verified balance from the given account index
-    /// - Parameter account: the index of the account
-    /// - Returns: balance in `Zatoshi`
-    public func getVerifiedBalance(account index: Int = 0) -> Zatoshi {
-        guard let balance = try? rustBackend.getVerifiedBalance(
-            dbData: dataDbURL,
-            account: Int32(index),
-            networkType: network.networkType
-        ) else { return .zero }
-
-        return Zatoshi(balance)
     }
     
     /**
@@ -458,16 +429,5 @@ extension InitializerError: LocalizedError {
         case .cantUpdateURLWithAlias(let url):
             return "Can't update path URL with alias. \(url)"
         }
-    }
-}
-
-/// Synchronous helpers that support clients that don't use structured concurrency yet
-extension Initializer {
-    func getCurrentAddress(accountIndex: Int) -> UnifiedAddress? {
-        try? self.rustBackend.getCurrentAddress(
-            dbData: self.dataDbURL,
-            account: Int32(accountIndex),
-            networkType: self.network.networkType
-        )
     }
 }

@@ -50,19 +50,19 @@ class SynchronizerMock: Synchronizer {
         await stopClosure()
     }
 
-    var getSaplingAddressAccountIndexClosure: ((Int) async -> SaplingAddress?)! = nil
-    func getSaplingAddress(accountIndex: Int) async -> SaplingAddress? {
-        return await getSaplingAddressAccountIndexClosure(accountIndex)
+    var getSaplingAddressAccountIndexClosure: ((Int) async throws -> SaplingAddress)! = nil
+    func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
+        return try await getSaplingAddressAccountIndexClosure(accountIndex)
     }
 
-    var getUnifiedAddressAccountIndexClosure: ((Int) async -> UnifiedAddress?)! = nil
-    func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress? {
-        return await getUnifiedAddressAccountIndexClosure(accountIndex)
+    var getUnifiedAddressAccountIndexClosure: ((Int) async throws -> UnifiedAddress)! = nil
+    func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
+        return try await getUnifiedAddressAccountIndexClosure(accountIndex)
     }
 
-    var getTransparentAddressAccountIndexClosure: ((Int) async -> TransparentAddress?)! = nil
-    func getTransparentAddress(accountIndex: Int) async -> TransparentAddress? {
-        return await getTransparentAddressAccountIndexClosure(accountIndex)
+    var getTransparentAddressAccountIndexClosure: ((Int) async throws -> TransparentAddress)! = nil
+    func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
+        return try await getTransparentAddressAccountIndexClosure(accountIndex)
     }
 
     var sendToAddressSpendingKeyZatoshiToAddressMemoClosure: (
@@ -152,14 +152,14 @@ class SynchronizerMock: Synchronizer {
         return try await getTransparentBalanceAccountIndexClosure(accountIndex)
     }
 
-    var getShieldedBalanceAccountIndexClosure: ((Int) -> Zatoshi)! = nil
-    func getShieldedBalance(accountIndex: Int) -> Zatoshi {
-        return getShieldedBalanceAccountIndexClosure(accountIndex)
+    var getShieldedBalanceAccountIndexClosure: ((Int) async throws -> Zatoshi)! = nil
+    func getShieldedBalance(accountIndex: Int) async throws -> Zatoshi {
+        try await getShieldedBalanceAccountIndexClosure(accountIndex)
     }
 
-    var getShieldedVerifiedBalanceAccountIndexClosure: ((Int) -> Zatoshi)! = nil
-    func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi {
-        return getShieldedVerifiedBalanceAccountIndexClosure(accountIndex)
+    var getShieldedVerifiedBalanceAccountIndexClosure: ((Int) async throws -> Zatoshi)! = nil
+    func getShieldedVerifiedBalance(accountIndex: Int) async throws -> Zatoshi {
+        try await getShieldedVerifiedBalanceAccountIndexClosure(accountIndex)
     }
 
     var rewindPolicyClosure: ((RewindPolicy) -> AnyPublisher<Void, Error>)! = nil

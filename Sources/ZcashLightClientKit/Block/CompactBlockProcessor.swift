@@ -631,7 +631,7 @@ actor CompactBlockProcessor {
         logger.debug("Executing rewind.")
         let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
         let height = Int32(context.height ?? lastDownloaded)
-        let nearestHeight = rustBackend.getNearestRewindHeight(
+        let nearestHeight = await rustBackend.getNearestRewindHeight(
             dbData: config.dataDb,
             height: height,
             networkType: self.config.network.networkType
@@ -647,7 +647,7 @@ actor CompactBlockProcessor {
 
         // FIXME: [#719] this should be done on the rust layer, https://github.com/zcash/ZcashLightClientKit/issues/719
         let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
+        guard await rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
             let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
             await fail(error)
             return await context.completion(.failure(error))
@@ -758,7 +758,7 @@ actor CompactBlockProcessor {
                     try await storage.clear()
                     await internalSyncProgress.set(newLatestDownloadedHeight, .latestDownloadedBlockHeight)
                 } else {
-                    try storage.create()
+                    try await storage.create()
                 }
 
                 if let range = ranges.downloadedButUnscannedRange {
@@ -1055,7 +1055,13 @@ actor CompactBlockProcessor {
 
         self.consecutiveChainValidationErrors += 1
 
-        guard rustBackend.rewindToHeight(dbData: config.dataDb, height: Int32(rewindHeight), networkType: self.config.network.networkType) else {
+        let rewindResult = await rustBackend.rewindToHeight(
+            dbData: config.dataDb,
+            height: Int32(rewindHeight),
+            networkType: self.config.network.networkType
+        )
+
+        guard rewindResult else {
             await fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
             return
         }
@@ -1198,37 +1204,37 @@ extension CompactBlockProcessor.State: Equatable {
 }
 
 extension CompactBlockProcessor {
-    func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
-        try? rustBackend.getCurrentAddress(
+    func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
+        try await rustBackend.getCurrentAddress(
             dbData: config.dataDb,
             account: Int32(accountIndex),
             networkType: config.network.networkType
         )
     }
     
-    func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
-        getUnifiedAddress(accountIndex: accountIndex)?.saplingReceiver()
+    func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
+        try await getUnifiedAddress(accountIndex: accountIndex).saplingReceiver()
     }
     
-    func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
-        getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
+    func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
+        try await getUnifiedAddress(accountIndex: accountIndex).transparentReceiver()
     }
     
-    func getTransparentBalance(accountIndex: Int) throws -> WalletBalance {
+    func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
         guard accountIndex >= 0 else {
             throw CompactBlockProcessorError.invalidAccount
         }
 
         return WalletBalance(
             verified: Zatoshi(
-                try rustBackend.getVerifiedTransparentBalance(
+                try await rustBackend.getVerifiedTransparentBalance(
                     dbData: config.dataDb,
                     account: Int32(accountIndex),
                     networkType: config.network.networkType
                 )
             ),
             total: Zatoshi(
-                try rustBackend.getTransparentBalance(
+                try await rustBackend.getTransparentBalance(
                     dbData: config.dataDb,
                     account: Int32(accountIndex),
                     networkType: config.network.networkType
@@ -1252,18 +1258,18 @@ extension CompactBlockProcessor {
             for try await utxo in stream {
                 utxos.append(utxo)
             }
-            return storeUTXOs(utxos, in: dataDb)
+            return await storeUTXOs(utxos, in: dataDb)
         } catch {
             throw mapError(error)
         }
     }
     
-    private func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) -> RefreshedUTXOs {
+    private func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) async -> RefreshedUTXOs {
         var refreshed: [UnspentTransactionOutputEntity] = []
         var skipped: [UnspentTransactionOutputEntity] = []
         for utxo in utxos {
             do {
-                if try self.rustBackend.putUnspentTransparentOutput(
+                if try await rustBackend.putUnspentTransparentOutput(
                     dbData: dataDb,
                     txid: utxo.txid.bytes,
                     index: utxo.index,
@@ -1464,7 +1470,7 @@ extension CompactBlockProcessor {
 
         // create the storage
         do {
-            try self.storage.create()
+            try await self.storage.create()
         } catch {
             throw CacheDbMigrationError.failedToInitFsBlockDb(error)
         }

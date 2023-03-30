@@ -45,7 +45,7 @@ extension BlockScannerImpl: BlockScanner {
             let batchSize = scanBatchSize(startScanHeight: previousScannedHeight + 1, network: self.config.networkType)
 
             let scanStartTime = Date()
-            guard self.rustBackend.scanBlocks(
+            guard await self.rustBackend.scanBlocks(
                 fsBlockDbRoot: config.fsBlockCacheRoot,
                 dbData: config.dataDB,
                 limit: batchSize,
