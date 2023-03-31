@@ -316,7 +316,7 @@ actor CompactBlockProcessor {
     var storage: CompactBlockRepository
     var transactionRepository: TransactionRepository
     var accountRepository: AccountRepository
-    var rustBackend: ZcashRustBackendWelding.Type
+    var rustBackend: ZcashRustBackendWelding
     private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
     private var lastChainValidationFailure: BlockHeight?
@@ -344,7 +344,7 @@ actor CompactBlockProcessor {
     init(
         service: LightWalletService,
         storage: CompactBlockRepository,
-        backend: ZcashRustBackendWelding.Type,
+        rustBackend: ZcashRustBackendWelding,
         config: Configuration,
         metrics: SDKMetrics,
         logger: Logger
@@ -352,11 +352,9 @@ actor CompactBlockProcessor {
         self.init(
             service: service,
             storage: storage,
-            backend: backend,
+            rustBackend: rustBackend,
             config: config,
-            repository: TransactionRepositoryBuilder.build(
-                dataDbURL: config.dataDb
-            ),
+            repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb),
             accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: logger),
             metrics: metrics,
             logger: logger
@@ -375,7 +373,7 @@ actor CompactBlockProcessor {
         self.init(
             service: initializer.lightWalletService,
             storage: initializer.storage,
-            backend: initializer.rustBackend,
+            rustBackend: initializer.rustBackend,
             config: Configuration(
                 alias: initializer.alias,
                 fsBlockCacheRoot: initializer.fsBlockDbRoot,
@@ -396,7 +394,7 @@ actor CompactBlockProcessor {
     internal init(
         service: LightWalletService,
         storage: CompactBlockRepository,
-        backend: ZcashRustBackendWelding.Type,
+        rustBackend: ZcashRustBackendWelding,
         config: Configuration,
         repository: TransactionRepository,
         accountRepository: AccountRepository,
@@ -420,73 +418,57 @@ actor CompactBlockProcessor {
         self.blockDownloaderService = blockDownloaderService
         self.blockDownloader = blockDownloader
 
-        let blockValidatorConfig = BlockValidatorConfig(
-            fsBlockCacheRoot: config.fsBlockCacheRoot,
-            dataDB: config.dataDb,
-            networkType: config.network.networkType
-        )
         self.blockValidator = BlockValidatorImpl(
-            config: blockValidatorConfig,
-            rustBackend: backend,
+            rustBackend: rustBackend,
             metrics: metrics,
             logger: logger
         )
 
         let blockScannerConfig = BlockScannerConfig(
-            fsBlockCacheRoot: config.fsBlockCacheRoot,
-            dataDB: config.dataDb,
             networkType: config.network.networkType,
             scanningBatchSize: config.scanningBatchSize
         )
         self.blockScanner = BlockScannerImpl(
             config: blockScannerConfig,
-            rustBackend: backend,
+            rustBackend: rustBackend,
             transactionRepository: repository,
             metrics: metrics,
             logger: logger
         )
 
-        let blockEnhancerConfig = BlockEnhancerConfig(dataDb: config.dataDb, networkType: config.network.networkType)
         self.blockEnhancer = BlockEnhancerImpl(
             blockDownloaderService: blockDownloaderService,
-            config: blockEnhancerConfig,
             internalSyncProgress: internalSyncProgress,
-            rustBackend: backend,
+            rustBackend: rustBackend,
             transactionRepository: repository,
             metrics: metrics,
             logger: logger
         )
 
-        let utxoFetcherConfig = UTXOFetcherConfig(
-            dataDb: config.dataDb,
-            networkType: config.network.networkType,
-            walletBirthdayProvider: config.walletBirthdayProvider
-        )
+        let utxoFetcherConfig = UTXOFetcherConfig(walletBirthdayProvider: config.walletBirthdayProvider)
         self.utxoFetcher = UTXOFetcherImpl(
             accountRepository: accountRepository,
             blockDownloaderService: blockDownloaderService,
             config: utxoFetcherConfig,
             internalSyncProgress: internalSyncProgress,
-            rustBackend: backend,
+            rustBackend: rustBackend,
             metrics: metrics,
             logger: logger
         )
 
         let saplingParametersHandlerConfig = SaplingParametersHandlerConfig(
-            dataDb: config.dataDb,
-            networkType: config.network.networkType,
             outputParamsURL: config.outputParamsURL,
             spendParamsURL: config.spendParamsURL,
             saplingParamsSourceURL: config.saplingParamsSourceURL
         )
         self.saplingParametersHandler = SaplingParametersHandlerImpl(
             config: saplingParametersHandlerConfig,
-            rustBackend: backend,
+            rustBackend: rustBackend,
             logger: logger
         )
 
         self.service = service
-        self.rustBackend = backend
+        self.rustBackend = rustBackend
         self.storage = storage
         self.config = config
         self.transactionRepository = repository
@@ -517,8 +499,8 @@ actor CompactBlockProcessor {
         _ info: LightWalletdInfo,
         saplingActivation: BlockHeight,
         localNetwork: ZcashNetwork,
-        rustBackend: ZcashRustBackendWelding.Type
-    ) throws {
+        rustBackend: ZcashRustBackendWelding
+    ) async throws {
         // check network types
         guard let remoteNetworkType = NetworkType.forChainName(info.chainName) else {
             throw CompactBlockProcessorError.generalError(
@@ -536,7 +518,7 @@ actor CompactBlockProcessor {
         }
 
         // check branch id
-        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight), networkType: localNetwork.networkType)
+        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
 
         guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
             throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
@@ -631,24 +613,21 @@ actor CompactBlockProcessor {
         logger.debug("Executing rewind.")
         let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
         let height = Int32(context.height ?? lastDownloaded)
-        let nearestHeight = await rustBackend.getNearestRewindHeight(
-            dbData: config.dataDb,
-            height: height,
-            networkType: self.config.network.networkType
-        )
 
-        guard nearestHeight > 0 else {
-            let error = rustBackend.lastError() ?? RustWeldingError.genericError(
-                message: "unknown error getting nearest rewind height for height: \(height)"
-            )
+        let nearestHeight: Int32
+        do {
+            nearestHeight = try await rustBackend.getNearestRewindHeight(height: height)
+        } catch {
             await fail(error)
             return await context.completion(.failure(error))
         }
 
         // FIXME: [#719] this should be done on the rust layer, https://github.com/zcash/ZcashLightClientKit/issues/719
         let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
-        guard await rustBackend.rewindToHeight(dbData: config.dataDb, height: rewindHeight, networkType: self.config.network.networkType) else {
-            let error = rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)")
+
+        do {
+            try await rustBackend.rewindToHeight(height: rewindHeight)
+        } catch {
             await fail(error)
             return await context.completion(.failure(error))
         }
@@ -715,7 +694,7 @@ actor CompactBlockProcessor {
     func validateServer() async {
         do {
             let info = try await self.service.getInfo()
-            try Self.validateServerInfo(
+            try await Self.validateServerInfo(
                 info,
                 saplingActivation: self.config.saplingActivation,
                 localNetwork: self.config.network,
@@ -1055,14 +1034,10 @@ actor CompactBlockProcessor {
 
         self.consecutiveChainValidationErrors += 1
 
-        let rewindResult = await rustBackend.rewindToHeight(
-            dbData: config.dataDb,
-            height: Int32(rewindHeight),
-            networkType: self.config.network.networkType
-        )
-
-        guard rewindResult else {
-            await fail(rustBackend.lastError() ?? RustWeldingError.genericError(message: "unknown error rewinding to height \(height)"))
+        do {
+            try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
+        } catch {
+            await fail(error)
             return
         }
         
@@ -1205,11 +1180,7 @@ extension CompactBlockProcessor.State: Equatable {
 
 extension CompactBlockProcessor {
     func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
-        try await rustBackend.getCurrentAddress(
-            dbData: config.dataDb,
-            account: Int32(accountIndex),
-            networkType: config.network.networkType
-        )
+        try await rustBackend.getCurrentAddress(account: Int32(accountIndex))
     }
     
     func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
@@ -1227,18 +1198,10 @@ extension CompactBlockProcessor {
 
         return WalletBalance(
             verified: Zatoshi(
-                try await rustBackend.getVerifiedTransparentBalance(
-                    dbData: config.dataDb,
-                    account: Int32(accountIndex),
-                    networkType: config.network.networkType
-                )
+                try await rustBackend.getVerifiedTransparentBalance(account: Int32(accountIndex))
             ),
             total: Zatoshi(
-                try await rustBackend.getTransparentBalance(
-                    dbData: config.dataDb,
-                    account: Int32(accountIndex),
-                    networkType: config.network.networkType
-                )
+                try await rustBackend.getTransparentBalance(account: Int32(accountIndex))
             )
         )
     }
@@ -1269,19 +1232,15 @@ extension CompactBlockProcessor {
         var skipped: [UnspentTransactionOutputEntity] = []
         for utxo in utxos {
             do {
-                if try await rustBackend.putUnspentTransparentOutput(
-                    dbData: dataDb,
+                try await rustBackend.putUnspentTransparentOutput(
                     txid: utxo.txid.bytes,
                     index: utxo.index,
                     script: utxo.script.bytes,
                     value: Int64(utxo.valueZat),
-                    height: utxo.height,
-                    networkType: self.config.network.networkType
-                ) {
-                    refreshed.append(utxo)
-                } else {
-                    skipped.append(utxo)
-                }
+                    height: utxo.height
+                )
+
+                refreshed.append(utxo)
             } catch {
                 logger.info("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
@@ -1389,7 +1348,7 @@ extension CompactBlockProcessor {
             downloaderService: BlockDownloaderService,
             transactionRepository: TransactionRepository,
             config: Configuration,
-            rustBackend: ZcashRustBackendWelding.Type,
+            rustBackend: ZcashRustBackendWelding,
             internalSyncProgress: InternalSyncProgress
         ) async throws -> CompactBlockProcessor.NextState {
             // It should be ok to not create new Task here because this method is already async. But for some reason something not good happens
@@ -1397,7 +1356,7 @@ extension CompactBlockProcessor {
             let task = Task(priority: .userInitiated) {
                 let info = try await service.getInfo()
 
-                try CompactBlockProcessor.validateServerInfo(
+                try await CompactBlockProcessor.validateServerInfo(
                     info,
                     saplingActivation: config.saplingActivation,
                     localNetwork: config.network,

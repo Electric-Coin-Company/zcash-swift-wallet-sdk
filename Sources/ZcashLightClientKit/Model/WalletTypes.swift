@@ -35,7 +35,7 @@ public struct SaplingExtendedSpendingKey: Equatable, StringEncoded, Undescribabl
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool(networkType: network).isValidSaplingExtendedSpendingKey(encoding) else {
+        guard DerivationTool.isValidSaplingExtendedSpendingKey(encoding, networkType: network) else {
             throw KeyEncodingError.invalidEncoding
         }
         self.encoding = encoding
@@ -136,7 +136,7 @@ public struct TransparentAddress: Equatable, StringEncoded, Comparable {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool(networkType: network).isValidTransparentAddress(encoding) else {
+        guard DerivationTool.isValidTransparentAddress(encoding, networkType: network) else {
             throw KeyEncodingError.invalidEncoding
         }
 
@@ -165,7 +165,7 @@ public struct SaplingAddress: Equatable, StringEncoded {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool(networkType: network).isValidSaplingAddress(encoding) else {
+        guard DerivationTool.isValidSaplingAddress(encoding, networkType: network) else {
             throw KeyEncodingError.invalidEncoding
         }
 
@@ -212,7 +212,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool(networkType: network).isValidUnifiedAddress(encoding) else {
+        guard DerivationTool.isValidUnifiedAddress(encoding, networkType: network) else {
             throw KeyEncodingError.invalidEncoding
         }
 

@@ -115,7 +115,6 @@ public class Initializer {
     // This is used to uniquely identify instance of the SDKSynchronizer. It's used when checking if the Alias is already used or not.
     let id = UUID()
 
-    let rustBackend: ZcashRustBackendWelding.Type
     let alias: ZcashSynchronizerAlias
     let endpoint: LightWalletEndpoint
     let fsBlockDbRoot: URL
@@ -131,6 +130,7 @@ public class Initializer {
     let blockDownloaderService: BlockDownloaderService
     let network: ZcashNetwork
     let logger: Logger
+    let rustBackend: ZcashRustBackendWelding
 
     /// The effective birthday of the wallet based on the height provided when initializing and the checkpoints available on this SDK.
     ///
@@ -180,8 +180,16 @@ public class Initializer {
         let (updatedURLs, parsingError) = Self.tryToUpdateURLs(with: alias, urls: urls)
 
         let logger = OSLogger(logLevel: logLevel, alias: alias)
+        let rustBackend = ZcashRustBackend(
+            dbData: updatedURLs.dataDbURL,
+            fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
+            spendParamsPath: updatedURLs.spendParamsURL,
+            outputParamsPath: updatedURLs.outputParamsURL,
+            networkType: network.networkType
+        )
+
         self.init(
-            rustBackend: ZcashRustBackend.self,
+            rustBackend: rustBackend,
             network: network,
             cacheDbURL: cacheDbURL,
             urls: updatedURLs,
@@ -198,7 +206,7 @@ public class Initializer {
                 fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
                 metadataStore: .live(
                     fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-                    rustBackend: ZcashRustBackend.self,
+                    rustBackend: rustBackend,
                     logger: logger
                 ),
                 blockDescriptor: .live,
@@ -216,7 +224,7 @@ public class Initializer {
     ///
     /// !!! It's expected that URLs put here are already update with the Alias.
     init(
-        rustBackend: ZcashRustBackendWelding.Type,
+        rustBackend: ZcashRustBackendWelding,
         network: ZcashNetwork,
         cacheDbURL: URL?,
         urls: URLs,
@@ -341,7 +349,7 @@ public class Initializer {
         }
         
         do {
-            if case .seedRequired = try await rustBackend.initDataDb(dbData: dataDbURL, seed: seed, networkType: network.networkType) {
+            if case .seedRequired = try await rustBackend.initDataDb(seed: seed) {
                 return .seedRequired
             }
         } catch {
@@ -351,12 +359,10 @@ public class Initializer {
         let checkpoint = Checkpoint.birthday(with: walletBirthday, network: network)
         do {
             try await rustBackend.initBlocksTable(
-                dbData: dataDbURL,
                 height: Int32(checkpoint.height),
                 hash: checkpoint.hash,
                 time: checkpoint.time,
-                saplingTree: checkpoint.saplingTree,
-                networkType: network.networkType
+                saplingTree: checkpoint.saplingTree
             )
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
@@ -367,11 +373,7 @@ public class Initializer {
         self.walletBirthday = checkpoint.height
  
         do {
-            try await rustBackend.initAccountsTable(
-                dbData: dataDbURL,
-                ufvks: viewingKeys,
-                networkType: network.networkType
-            )
+            try await rustBackend.initAccountsTable(ufvks: viewingKeys)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch RustWeldingError.malformedStringInput {
@@ -395,14 +397,18 @@ public class Initializer {
     checks if the provided address is a valid sapling address
     */
     public func isValidSaplingAddress(_ address: String) -> Bool {
-        rustBackend.isValidSaplingAddress(address, networkType: network.networkType)
+        ZcashRustBackend.isValidSaplingAddress(address, networkType: network.networkType)
     }
 
     /**
     checks if the provided address is a transparent zAddress
     */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        rustBackend.isValidTransparentAddress(address, networkType: network.networkType)
+        ZcashRustBackend.isValidTransparentAddress(address, networkType: network.networkType)
+    }
+
+    public func makeDerivationTool() -> DerivationTool {
+        return DerivationTool(rustBackend: rustBackend)
     }
 }
 

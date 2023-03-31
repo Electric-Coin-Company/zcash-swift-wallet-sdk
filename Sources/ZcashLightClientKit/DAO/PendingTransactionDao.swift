@@ -28,7 +28,7 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         case rawTransactionId = "txid"
         case fee
     }
-    
+
     var recipient: PendingTransactionRecipient
     var accountIndex: Int
     var minedHeight: BlockHeight

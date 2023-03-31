@@ -52,38 +52,9 @@ class TestCoordinator {
         singleCallTimeoutInMillis: 10000,
         streamingCallTimeoutInMillis: 1000000
     )
-
-    convenience init(
-        alias: ZcashSynchronizerAlias = .default,
-        walletBirthday: BlockHeight,
-        network: ZcashNetwork,
-        callPrepareInConstructor: Bool = true,
-        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
-    ) async throws {
-        let derivationTool = DerivationTool(networkType: network.networkType)
-
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
-            seed: Environment.seedBytes,
-            accountIndex: 0
-        )
-
-        let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
-
-        try await self.init(
-            alias: alias,
-            spendingKey: spendingKey,
-            unifiedFullViewingKey: ufvk,
-            walletBirthday: walletBirthday,
-            network: network,
-            callPrepareInConstructor: callPrepareInConstructor,
-            endpoint: endpoint
-        )
-    }
     
-    required init(
+    init(
         alias: ZcashSynchronizerAlias = .default,
-        spendingKey: UnifiedSpendingKey,
-        unifiedFullViewingKey: UnifiedFullViewingKey,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true,
@@ -91,14 +62,8 @@ class TestCoordinator {
     ) async throws {
         await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
-        self.spendingKey = spendingKey
-        self.viewingKey = unifiedFullViewingKey
-        self.birthday = walletBirthday
-        self.databases = TemporaryDbBuilder.build()
-        self.network = network
-
-        let liveService = LightWalletServiceFactory(endpoint: endpoint).make()
-        self.service = DarksideWalletService(endpoint: endpoint, service: liveService)
+        let databases = TemporaryDbBuilder.build()
+        self.databases = databases
 
         let initializer = Initializer(
             cacheDbURL: nil,
@@ -113,6 +78,20 @@ class TestCoordinator {
             alias: alias,
             logLevel: .debug
         )
+
+        let derivationTool = initializer.makeDerivationTool()
+
+        self.spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
+            seed: Environment.seedBytes,
+            accountIndex: 0
+        )
+
+        self.viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        self.birthday = walletBirthday
+        self.network = network
+
+        let liveService = LightWalletServiceFactory(endpoint: endpoint).make()
+        self.service = DarksideWalletService(endpoint: endpoint, service: liveService)
 
         let synchronizer = SDKSynchronizer(initializer: initializer)
         

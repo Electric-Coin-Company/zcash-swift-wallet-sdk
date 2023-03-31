@@ -8,7 +8,7 @@
 import Foundation
 
 class WalletTransactionEncoder: TransactionEncoder {
-    var rustBackend: ZcashRustBackendWelding.Type
+    var rustBackend: ZcashRustBackendWelding
     var repository: TransactionRepository
     let logger: Logger
 
@@ -19,7 +19,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     private var networkType: NetworkType
     
     init(
-        rust: ZcashRustBackendWelding.Type,
+        rustBackend: ZcashRustBackendWelding,
         dataDb: URL,
         fsBlockDbRoot: URL,
         repository: TransactionRepository,
@@ -28,7 +28,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         networkType: NetworkType,
         logger: Logger
     ) {
-        self.rustBackend = rust
+        self.rustBackend = rustBackend
         self.dataDbURL = dataDb
         self.fsBlockDbRoot = fsBlockDbRoot
         self.repository = repository
@@ -40,7 +40,7 @@ class WalletTransactionEncoder: TransactionEncoder {
     
     convenience init(initializer: Initializer) {
         self.init(
-            rust: initializer.rustBackend,
+            rustBackend: initializer.rustBackend,
             dataDb: initializer.dataDbURL,
             fsBlockDbRoot: initializer.fsBlockDbRoot,
             repository: initializer.transactionRepository,
@@ -84,22 +84,14 @@ class WalletTransactionEncoder: TransactionEncoder {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
-                
-        let txId = await rustBackend.createToAddress(
-            dbData: self.dataDbURL,
+
+        let txId = try await rustBackend.createToAddress(
             usk: spendingKey,
             to: address,
             value: zatoshi.amount,
-            memo: memoBytes,
-            spendParamsPath: self.spendParamsURL.path,
-            outputParamsPath: self.outputParamsURL.path,
-            networkType: networkType
+            memo: memoBytes
         )
-        
-        guard txId > 0 else {
-            throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
-        }
-        
+
         return Int(txId)
     }
     
@@ -134,20 +126,12 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw TransactionEncoderError.missingParams
         }
         
-        let txId = await rustBackend.shieldFunds(
-            dbData: self.dataDbURL,
+        let txId = try await rustBackend.shieldFunds(
             usk: spendingKey,
             memo: memo,
-            shieldingThreshold: shieldingThreshold,
-            spendParamsPath: self.spendParamsURL.path,
-            outputParamsPath: self.outputParamsURL.path,
-            networkType: networkType
+            shieldingThreshold: shieldingThreshold
         )
-        
-        guard txId > 0 else {
-            throw rustBackend.lastError() ?? RustWeldingError.genericError(message: "create spend failed")
-        }
-        
+                
         return Int(txId)
     }
     

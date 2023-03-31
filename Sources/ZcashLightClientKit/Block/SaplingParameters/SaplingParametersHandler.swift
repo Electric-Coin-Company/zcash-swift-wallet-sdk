@@ -8,8 +8,6 @@
 import Foundation
 
 struct SaplingParametersHandlerConfig {
-    let dataDb: URL
-    let networkType: NetworkType
     let outputParamsURL: URL
     let spendParamsURL: URL
     let saplingParamsSourceURL: SaplingParamsSourceURL
@@ -21,7 +19,7 @@ protocol SaplingParametersHandler {
 
 struct SaplingParametersHandlerImpl {
     let config: SaplingParametersHandlerConfig
-    let rustBackend: ZcashRustBackendWelding.Type
+    let rustBackend: ZcashRustBackendWelding
     let logger: Logger
 }
 
@@ -30,16 +28,8 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
         try Task.checkCancellation()
 
         do {
-            let totalShieldedBalance = try await rustBackend.getBalance(
-                dbData: config.dataDb,
-                account: Int32(0),
-                networkType: config.networkType
-            )
-            let totalTransparentBalance = try await rustBackend.getTransparentBalance(
-                dbData: config.dataDb,
-                account: Int32(0),
-                networkType: config.networkType
-            )
+            let totalShieldedBalance = try await rustBackend.getBalance(account: Int32(0))
+            let totalTransparentBalance = try await rustBackend.getTransparentBalance(account: Int32(0))
 
             // Download Sapling parameters only if sapling funds are detected.
             guard totalShieldedBalance > 0 || totalTransparentBalance > 0 else { return }

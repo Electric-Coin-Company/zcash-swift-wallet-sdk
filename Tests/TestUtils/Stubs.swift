@@ -153,7 +153,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.receiverNotFound
     }
 
-    static func createAccount(dbData: URL, seed: [UInt8], networkType: ZcashLightClientKit.NetworkType) async throws -> ZcashLightClientKit.UnifiedSpendingKey {
+    func createAccount(dbData: URL, seed: [UInt8], networkType: ZcashLightClientKit.NetworkType) async throws -> ZcashLightClientKit.UnifiedSpendingKey {
         throw KeyDerivationErrors.unableToDerive
     }
 
