@@ -364,7 +364,7 @@ class AdvancedReOrgTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
+                    let pMinedHeight = await synchronizer.pendingTransactions.first?.minedHeight
                     XCTAssertEqual(pMinedHeight, sentTxHeight)
                     sentTxSyncExpectation.fulfill()
                 },
@@ -398,7 +398,7 @@ class AdvancedReOrgTests: XCTestCase {
                     /*
                     11. verify that the sent tx is mined and balance is correct
                     */
-                    let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
+                    let pMinedHeight = await synchronizer.pendingTransactions.first?.minedHeight
                     XCTAssertEqual(pMinedHeight, sentTxHeight)
                     // fee change on this branch
                     let expectedBalance = try await synchronizer.getShieldedBalance()
@@ -437,7 +437,8 @@ class AdvancedReOrgTests: XCTestCase {
         wait(for: [lastSyncExpectation], timeout: 5)
 
         let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
+        let expectedPendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
+        XCTAssertEqual(expectedPendingTransactionsCount, 0)
         XCTAssertEqual(initialTotalBalance - pendingTx.value - Zatoshi(1000), expectedVerifiedBalance)
 
         let resultingBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
@@ -836,9 +837,10 @@ class AdvancedReOrgTests: XCTestCase {
         }
 
         wait(for: [secondSyncExpectation], timeout: 5)
-        
-        XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 1)
-        guard let afterStagePendingTx = coordinator.synchronizer.pendingTransactions.first else {
+
+        var pendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
+        XCTAssertEqual(pendingTransactionsCount, 1)
+        guard let afterStagePendingTx = await coordinator.synchronizer.pendingTransactions.first else {
             return
         }
         
@@ -885,7 +887,7 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         10. verify that there's a pending transaction with -1 mined height
         */
-        guard let newPendingTx = coordinator.synchronizer.pendingTransactions.first else {
+        guard let newPendingTx = await coordinator.synchronizer.pendingTransactions.first else {
             XCTFail("No pending transaction")
             try await coordinator.stop()
             return
@@ -920,8 +922,9 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         12. verify that there's a pending transaction with a mined height of sentTxHeight + 2
         */
-        XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 1)
-        guard let newlyPendingTx = try coordinator.synchronizer.allPendingTransactions().first else {
+        pendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
+        XCTAssertEqual(pendingTransactionsCount, 1)
+        guard let newlyPendingTx = try await coordinator.synchronizer.allPendingTransactions().first else {
             XCTFail("no pending transaction")
             try await coordinator.stop()
             return
@@ -957,7 +960,8 @@ class AdvancedReOrgTests: XCTestCase {
         /*
         15. verify that there's no pending transaction and that the tx is displayed on the sentTransactions collection
         */
-        XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 0)
+        let pendingTranscationsCount = await coordinator.synchronizer.pendingTransactions.count
+        XCTAssertEqual(pendingTranscationsCount, 0)
 
         let sentTransactions = await coordinator.synchronizer.sentTransactions
             .first(
@@ -1269,7 +1273,7 @@ class AdvancedReOrgTests: XCTestCase {
 
         wait(for: [reorgExpectation, reorgSyncExpectation], timeout: 5)
         
-        guard let pendingTx = coordinator.synchronizer.pendingTransactions.first else {
+        guard let pendingTx = await coordinator.synchronizer.pendingTransactions.first else {
             XCTFail("no pending transaction after reorg sync")
             return
         }

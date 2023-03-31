@@ -419,7 +419,7 @@ class RewindRescanTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    let pendingTransaction = synchronizer.pendingTransactions
+                    let pendingTransaction = await synchronizer.pendingTransactions
                         .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
                     XCTAssertNotNil(pendingTransaction, "pending transaction should have been mined by now")
                     XCTAssertTrue(pendingTransaction?.isMined ?? false)
@@ -464,7 +464,7 @@ class RewindRescanTests: XCTestCase {
         wait(for: [rewindExpectation], timeout: 2)
 
         guard
-            let pendingEntity = try coordinator.synchronizer.allPendingTransactions()
+            let pendingEntity = try await coordinator.synchronizer.allPendingTransactions()
                 .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
         else {
             XCTFail("sent pending transaction not found after rewind")
@@ -500,7 +500,7 @@ class RewindRescanTests: XCTestCase {
 
         wait(for: [confirmExpectation], timeout: 10)
         
-        let confirmedPending = try coordinator.synchronizer.allPendingTransactions()
+        let confirmedPending = try await coordinator.synchronizer.allPendingTransactions()
             .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
         
         XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")

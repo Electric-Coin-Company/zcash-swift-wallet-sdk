@@ -19,8 +19,10 @@ class GetBalanceViewController: UIViewController {
         self.title = "Account 0 Balance"
 
         Task { @MainActor in
-            self.balance.text = "\(try? await synchronizer.getShieldedBalance().formattedString ?? "0.0") ZEC"
-            self.verified.text = "\(try? await synchronizer.getShieldedVerifiedBalance().formattedString ?? "0.0") ZEC"
+            let balanceText = (try? await synchronizer.getShieldedBalance().formattedString) ?? "0.0"
+            let verifiedText = (try? await synchronizer.getShieldedVerifiedBalance().formattedString) ?? "0.0"
+            self.balance.text = "\(balanceText) ZEC"
+            self.verified.text = "\(verifiedText) ZEC"
         }
     }
 }
