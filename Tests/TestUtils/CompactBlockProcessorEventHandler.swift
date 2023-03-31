@@ -29,6 +29,7 @@ class CompactBlockProcessorEventHandler {
 
     func subscribe(to blockProcessor: CompactBlockProcessor, expectations: [EventIdentifier: XCTestExpectation]) async {
         let closure: CompactBlockProcessor.EventClosure = { event in
+            print("Received event: \(event.identifier)")
             expectations[event.identifier]?.fulfill()
         }
 

@@ -14,20 +14,14 @@ enum BlockEnhancerError: Error {
     case txIdNotFound(txId: Data)
 }
 
-struct BlockEnhancerConfig {
-    let dataDb: URL
-    let networkType: NetworkType
-}
-
 protocol BlockEnhancer {
     func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]
 }
 
 struct BlockEnhancerImpl {
     let blockDownloaderService: BlockDownloaderService
-    let config: BlockEnhancerConfig
     let internalSyncProgress: InternalSyncProgress
-    let rustBackend: ZcashRustBackendWelding.Type
+    let rustBackend: ZcashRustBackendWelding
     let transactionRepository: TransactionRepository
     let metrics: SDKMetrics
     let logger: Logger
@@ -41,17 +35,13 @@ struct BlockEnhancerImpl {
         let block = String(describing: transaction.minedHeight)
         logger.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
 
-        let decryptionResult = await rustBackend.decryptAndStoreTransaction(
-            dbData: config.dataDb,
-            txBytes: fetchedTransaction.raw.bytes,
-            minedHeight: Int32(fetchedTransaction.minedHeight),
-            networkType: config.networkType
-        )
-
-        guard decryptionResult else {
-            throw BlockEnhancerError.decryptError(
-                error: rustBackend.lastError() ?? .genericError(message: "`decryptAndStoreTransaction` failed. No message available")
+        do {
+            try await rustBackend.decryptAndStoreTransaction(
+                txBytes: fetchedTransaction.raw.bytes,
+                minedHeight: Int32(fetchedTransaction.minedHeight)
             )
+        } catch {
+            throw BlockEnhancerError.decryptError(error: error)
         }
 
         let confirmedTx: ZcashTransaction.Overview

@@ -19,16 +19,14 @@ class TransactionEnhancementTests: XCTestCase {
     let network = DarksideWalletDNetwork()
     let branchID = "2bb40e60"
     let chainName = "main"
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
+    var testTempDirectory: URL!
     let testFileManager = FileManager()
 
     var initializer: Initializer!
     var processorConfig: CompactBlockProcessor.Configuration!
     var processor: CompactBlockProcessor!
+    var rustBackend: ZcashRustBackendWelding!
     var darksideWalletService: DarksideWalletService!
     var downloader: BlockDownloaderServiceImpl!
     var syncStartedExpect: XCTestExpectation!
@@ -42,8 +40,8 @@ class TransactionEnhancementTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
 
         await InternalSyncProgress(
             alias: .default,
@@ -63,7 +61,6 @@ class TransactionEnhancementTests: XCTestCase {
         
         waitExpectation = XCTestExpectation(description: "\(self.description) waitExpectation")
 
-        let rustBackend = ZcashRustBackend.self
         let birthday = Checkpoint.birthday(with: walletBirthday, network: network)
 
         let pathProvider = DefaultResourceProvider(network: network)
@@ -78,27 +75,25 @@ class TransactionEnhancementTests: XCTestCase {
             network: network
         )
 
+        rustBackend = ZcashRustBackend.makeForTests(
+            dbData: processorConfig.dataDb,
+            fsBlockDbRoot: testTempDirectory,
+            networkType: network.networkType
+        )
+
         try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
 
-        let dbInit = try await rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
-        
-        let ufvks = [
-            try DerivationTool(networkType: network.networkType)
-                .deriveUnifiedSpendingKey(seed: Environment.seedBytes, accountIndex: 0)
-                .map {
-                    try DerivationTool(networkType: network.networkType)
-                        .deriveUnifiedFullViewingKey(from: $0)
-                }
-        ]
+        let dbInit = try await rustBackend.initDataDb(seed: nil)
+
+        let derivationTool = DerivationTool(networkType: network.networkType)
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: Environment.seedBytes, accountIndex: 0)
+        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+
         do {
-            try await rustBackend.initAccountsTable(
-                dbData: processorConfig.dataDb,
-                ufvks: ufvks,
-                networkType: network.networkType
-            )
+            try await rustBackend.initAccountsTable(ufvks: [viewingKey])
         } catch {
-            XCTFail("Failed to init accounts table error: \(String(describing: rustBackend.getLastError()))")
+            XCTFail("Failed to init accounts table error: \(error)")
             return
         }
         
@@ -108,12 +103,10 @@ class TransactionEnhancementTests: XCTestCase {
         }
 
         _ = try await rustBackend.initBlocksTable(
-            dbData: processorConfig.dataDb,
             height: Int32(birthday.height),
             hash: birthday.hash,
             time: birthday.time,
-            saplingTree: birthday.saplingTree,
-            networkType: network.networkType
+            saplingTree: birthday.saplingTree
         )
         
         let service = DarksideWalletService()
@@ -136,7 +129,7 @@ class TransactionEnhancementTests: XCTestCase {
         processor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: rustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger
@@ -163,6 +156,7 @@ class TransactionEnhancementTests: XCTestCase {
         processor = nil
         darksideWalletService = nil
         downloader = nil
+        testTempDirectory = nil
     }
     
     private func startProcessing() async throws {

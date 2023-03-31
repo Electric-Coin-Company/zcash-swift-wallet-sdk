@@ -11,24 +11,22 @@ import XCTest
 
 class CompactBlockProcessorOfflineTests: XCTestCase {
     let testFileManager = FileManager()
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try FileManager.default.removeItem(at: self.testTempDirectory)
+        try FileManager.default.removeItem(at: testTempDirectory)
     }
 
     func testComputeProcessingRangeForSingleLoop() async throws {
         let network = ZcashNetworkBuilder.network(for: .testnet)
-        let realRustBackend = ZcashRustBackend.self
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
 
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: network,
@@ -44,7 +42,7 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -55,7 +53,7 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
         let processor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger

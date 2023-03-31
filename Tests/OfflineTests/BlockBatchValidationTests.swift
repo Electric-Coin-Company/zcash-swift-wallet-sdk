@@ -10,21 +10,22 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class BlockBatchValidationTests: XCTestCase {
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
+    var rustBackend: ZcashRustBackendWelding!
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? testFileManager.removeItem(at: testTempDirectory)
+        rustBackend = nil
+        testTempDirectory = nil
     }
 
     func testBranchIdFailure() async throws {
@@ -34,13 +35,11 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -76,14 +75,13 @@ class BlockBatchValidationTests: XCTestCase {
         info.consensusBranchID = "d34db33f"
         info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
-        
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = Int32(0xd34d)
+
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: Int32(0xd34d))
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockBackend.rustBackendMock,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -109,13 +107,11 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -151,14 +147,13 @@ class BlockBatchValidationTests: XCTestCase {
         info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
 
         service.mockLightDInfo = info
-        
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockBackend.rustBackendMock,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -184,13 +179,11 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -227,13 +220,12 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockBackend.rustBackendMock,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -259,13 +251,11 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -303,13 +293,12 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockBackend.rustBackendMock,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -381,9 +370,8 @@ class BlockBatchValidationTests: XCTestCase {
         info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
 
         service.mockLightDInfo = info
-        
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
 
         var nextBatch: CompactBlockProcessor.NextState?
         do {
@@ -392,7 +380,7 @@ class BlockBatchValidationTests: XCTestCase {
                 downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
-                rustBackend: mockRust,
+                rustBackend: mockBackend.rustBackendMock,
                 internalSyncProgress: InternalSyncProgress(
                     alias: .default,
                     storage: InternalSyncProgressMemoryStorage(),
@@ -479,8 +467,7 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         var nextBatch: CompactBlockProcessor.NextState?
         do {
@@ -489,7 +476,7 @@ class BlockBatchValidationTests: XCTestCase {
                 downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
-                rustBackend: mockRust,
+                rustBackend: mockBackend.rustBackendMock,
                 internalSyncProgress: InternalSyncProgress(
                     alias: .default,
                     storage: InternalSyncProgressMemoryStorage(),
@@ -573,8 +560,7 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         var nextBatch: CompactBlockProcessor.NextState?
         do {
@@ -583,7 +569,7 @@ class BlockBatchValidationTests: XCTestCase {
                 downloaderService: downloaderService,
                 transactionRepository: transactionRepository,
                 config: config,
-                rustBackend: mockRust,
+                rustBackend: mockBackend.rustBackendMock,
                 internalSyncProgress: internalSyncProgress
             )
 

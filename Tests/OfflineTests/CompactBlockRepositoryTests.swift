@@ -13,22 +13,22 @@ import XCTest
 
 class CompactBlockRepositoryTests: XCTestCase {
     let network = ZcashNetworkBuilder.network(for: .testnet)
-
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
+    var rustBackend: ZcashRustBackendWelding!
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? testFileManager.removeItem(at: testTempDirectory)
+        rustBackend = nil
+        testTempDirectory = nil
     }
 
     func testEmptyStorage() async throws {
@@ -36,7 +36,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -55,7 +55,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -82,7 +82,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -108,7 +108,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,

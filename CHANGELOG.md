@@ -1,4 +1,12 @@
 # unreleased
+### [#888] Updates to layer between Swift and Rust
+
+This is mostly internal change. But it also touches the public API.
+
+`KeyDeriving` protocol is changed. And therefore `DerivationTool` is changed. `deriveUnifiedSpendingKey(seed:accountIndex:)` and
+`deriveUnifiedFullViewingKey(from:)` methods are now async. `DerivationTool` offers alternatives for these methods. Alternatives are using either
+closures or Combine. 
+
 ### [#469] ZcashRustBackendWelding to Async
 
 This is mostly internal change. But it also touches the public API.

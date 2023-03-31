@@ -58,33 +58,35 @@ class SyncBlocksListViewController: UIViewController {
     }
 
     private func didTapOnButton(index: Int) async {
-        let synchronizerData = synchronizerData[index]
-        let synchronizer = synchronizers[index]
-        let syncStatus = synchronizer.latestState.syncStatus
+        Task { @MainActor in
+            let synchronizerData = synchronizerData[index]
+            let synchronizer = synchronizers[index]
+            let syncStatus = synchronizer.latestState.syncStatus
 
-        loggerProxy.debug("Processing synchronizer with alias \(synchronizer.alias.description) \(index)")
+            loggerProxy.debug("Processing synchronizer with alias \(synchronizer.alias.description) \(index)")
 
-        switch syncStatus {
-        case .stopped, .unprepared, .synced, .disconnected, .error:
-            do {
-                if syncStatus == .unprepared {
-                    let viewingKey = try! DerivationTool(networkType: kZcashNetwork.networkType)
-                        .deriveUnifiedSpendingKey(seed: synchronizerData.seed, accountIndex: 0)
-                        .deriveFullViewingKey()
+            switch syncStatus {
+            case .stopped, .unprepared, .synced, .disconnected, .error:
+                do {
+                    if syncStatus == .unprepared {
+                        let derivationTool = AppDelegate.shared.sharedWallet.makeDerivationTool()
+                        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: synchronizerData.seed, accountIndex: 0)
+                        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
-                    _ = try! await synchronizer.prepare(
-                        with: synchronizerData.seed,
-                        viewingKeys: [viewingKey],
-                        walletBirthday: synchronizerData.birthday
-                    )
+                        _ = try! await synchronizer.prepare(
+                            with: synchronizerData.seed,
+                            viewingKeys: [viewingKey],
+                            walletBirthday: synchronizerData.birthday
+                        )
+                    }
+
+                    try await synchronizer.start(retry: false)
+                } catch {
+                    loggerProxy.error("Can't start synchronizer: \(error)")
                 }
-
-                try await synchronizer.start(retry: false)
-            } catch {
-                loggerProxy.error("Can't start synchronizer: \(error)")
+            case .syncing, .enhancing, .fetching:
+                await synchronizer.stop()
             }
-        case .syncing, .enhancing, .fetching:
-            await synchronizer.stop()
         }
     }
 
