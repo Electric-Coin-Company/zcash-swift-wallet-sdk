@@ -254,7 +254,7 @@ public class SDKSynchronizer: Synchronizer {
         logger.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
         do {
-            try transactionManager.handleReorg(at: rewindHeight)
+            try await transactionManager.handleReorg(at: rewindHeight)
         } catch {
             logger.debug("error handling reorg: \(error)")
         }
@@ -322,7 +322,7 @@ public class SDKSynchronizer: Synchronizer {
                 throw ShieldFundsError.insuficientTransparentFunds
             }
 
-            let shieldingSpend = try transactionManager.initSpend(
+            let shieldingSpend = try await transactionManager.initSpend(
                 zatoshi: tBalance.verified,
                 recipient: .internalAccount(spendingKey.account),
                 memo: try memo.asMemoBytes(),
@@ -349,7 +349,7 @@ public class SDKSynchronizer: Synchronizer {
         memo: Memo?
     ) async throws -> PendingTransactionEntity {
         do {
-            let spend = try transactionManager.initSpend(
+            let spend = try await transactionManager.initSpend(
                 zatoshi: zatoshi,
                 recipient: .address(recipient),
                 memo: memo?.asMemoBytes(),
@@ -367,16 +367,16 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity) -> Bool {
-        transactionManager.cancel(pendingTransaction: transaction)
+    public func cancelSpend(transaction: PendingTransactionEntity) async -> Bool {
+        await transactionManager.cancel(pendingTransaction: transaction)
     }
 
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Received] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
 
-    public func allPendingTransactions() throws -> [PendingTransactionEntity] {
-        try transactionManager.allPendingTransactions()
+    public func allPendingTransactions() async throws -> [PendingTransactionEntity] {
+        try await transactionManager.allPendingTransactions()
     }
 
     public func allClearedTransactions() async throws -> [ZcashTransaction.Overview] {
@@ -520,7 +520,7 @@ public class SDKSynchronizer: Synchronizer {
                     switch result {
                     case let .success(rewindHeight):
                         do {
-                            try self?.transactionManager.handleReorg(at: rewindHeight)
+                            try await self?.transactionManager.handleReorg(at: rewindHeight)
                             subject.send(completion: .finished)
                         } catch {
                             subject.send(completion: .failure(SynchronizerError.rewindError(underlyingError: error)))
@@ -633,7 +633,7 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: book keeping
 
     private func updateMinedTransactions() async throws {
-        let transactions = try transactionManager.allPendingTransactions()
+        let transactions = try await transactionManager.allPendingTransactions()
             .filter { $0.isSubmitSuccess && !$0.isMined }
 
         for pendingTx in transactions {
@@ -641,7 +641,7 @@ public class SDKSynchronizer: Synchronizer {
             let transaction = try await transactionRepository.find(rawID: rawID)
             guard let minedHeight = transaction.minedHeight else { return }
 
-            let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
+            let minedTx = try await transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
 
             notifyMinedTransaction(minedTx)
         }
@@ -650,9 +650,12 @@ public class SDKSynchronizer: Synchronizer {
     private func removeConfirmedTransactions() async throws {
         let latestHeight = try await transactionRepository.lastScannedHeight()
 
-        try transactionManager.allPendingTransactions()
+        let transactions = try await transactionManager.allPendingTransactions()
             .filter { $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.defaultStaleTolerance }
-            .forEach { try transactionManager.delete(pendingTransaction: $0) }
+
+        for transaction in transactions {
+            try await transactionManager.delete(pendingTransaction: transaction)
+        }
     }
 
     private func refreshPendingTransactions() async {
@@ -713,7 +716,9 @@ public class SDKSynchronizer: Synchronizer {
 
 extension SDKSynchronizer {
     public var pendingTransactions: [PendingTransactionEntity] {
-        (try? self.allPendingTransactions()) ?? [PendingTransactionEntity]()
+        get async {
+            (try? await self.allPendingTransactions()) ?? [PendingTransactionEntity]()
+        }
     }
 
     public var clearedTransactions: [ZcashTransaction.Overview] {

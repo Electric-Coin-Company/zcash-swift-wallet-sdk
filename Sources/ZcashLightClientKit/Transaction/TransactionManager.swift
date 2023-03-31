@@ -19,7 +19,7 @@ protocol OutboundTransactionManager {
         recipient: PendingTransactionRecipient,
         memo: MemoBytes?,
         from accountIndex: Int
-    ) throws -> PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity
 
     func encodeShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
@@ -39,21 +39,21 @@ protocol OutboundTransactionManager {
     func applyMinedHeight(
         pendingTransaction: PendingTransactionEntity,
         minedHeight: BlockHeight
-    ) throws -> PendingTransactionEntity
+    ) async throws -> PendingTransactionEntity
     
     /**
     Attempts to Cancel a transaction. Returns true if successful
     */
-    func cancel(pendingTransaction: PendingTransactionEntity) -> Bool
+    func cancel(pendingTransaction: PendingTransactionEntity) async -> Bool
 
-    func allPendingTransactions() throws -> [PendingTransactionEntity]
+    func allPendingTransactions() async throws -> [PendingTransactionEntity]
 
-    func handleReorg(at blockHeight: BlockHeight) throws
+    func handleReorg(at blockHeight: BlockHeight) async throws
 
     /**
     Deletes a pending transaction from the database
     */
-    func delete(pendingTransaction: PendingTransactionEntity) throws
+    func delete(pendingTransaction: PendingTransactionEntity) async throws
 
     func closeDBConnection()
 }

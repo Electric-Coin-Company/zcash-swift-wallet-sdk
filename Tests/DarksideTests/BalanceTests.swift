@@ -139,7 +139,7 @@ class BalanceTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                    let pendingEntity = await synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
                     XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
                     XCTAssertTrue(pendingEntity?.isMined ?? false)
                     XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
@@ -180,7 +180,7 @@ class BalanceTests: XCTestCase {
 
         wait(for: [confirmExpectation], timeout: 5)
         
-        let confirmedPending = try coordinator.synchronizer.allPendingTransactions()
+        let confirmedPending = try await coordinator.synchronizer.allPendingTransactions()
             .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
         
         XCTAssertNil(confirmedPending, "pending, now confirmed transaction found")
@@ -288,7 +288,7 @@ class BalanceTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                    let pendingEntity = await synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
                     XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
                     XCTAssertTrue(pendingEntity?.isMined ?? false)
                     XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
@@ -329,7 +329,7 @@ class BalanceTests: XCTestCase {
         
         wait(for: [confirmExpectation], timeout: 5)
         
-        let confirmedPending = try coordinator.synchronizer
+        let confirmedPending = try await coordinator.synchronizer
             .allPendingTransactions()
             .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
         
@@ -438,7 +438,7 @@ class BalanceTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    let pendingEntity = synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
+                    let pendingEntity = await synchronizer.pendingTransactions.first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
                     XCTAssertNotNil(pendingEntity, "pending transaction should have been mined by now")
                     XCTAssertTrue(pendingEntity?.isMined ?? false)
                     XCTAssertEqual(pendingEntity?.minedHeight, sentTxHeight)
@@ -479,7 +479,7 @@ class BalanceTests: XCTestCase {
         
         wait(for: [confirmExpectation], timeout: 5)
         
-        let confirmedPending = try coordinator.synchronizer
+        let confirmedPending = try await coordinator.synchronizer
             .allPendingTransactions()
             .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
         

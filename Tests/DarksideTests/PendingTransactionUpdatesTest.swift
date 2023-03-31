@@ -159,9 +159,10 @@ class PendingTransactionUpdatesTest: XCTestCase {
         }
 
         wait(for: [secondSyncExpectation], timeout: 5)
-        
-        XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 1)
-        guard let afterStagePendingTx = coordinator.synchronizer.pendingTransactions.first else {
+
+        let pendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
+        XCTAssertEqual(pendingTransactionsCount, 1)
+        guard let afterStagePendingTx = await coordinator.synchronizer.pendingTransactions.first else {
             return
         }
         
@@ -203,9 +204,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         }
 
         wait(for: [syncToConfirmExpectation], timeout: 6)
-        var supposedlyPendingUnexistingTransaction: PendingTransactionEntity?
-        
-        XCTAssertNoThrow(try { supposedlyPendingUnexistingTransaction = try coordinator.synchronizer.allPendingTransactions().first }())
+        let supposedlyPendingUnexistingTransaction = try await coordinator.synchronizer.allPendingTransactions().first
         
         XCTAssertNil(supposedlyPendingUnexistingTransaction)
     }

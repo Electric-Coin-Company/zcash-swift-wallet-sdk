@@ -196,7 +196,7 @@ class Z2TReceiveTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
+                    let pMinedHeight = await synchronizer.pendingTransactions.first?.minedHeight
                     XCTAssertEqual(pMinedHeight, sentTxHeight)
 
                     sentTxSyncExpectation.fulfill()
