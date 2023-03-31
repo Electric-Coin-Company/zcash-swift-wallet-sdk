@@ -1185,7 +1185,7 @@ class SDKSynchonizerListener {
     }
     
     func unsubscribe() {
-        NotificationCenter.default.removeObserver(self)
+        cancellables = []
     }
     
     func txFound(_ txs: [ZcashTransaction.Overview]) {

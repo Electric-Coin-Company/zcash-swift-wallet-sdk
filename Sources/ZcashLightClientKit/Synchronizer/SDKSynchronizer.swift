@@ -94,7 +94,6 @@ public class SDKSynchronizer: Synchronizer {
 
     deinit {
         UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
-        NotificationCenter.default.removeObserver(self)
         Task { [blockProcessor] in
             await blockProcessor.stop()
         }
