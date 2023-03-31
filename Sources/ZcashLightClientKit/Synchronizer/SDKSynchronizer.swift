@@ -134,7 +134,7 @@ public class SDKSynchronizer: Synchronizer {
             throw error
         }
 
-        try utxoRepository.initialise()
+        try await utxoRepository.initialise()
 
         if case .seedRequired = try await self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
             return .seedRequired
@@ -435,8 +435,8 @@ public class SDKSynchronizer: Synchronizer {
             for try await transactionEntity in stream {
                 utxos.append(transactionEntity)
             }
-            try self.utxoRepository.clearAll(address: address)
-            try self.utxoRepository.store(utxos: utxos)
+            try await self.utxoRepository.clearAll(address: address)
+            try await self.utxoRepository.store(utxos: utxos)
             return utxos
         } catch {
             throw SynchronizerError.generalError(message: "\(error)")
