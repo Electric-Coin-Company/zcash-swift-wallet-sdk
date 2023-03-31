@@ -122,7 +122,6 @@ class CompactBlockProcessorTests: XCTestCase {
         await self.processor.stop()
         try FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        NotificationCenter.default.removeObserver(self)
         cancellables = []
         processor = nil
         processorEventHandler = nil

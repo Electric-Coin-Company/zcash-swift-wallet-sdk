@@ -55,10 +55,6 @@ public struct LightWalletEndpoint {
     }
 }
 
-extension Notification.Name {
-    static let connectionStatusChanged = Notification.Name("LightWalletServiceConnectivityStatusChanged")
-}
-
 /// This contains URLs from which can the SDK fetch files that contain sapling parameters.
 /// Use `SaplingParamsSourceURL.default` when initilizing the SDK.
 public struct SaplingParamsSourceURL {
