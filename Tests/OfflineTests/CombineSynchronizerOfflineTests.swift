@@ -1098,7 +1098,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetShieldedVerifiedBalanceThrowsError() {
-        synchronizerMock.getShieldedVerifiedBalanceAccountIndexClosure = { receivedAccountIndex in
+        synchronizerMock.getShieldedVerifiedBalanceAccountIndexClosure = { _ in
             throw "Some error"
         }
 
