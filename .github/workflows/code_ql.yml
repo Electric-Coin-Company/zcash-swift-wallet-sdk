@@ -1,8 +1,9 @@
 name: "CodeQL"
 
 on:
-  pull_request:
+  push:
     branches: [ "main" ]
+  pull_request:
 
 env:
   CODEQL_ENABLE_EXPERIMENTAL_FEATURES_SWIFT: true
