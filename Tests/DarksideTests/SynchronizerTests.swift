@@ -264,8 +264,8 @@ final class SynchronizerTests: XCTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
 
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
-        let initialVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
 
@@ -306,8 +306,8 @@ final class SynchronizerTests: XCTestCase {
 
         wait(for: [waitExpectation], timeout: 1)
 
-        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
@@ -338,7 +338,9 @@ final class SynchronizerTests: XCTestCase {
         XCTAssertEqual(lastScannedHeight, self.birthday)
 
         // check that the balance is cleared
-        XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
+        let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        XCTAssertEqual(initialVerifiedBalance, expectedVerifiedBalance)
+        XCTAssertEqual(initialTotalBalance, expectedBalance)
     }
 }

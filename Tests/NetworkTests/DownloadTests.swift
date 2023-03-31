@@ -49,7 +49,7 @@ class DownloadTests: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
 
         let blockCount = 100
         let activationHeight = network.constants.saplingActivationHeight

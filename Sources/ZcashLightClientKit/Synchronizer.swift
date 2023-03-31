@@ -156,17 +156,17 @@ public protocol Synchronizer: AnyObject {
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getSaplingAddress(accountIndex: Int) async -> SaplingAddress?
+    func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress
 
     /// Gets the unified address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress?
+    func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress
 
     /// Gets the transparent address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.
     /// - Returns the address or nil if account index is incorrect
-    func getTransparentAddress(accountIndex: Int) async -> TransparentAddress?
+    func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress
     
     /// Sends zatoshi.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows spends to occur.
@@ -258,11 +258,15 @@ public protocol Synchronizer: AnyObject {
     /// Returns the last stored transparent balance
     func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance
 
-    /// Returns the shielded total balance (includes verified and unverified balance)
-    func getShieldedBalance(accountIndex: Int) -> Zatoshi
+    /// get (unverified) balance from the given account index
+    /// - Parameter accountIndex: the index of the account
+    /// - Returns: balance in `Zatoshi`
+    func getShieldedBalance(accountIndex: Int) async throws -> Zatoshi
 
-    /// Returns the shielded verified balance (anchor is 10 blocks back)
-    func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
+    /// get verified balance from the given account index
+    /// - Parameter accountIndex: the index of the account
+    /// - Returns: balance in `Zatoshi`
+    func getShieldedVerifiedBalance(accountIndex: Int) async throws -> Zatoshi
 
     /// Rescans the known blocks with the current keys.
     ///

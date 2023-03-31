@@ -25,8 +25,8 @@ class BlockDownloaderTests: XCTestCase {
     var storage: CompactBlockRepository!
     var network = DarksideWalletDNetwork()
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
 
         storage = FSCompactBlockRepository(
@@ -40,7 +40,7 @@ class BlockDownloaderTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
         )
-        try storage.create()
+        try await storage.create()
 
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         darksideWalletService = DarksideWalletService(endpoint: LightWalletEndpointBuilder.default, service: service as! LightWalletGRPCService)

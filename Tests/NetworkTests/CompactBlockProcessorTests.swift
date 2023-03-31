@@ -42,18 +42,16 @@ class CompactBlockProcessorTests: XCTestCase {
 
     let testFileManager = FileManager()
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         logger = OSLogger(logLevel: .debug)
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
-        XCTestCase.wait {
-            await InternalSyncProgress(
-                alias: .default,
-                storage: UserDefaults.standard,
-                logger: logger
-            ).rewind(to: 0)
-        }
+        await InternalSyncProgress(
+            alias: .default,
+            storage: UserDefaults.standard,
+            logger: logger
+        ).rewind(to: 0)
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
@@ -86,7 +84,7 @@ class CompactBlockProcessorTests: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
         
         processor = CompactBlockProcessor(
             service: service,
@@ -97,7 +95,7 @@ class CompactBlockProcessorTests: XCTestCase {
             logger: logger
         )
 
-        let dbInit = try realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+        let dbInit = try await realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
@@ -116,7 +114,7 @@ class CompactBlockProcessorTests: XCTestCase {
             }
         }
 
-        XCTestCase.wait { await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure) }
+        await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure)
     }
     
     override func tearDownWithError() throws {

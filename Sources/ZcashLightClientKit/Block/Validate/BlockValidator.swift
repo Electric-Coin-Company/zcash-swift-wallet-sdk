@@ -37,7 +37,7 @@ extension BlockValidatorImpl: BlockValidator {
         try Task.checkCancellation()
 
         let startTime = Date()
-        let result = rustBackend.validateCombinedChain(
+        let result = await rustBackend.validateCombinedChain(
             fsBlockDbRoot: config.fsBlockCacheRoot,
             dbData: config.dataDB,
             networkType: config.networkType,

@@ -79,9 +79,11 @@ class SendViewController: UIViewController {
     }
     
     func setUp() {
-        balanceLabel.text = format(balance: wallet.getBalance())
-        verifiedBalanceLabel.text = format(balance: wallet.getVerifiedBalance())
-        toggleSendButton()
+        Task { @MainActor in
+            balanceLabel.text = format(balance: (try? await synchronizer.getShieldedBalance(accountIndex: 0)) ?? .zero)
+            verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero)
+            await toggleSendButton()
+        }
         memoField.text = ""
         memoField.layer.borderColor = UIColor.gray.cgColor
         memoField.layer.borderWidth = 1
@@ -102,39 +104,45 @@ class SendViewController: UIViewController {
         "Zec \(balance.formattedString ?? "0.0")"
     }
     
-    func toggleSendButton() {
-        sendButton.isEnabled = isFormValid()
+    func toggleSendButton() async {
+        sendButton.isEnabled = await isFormValid()
     }
     
     func maxFundsOn() {
-        let fee = Zatoshi(10000)
-        let max: Zatoshi = wallet.getVerifiedBalance() - fee
-        amountTextField.text = format(balance: max)
-        amountTextField.isEnabled = false
+        Task { @MainActor in
+            let fee = Zatoshi(10000)
+            let max: Zatoshi = ((try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero) - fee
+            amountTextField.text = format(balance: max)
+            amountTextField.isEnabled = false
+        }
     }
     
     func maxFundsOff() {
         amountTextField.isEnabled = true
     }
     
-    func isFormValid() -> Bool {
+    func isFormValid() async -> Bool {
         switch synchronizer.latestState.syncStatus {
         case .synced:
-            return isBalanceValid() && isAmountValid() && isRecipientValid()
+            let isBalanceValid = await self.isBalanceValid()
+            let isAmountValid = await self.isAmountValid()
+            return isBalanceValid && isAmountValid && isRecipientValid()
         default:
             return false
         }
     }
     
-    func isBalanceValid() -> Bool {
-        wallet.getVerifiedBalance() > .zero
+    func isBalanceValid() async -> Bool {
+        let balance = (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero
+        return balance > .zero
     }
     
-    func isAmountValid() -> Bool {
+    func isAmountValid() async -> Bool {
+        let balance = (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero
         guard
             let value = amountTextField.text,
             let amount = NumberFormatter.zcashNumberFormatter.number(from: value).flatMap({ Zatoshi($0.int64Value) }),
-            amount <= wallet.getVerifiedBalance()
+            amount <= balance
         else {
             return false
         }
@@ -158,68 +166,70 @@ class SendViewController: UIViewController {
     }
     
     @IBAction func send(_ sender: Any) {
-        guard isFormValid() else {
-            loggerProxy.warn("WARNING: Form is invalid")
-            return
-        }
+        Task { @MainActor in
+            guard await isFormValid() else {
+                loggerProxy.warn("WARNING: Form is invalid")
+                return
+            }
 
-        let alert = UIAlertController(
-            title: "About To send funds!",
-            message: """
+            let alert = UIAlertController(
+                title: "About To send funds!",
+                message: """
             This is an ugly confirmation message. You should come up with something fancier that lets the user be sure about sending funds without \
             disturbing the user experience with an annoying alert like this one
             """,
-            preferredStyle: UIAlertController.Style.alert
-        )
+                preferredStyle: UIAlertController.Style.alert
+            )
 
-        let sendAction = UIAlertAction(
-            title: "Send!",
-            style: UIAlertAction.Style.default,
-            handler: { _ in
-                self.send()
-            }
-        )
+            let sendAction = UIAlertAction(
+                title: "Send!",
+                style: UIAlertAction.Style.default,
+                handler: { _ in
+                    self.send()
+                }
+            )
 
-        let cancelAction = UIAlertAction(
-            title: "Go back! I'm not sure about this.",
-            style: UIAlertAction.Style.destructive,
-            handler: { _ in
-                self.cancel()
-            }
-        )
+            let cancelAction = UIAlertAction(
+                title: "Go back! I'm not sure about this.",
+                style: UIAlertAction.Style.destructive,
+                handler: { _ in
+                    self.cancel()
+                }
+            )
 
-        alert.addAction(sendAction)
-        alert.addAction(cancelAction)
-        
-        self.present(alert, animated: true, completion: nil)
+            alert.addAction(sendAction)
+            alert.addAction(cancelAction)
+
+            self.present(alert, animated: true, completion: nil)
+        }
     }
     
     func send() {
-        guard
-            isFormValid(),
-            let amount = amountTextField.text,
-            let zec = NumberFormatter.zcashNumberFormatter.number(from: amount).flatMap({ Zatoshi($0.int64Value) }),
-            let recipient = addressTextField.text
-        else {
-            loggerProxy.warn("WARNING: Form is invalid")
-            return
-        }
-
-        guard let spendingKey = try? DerivationTool(
-            networkType: kZcashNetwork.networkType
-        )
-            .deriveUnifiedSpendingKey(
-                seed: DemoAppConfig.defaultSeed,
-                accountIndex: 0
-            )
-        else {
-            loggerProxy.error("NO SPENDING KEY")
-            return
-        }
-        
-        KRProgressHUD.show()
-        
         Task { @MainActor in
+            guard
+                await isFormValid(),
+                let amount = amountTextField.text,
+                let zec = NumberFormatter.zcashNumberFormatter.number(from: amount).flatMap({ Zatoshi($0.int64Value) }),
+                let recipient = addressTextField.text
+            else {
+                loggerProxy.warn("WARNING: Form is invalid")
+                return
+            }
+
+            guard let spendingKey = try? DerivationTool(
+                networkType: kZcashNetwork.networkType
+            )
+                .deriveUnifiedSpendingKey(
+                    seed: DemoAppConfig.defaultSeed,
+                    accountIndex: 0
+                )
+            else {
+                loggerProxy.error("NO SPENDING KEY")
+                return
+            }
+
+            KRProgressHUD.show()
+
             do {
                 let pendingTransaction = try await synchronizer.sendToAddress(
                     spendingKey: spendingKey,
@@ -267,7 +277,9 @@ extension SendViewController: UITextFieldDelegate {
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         textField.resignFirstResponder()
-        toggleSendButton()
+        Task { @MainActor in
+            await toggleSendButton()
+        }
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {

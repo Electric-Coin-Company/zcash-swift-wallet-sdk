@@ -29,7 +29,7 @@ enum CompactBlockRepositoryError: Error, Equatable {
 
 protocol CompactBlockRepository {
     /// Creates the underlying repository
-    func create() throws
+    func create() async throws
 
     /**
     Gets the height of the highest block that is currently stored.

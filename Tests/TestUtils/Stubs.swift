@@ -71,25 +71,25 @@ class MockRustBackend: ZcashRustBackendWelding {
     static var consensusBranchID: Int32?
     static var writeBlocksMetadataResult: () throws -> Bool = { true }
     static var rewindCacheToHeightResult: () -> Bool = { true }
-    static func latestCachedBlockHeight(fsBlockDbRoot: URL) -> ZcashLightClientKit.BlockHeight {
+    static func latestCachedBlockHeight(fsBlockDbRoot: URL) async -> ZcashLightClientKit.BlockHeight {
         .empty()
     }
 
-    static func rewindCacheToHeight(fsBlockDbRoot: URL, height: Int32) -> Bool {
+    static func rewindCacheToHeight(fsBlockDbRoot: URL, height: Int32) async -> Bool {
         rewindCacheToHeightResult()
     }
 
-    static func initBlockMetadataDb(fsBlockDbRoot: URL) throws -> Bool {
+    static func initBlockMetadataDb(fsBlockDbRoot: URL) async throws -> Bool {
         true
     }
 
-    static func writeBlocksMetadata(fsBlockDbRoot: URL, blocks: [ZcashLightClientKit.ZcashCompactBlock]) throws -> Bool {
+    static func writeBlocksMetadata(fsBlockDbRoot: URL, blocks: [ZcashLightClientKit.ZcashCompactBlock]) async throws -> Bool {
         try writeBlocksMetadataResult()
     }
 
-    static func initAccountsTable(dbData: URL, ufvks: [ZcashLightClientKit.UnifiedFullViewingKey], networkType: ZcashLightClientKit.NetworkType) throws { }
+    static func initAccountsTable(dbData: URL, ufvks: [ZcashLightClientKit.UnifiedFullViewingKey], networkType: ZcashLightClientKit.NetworkType) async throws { }
 
-    static func createToAddress(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, to address: String, value: Int64, memo: ZcashLightClientKit.MemoBytes?, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
+    static func createToAddress(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, to address: String, value: Int64, memo: ZcashLightClientKit.MemoBytes?, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) async -> Int64 {
         -1
     }
 
@@ -101,7 +101,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: ZcashLightClientKit.NetworkType
-    ) -> Int64 {
+    ) async -> Int64 {
         -1
     }
 
@@ -109,15 +109,15 @@ class MockRustBackend: ZcashRustBackendWelding {
         nil
     }
     
-    static func clearUtxos(dbData: URL, address: ZcashLightClientKit.TransparentAddress, sinceHeight: ZcashLightClientKit.BlockHeight, networkType: ZcashLightClientKit.NetworkType) throws -> Int32 {
+    static func clearUtxos(dbData: URL, address: ZcashLightClientKit.TransparentAddress, sinceHeight: ZcashLightClientKit.BlockHeight, networkType: ZcashLightClientKit.NetworkType) async throws -> Int32 {
         0
     }
 
-    static func getTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> Int64 { 0 }
+    static func getTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) async throws -> Int64 { 0 }
 
-    static func getVerifiedTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> Int64 { 0 }
+    static func getVerifiedTransparentBalance(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) async throws -> Int64 { 0 }
 
-    static func listTransparentReceivers(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> [ZcashLightClientKit.TransparentAddress] {
+    static func listTransparentReceivers(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) async throws -> [ZcashLightClientKit.TransparentAddress] {
         []
     }
 
@@ -129,23 +129,23 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func getCurrentAddress(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.UnifiedAddress {
+    static func getCurrentAddress(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) async throws -> ZcashLightClientKit.UnifiedAddress {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func getNextAvailableAddress(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.UnifiedAddress {
+    static func getNextAvailableAddress(dbData: URL, account: Int32, networkType: ZcashLightClientKit.NetworkType) async throws -> ZcashLightClientKit.UnifiedAddress {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func getSaplingReceiver(for uAddr: ZcashLightClientKit.UnifiedAddress) throws -> ZcashLightClientKit.SaplingAddress? {
+    static func getSaplingReceiver(for uAddr: ZcashLightClientKit.UnifiedAddress) throws -> ZcashLightClientKit.SaplingAddress {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func getTransparentReceiver(for uAddr: ZcashLightClientKit.UnifiedAddress) throws -> ZcashLightClientKit.TransparentAddress? {
+    static func getTransparentReceiver(for uAddr: ZcashLightClientKit.UnifiedAddress) throws -> ZcashLightClientKit.TransparentAddress {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func shieldFunds(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, memo: ZcashLightClientKit.MemoBytes, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
+    static func shieldFunds(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, memo: ZcashLightClientKit.MemoBytes, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) async -> Int64 {
         -1
     }
 
@@ -153,19 +153,19 @@ class MockRustBackend: ZcashRustBackendWelding {
         throw KeyDerivationErrors.receiverNotFound
     }
 
-    static func createAccount(dbData: URL, seed: [UInt8], networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.UnifiedSpendingKey {
+    static func createAccount(dbData: URL, seed: [UInt8], networkType: ZcashLightClientKit.NetworkType) async throws -> ZcashLightClientKit.UnifiedSpendingKey {
         throw KeyDerivationErrors.unableToDerive
     }
 
-    static func getReceivedMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) -> ZcashLightClientKit.Memo? { nil }
+    static func getReceivedMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) async -> ZcashLightClientKit.Memo? { nil }
 
-    static func getSentMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) -> ZcashLightClientKit.Memo? { nil }
+    static func getSentMemo(dbData: URL, idNote: Int64, networkType: ZcashLightClientKit.NetworkType) async -> ZcashLightClientKit.Memo? { nil }
 
-    static func createToAddress(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, to address: String, value: Int64, memo: ZcashLightClientKit.MemoBytes, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) -> Int64 {
+    static func createToAddress(dbData: URL, usk: ZcashLightClientKit.UnifiedSpendingKey, to address: String, value: Int64, memo: ZcashLightClientKit.MemoBytes, spendParamsPath: String, outputParamsPath: String, networkType: ZcashLightClientKit.NetworkType) async -> Int64 {
         -1
     }
 
-    static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: ZcashLightClientKit.NetworkType) throws -> ZcashLightClientKit.DbInitResult {
+    static func initDataDb(dbData: URL, seed: [UInt8]?, networkType: ZcashLightClientKit.NetworkType) async throws -> ZcashLightClientKit.DbInitResult {
         .seedRequired
     }
 
@@ -189,11 +189,11 @@ class MockRustBackend: ZcashRustBackendWelding {
 
     public func deriveViewingKeys(seed: [UInt8], numberOfAccounts: Int) throws -> [UnifiedFullViewingKey] { [] }
     
-    static func getNearestRewindHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Int32 { -1 }
+    static func getNearestRewindHeight(dbData: URL, height: Int32, networkType: NetworkType) async -> Int32 { -1 }
     
-    static func network(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) throws -> Int32 { -1 }
+    static func network(dbData: URL, address: String, sinceHeight: BlockHeight, networkType: NetworkType) async throws -> Int32 { -1 }
     
-    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) throws -> Bool { false }
+    static func initAccountsTable(dbData: URL, ufvks: [UnifiedFullViewingKey], networkType: NetworkType) async throws -> Bool { false }
     
     static func putUnspentTransparentOutput(
         dbData: URL,
@@ -203,11 +203,11 @@ class MockRustBackend: ZcashRustBackendWelding {
         value: Int64,
         height: BlockHeight,
         networkType: NetworkType
-    ) throws -> Bool {
+    ) async throws -> Bool {
         false
     }
     
-    static func downloadedUtxoBalance(dbData: URL, address: String, networkType: NetworkType) throws -> WalletBalance {
+    static func downloadedUtxoBalance(dbData: URL, address: String, networkType: NetworkType) async throws -> WalletBalance {
         throw RustWeldingError.genericError(message: "unimplemented")
     }
     
@@ -221,7 +221,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
-    ) -> Int64 {
+    ) async -> Int64 {
         -1
     }
 
@@ -262,9 +262,9 @@ class MockRustBackend: ZcashRustBackendWelding {
         true
     }
     
-    static func initDataDb(dbData: URL, networkType: NetworkType) throws {
+    static func initDataDb(dbData: URL, networkType: NetworkType) async throws {
         if !mockDataDb {
-            _ = try rustBackend.initDataDb(dbData: dbData, seed: nil, networkType: networkType)
+            _ = try await rustBackend.initDataDb(dbData: dbData, seed: nil, networkType: networkType)
         }
     }
 
@@ -275,9 +275,9 @@ class MockRustBackend: ZcashRustBackendWelding {
         time: UInt32,
         saplingTree: String,
         networkType: NetworkType
-    ) throws {
+    ) async throws {
         if !mockDataDb {
-            try rustBackend.initBlocksTable(
+            try await rustBackend.initBlocksTable(
                 dbData: dbData,
                 height: height,
                 hash: hash,
@@ -288,66 +288,66 @@ class MockRustBackend: ZcashRustBackendWelding {
         }
     }
     
-    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) throws -> Int64 {
+    static func getBalance(dbData: URL, account: Int32, networkType: NetworkType) async throws -> Int64 {
         if let balance = mockBalance {
             return balance
         }
-        return try rustBackend.getBalance(dbData: dbData, account: account, networkType: networkType)
+        return try await rustBackend.getBalance(dbData: dbData, account: account, networkType: networkType)
     }
     
-    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) throws -> Int64 {
+    static func getVerifiedBalance(dbData: URL, account: Int32, networkType: NetworkType) async throws -> Int64 {
         if let balance = mockVerifiedBalance {
             return balance
         }
 
-        return try rustBackend.getVerifiedBalance(dbData: dbData, account: account, networkType: networkType)
+        return try await rustBackend.getVerifiedBalance(dbData: dbData, account: account, networkType: networkType)
     }
     
-    static func validateCombinedChain(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType, limit: UInt32 = 0) -> Int32 {
+    static func validateCombinedChain(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType, limit: UInt32 = 0) async -> Int32 {
         if let rate = self.mockValidateCombinedChainSuccessRate {
             if shouldSucceed(successRate: rate) {
-                return validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
+                return await validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
             } else {
                 return Int32(mockValidateCombinedChainFailureHeight)
             }
         } else if let attempts = self.mockValidateCombinedChainFailAfterAttempts {
             self.mockValidateCombinedChainFailAfterAttempts = attempts - 1
             if attempts > 0 {
-                return validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
+                return await validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
             } else {
                 if attempts == 0 {
                     return Int32(mockValidateCombinedChainFailureHeight)
                 } else if attempts < 0 && mockValidateCombinedChainKeepFailing {
                     return Int32(mockValidateCombinedChainFailureHeight)
                 } else {
-                    return validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
+                    return await validationResult(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
                 }
             }
         }
-        return rustBackend.validateCombinedChain(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
+        return await rustBackend.validateCombinedChain(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
     }
     
-    private static func validationResult(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType) -> Int32 {
+    private static func validationResult(fsBlockDbRoot: URL, dbData: URL, networkType: NetworkType) async -> Int32 {
         if mockDataDb {
             return -1
         } else {
-            return rustBackend.validateCombinedChain(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
+            return await rustBackend.validateCombinedChain(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
         }
     }
     
-    static func rewindToHeight(dbData: URL, height: Int32, networkType: NetworkType) -> Bool {
+    static func rewindToHeight(dbData: URL, height: Int32, networkType: NetworkType) async -> Bool {
         mockDataDb ? true : rustBackend.rewindToHeight(dbData: dbData, height: height, networkType: networkType)
     }
     
-    static func scanBlocks(fsBlockDbRoot: URL, dbData: URL, limit: UInt32, networkType: NetworkType) -> Bool {
+    static func scanBlocks(fsBlockDbRoot: URL, dbData: URL, limit: UInt32, networkType: NetworkType) async -> Bool {
         if let rate = mockScanblocksSuccessRate {
             if shouldSucceed(successRate: rate) {
-                return mockDataDb ? true : rustBackend.scanBlocks(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
+                return mockDataDb ? true : await rustBackend.scanBlocks(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: networkType)
             } else {
                 return false
             }
         }
-        return rustBackend.scanBlocks(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: Self.networkType)
+        return await rustBackend.scanBlocks(fsBlockDbRoot: fsBlockDbRoot, dbData: dbData, networkType: Self.networkType)
     }
     
     static func createToAddress(
@@ -361,7 +361,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         spendParamsPath: String,
         outputParamsPath: String,
         networkType: NetworkType
-    ) -> Int64 {
+    ) async -> Int64 {
         -1
     }
     
@@ -382,7 +382,7 @@ class MockRustBackend: ZcashRustBackendWelding {
         nil
     }
     
-    static func decryptAndStoreTransaction(dbData: URL, txBytes: [UInt8], minedHeight: Int32, networkType: NetworkType) -> Bool {
+    static func decryptAndStoreTransaction(dbData: URL, txBytes: [UInt8], minedHeight: Int32, networkType: NetworkType) async -> Bool {
         false
     }
 }

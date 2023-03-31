@@ -13,10 +13,10 @@ class NotesRepositoryTests: XCTestCase {
     var sentNotesRepository: SentNotesRepository!
     var receivedNotesRepository: ReceivedNoteRepository!
 
-    override func setUp() {
-        super.setUp()
-        sentNotesRepository = try! TestDbBuilder.sentNotesRepository()
-        receivedNotesRepository = try! TestDbBuilder.receivedNotesRepository()
+    override func setUp() async throws {
+        try await super.setUp()
+        sentNotesRepository = try! await TestDbBuilder.sentNotesRepository()
+        receivedNotesRepository = try! await TestDbBuilder.receivedNotesRepository()
     }
     
     override func tearDown() {

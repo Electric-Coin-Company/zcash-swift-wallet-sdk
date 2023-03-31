@@ -136,7 +136,7 @@ public class SDKSynchronizer: Synchronizer {
 
         try utxoRepository.initialise()
 
-        if case .seedRequired = try self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
+        if case .seedRequired = try await self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
             return .seedRequired
         }
 
@@ -447,25 +447,37 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
-    
-    public func getShieldedBalance(accountIndex: Int = 0) -> Zatoshi {
-        initializer.getBalance(account: accountIndex)
+
+    public func getShieldedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
+        let balance = try await initializer.rustBackend.getBalance(
+            dbData: initializer.dataDbURL,
+            account: Int32(accountIndex),
+            networkType: network.networkType
+        )
+
+        return Zatoshi(balance)
     }
 
-    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Zatoshi {
-        initializer.getVerifiedBalance(account: accountIndex)
+    public func getShieldedVerifiedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
+        let balance = try await initializer.rustBackend.getVerifiedBalance(
+            dbData: initializer.dataDbURL,
+            account: Int32(accountIndex),
+            networkType: network.networkType
+        )
+
+        return Zatoshi(balance)
     }
 
-    public func getSaplingAddress(accountIndex: Int) async -> SaplingAddress? {
-        await blockProcessor.getSaplingAddress(accountIndex: accountIndex)
+    public func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
+        try await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
     }
 
-    public func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress? {
-        await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
+    public func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
+        try await blockProcessor.getSaplingAddress(accountIndex: accountIndex)
     }
 
-    public func getTransparentAddress(accountIndex: Int) async -> TransparentAddress? {
-        await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
+    public func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
+        try await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
 
     /// Returns the last stored transparent balance
@@ -563,8 +575,8 @@ public class SDKSynchronizer: Synchronizer {
     private func snapshotState(status: SyncStatus) async -> SynchronizerState {
         SynchronizerState(
             shieldedBalance: WalletBalance(
-                verified: initializer.getVerifiedBalance(),
-                total: initializer.getBalance()
+                verified: (try? await getShieldedVerifiedBalance()) ?? .zero,
+                total: (try? await getShieldedBalance()) ?? .zero
             ),
             transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
             syncStatus: status,
@@ -721,19 +733,5 @@ extension SDKSynchronizer {
         get async {
             (try? await allReceivedTransactions()) ?? []
         }
-    }
-}
-
-extension SDKSynchronizer {
-    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
-        self.initializer.getCurrentAddress(accountIndex: accountIndex)
-    }
-
-    public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
-        self.getUnifiedAddress(accountIndex: accountIndex)?.saplingReceiver()
-    }
-
-    public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
-        self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
 }

@@ -43,19 +43,17 @@ class CompactBlockReorgTests: XCTestCase {
     var reorgNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-    
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+
+    override func setUp() async throws {
+        try await super.setUp()
         logger = OSLogger(logLevel: .debug)
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
-        XCTestCase.wait {
-            await InternalSyncProgress(
-                alias: .default,
-                storage: UserDefaults.standard,
-                logger: logger
-            ).rewind(to: 0)
-        }
+        await InternalSyncProgress(
+            alias: .default,
+            storage: UserDefaults.standard,
+            logger: logger
+        ).rewind(to: 0)
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
@@ -89,9 +87,10 @@ class CompactBlockReorgTests: XCTestCase {
             logger: logger
         )
 
-        try realCache.create()
+        try await realCache.create()
 
-        guard case .success = try realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet) else {
+        let initResult = try await realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+        guard case .success = initResult else {
             XCTFail("initDataDb failed. Expected Success but got .seedRequired")
             return
         }
@@ -124,7 +123,7 @@ class CompactBlockReorgTests: XCTestCase {
             }
         }
 
-        XCTestCase.wait { await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure) }
+        await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure)
     }
     
     override func tearDownWithError() throws {
