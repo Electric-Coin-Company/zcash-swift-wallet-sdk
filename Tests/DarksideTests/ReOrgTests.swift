@@ -41,10 +41,10 @@ class ReOrgTests: XCTestCase {
     var expectedRewindHeight: BlockHeight = 665188
     var cancellables: [AnyCancellable] = []
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
 
-        self.coordinator = TestCoordinator.make(walletBirthday: self.birthday, network: self.network)
+        self.coordinator = try await TestCoordinator(walletBirthday: self.birthday, network: self.network)
 
         try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
 
@@ -57,17 +57,19 @@ class ReOrgTests: XCTestCase {
             }
         }
 
-        XCTestCase.wait { await self.coordinator.synchronizer.blockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure) }
+        await self.coordinator.synchronizer.blockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure)
     }
 
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        wait { try await self.coordinator.stop() }
+    override func tearDown() async throws {
+        try await super.tearDown()
+        let coordinator = self.coordinator!
+        self.coordinator = nil
+        cancellables = []
+
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-        coordinator = nil
-        cancellables = []
+        try await coordinator.stop()
     }
 
     func handleReOrgNotification(event: CompactBlockProcessor.Event) {
