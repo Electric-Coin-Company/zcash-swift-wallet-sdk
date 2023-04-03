@@ -54,21 +54,21 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getSaplingAddress(accountIndex: Int, completion: @escaping (SaplingAddress?) -> Void) {
-        executeAction(completion) {
-            await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
+    public func getSaplingAddress(accountIndex: Int, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Int, completion: @escaping (UnifiedAddress?) -> Void) {
-        executeAction(completion) {
-            await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
+    public func getUnifiedAddress(accountIndex: Int, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Int, completion: @escaping (TransparentAddress?) -> Void) {
-        executeAction(completion) {
-            await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
+    public func getTransparentAddress(accountIndex: Int, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
         }
     }
 
@@ -185,9 +185,17 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getShieldedBalance(accountIndex: Int) -> Zatoshi { synchronizer.getShieldedBalance(accountIndex: accountIndex) }
+    public func getShieldedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getShieldedBalance(accountIndex: accountIndex)
+        }
+    }
 
-    public func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi { synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex) }
+    public func getShieldedVerifiedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void) {
+        executeThrowingAction(completion) {
+            try await self.synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex)
+        }
+    }
 
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't

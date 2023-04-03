@@ -1,3 +1,20 @@
+# unreleased
+### [#469] ZcashRustBackendWelding to Async
+
+This is mostly internal change. But it also touches the public API.
+
+These methods previously returned Optional and now those methods return non-optional value and those methods can an throw error:
+- `getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress`
+- `func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress`
+- `func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress`
+
+These methods are now async:
+- `func getShieldedBalance(accountIndex: Int) async throws -> Zatoshi`
+- `func getShieldedVerifiedBalance(accountIndex: Int) async throws -> Zatoshi`
+
+`Initializer` no longer have methods to get balance. Use `SDKSynchronizer` (or it's alternative APIs) to get balance.
+
+
 # 0.20.0-beta
 
 ### New Checkpoints:

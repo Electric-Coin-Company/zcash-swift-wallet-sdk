@@ -26,7 +26,7 @@ class GetUTXOsViewController: UIViewController {
         let synchronizer = SDKSynchronizer.shared
 
         Task { @MainActor in
-            let tAddress = await synchronizer.getTransparentAddress(accountIndex: 0)?.stringEncoded ?? "no t-address found"
+            let tAddress = (try? await synchronizer.getTransparentAddress(accountIndex: 0))?.stringEncoded ?? "no t-address found"
 
             self.transparentAddressLabel.text = tAddress
             

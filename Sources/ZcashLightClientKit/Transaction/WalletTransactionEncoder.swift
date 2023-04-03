@@ -58,7 +58,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> ZcashTransaction.Overview {
-        let txId = try createSpend(
+        let txId = try await createSpend(
             spendingKey: spendingKey,
             zatoshi: zatoshi,
             to: address,
@@ -80,12 +80,12 @@ class WalletTransactionEncoder: TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) throws -> Int {
+    ) async throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
                 
-        let txId = rustBackend.createToAddress(
+        let txId = await rustBackend.createToAddress(
             dbData: self.dataDbURL,
             usk: spendingKey,
             to: address,
@@ -109,7 +109,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> ZcashTransaction.Overview {
-        let txId = try createShieldingSpend(
+        let txId = try await createShieldingSpend(
             spendingKey: spendingKey,
             shieldingThreshold: shieldingThreshold,
             memo: memoBytes,
@@ -129,12 +129,12 @@ class WalletTransactionEncoder: TransactionEncoder {
         shieldingThreshold: Zatoshi,
         memo: MemoBytes?,
         accountIndex: Int
-    ) throws -> Int {
+    ) async throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw TransactionEncoderError.missingParams
         }
         
-        let txId = rustBackend.shieldFunds(
+        let txId = await rustBackend.shieldFunds(
             dbData: self.dataDbURL,
             usk: spendingKey,
             memo: memo,

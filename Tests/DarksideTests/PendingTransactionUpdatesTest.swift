@@ -21,25 +21,23 @@ class PendingTransactionUpdatesTest: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
-    
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        self.coordinator = TestCoordinator.make(
-            walletBirthday: self.birthday,
-            network: self.network
-        )
 
+    override func setUp() async throws {
+        try await super.setUp()
+
+        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
-    
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        NotificationCenter.default.removeObserver(self)
-        wait { try await self.coordinator.stop() }
+
+    override func tearDown() async throws {
+        try await super.tearDown()
+        let coordinator = self.coordinator!
+        self.coordinator = nil
+
+        try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-        coordinator = nil
     }
     
     func testPendingTransactionMinedHeightUpdated() async throws {
@@ -161,9 +159,10 @@ class PendingTransactionUpdatesTest: XCTestCase {
         }
 
         wait(for: [secondSyncExpectation], timeout: 5)
-        
-        XCTAssertEqual(coordinator.synchronizer.pendingTransactions.count, 1)
-        guard let afterStagePendingTx = coordinator.synchronizer.pendingTransactions.first else {
+
+        let pendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
+        XCTAssertEqual(pendingTransactionsCount, 1)
+        guard let afterStagePendingTx = await coordinator.synchronizer.pendingTransactions.first else {
             return
         }
         
@@ -205,9 +204,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         }
 
         wait(for: [syncToConfirmExpectation], timeout: 6)
-        var supposedlyPendingUnexistingTransaction: PendingTransactionEntity?
-        
-        XCTAssertNoThrow(try { supposedlyPendingUnexistingTransaction = try coordinator.synchronizer.allPendingTransactions().first }())
+        let supposedlyPendingUnexistingTransaction = try await coordinator.synchronizer.allPendingTransactions().first
         
         XCTAssertNil(supposedlyPendingUnexistingTransaction)
     }

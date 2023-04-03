@@ -48,7 +48,7 @@ class BlockBatchValidationTests: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
@@ -123,7 +123,7 @@ class BlockBatchValidationTests: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
@@ -198,7 +198,7 @@ class BlockBatchValidationTests: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
@@ -273,7 +273,7 @@ class BlockBatchValidationTests: XCTestCase {
             logger: logger
         )
 
-        try storage.create()
+        try await storage.create()
 
         let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)

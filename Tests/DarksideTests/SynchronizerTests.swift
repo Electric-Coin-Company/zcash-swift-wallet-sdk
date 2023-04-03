@@ -24,13 +24,11 @@ final class SynchronizerTests: XCTestCase {
     var cancellables: [AnyCancellable] = []
     var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        self.coordinator = TestCoordinator.make(
-            walletBirthday: self.birthday + 50, // don't use an exact birthday, users never do.
-            network: self.network
-        )
+    override func setUp() async throws {
+        try await super.setUp()
 
+        // don't use an exact birthday, users never do.
+        self.coordinator = try await TestCoordinator(walletBirthday: birthday + 50, network: network)
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
@@ -40,19 +38,20 @@ final class SynchronizerTests: XCTestCase {
             }
         }
 
-        XCTestCase.wait { await self.coordinator.synchronizer.blockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure) }
+        await self.coordinator.synchronizer.blockProcessor.updateEventClosure(identifier: "tests", closure: eventClosure)
     }
 
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        NotificationCenter.default.removeObserver(self)
-        wait { try await self.coordinator.stop() }
+    override func tearDown() async throws {
+        try await super.tearDown()
+        let coordinator = self.coordinator!
+        self.coordinator = nil
+        sdkSynchronizerSyncStatusHandler = nil
+        cancellables = []
+
+        try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-        coordinator = nil
-        sdkSynchronizerSyncStatusHandler = nil
-        cancellables = []
     }
 
     func handleReorg(event: CompactBlockProcessor.Event) {
@@ -264,8 +263,8 @@ final class SynchronizerTests: XCTestCase {
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
 
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
-        let initialVerifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let initialTotalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
 
@@ -306,8 +305,8 @@ final class SynchronizerTests: XCTestCase {
 
         wait(for: [waitExpectation], timeout: 1)
 
-        let verifiedBalance: Zatoshi = coordinator.synchronizer.initializer.getVerifiedBalance()
-        let totalBalance: Zatoshi = coordinator.synchronizer.initializer.getBalance()
+        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
@@ -338,7 +337,9 @@ final class SynchronizerTests: XCTestCase {
         XCTAssertEqual(lastScannedHeight, self.birthday)
 
         // check that the balance is cleared
-        XCTAssertEqual(initialVerifiedBalance, coordinator.synchronizer.initializer.getVerifiedBalance())
-        XCTAssertEqual(initialTotalBalance, coordinator.synchronizer.initializer.getBalance())
+        let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
+        XCTAssertEqual(initialVerifiedBalance, expectedVerifiedBalance)
+        XCTAssertEqual(initialTotalBalance, expectedBalance)
     }
 }

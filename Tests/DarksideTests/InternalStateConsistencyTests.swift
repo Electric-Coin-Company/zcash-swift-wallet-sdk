@@ -24,25 +24,24 @@ final class InternalStateConsistencyTests: XCTestCase {
     let network = DarksideWalletDNetwork()
     var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
 
-        self.coordinator = TestCoordinator.make(
-            walletBirthday: birthday + 50, // don't use an exact birthday, users never do.
-            network: network
-        )
+        // don't use an exact birthday, users never do.
+        self.coordinator = try await TestCoordinator(walletBirthday: birthday + 50, network: network)
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
 
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        NotificationCenter.default.removeObserver(self)
-        wait { try await self.coordinator.stop() }
+    override func tearDown() async throws {
+        try await super.tearDown()
+        let coordinator = self.coordinator!
+        self.coordinator = nil
+        sdkSynchronizerSyncStatusHandler = nil
+
+        try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-        coordinator = nil
-        sdkSynchronizerSyncStatusHandler = nil
     }
 
     func testInternalStateIsConsistentWhenMigrating() async throws {

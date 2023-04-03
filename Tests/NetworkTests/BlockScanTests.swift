@@ -68,7 +68,7 @@ class BlockScanTests: XCTestCase {
     func testSingleDownloadAndScan() async throws {
         logger = OSLogger(logLevel: .debug)
 
-        XCTAssertNoThrow(try rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType))
+        _ = try await rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType)
 
         let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
@@ -90,7 +90,7 @@ class BlockScanTests: XCTestCase {
             logger: logger
         )
 
-        try fsBlockRepository.create()
+        try await fsBlockRepository.create()
 
         let processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
@@ -139,7 +139,7 @@ class BlockScanTests: XCTestCase {
         let metrics = SDKMetrics()
         metrics.enableMetrics()
         
-        guard try self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType) == .success else {
+        guard try await self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType) == .success else {
             XCTFail("Seed should not be required for this test")
             return
         }
@@ -150,7 +150,7 @@ class BlockScanTests: XCTestCase {
             .map { try derivationTool.deriveUnifiedFullViewingKey(from: $0) }
 
         do {
-            try self.rustWelding.initAccountsTable(
+            try await self.rustWelding.initAccountsTable(
                 dbData: self.dataDbURL,
                 ufvks: [ufvk],
                 networkType: network.networkType
@@ -160,7 +160,7 @@ class BlockScanTests: XCTestCase {
             return
         }
         
-        try self.rustWelding.initBlocksTable(
+        try await self.rustWelding.initBlocksTable(
             dbData: dataDbURL,
             height: Int32(walletBirthDay.height),
             hash: walletBirthDay.hash,
@@ -185,7 +185,7 @@ class BlockScanTests: XCTestCase {
             logger: logger
         )
 
-        try fsBlockRepository.create()
+        try await fsBlockRepository.create()
         
         var processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,

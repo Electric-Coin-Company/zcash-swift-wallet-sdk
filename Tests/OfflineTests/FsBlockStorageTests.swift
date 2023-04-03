@@ -36,7 +36,7 @@ final class FsBlockStorageTests: XCTestCase {
     func testLatestHeightEmptyCache() async throws {
         let emptyCache: FSCompactBlockRepository = .emptyTemporaryCache
 
-        try emptyCache.create()
+        try await emptyCache.create()
 
         let latestHeight = await emptyCache.latestHeight()
         XCTAssertEqual(latestHeight, .empty())
@@ -45,7 +45,7 @@ final class FsBlockStorageTests: XCTestCase {
     func testRewindEmptyCacheDoesNothing() async throws {
         let emptyCache: FSCompactBlockRepository = .emptyTemporaryCache
 
-        try emptyCache.create()
+        try await emptyCache.create()
 
         try await emptyCache.rewind(to: 1000000)
     }
@@ -65,7 +65,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try freshCache.create()
+        try await freshCache.create()
 
         let fakeBlock = StubBlockCreator.createRandomDataBlock(with: 1234)!
 
@@ -87,7 +87,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try freshCache.create()
+        try await freshCache.create()
 
         let fakeBlock = StubBlockCreator.createRandomDataBlock(with: 1234)!
         let fakeBlockHash = fakeBlock.meta.hash.toHexStringTxId()
@@ -113,7 +113,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try freshCache.create()
+        try await freshCache.create()
 
         let blockRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 
@@ -176,7 +176,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try freshCache.create()
+        try await freshCache.create()
 
         let blockRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 
@@ -288,7 +288,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try fsBlockCache.create()
+        try await fsBlockCache.create()
 
         guard let stubBlocks = StubBlockCreator.createBlockRange(1000 ... 1010) else {
             XCTFail("Something Happened. Creating Stub blocks failed")
@@ -305,7 +305,7 @@ final class FsBlockStorageTests: XCTestCase {
         XCTAssertEqual(latestHeight, .empty())
     }
 
-    func testCreateDoesntFailWhenAlreadyCreated() throws {
+    func testCreateDoesntFailWhenAlreadyCreated() async throws {
         let freshCache = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: .mock,
@@ -314,9 +314,8 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try freshCache.create()
-
-        XCTAssertNoThrow(try freshCache.create())
+        try await freshCache.create()
+        try await freshCache.create()
     }
 
     func disabled_testStoringTenSandblastedBlocks() async throws {
@@ -330,7 +329,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try realCache.create()
+        try await realCache.create()
 
         guard let sandblastedBlocks = try SandblastSimulator().sandblast(with: CompactBlockRange(uncheckedBounds: (10, 19))) else {
             XCTFail("failed to create sandblasted blocks")
@@ -362,7 +361,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try realCache.create()
+        try await realCache.create()
 
         guard let sandblastedBlocks = try SandblastSimulator().sandblast(with: CompactBlockRange(uncheckedBounds: (10, 19))) else {
             XCTFail("failed to create sandblasted blocks")
@@ -388,7 +387,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try realCache.create()
+        try await realCache.create()
 
         guard let sandblastedBlocks = try SandblastSimulator().sandblast(with: CompactBlockRange(uncheckedBounds: (10, 19))) else {
             XCTFail("failed to create sandblasted blocks")
@@ -465,18 +464,19 @@ final class FsBlockStorageTests: XCTestCase {
         }
     }
 
-    func testMetadataStoreThrowsWhenRewindFails() {
+    func testMetadataStoreThrowsWhenRewindFails() async {
         MockRustBackend.rewindCacheToHeightResult = { false }
         let expectedHeight = BlockHeight(1000)
 
-        XCTAssertThrowsError(
-            try FSMetadataStore.live(
+        do {
+            try await FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
                 rustBackend: MockRustBackend.self,
                 logger: logger
             )
             .rewindToHeight(expectedHeight)
-        ) { error in
+            XCTFail("rewindToHeight should fail")
+        } catch {
             guard let repositoryError = error as? CompactBlockRepositoryError else {
                 XCTFail("Expected CompactBlockRepositoryError. Found \(error)")
                 return
@@ -502,7 +502,7 @@ final class FsBlockStorageTests: XCTestCase {
             logger: logger
         )
 
-        try freshCache.create()
+        try await freshCache.create()
 
         let blockRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 

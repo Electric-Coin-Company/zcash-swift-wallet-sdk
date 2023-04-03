@@ -36,16 +36,17 @@ extension UTXOFetcherImpl: UTXOFetcher {
     func fetch(at range: CompactBlockRange) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
         try Task.checkCancellation()
 
-        let tAddresses = try accountRepository.getAll()
+        let accounts = try accountRepository.getAll()
             .map { $0.account }
-            .map {
-                try rustBackend.listTransparentReceivers(
-                    dbData: config.dataDb,
-                    account: Int32($0),
-                    networkType: config.networkType
-                )
-            }
-            .flatMap({ $0 })
+
+        var tAddresses: [TransparentAddress] = []
+        for account in accounts {
+            tAddresses += try await rustBackend.listTransparentReceivers(
+                dbData: config.dataDb,
+                account: Int32(account),
+                networkType: config.networkType
+            )
+        }
 
         var utxos: [UnspentTransactionOutputEntity] = []
         let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
@@ -63,7 +64,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
         let startTime = Date()
         for utxo in utxos {
             do {
-                if try rustBackend.putUnspentTransparentOutput(
+                if try await rustBackend.putUnspentTransparentOutput(
                     dbData: config.dataDb,
                     txid: utxo.txid.bytes,
                     index: utxo.index,

@@ -40,16 +40,16 @@ class TransactionEnhancementTests: XCTestCase {
     var txFoundNotificationExpectation: XCTestExpectation!
     var waitExpectation: XCTestExpectation!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
+        
         try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
-        XCTestCase.wait {
-            await InternalSyncProgress(
-                alias: .default,
-                storage: UserDefaults.standard,
-                logger: logger
-            ).rewind(to: 0)
-        }
+
+        await InternalSyncProgress(
+            alias: .default,
+            storage: UserDefaults.standard,
+            logger: logger
+        ).rewind(to: 0)
 
         logger = OSLogger(logLevel: .debug)
         
@@ -81,7 +81,7 @@ class TransactionEnhancementTests: XCTestCase {
         try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
 
-        let dbInit = try rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
+        let dbInit = try await rustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: network.networkType)
         
         let ufvks = [
             try DerivationTool(networkType: network.networkType)
@@ -92,7 +92,7 @@ class TransactionEnhancementTests: XCTestCase {
                 }
         ]
         do {
-            try rustBackend.initAccountsTable(
+            try await rustBackend.initAccountsTable(
                 dbData: processorConfig.dataDb,
                 ufvks: ufvks,
                 networkType: network.networkType
@@ -107,7 +107,7 @@ class TransactionEnhancementTests: XCTestCase {
             return
         }
 
-        _ = try rustBackend.initBlocksTable(
+        _ = try await rustBackend.initBlocksTable(
             dbData: processorConfig.dataDb,
             height: Int32(birthday.height),
             hash: birthday.hash,
@@ -130,7 +130,7 @@ class TransactionEnhancementTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
         )
-        try! storage.create()
+        try! await storage.create()
         
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         processor = CompactBlockProcessor(
@@ -149,15 +149,14 @@ class TransactionEnhancementTests: XCTestCase {
             }
         }
 
-        XCTestCase.wait { await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure) }
+        await self.processor.updateEventClosure(identifier: "tests", closure: eventClosure)
     }
-    
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        XCTestCase.wait { await self.processor.stop() }
+
+    override func tearDown() async throws {
+        try await super.tearDown()
+        await self.processor.stop()
         try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
-        NotificationCenter.default.removeObserver(self)
         processorEventHandler = nil
         initializer = nil
         processorConfig = nil

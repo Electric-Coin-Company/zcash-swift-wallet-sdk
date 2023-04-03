@@ -41,7 +41,7 @@ struct BlockEnhancerImpl {
         let block = String(describing: transaction.minedHeight)
         logger.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
 
-        let decryptionResult = rustBackend.decryptAndStoreTransaction(
+        let decryptionResult = await rustBackend.decryptAndStoreTransaction(
             dbData: config.dataDb,
             txBytes: fetchedTransaction.raw.bytes,
             minedHeight: Int32(fetchedTransaction.minedHeight),
