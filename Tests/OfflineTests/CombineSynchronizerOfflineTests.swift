@@ -38,6 +38,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
     func testStateStreamEmitsAsExpected() {
         let state = SynchronizerState(
+            syncSessionID: .nullID,
             shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
             transparentBalance: WalletBalance(verified: Zatoshi(200), total: Zatoshi(300)),
             syncStatus: .fetching,
@@ -68,6 +69,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
     func testLatestStateIsAsExpected() {
         let state = SynchronizerState(
+            syncSessionID: .nullID,
             shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
             transparentBalance: WalletBalance(verified: Zatoshi(200), total: Zatoshi(300)),
             syncStatus: .fetching,

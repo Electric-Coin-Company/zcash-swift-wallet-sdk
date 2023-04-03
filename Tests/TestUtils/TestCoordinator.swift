@@ -58,7 +58,8 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true,
-        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
+        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint,
+        syncSessionIDGenerator: SyncSessionIDGenerator = UniqueSyncSessionIDGenerator()
     ) async throws {
         let derivationTool = DerivationTool(networkType: network.networkType)
 
@@ -76,7 +77,8 @@ class TestCoordinator {
             walletBirthday: walletBirthday,
             network: network,
             callPrepareInConstructor: callPrepareInConstructor,
-            endpoint: endpoint
+            endpoint: endpoint,
+            syncSessionIDGenerator: syncSessionIDGenerator
         )
     }
     
@@ -87,7 +89,8 @@ class TestCoordinator {
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true,
-        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
+        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint,
+        syncSessionIDGenerator: SyncSessionIDGenerator
     ) async throws {
         await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
@@ -114,7 +117,7 @@ class TestCoordinator {
             logLevel: .debug
         )
 
-        let synchronizer = SDKSynchronizer(initializer: initializer)
+        let synchronizer = SDKSynchronizer(initializer: initializer, sessionGenerator: syncSessionIDGenerator, sessionTicker: .live)
         
         self.synchronizer = synchronizer
         subscribeToState(synchronizer: self.synchronizer)

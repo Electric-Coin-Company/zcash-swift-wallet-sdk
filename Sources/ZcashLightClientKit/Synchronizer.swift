@@ -64,15 +64,27 @@ public enum ConnectionState {
     /// the connection has been closed
     case shutdown
 }
-
+/// Reports the state of a synchronizer.
 public struct SynchronizerState: Equatable {
+    /// Unique Identifier for the current sync attempt
+    /// - Note: Although on it's lifetime a synchronizer will attempt to sync between random fractions of a minute (when idle),
+    /// each sync attempt will be considered a new sync session. This is to maintain a consistent UUID cadence
+    /// given how application lifecycle varies between OS Versions, platforms, etc.
+    /// SyncSessionIDs are provided to users
+    public var syncSessionID: UUID
+    /// shielded balance known to this synchronizer given the data that has processed locally
     public var shieldedBalance: WalletBalance
+    /// transparent balance known to this synchronizer given the data that has processed locally
     public var transparentBalance: WalletBalance
+    /// status of the whole sync process
     public var syncStatus: SyncStatus
+    /// height of the latest scanned block known to this synchronizer.
     public var latestScannedHeight: BlockHeight
 
+    /// Represents a synchronizer that has made zero progress hasn't done a sync attempt
     public static var zero: SynchronizerState {
         SynchronizerState(
+            syncSessionID: .nullID,
             shieldedBalance: .zero,
             transparentBalance: .zero,
             syncStatus: .unprepared,
@@ -421,5 +433,12 @@ extension SyncStatus {
         case .fetch:
             self = .fetching
         }
+    }
+}
+
+extension UUID {
+    /// UUID  00000000-0000-0000-0000-000000000000
+    static var nullID: UUID {
+        UUID(uuid: (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
     }
 }
