@@ -68,7 +68,7 @@ class DarksideSanityCheckTests: XCTestCase {
             }
         )
         
-        wait(for: [syncExpectation], timeout: 5)
+        await fulfillment(of: [syncExpectation], timeout: 5)
         
         let blocksDao = BlockSQLDAO(dbProvider: SimpleConnectionProvider(path: coordinator.databases.dataDB.absoluteString, readonly: false))
         

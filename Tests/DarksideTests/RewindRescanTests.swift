@@ -76,7 +76,7 @@ class RewindRescanTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [firstSyncExpectation], timeout: 12)
+        await fulfillment(of: [firstSyncExpectation], timeout: 12)
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
@@ -105,7 +105,7 @@ class RewindRescanTests: XCTestCase {
                 .store(in: &cancellables)
         }
 
-        wait(for: [rewindExpectation], timeout: 2)
+        await fulfillment(of: [rewindExpectation], timeout: 2)
 
         // assert that after the new height is
         let lastScannedHeight = try await coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()
@@ -129,7 +129,7 @@ class RewindRescanTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [secondScanExpectation], timeout: 12)
+        await fulfillment(of: [secondScanExpectation], timeout: 12)
         
         // verify that the balance still adds up
         expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -164,7 +164,7 @@ class RewindRescanTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [firstSyncExpectation], timeout: 20)
+        await fulfillment(of: [firstSyncExpectation], timeout: 20)
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
@@ -202,7 +202,7 @@ class RewindRescanTests: XCTestCase {
                 .store(in: &cancellables)
         }
 
-        wait(for: [rewindExpectation], timeout: 2)
+        await fulfillment(of: [rewindExpectation], timeout: 2)
 
         // check that the balance is cleared
         var expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -221,7 +221,7 @@ class RewindRescanTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [secondScanExpectation], timeout: 20)
+        await fulfillment(of: [secondScanExpectation], timeout: 20)
         
         // verify that the balance still adds up
         expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -243,7 +243,7 @@ class RewindRescanTests: XCTestCase {
         } catch {
             XCTFail("sending fail: \(error)")
         }
-        wait(for: [sendExpectation], timeout: 15)
+        await fulfillment(of: [sendExpectation], timeout: 15)
     }
 
     // FIX [#790]: Fix tests
@@ -263,7 +263,7 @@ class RewindRescanTests: XCTestCase {
             error: handleError
         )
         
-        wait(for: [firstSyncExpectation], timeout: 12)
+        await fulfillment(of: [firstSyncExpectation], timeout: 12)
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         // 2 check that there are no unconfirmed funds
@@ -297,7 +297,7 @@ class RewindRescanTests: XCTestCase {
                 .store(in: &cancellables)
         }
 
-        wait(for: [rewindExpectation], timeout: 2)
+        await fulfillment(of: [rewindExpectation], timeout: 2)
 
         // assert that after the new height is lower or same as transaction, rewind doesn't have to be make exactly to transaction height, it can
         // be done to nearest height provided by rust
@@ -313,7 +313,7 @@ class RewindRescanTests: XCTestCase {
             error: handleError
         )
         
-        wait(for: [secondScanExpectation], timeout: 12)
+        await fulfillment(of: [secondScanExpectation], timeout: 12)
         
         // verify that the balance still adds up
         let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -349,7 +349,7 @@ class RewindRescanTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [firstSyncExpectation], timeout: 12)
+        await fulfillment(of: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -375,7 +375,7 @@ class RewindRescanTests: XCTestCase {
         } catch {
             XCTFail("sendToAddress failed: \(error)")
         }
-        wait(for: [sentTransactionExpectation], timeout: 20)
+        await fulfillment(of: [sentTransactionExpectation], timeout: 20)
         guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
@@ -428,7 +428,7 @@ class RewindRescanTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
+        await fulfillment(of: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
         // 7 advance to confirmation
         
@@ -458,7 +458,7 @@ class RewindRescanTests: XCTestCase {
                 .store(in: &cancellables)
         }
 
-        wait(for: [rewindExpectation], timeout: 2)
+        await fulfillment(of: [rewindExpectation], timeout: 2)
 
         guard
             let pendingEntity = try await coordinator.synchronizer.allPendingTransactions()
@@ -495,7 +495,7 @@ class RewindRescanTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [confirmExpectation], timeout: 10)
+        await fulfillment(of: [confirmExpectation], timeout: 10)
         
         let confirmedPending = try await coordinator.synchronizer.allPendingTransactions()
             .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })

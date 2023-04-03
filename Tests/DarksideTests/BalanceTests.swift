@@ -71,7 +71,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [firstSyncExpectation], timeout: 12)
+        await fulfillment(of: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -99,7 +99,7 @@ class BalanceTests: XCTestCase {
             XCTFail("sendToAddress failed: \(error)")
         }
 
-        wait(for: [sentTransactionExpectation], timeout: 20)
+        await fulfillment(of: [sentTransactionExpectation], timeout: 20)
         guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
@@ -151,7 +151,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
+        await fulfillment(of: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
         // 7 advance to confirmation
         
@@ -178,7 +178,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [confirmExpectation], timeout: 5)
+        await fulfillment(of: [confirmExpectation], timeout: 5)
         
         let confirmedPending = try await coordinator.synchronizer.allPendingTransactions()
             .first(where: { $0.rawTransactionId == pendingTx.rawTransactionId })
@@ -221,7 +221,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [firstSyncExpectation], timeout: 12)
+        await fulfillment(of: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -248,7 +248,7 @@ class BalanceTests: XCTestCase {
             XCTFail("sendToAddress failed: \(error)")
         }
 
-        wait(for: [sentTransactionExpectation], timeout: 20)
+        await fulfillment(of: [sentTransactionExpectation], timeout: 20)
         guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
@@ -300,7 +300,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
+        await fulfillment(of: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
         // 7 advance to confirmation
         
@@ -327,7 +327,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
         
-        wait(for: [confirmExpectation], timeout: 5)
+        await fulfillment(of: [confirmExpectation], timeout: 5)
         
         let confirmedPending = try await coordinator.synchronizer
             .allPendingTransactions()
@@ -371,7 +371,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [firstSyncExpectation], timeout: 12)
+        await fulfillment(of: [firstSyncExpectation], timeout: 12)
         // 2 check that there are no unconfirmed funds
         
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
@@ -398,7 +398,7 @@ class BalanceTests: XCTestCase {
             XCTFail("sendToAddress failed: \(error)")
         }
 
-        wait(for: [sentTransactionExpectation], timeout: 20)
+        await fulfillment(of: [sentTransactionExpectation], timeout: 20)
         guard let pendingTx else {
             XCTFail("transaction creation failed")
             return
@@ -450,7 +450,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
+        await fulfillment(of: [mineExpectation, transactionMinedExpectation, foundTransactionsExpectation], timeout: 5)
         
         // 7 advance to confirmation
         
@@ -477,7 +477,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
         
-        wait(for: [confirmExpectation], timeout: 5)
+        await fulfillment(of: [confirmExpectation], timeout: 5)
         
         let confirmedPending = try await coordinator.synchronizer
             .allPendingTransactions()
@@ -526,7 +526,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [syncedExpectation], timeout: 60)
+        await fulfillment(of: [syncedExpectation], timeout: 60)
         
         let spendingKey = coordinator.spendingKey
         
@@ -556,7 +556,7 @@ class BalanceTests: XCTestCase {
 
         var expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         XCTAssertTrue(expectedVerifiedBalance > .zero)
-        wait(for: [sentTransactionExpectation], timeout: 12)
+        await fulfillment(of: [sentTransactionExpectation], timeout: 12)
         
         // sync and mine
         
@@ -585,7 +585,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [mineExpectation], timeout: 5)
+        await fulfillment(of: [mineExpectation], timeout: 5)
 
         expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
@@ -701,7 +701,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
         
-        wait(for: [syncedExpectation], timeout: 5)
+        await fulfillment(of: [syncedExpectation], timeout: 5)
         
         let spendingKey = coordinator.spendingKey
 
@@ -729,7 +729,7 @@ class BalanceTests: XCTestCase {
 
         var expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         XCTAssertTrue(expectedVerifiedBalance > .zero)
-        wait(for: [sentTransactionExpectation], timeout: 12)
+        await fulfillment(of: [sentTransactionExpectation], timeout: 12)
 
         expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         if let testError {
@@ -776,7 +776,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [mineExpectation], timeout: 5)
+        await fulfillment(of: [mineExpectation], timeout: 5)
 
         expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
         XCTAssertEqual(
@@ -812,7 +812,7 @@ class BalanceTests: XCTestCase {
             error: self.handleError
         )
         
-        wait(for: [syncedExpectation], timeout: 5)
+        await fulfillment(of: [syncedExpectation], timeout: 5)
 
         let clearedTransactions = await coordinator.synchronizer.clearedTransactions
         let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
@@ -867,7 +867,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [syncedExpectation], timeout: 6)
+        await fulfillment(of: [syncedExpectation], timeout: 6)
         
         let previousVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let previousTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
@@ -891,7 +891,7 @@ class BalanceTests: XCTestCase {
         } catch {
             XCTFail("error sending \(error)")
         }
-        wait(for: [createToAddressExpectation], timeout: 30)
+        await fulfillment(of: [createToAddressExpectation], timeout: 30)
         
         let syncToMinedheightExpectation = XCTestExpectation(description: "sync to mined height + 1")
         
@@ -997,7 +997,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
         
-        wait(for: [syncToMinedheightExpectation], timeout: 5)
+        await fulfillment(of: [syncToMinedheightExpectation], timeout: 5)
     }
     
     /**
@@ -1039,7 +1039,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [syncedExpectation], timeout: 5)
+        await fulfillment(of: [syncedExpectation], timeout: 5)
         
         let spendingKey = coordinator.spendingKey
         
@@ -1065,7 +1065,7 @@ class BalanceTests: XCTestCase {
             XCTFail("sendToAddress failed: \(error)")
         }
 
-        wait(for: [sendExpectation], timeout: 12)
+        await fulfillment(of: [sendExpectation], timeout: 12)
         
         guard let pendingTransaction = pendingTx, pendingTransaction.expiryHeight > defaultLatestHeight else {
             XCTFail("No pending transaction")
@@ -1089,7 +1089,7 @@ class BalanceTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [expirationSyncExpectation], timeout: 5)
+        await fulfillment(of: [expirationSyncExpectation], timeout: 5)
 
         let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()

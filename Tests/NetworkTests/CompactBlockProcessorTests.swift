@@ -167,8 +167,8 @@ class CompactBlockProcessorTests: XCTestCase {
     func testStartNotifiesSuscriptors() async {
         await startProcessing()
    
-        wait(
-            for: [
+        await fulfillment(
+            of: [
                 syncStartedExpect,
                 finishedNotificationExpectation
             ],
@@ -186,7 +186,7 @@ class CompactBlockProcessorTests: XCTestCase {
         updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
         
         await startProcessing()
-        wait(for: [updatedNotificationExpectation, finishedNotificationExpectation], timeout: 300)
+        await fulfillment(of: [updatedNotificationExpectation, finishedNotificationExpectation], timeout: 300)
     }
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {

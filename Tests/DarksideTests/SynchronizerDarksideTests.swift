@@ -73,7 +73,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
         
-        wait(for: [preTxExpectation], timeout: 5)
+        await fulfillment(of: [preTxExpectation], timeout: 5)
         
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
@@ -104,7 +104,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
         
-        wait(for: [firsTxExpectation], timeout: 10)
+        await fulfillment(of: [firsTxExpectation], timeout: 10)
         
         XCTAssertEqual(self.foundTransactions.count, 5)
         
@@ -122,7 +122,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
         
-        wait(for: [preTxExpectation], timeout: 10)
+        await fulfillment(of: [preTxExpectation], timeout: 10)
         
         XCTAssertTrue(self.foundTransactions.isEmpty)
         
@@ -138,7 +138,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
         
-        wait(for: [findManyTxExpectation], timeout: 10)
+        await fulfillment(of: [findManyTxExpectation], timeout: 10)
         
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
@@ -172,7 +172,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
 
-        wait(for: [preTxExpectation], timeout: 5)
+        await fulfillment(of: [preTxExpectation], timeout: 5)
 
         let expectedStates: [SynchronizerState] = [
             SynchronizerState(
@@ -328,7 +328,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
 
-        wait(for: [preTxExpectation], timeout: 5)
+        await fulfillment(of: [preTxExpectation], timeout: 5)
 
         let expectedStates: [SynchronizerState] = [
             SynchronizerState(
@@ -468,7 +468,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
 
-        wait(for: [secondSyncExpectation], timeout: 5)
+        await fulfillment(of: [secondSyncExpectation], timeout: 5)
 
         let secondBatchOfExpectedStates: [SynchronizerState] = [
             SynchronizerState(
@@ -539,7 +539,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
 
-        wait(for: [firsSyncExpectation], timeout: 10)
+        await fulfillment(of: [firsSyncExpectation], timeout: 10)
 
         let wipeFinished = XCTestExpectation(description: "SynchronizerWipeFinished Expectation")
 
@@ -560,7 +560,7 @@ class SynchronizerDarksideTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [wipeFinished], timeout: 1)
+        await fulfillment(of: [wipeFinished], timeout: 1)
 
         _ = try await coordinator.prepare(seed: Environment.seedBytes)
 
@@ -573,7 +573,7 @@ class SynchronizerDarksideTests: XCTestCase {
             error: self.handleError
         )
 
-        wait(for: [secondSyncExpectation], timeout: 10)
+        await fulfillment(of: [secondSyncExpectation], timeout: 10)
     }
     
     func handleFoundTransactions(transactions: [ZcashTransaction.Overview]) {

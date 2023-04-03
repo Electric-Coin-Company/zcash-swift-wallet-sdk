@@ -94,7 +94,7 @@ final class SynchronizerTests: XCTestCase {
         try await Task.sleep(nanoseconds: 5_000_000_000)
         await self.coordinator.synchronizer.stop()
 
-        wait(for: [syncStoppedExpectation], timeout: 6)
+        await fulfillment(of: [syncStoppedExpectation], timeout: 6)
 
         let status = await coordinator.synchronizer.status
         XCTAssertEqual(status, .stopped)
@@ -128,7 +128,7 @@ final class SynchronizerTests: XCTestCase {
             error: handleError
         )
 
-        wait(for: [syncFinished], timeout: 3)
+        await fulfillment(of: [syncFinished], timeout: 3)
 
         let wipeFinished = XCTestExpectation(description: "SynchronizerWipeFinished Expectation")
 
@@ -152,7 +152,7 @@ final class SynchronizerTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [wipeFinished], timeout: 1)
+        await fulfillment(of: [wipeFinished], timeout: 1)
 
         /*
          Check that wipe cleared everything that is expected
@@ -209,7 +209,7 @@ final class SynchronizerTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [wipeFinished], timeout: 6)
+        await fulfillment(of: [wipeFinished], timeout: 6)
 
         /*
          Check that wipe cleared everything that is expected
@@ -279,7 +279,7 @@ final class SynchronizerTests: XCTestCase {
             await handleError(error)
         }
 
-        wait(for: [firstSyncExpectation], timeout: 12)
+        await fulfillment(of: [firstSyncExpectation], timeout: 12)
 
         // Add more blocks to the chain so the long sync can start.
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: 10000)
@@ -303,7 +303,7 @@ final class SynchronizerTests: XCTestCase {
             waitExpectation.fulfill()
         }
 
-        wait(for: [waitExpectation], timeout: 1)
+        await fulfillment(of: [waitExpectation], timeout: 1)
 
         let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
@@ -330,7 +330,7 @@ final class SynchronizerTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [rewindExpectation], timeout: 5)
+        await fulfillment(of: [rewindExpectation], timeout: 5)
 
         // assert that after the new height is
         let lastScannedHeight = try await coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()

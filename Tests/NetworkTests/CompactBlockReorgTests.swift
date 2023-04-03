@@ -188,8 +188,8 @@ class CompactBlockReorgTests: XCTestCase {
     func testNotifiesReorg() async {
         await startProcessing()
 
-        wait(
-            for: [
+        await fulfillment(
+            of: [
                 syncStartedExpect,
                 reorgNotificationExpectation,
                 finishedNotificationExpectation

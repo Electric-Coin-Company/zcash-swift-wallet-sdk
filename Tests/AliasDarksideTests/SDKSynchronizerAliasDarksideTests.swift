@@ -96,7 +96,7 @@ class SDKSynchronizerAliasDarksideTests: XCTestCase {
             )
         }
 
-        wait(for: expectations, timeout: TimeInterval(aliases.count * 5))
+        await fulfillment(of: expectations, timeout: TimeInterval(aliases.count * 5))
     }
 
     func handleError(_ error: Error?) async {

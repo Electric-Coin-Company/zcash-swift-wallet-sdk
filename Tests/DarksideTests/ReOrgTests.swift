@@ -148,7 +148,7 @@ class ReOrgTests: XCTestCase {
             error: self.handleError
         )
        
-        wait(for: [firstSyncExpectation], timeout: 5)
+        await fulfillment(of: [firstSyncExpectation], timeout: 5)
         
         guard let syncedSynchronizer = synchronizer else {
             XCTFail("nil synchronizer")
@@ -190,7 +190,7 @@ class ReOrgTests: XCTestCase {
         
         // now reorg should happen and reorg notifications and idle notification should be triggered
         
-        wait(for: [reorgExpectation, secondSyncExpectation], timeout: 5)
+        await fulfillment(of: [reorgExpectation, secondSyncExpectation], timeout: 5)
         
         // now everything should be fine. latest block should be targetHeight
 

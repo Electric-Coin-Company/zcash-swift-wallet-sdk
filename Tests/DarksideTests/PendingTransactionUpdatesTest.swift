@@ -67,7 +67,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         } catch {
             await handleError(error)
         }
-        wait(for: [firstSyncExpectation], timeout: 5)
+        await fulfillment(of: [firstSyncExpectation], timeout: 5)
         
         sleep(1)
         
@@ -91,7 +91,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
             await self.handleError(error)
         }
         
-        wait(for: [sendExpectation], timeout: 11)
+        await fulfillment(of: [sendExpectation], timeout: 11)
         
         guard let pendingUnconfirmedTx = pendingEntity else {
             XCTFail("no pending transaction after sending")
@@ -158,7 +158,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
             await handleError(error)
         }
 
-        wait(for: [secondSyncExpectation], timeout: 5)
+        await fulfillment(of: [secondSyncExpectation], timeout: 5)
 
         let pendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
         XCTAssertEqual(pendingTransactionsCount, 1)
@@ -203,7 +203,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
             await handleError(error)
         }
 
-        wait(for: [syncToConfirmExpectation], timeout: 6)
+        await fulfillment(of: [syncToConfirmExpectation], timeout: 6)
         let supposedlyPendingUnexistingTransaction = try await coordinator.synchronizer.allPendingTransactions().first
 
         let clearedTransactions = await coordinator.synchronizer
