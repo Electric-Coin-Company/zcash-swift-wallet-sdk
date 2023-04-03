@@ -193,8 +193,8 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't
      provide different implementations for these two methods. So Combine it is even here.
      */
-    public func rewind(_ policy: RewindPolicy) -> Completable<Error> { synchronizer.rewind(policy) }
-    public func wipe() -> Completable<Error> { synchronizer.wipe() }
+    public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
+    public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
 }
 
 extension ClosureSDKSynchronizer {
