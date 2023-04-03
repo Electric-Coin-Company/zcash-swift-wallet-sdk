@@ -1109,7 +1109,7 @@ actor CompactBlockProcessor {
             repeats: true,
             block: { [weak self] _ in
                 Task { [self] in
-                    guard let self else { return }
+                    guard let self = self else { return }
                     if await self.shouldStart {
                         self.logger.debug(
                             """
