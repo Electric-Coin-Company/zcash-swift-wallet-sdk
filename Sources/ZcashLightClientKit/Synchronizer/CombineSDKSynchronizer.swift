@@ -41,13 +41,13 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func start(retry: Bool) -> Completable<Error> {
+    public func start(retry: Bool) -> CompletablePublisher<Error> {
         return executeThrowingAction() {
             try await self.synchronizer.start(retry: retry)
         }
     }
 
-    public func stop() -> Completable<Never> {
+    public func stop() -> CompletablePublisher<Never> {
         return executeAction() {
             await self.synchronizer.stop()
         }
@@ -190,12 +190,12 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func rewind(_ policy: RewindPolicy) -> Completable<Error> { synchronizer.rewind(policy) }
-    public func wipe() -> Completable<Error> { synchronizer.wipe() }
+    public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
+    public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
 }
 
 extension CombineSDKSynchronizer {
-    private func executeAction(action: @escaping () async -> Void) -> Completable<Never> {
+    private func executeAction(action: @escaping () async -> Void) -> CompletablePublisher<Never> {
         let subject = PassthroughSubject<Void, Never>()
         Task {
             await action()
@@ -214,7 +214,7 @@ extension CombineSDKSynchronizer {
         return subject.eraseToAnyPublisher()
     }
 
-    private func executeThrowingAction(action: @escaping () async throws -> Void) -> Completable<Error> {
+    private func executeThrowingAction(action: @escaping () async throws -> Void) -> CompletablePublisher<Error> {
         let subject = PassthroughSubject<Void, Error>()
         Task {
             do {

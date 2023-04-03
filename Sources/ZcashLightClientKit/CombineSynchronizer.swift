@@ -11,7 +11,7 @@ import Foundation
 /* These aliases are here to just make the API easier to read. */
 
 // Publisher which emitts completed or error. No value is emitted.
-public typealias Completable<E: Error> = AnyPublisher<Void, E>
+public typealias CompletablePublisher<E: Error> = AnyPublisher<Void, E>
 // Publisher that either emits one value and then finishes or it emits error.
 public typealias Single = AnyPublisher
 
@@ -35,8 +35,8 @@ public protocol CombineSynchronizer {
         walletBirthday: BlockHeight
     ) -> Single<Initializer.InitializationResult, Error>
 
-    func start(retry: Bool) -> Completable<Error>
-    func stop() -> Completable<Never>
+    func start(retry: Bool) -> CompletablePublisher<Error>
+    func stop() -> CompletablePublisher<Never>
 
     func getSaplingAddress(accountIndex: Int) -> Single<SaplingAddress, Error>
     func getUnifiedAddress(accountIndex: Int) -> Single<UnifiedAddress, Error>
@@ -81,6 +81,6 @@ public protocol CombineSynchronizer {
     func getShieldedBalance(accountIndex: Int) -> Single<Zatoshi, Error>
     func getShieldedVerifiedBalance(accountIndex: Int) -> Single<Zatoshi, Error>
 
-    func rewind(_ policy: RewindPolicy) -> Completable<Error>
-    func wipe() -> Completable<Error>
+    func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error>
+    func wipe() -> CompletablePublisher<Error>
 }
