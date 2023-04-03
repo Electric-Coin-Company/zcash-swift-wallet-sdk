@@ -32,9 +32,9 @@ public protocol ClosureSynchronizer {
     func start(retry: Bool, completion: @escaping (Error?) -> Void)
     func stop(completion: @escaping () -> Void)
 
-    func getSaplingAddress(accountIndex: Int, completion: @escaping (SaplingAddress?) -> Void)
-    func getUnifiedAddress(accountIndex: Int, completion: @escaping (UnifiedAddress?) -> Void)
-    func getTransparentAddress(accountIndex: Int, completion: @escaping (TransparentAddress?) -> Void)
+    func getSaplingAddress(accountIndex: Int, completion: @escaping (Result<SaplingAddress, Error>) -> Void)
+    func getUnifiedAddress(accountIndex: Int, completion: @escaping (Result<UnifiedAddress, Error>) -> Void)
+    func getTransparentAddress(accountIndex: Int, completion: @escaping (Result<TransparentAddress, Error>) -> Void)
 
     func sendToAddress(
         spendingKey: UnifiedSpendingKey,
@@ -79,9 +79,9 @@ public protocol ClosureSynchronizer {
 
     func getTransparentBalance(accountIndex: Int, completion: @escaping (Result<WalletBalance, Error>) -> Void)
 
-    func getShieldedBalance(accountIndex: Int) -> Zatoshi
+    func getShieldedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void)
 
-    func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi
+    func getShieldedVerifiedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void)
 
     /*
      It can be missleading that these two methods are returning Publisher even this protocol is closure based. Reason is that Synchronizer doesn't

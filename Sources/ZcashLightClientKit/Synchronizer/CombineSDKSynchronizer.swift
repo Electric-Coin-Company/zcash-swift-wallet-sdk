@@ -53,21 +53,21 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress?, Never> {
-        return executeAction() {
-            await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
+    public func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress, Error> {
+        return executeThrowingAction() {
+            try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress?, Never> {
-        return executeAction() {
-            await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
+    public func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error> {
+        return executeThrowingAction() {
+            try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress?, Never> {
-        return executeAction() {
-            await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
+    public func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress, Error> {
+        return executeThrowingAction() {
+            try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
         }
     }
 
@@ -178,9 +178,17 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getShieldedBalance(accountIndex: Int) -> Zatoshi { synchronizer.getShieldedBalance(accountIndex: accountIndex) }
+    public func getShieldedBalance(accountIndex: Int = 0) -> SinglePublisher<Zatoshi, Error> {
+        return executeThrowingAction() {
+            try await synchronizer.getShieldedBalance(accountIndex: accountIndex)
+        }
+    }
 
-    public func getShieldedVerifiedBalance(accountIndex: Int) -> Zatoshi { synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex) }
+    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> SinglePublisher<Zatoshi, Error> {
+        return executeThrowingAction() {
+            try await synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex)
+        }
+    }
 
     public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
     public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }

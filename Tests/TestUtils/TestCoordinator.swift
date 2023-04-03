@@ -53,50 +53,6 @@ class TestCoordinator {
         streamingCallTimeoutInMillis: 1000000
     )
 
-    static func make(
-        alias: ZcashSynchronizerAlias = .default,
-        walletBirthday: BlockHeight,
-        network: ZcashNetwork,
-        callPrepareInConstructor: Bool = true,
-        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
-    ) -> TestCoordinator {
-        var coordinator: TestCoordinator!
-        XCTestCase.wait {
-            coordinator = try await TestCoordinator(
-                alias: alias,
-                walletBirthday: walletBirthday,
-                network: network,
-                callPrepareInConstructor: callPrepareInConstructor,
-                endpoint: endpoint
-            )
-        }
-        return coordinator
-    }
-
-    static func make(
-        alias: ZcashSynchronizerAlias = .default,
-        spendingKey: UnifiedSpendingKey,
-        unifiedFullViewingKey: UnifiedFullViewingKey,
-        walletBirthday: BlockHeight,
-        network: ZcashNetwork,
-        callPrepareInConstructor: Bool = true,
-        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
-    ) -> TestCoordinator {
-        var coordinator: TestCoordinator!
-        XCTestCase.wait {
-            coordinator = try await TestCoordinator(
-                alias: alias,
-                spendingKey: spendingKey,
-                unifiedFullViewingKey: unifiedFullViewingKey,
-                walletBirthday: walletBirthday,
-                network: network,
-                callPrepareInConstructor: callPrepareInConstructor,
-                endpoint: endpoint
-            )
-        }
-        return coordinator
-    }
-
     convenience init(
         alias: ZcashSynchronizerAlias = .default,
         walletBirthday: BlockHeight,

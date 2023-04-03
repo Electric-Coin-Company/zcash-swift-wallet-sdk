@@ -94,7 +94,6 @@ public class SDKSynchronizer: Synchronizer {
 
     deinit {
         UsedAliasesChecker.stopUsing(alias: initializer.alias, id: initializer.id)
-        NotificationCenter.default.removeObserver(self)
         Task { [blockProcessor] in
             await blockProcessor.stop()
         }
@@ -134,9 +133,9 @@ public class SDKSynchronizer: Synchronizer {
             throw error
         }
 
-        try utxoRepository.initialise()
+        try await utxoRepository.initialise()
 
-        if case .seedRequired = try self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
+        if case .seedRequired = try await self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
             return .seedRequired
         }
 
@@ -255,7 +254,7 @@ public class SDKSynchronizer: Synchronizer {
         logger.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
         do {
-            try transactionManager.handleReorg(at: rewindHeight)
+            try await transactionManager.handleReorg(at: rewindHeight)
         } catch {
             logger.debug("error handling reorg: \(error)")
         }
@@ -323,7 +322,7 @@ public class SDKSynchronizer: Synchronizer {
                 throw ShieldFundsError.insuficientTransparentFunds
             }
 
-            let shieldingSpend = try transactionManager.initSpend(
+            let shieldingSpend = try await transactionManager.initSpend(
                 zatoshi: tBalance.verified,
                 recipient: .internalAccount(spendingKey.account),
                 memo: try memo.asMemoBytes(),
@@ -350,7 +349,7 @@ public class SDKSynchronizer: Synchronizer {
         memo: Memo?
     ) async throws -> PendingTransactionEntity {
         do {
-            let spend = try transactionManager.initSpend(
+            let spend = try await transactionManager.initSpend(
                 zatoshi: zatoshi,
                 recipient: .address(recipient),
                 memo: memo?.asMemoBytes(),
@@ -368,16 +367,16 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity) -> Bool {
-        transactionManager.cancel(pendingTransaction: transaction)
+    public func cancelSpend(transaction: PendingTransactionEntity) async -> Bool {
+        await transactionManager.cancel(pendingTransaction: transaction)
     }
 
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Received] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
 
-    public func allPendingTransactions() throws -> [PendingTransactionEntity] {
-        try transactionManager.allPendingTransactions()
+    public func allPendingTransactions() async throws -> [PendingTransactionEntity] {
+        try await transactionManager.allPendingTransactions()
     }
 
     public func allClearedTransactions() async throws -> [ZcashTransaction.Overview] {
@@ -435,8 +434,8 @@ public class SDKSynchronizer: Synchronizer {
             for try await transactionEntity in stream {
                 utxos.append(transactionEntity)
             }
-            try self.utxoRepository.clearAll(address: address)
-            try self.utxoRepository.store(utxos: utxos)
+            try await self.utxoRepository.clearAll(address: address)
+            try await self.utxoRepository.store(utxos: utxos)
             return utxos
         } catch {
             throw SynchronizerError.generalError(message: "\(error)")
@@ -447,25 +446,37 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
         return try await blockProcessor.refreshUTXOs(tAddress: address, startHeight: height)
     }
-    
-    public func getShieldedBalance(accountIndex: Int = 0) -> Zatoshi {
-        initializer.getBalance(account: accountIndex)
+
+    public func getShieldedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
+        let balance = try await initializer.rustBackend.getBalance(
+            dbData: initializer.dataDbURL,
+            account: Int32(accountIndex),
+            networkType: network.networkType
+        )
+
+        return Zatoshi(balance)
     }
 
-    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Zatoshi {
-        initializer.getVerifiedBalance(account: accountIndex)
+    public func getShieldedVerifiedBalance(accountIndex: Int = 0) async throws -> Zatoshi {
+        let balance = try await initializer.rustBackend.getVerifiedBalance(
+            dbData: initializer.dataDbURL,
+            account: Int32(accountIndex),
+            networkType: network.networkType
+        )
+
+        return Zatoshi(balance)
     }
 
-    public func getSaplingAddress(accountIndex: Int) async -> SaplingAddress? {
-        await blockProcessor.getSaplingAddress(accountIndex: accountIndex)
+    public func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
+        try await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
     }
 
-    public func getUnifiedAddress(accountIndex: Int) async -> UnifiedAddress? {
-        await blockProcessor.getUnifiedAddress(accountIndex: accountIndex)
+    public func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
+        try await blockProcessor.getSaplingAddress(accountIndex: accountIndex)
     }
 
-    public func getTransparentAddress(accountIndex: Int) async -> TransparentAddress? {
-        await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
+    public func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
+        try await blockProcessor.getTransparentAddress(accountIndex: accountIndex)
     }
 
     /// Returns the last stored transparent balance
@@ -509,7 +520,7 @@ public class SDKSynchronizer: Synchronizer {
                     switch result {
                     case let .success(rewindHeight):
                         do {
-                            try self?.transactionManager.handleReorg(at: rewindHeight)
+                            try await self?.transactionManager.handleReorg(at: rewindHeight)
                             subject.send(completion: .finished)
                         } catch {
                             subject.send(completion: .failure(SynchronizerError.rewindError(underlyingError: error)))
@@ -563,8 +574,8 @@ public class SDKSynchronizer: Synchronizer {
     private func snapshotState(status: SyncStatus) async -> SynchronizerState {
         SynchronizerState(
             shieldedBalance: WalletBalance(
-                verified: initializer.getVerifiedBalance(),
-                total: initializer.getBalance()
+                verified: (try? await getShieldedVerifiedBalance()) ?? .zero,
+                total: (try? await getShieldedBalance()) ?? .zero
             ),
             transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
             syncStatus: status,
@@ -622,7 +633,7 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: book keeping
 
     private func updateMinedTransactions() async throws {
-        let transactions = try transactionManager.allPendingTransactions()
+        let transactions = try await transactionManager.allPendingTransactions()
             .filter { $0.isSubmitSuccess && !$0.isMined }
 
         for pendingTx in transactions {
@@ -630,7 +641,7 @@ public class SDKSynchronizer: Synchronizer {
             let transaction = try await transactionRepository.find(rawID: rawID)
             guard let minedHeight = transaction.minedHeight else { return }
 
-            let minedTx = try transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
+            let minedTx = try await transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
 
             notifyMinedTransaction(minedTx)
         }
@@ -639,9 +650,12 @@ public class SDKSynchronizer: Synchronizer {
     private func removeConfirmedTransactions() async throws {
         let latestHeight = try await transactionRepository.lastScannedHeight()
 
-        try transactionManager.allPendingTransactions()
+        let transactions = try await transactionManager.allPendingTransactions()
             .filter { $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.defaultStaleTolerance }
-            .forEach { try transactionManager.delete(pendingTransaction: $0) }
+
+        for transaction in transactions {
+            try await transactionManager.delete(pendingTransaction: transaction)
+        }
     }
 
     private func refreshPendingTransactions() async {
@@ -702,7 +716,9 @@ public class SDKSynchronizer: Synchronizer {
 
 extension SDKSynchronizer {
     public var pendingTransactions: [PendingTransactionEntity] {
-        (try? self.allPendingTransactions()) ?? [PendingTransactionEntity]()
+        get async {
+            (try? await self.allPendingTransactions()) ?? [PendingTransactionEntity]()
+        }
     }
 
     public var clearedTransactions: [ZcashTransaction.Overview] {
@@ -721,19 +737,5 @@ extension SDKSynchronizer {
         get async {
             (try? await allReceivedTransactions()) ?? []
         }
-    }
-}
-
-extension SDKSynchronizer {
-    public func getUnifiedAddress(accountIndex: Int) -> UnifiedAddress? {
-        self.initializer.getCurrentAddress(accountIndex: accountIndex)
-    }
-
-    public func getSaplingAddress(accountIndex: Int) -> SaplingAddress? {
-        self.getUnifiedAddress(accountIndex: accountIndex)?.saplingReceiver()
-    }
-
-    public func getTransparentAddress(accountIndex: Int) -> TransparentAddress? {
-        self.getUnifiedAddress(accountIndex: accountIndex)?.transparentReceiver()
     }
 }

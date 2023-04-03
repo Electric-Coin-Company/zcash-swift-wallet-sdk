@@ -87,11 +87,11 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         self.dbProvider = dbProvider
     }
 
-    func initialise() throws {
-        try createTableIfNeeded()
+    func initialise() async throws {
+        try await createTableIfNeeded()
     }
     
-    func createTableIfNeeded() throws {
+    func createTableIfNeeded() async throws {
         let stringStatement =
             """
             CREATE TABLE IF NOT EXISTS utxos (
@@ -111,7 +111,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         try dbProvider.connection().run(stringStatement)
     }
 
-    func store(utxos: [UnspentTransactionOutputEntity]) throws {
+    func store(utxos: [UnspentTransactionOutputEntity]) async throws {
         do {
             let db = try dbProvider.connection()
             try dbProvider.connection().transaction {
@@ -124,7 +124,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         }
     }
 
-    func clearAll(address: String?) throws {
+    func clearAll(address: String?) async throws {
         if let tAddr = address {
             do {
                 try dbProvider.connection().run(table.filter(TableColumns.address == tAddr).delete())
@@ -140,7 +140,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         }
     }
     
-    func getAll(address: String?) throws -> [UnspentTransactionOutputEntity] {
+    func getAll(address: String?) async throws -> [UnspentTransactionOutputEntity] {
         if let tAddress = address {
             let allTxs: [UTXO] = try dbProvider.connection()
                 .prepare(table.filter(TableColumns.address == tAddress))
@@ -158,7 +158,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
         }
     }
     
-    func balance(address: String, latestHeight: BlockHeight) throws -> WalletBalance {
+    func balance(address: String, latestHeight: BlockHeight) async throws -> WalletBalance {
         do {
             let verified = try dbProvider.connection().scalar(
                 table.select(TableColumns.valueZat.sum)

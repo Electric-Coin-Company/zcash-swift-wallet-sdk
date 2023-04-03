@@ -37,18 +37,20 @@ class ZcashRustBackendTests: XCTestCase {
         dataDbHandle.dispose()
     }
     
-    func testInitWithShortSeedAndFail() throws {
+    func testInitWithShortSeedAndFail() async throws {
         let seed = "testreferencealice"
 
-        var dbInit: DbInitResult!
-        XCTAssertNoThrow(try { dbInit = try ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType) }())
+        let dbInit = try await ZcashRustBackend.initDataDb(dbData: self.dbData!, seed: nil, networkType: self.networkType)
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
             return
         }
 
-        XCTAssertThrowsError(try ZcashRustBackend.createAccount(dbData: dbData!, seed: Array(seed.utf8), networkType: networkType))
+        do {
+            _ = try await ZcashRustBackend.createAccount(dbData: dbData!, seed: Array(seed.utf8), networkType: networkType)
+            XCTFail("createAccount should fail here.")
+        } catch { }
     }
 
     func testIsValidTransparentAddressFalse() {
@@ -87,7 +89,7 @@ class ZcashRustBackendTests: XCTestCase {
         )
     }
 
-    func testListTransparentReceivers() throws {
+    func testListTransparentReceivers() async throws {
         let testVector = [TestVector](TestVector.testVectors![0 ... 2])
         let network = NetworkType.mainnet
         let tempDBs = TemporaryDbBuilder.build()
@@ -95,29 +97,24 @@ class ZcashRustBackendTests: XCTestCase {
 
         try? FileManager.default.removeItem(at: tempDBs.dataDB)
 
-        XCTAssertEqual(
-            try ZcashRustBackend.initDataDb(
-                dbData: tempDBs.dataDB,
-                seed: seed,
-                networkType: network
-            ),
-            .success
+        let initResult = try await ZcashRustBackend.initDataDb(
+            dbData: tempDBs.dataDB,
+            seed: seed,
+            networkType: network
         )
+        XCTAssertEqual(initResult, .success)
 
-        var usk: UnifiedSpendingKey?
-        XCTAssertNoThrow(
-            usk = try ZcashRustBackend.createAccount(
-                dbData: tempDBs.dataDB,
-                seed: seed,
-                networkType: network
-            )
+        let usk = try await ZcashRustBackend.createAccount(
+            dbData: tempDBs.dataDB,
+            seed: seed,
+            networkType: network
         )
-        XCTAssertEqual(usk?.account, 0)
+        XCTAssertEqual(usk.account, 0)
 
-        let expectedReceivers = testVector.map {
+        let expectedReceivers = try testVector.map {
             UnifiedAddress(validatedEncoding: $0.unified_addr!)
         }
-        .compactMap({ $0.transparentReceiver() })
+        .map { try $0.transparentReceiver() }
 
         let expectedUAs = testVector.map {
             UnifiedAddress(validatedEncoding: $0.unified_addr!)
@@ -130,7 +127,7 @@ class ZcashRustBackendTests: XCTestCase {
         var uAddresses: [UnifiedAddress] = []
         for i in 0...2 {
             uAddresses.append(
-                try ZcashRustBackend.getCurrentAddress(
+                try await ZcashRustBackend.getCurrentAddress(
                     dbData: tempDBs.dataDB,
                     account: 0,
                     networkType: network
@@ -138,7 +135,7 @@ class ZcashRustBackendTests: XCTestCase {
             )
 
             if i < 2 {
-                _ = try ZcashRustBackend.getNextAvailableAddress(
+                _ = try await ZcashRustBackend.getNextAvailableAddress(
                     dbData: tempDBs.dataDB,
                     account: 0,
                     networkType: network
@@ -151,7 +148,7 @@ class ZcashRustBackendTests: XCTestCase {
             expectedUAs
         )
 
-        let actualReceivers = try ZcashRustBackend.listTransparentReceivers(
+        let actualReceivers = try await ZcashRustBackend.listTransparentReceivers(
             dbData: tempDBs.dataDB,
             account: 0,
             networkType: network

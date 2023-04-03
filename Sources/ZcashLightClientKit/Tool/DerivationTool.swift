@@ -30,12 +30,12 @@ public protocol KeyDeriving {
     /// Extracts the `SaplingAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
     /// - Throws `KeyDerivationErrors.receiverNotFound` if the receiver is not present
-    static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress?
+    static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress
 
     /// Extracts the `TransparentAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
     /// - Throws `KeyDerivationErrors.receiverNotFound` if the receiver is not present
-    static func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress?
+    static func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress
 
     /// Extracts the `UnifiedAddress.ReceiverTypecodes` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
@@ -60,11 +60,11 @@ public class DerivationTool: KeyDeriving {
         self.networkType = networkType
     }
 
-    public static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress? {
+    public static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress {
         try rustwelding.getSaplingReceiver(for: unifiedAddress)
     }
 
-    public static func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress? {
+    public static func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress {
         try rustwelding.getTransparentReceiver(for: unifiedAddress)
     }
 
@@ -215,13 +215,13 @@ public extension UnifiedSpendingKey {
 public extension UnifiedAddress {
     /// Extracts the sapling receiver from this UA if available
     /// - Returns: an `Optional<SaplingAddress>`
-    func saplingReceiver() -> SaplingAddress? {
-        try? DerivationTool.saplingReceiver(from: self)
+    func saplingReceiver() throws -> SaplingAddress {
+        try DerivationTool.saplingReceiver(from: self)
     }
 
     /// Extracts the transparent receiver from this UA if available
     /// - Returns: an `Optional<TransparentAddress>`
-    func transparentReceiver() -> TransparentAddress? {
-        try? DerivationTool.transparentReceiver(from: self)
+    func transparentReceiver() throws -> TransparentAddress {
+        try DerivationTool.transparentReceiver(from: self)
     }
 }

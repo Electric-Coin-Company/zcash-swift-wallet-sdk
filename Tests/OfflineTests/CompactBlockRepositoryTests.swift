@@ -44,7 +44,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             logger: logger
         )
 
-        try compactBlockRepository.create()
+        try await compactBlockRepository.create()
 
         let latestHeight = await compactBlockRepository.latestHeight()
         XCTAssertEqual(latestHeight, BlockHeight.empty())
@@ -63,7 +63,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             logger: logger
         )
 
-        try compactBlockRepository.create()
+        try await compactBlockRepository.create()
 
         let initialHeight = await compactBlockRepository.latestHeight()
         let startHeight = self.network.constants.saplingActivationHeight
@@ -90,7 +90,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             logger: logger
         )
 
-        try compactBlockRepository.create()
+        try await compactBlockRepository.create()
 
         let expectedHeight = BlockHeight(123_456)
         guard let block = StubBlockCreator.createRandomDataBlock(with: expectedHeight) else {
@@ -116,7 +116,7 @@ class CompactBlockRepositoryTests: XCTestCase {
             logger: logger
         )
 
-        try compactBlockRepository.create()
+        try await compactBlockRepository.create()
 
         let startHeight = self.network.constants.saplingActivationHeight
         let blockCount = Int(1_000)

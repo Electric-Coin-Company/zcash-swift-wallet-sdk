@@ -210,9 +210,33 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getSaplingAddress(accountIndex: 3) { receivedAddress in
-            XCTAssertEqual(receivedAddress, self.data.saplingAddress)
-            expectation.fulfill()
+        synchronizer.getSaplingAddress(accountIndex: 3) { result in
+            switch result {
+            case let .success(address):
+                XCTAssertEqual(address, self.data.saplingAddress)
+                expectation.fulfill()
+            case let .failure(error):
+                XCTFail("getSaplingAddress failed with error: \(error)")
+            }
+        }
+
+        wait(for: [expectation], timeout: 0.5)
+    }
+
+    func testGetSaplingAddressThrowsError() {
+        synchronizerMock.getSaplingAddressAccountIndexClosure = { _ in
+            throw "Some error"
+        }
+
+        let expectation = XCTestExpectation()
+
+        synchronizer.getSaplingAddress(accountIndex: 3) { result in
+            switch result {
+            case .success:
+                XCTFail("Error should be thrown.")
+            case .failure:
+                expectation.fulfill()
+            }
         }
 
         wait(for: [expectation], timeout: 0.5)
@@ -226,9 +250,33 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getUnifiedAddress(accountIndex: 3) { receivedAddress in
-            XCTAssertEqual(receivedAddress, self.data.unifiedAddress)
-            expectation.fulfill()
+        synchronizer.getUnifiedAddress(accountIndex: 3) { result in
+            switch result {
+            case let .success(address):
+                XCTAssertEqual(address, self.data.unifiedAddress)
+                expectation.fulfill()
+            case let .failure(error):
+                XCTFail("getSaplingAddress failed with error: \(error)")
+            }
+        }
+
+        wait(for: [expectation], timeout: 0.5)
+    }
+
+    func testGetUnifiedAddressThrowsError() {
+        synchronizerMock.getUnifiedAddressAccountIndexClosure = { _ in
+            throw "Some error"
+        }
+
+        let expectation = XCTestExpectation()
+
+        synchronizer.getUnifiedAddress(accountIndex: 3) { result in
+            switch result {
+            case .success:
+                XCTFail("Error should be thrown.")
+            case .failure:
+                expectation.fulfill()
+            }
         }
 
         wait(for: [expectation], timeout: 0.5)
@@ -242,9 +290,33 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.getTransparentAddress(accountIndex: 3) { receivedAddress in
-            XCTAssertEqual(receivedAddress, self.data.transparentAddress)
-            expectation.fulfill()
+        synchronizer.getTransparentAddress(accountIndex: 3) { result in
+            switch result {
+            case let .success(address):
+                XCTAssertEqual(address, self.data.transparentAddress)
+                expectation.fulfill()
+            case let .failure(error):
+                XCTFail("getSaplingAddress failed with error: \(error)")
+            }
+        }
+
+        wait(for: [expectation], timeout: 0.5)
+    }
+
+    func testGetTransparentAddressThrowsError() {
+        synchronizerMock.getTransparentAddressAccountIndexClosure = { _ in
+            throw "Some error"
+        }
+
+        let expectation = XCTestExpectation()
+
+        synchronizer.getTransparentAddress(accountIndex: 3) { result in
+            switch result {
+            case .success:
+                XCTFail("Error should be thrown.")
+            case .failure:
+                expectation.fulfill()
+            }
         }
 
         wait(for: [expectation], timeout: 0.5)
@@ -762,7 +834,38 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
             return Zatoshi(333)
         }
 
-        XCTAssertEqual(synchronizer.getShieldedBalance(accountIndex: 3), Zatoshi(333))
+        let expectation = XCTestExpectation()
+
+        synchronizer.getShieldedBalance(accountIndex: 3) { result in
+            switch result {
+            case let .success(receivedBalance):
+                XCTAssertEqual(receivedBalance, Zatoshi(333))
+                expectation.fulfill()
+            case let .failure(error):
+                XCTFail("Unpected failure with error: \(error)")
+            }
+        }
+
+        wait(for: [expectation], timeout: 0.5)
+    }
+
+    func testGetShieldedBalanceThrowsError() {
+        synchronizerMock.getShieldedBalanceAccountIndexClosure = { _ in
+            throw "Some error"
+        }
+
+        let expectation = XCTestExpectation()
+
+        synchronizer.getShieldedBalance(accountIndex: 3) { result in
+            switch result {
+            case .success:
+                XCTFail("Error should be thrown.")
+            case .failure:
+                expectation.fulfill()
+            }
+        }
+
+        wait(for: [expectation], timeout: 0.5)
     }
 
     func testGetShieldedVerifiedBalanceSucceed() {
@@ -771,7 +874,38 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
             return Zatoshi(333)
         }
 
-        XCTAssertEqual(synchronizer.getShieldedVerifiedBalance(accountIndex: 3), Zatoshi(333))
+        let expectation = XCTestExpectation()
+
+        synchronizer.getShieldedVerifiedBalance(accountIndex: 3) { result in
+            switch result {
+            case let .success(receivedBalance):
+                XCTAssertEqual(receivedBalance, Zatoshi(333))
+                expectation.fulfill()
+            case let .failure(error):
+                XCTFail("Unpected failure with error: \(error)")
+            }
+        }
+
+        wait(for: [expectation], timeout: 0.5)
+    }
+
+    func testGetShieldedVerifiedBalanceThrowsError() {
+        synchronizerMock.getShieldedVerifiedBalanceAccountIndexClosure = { _ in
+            throw "Some error"
+        }
+
+        let expectation = XCTestExpectation()
+
+        synchronizer.getShieldedVerifiedBalance(accountIndex: 3) { result in
+            switch result {
+            case .success:
+                XCTFail("Error should be thrown.")
+            case .failure:
+                expectation.fulfill()
+            }
+        }
+
+        wait(for: [expectation], timeout: 0.5)
     }
 
     func testRewindSucceed() {

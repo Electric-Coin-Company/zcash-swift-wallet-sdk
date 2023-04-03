@@ -144,7 +144,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             throw TransactionManagerError.updateFailed(pendingTransaction)
         } catch {
             do {
-                try self.updateOnFailure(transaction: pendingTransaction, error: error)
+                try await self.updateOnFailure(transaction: pendingTransaction, error: error)
             } catch {
                 throw TransactionManagerError.updateFailed(pendingTransaction)
             }
@@ -175,7 +175,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             }
             
             let response = try await self.service.submit(spendTransaction: raw)
-            let transaction = try self.update(transaction: storedTx, on: response)
+            let transaction = try await self.update(transaction: storedTx, on: response)
             
             guard response.errorCode >= 0 else {
                 throw TransactionManagerError.submitFailed(transaction, errorCode: Int(response.errorCode))
@@ -183,12 +183,12 @@ class PersistentTransactionManager: OutboundTransactionManager {
             
             return transaction
         } catch {
-            try? self.updateOnFailure(transaction: pendingTransaction, error: error)
+            try? await self.updateOnFailure(transaction: pendingTransaction, error: error)
             throw error
         }
     }
     
-    func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) throws -> PendingTransactionEntity {
+    func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) async throws -> PendingTransactionEntity {
         guard let id = pendingTransaction.id else {
             throw TransactionManagerError.internalInconsistency(pendingTransaction)
         }
@@ -209,8 +209,8 @@ class PersistentTransactionManager: OutboundTransactionManager {
         return transaction
     }
     
-    func handleReorg(at height: BlockHeight) throws {
-        let affectedTxs = try allPendingTransactions()
+    func handleReorg(at height: BlockHeight) async throws {
+        let affectedTxs = try await allPendingTransactions()
             .filter({ $0.minedHeight >= height })
         
         try affectedTxs
@@ -222,7 +222,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             .forEach { try self.repository.update($0) }
     }
     
-    func cancel(pendingTransaction: PendingTransactionEntity) -> Bool {
+    func cancel(pendingTransaction: PendingTransactionEntity) async -> Bool {
         guard let id = pendingTransaction.id else { return false }
         
         guard let transaction = try? repository.find(by: id) else { return false }
@@ -234,19 +234,19 @@ class PersistentTransactionManager: OutboundTransactionManager {
         return true
     }
     
-    func allPendingTransactions() throws -> [PendingTransactionEntity] {
+    func allPendingTransactions() async throws -> [PendingTransactionEntity] {
         try repository.getAll()
     }
     
     // MARK: other functions
-    private func updateOnFailure(transaction: PendingTransactionEntity, error: Error) throws {
+    private func updateOnFailure(transaction: PendingTransactionEntity, error: Error) async throws {
         var pending = transaction
         pending.errorMessage = error.localizedDescription
         pending.encodeAttempts = transaction.encodeAttempts + 1
         try self.repository.update(pending)
     }
     
-    private func update(transaction: PendingTransactionEntity, on sendResponse: LightWalletServiceResponse) throws -> PendingTransactionEntity {
+    private func update(transaction: PendingTransactionEntity, on sendResponse: LightWalletServiceResponse) async throws -> PendingTransactionEntity {
         var pendingTx = transaction
         pendingTx.submitAttempts += 1
         let error = sendResponse.errorCode < 0
@@ -256,7 +256,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
         return pendingTx
     }
     
-    func delete(pendingTransaction: PendingTransactionEntity) throws {
+    func delete(pendingTransaction: PendingTransactionEntity) async throws {
         do {
             try repository.delete(pendingTransaction)
         } catch {

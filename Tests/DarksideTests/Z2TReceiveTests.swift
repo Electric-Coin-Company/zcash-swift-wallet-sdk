@@ -24,26 +24,24 @@ class Z2TReceiveTests: XCTestCase {
     var cancellables: [AnyCancellable] = []
     
     let network = DarksideWalletDNetwork()
-    
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        self.coordinator = TestCoordinator.make(
-            walletBirthday: self.birthday,
-            network: self.network
-        )
 
+    override func setUp() async throws {
+        try await super.setUp()
+
+        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
-    
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
-        NotificationCenter.default.removeObserver(self)
-        wait { try await self.coordinator.stop() }
+
+    override func tearDown() async throws {
+        try await super.tearDown()
+        let coordinator = self.coordinator!
+        self.coordinator = nil
+        cancellables = []
+
+        try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-        coordinator = nil
-        cancellables = []
     }
     
     func subscribeToFoundTransactions() {
@@ -198,7 +196,7 @@ class Z2TReceiveTests: XCTestCase {
         do {
             try await coordinator.sync(
                 completion: { synchronizer in
-                    let pMinedHeight = synchronizer.pendingTransactions.first?.minedHeight
+                    let pMinedHeight = await synchronizer.pendingTransactions.first?.minedHeight
                     XCTAssertEqual(pMinedHeight, sentTxHeight)
 
                     sentTxSyncExpectation.fulfill()
