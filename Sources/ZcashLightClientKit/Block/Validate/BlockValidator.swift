@@ -14,20 +14,13 @@ enum BlockValidatorError: Error {
     case failedWithUnknownError
 }
 
-struct BlockValidatorConfig {
-    let fsBlockCacheRoot: URL
-    let dataDB: URL
-    let networkType: NetworkType
-}
-
 protocol BlockValidator {
     /// Validate all the downloaded blocks that haven't been yet validated.
     func validate() async throws
 }
 
 struct BlockValidatorImpl {
-    let config: BlockValidatorConfig
-    let rustBackend: ZcashRustBackendWelding.Type
+    let rustBackend: ZcashRustBackendWelding
     let metrics: SDKMetrics
     let logger: Logger
 }
@@ -37,14 +30,24 @@ extension BlockValidatorImpl: BlockValidator {
         try Task.checkCancellation()
 
         let startTime = Date()
-        let result = await rustBackend.validateCombinedChain(
-            fsBlockDbRoot: config.fsBlockCacheRoot,
-            dbData: config.dataDB,
-            networkType: config.networkType,
-            limit: 0
-        )
-        let finishTime = Date()
+        do {
+            try await rustBackend.validateCombinedChain(limit: 0)
+            pushProgressReport(startTime: startTime, finishTime: Date())
+            logger.debug("validateChainFinished")
+        } catch {
+            pushProgressReport(startTime: startTime, finishTime: Date())
 
+            switch error {
+            case let RustWeldingError.invalidChain(upperBound):
+                throw BlockValidatorError.validationFailed(height: BlockHeight(upperBound))
+
+            default:
+                throw BlockValidatorError.failedWithError(error)
+            }
+        }
+    }
+
+    private func pushProgressReport(startTime: Date, finishTime: Date) {
         metrics.pushProgressReport(
             progress: BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0),
             start: startTime,
@@ -52,24 +55,5 @@ extension BlockValidatorImpl: BlockValidator {
             batchSize: 0,
             operation: .validateBlocks
         )
-
-        switch result {
-        case 0:
-            let rustError = rustBackend.lastError()
-            logger.debug("Block validation failed with error: \(String(describing: rustError))")
-            if let rustError {
-                throw BlockValidatorError.failedWithError(rustError)
-            } else {
-                throw BlockValidatorError.failedWithUnknownError
-            }
-
-        case ZcashRustBackendWeldingConstants.validChain:
-            logger.debug("validateChainFinished")
-            return
-
-        default:
-            logger.debug("Block validation failed at height: \(result)")
-            throw BlockValidatorError.validationFailed(height: BlockHeight(result))
-        }
     }
 }

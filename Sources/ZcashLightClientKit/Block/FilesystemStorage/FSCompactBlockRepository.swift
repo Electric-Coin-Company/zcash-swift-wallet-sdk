@@ -52,7 +52,10 @@ extension FSCompactBlockRepository: CompactBlockRepository {
             try fileManager.createDirectory(at: blocksDirectory, withIntermediateDirectories: true)
         }
 
-        guard try await self.metadataStore.initFsBlockDbRoot(self.fsBlockDbRoot) else {
+        do {
+            try await self.metadataStore.initFsBlockDbRoot()
+        } catch {
+            logger.error("Blocks metadata store init failed with error: \(error)")
             throw CompactBlockRepositoryError.failedToInitializeCache
         }
     }
@@ -210,12 +213,12 @@ extension FSBlockFileWriter {
 struct FSMetadataStore {
     var saveBlocksMeta: ([ZcashCompactBlock]) async throws -> Void
     var rewindToHeight: (BlockHeight) async throws -> Void
-    var initFsBlockDbRoot: (URL) async throws -> Bool
+    var initFsBlockDbRoot: () async throws -> Void
     var latestHeight: () async -> BlockHeight
 }
 
 extension FSMetadataStore {
-    static func live(fsBlockDbRoot: URL, rustBackend: ZcashRustBackendWelding.Type, logger: Logger) -> FSMetadataStore {
+    static func live(fsBlockDbRoot: URL, rustBackend: ZcashRustBackendWelding, logger: Logger) -> FSMetadataStore {
         FSMetadataStore { blocks in
             try await FSMetadataStore.saveBlocksMeta(
                 blocks,
@@ -224,13 +227,13 @@ extension FSMetadataStore {
                 logger: logger
             )
         } rewindToHeight: { height in
-            guard await rustBackend.rewindCacheToHeight(fsBlockDbRoot: fsBlockDbRoot, height: Int32(height)) else {
+            guard await rustBackend.rewindCacheToHeight(height: Int32(height)) else {
                 throw CompactBlockRepositoryError.failedToRewind(height)
             }
-        } initFsBlockDbRoot: { dbRootURL in
-            try await rustBackend.initBlockMetadataDb(fsBlockDbRoot: dbRootURL)
+        } initFsBlockDbRoot: {
+            try await rustBackend.initBlockMetadataDb()
         } latestHeight: {
-            await rustBackend.latestCachedBlockHeight(fsBlockDbRoot: fsBlockDbRoot)
+            await rustBackend.latestCachedBlockHeight()
         }
     }
 }
@@ -244,15 +247,13 @@ extension FSMetadataStore {
     static func saveBlocksMeta(
         _ blocks: [ZcashCompactBlock],
         fsBlockDbRoot: URL,
-        rustBackend: ZcashRustBackendWelding.Type,
+        rustBackend: ZcashRustBackendWelding,
         logger: Logger
     ) async throws {
         guard !blocks.isEmpty else { return }
 
         do {
-            guard try await rustBackend.writeBlocksMetadata(fsBlockDbRoot: fsBlockDbRoot, blocks: blocks) else {
-                throw CompactBlockRepositoryError.failedToWriteMetadata
-            }
+            try await rustBackend.writeBlocksMetadata(blocks: blocks)
         } catch {
             logger.error("Failed to write metadata with error: \(error)")
             throw CompactBlockRepositoryError.failedToWriteMetadata

@@ -5,18 +5,15 @@
 //  Created by Francisco Gindre on 10/8/20.
 //
 
+import Combine
 import Foundation
 
 public protocol KeyValidation {
-    func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool
-    
-    func isValidTransparentAddress(_ tAddress: String) -> Bool
-    
-    func isValidSaplingAddress(_ zAddress: String) -> Bool
-
-    func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool
-
-    func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool
+    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool
+    static func isValidTransparentAddress(_ tAddress: String, networkType: NetworkType) -> Bool
+    static func isValidSaplingAddress(_ zAddress: String, networkType: NetworkType) -> Bool
+    static func isValidSaplingExtendedSpendingKey(_ extsk: String, networkType: NetworkType) -> Bool
+    static func isValidUnifiedAddress(_ unifiedAddress: String, networkType: NetworkType) -> Bool
 }
 
 public protocol KeyDeriving {
@@ -25,7 +22,16 @@ public protocol KeyDeriving {
     /// - Parameter accountNumber: `Int` with the account number
     /// - Throws `.unableToDerive` if there's a problem deriving this key
     /// - Returns a `UnifiedSpendingKey`
-    func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) throws -> UnifiedSpendingKey
+    func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) async throws -> UnifiedSpendingKey
+    func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int, completion: @escaping (Result<UnifiedSpendingKey, Error>) -> Void)
+    func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) -> SinglePublisher<UnifiedSpendingKey, Error>
+
+    /// Given a spending key, return the associated viewing key.
+    /// - Parameter spendingKey: the `UnifiedSpendingKey` from which to derive the `UnifiedFullViewingKey` from.
+    /// - Returns: the viewing key that corresponds to the spending key.
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey, completion: @escaping (Result<UnifiedFullViewingKey, Error>) -> Void)
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) -> SinglePublisher<UnifiedFullViewingKey, Error>
 
     /// Extracts the `SaplingAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
@@ -45,6 +51,8 @@ public protocol KeyDeriving {
 
 public enum KeyDerivationErrors: Error {
     case derivationError(underlyingError: Error)
+    // When something happens that is not related to derivation itself happens. For example if self is nil in closure.
+    case genericOtherError
     case unableToDerive
     case invalidInput
     case invalidUnifiedAddress
@@ -54,10 +62,10 @@ public enum KeyDerivationErrors: Error {
 public class DerivationTool: KeyDeriving {
     static var rustwelding: ZcashRustBackendWelding.Type = ZcashRustBackend.self
     
-    var networkType: NetworkType
+    let rustBackend: ZcashRustBackendWelding
     
-    public init(networkType: NetworkType) {
-        self.networkType = networkType
+    init(rustBackend: ZcashRustBackendWelding) {
+        self.rustBackend = rustBackend
     }
 
     public static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress {
@@ -75,8 +83,22 @@ public class DerivationTool: KeyDeriving {
     /// Given a spending key, return the associated viewing key.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` from which to derive the `UnifiedFullViewingKey` from.
     /// - Returns: the viewing key that corresponds to the spending key.
-    public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) throws -> UnifiedFullViewingKey {
-        try DerivationTool.rustwelding.deriveUnifiedFullViewingKey(from: spendingKey, networkType: self.networkType)
+    public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
+        try await rustBackend.deriveUnifiedFullViewingKey(from: spendingKey)
+    }
+
+    public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey, completion: @escaping (Result<UnifiedFullViewingKey, Error>) -> Void) {
+        AsyncToClosureGateway.executeThrowingAction(completion) { [weak self] in
+            guard let self else { throw KeyDerivationErrors.genericOtherError }
+            return try await self.deriveUnifiedFullViewingKey(from: spendingKey)
+        }
+    }
+
+    public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) -> SinglePublisher<UnifiedFullViewingKey, Error> {
+        AsyncToCombineGateway.executeThrowingAction() { [weak self] in
+            guard let self else { throw KeyDerivationErrors.genericOtherError }
+            return try await self.deriveUnifiedFullViewingKey(from: spendingKey)
+        }
     }
 
     /// Given a seed and a number of accounts, return the associated spending keys.
@@ -84,18 +106,28 @@ public class DerivationTool: KeyDeriving {
     /// - Parameter numberOfAccounts: the number of accounts to use. Multiple accounts are not fully
     /// supported so the default value of 1 is recommended.
     /// - Returns: the spending keys that correspond to the seed, formatted as Strings.
-    public func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) throws -> UnifiedSpendingKey {
+    public func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) async throws -> UnifiedSpendingKey {
         guard accountIndex >= 0, let accountIndex = Int32(exactly: accountIndex) else {
             throw KeyDerivationErrors.invalidInput
         }
         do {
-            return try DerivationTool.rustwelding.deriveUnifiedSpendingKey(
-                from: seed,
-                accountIndex: accountIndex,
-                networkType: self.networkType
-            )
+            return try await rustBackend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
         } catch {
             throw KeyDerivationErrors.unableToDerive
+        }
+    }
+
+    public func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int, completion: @escaping (Result<UnifiedSpendingKey, Error>) -> Void) {
+        AsyncToClosureGateway.executeThrowingAction(completion) { [weak self] in
+            guard let self else { throw KeyDerivationErrors.genericOtherError }
+            return try await self.deriveUnifiedSpendingKey(seed: seed, accountIndex: accountIndex)
+        }
+    }
+
+    public func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) -> SinglePublisher<UnifiedSpendingKey, Error> {
+        AsyncToCombineGateway.executeThrowingAction() { [weak self] in
+            guard let self else { throw KeyDerivationErrors.genericOtherError }
+            return try await self.deriveUnifiedSpendingKey(seed: seed, accountIndex: accountIndex)
         }
     }
 
@@ -120,23 +152,23 @@ public struct AddressMetadata {
 }
 
 extension DerivationTool: KeyValidation {
-    public func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool {
+    public static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool {
         DerivationTool.rustwelding.isValidUnifiedFullViewingKey(ufvk, networkType: networkType)
     }
 
-    public func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool {
+    public static func isValidUnifiedAddress(_ unifiedAddress: String, networkType: NetworkType) -> Bool {
         DerivationTool.rustwelding.isValidUnifiedAddress(unifiedAddress, networkType: networkType)
     }
     
-    public func isValidTransparentAddress(_ tAddress: String) -> Bool {
+    public static func isValidTransparentAddress(_ tAddress: String, networkType: NetworkType) -> Bool {
         DerivationTool.rustwelding.isValidTransparentAddress(tAddress, networkType: networkType)
     }
     
-    public func isValidSaplingAddress(_ zAddress: String) -> Bool {
+    public static func isValidSaplingAddress(_ zAddress: String, networkType: NetworkType) -> Bool {
         DerivationTool.rustwelding.isValidSaplingAddress(zAddress, networkType: networkType)
     }
 
-    public func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool {
+    public static func isValidSaplingExtendedSpendingKey(_ extsk: String, networkType: NetworkType) -> Bool {
         DerivationTool.rustwelding.isValidSaplingExtendedSpendingKey(extsk, networkType: networkType)
     }
 }
@@ -205,10 +237,6 @@ extension SaplingExtendedSpendingKey {
 public extension UnifiedSpendingKey {
     func map<T>(_ transform: (UnifiedSpendingKey) throws -> T) rethrows -> T {
         try transform(self)
-    }
-
-    func deriveFullViewingKey() throws -> UnifiedFullViewingKey {
-        try DerivationTool(networkType: self.network).deriveUnifiedFullViewingKey(from: self)
     }
 }
 

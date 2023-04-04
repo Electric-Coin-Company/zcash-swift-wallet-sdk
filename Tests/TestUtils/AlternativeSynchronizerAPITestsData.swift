@@ -9,7 +9,18 @@ import Foundation
 @testable import ZcashLightClientKit
 
 class AlternativeSynchronizerAPITestsData {
-    let derivationTools = DerivationTool(networkType: .testnet)
+    let initialier = Initializer(
+        cacheDbURL: nil,
+        fsBlockDbRoot: URL(fileURLWithPath: "/"),
+        dataDbURL: URL(fileURLWithPath: "/"),
+        pendingDbURL: URL(fileURLWithPath: "/"),
+        endpoint: LightWalletEndpointBuilder.default,
+        network: ZcashNetworkBuilder.network(for: .testnet),
+        spendParamsURL: URL(fileURLWithPath: "/"),
+        outputParamsURL: URL(fileURLWithPath: "/"),
+        saplingParamsSourceURL: .default
+    )
+    lazy var derivationTools: DerivationTool = { initialier.makeDerivationTool() }()
     let saplingAddress = SaplingAddress(validatedEncoding: "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6")
     let unifiedAddress = UnifiedAddress(
         validatedEncoding: """
@@ -73,8 +84,16 @@ class AlternativeSynchronizerAPITestsData {
     }()
 
     var seed: [UInt8] = Environment.seedBytes
-    lazy var spendingKey: UnifiedSpendingKey = { try! derivationTools.deriveUnifiedSpendingKey(seed: seed, accountIndex: 0) }()
-    lazy var viewingKey: UnifiedFullViewingKey = { try! derivationTools.deriveUnifiedFullViewingKey(from: spendingKey) }()
+    var spendingKey: UnifiedSpendingKey {
+        get async {
+            try! await derivationTools.deriveUnifiedSpendingKey(seed: seed, accountIndex: 0)
+        }
+    }
+    var viewingKey: UnifiedFullViewingKey {
+        get async {
+            try! await derivationTools.deriveUnifiedFullViewingKey(from: spendingKey)
+        }
+    }
     var birthday: BlockHeight = 123000
 
     init() { }

@@ -8,8 +8,6 @@
 import Foundation
 
 struct BlockScannerConfig {
-    let fsBlockCacheRoot: URL
-    let dataDB: URL
     let networkType: NetworkType
     let scanningBatchSize: Int
 }
@@ -20,7 +18,7 @@ protocol BlockScanner {
 
 struct BlockScannerImpl {
     let config: BlockScannerConfig
-    let rustBackend: ZcashRustBackendWelding.Type
+    let rustBackend: ZcashRustBackendWelding
     let transactionRepository: TransactionRepository
     let metrics: SDKMetrics
     let logger: Logger
@@ -42,19 +40,16 @@ extension BlockScannerImpl: BlockScanner {
             let previousScannedHeight = lastScannedHeight
 
             // TODO: [#576] remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
-            let batchSize = scanBatchSize(startScanHeight: previousScannedHeight + 1, network: self.config.networkType)
+            let batchSize = scanBatchSize(startScanHeight: previousScannedHeight + 1, network: config.networkType)
 
             let scanStartTime = Date()
-            guard await self.rustBackend.scanBlocks(
-                fsBlockDbRoot: config.fsBlockCacheRoot,
-                dbData: config.dataDB,
-                limit: batchSize,
-                networkType: config.networkType
-            ) else {
-                let error: Error = rustBackend.lastError() ?? CompactBlockProcessorError.unknown
+            do {
+                try await self.rustBackend.scanBlocks(limit: batchSize)
+            } catch {
                 logger.debug("block scanning failed with error: \(String(describing: error))")
                 throw error
             }
+
             let scanFinishTime = Date()
 
             lastScannedHeight = try await transactionRepository.lastScannedHeight()

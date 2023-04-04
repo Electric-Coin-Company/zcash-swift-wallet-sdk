@@ -35,38 +35,38 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
-    ) -> Single<Initializer.InitializationResult, Error> {
-        return executeThrowingAction() {
+    ) -> SinglePublisher<Initializer.InitializationResult, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             return try await self.synchronizer.prepare(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday)
         }
     }
 
-    public func start(retry: Bool) -> Completable<Error> {
-        return executeThrowingAction() {
+    public func start(retry: Bool) -> CompletablePublisher<Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.start(retry: retry)
         }
     }
 
-    public func stop() -> Completable<Never> {
-        return executeAction() {
+    public func stop() -> CompletablePublisher<Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.stop()
         }
     }
 
-    public func getSaplingAddress(accountIndex: Int) -> Single<SaplingAddress, Error> {
-        return executeThrowingAction() {
+    public func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getUnifiedAddress(accountIndex: Int) -> Single<UnifiedAddress, Error> {
-        return executeThrowingAction() {
+    public func getUnifiedAddress(accountIndex: Int) -> SinglePublisher<UnifiedAddress, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
         }
     }
 
-    public func getTransparentAddress(accountIndex: Int) -> Single<TransparentAddress, Error> {
-        return executeThrowingAction() {
+    public func getTransparentAddress(accountIndex: Int) -> SinglePublisher<TransparentAddress, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
         }
     }
@@ -76,8 +76,8 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?
-    ) -> Single<PendingTransactionEntity, Error> {
-        return executeThrowingAction() {
+    ) -> SinglePublisher<PendingTransactionEntity, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo)
         }
     }
@@ -86,160 +86,110 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi
-    ) -> Single<PendingTransactionEntity, Error> {
-        return executeThrowingAction() {
+    ) -> SinglePublisher<PendingTransactionEntity, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.shieldFunds(spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
         }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity) -> Single<Bool, Never> {
-        executeAction() {
+    public func cancelSpend(transaction: PendingTransactionEntity) -> SinglePublisher<Bool, Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.cancelSpend(transaction: transaction)
         }
     }
 
-    public var pendingTransactions: Single<[PendingTransactionEntity], Never> {
-        executeAction() {
+    public var pendingTransactions: SinglePublisher<[PendingTransactionEntity], Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.pendingTransactions
         }
     }
 
-    public var clearedTransactions: Single<[ZcashTransaction.Overview], Never> {
-        executeAction() {
+    public var clearedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.clearedTransactions
         }
     }
 
-    public var sentTransactions: Single<[ZcashTransaction.Sent], Never> {
-        executeAction() {
+    public var sentTransactions: SinglePublisher<[ZcashTransaction.Sent], Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.sentTransactions
         }
     }
 
-    public var receivedTransactions: Single<[ZcashTransaction.Received], Never> {
-        executeAction() {
+    public var receivedTransactions: SinglePublisher<[ZcashTransaction.Received], Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.receivedTransactions
         }
     }
     
     public func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository { synchronizer.paginatedTransactions(of: kind) }
 
-    public func getMemos(for transaction: ZcashTransaction.Overview) -> Single<[Memo], Error> {
-        executeThrowingAction() {
+    public func getMemos(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[Memo], Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getMemos(for: transaction)
         }
     }
 
-    public func getMemos(for receivedTransaction: ZcashTransaction.Received) -> Single<[Memo], Error> {
-        executeThrowingAction() {
+    public func getMemos(for receivedTransaction: ZcashTransaction.Received) -> SinglePublisher<[Memo], Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getMemos(for: receivedTransaction)
         }
     }
 
-    public func getMemos(for sentTransaction: ZcashTransaction.Sent) -> Single<[Memo], Error> {
-        executeThrowingAction() {
+    public func getMemos(for sentTransaction: ZcashTransaction.Sent) -> SinglePublisher<[Memo], Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getMemos(for: sentTransaction)
         }
     }
 
-    public func getRecipients(for transaction: ZcashTransaction.Overview) -> Single<[TransactionRecipient], Never> {
-        executeAction() {
+    public func getRecipients(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[TransactionRecipient], Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.getRecipients(for: transaction)
         }
     }
 
-    public func getRecipients(for transaction: ZcashTransaction.Sent) -> Single<[TransactionRecipient], Never> {
-        executeAction() {
+    public func getRecipients(for transaction: ZcashTransaction.Sent) -> SinglePublisher<[TransactionRecipient], Never> {
+        AsyncToCombineGateway.executeAction() {
             await self.synchronizer.getRecipients(for: transaction)
         }
     }
 
-    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> Single<[ZcashTransaction.Overview], Error> {
-        executeThrowingAction() {
+    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> SinglePublisher<[ZcashTransaction.Overview], Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
         }
     }
 
-    public func latestHeight() -> Single<BlockHeight, Error> {
-        return executeThrowingAction() {
+    public func latestHeight() -> SinglePublisher<BlockHeight, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.latestHeight()
         }
     }
 
-    public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) -> Single<RefreshedUTXOs, Error> {
-        return executeThrowingAction() {
+    public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) -> SinglePublisher<RefreshedUTXOs, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.refreshUTXOs(address: address, from: height)
         }
     }
 
-    public func getTransparentBalance(accountIndex: Int) -> Single<WalletBalance, Error> {
-        return executeThrowingAction() {
+    public func getTransparentBalance(accountIndex: Int) -> SinglePublisher<WalletBalance, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.getTransparentBalance(accountIndex: accountIndex)
         }
     }
 
-    public func getShieldedBalance(accountIndex: Int = 0) -> Single<Zatoshi, Error> {
-        return executeThrowingAction() {
+    public func getShieldedBalance(accountIndex: Int = 0) -> SinglePublisher<Zatoshi, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await synchronizer.getShieldedBalance(accountIndex: accountIndex)
         }
     }
 
-    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> Single<Zatoshi, Error> {
-        return executeThrowingAction() {
+    public func getShieldedVerifiedBalance(accountIndex: Int = 0) -> SinglePublisher<Zatoshi, Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
             try await synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex)
         }
     }
 
-    public func rewind(_ policy: RewindPolicy) -> Completable<Error> { synchronizer.rewind(policy) }
-    public func wipe() -> Completable<Error> { synchronizer.wipe() }
-}
-
-extension CombineSDKSynchronizer {
-    private func executeAction(action: @escaping () async -> Void) -> Completable<Never> {
-        let subject = PassthroughSubject<Void, Never>()
-        Task {
-            await action()
-            subject.send(completion: .finished)
-        }
-        return subject.eraseToAnyPublisher()
-    }
-
-    private func executeAction<R>(action: @escaping () async -> R) -> Single<R, Never> {
-        let subject = PassthroughSubject<R, Never>()
-        Task {
-            let result = await action()
-            subject.send(result)
-            subject.send(completion: .finished)
-        }
-        return subject.eraseToAnyPublisher()
-    }
-
-    private func executeThrowingAction(action: @escaping () async throws -> Void) -> Completable<Error> {
-        let subject = PassthroughSubject<Void, Error>()
-        Task {
-            do {
-                try await action()
-                subject.send(completion: .finished)
-            } catch {
-                subject.send(completion: .failure(error))
-            }
-        }
-
-        return subject.eraseToAnyPublisher()
-    }
-
-    private func executeThrowingAction<R>(action: @escaping () async throws -> R) -> Single<R, Error> {
-        let subject = PassthroughSubject<R, Error>()
-        Task {
-            do {
-                let result = try await action()
-                subject.send(result)
-                subject.send(completion: .finished)
-            } catch {
-                subject.send(completion: .failure(error))
-            }
-        }
-
-        return subject.eraseToAnyPublisher()
-    }
+    public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
+    public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
 }
