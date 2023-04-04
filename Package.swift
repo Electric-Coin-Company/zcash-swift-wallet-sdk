@@ -39,7 +39,9 @@ let package = Package(
             dependencies: ["ZcashLightClientKit"],
             path: "Tests/TestUtils",
             exclude: [
-                "proto/darkside.proto"
+                "proto/darkside.proto",
+                "Sourcery/AutoMockable.stencil",
+                "Sourcery/generateMocks"
             ],
             resources: [
                 .copy("Resources/test_data.db"),

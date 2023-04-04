@@ -104,6 +104,20 @@
                ReferencedContainer = "container:../..">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "0DA1C4A627D11B2900E5006E"
+               BuildableName = "ZcashLightClientSampleTests.xctest"
+               BlueprintName = "ZcashLightClientSampleTests"
+               ReferencedContainer = "container:ZcashLightClientSample.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

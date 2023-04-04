@@ -218,24 +218,34 @@ public protocol Synchronizer: AnyObject {
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
     /// Get all memos for `transaction`.
+    ///
+    // sourcery: mockedName="getMemosForClearedTransaction"
     func getMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo]
 
     /// Get all memos for `receivedTransaction`.
+    ///
+    // sourcery: mockedName="getMemosForReceivedTransaction"
     func getMemos(for receivedTransaction: ZcashTransaction.Received) async throws -> [Memo]
 
     /// Get all memos for `sentTransaction`.
+    ///
+    // sourcery: mockedName="getMemosForSentTransaction"
     func getMemos(for sentTransaction: ZcashTransaction.Sent) async throws -> [Memo]
 
     /// Attempt to get recipients from a Transaction Overview.
     /// - parameter transaction: A transaction overview
     /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
     /// transaction
+    ///
+    // sourcery: mockedName="getRecipientsForClearedTransaction"
     func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient]
     
     /// Get the recipients for the given a sent transaction
     /// - parameter transaction: A transaction overview
     /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
     /// transaction
+    ///
+    // sourcery: mockedName="getRecipientsForSentTransaction"
     func getRecipients(for transaction: ZcashTransaction.Sent) async -> [TransactionRecipient]
 
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
