@@ -1,5 +1,5 @@
 //
-//  AlternativeSynchronizerAPITestsData.swift
+//  TestsData.swift
 //
 //
 //  Created by Michal Fousek on 20.03.2023.
@@ -8,18 +8,22 @@
 import Foundation
 @testable import ZcashLightClientKit
 
-class AlternativeSynchronizerAPITestsData {
-    let initialier = Initializer(
-        cacheDbURL: nil,
-        fsBlockDbRoot: URL(fileURLWithPath: "/"),
-        dataDbURL: URL(fileURLWithPath: "/"),
-        pendingDbURL: URL(fileURLWithPath: "/"),
-        endpoint: LightWalletEndpointBuilder.default,
-        network: ZcashNetworkBuilder.network(for: .testnet),
-        spendParamsURL: URL(fileURLWithPath: "/"),
-        outputParamsURL: URL(fileURLWithPath: "/"),
-        saplingParamsSourceURL: .default
-    )
+class TestsData {
+    let networkType: NetworkType
+
+    lazy var initialier = {
+        Initializer(
+            cacheDbURL: nil,
+            fsBlockDbRoot: URL(fileURLWithPath: "/"),
+            dataDbURL: URL(fileURLWithPath: "/"),
+            pendingDbURL: URL(fileURLWithPath: "/"),
+            endpoint: LightWalletEndpointBuilder.default,
+            network: ZcashNetworkBuilder.network(for: networkType),
+            spendParamsURL: URL(fileURLWithPath: "/"),
+            outputParamsURL: URL(fileURLWithPath: "/"),
+            saplingParamsSourceURL: .default
+        )
+    }()
     lazy var derivationTools: DerivationTool = { initialier.makeDerivationTool() }()
     let saplingAddress = SaplingAddress(validatedEncoding: "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6")
     let unifiedAddress = UnifiedAddress(
@@ -96,5 +100,7 @@ class AlternativeSynchronizerAPITestsData {
     }
     var birthday: BlockHeight = 123000
 
-    init() { }
+    init(networkType: NetworkType) {
+        self.networkType = networkType
+    }
 }

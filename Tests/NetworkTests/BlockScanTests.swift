@@ -31,11 +31,6 @@ class BlockScanTests: XCTestCase {
     var network = ZcashNetworkBuilder.network(for: .testnet)
     var blockRepository: BlockRepository!
 
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
 
     override func setUpWithError() throws {
@@ -45,7 +40,7 @@ class BlockScanTests: XCTestCase {
         self.spendParamsURL = try! __spendParamsURL()
         self.outputParamsURL = try! __outputParamsURL()
 
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
 
         deleteDBs()
     }
@@ -60,7 +55,7 @@ class BlockScanTests: XCTestCase {
         try? testFileManager.removeItem(at: dataDbURL)
         try? testFileManager.removeItem(at: spendParamsURL)
         try? testFileManager.removeItem(at: outputParamsURL)
-        try? testFileManager.removeItem(at: testTempDirectory)
+        try? testFileManager.removeItem(at: Environment.testTempDirectory)
         cancelables = []
         blockRepository = nil
     }
@@ -75,7 +70,7 @@ class BlockScanTests: XCTestCase {
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
 
-        let fsDbRootURL = self.testTempDirectory
+        let fsDbRootURL = Environment.testTempDirectory
 
         let rustBackend = ZcashRustBackend.self
         let fsBlockRepository = FSCompactBlockRepository(
@@ -171,7 +166,7 @@ class BlockScanTests: XCTestCase {
         
         let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
 
-        let fsDbRootURL = self.testTempDirectory
+        let fsDbRootURL = Environment.testTempDirectory
 
         let fsBlockRepository = FSCompactBlockRepository(
             fsBlockDbRoot: fsDbRootURL,

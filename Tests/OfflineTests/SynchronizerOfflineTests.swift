@@ -12,7 +12,7 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class SynchronizerOfflineTests: XCTestCase {
-    let data = AlternativeSynchronizerAPITestsData()
+    let data = TestsData(networkType: .testnet)
     var network: ZcashNetwork!
     var cancellables: [AnyCancellable] = []
 
@@ -257,12 +257,12 @@ class SynchronizerOfflineTests: XCTestCase {
         let synchronizer = SDKSynchronizer(initializer: initializer)
 
         do {
-            let derivationTool = DerivationTool(networkType: network.networkType)
-            let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
+            let derivationTool = initializer.makeDerivationTool()
+            let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
                 seed: Environment.seedBytes,
                 accountIndex: 0
             )
-            let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+            let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
             _ = try await synchronizer.prepare(with: Environment.seedBytes, viewingKeys: [viewingKey], walletBirthday: 123000)
             XCTFail("Failure of prepare is expected.")
         } catch {

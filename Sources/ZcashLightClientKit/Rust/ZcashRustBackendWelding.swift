@@ -38,6 +38,7 @@ public enum DbInitResult {
     case seedRequired
 }
 
+// sourcery: mockActor
 protocol ZcashRustBackendWelding {
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
     /// account identifiers known, to the wallet database.
@@ -284,7 +285,7 @@ protocol ZcashRustBackendWelding {
     /// - parameter fsBlockDbRoot: location of the data db file
     /// - parameter height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use getNearestRewindHeight when unsure
     /// - parameter networkType: the network type
-    func rewindCacheToHeight(height: Int32) async -> Bool
+    func rewindCacheToHeight(height: Int32) async throws
 
     /// Scans new blocks added to the cache for any transactions received by the tracked
     /// accounts.
@@ -345,7 +346,7 @@ protocol ZcashRustBackendWelding {
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
     /// - Parameter networkType: the network type
-    func consensusBranchIdFor(height: Int32) throws -> Int32
+    func consensusBranchIdFor(height: Int32) async throws -> Int32
 
     /// Derives a `UnifiedFullViewingKey` from a `UnifiedSpendingKey`
     /// - Parameter spendingKey: the `UnifiedSpendingKey` to derive from

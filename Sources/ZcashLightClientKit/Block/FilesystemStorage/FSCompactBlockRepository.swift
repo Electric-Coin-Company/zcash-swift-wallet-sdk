@@ -227,7 +227,9 @@ extension FSMetadataStore {
                 logger: logger
             )
         } rewindToHeight: { height in
-            guard await rustBackend.rewindCacheToHeight(height: Int32(height)) else {
+            do {
+                try await rustBackend.rewindCacheToHeight(height: Int32(height))
+            } catch {
                 throw CompactBlockRepositoryError.failedToRewind(height)
             }
         } initFsBlockDbRoot: {

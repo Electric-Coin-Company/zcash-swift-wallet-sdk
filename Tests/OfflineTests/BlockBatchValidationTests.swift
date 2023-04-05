@@ -10,21 +10,19 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class BlockBatchValidationTests: XCTestCase {
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
+    var rustBackend: ZcashRustBackendWelding!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        rustBackend = ZcashRustBackend.makeForTests(networkType: .testnet)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: testTempDirectory)
+        try? testFileManager.removeItem(at: Environment.testTempDirectory)
+        rustBackend = nil
     }
 
     func testBranchIdFailure() async throws {
@@ -37,10 +35,10 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                fsBlockDbRoot: Environment.testTempDirectory,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -54,7 +52,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -76,14 +74,14 @@ class BlockBatchValidationTests: XCTestCase {
         info.consensusBranchID = "d34db33f"
         info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         service.mockLightDInfo = info
-        
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = Int32(0xd34d)
+
+
+        let mockRust = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend, consensusBranchID: Int32(0xd34d))
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockRust,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -112,10 +110,10 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                fsBlockDbRoot: Environment.testTempDirectory,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -129,7 +127,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -152,13 +150,12 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockRust = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockRust,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -187,10 +184,10 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                fsBlockDbRoot: Environment.testTempDirectory,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -204,7 +201,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -227,13 +224,12 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockRust = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockRust,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -262,10 +258,10 @@ class BlockBatchValidationTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                fsBlockDbRoot: Environment.testTempDirectory,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -279,7 +275,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -303,13 +299,12 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockRust = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: mockRust,
+            rustBackend: mockRust,
             config: config,
             metrics: SDKMetrics(),
             logger: logger
@@ -350,7 +345,7 @@ class BlockBatchValidationTests: XCTestCase {
 
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -381,9 +376,8 @@ class BlockBatchValidationTests: XCTestCase {
         info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
 
         service.mockLightDInfo = info
-        
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+
+        let mockRust = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
 
         var nextBatch: CompactBlockProcessor.NextState?
         do {
@@ -447,7 +441,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -479,8 +473,7 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockRust = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         var nextBatch: CompactBlockProcessor.NextState?
         do {
@@ -533,7 +526,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -573,8 +566,7 @@ class BlockBatchValidationTests: XCTestCase {
 
         service.mockLightDInfo = info
         
-        let mockRust = MockRustBackend.self
-        mockRust.consensusBranchID = 0xd34db4d
+        let mockRust = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
         
         var nextBatch: CompactBlockProcessor.NextState?
         do {

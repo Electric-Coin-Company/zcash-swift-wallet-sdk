@@ -58,16 +58,12 @@ enum TestDbBuilder {
         Bundle.module.url(forResource: "darkside_caches", withExtension: "db")
     }
     
-    static func prepopulatedDataDbProvider() async throws -> ConnectionProvider? {
+    static func prepopulatedDataDbProvider(rustBackend: ZcashRustBackendWelding) async throws -> ConnectionProvider? {
         guard let url = prePopulatedMainnetDataDbURL() else { return nil }
 
         let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
 
-        let initResult = try await ZcashRustBackend.initDataDb(
-            dbData: url,
-            seed: Environment.seedBytes,
-            networkType: .mainnet
-        )
+        let initResult = try await rustBackend.initDataDb(seed: Environment.seedBytes)
         
         switch initResult {
         case .success: return provider
@@ -76,19 +72,19 @@ enum TestDbBuilder {
         }
     }
     
-    static func transactionRepository() async throws -> TransactionRepository? {
-        guard let provider = try await prepopulatedDataDbProvider() else { return nil }
+    static func transactionRepository(rustBackend: ZcashRustBackendWelding) async throws -> TransactionRepository? {
+        guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
         
         return TransactionSQLDAO(dbProvider: provider)
     }
     
-    static func sentNotesRepository() async throws -> SentNotesRepository? {
-        guard let provider = try await prepopulatedDataDbProvider() else { return nil }
+    static func sentNotesRepository(rustBackend: ZcashRustBackendWelding) async throws -> SentNotesRepository? {
+        guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
         return SentNotesSQLDAO(dbProvider: provider)
     }
     
-    static func receivedNotesRepository() async throws -> ReceivedNoteRepository? {
-        guard let provider = try await prepopulatedDataDbProvider() else { return nil }
+    static func receivedNotesRepository(rustBackend: ZcashRustBackendWelding) async throws -> ReceivedNoteRepository? {
+        guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
         return ReceivedNotesSQLDAO(dbProvider: provider)
     }
         
