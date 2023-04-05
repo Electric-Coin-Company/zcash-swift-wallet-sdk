@@ -29,7 +29,8 @@ class CompactBlockReorgTests: XCTestCase {
     let testFileManager = FileManager()
     var cancellables: [AnyCancellable] = []
     var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
-
+    var rustBackend: ZcashRustBackendWelding!
+    var rustBackendMockHelper: RustBackendMockHelper!
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -55,8 +56,14 @@ class CompactBlockReorgTests: XCTestCase {
             latestBlockHeight: mockLatestHeight,
             service: liveService
         )
-        
-        let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
+
+        rustBackend = ZcashRustBackend.makeForTests(
+            dbData: processorConfig.dataDb,
+            fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
+            networkType: network.networkType
+        )
+
+        let branchID = try await rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
         service.mockLightDInfo = LightdInfo.with { info in
             info.blockHeight = UInt64(mockLatestHeight)
             info.branch = "asdf"
@@ -68,13 +75,11 @@ class CompactBlockReorgTests: XCTestCase {
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         }
 
-        let realRustBackend = ZcashRustBackend.self
-
         let realCache = FSCompactBlockRepository(
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -84,21 +89,23 @@ class CompactBlockReorgTests: XCTestCase {
 
         try await realCache.create()
 
-        let initResult = try await realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+        let initResult = try await rustBackend.initDataDb(seed: nil)
         guard case .success = initResult else {
             XCTFail("initDataDb failed. Expected Success but got .seedRequired")
             return
         }
 
-        let mockBackend = MockRustBackend.self
-        mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
-        mockBackend.mockValidateCombinedChainKeepFailing = false
-        mockBackend.mockValidateCombinedChainFailureHeight = self.network.constants.saplingActivationHeight + 320
-        
+        rustBackendMockHelper = await RustBackendMockHelper(
+            rustBackend: rustBackend,
+            mockValidateCombinedChainFailAfterAttempts: 3,
+            mockValidateCombinedChainKeepFailing: false,
+            mockValidateCombinedChainFailureError: .invalidChain(upperBound: Int32(network.constants.saplingActivationHeight + 320))
+        )
+
         processor = CompactBlockProcessor(
             service: service,
             storage: realCache,
-            backend: mockBackend,
+            rustBackend: rustBackendMockHelper.rustBackendMock,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger
@@ -129,6 +136,8 @@ class CompactBlockReorgTests: XCTestCase {
         cancellables = []
         processorEventHandler = nil
         processor = nil
+        rustBackend = nil
+        rustBackendMockHelper = nil
     }
     
     func processorHandledReorg(event: CompactBlockProcessor.Event) {

@@ -15,8 +15,6 @@ import SQLite
 class BlockScanTests: XCTestCase {
     var cancelables: [AnyCancellable] = []
 
-    let rustWelding = ZcashRustBackend.self
-
     var dataDbURL: URL!
     var spendParamsURL: URL!
     var outputParamsURL: URL!
@@ -27,6 +25,8 @@ class BlockScanTests: XCTestCase {
         with: 1386000,
         network: ZcashNetworkBuilder.network(for: .testnet)
     )
+
+    var rustBackend: ZcashRustBackendWelding!
     
     var network = ZcashNetworkBuilder.network(for: .testnet)
     var blockRepository: BlockRepository!
@@ -41,6 +41,12 @@ class BlockScanTests: XCTestCase {
         self.outputParamsURL = try! __outputParamsURL()
 
         try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+
+        rustBackend = ZcashRustBackend.makeForTests(
+            dbData: dataDbURL,
+            fsBlockDbRoot: Environment.testTempDirectory,
+            networkType: network.networkType
+        )
 
         deleteDBs()
     }
@@ -63,7 +69,7 @@ class BlockScanTests: XCTestCase {
     func testSingleDownloadAndScan() async throws {
         logger = OSLogger(logLevel: .debug)
 
-        _ = try await rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType)
+        _ = try await rustBackend.initDataDb(seed: nil)
 
         let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
@@ -72,7 +78,6 @@ class BlockScanTests: XCTestCase {
 
         let fsDbRootURL = Environment.testTempDirectory
 
-        let rustBackend = ZcashRustBackend.self
         let fsBlockRepository = FSCompactBlockRepository(
             fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
@@ -101,7 +106,7 @@ class BlockScanTests: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: fsBlockRepository,
-            backend: rustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger
@@ -134,34 +139,27 @@ class BlockScanTests: XCTestCase {
         let metrics = SDKMetrics()
         metrics.enableMetrics()
         
-        guard try await self.rustWelding.initDataDb(dbData: dataDbURL, seed: nil, networkType: network.networkType) == .success else {
+        guard try await rustBackend.initDataDb(seed: nil) == .success else {
             XCTFail("Seed should not be required for this test")
             return
         }
 
-        let derivationTool = DerivationTool(networkType: .testnet)
-        let ufvk = try derivationTool
-            .deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
-            .map { try derivationTool.deriveUnifiedFullViewingKey(from: $0) }
+        let derivationTool = DerivationTool(rustBackend: rustBackend)
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
+        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         do {
-            try await self.rustWelding.initAccountsTable(
-                dbData: self.dataDbURL,
-                ufvks: [ufvk],
-                networkType: network.networkType
-            )
+            try await rustBackend.initAccountsTable(ufvks: [viewingKey])
         } catch {
-            XCTFail("failed to init account table. error: \(self.rustWelding.getLastError() ?? "no error found")")
+            XCTFail("failed to init account table. error: \(error)")
             return
         }
         
-        try await self.rustWelding.initBlocksTable(
-            dbData: dataDbURL,
+        try await rustBackend.initBlocksTable(
             height: Int32(walletBirthDay.height),
             hash: walletBirthDay.hash,
             time: walletBirthDay.time,
-            saplingTree: walletBirthDay.saplingTree,
-            networkType: network.networkType
+            saplingTree: walletBirthDay.saplingTree
         )
         
         let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
@@ -172,7 +170,7 @@ class BlockScanTests: XCTestCase {
             fsBlockDbRoot: fsDbRootURL,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: fsDbRootURL,
-                rustBackend: rustWelding,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: ZcashCompactBlockDescriptor.live,
@@ -197,7 +195,7 @@ class BlockScanTests: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: fsBlockRepository,
-            backend: rustWelding,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: metrics,
             logger: logger

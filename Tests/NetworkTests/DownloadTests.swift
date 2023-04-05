@@ -29,14 +29,13 @@ class DownloadTests: XCTestCase {
 
     func testSingleDownload() async throws {
         let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
-
-        let realRustBackend = ZcashRustBackend.self
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: network.networkType)
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: Environment.testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -58,7 +57,7 @@ class DownloadTests: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: realRustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger

@@ -11,15 +11,18 @@ import XCTest
 
 class BlockStreamingTest: XCTestCase {
     let testFileManager = FileManager()
+    var rustBackend: ZcashRustBackendWelding!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: .testnet)
         logger = OSLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
+        rustBackend = nil
         try? FileManager.default.removeItem(at: __dataDbURL())
         try? testFileManager.removeItem(at: Environment.testTempDirectory)
     }
@@ -63,13 +66,11 @@ class BlockStreamingTest: XCTestCase {
         )
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: Environment.testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -89,7 +90,7 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: realRustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger
@@ -127,13 +128,11 @@ class BlockStreamingTest: XCTestCase {
         )
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: Environment.testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -155,7 +154,7 @@ class BlockStreamingTest: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: realRustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger

@@ -28,6 +28,7 @@ class CompactBlockProcessorTests: XCTestCase {
 
     var cancellables: [AnyCancellable] = []
     var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
+    var rustBackend: ZcashRustBackendWelding!
     var processor: CompactBlockProcessor!
     var syncStartedExpect: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
@@ -54,7 +55,14 @@ class CompactBlockProcessorTests: XCTestCase {
             latestBlockHeight: mockLatestHeight,
             service: liveService
         )
-        let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
+
+        rustBackend = ZcashRustBackend.makeForTests(
+            dbData: processorConfig.dataDb,
+            fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
+            networkType: network.networkType
+        )
+
+        let branchID = try await rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
         service.mockLightDInfo = LightdInfo.with({ info in
             info.blockHeight = UInt64(mockLatestHeight)
             info.branch = "asdf"
@@ -72,7 +80,7 @@ class CompactBlockProcessorTests: XCTestCase {
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -85,13 +93,13 @@ class CompactBlockProcessorTests: XCTestCase {
         processor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: realRustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger
         )
 
-        let dbInit = try await realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+        let dbInit = try await rustBackend.initDataDb(seed: nil)
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
@@ -121,6 +129,7 @@ class CompactBlockProcessorTests: XCTestCase {
         cancellables = []
         processor = nil
         processorEventHandler = nil
+        rustBackend = nil
     }
     
     func processorFailed(event: CompactBlockProcessor.Event) {
