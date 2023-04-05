@@ -173,11 +173,13 @@ class RewindRescanTests: XCTestCase {
         
         // rewind to birthday
         let targetHeight: BlockHeight = newChaintTip - 8000
-        let rewindHeight = await ZcashRustBackend.getNearestRewindHeight(
-            dbData: coordinator.databases.dataDB,
-            height: Int32(targetHeight),
-            networkType: network.networkType
-        )
+
+        do {
+            _ = try await coordinator.synchronizer.initializer.rustBackend.getNearestRewindHeight(height: Int32(targetHeight))
+        } catch {
+            XCTFail("get nearest height failed error: \(error)")
+            return
+        }
 
         let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
 
@@ -201,11 +203,6 @@ class RewindRescanTests: XCTestCase {
         }
 
         wait(for: [rewindExpectation], timeout: 2)
-
-        guard rewindHeight > 0 else {
-            XCTFail("get nearest height failed error: \(ZcashRustBackend.getLastError() ?? "null")")
-            return
-        }
 
         // check that the balance is cleared
         var expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()

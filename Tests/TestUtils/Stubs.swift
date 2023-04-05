@@ -178,7 +178,7 @@ class RustBackendMockHelper {
             try await self.rustBackend.rewindToHeight(height: height)
         }
 
-        await rustBackendMock.setRewindCacheToHeightHeightClosure() {  _ in }
+        await rustBackendMock.setRewindCacheToHeightHeightClosure() { _ in }
 
         await rustBackendMock.setScanBlocksLimitClosure() { [weak self] limit in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
@@ -191,7 +191,6 @@ class RustBackendMockHelper {
         return random <= successRate
     }
 }
-
 
 extension SaplingParamsSourceURL {
     static var tests = SaplingParamsSourceURL(

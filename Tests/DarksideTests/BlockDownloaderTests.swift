@@ -20,16 +20,19 @@ class BlockDownloaderTests: XCTestCase {
     var service: LightWalletService!
     var storage: CompactBlockRepository!
     var network = DarksideWalletDNetwork()
+    var rustBackend: ZcashRustBackendWelding!
 
     override func setUp() async throws {
         try await super.setUp()
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
 
+        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: network.networkType)
+
         storage = FSCompactBlockRepository(
             fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: Environment.testTempDirectory,
-                rustBackend: ZcashRustBackend.self,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -54,6 +57,7 @@ class BlockDownloaderTests: XCTestCase {
         service = nil
         storage = nil
         downloader = nil
+        rustBackend = nil
     }
 
     func testSmallDownload() async {
