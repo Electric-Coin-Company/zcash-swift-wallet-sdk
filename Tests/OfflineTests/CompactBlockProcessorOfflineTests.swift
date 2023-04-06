@@ -56,7 +56,8 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderMock()
         )
 
         let fullRange = 0...1000

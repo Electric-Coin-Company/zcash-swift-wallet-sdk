@@ -43,6 +43,10 @@ class TransactionSQLDAO: TransactionRepository {
         try blockDao.latestBlockHeight()
     }
 
+    func lastScannedBlock() async throws -> Block? {
+        try blockDao.latestBlock()
+    }
+
     func isInitialized() async throws -> Bool {
         true
     }

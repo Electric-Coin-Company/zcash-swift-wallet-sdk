@@ -125,6 +125,14 @@ class TransactionEnhancementTests: XCTestCase {
         )
         try! await storage.create()
         
+        let transactionRepository = MockTransactionRepository(
+            unminedCount: 0,
+            receivedCount: 0,
+            sentCount: 0,
+            scannedHeight: 0,
+            network: network
+        )
+        
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
         processor = CompactBlockProcessor(
             service: service,
@@ -132,7 +140,8 @@ class TransactionEnhancementTests: XCTestCase {
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in

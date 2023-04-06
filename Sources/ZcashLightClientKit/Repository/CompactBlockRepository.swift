@@ -38,7 +38,6 @@ protocol CompactBlockRepository {
 
     /**
     Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
-    Non-Blocking
     - Parameters:
         - Parameter blocks: array of blocks to be written to storage
         - Throws: an error when there's a failure

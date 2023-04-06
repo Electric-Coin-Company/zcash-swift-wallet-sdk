@@ -16,6 +16,7 @@ class SyncBlocksViewController: UIViewController {
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var progressBar: UIProgressView!
     @IBOutlet weak var progressLabel: UILabel!
+    @IBOutlet weak var progressDataLabel: UILabel!
     @IBOutlet weak var startPause: UIButton!
     @IBOutlet weak var metricLabel: UILabel!
     @IBOutlet weak var summaryLabel: UILabel!
@@ -36,6 +37,7 @@ class SyncBlocksViewController: UIViewController {
     }
 
     var cancellables: [AnyCancellable] = []
+    let dateFormatter = DateFormatter()
 
     let synchronizer = AppDelegate.shared.sharedSynchronizer
     let closureSynchronizer = ClosureSDKSynchronizer(synchronizer: AppDelegate.shared.sharedSynchronizer)
@@ -55,6 +57,8 @@ class SyncBlocksViewController: UIViewController {
 
         statusLabel.text = textFor(state: synchronizer.latestState.syncStatus)
         progressBar.progress = 0
+        dateFormatter.dateStyle = .short
+        dateFormatter.timeStyle = .short
 
         synchronizer.stateStream
             .throttle(for: .seconds(0.2), scheduler: DispatchQueue.main, latest: true)
@@ -80,6 +84,13 @@ class SyncBlocksViewController: UIViewController {
 
             progressBar.progress = progress.progress
             progressLabel.text = "\(floor(progress.progress * 1000) / 10)%"
+            let syncedDate = dateFormatter.string(from: Date(timeIntervalSince1970: state.latestScannedTime))
+            let progressText = """
+            synced date \(syncedDate)
+            synced block \(state.latestScannedHeight)
+            target block \(state.latestBlockHeight)
+            """
+            progressDataLabel.text = progressText
 
             if let currentMetric {
                 let report = synchronizer.metrics.popBlock(operation: currentMetric)?.last

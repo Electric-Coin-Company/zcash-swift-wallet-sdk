@@ -110,7 +110,8 @@ class BlockScanTests: XCTestCase {
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderMock()
         )
         
         let repository = BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
@@ -197,7 +198,8 @@ class BlockScanTests: XCTestCase {
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: metrics,
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderMock()
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in

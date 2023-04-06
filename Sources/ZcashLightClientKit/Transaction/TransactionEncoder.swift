@@ -21,7 +21,6 @@ protocol TransactionEncoder {
     /// Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
     /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
     /// double-bangs for things).
-    /// Non-blocking
     ///
     /// - Parameters:
     /// - Parameter spendingKey: a `UnifiedSpendingKey` containing the spending key
@@ -37,16 +36,15 @@ protocol TransactionEncoder {
         from accountIndex: Int
     ) async throws -> ZcashTransaction.Overview
     
-    /**
-    Creates a transaction that will attempt to shield transparent funds that are present on the blocks cache .throwing an exception whenever things are missing. When the provided wallet implementation doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using double-bangs for things).
-    Blocking
-     
-    - Parameters:
-    - Parameter spendingKey: `UnifiedSpendingKey` to spend the UTXOs
-    - Parameter memoBytes: containing the memo (optional)
-    - Parameter accountIndex: index of the account that will be used to send the funds
-    - Throws: a TransactionEncoderError
-    */
+    /// Creates a transaction that will attempt to shield transparent funds that are present on the blocks cache .throwing
+    /// an exception whenever things are missing. When the provided wallet implementation doesn't throw an exception,
+    /// we wrap the issue into a descriptive exception ourselves (rather than using double-bangs for things).
+    ///
+    /// - Parameters:
+    /// - Parameter spendingKey: `UnifiedSpendingKey` to spend the UTXOs
+    /// - Parameter memoBytes: containing the memo (optional)
+    /// - Parameter accountIndex: index of the account that will be used to send the funds
+    /// - Throws: a TransactionEncoderError
     func createShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
         shieldingThreshold: Zatoshi,

@@ -35,8 +35,6 @@ public class SDKSynchronizer: Synchronizer {
     lazy var blockProcessorEventProcessingQueue = { DispatchQueue(label: "blockProcessorEventProcessingQueue_\(initializer.alias.description)") }()
 
     public private(set) var initializer: Initializer
-    // Valid value is stored here after `prepare` is called.
-    public private(set) var latestScannedHeight: BlockHeight = .zero
     public private(set) var connectionState: ConnectionState
     public private(set) var network: ZcashNetwork
     private var transactionManager: OutboundTransactionManager
@@ -47,11 +45,16 @@ public class SDKSynchronizer: Synchronizer {
     private var syncSession: SyncSession
     private var syncSessionTicker: SessionTicker
     private var syncStartDate: Date?
+    let latestBlocksDataProvider: LatestBlocksDataProvider
 
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) {
         let metrics = SDKMetrics()
+        let latestBlocksDataProvider = LatestBlocksDataProviderImpl(
+            service: initializer.lightWalletService,
+            transactionRepository: initializer.transactionRepository
+        )
         self.init(
             status: .unprepared,
             initializer: initializer,
@@ -62,11 +65,13 @@ public class SDKSynchronizer: Synchronizer {
                 initializer: initializer,
                 metrics: metrics,
                 logger: initializer.logger,
+                latestBlocksDataProvider: latestBlocksDataProvider,
                 walletBirthdayProvider: { initializer.walletBirthday }
             ),
             metrics: metrics,
             syncSessionIDGenerator: UniqueSyncSessionIDGenerator(),
-            syncSessionTicker: .live
+            syncSessionTicker: .live,
+            latestBlocksDataProvider: latestBlocksDataProvider
         )
     }
 
@@ -79,7 +84,8 @@ public class SDKSynchronizer: Synchronizer {
         blockProcessor: CompactBlockProcessor,
         metrics: SDKMetrics,
         syncSessionIDGenerator: SyncSessionIDGenerator,
-        syncSessionTicker: SessionTicker
+        syncSessionTicker: SessionTicker,
+        latestBlocksDataProvider: LatestBlocksDataProvider
     ) {
         self.connectionState = .idle
         self.underlyingStatus = GenericActor(status)
@@ -94,6 +100,7 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSessionIDGenerator = syncSessionIDGenerator
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
+        self.latestBlocksDataProvider = latestBlocksDataProvider
         
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -149,8 +156,9 @@ public class SDKSynchronizer: Synchronizer {
             return .seedRequired
         }
 
-        latestScannedHeight = (try? await transactionRepository.lastScannedHeight()) ?? initializer.walletBirthday
-
+        await latestBlocksDataProvider.updateWalletBirthday(initializer.walletBirthday)
+        await latestBlocksDataProvider.updateScannedData()
+        
         await updateStatus(.disconnected)
 
         return .success
@@ -241,8 +249,8 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) async {
+        await latestBlocksDataProvider.updateScannedData()
         // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories see: https://github.com/zcash/ZcashLightClientKit/issues/450
-        latestScannedHeight = lastScannedHeight
         await refreshPendingTransactions()
         await updateStatus(.synced)
 
@@ -328,7 +336,7 @@ public class SDKSynchronizer: Synchronizer {
             let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
 
             // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
-            guard tBalance.verified >= self.network.constants.defaultFee(for: self.latestScannedHeight) else {
+            guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.latestScannedHeight) else {
                 throw ShieldFundsError.insuficientTransparentFunds
             }
 
@@ -574,7 +582,7 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: notify state
 
     private func snapshotState(status: SyncStatus) async -> SynchronizerState {
-        await SynchronizerState(
+        return await SynchronizerState(
             syncSessionID: syncSession.value,
             shieldedBalance: WalletBalance(
                 verified: (try? await getShieldedVerifiedBalance()) ?? .zero,
@@ -582,7 +590,9 @@ public class SDKSynchronizer: Synchronizer {
             ),
             transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
             syncStatus: status,
-            latestScannedHeight: self.latestScannedHeight
+            latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
+            latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
+            latestScannedTime: latestBlocksDataProvider.latestScannedTime
         )
     }
 
@@ -602,21 +612,10 @@ public class SDKSynchronizer: Synchronizer {
             nextState.syncSessionID = nextSessionID
             newState = nextState
         } else {
-            if oldStatus.isDifferent(from: newStatus) {
-                if SessionTicker.live.isNewSyncSession(oldStatus, newStatus) {
-                    await self.syncSession.newSession(with: self.syncSessionIDGenerator)
-                }
-
-                newState = await snapshotState(status: newStatus)
-            } else {
-                newState = await SynchronizerState(
-                    syncSessionID: syncSession.value,
-                    shieldedBalance: latestState.shieldedBalance,
-                    transparentBalance: latestState.transparentBalance,
-                    syncStatus: newStatus,
-                    latestScannedHeight: latestState.latestScannedHeight
-                )
+            if SessionTicker.live.isNewSyncSession(oldStatus, newStatus) {
+                await self.syncSession.newSession(with: self.syncSessionIDGenerator)
             }
+            newState = await snapshotState(status: newStatus)
         }
 
         latestState = newState

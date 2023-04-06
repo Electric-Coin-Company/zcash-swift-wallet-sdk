@@ -104,13 +104,22 @@ class CompactBlockReorgTests: XCTestCase {
             mockValidateCombinedChainFailureError: .invalidChain(upperBound: Int32(network.constants.saplingActivationHeight + 320))
         )
 
+        let transactionRepository = MockTransactionRepository(
+            unminedCount: 0,
+            receivedCount: 0,
+            sentCount: 0,
+            scannedHeight: 0,
+            network: network
+        )
+
         processor = CompactBlockProcessor(
             service: service,
             storage: realCache,
             rustBackend: rustBackendMockHelper.rustBackendMock,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
         )
         
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")

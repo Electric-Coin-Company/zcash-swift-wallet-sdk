@@ -1336,7 +1336,7 @@ class AdvancedReOrgTests: XCTestCase {
 
         wait(for: [firstSyncExpectation], timeout: 600)
         
-        let latestScannedHeight = coordinator.synchronizer.latestScannedHeight
+        let latestScannedHeight = await coordinator.synchronizer.latestBlocksDataProvider.latestScannedHeight
         XCTAssertEqual(latestScannedHeight, birthday + fullSyncLength)
     }
     

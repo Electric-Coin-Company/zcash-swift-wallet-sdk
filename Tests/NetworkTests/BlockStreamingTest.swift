@@ -96,7 +96,8 @@ class BlockStreamingTest: XCTestCase {
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderMock()
         )
         
         let cancelableTask = Task {
@@ -160,7 +161,8 @@ class BlockStreamingTest: XCTestCase {
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderMock()
         )
         
         let date = Date()

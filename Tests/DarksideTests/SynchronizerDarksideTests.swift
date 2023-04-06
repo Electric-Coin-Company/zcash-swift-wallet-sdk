@@ -181,33 +181,42 @@ class SynchronizerDarksideTests: XCTestCase {
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .disconnected,
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1576821833
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1576821833
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: .zero,
+//                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                transparentBalance: .zero,
                 syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                transparentBalance: .zero,
                 syncStatus: .enhancing(
                     EnhancementProgress(
                         totalTransactions: 2,
@@ -231,12 +240,14 @@ class SynchronizerDarksideTests: XCTestCase {
                         range: 663150...663189
                     )
                 ),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                transparentBalance: .zero,
                 syncStatus: .enhancing(
                     EnhancementProgress(
                         totalTransactions: 2,
@@ -260,21 +271,27 @@ class SynchronizerDarksideTests: XCTestCase {
                         range: 663150...663189
                     )
                 ),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                transparentBalance: .zero,
                 syncStatus: .fetching,
-                latestScannedHeight: 663150
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                transparentBalance: .zero,
                 syncStatus: .synced,
-                latestScannedHeight: 663189
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             )
         ]
 
@@ -319,28 +336,36 @@ class SynchronizerDarksideTests: XCTestCase {
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .disconnected,
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
@@ -369,7 +394,9 @@ class SynchronizerDarksideTests: XCTestCase {
                         range: 663150...663189
                     )
                 ),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
@@ -398,21 +425,27 @@ class SynchronizerDarksideTests: XCTestCase {
                         range: 663150...663189
                     )
                 ),
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .fetching,
-                latestScannedHeight: 663150
+                latestScannedHeight: 663150,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .synced,
-                latestScannedHeight: 663189
+                latestScannedHeight: 663189,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             )
         ]
 
@@ -441,35 +474,45 @@ class SynchronizerDarksideTests: XCTestCase {
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
-                latestScannedHeight: 663189
+                latestScannedHeight: 663189,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .syncing(BlockProgress(startHeight: 663190, targetHeight: 663200, progressHeight: 663200)),
-                latestScannedHeight: 663189
+                latestScannedHeight: 663189,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
-                latestScannedHeight: 663189
+                latestScannedHeight: 663189,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .fetching,
-                latestScannedHeight: 663189
+                latestScannedHeight: 663189,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .synced,
-                latestScannedHeight: 663200
+                latestScannedHeight: 663200,
+                latestBlockHeight: 0,
+                latestScannedTime: 0
             )
         ]
 

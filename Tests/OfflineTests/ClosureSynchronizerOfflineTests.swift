@@ -39,13 +39,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testStateStreamEmitsAsExpected() {
-        let state = SynchronizerState(
-            syncSessionID: .nullID,
-            shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
-            transparentBalance: WalletBalance(verified: Zatoshi(200), total: Zatoshi(300)),
-            syncStatus: .fetching,
-            latestScannedHeight: 111111
-        )
+        let state = SynchronizerState.mock
         synchronizerMock.underlyingStateStream = Just(state).eraseToAnyPublisher()
 
         let expectation = XCTestExpectation()
@@ -70,13 +64,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testLatestStateIsAsExpected() {
-        let state = SynchronizerState(
-            syncSessionID: .nullID,
-            shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
-            transparentBalance: WalletBalance(verified: Zatoshi(200), total: Zatoshi(300)),
-            syncStatus: .fetching,
-            latestScannedHeight: 111111
-        )
+        let state = SynchronizerState.mock
         synchronizerMock.underlyingLatestState = state
 
         XCTAssertEqual(synchronizer.latestState, state)
