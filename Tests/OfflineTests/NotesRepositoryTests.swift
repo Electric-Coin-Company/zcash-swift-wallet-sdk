@@ -15,8 +15,9 @@ class NotesRepositoryTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        sentNotesRepository = try! await TestDbBuilder.sentNotesRepository()
-        receivedNotesRepository = try! await TestDbBuilder.receivedNotesRepository()
+        let rustBackend = ZcashRustBackend.makeForTests(networkType: .testnet)
+        sentNotesRepository = try! await TestDbBuilder.sentNotesRepository(rustBackend: rustBackend)
+        receivedNotesRepository = try! await TestDbBuilder.receivedNotesRepository(rustBackend: rustBackend)
     }
     
     override func tearDown() {

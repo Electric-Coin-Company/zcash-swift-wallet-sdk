@@ -13,10 +13,6 @@ import XCTest
 class BlockDownloaderTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
     let testFileManager = FileManager()
     var darksideWalletService: DarksideWalletService!
@@ -30,9 +26,9 @@ class BlockDownloaderTests: XCTestCase {
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
 
         storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
+                fsBlockDbRoot: Environment.testTempDirectory,
                 rustBackend: ZcashRustBackend.self,
                 logger: logger
             ),
@@ -53,7 +49,7 @@ class BlockDownloaderTests: XCTestCase {
     
     override func tearDown() {
         super.tearDown()
-        try? testFileManager.removeItem(at: testTempDirectory)
+        try? testFileManager.removeItem(at: Environment.testTempDirectory)
         darksideWalletService = nil
         service = nil
         storage = nil

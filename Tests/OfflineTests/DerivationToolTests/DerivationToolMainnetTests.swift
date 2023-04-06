@@ -45,39 +45,37 @@ class DerivationToolMainnetTests: XCTestCase {
     """)
 
     let expectedSaplingAddress = SaplingAddress(validatedEncoding: "zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0")
-    
-    let derivationTool = DerivationTool(networkType: NetworkType.mainnet)
+
+    let derivationTool = TestsData(networkType: .mainnet).derivationTools
     let expectedTransparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
-    func testDeriveViewingKeysFromSeed() throws {
+
+    func testDeriveViewingKeysFromSeed() async throws {
         let seedBytes = [UInt8](seedData)
 
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
-
-        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         XCTAssertEqual(expectedViewingKey, viewingKey)
     }
     
-    func testDeriveViewingKeyFromSpendingKeys() throws {
-        XCTAssertEqual(
-            expectedViewingKey,
-            try derivationTool.deriveUnifiedFullViewingKey(from: expectedSpendingKey)
-        )
+    func testDeriveViewingKeyFromSpendingKeys() async throws {
+        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: expectedSpendingKey)
+        XCTAssertEqual(expectedViewingKey, viewingKey)
     }
     
-    func testDeriveSpendingKeysFromSeed() throws {
+    func testDeriveSpendingKeysFromSeed() async throws {
         let seedBytes = [UInt8](seedData)
         
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
         XCTAssertEqual(expectedSpendingKey, spendingKey)
     }
 
-    func testDeriveUnifiedSpendingKeyFromSeed() throws {
+    func testDeriveUnifiedSpendingKeyFromSeed() async throws {
         let account = 0
         let seedBytes = [UInt8](seedData)
 
-        XCTAssertNoThrow(try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: account))
+        _ = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: account)
     }
 
     func testGetTransparentAddressFromUA() throws {
@@ -107,20 +105,14 @@ class DerivationToolMainnetTests: XCTestCase {
         )
     }
     
-    func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
+    func testDeriveQuiteALotOfUnifiedKeysFromSeed() async throws {
         let numberOfAccounts: Int = 10
-        let ufvks = try (0 ..< numberOfAccounts)
-            .map({
-                try derivationTool.deriveUnifiedSpendingKey(
-                    seed: [UInt8](seedData),
-                    accountIndex: $0
-                )
-            })
-            .map {
-                try derivationTool.deriveUnifiedFullViewingKey(
-                    from: $0
-                )
-            }
+        var ufvks: [UnifiedFullViewingKey] = []
+        for i in 0..<numberOfAccounts {
+            let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: [UInt8](seedData), accountIndex: i)
+            let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+            ufvks.append(viewingKey)
+        }
 
         XCTAssertEqual(ufvks.count, numberOfAccounts)
         XCTAssertEqual(ufvks[0].account, 0)
@@ -129,7 +121,7 @@ class DerivationToolMainnetTests: XCTestCase {
     
     func testShouldFailOnInvalidChecksumAddresses() {
         let testAddress = "t14oHp2v54vfmdgQ3v3SNuQga8JKHTNi2a1"
-        XCTAssertFalse(derivationTool.isValidTransparentAddress(testAddress))
+        XCTAssertFalse(DerivationTool.isValidTransparentAddress(testAddress, networkType: .mainnet))
     }
 
     func testSpendingKeyValidationFailsOnInvalidKey() throws {
@@ -139,7 +131,7 @@ class DerivationToolMainnetTests: XCTestCase {
         4fsuaz686lgszc7nc9vvZzZzZz
         """
 
-        XCTAssertFalse(derivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey))
+        XCTAssertFalse(DerivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey, networkType: .mainnet))
     }
     // TODO: [#509] Address encoding does not catch this test https://github.com/zcash/ZcashLightClientKit/issues/509
 //    func testSpendingKeyValidationThrowsWhenWrongNetwork() throws {

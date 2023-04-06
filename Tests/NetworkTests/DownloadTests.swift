@@ -12,11 +12,6 @@ import SQLite
 @testable import ZcashLightClientKit
 
 class DownloadTests: XCTestCase {
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
 
     var network = ZcashNetworkBuilder.network(for: .testnet)
@@ -24,12 +19,12 @@ class DownloadTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
 
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: testTempDirectory)
+        try? testFileManager.removeItem(at: Environment.testTempDirectory)
     }
 
     func testSingleDownload() async throws {
@@ -38,9 +33,9 @@ class DownloadTests: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
+                fsBlockDbRoot: Environment.testTempDirectory,
                 rustBackend: realRustBackend,
                 logger: logger
             ),

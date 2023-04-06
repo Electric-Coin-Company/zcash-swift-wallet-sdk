@@ -50,14 +50,14 @@ class NullBytesTests: XCTestCase {
         934dc76f087935a5c07788000b4e3aae24883adfec51b5f4d260
         """
 
+        let rustBackend = ZcashRustBackend.makeForTests(dbData: try! __dataDbURL(), networkType: networkType)
+
         do {
-            _ = try await ZcashRustBackend.initBlocksTable(
-                dbData: __dataDbURL(),
+            _ = try await rustBackend.initBlocksTable(
                 height: height,
                 hash: wrongHash,
                 time: time,
-                saplingTree: goodTree,
-                networkType: networkType
+                saplingTree: goodTree
             )
             XCTFail("InitBlocksTable with Null bytes on hash string should have failed")
         } catch {
@@ -75,13 +75,11 @@ class NullBytesTests: XCTestCase {
         }
 
         do {
-            try await ZcashRustBackend.initBlocksTable(
-                dbData: __dataDbURL(),
+            try await rustBackend.initBlocksTable(
                 height: height,
                 hash: goodHash,
                 time: time,
-                saplingTree: wrongTree,
-                networkType: networkType
+                saplingTree: wrongTree
             )
             XCTFail("InitBlocksTable with Null bytes on saplingTree string should have failed")
         } catch {

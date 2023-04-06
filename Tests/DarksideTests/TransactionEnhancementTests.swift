@@ -19,10 +19,6 @@ class TransactionEnhancementTests: XCTestCase {
     let network = DarksideWalletDNetwork()
     let branchID = "2bb40e60"
     let chainName = "main"
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
     let testFileManager = FileManager()
 
@@ -43,7 +39,7 @@ class TransactionEnhancementTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
 
         await InternalSyncProgress(
             alias: .default,
@@ -69,7 +65,7 @@ class TransactionEnhancementTests: XCTestCase {
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
@@ -120,9 +116,9 @@ class TransactionEnhancementTests: XCTestCase {
         darksideWalletService = service
         
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
+                fsBlockDbRoot: Environment.testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),

@@ -10,23 +10,18 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class BlockStreamingTest: XCTestCase {
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
         logger = OSLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? FileManager.default.removeItem(at: __dataDbURL())
-        try? testFileManager.removeItem(at: testTempDirectory)
+        try? testFileManager.removeItem(at: Environment.testTempDirectory)
     }
 
     func testStream() async throws {
@@ -71,9 +66,9 @@ class BlockStreamingTest: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
+                fsBlockDbRoot: Environment.testTempDirectory,
                 rustBackend: realRustBackend,
                 logger: logger
             ),
@@ -135,9 +130,9 @@ class BlockStreamingTest: XCTestCase {
         let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
+                fsBlockDbRoot: Environment.testTempDirectory,
                 rustBackend: realRustBackend,
                 logger: logger
             ),

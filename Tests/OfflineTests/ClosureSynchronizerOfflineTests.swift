@@ -14,7 +14,7 @@ import XCTest
 extension String: Error { }
 
 class ClosureSynchronizerOfflineTests: XCTestCase {
-    var data: AlternativeSynchronizerAPITestsData!
+    var data: TestsData!
 
     var cancellables: [AnyCancellable] = []
     var synchronizerMock: SynchronizerMock!
@@ -22,7 +22,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        data = AlternativeSynchronizerAPITestsData()
+        data = TestsData(networkType: .testnet)
         synchronizerMock = SynchronizerMock()
         synchronizer = ClosureSDKSynchronizer(synchronizer: synchronizerMock)
         cancellables = []
@@ -112,17 +112,18 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         XCTAssertEqual(synchronizer.connectionState, .reconnecting)
     }
 
-    func testPrepareSucceed() throws {
-        synchronizerMock.prepareWithSeedViewingKeysWalletBirthdayClosure = { receivedSeed, receivedViewingKeys, receivedWalletBirthday in
+    func testPrepareSucceed() async throws {
+        let mockedViewingKey = await data.viewingKey
+        synchronizerMock.prepareWithViewingKeysWalletBirthdayClosure = { receivedSeed, receivedViewingKeys, receivedWalletBirthday in
             XCTAssertEqual(receivedSeed, self.data.seed)
-            XCTAssertEqual(receivedViewingKeys, [self.data.viewingKey])
+            XCTAssertEqual(receivedViewingKeys, [mockedViewingKey])
             XCTAssertEqual(receivedWalletBirthday, self.data.birthday)
             return .success
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, viewingKeys: [data.viewingKey], walletBirthday: data.birthday) { result in
+        synchronizer.prepare(with: data.seed, viewingKeys: [mockedViewingKey], walletBirthday: data.birthday) { result in
             switch result {
             case let .success(status):
                 XCTAssertEqual(status, .success)
@@ -135,14 +136,15 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testPrepareThrowsError() throws {
-        synchronizerMock.prepareWithSeedViewingKeysWalletBirthdayClosure = { _, _, _ in
+    func testPrepareThrowsError() async throws {
+        let mockedViewingKey = await data.viewingKey
+        synchronizerMock.prepareWithViewingKeysWalletBirthdayClosure = { _, _, _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.prepare(with: data.seed, viewingKeys: [data.viewingKey], walletBirthday: data.birthday) { result in
+        synchronizer.prepare(with: data.seed, viewingKeys: [mockedViewingKey], walletBirthday: data.birthday) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -322,14 +324,15 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testSendToAddressSucceed() throws {
+    func testSendToAddressSucceed() async throws {
         let amount = Zatoshi(100)
         let recipient: Recipient = .transparent(data.transparentAddress)
         let memo: Memo = .text(try MemoText("Some message"))
+        let mockedSpendingKey = await data.spendingKey
 
         synchronizerMock
             .sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { receivedSpendingKey, receivedZatoshi, receivedToAddress, receivedMemo in
-                XCTAssertEqual(receivedSpendingKey, self.data.spendingKey)
+                XCTAssertEqual(receivedSpendingKey, mockedSpendingKey)
                 XCTAssertEqual(receivedZatoshi, amount)
                 XCTAssertEqual(receivedToAddress, recipient)
                 XCTAssertEqual(receivedMemo, memo)
@@ -338,7 +341,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.sendToAddress(spendingKey: data.spendingKey, zatoshi: amount, toAddress: recipient, memo: memo) { result in
+        synchronizer.sendToAddress(spendingKey: mockedSpendingKey, zatoshi: amount, toAddress: recipient, memo: memo) { result in
             switch result {
             case let .success(receivedEntity):
                 XCTAssertEqual(receivedEntity.recipient, self.data.pendingTransactionEntity.recipient)
@@ -351,10 +354,11 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testSendToAddressThrowsError() throws {
+    func testSendToAddressThrowsError() async throws {
         let amount = Zatoshi(100)
         let recipient: Recipient = .transparent(data.transparentAddress)
         let memo: Memo = .text(try MemoText("Some message"))
+        let mockedSpendingKey = await data.spendingKey
 
         synchronizerMock.sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { _, _, _, _ in
             throw "Some error"
@@ -362,7 +366,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.sendToAddress(spendingKey: data.spendingKey, zatoshi: amount, toAddress: recipient, memo: memo) { result in
+        synchronizer.sendToAddress(spendingKey: mockedSpendingKey, zatoshi: amount, toAddress: recipient, memo: memo) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -374,12 +378,13 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testShieldFundsSucceed() throws {
+    func testShieldFundsSucceed() async throws {
         let memo: Memo = .text(try MemoText("Some message"))
         let shieldingThreshold = Zatoshi(1)
+        let mockedSpendingKey = await data.spendingKey
 
         synchronizerMock.shieldFundsSpendingKeyMemoShieldingThresholdClosure = { receivedSpendingKey, receivedMemo, receivedShieldingThreshold in
-            XCTAssertEqual(receivedSpendingKey, self.data.spendingKey)
+            XCTAssertEqual(receivedSpendingKey, mockedSpendingKey)
             XCTAssertEqual(receivedMemo, memo)
             XCTAssertEqual(receivedShieldingThreshold, shieldingThreshold)
             return self.data.pendingTransactionEntity
@@ -387,7 +392,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.shieldFunds(spendingKey: data.spendingKey, memo: memo, shieldingThreshold: shieldingThreshold) { result in
+        synchronizer.shieldFunds(spendingKey: mockedSpendingKey, memo: memo, shieldingThreshold: shieldingThreshold) { result in
             switch result {
             case let .success(receivedEntity):
                 XCTAssertEqual(receivedEntity.recipient, self.data.pendingTransactionEntity.recipient)
@@ -400,9 +405,10 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testShieldFundsThrowsError() throws {
+    func testShieldFundsThrowsError() async throws {
         let memo: Memo = .text(try MemoText("Some message"))
         let shieldingThreshold = Zatoshi(1)
+        let mockedSpendingKey = await data.spendingKey
 
         synchronizerMock.shieldFundsSpendingKeyMemoShieldingThresholdClosure = { _, _, _ in
             throw "Some error"
@@ -410,7 +416,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.shieldFunds(spendingKey: data.spendingKey, memo: memo, shieldingThreshold: shieldingThreshold) { result in
+        synchronizer.shieldFunds(spendingKey: mockedSpendingKey, memo: memo, shieldingThreshold: shieldingThreshold) { result in
             switch result {
             case .success:
                 XCTFail("Error should be thrown.")
@@ -497,7 +503,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     func testGetMemosForClearedTransactionSucceed() throws {
         let memo: Memo = .text(try MemoText("Some message"))
 
-        synchronizerMock.getMemosForTransactionClosure = { receivedTransaction in
+        synchronizerMock.getMemosForClearedTransactionClosure = { receivedTransaction in
             XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
             return [memo]
         }
@@ -519,7 +525,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetMemosForClearedTransactionThrowsError() {
-        synchronizerMock.getMemosForTransactionClosure = { _ in
+        synchronizerMock.getMemosForClearedTransactionClosure = { _ in
             throw "Some error"
         }
 
@@ -662,7 +668,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testAllConfirmedTransactionsSucceed() throws {
-        synchronizerMock.allConfirmedTransactionsFromTransactionClosure = { receivedTransaction, limit in
+        synchronizerMock.allConfirmedTransactionsFromLimitClosure = { receivedTransaction, limit in
             XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
             XCTAssertEqual(limit, 3)
             return [self.data.clearedTransaction]
@@ -685,7 +691,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testAllConfirmedTransactionsThrowsError() throws {
-        synchronizerMock.allConfirmedTransactionsFromTransactionClosure = { _, _ in
+        synchronizerMock.allConfirmedTransactionsFromLimitClosure = { _, _ in
             throw "Some error"
         }
 
@@ -745,7 +751,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         let skippedEntity = UnspentTransactionOutputEntityMock(address: "addr2", txid: Data(), index: 1, script: Data(), valueZat: 2, height: 3)
         let refreshedUTXO = (inserted: [insertedEntity], skipped: [skippedEntity])
 
-        synchronizerMock.refreshUTXOsAddressFromHeightClosure = { receivedAddress, receivedFromHeight in
+        synchronizerMock.refreshUTXOsAddressFromClosure = { receivedAddress, receivedFromHeight in
             XCTAssertEqual(receivedAddress, self.data.transparentAddress)
             XCTAssertEqual(receivedFromHeight, 121000)
             return refreshedUTXO
@@ -768,7 +774,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testRefreshUTXOsThrowsError() {
-        synchronizerMock.refreshUTXOsAddressFromHeightClosure = { _, _ in
+        synchronizerMock.refreshUTXOsAddressFromClosure = { _, _ in
             throw "Some error"
         }
 
@@ -909,7 +915,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testRewindSucceed() {
-        synchronizerMock.rewindPolicyClosure = { receivedPolicy in
+        synchronizerMock.rewindClosure = { receivedPolicy in
             if case .quick = receivedPolicy {
             } else {
                 XCTFail("Unexpected policy \(receivedPolicy)")
@@ -938,7 +944,7 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
     }
 
     func testRewindThrowsError() {
-        synchronizerMock.rewindPolicyClosure = { _ in
+        synchronizerMock.rewindClosure = { _ in
             return Fail(error: "some error").eraseToAnyPublisher()
         }
 

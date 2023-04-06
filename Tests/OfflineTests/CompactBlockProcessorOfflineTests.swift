@@ -11,24 +11,20 @@ import XCTest
 
 class CompactBlockProcessorOfflineTests: XCTestCase {
     let testFileManager = FileManager()
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try FileManager.default.removeItem(at: self.testTempDirectory)
+        try FileManager.default.removeItem(at: Environment.testTempDirectory)
     }
 
     func testComputeProcessingRangeForSingleLoop() async throws {
         let network = ZcashNetworkBuilder.network(for: .testnet)
-        let realRustBackend = ZcashRustBackend.self
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: .testnet)
 
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: network,
@@ -41,10 +37,10 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
         )
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                fsBlockDbRoot: Environment.testTempDirectory,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -55,7 +51,7 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
         let processor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: ZcashRustBackend.self,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger

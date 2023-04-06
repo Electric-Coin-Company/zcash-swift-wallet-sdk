@@ -11,26 +11,25 @@ import XCTest
 var logger = OSLogger(logLevel: .debug)
 
 final class FsBlockStorageTests: XCTestCase {
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
 
     var fsBlockDb: URL!
+    var rustBackend: ZcashRustBackendWelding!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         // Put setup code here. This method is called before the invocation of each test method in the class.
-        self.fsBlockDb = self.testTempDirectory.appendingPathComponent("FsBlockDb-\(Int.random(in: 0 ... .max))")
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        self.fsBlockDb = Environment.testTempDirectory.appendingPathComponent("FsBlockDb-\(Int.random(in: 0 ... .max))")
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
         try self.testFileManager.createDirectory(at: self.fsBlockDb, withIntermediateDirectories: false)
+
+        rustBackend = ZcashRustBackend.makeForTests(networkType: .testnet)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: testTempDirectory)
+        try? testFileManager.removeItem(at: Environment.testTempDirectory)
+        rustBackend = nil
     }
 
     func testLatestHeightEmptyCache() async throws {
@@ -54,7 +53,7 @@ final class FsBlockStorageTests: XCTestCase {
         let blockNameFixture = "This-is-a-fixture"
 
         let freshCache = FSCompactBlockRepository(
-            fsBlockDbRoot: self.testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: ZcashCompactBlockDescriptor(
                 height: { _ in nil },
@@ -80,7 +79,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testWhenBlockIsStoredItFollowsTheFilenameConvention() async throws {
         let freshCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
@@ -106,7 +105,7 @@ final class FsBlockStorageTests: XCTestCase {
     func testRewindDeletesTheRightBlocks() async throws {
         let contentProvider = DirectoryListingProviders.defaultSorted
         let freshCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: .live,
             contentProvider: contentProvider,
@@ -169,8 +168,8 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testGetLatestHeight() async throws {
         let freshCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self, logger: logger),
+            fsBlockDbRoot: Environment.testTempDirectory,
+            metadataStore: .live(fsBlockDbRoot: Environment.testTempDirectory, rustBackend: rustBackend, logger: logger),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
@@ -281,8 +280,8 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testClearTheCache() async throws {
         let fsBlockCache = FSCompactBlockRepository(
-            fsBlockDbRoot: self.testTempDirectory,
-            metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self, logger: logger),
+            fsBlockDbRoot: Environment.testTempDirectory,
+            metadataStore: .live(fsBlockDbRoot: Environment.testTempDirectory, rustBackend: rustBackend, logger: logger),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.naive,
             logger: logger
@@ -307,7 +306,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testCreateDoesntFailWhenAlreadyCreated() async throws {
         let freshCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
+            fsBlockDbRoot: Environment.testTempDirectory,
             metadataStore: .mock,
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
@@ -319,11 +318,9 @@ final class FsBlockStorageTests: XCTestCase {
     }
 
     func disabled_testStoringTenSandblastedBlocks() async throws {
-        let realRustBackend = ZcashRustBackend.self
-
         let realCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: realRustBackend, logger: logger),
+            fsBlockDbRoot: Environment.testTempDirectory,
+            metadataStore: .live(fsBlockDbRoot: Environment.testTempDirectory, rustBackend: rustBackend, logger: logger),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
@@ -350,11 +347,9 @@ final class FsBlockStorageTests: XCTestCase {
     }
 
     func testStoringTenSandblastedBlocksFailsAndThrows() async throws {
-        let realRustBackend = ZcashRustBackend.self
-
         let realCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: realRustBackend, logger: logger),
+            fsBlockDbRoot: Environment.testTempDirectory,
+            metadataStore: .live(fsBlockDbRoot: Environment.testTempDirectory, rustBackend: rustBackend, logger: logger),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
             fileWriter: FSBlockFileWriter(writeToURL: { _, _ in  throw FixtureError.arbitraryError }),
@@ -377,11 +372,9 @@ final class FsBlockStorageTests: XCTestCase {
     }
 
     func testStoringTenSandblastedBlocksAndRewindFiveThenStoreThemBack() async throws {
-        let realRustBackend = ZcashRustBackend.self
-
         let realCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: realRustBackend, logger: logger),
+            fsBlockDbRoot: Environment.testTempDirectory,
+            metadataStore: .live(fsBlockDbRoot: Environment.testTempDirectory, rustBackend: rustBackend, logger: logger),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
@@ -420,41 +413,19 @@ final class FsBlockStorageTests: XCTestCase {
         XCTAssertEqual(newLatestHeight, 19)
     }
 
-    func testMetadataStoreThrowsWhenCallReturnsFalse() async {
-        guard let sandblastedBlocks = try? SandblastSimulator().sandblast(with: CompactBlockRange(uncheckedBounds: (10, 19))) else {
-            XCTFail("failed to create sandblasted blocks")
-            return
-        }
-
-        MockRustBackend.writeBlocksMetadataResult = { false }
-
-        do {
-            try await FSMetadataStore.saveBlocksMeta(
-                sandblastedBlocks,
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: MockRustBackend.self,
-                logger: logger
-            )
-        } catch CompactBlockRepositoryError.failedToWriteMetadata {
-            // this is fine
-        } catch {
-            XCTFail("Expected `CompactBlockRepositoryError.failedToWriteMetadata` but found: \(error.localizedDescription)")
-        }
-    }
-
     func testMetadataStoreThrowsWhenRustThrows() async {
         guard let sandblastedBlocks = try? SandblastSimulator().sandblast(with: CompactBlockRange(uncheckedBounds: (10, 19))) else {
             XCTFail("failed to create sandblasted blocks")
             return
         }
-
-        MockRustBackend.writeBlocksMetadataResult = { throw RustWeldingError.genericError(message: "oops") }
+        let mockBackend = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend)
+        await mockBackend.setWriteBlocksMetadataBlocksThrowableError(RustWeldingError.genericError(message: "oops"))
 
         do {
             try await FSMetadataStore.saveBlocksMeta(
                 sandblastedBlocks,
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: MockRustBackend.self,
+                fsBlockDbRoot: Environment.testTempDirectory,
+                rustBackend: mockBackend,
                 logger: logger
             )
         } catch CompactBlockRepositoryError.failedToWriteMetadata {
@@ -465,13 +436,15 @@ final class FsBlockStorageTests: XCTestCase {
     }
 
     func testMetadataStoreThrowsWhenRewindFails() async {
-        MockRustBackend.rewindCacheToHeightResult = { false }
+        let mockBackend = await ZcashRustBackendWeldingMock.makeDefaultMock(rustBackend: rustBackend)
+        await mockBackend.setRewindCacheToHeightHeightThrowableError(RustWeldingError.genericError(message: "oops"))
+
         let expectedHeight = BlockHeight(1000)
 
         do {
             try await FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: MockRustBackend.self,
+                fsBlockDbRoot: Environment.testTempDirectory,
+                rustBackend: mockBackend,
                 logger: logger
             )
             .rewindToHeight(expectedHeight)
@@ -495,8 +468,8 @@ final class FsBlockStorageTests: XCTestCase {
     func disable_testPerformanceExample() async throws {
         // NOTE: performance tests don't work with async code. Thanks Apple!
         let freshCache = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: ZcashRustBackend.self, logger: logger),
+            fsBlockDbRoot: Environment.testTempDirectory,
+            metadataStore: .live(fsBlockDbRoot: Environment.testTempDirectory, rustBackend: rustBackend, logger: logger),
             blockDescriptor: .live,
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
@@ -551,7 +524,7 @@ extension FSMetadataStore {
     static let mock = FSMetadataStore(
         saveBlocksMeta: { _ in },
         rewindToHeight: { _ in },
-        initFsBlockDbRoot: { _ in true },
+        initFsBlockDbRoot: { },
         latestHeight: { .empty() }
     )
 }

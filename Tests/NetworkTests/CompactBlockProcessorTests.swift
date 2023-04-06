@@ -16,7 +16,7 @@ class CompactBlockProcessorTests: XCTestCase {
         let pathProvider = DefaultResourceProvider(network: network)
         return CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
@@ -35,17 +35,13 @@ class CompactBlockProcessorTests: XCTestCase {
     var finishedNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
     let testFileManager = FileManager()
 
     override func setUp() async throws {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
 
         await InternalSyncProgress(
             alias: .default,

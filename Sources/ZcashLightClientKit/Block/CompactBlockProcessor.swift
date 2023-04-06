@@ -518,7 +518,7 @@ actor CompactBlockProcessor {
         }
 
         // check branch id
-        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
+        let localBranch = try await rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
 
         guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
             throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")

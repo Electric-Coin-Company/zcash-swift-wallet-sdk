@@ -16,7 +16,7 @@ class CompactBlockReorgTests: XCTestCase {
         let pathProvider = DefaultResourceProvider(network: network)
         return CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: testTempDirectory,
+            fsBlockCacheRoot: Environment.testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
@@ -25,11 +25,6 @@ class CompactBlockReorgTests: XCTestCase {
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
     }()
-
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
     let testFileManager = FileManager()
     var cancellables: [AnyCancellable] = []
@@ -47,7 +42,7 @@ class CompactBlockReorgTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
 
         await InternalSyncProgress(
             alias: .default,

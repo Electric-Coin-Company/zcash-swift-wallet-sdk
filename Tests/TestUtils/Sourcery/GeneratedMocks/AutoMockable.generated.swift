@@ -557,18 +557,27 @@ class SynchronizerMock: Synchronizer {
     }
 
 }
-class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
+actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - createAccount
 
     var createAccountSeedThrowableError: Error?
+    func setCreateAccountSeedThrowableError(_ param: Error?) async {
+        createAccountSeedThrowableError = param
+    }
     var createAccountSeedCallsCount = 0
     var createAccountSeedCalled: Bool {
         return createAccountSeedCallsCount > 0
     }
     var createAccountSeedReceivedSeed: [UInt8]?
     var createAccountSeedReturnValue: UnifiedSpendingKey!
+    func setCreateAccountSeedReturnValue(_ param: UnifiedSpendingKey) async {
+        createAccountSeedReturnValue = param
+    }
     var createAccountSeedClosure: (([UInt8]) async throws -> UnifiedSpendingKey)?
+    func setCreateAccountSeedClosure(_ param: (([UInt8]) async throws -> UnifiedSpendingKey)?) async {
+        createAccountSeedClosure = param
+    }
 
     func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey {
         if let error = createAccountSeedThrowableError {
@@ -586,13 +595,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - createToAddress
 
     var createToAddressUskToValueMemoThrowableError: Error?
+    func setCreateToAddressUskToValueMemoThrowableError(_ param: Error?) async {
+        createToAddressUskToValueMemoThrowableError = param
+    }
     var createToAddressUskToValueMemoCallsCount = 0
     var createToAddressUskToValueMemoCalled: Bool {
         return createToAddressUskToValueMemoCallsCount > 0
     }
     var createToAddressUskToValueMemoReceivedArguments: (usk: UnifiedSpendingKey, address: String, value: Int64, memo: MemoBytes?)?
     var createToAddressUskToValueMemoReturnValue: Int64!
+    func setCreateToAddressUskToValueMemoReturnValue(_ param: Int64) async {
+        createToAddressUskToValueMemoReturnValue = param
+    }
     var createToAddressUskToValueMemoClosure: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Int64)?
+    func setCreateToAddressUskToValueMemoClosure(_ param: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Int64)?) async {
+        createToAddressUskToValueMemoClosure = param
+    }
 
     func createToAddress(usk: UnifiedSpendingKey, to address: String, value: Int64, memo: MemoBytes?) async throws -> Int64 {
         if let error = createToAddressUskToValueMemoThrowableError {
@@ -610,12 +628,18 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - decryptAndStoreTransaction
 
     var decryptAndStoreTransactionTxBytesMinedHeightThrowableError: Error?
+    func setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(_ param: Error?) async {
+        decryptAndStoreTransactionTxBytesMinedHeightThrowableError = param
+    }
     var decryptAndStoreTransactionTxBytesMinedHeightCallsCount = 0
     var decryptAndStoreTransactionTxBytesMinedHeightCalled: Bool {
         return decryptAndStoreTransactionTxBytesMinedHeightCallsCount > 0
     }
     var decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments: (txBytes: [UInt8], minedHeight: Int32)?
     var decryptAndStoreTransactionTxBytesMinedHeightClosure: (([UInt8], Int32) async throws -> Void)?
+    func setDecryptAndStoreTransactionTxBytesMinedHeightClosure(_ param: (([UInt8], Int32) async throws -> Void)?) async {
+        decryptAndStoreTransactionTxBytesMinedHeightClosure = param
+    }
 
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
         if let error = decryptAndStoreTransactionTxBytesMinedHeightThrowableError {
@@ -629,13 +653,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - deriveUnifiedSpendingKey
 
     var deriveUnifiedSpendingKeyFromAccountIndexThrowableError: Error?
+    func setDeriveUnifiedSpendingKeyFromAccountIndexThrowableError(_ param: Error?) async {
+        deriveUnifiedSpendingKeyFromAccountIndexThrowableError = param
+    }
     var deriveUnifiedSpendingKeyFromAccountIndexCallsCount = 0
     var deriveUnifiedSpendingKeyFromAccountIndexCalled: Bool {
         return deriveUnifiedSpendingKeyFromAccountIndexCallsCount > 0
     }
     var deriveUnifiedSpendingKeyFromAccountIndexReceivedArguments: (seed: [UInt8], accountIndex: Int32)?
     var deriveUnifiedSpendingKeyFromAccountIndexReturnValue: UnifiedSpendingKey!
+    func setDeriveUnifiedSpendingKeyFromAccountIndexReturnValue(_ param: UnifiedSpendingKey) async {
+        deriveUnifiedSpendingKeyFromAccountIndexReturnValue = param
+    }
     var deriveUnifiedSpendingKeyFromAccountIndexClosure: (([UInt8], Int32) async throws -> UnifiedSpendingKey)?
+    func setDeriveUnifiedSpendingKeyFromAccountIndexClosure(_ param: (([UInt8], Int32) async throws -> UnifiedSpendingKey)?) async {
+        deriveUnifiedSpendingKeyFromAccountIndexClosure = param
+    }
 
     func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) async throws -> UnifiedSpendingKey {
         if let error = deriveUnifiedSpendingKeyFromAccountIndexThrowableError {
@@ -653,13 +686,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - getBalance
 
     var getBalanceAccountThrowableError: Error?
+    func setGetBalanceAccountThrowableError(_ param: Error?) async {
+        getBalanceAccountThrowableError = param
+    }
     var getBalanceAccountCallsCount = 0
     var getBalanceAccountCalled: Bool {
         return getBalanceAccountCallsCount > 0
     }
     var getBalanceAccountReceivedAccount: Int32?
     var getBalanceAccountReturnValue: Int64!
+    func setGetBalanceAccountReturnValue(_ param: Int64) async {
+        getBalanceAccountReturnValue = param
+    }
     var getBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getBalanceAccountClosure = param
+    }
 
     func getBalance(account: Int32) async throws -> Int64 {
         if let error = getBalanceAccountThrowableError {
@@ -677,13 +719,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - getCurrentAddress
 
     var getCurrentAddressAccountThrowableError: Error?
+    func setGetCurrentAddressAccountThrowableError(_ param: Error?) async {
+        getCurrentAddressAccountThrowableError = param
+    }
     var getCurrentAddressAccountCallsCount = 0
     var getCurrentAddressAccountCalled: Bool {
         return getCurrentAddressAccountCallsCount > 0
     }
     var getCurrentAddressAccountReceivedAccount: Int32?
     var getCurrentAddressAccountReturnValue: UnifiedAddress!
+    func setGetCurrentAddressAccountReturnValue(_ param: UnifiedAddress) async {
+        getCurrentAddressAccountReturnValue = param
+    }
     var getCurrentAddressAccountClosure: ((Int32) async throws -> UnifiedAddress)?
+    func setGetCurrentAddressAccountClosure(_ param: ((Int32) async throws -> UnifiedAddress)?) async {
+        getCurrentAddressAccountClosure = param
+    }
 
     func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
         if let error = getCurrentAddressAccountThrowableError {
@@ -701,13 +752,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - getNearestRewindHeight
 
     var getNearestRewindHeightHeightThrowableError: Error?
+    func setGetNearestRewindHeightHeightThrowableError(_ param: Error?) async {
+        getNearestRewindHeightHeightThrowableError = param
+    }
     var getNearestRewindHeightHeightCallsCount = 0
     var getNearestRewindHeightHeightCalled: Bool {
         return getNearestRewindHeightHeightCallsCount > 0
     }
     var getNearestRewindHeightHeightReceivedHeight: Int32?
     var getNearestRewindHeightHeightReturnValue: Int32!
+    func setGetNearestRewindHeightHeightReturnValue(_ param: Int32) async {
+        getNearestRewindHeightHeightReturnValue = param
+    }
     var getNearestRewindHeightHeightClosure: ((Int32) async throws -> Int32)?
+    func setGetNearestRewindHeightHeightClosure(_ param: ((Int32) async throws -> Int32)?) async {
+        getNearestRewindHeightHeightClosure = param
+    }
 
     func getNearestRewindHeight(height: Int32) async throws -> Int32 {
         if let error = getNearestRewindHeightHeightThrowableError {
@@ -725,13 +785,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - getNextAvailableAddress
 
     var getNextAvailableAddressAccountThrowableError: Error?
+    func setGetNextAvailableAddressAccountThrowableError(_ param: Error?) async {
+        getNextAvailableAddressAccountThrowableError = param
+    }
     var getNextAvailableAddressAccountCallsCount = 0
     var getNextAvailableAddressAccountCalled: Bool {
         return getNextAvailableAddressAccountCallsCount > 0
     }
     var getNextAvailableAddressAccountReceivedAccount: Int32?
     var getNextAvailableAddressAccountReturnValue: UnifiedAddress!
+    func setGetNextAvailableAddressAccountReturnValue(_ param: UnifiedAddress) async {
+        getNextAvailableAddressAccountReturnValue = param
+    }
     var getNextAvailableAddressAccountClosure: ((Int32) async throws -> UnifiedAddress)?
+    func setGetNextAvailableAddressAccountClosure(_ param: ((Int32) async throws -> UnifiedAddress)?) async {
+        getNextAvailableAddressAccountClosure = param
+    }
 
     func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress {
         if let error = getNextAvailableAddressAccountThrowableError {
@@ -754,7 +823,13 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     }
     var getReceivedMemoIdNoteReceivedIdNote: Int64?
     var getReceivedMemoIdNoteReturnValue: Memo?
+    func setGetReceivedMemoIdNoteReturnValue(_ param: Memo?) async {
+        getReceivedMemoIdNoteReturnValue = param
+    }
     var getReceivedMemoIdNoteClosure: ((Int64) async -> Memo?)?
+    func setGetReceivedMemoIdNoteClosure(_ param: ((Int64) async -> Memo?)?) async {
+        getReceivedMemoIdNoteClosure = param
+    }
 
     func getReceivedMemo(idNote: Int64) async -> Memo? {
         getReceivedMemoIdNoteCallsCount += 1
@@ -798,7 +873,13 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     }
     var getSentMemoIdNoteReceivedIdNote: Int64?
     var getSentMemoIdNoteReturnValue: Memo?
+    func setGetSentMemoIdNoteReturnValue(_ param: Memo?) async {
+        getSentMemoIdNoteReturnValue = param
+    }
     var getSentMemoIdNoteClosure: ((Int64) async -> Memo?)?
+    func setGetSentMemoIdNoteClosure(_ param: ((Int64) async -> Memo?)?) async {
+        getSentMemoIdNoteClosure = param
+    }
 
     func getSentMemo(idNote: Int64) async -> Memo? {
         getSentMemoIdNoteCallsCount += 1
@@ -813,13 +894,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - getTransparentBalance
 
     var getTransparentBalanceAccountThrowableError: Error?
+    func setGetTransparentBalanceAccountThrowableError(_ param: Error?) async {
+        getTransparentBalanceAccountThrowableError = param
+    }
     var getTransparentBalanceAccountCallsCount = 0
     var getTransparentBalanceAccountCalled: Bool {
         return getTransparentBalanceAccountCallsCount > 0
     }
     var getTransparentBalanceAccountReceivedAccount: Int32?
     var getTransparentBalanceAccountReturnValue: Int64!
+    func setGetTransparentBalanceAccountReturnValue(_ param: Int64) async {
+        getTransparentBalanceAccountReturnValue = param
+    }
     var getTransparentBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetTransparentBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getTransparentBalanceAccountClosure = param
+    }
 
     func getTransparentBalance(account: Int32) async throws -> Int64 {
         if let error = getTransparentBalanceAccountThrowableError {
@@ -861,12 +951,18 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - initAccountsTable
 
     var initAccountsTableUfvksThrowableError: Error?
+    func setInitAccountsTableUfvksThrowableError(_ param: Error?) async {
+        initAccountsTableUfvksThrowableError = param
+    }
     var initAccountsTableUfvksCallsCount = 0
     var initAccountsTableUfvksCalled: Bool {
         return initAccountsTableUfvksCallsCount > 0
     }
     var initAccountsTableUfvksReceivedUfvks: [UnifiedFullViewingKey]?
     var initAccountsTableUfvksClosure: (([UnifiedFullViewingKey]) async throws -> Void)?
+    func setInitAccountsTableUfvksClosure(_ param: (([UnifiedFullViewingKey]) async throws -> Void)?) async {
+        initAccountsTableUfvksClosure = param
+    }
 
     func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws {
         if let error = initAccountsTableUfvksThrowableError {
@@ -880,13 +976,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - initDataDb
 
     var initDataDbSeedThrowableError: Error?
+    func setInitDataDbSeedThrowableError(_ param: Error?) async {
+        initDataDbSeedThrowableError = param
+    }
     var initDataDbSeedCallsCount = 0
     var initDataDbSeedCalled: Bool {
         return initDataDbSeedCallsCount > 0
     }
     var initDataDbSeedReceivedSeed: [UInt8]?
     var initDataDbSeedReturnValue: DbInitResult!
+    func setInitDataDbSeedReturnValue(_ param: DbInitResult) async {
+        initDataDbSeedReturnValue = param
+    }
     var initDataDbSeedClosure: (([UInt8]?) async throws -> DbInitResult)?
+    func setInitDataDbSeedClosure(_ param: (([UInt8]?) async throws -> DbInitResult)?) async {
+        initDataDbSeedClosure = param
+    }
 
     func initDataDb(seed: [UInt8]?) async throws -> DbInitResult {
         if let error = initDataDbSeedThrowableError {
@@ -1044,12 +1149,18 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - initBlocksTable
 
     var initBlocksTableHeightHashTimeSaplingTreeThrowableError: Error?
+    func setInitBlocksTableHeightHashTimeSaplingTreeThrowableError(_ param: Error?) async {
+        initBlocksTableHeightHashTimeSaplingTreeThrowableError = param
+    }
     var initBlocksTableHeightHashTimeSaplingTreeCallsCount = 0
     var initBlocksTableHeightHashTimeSaplingTreeCalled: Bool {
         return initBlocksTableHeightHashTimeSaplingTreeCallsCount > 0
     }
     var initBlocksTableHeightHashTimeSaplingTreeReceivedArguments: (height: Int32, hash: String, time: UInt32, saplingTree: String)?
     var initBlocksTableHeightHashTimeSaplingTreeClosure: ((Int32, String, UInt32, String) async throws -> Void)?
+    func setInitBlocksTableHeightHashTimeSaplingTreeClosure(_ param: ((Int32, String, UInt32, String) async throws -> Void)?) async {
+        initBlocksTableHeightHashTimeSaplingTreeClosure = param
+    }
 
     func initBlocksTable(height: Int32, hash: String, time: UInt32, saplingTree: String) async throws {
         if let error = initBlocksTableHeightHashTimeSaplingTreeThrowableError {
@@ -1063,13 +1174,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - listTransparentReceivers
 
     var listTransparentReceiversAccountThrowableError: Error?
+    func setListTransparentReceiversAccountThrowableError(_ param: Error?) async {
+        listTransparentReceiversAccountThrowableError = param
+    }
     var listTransparentReceiversAccountCallsCount = 0
     var listTransparentReceiversAccountCalled: Bool {
         return listTransparentReceiversAccountCallsCount > 0
     }
     var listTransparentReceiversAccountReceivedAccount: Int32?
     var listTransparentReceiversAccountReturnValue: [TransparentAddress]!
+    func setListTransparentReceiversAccountReturnValue(_ param: [TransparentAddress]) async {
+        listTransparentReceiversAccountReturnValue = param
+    }
     var listTransparentReceiversAccountClosure: ((Int32) async throws -> [TransparentAddress])?
+    func setListTransparentReceiversAccountClosure(_ param: ((Int32) async throws -> [TransparentAddress])?) async {
+        listTransparentReceiversAccountClosure = param
+    }
 
     func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
         if let error = listTransparentReceiversAccountThrowableError {
@@ -1087,13 +1207,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - getVerifiedBalance
 
     var getVerifiedBalanceAccountThrowableError: Error?
+    func setGetVerifiedBalanceAccountThrowableError(_ param: Error?) async {
+        getVerifiedBalanceAccountThrowableError = param
+    }
     var getVerifiedBalanceAccountCallsCount = 0
     var getVerifiedBalanceAccountCalled: Bool {
         return getVerifiedBalanceAccountCallsCount > 0
     }
     var getVerifiedBalanceAccountReceivedAccount: Int32?
     var getVerifiedBalanceAccountReturnValue: Int64!
+    func setGetVerifiedBalanceAccountReturnValue(_ param: Int64) async {
+        getVerifiedBalanceAccountReturnValue = param
+    }
     var getVerifiedBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetVerifiedBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getVerifiedBalanceAccountClosure = param
+    }
 
     func getVerifiedBalance(account: Int32) async throws -> Int64 {
         if let error = getVerifiedBalanceAccountThrowableError {
@@ -1111,13 +1240,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - getVerifiedTransparentBalance
 
     var getVerifiedTransparentBalanceAccountThrowableError: Error?
+    func setGetVerifiedTransparentBalanceAccountThrowableError(_ param: Error?) async {
+        getVerifiedTransparentBalanceAccountThrowableError = param
+    }
     var getVerifiedTransparentBalanceAccountCallsCount = 0
     var getVerifiedTransparentBalanceAccountCalled: Bool {
         return getVerifiedTransparentBalanceAccountCallsCount > 0
     }
     var getVerifiedTransparentBalanceAccountReceivedAccount: Int32?
     var getVerifiedTransparentBalanceAccountReturnValue: Int64!
+    func setGetVerifiedTransparentBalanceAccountReturnValue(_ param: Int64) async {
+        getVerifiedTransparentBalanceAccountReturnValue = param
+    }
     var getVerifiedTransparentBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetVerifiedTransparentBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getVerifiedTransparentBalanceAccountClosure = param
+    }
 
     func getVerifiedTransparentBalance(account: Int32) async throws -> Int64 {
         if let error = getVerifiedTransparentBalanceAccountThrowableError {
@@ -1135,12 +1273,18 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - validateCombinedChain
 
     var validateCombinedChainLimitThrowableError: Error?
+    func setValidateCombinedChainLimitThrowableError(_ param: Error?) async {
+        validateCombinedChainLimitThrowableError = param
+    }
     var validateCombinedChainLimitCallsCount = 0
     var validateCombinedChainLimitCalled: Bool {
         return validateCombinedChainLimitCallsCount > 0
     }
     var validateCombinedChainLimitReceivedLimit: UInt32?
     var validateCombinedChainLimitClosure: ((UInt32) async throws -> Void)?
+    func setValidateCombinedChainLimitClosure(_ param: ((UInt32) async throws -> Void)?) async {
+        validateCombinedChainLimitClosure = param
+    }
 
     func validateCombinedChain(limit: UInt32) async throws {
         if let error = validateCombinedChainLimitThrowableError {
@@ -1154,12 +1298,18 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - rewindToHeight
 
     var rewindToHeightHeightThrowableError: Error?
+    func setRewindToHeightHeightThrowableError(_ param: Error?) async {
+        rewindToHeightHeightThrowableError = param
+    }
     var rewindToHeightHeightCallsCount = 0
     var rewindToHeightHeightCalled: Bool {
         return rewindToHeightHeightCallsCount > 0
     }
     var rewindToHeightHeightReceivedHeight: Int32?
     var rewindToHeightHeightClosure: ((Int32) async throws -> Void)?
+    func setRewindToHeightHeightClosure(_ param: ((Int32) async throws -> Void)?) async {
+        rewindToHeightHeightClosure = param
+    }
 
     func rewindToHeight(height: Int32) async throws {
         if let error = rewindToHeightHeightThrowableError {
@@ -1172,33 +1322,44 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - rewindCacheToHeight
 
+    var rewindCacheToHeightHeightThrowableError: Error?
+    func setRewindCacheToHeightHeightThrowableError(_ param: Error?) async {
+        rewindCacheToHeightHeightThrowableError = param
+    }
     var rewindCacheToHeightHeightCallsCount = 0
     var rewindCacheToHeightHeightCalled: Bool {
         return rewindCacheToHeightHeightCallsCount > 0
     }
     var rewindCacheToHeightHeightReceivedHeight: Int32?
-    var rewindCacheToHeightHeightReturnValue: Bool!
-    var rewindCacheToHeightHeightClosure: ((Int32) async -> Bool)?
+    var rewindCacheToHeightHeightClosure: ((Int32) async throws -> Void)?
+    func setRewindCacheToHeightHeightClosure(_ param: ((Int32) async throws -> Void)?) async {
+        rewindCacheToHeightHeightClosure = param
+    }
 
-    func rewindCacheToHeight(height: Int32) async -> Bool {
+    func rewindCacheToHeight(height: Int32) async throws {
+        if let error = rewindCacheToHeightHeightThrowableError {
+            throw error
+        }
         rewindCacheToHeightHeightCallsCount += 1
         rewindCacheToHeightHeightReceivedHeight = height
-        if let closure = rewindCacheToHeightHeightClosure {
-            return await closure(height)
-        } else {
-            return rewindCacheToHeightHeightReturnValue
-        }
+        try await rewindCacheToHeightHeightClosure?(height)
     }
 
     // MARK: - scanBlocks
 
     var scanBlocksLimitThrowableError: Error?
+    func setScanBlocksLimitThrowableError(_ param: Error?) async {
+        scanBlocksLimitThrowableError = param
+    }
     var scanBlocksLimitCallsCount = 0
     var scanBlocksLimitCalled: Bool {
         return scanBlocksLimitCallsCount > 0
     }
     var scanBlocksLimitReceivedLimit: UInt32?
     var scanBlocksLimitClosure: ((UInt32) async throws -> Void)?
+    func setScanBlocksLimitClosure(_ param: ((UInt32) async throws -> Void)?) async {
+        scanBlocksLimitClosure = param
+    }
 
     func scanBlocks(limit: UInt32) async throws {
         if let error = scanBlocksLimitThrowableError {
@@ -1212,12 +1373,18 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - putUnspentTransparentOutput
 
     var putUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError: Error?
+    func setPutUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError(_ param: Error?) async {
+        putUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError = param
+    }
     var putUnspentTransparentOutputTxidIndexScriptValueHeightCallsCount = 0
     var putUnspentTransparentOutputTxidIndexScriptValueHeightCalled: Bool {
         return putUnspentTransparentOutputTxidIndexScriptValueHeightCallsCount > 0
     }
     var putUnspentTransparentOutputTxidIndexScriptValueHeightReceivedArguments: (txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight)?
     var putUnspentTransparentOutputTxidIndexScriptValueHeightClosure: (([UInt8], Int, [UInt8], Int64, BlockHeight) async throws -> Void)?
+    func setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure(_ param: (([UInt8], Int, [UInt8], Int64, BlockHeight) async throws -> Void)?) async {
+        putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = param
+    }
 
     func putUnspentTransparentOutput(txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) async throws {
         if let error = putUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError {
@@ -1231,13 +1398,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - shieldFunds
 
     var shieldFundsUskMemoShieldingThresholdThrowableError: Error?
+    func setShieldFundsUskMemoShieldingThresholdThrowableError(_ param: Error?) async {
+        shieldFundsUskMemoShieldingThresholdThrowableError = param
+    }
     var shieldFundsUskMemoShieldingThresholdCallsCount = 0
     var shieldFundsUskMemoShieldingThresholdCalled: Bool {
         return shieldFundsUskMemoShieldingThresholdCallsCount > 0
     }
     var shieldFundsUskMemoShieldingThresholdReceivedArguments: (usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi)?
     var shieldFundsUskMemoShieldingThresholdReturnValue: Int64!
+    func setShieldFundsUskMemoShieldingThresholdReturnValue(_ param: Int64) async {
+        shieldFundsUskMemoShieldingThresholdReturnValue = param
+    }
     var shieldFundsUskMemoShieldingThresholdClosure: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Int64)?
+    func setShieldFundsUskMemoShieldingThresholdClosure(_ param: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Int64)?) async {
+        shieldFundsUskMemoShieldingThresholdClosure = param
+    }
 
     func shieldFunds(usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> Int64 {
         if let error = shieldFundsUskMemoShieldingThresholdThrowableError {
@@ -1279,22 +1455,31 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - consensusBranchIdFor
 
     var consensusBranchIdForHeightThrowableError: Error?
+    func setConsensusBranchIdForHeightThrowableError(_ param: Error?) async {
+        consensusBranchIdForHeightThrowableError = param
+    }
     var consensusBranchIdForHeightCallsCount = 0
     var consensusBranchIdForHeightCalled: Bool {
         return consensusBranchIdForHeightCallsCount > 0
     }
     var consensusBranchIdForHeightReceivedHeight: Int32?
     var consensusBranchIdForHeightReturnValue: Int32!
-    var consensusBranchIdForHeightClosure: ((Int32) throws -> Int32)?
+    func setConsensusBranchIdForHeightReturnValue(_ param: Int32) async {
+        consensusBranchIdForHeightReturnValue = param
+    }
+    var consensusBranchIdForHeightClosure: ((Int32) async throws -> Int32)?
+    func setConsensusBranchIdForHeightClosure(_ param: ((Int32) async throws -> Int32)?) async {
+        consensusBranchIdForHeightClosure = param
+    }
 
-    func consensusBranchIdFor(height: Int32) throws -> Int32 {
+    func consensusBranchIdFor(height: Int32) async throws -> Int32 {
         if let error = consensusBranchIdForHeightThrowableError {
             throw error
         }
         consensusBranchIdForHeightCallsCount += 1
         consensusBranchIdForHeightReceivedHeight = height
         if let closure = consensusBranchIdForHeightClosure {
-            return try closure(height)
+            return try await closure(height)
         } else {
             return consensusBranchIdForHeightReturnValue
         }
@@ -1303,13 +1488,22 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - deriveUnifiedFullViewingKey
 
     var deriveUnifiedFullViewingKeyFromThrowableError: Error?
+    func setDeriveUnifiedFullViewingKeyFromThrowableError(_ param: Error?) async {
+        deriveUnifiedFullViewingKeyFromThrowableError = param
+    }
     var deriveUnifiedFullViewingKeyFromCallsCount = 0
     var deriveUnifiedFullViewingKeyFromCalled: Bool {
         return deriveUnifiedFullViewingKeyFromCallsCount > 0
     }
     var deriveUnifiedFullViewingKeyFromReceivedSpendingKey: UnifiedSpendingKey?
     var deriveUnifiedFullViewingKeyFromReturnValue: UnifiedFullViewingKey!
+    func setDeriveUnifiedFullViewingKeyFromReturnValue(_ param: UnifiedFullViewingKey) async {
+        deriveUnifiedFullViewingKeyFromReturnValue = param
+    }
     var deriveUnifiedFullViewingKeyFromClosure: ((UnifiedSpendingKey) async throws -> UnifiedFullViewingKey)?
+    func setDeriveUnifiedFullViewingKeyFromClosure(_ param: ((UnifiedSpendingKey) async throws -> UnifiedFullViewingKey)?) async {
+        deriveUnifiedFullViewingKeyFromClosure = param
+    }
 
     func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
         if let error = deriveUnifiedFullViewingKeyFromThrowableError {
@@ -1327,11 +1521,17 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - initBlockMetadataDb
 
     var initBlockMetadataDbThrowableError: Error?
+    func setInitBlockMetadataDbThrowableError(_ param: Error?) async {
+        initBlockMetadataDbThrowableError = param
+    }
     var initBlockMetadataDbCallsCount = 0
     var initBlockMetadataDbCalled: Bool {
         return initBlockMetadataDbCallsCount > 0
     }
     var initBlockMetadataDbClosure: (() async throws -> Void)?
+    func setInitBlockMetadataDbClosure(_ param: (() async throws -> Void)?) async {
+        initBlockMetadataDbClosure = param
+    }
 
     func initBlockMetadataDb() async throws {
         if let error = initBlockMetadataDbThrowableError {
@@ -1344,12 +1544,18 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     // MARK: - writeBlocksMetadata
 
     var writeBlocksMetadataBlocksThrowableError: Error?
+    func setWriteBlocksMetadataBlocksThrowableError(_ param: Error?) async {
+        writeBlocksMetadataBlocksThrowableError = param
+    }
     var writeBlocksMetadataBlocksCallsCount = 0
     var writeBlocksMetadataBlocksCalled: Bool {
         return writeBlocksMetadataBlocksCallsCount > 0
     }
     var writeBlocksMetadataBlocksReceivedBlocks: [ZcashCompactBlock]?
     var writeBlocksMetadataBlocksClosure: (([ZcashCompactBlock]) async throws -> Void)?
+    func setWriteBlocksMetadataBlocksClosure(_ param: (([ZcashCompactBlock]) async throws -> Void)?) async {
+        writeBlocksMetadataBlocksClosure = param
+    }
 
     func writeBlocksMetadata(blocks: [ZcashCompactBlock]) async throws {
         if let error = writeBlocksMetadataBlocksThrowableError {
@@ -1367,7 +1573,13 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return latestCachedBlockHeightCallsCount > 0
     }
     var latestCachedBlockHeightReturnValue: BlockHeight!
+    func setLatestCachedBlockHeightReturnValue(_ param: BlockHeight) async {
+        latestCachedBlockHeightReturnValue = param
+    }
     var latestCachedBlockHeightClosure: (() async -> BlockHeight)?
+    func setLatestCachedBlockHeightClosure(_ param: (() async -> BlockHeight)?) async {
+        latestCachedBlockHeightClosure = param
+    }
 
     func latestCachedBlockHeight() async -> BlockHeight {
         latestCachedBlockHeightCallsCount += 1

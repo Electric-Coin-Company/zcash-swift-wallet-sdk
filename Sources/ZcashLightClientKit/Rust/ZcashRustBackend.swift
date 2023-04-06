@@ -615,8 +615,12 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func rewindCacheToHeight(height: Int32) async -> Bool {
-        return zcashlc_rewind_fs_block_cache_to_height(fsBlockDbRoot.0, fsBlockDbRoot.1, height)
+    func rewindCacheToHeight(height: Int32) async throws {
+        let result = zcashlc_rewind_fs_block_cache_to_height(fsBlockDbRoot.0, fsBlockDbRoot.1, height)
+
+        guard result else {
+            throw lastError() ?? .genericError(message: "No error message available")
+        }
     }
 
     func scanBlocks(limit: UInt32 = 0) async throws {
@@ -709,7 +713,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return typecodes
     }
 
-    nonisolated func consensusBranchIdFor(height: Int32) throws -> Int32 {
+    func consensusBranchIdFor(height: Int32) async throws -> Int32 {
         let branchId = zcashlc_branch_id_for_height(height, networkType.networkId)
 
         guard branchId != -1 else {
