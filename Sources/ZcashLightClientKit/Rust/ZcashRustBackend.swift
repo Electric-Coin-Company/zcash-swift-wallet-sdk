@@ -21,6 +21,15 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
     nonisolated let networkType: NetworkType
 
+    /// Creates instance of `ZcashRustBackend`.
+    /// - Parameters:
+    ///   - dbData: `URL` pointing to file where data database will be.
+    ///   - fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
+    ///                    this directory  is expected to contain a `/blocks` sub-directory with the blocks stored in the convened filename
+    ///                    format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
+    ///   - spendParamsPath: `URL` pointing to spend parameters file.
+    ///   - outputParamsPath: `URL` pointing to output parameters file.
+    ///   - networkType: Network type to use.
     init(dbData: URL, fsBlockDbRoot: URL, spendParamsPath: URL, outputParamsPath: URL, networkType: NetworkType) {
         self.dbData = dbData.osStr()
         self.fsBlockDbRoot = fsBlockDbRoot.osPathStr()
