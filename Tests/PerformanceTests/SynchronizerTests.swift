@@ -26,6 +26,7 @@ class SynchronizerTests: XCTestCase {
     var coordinator: TestCoordinator!
     var cancellables: [AnyCancellable] = []
     var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
+    var rustBackend: ZcashRustBackendWelding!
 
     let seedPhrase = """
     wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame
@@ -33,25 +34,31 @@ class SynchronizerTests: XCTestCase {
 
     var birthday: BlockHeight = 1_730_000
 
+    override func setUp() async throws {
+        try await super.setUp()
+        rustBackend = ZcashRustBackend.makeForTests(networkType: .mainnet)
+    }
+
     override func tearDown() {
         super.tearDown()
         coordinator = nil
         cancellables = []
         sdkSynchronizerSyncStatusHandler = nil
+        rustBackend = nil
     }
 
     func testHundredBlocksSync() async throws {
-        let derivationTool = DerivationTool(networkType: .mainnet)
+        let derivationTool = DerivationTool(rustBackend: rustBackend)
         guard let seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==") else {
             XCTFail("seedData expected to be successfuly instantiated.")
             return
         }
         let seedBytes = [UInt8](seedData)
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
             seed: seedBytes,
             accountIndex: 0
         )
-        let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        let ufvk = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let endpoint = LightWalletEndpoint(address: "lightwalletd.electriccoin.co", port: 9067, secure: true)
 
