@@ -43,6 +43,9 @@ public class SDKSynchronizer: Synchronizer {
     private var transactionRepository: TransactionRepository
     private var utxoRepository: UnspentTransactionOutputRepository
 
+    private var syncSessionIDGenerator: SyncSessionIDGenerator
+    private var syncSession: SyncSession
+    private var syncSessionTicker: SessionTicker
     private var syncStartDate: Date?
 
     /// Creates an SDKSynchronizer instance
@@ -61,7 +64,9 @@ public class SDKSynchronizer: Synchronizer {
                 logger: initializer.logger,
                 walletBirthdayProvider: { initializer.walletBirthday }
             ),
-            metrics: metrics
+            metrics: metrics,
+            syncSessionIDGenerator: UniqueSyncSessionIDGenerator(),
+            syncSessionTicker: .live
         )
     }
 
@@ -72,7 +77,9 @@ public class SDKSynchronizer: Synchronizer {
         transactionRepository: TransactionRepository,
         utxoRepository: UnspentTransactionOutputRepository,
         blockProcessor: CompactBlockProcessor,
-        metrics: SDKMetrics
+        metrics: SDKMetrics,
+        syncSessionIDGenerator: SyncSessionIDGenerator,
+        syncSessionTicker: SessionTicker
     ) {
         self.connectionState = .idle
         self.underlyingStatus = GenericActor(status)
@@ -84,7 +91,10 @@ public class SDKSynchronizer: Synchronizer {
         self.network = initializer.network
         self.metrics = metrics
         self.logger = initializer.logger
-
+        self.syncSessionIDGenerator = syncSessionIDGenerator
+        self.syncSession = SyncSession(.nullID)
+        self.syncSessionTicker = syncSessionTicker
+        
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
         }
@@ -572,7 +582,8 @@ public class SDKSynchronizer: Synchronizer {
     // MARK: notify state
 
     private func snapshotState(status: SyncStatus) async -> SynchronizerState {
-        SynchronizerState(
+        await SynchronizerState(
+            syncSessionID: syncSession.value,
             shieldedBalance: WalletBalance(
                 verified: (try? await getShieldedVerifiedBalance()) ?? .zero,
                 total: (try? await getShieldedBalance()) ?? .zero
@@ -592,12 +603,23 @@ public class SDKSynchronizer: Synchronizer {
         // When new snapshot is created balance is checked. And when balance is checked and data DB doesn't exist then rust initialise new database.
         // So it's necessary to not create new snapshot after status is switched to `unprepared` otherwise data DB exists after wipe
         if newStatus == .unprepared {
-            newState = SynchronizerState.zero
+            var nextState = SynchronizerState.zero
+
+            let nextSessionID = await self.syncSession.update(.nullID)
+
+            nextState.syncSessionID = nextSessionID
+            newState = nextState
         } else {
-            if areTwoStatusesDifferent(firstStatus: oldStatus, secondStatus: newStatus) {
+            if oldStatus.isDifferent(from: newStatus) {
+                if SessionTicker.live.isNewSyncSession(oldStatus, newStatus) {
+                    await self.syncSession.newSession(with: self.syncSessionIDGenerator)
+                }
+
                 newState = await snapshotState(status: newStatus)
             } else {
-                newState = SynchronizerState(
+
+                newState = await SynchronizerState(
+                    syncSessionID: syncSession.value,
                     shieldedBalance: latestState.shieldedBalance,
                     transparentBalance: latestState.transparentBalance,
                     syncStatus: newStatus,
@@ -608,20 +630,6 @@ public class SDKSynchronizer: Synchronizer {
 
         latestState = newState
         updateStateStream(with: latestState)
-    }
-
-    private func areTwoStatusesDifferent(firstStatus: SyncStatus, secondStatus: SyncStatus) -> Bool {
-        switch (firstStatus, secondStatus) {
-        case (.unprepared, .unprepared): return false
-        case (.syncing, .syncing): return false
-        case (.enhancing, .enhancing): return false
-        case (.fetching, .fetching): return false
-        case (.synced, .synced): return false
-        case (.stopped, .stopped): return false
-        case (.disconnected, .disconnected): return false
-        case (.error, .error): return false
-        default: return true
-        }
     }
 
     private func updateStateStream(with newState: SynchronizerState) {
@@ -736,6 +744,47 @@ extension SDKSynchronizer {
     public var receivedTransactions: [ZcashTransaction.Received] {
         get async {
             (try? await allReceivedTransactions()) ?? []
+        }
+    }
+}
+
+extension SyncStatus {
+    func isDifferent(from otherStatus: SyncStatus) -> Bool {
+        switch (self, otherStatus) {
+        case (.unprepared, .unprepared): return false
+        case (.syncing, .syncing): return false
+        case (.enhancing, .enhancing): return false
+        case (.fetching, .fetching): return false
+        case (.synced, .synced): return false
+        case (.stopped, .stopped): return false
+        case (.disconnected, .disconnected): return false
+        case (.error, .error): return false
+        default: return true
+        }
+    }
+}
+
+struct SessionTicker {
+    /// Helper function to determine whether we are in front of a SyncSession change for a given syncStatus
+    /// transition we consider that every sync attempt is a new sync session and should have it's unique UUID reported.
+    var isNewSyncSession: (SyncStatus, SyncStatus) -> Bool
+}
+
+extension SessionTicker {
+    static let live = SessionTicker { oldStatus, newStatus in
+        // if the state hasn't changed to a different syncStatus member
+        guard oldStatus.isDifferent(from: newStatus) else { return false }
+
+        switch (oldStatus, newStatus) {
+        case (.unprepared, .syncing):
+            return true
+        case (.error, .syncing),
+            (.disconnected, .syncing),
+            (.stopped, .syncing),
+            (.synced, .syncing):
+            return true
+        default:
+            return false
         }
     }
 }

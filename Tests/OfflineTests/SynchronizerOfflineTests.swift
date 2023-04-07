@@ -319,4 +319,88 @@ class SynchronizerOfflineTests: XCTestCase {
 
         wait(for: [expectation], timeout: 1)
     }
+
+    func testIsNewSessionOnUnpreparedToValidTransition() {
+        XCTAssertTrue(SessionTicker.live.isNewSyncSession(.unprepared, .syncing(.nullProgress)))
+    }
+
+    func testIsNotNewSessionOnUnpreparedToStateThatWontSync() {
+        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .error(SynchronizerError.criticalError)))
+        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .disconnected))
+        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .unprepared))
+    }
+
+    func testIsNotNewSessionOnUnpreparedToInvalidOrUnexpectedTransitions() {
+        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .synced))
+        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .fetching))
+        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .enhancing(.zero)))
+    }
+
+    func testIsNotNewSyncSessionOnSameSession() {
+        XCTAssertFalse(
+            SessionTicker.live.isNewSyncSession(
+                .syncing(
+                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 3)
+                ),
+                .syncing(
+                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                )
+            )
+        )
+    }
+
+    func testIsNewSyncSessionWhenRestartingFromError() {
+
+        XCTAssertTrue(
+            SessionTicker.live.isNewSyncSession(
+                .error(SynchronizerError.generalError(message: "some error")),
+                .syncing(
+                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                )
+            )
+        )
+    }
+
+    func testIsNewSyncSessionWhenStartingFromSynced() {
+        XCTAssertTrue(
+            SessionTicker.live.isNewSyncSession(
+                .synced,
+                .syncing(
+                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                )
+            )
+        )
+    }
+
+    func testIsNewSyncSessionWhenStartingFromDisconnected() {
+        XCTAssertTrue(
+            SessionTicker.live.isNewSyncSession(
+                .disconnected,
+                .syncing(
+                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                )
+            )
+        )
+    }
+
+    func testIsNewSyncSessionWhenStartingFromStopped() {
+        XCTAssertTrue(
+            SessionTicker.live.isNewSyncSession(
+                .stopped,
+                .syncing(
+                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                )
+            )
+        )
+    }
+
+    func testSyncStatusesDontDifferWhenOuterStatusIsTheSame() {
+        XCTAssertFalse(SyncStatus.error(SynchronizerError.criticalError).isDifferent(from: .error(.invalidAccount)))
+        XCTAssertFalse(SyncStatus.disconnected.isDifferent(from: .disconnected))
+        XCTAssertFalse(SyncStatus.fetching.isDifferent(from: .fetching))
+        XCTAssertFalse(SyncStatus.stopped.isDifferent(from: .stopped))
+        XCTAssertFalse(SyncStatus.synced.isDifferent(from: .synced))
+        XCTAssertFalse(SyncStatus.syncing(.nullProgress).isDifferent(from: .syncing(.nullProgress)))
+        XCTAssertFalse(SyncStatus.unprepared.isDifferent(from: .unprepared))
+    }
 }

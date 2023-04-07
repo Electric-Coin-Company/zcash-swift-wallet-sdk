@@ -10,7 +10,7 @@ import Combine
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class SychronizerDarksideTests: XCTestCase {
+class SynchronizerDarksideTests: XCTestCase {
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let branchID = "2bb40e60"
@@ -26,11 +26,11 @@ class SychronizerDarksideTests: XCTestCase {
     var reorgExpectation = XCTestExpectation(description: "reorg")
     var foundTransactions: [ZcashTransaction.Overview] = []
     var cancellables: [AnyCancellable] = []
-
+    var idGenerator: MockSyncSessionIDGenerator!
     override func setUp() async throws {
         try await super.setUp()
-
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
+        idGenerator = MockSyncSessionIDGenerator(ids: [.deadbeef])
+        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network, syncSessionIDGenerator: idGenerator)
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
 
@@ -78,6 +78,8 @@ class SychronizerDarksideTests: XCTestCase {
     }
     
     func testFoundManyTransactions() async throws {
+
+        self.idGenerator.ids = [.deadbeef, .beefbeef, .beefdead]
         coordinator.synchronizer.eventStream
             .map { event in
                 guard case let .foundTransactions(transactions, _) = event else { return nil }
@@ -142,6 +144,8 @@ class SychronizerDarksideTests: XCTestCase {
     }
 
     func testLastStates() async throws {
+        self.idGenerator.ids = [.deadbeef]
+        
         var cancellables: [AnyCancellable] = []
 
         var states: [SynchronizerState] = []
@@ -169,32 +173,39 @@ class SychronizerDarksideTests: XCTestCase {
 
         wait(for: [preTxExpectation], timeout: 5)
 
+        let uuids = self.idGenerator.ids
+
         let expectedStates: [SynchronizerState] = [
             SynchronizerState(
+                syncSessionID: .nullID,
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .disconnected,
                 latestScannedHeight: 663150
             ),
             SynchronizerState(
+                syncSessionID: uuids[0],
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
                 latestScannedHeight: 663150
             ),
             SynchronizerState(
+                syncSessionID: uuids[0],
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
                 latestScannedHeight: 663150
             ),
             SynchronizerState(
+                syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
                 latestScannedHeight: 663150
             ),
             SynchronizerState(
+                syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .enhancing(
@@ -223,6 +234,7 @@ class SychronizerDarksideTests: XCTestCase {
                 latestScannedHeight: 663150
             ),
             SynchronizerState(
+                syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .enhancing(
@@ -251,12 +263,14 @@ class SychronizerDarksideTests: XCTestCase {
                 latestScannedHeight: 663150
             ),
             SynchronizerState(
+                syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .fetching,
                 latestScannedHeight: 663150
             ),
             SynchronizerState(
+                syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .synced,
@@ -265,6 +279,202 @@ class SychronizerDarksideTests: XCTestCase {
         ]
 
         XCTAssertEqual(states, expectedStates)
+    }
+
+    func testSyncSessionUpdates() async throws {
+        var cancellables: [AnyCancellable] = []
+
+        self.idGenerator.ids = [.deadbeef, .beefbeef]
+
+        var states: [SynchronizerState] = []
+
+        try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
+        let receivedTxHeight: BlockHeight = 663188
+
+        try coordinator.applyStaged(blockheight: receivedTxHeight + 1)
+
+        sleep(2)
+        let preTxExpectation = XCTestExpectation(description: "pre receive")
+
+        coordinator.synchronizer.stateStream
+            .sink { state in
+                states.append(state)
+            }
+            .store(in: &cancellables)
+
+        try await coordinator.sync(
+            completion: { _ in
+                preTxExpectation.fulfill()
+            },
+            error: self.handleError
+        )
+
+        wait(for: [preTxExpectation], timeout: 5)
+
+        let uuids = idGenerator.ids
+
+        let expectedStates: [SynchronizerState] = [
+            SynchronizerState(
+                syncSessionID: .nullID,
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .disconnected,
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[0],
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[0],
+                shieldedBalance: .zero,
+                transparentBalance: .zero,
+                syncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[0],
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[0],
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .enhancing(
+                    EnhancementProgress(
+                        totalTransactions: 2,
+                        enhancedTransactions: 1,
+                        lastFoundTransaction: ZcashTransaction.Overview(
+                            blockTime: 1.0,
+                            expiryHeight: 663206,
+                            fee: Zatoshi(0),
+                            id: 2,
+                            index: 1,
+                            isWalletInternal: true,
+                            hasChange: false,
+                            memoCount: 1,
+                            minedHeight: 663188,
+                            raw: Data(),
+                            rawID: Data(),
+                            receivedNoteCount: 1,
+                            sentNoteCount: 0,
+                            value: Zatoshi(100000)
+                        ),
+                        range: 663150...663189
+                    )
+                ),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[0],
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .enhancing(
+                    EnhancementProgress(
+                        totalTransactions: 2,
+                        enhancedTransactions: 2,
+                        lastFoundTransaction: ZcashTransaction.Overview(
+                            blockTime: 1.0,
+                            expiryHeight: 663192,
+                            fee: Zatoshi(0),
+                            id: 1,
+                            index: 1,
+                            isWalletInternal: true,
+                            hasChange: false,
+                            memoCount: 1,
+                            minedHeight: 663174,
+                            raw: Data(),
+                            rawID: Data(),
+                            receivedNoteCount: 1,
+                            sentNoteCount: 0,
+                            value: Zatoshi(100000)
+                        ),
+                        range: 663150...663189
+                    )
+                ),
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[0],
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .fetching,
+                latestScannedHeight: 663150
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[0],
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .synced,
+                latestScannedHeight: 663189
+            )
+        ]
+
+        XCTAssertEqual(states, expectedStates)
+
+        try coordinator.service.applyStaged(nextLatestHeight: 663_200)
+
+        sleep(1)
+
+        states.removeAll()
+
+        let secondSyncExpectation = XCTestExpectation(description: "second sync")
+
+        try await coordinator.sync(
+            completion: { _ in
+                secondSyncExpectation.fulfill()
+            },
+            error: self.handleError
+        )
+
+        wait(for: [secondSyncExpectation], timeout: 5)
+
+        let secondBatchOfExpectedStates: [SynchronizerState] = [
+            SynchronizerState(
+                syncSessionID: uuids[1],
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
+                latestScannedHeight: 663189
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[1],
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .syncing(BlockProgress(startHeight: 663190, targetHeight: 663200, progressHeight: 663200)),
+                latestScannedHeight: 663189
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[1],
+                shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
+                latestScannedHeight: 663189
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[1],
+                shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .fetching,
+                latestScannedHeight: 663189
+            ),
+            SynchronizerState(
+                syncSessionID: uuids[1],
+                shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
+                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
+                syncStatus: .synced,
+                latestScannedHeight: 663200
+            )
+        ]
+
+        XCTAssertEqual(states, secondBatchOfExpectedStates)
+
     }
 
     func testSyncAfterWipeWorks() async throws {
@@ -339,4 +549,10 @@ extension Zatoshi: CustomDebugStringConvertible {
     public var debugDescription: String {
         "Zatoshi(\(self.amount))"
     }
+}
+
+extension UUID {
+    static let deadbeef = UUID(uuidString: "DEADBEEF-BEEF-FAFA-BEEF-FAFAFAFAFAFA")!
+    static let beefbeef = UUID(uuidString: "BEEFBEEF-BEEF-DEAD-BEEF-BEEFEBEEFEBE")!
+    static let beefdead = UUID(uuidString: "BEEFDEAD-BEEF-FAFA-DEAD-EAEAEAEAEAEA")!
 }
