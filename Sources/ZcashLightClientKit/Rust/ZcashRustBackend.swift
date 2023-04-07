@@ -93,28 +93,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func deriveUnifiedSpendingKey(
-        from seed: [UInt8],
-        accountIndex: Int32
-    ) async throws -> UnifiedSpendingKey {
-        let binaryKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
-            return zcashlc_derive_spending_key(
-                seedBufferPtr.baseAddress,
-                UInt(seed.count),
-                accountIndex,
-                networkType.networkId
-            )
-        }
-
-        defer { zcashlc_free_binary_key(binaryKeyPtr) }
-
-        guard let binaryKey = binaryKeyPtr?.pointee else {
-            throw lastError() ?? .genericError(message: "No error message available")
-        }
-
-        return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
-    }
-
     func getBalance(account: Int32) async throws -> Int64 {
         let balance = zcashlc_get_balance(dbData.0, dbData.1, account, networkType.networkId)
 
@@ -189,22 +167,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         guard success else { return nil }
 
         return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
-    }
-
-    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress {
-        guard let saplingCStr = zcashlc_get_sapling_receiver_for_unified_address(
-            [CChar](uAddr.encoding.utf8CString)
-        ) else {
-            throw KeyDerivationErrors.invalidUnifiedAddress
-        }
-
-        defer { zcashlc_string_free(saplingCStr) }
-
-        guard let saplingReceiverStr = String(validatingUTF8: saplingCStr) else {
-            throw KeyDerivationErrors.receiverNotFound
-        }
-
-        return SaplingAddress(validatedEncoding: saplingReceiverStr)
     }
 
     func getSentMemo(idNote: Int64) async -> Memo? {
@@ -293,22 +255,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         return RustWeldingError.genericError(message: message)
-    }
-
-    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress {
-        guard let transparentCStr = zcashlc_get_transparent_receiver_for_unified_address(
-            [CChar](uAddr.encoding.utf8CString)
-        ) else {
-            throw KeyDerivationErrors.invalidUnifiedAddress
-        }
-
-        defer { zcashlc_string_free(transparentCStr) }
-
-        guard let transparentReceiverStr = String(validatingUTF8: transparentCStr) else {
-            throw KeyDerivationErrors.receiverNotFound
-        }
-
-        return TransparentAddress(validatedEncoding: transparentReceiverStr)
     }
 
     private nonisolated func getLastError() -> String? {

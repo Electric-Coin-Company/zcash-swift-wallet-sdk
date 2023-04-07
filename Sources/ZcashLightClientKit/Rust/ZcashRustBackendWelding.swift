@@ -85,14 +85,6 @@ protocol ZcashRustBackendWelding {
     /// returns false if fails to decrypt.
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws
 
-    /// Derives and returns a unified spending key from the given seed for the given account ID.
-    /// Returns the binary encoding of the spending key. The caller should manage the memory of (and store, if necessary) the returned spending key in a secure fashion.
-    /// - Parameter seed: a Byte Array with the seed
-    /// - Parameter accountIndex:account index that the key can spend from
-    /// - Parameter networkType: network type of this key
-    /// - Throws `.unableToDerive` when there's an error
-    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) async throws -> UnifiedSpendingKey
-
     /// get the (unverified) balance from the given account
     /// - parameter dbData: location of the data db
     /// - parameter account: index of the given account
@@ -131,12 +123,6 @@ protocol ZcashRustBackendWelding {
     /// - parameter networkType: network type of this key
     func getReceivedMemo(idNote: Int64) async -> Memo?
 
-    /// Returns the Sapling receiver within the given Unified Address, if any.
-    /// - Parameter uAddr: a `UnifiedAddress`
-    /// - Returns a `SaplingAddress` if any
-    /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress
-
     /// get sent memo from note
     /// - parameter dbData: location of the data db file
     /// - parameter idNote: note_id of note where the memo is located
@@ -149,12 +135,6 @@ protocol ZcashRustBackendWelding {
     /// - parameter account; the account index to query
     /// - parameter networkType: network type of this key
     func getTransparentBalance(account: Int32) async throws -> Int64
-
-    /// Returns the transparent receiver within the given Unified Address, if any.
-    /// - parameter uAddr: a `UnifiedAddress`
-    /// - Returns a `TransparentAddress` if any
-    /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress
 
     /// initialize the accounts table from a set of unified full viewing keys
     /// - Note: this function should only be used when restoring an existing seed phrase.
