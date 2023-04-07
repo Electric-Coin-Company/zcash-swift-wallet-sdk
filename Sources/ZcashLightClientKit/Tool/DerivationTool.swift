@@ -9,11 +9,11 @@ import Combine
 import Foundation
 
 public protocol KeyValidation {
-    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool
-    static func isValidTransparentAddress(_ tAddress: String, networkType: NetworkType) -> Bool
-    static func isValidSaplingAddress(_ zAddress: String, networkType: NetworkType) -> Bool
-    static func isValidSaplingExtendedSpendingKey(_ extsk: String, networkType: NetworkType) -> Bool
-    static func isValidUnifiedAddress(_ unifiedAddress: String, networkType: NetworkType) -> Bool
+    func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool
+    func isValidTransparentAddress(_ tAddress: String) -> Bool
+    func isValidSaplingAddress(_ zAddress: String) -> Bool
+    func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool
+    func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool
 }
 
 public protocol KeyDeriving {
@@ -60,31 +60,29 @@ public enum KeyDerivationErrors: Error {
 }
 
 public class DerivationTool: KeyDeriving {
-    static var rustwelding: ZcashRustBackendWelding.Type = ZcashRustBackend.self
+    let backend: ZcashKeyDeriving
     
-    let rustBackend: ZcashRustBackendWelding
-    
-    init(rustBackend: ZcashRustBackendWelding) {
-        self.rustBackend = rustBackend
+    init(networkType: NetworkType) {
+        self.backend = ZcashKeyDerivationBackend(networkType: networkType)
     }
 
     public static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress {
-        try rustwelding.getSaplingReceiver(for: unifiedAddress)
+        try ZcashKeyDerivationBackend.getSaplingReceiver(for: unifiedAddress)
     }
 
     public static func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress {
-        try rustwelding.getTransparentReceiver(for: unifiedAddress)
+        try ZcashKeyDerivationBackend.getTransparentReceiver(for: unifiedAddress)
     }
 
     public static func getAddressMetadata(_ addr: String) -> AddressMetadata? {
-        rustwelding.getAddressMetadata(addr)
+        ZcashKeyDerivationBackend.getAddressMetadata(addr)
     }
 
     /// Given a spending key, return the associated viewing key.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` from which to derive the `UnifiedFullViewingKey` from.
     /// - Returns: the viewing key that corresponds to the spending key.
     public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
-        try await rustBackend.deriveUnifiedFullViewingKey(from: spendingKey)
+        try await backend.deriveUnifiedFullViewingKey(from: spendingKey)
     }
 
     public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey, completion: @escaping (Result<UnifiedFullViewingKey, Error>) -> Void) {
@@ -111,7 +109,7 @@ public class DerivationTool: KeyDeriving {
             throw KeyDerivationErrors.invalidInput
         }
         do {
-            return try await rustBackend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
+            return try await backend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
         } catch {
             throw KeyDerivationErrors.unableToDerive
         }
@@ -133,7 +131,7 @@ public class DerivationTool: KeyDeriving {
 
     public static func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes] {
         do {
-            return try DerivationTool.rustwelding.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
+            return try ZcashKeyDerivationBackend.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
                 .map({ UnifiedAddress.ReceiverTypecodes(typecode: $0) })
         } catch {
             throw KeyDerivationErrors.invalidUnifiedAddress
@@ -152,24 +150,24 @@ public struct AddressMetadata {
 }
 
 extension DerivationTool: KeyValidation {
-    public static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool {
-        DerivationTool.rustwelding.isValidUnifiedFullViewingKey(ufvk, networkType: networkType)
+    public func isValidUnifiedFullViewingKey(_ ufvk: String) -> Bool {
+        backend.isValidUnifiedFullViewingKey(ufvk)
     }
 
-    public static func isValidUnifiedAddress(_ unifiedAddress: String, networkType: NetworkType) -> Bool {
-        DerivationTool.rustwelding.isValidUnifiedAddress(unifiedAddress, networkType: networkType)
+    public func isValidUnifiedAddress(_ unifiedAddress: String) -> Bool {
+        backend.isValidUnifiedAddress(unifiedAddress)
     }
     
-    public static func isValidTransparentAddress(_ tAddress: String, networkType: NetworkType) -> Bool {
-        DerivationTool.rustwelding.isValidTransparentAddress(tAddress, networkType: networkType)
+    public func isValidTransparentAddress(_ tAddress: String) -> Bool {
+        backend.isValidTransparentAddress(tAddress)
     }
     
-    public static func isValidSaplingAddress(_ zAddress: String, networkType: NetworkType) -> Bool {
-        DerivationTool.rustwelding.isValidSaplingAddress(zAddress, networkType: networkType)
+    public func isValidSaplingAddress(_ zAddress: String) -> Bool {
+        backend.isValidSaplingAddress(zAddress)
     }
 
-    public static func isValidSaplingExtendedSpendingKey(_ extsk: String, networkType: NetworkType) -> Bool {
-        DerivationTool.rustwelding.isValidSaplingExtendedSpendingKey(extsk, networkType: networkType)
+    public func isValidSaplingExtendedSpendingKey(_ extsk: String) -> Bool {
+        backend.isValidSaplingExtendedSpendingKey(extsk)
     }
 }
 

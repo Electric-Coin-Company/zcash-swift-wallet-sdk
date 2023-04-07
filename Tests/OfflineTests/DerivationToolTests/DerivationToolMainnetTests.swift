@@ -87,20 +87,18 @@ class DerivationToolMainnetTests: XCTestCase {
     
     func testIsValidViewingKey() {
         XCTAssertTrue(
-            DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(
+            ZcashKeyDerivationBackend(networkType: .mainnet).isValidSaplingExtendedFullViewingKey(
                 """
                 zxviews1q0dm7hkzqqqqpqplzv3f50rl4vay8uy5zg9e92f62lqg6gzu63rljety32xy5tcyenzuu3n386ws772nm6tp4sads8n37gff6nxmyz8dn9keehmapk0spc6pzx5ux\
                 epgu52xnwzxxnuja5tv465t9asppnj3eqncu3s7g3gzg5x8ss4ypkw08xwwyj7ky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658\
                 vljjddj7s645q399jd7
-                """,
-                networkType: .mainnet
+                """
             )
         )
         
         XCTAssertFalse(
-            DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(
-                "zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7",
-                networkType: .mainnet
+            ZcashKeyDerivationBackend(networkType: .mainnet).isValidSaplingExtendedFullViewingKey(
+                "zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"
             )
         )
     }
@@ -121,7 +119,7 @@ class DerivationToolMainnetTests: XCTestCase {
     
     func testShouldFailOnInvalidChecksumAddresses() {
         let testAddress = "t14oHp2v54vfmdgQ3v3SNuQga8JKHTNi2a1"
-        XCTAssertFalse(DerivationTool.isValidTransparentAddress(testAddress, networkType: .mainnet))
+        XCTAssertFalse(DerivationTool(networkType: .mainnet).isValidTransparentAddress(testAddress))
     }
 
     func testSpendingKeyValidationFailsOnInvalidKey() throws {
@@ -131,7 +129,7 @@ class DerivationToolMainnetTests: XCTestCase {
         4fsuaz686lgszc7nc9vvZzZzZz
         """
 
-        XCTAssertFalse(DerivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey, networkType: .mainnet))
+        XCTAssertFalse(DerivationTool(networkType: .mainnet).isValidSaplingExtendedSpendingKey(wrongSpendingKey))
     }
     // TODO: [#509] Address encoding does not catch this test https://github.com/zcash/ZcashLightClientKit/issues/509
 //    func testSpendingKeyValidationThrowsWhenWrongNetwork() throws {

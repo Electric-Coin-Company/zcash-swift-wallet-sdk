@@ -59,36 +59,32 @@ class ZcashRustBackendTests: XCTestCase {
 
     func testIsValidTransparentAddressFalse() {
         XCTAssertFalse(
-            ZcashRustBackend.isValidTransparentAddress(
-                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc",
-                networkType: networkType
+            ZcashKeyDerivationBackend(networkType: networkType).isValidTransparentAddress(
+                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
             )
         )
     }
     
     func testIsValidTransparentAddressTrue() {
         XCTAssertTrue(
-            ZcashRustBackend.isValidTransparentAddress(
-                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7",
-                networkType: networkType
+            ZcashKeyDerivationBackend(networkType: networkType).isValidTransparentAddress(
+                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7"
             )
         )
     }
     
     func testIsValidSaplingAddressTrue() {
         XCTAssertTrue(
-            ZcashRustBackend.isValidSaplingAddress(
-                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc",
-                networkType: networkType
+            ZcashKeyDerivationBackend(networkType: networkType).isValidSaplingAddress(
+                "ztestsapling12k9m98wmpjts2m56wc60qzhgsfvlpxcwah268xk5yz4h942sd58jy3jamqyxjwums6hw7kfa4cc"
             )
         )
     }
     
     func testIsValidSaplingAddressFalse() {
         XCTAssertFalse(
-            ZcashRustBackend.isValidSaplingAddress(
-                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7",
-                networkType: networkType
+            ZcashKeyDerivationBackend(networkType: networkType).isValidSaplingAddress(
+                "tmSwpioc7reeoNrYB9SKpWkurJz3yEj3ee7"
             )
         )
     }
@@ -147,7 +143,7 @@ class ZcashRustBackendTests: XCTestCase {
     func testGetMetadataFromAddress() throws {
         let recipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
 
-        let metadata = ZcashRustBackend.getAddressMetadata(recipientAddress)
+        let metadata = ZcashKeyDerivationBackend.getAddressMetadata(recipientAddress)
 
         XCTAssertEqual(metadata?.networkType, .mainnet)
         XCTAssertEqual(metadata?.addressType, .sapling)
