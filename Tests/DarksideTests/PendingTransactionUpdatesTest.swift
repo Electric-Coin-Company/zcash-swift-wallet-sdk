@@ -204,8 +204,25 @@ class PendingTransactionUpdatesTest: XCTestCase {
         }
 
         wait(for: [syncToConfirmExpectation], timeout: 6)
+
+        let sentTransactionValue = try await coordinator.synchronizer
+            .allSentTransactions()
+            .first(
+                where: { $0.rawID != nil && $0.rawID == pendingEntity?.rawTransactionId }
+            )?.value ?? .zero
+
+        XCTAssertEqual(sentTransactionValue, afterStagePendingTx.value)
+
+        let outboundTransactionValue = try await coordinator.synchronizer
+            .allClearedTransactions()
+            .first(
+                where: { $0.rawID == pendingEntity?.rawTransactionId }
+            )?.value ?? .zero
+
+        XCTAssertEqual(outboundTransactionValue, afterStagePendingTx.value)
+        XCTAssertEqual(outboundTransactionValue, sentTransactionValue)
         let supposedlyPendingUnexistingTransaction = try await coordinator.synchronizer.allPendingTransactions().first
-        
+
         XCTAssertNil(supposedlyPendingUnexistingTransaction)
     }
     
