@@ -11,6 +11,8 @@ import GRPC
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 
+extension String: Error { }
+
 class AwfulLightWalletService: MockLightWalletService {
     override func latestBlockHeight() async throws -> BlockHeight {
         throw LightWalletServiceError.criticalError

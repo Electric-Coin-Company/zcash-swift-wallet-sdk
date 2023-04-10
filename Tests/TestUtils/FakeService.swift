@@ -32,6 +32,10 @@ class MockLightWalletService: LightWalletService {
         service.blockStream(startHeight: startHeight, endHeight: endHeight)
     }
 
+    func latestBlock() async throws -> ZcashLightClientKit.BlockID {
+        throw "Not mocked"
+    }
+
     func closeConnection() {
     }
 
