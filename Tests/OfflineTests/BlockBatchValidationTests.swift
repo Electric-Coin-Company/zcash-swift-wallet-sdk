@@ -12,17 +12,20 @@ import XCTest
 class BlockBatchValidationTests: XCTestCase {
     let testFileManager = FileManager()
     var rustBackend: ZcashRustBackendWelding!
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
-        rustBackend = ZcashRustBackend.makeForTests(networkType: .testnet)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: Environment.testTempDirectory)
+        try? testFileManager.removeItem(at: testTempDirectory)
         rustBackend = nil
+        testTempDirectory = nil
     }
 
     func testBranchIdFailure() async throws {
@@ -32,12 +35,10 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -52,7 +53,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -106,12 +107,10 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -126,7 +125,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -180,12 +179,10 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -200,7 +197,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -254,12 +251,10 @@ class BlockBatchValidationTests: XCTestCase {
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -274,7 +269,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -344,7 +339,7 @@ class BlockBatchValidationTests: XCTestCase {
 
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -440,7 +435,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),
@@ -525,7 +520,7 @@ class BlockBatchValidationTests: XCTestCase {
         let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: try! __dataDbURL(),
             spendParamsURL: try! __spendParamsURL(),
             outputParamsURL: try! __outputParamsURL(),

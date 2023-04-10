@@ -14,7 +14,7 @@ class TransactionRepositoryTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        let rustBackend = ZcashRustBackend.makeForTests(networkType: .testnet)
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.uniqueTestTempDirectory, networkType: .testnet)
         transactionRepository = try! await TestDbBuilder.transactionRepository(rustBackend: rustBackend)
     }
     

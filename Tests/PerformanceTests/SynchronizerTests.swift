@@ -27,6 +27,7 @@ class SynchronizerTests: XCTestCase {
     var cancellables: [AnyCancellable] = []
     var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
     var rustBackend: ZcashRustBackendWelding!
+    var testTempDirectory: URL!
 
     let seedPhrase = """
     wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame
@@ -36,7 +37,8 @@ class SynchronizerTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        rustBackend = ZcashRustBackend.makeForTests(networkType: .mainnet)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .mainnet)
     }
 
     override func tearDown() {
@@ -45,6 +47,7 @@ class SynchronizerTests: XCTestCase {
         cancellables = []
         sdkSynchronizerSyncStatusHandler = nil
         rustBackend = nil
+        testTempDirectory = nil
     }
 
     func testHundredBlocksSync() async throws {

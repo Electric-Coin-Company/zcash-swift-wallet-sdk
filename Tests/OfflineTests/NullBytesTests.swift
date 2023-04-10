@@ -50,7 +50,11 @@ class NullBytesTests: XCTestCase {
         934dc76f087935a5c07788000b4e3aae24883adfec51b5f4d260
         """
 
-        let rustBackend = ZcashRustBackend.makeForTests(dbData: try! __dataDbURL(), networkType: networkType)
+        let rustBackend = ZcashRustBackend.makeForTests(
+            dbData: try! __dataDbURL(),
+            fsBlockDbRoot: Environment.uniqueTestTempDirectory,
+            networkType: networkType
+        )
 
         do {
             _ = try await rustBackend.initBlocksTable(

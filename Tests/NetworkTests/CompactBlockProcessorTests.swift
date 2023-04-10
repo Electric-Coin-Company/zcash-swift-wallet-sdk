@@ -12,20 +12,7 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class CompactBlockProcessorTests: XCTestCase {
-    lazy var processorConfig = {
-        let pathProvider = DefaultResourceProvider(network: network)
-        return CompactBlockProcessor.Configuration(
-            alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
-            dataDb: pathProvider.dataDbURL,
-            spendParamsURL: pathProvider.spendParamsURL,
-            outputParamsURL: pathProvider.outputParamsURL,
-            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
-            network: ZcashNetworkBuilder.network(for: .testnet)
-        )
-    }()
-
+    var processorConfig: CompactBlockProcessor.Configuration!
     var cancellables: [AnyCancellable] = []
     var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
     var rustBackend: ZcashRustBackendWelding!
@@ -38,11 +25,26 @@ class CompactBlockProcessorTests: XCTestCase {
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
 
     let testFileManager = FileManager()
+    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+
+        let pathProvider = DefaultResourceProvider(network: network)
+        processorConfig = CompactBlockProcessor.Configuration(
+            alias: .default,
+            fsBlockCacheRoot: testTempDirectory,
+            dataDb: pathProvider.dataDbURL,
+            spendParamsURL: pathProvider.spendParamsURL,
+            outputParamsURL: pathProvider.outputParamsURL,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
+            walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
+            network: ZcashNetworkBuilder.network(for: .testnet)
+        )
 
         await InternalSyncProgress(
             alias: .default,
@@ -73,8 +75,6 @@ class CompactBlockProcessorTests: XCTestCase {
             info.estimatedHeight = UInt64(mockLatestHeight)
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         })
-
-        let realRustBackend = ZcashRustBackend.self
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
@@ -130,6 +130,7 @@ class CompactBlockProcessorTests: XCTestCase {
         processor = nil
         processorEventHandler = nil
         rustBackend = nil
+        testTempDirectory = nil
     }
     
     func processorFailed(event: CompactBlockProcessor.Event) {

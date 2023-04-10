@@ -21,17 +21,23 @@ class BlockDownloaderTests: XCTestCase {
     var storage: CompactBlockRepository!
     var network = DarksideWalletDNetwork()
     var rustBackend: ZcashRustBackendWelding!
+    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
+        testTempDirectory = Environment.uniqueTestTempDirectory
+
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
 
-        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: network.networkType)
+        rustBackend = ZcashRustBackend.makeForTests(
+            fsBlockDbRoot: testTempDirectory,
+            networkType: network.networkType
+        )
 
         storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -52,12 +58,13 @@ class BlockDownloaderTests: XCTestCase {
     
     override func tearDown() {
         super.tearDown()
-        try? testFileManager.removeItem(at: Environment.testTempDirectory)
+        try? testFileManager.removeItem(at: testTempDirectory)
         darksideWalletService = nil
         service = nil
         storage = nil
         downloader = nil
         rustBackend = nil
+        testTempDirectory = nil
     }
 
     func testSmallDownload() async {

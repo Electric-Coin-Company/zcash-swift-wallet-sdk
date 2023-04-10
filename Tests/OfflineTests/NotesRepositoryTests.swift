@@ -15,7 +15,7 @@ class NotesRepositoryTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        let rustBackend = ZcashRustBackend.makeForTests(networkType: .testnet)
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.uniqueTestTempDirectory, networkType: .testnet)
         sentNotesRepository = try! await TestDbBuilder.sentNotesRepository(rustBackend: rustBackend)
         receivedNotesRepository = try! await TestDbBuilder.receivedNotesRepository(rustBackend: rustBackend)
     }

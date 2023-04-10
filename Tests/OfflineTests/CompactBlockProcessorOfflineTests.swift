@@ -11,20 +11,22 @@ import XCTest
 
 class CompactBlockProcessorOfflineTests: XCTestCase {
     let testFileManager = FileManager()
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try FileManager.default.removeItem(at: Environment.testTempDirectory)
+        try FileManager.default.removeItem(at: testTempDirectory)
     }
 
     func testComputeProcessingRangeForSingleLoop() async throws {
         let network = ZcashNetworkBuilder.network(for: .testnet)
-        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: .testnet)
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
 
         let processorConfig = CompactBlockProcessor.Configuration.standard(
             for: network,
@@ -37,9 +39,9 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
         )
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),

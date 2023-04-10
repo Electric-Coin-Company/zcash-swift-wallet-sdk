@@ -28,8 +28,11 @@ enum Environment {
     }
 
     static let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
-    static let testTempDirectory = URL(fileURLWithPath: NSString(string: NSTemporaryDirectory())
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+
+    static var uniqueTestTempDirectory: URL {
+        URL(fileURLWithPath: NSString(string: NSTemporaryDirectory())
+            .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+    }
 }
 
 public enum Constants {
@@ -134,7 +137,7 @@ func parametersReady() -> Bool {
 extension ZcashRustBackend {
     static func makeForTests(
         dbData: URL = try! __dataDbURL(),
-        fsBlockDbRoot: URL = Environment.testTempDirectory,
+        fsBlockDbRoot: URL,
         spendParamsPath: URL = SaplingParamsSourceURL.default.spendParamFileURL,
         outputParamsPath: URL = SaplingParamsSourceURL.default.outputParamFileURL,
         networkType: NetworkType
