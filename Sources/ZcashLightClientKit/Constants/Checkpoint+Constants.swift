@@ -52,10 +52,16 @@ extension Checkpoint {
         return try? checkpoint(at: url)
     }
 
+    /// - Throws:
+    ///     - `checkpointCantLoadFromDisk` if can't load JSON with checkpoint from disk.
     private static func checkpoint(at url: URL) throws -> Checkpoint {
-        let data = try Data(contentsOf: url)
-        let checkpoint = try JSONDecoder().decode(Checkpoint.self, from: data)
-        return checkpoint
+        do {
+            let data = try Data(contentsOf: url)
+            let checkpoint = try JSONDecoder().decode(Checkpoint.self, from: data)
+            return checkpoint
+        } catch {
+            throw ZcashError.checkpointCantLoadFromDisk(error)
+        }
     }
 }
 
@@ -66,7 +72,7 @@ struct BundleCheckpointURLProvider {
 extension BundleCheckpointURLProvider {
     /// Attempts to resolve the platform by checking `#if os(macOS)` build corresponds to a MacOS target
     /// `#else` branch of that condition will assume iOS is the target platform
-    static var `default` = BundleCheckpointURLProvider { networkType in
+    static let `default` = BundleCheckpointURLProvider { networkType in
         #if os(macOS)
         Self.macOS.url(networkType)
         #else
@@ -74,7 +80,7 @@ extension BundleCheckpointURLProvider {
         #endif
     }
 
-    static var iOS = BundleCheckpointURLProvider(url: { networkType in
+    static let iOS = BundleCheckpointURLProvider(url: { networkType in
         switch networkType {
         case .mainnet:
             return Checkpoint.mainnetCheckpointDirectory
@@ -88,7 +94,7 @@ extension BundleCheckpointURLProvider {
     /// if not found it will return `WalletBirthday.mainnetCheckpointDirectory` or
     /// `WalletBirthday.testnetCheckpointDirectory`. This responds to tests
     /// failing on MacOS target because the checkpoint resources would fail.
-    static var macOS = BundleCheckpointURLProvider(url: { networkType in
+    static let macOS = BundleCheckpointURLProvider(url: { networkType in
         switch networkType {
         case .mainnet:
             return Bundle.module.url(

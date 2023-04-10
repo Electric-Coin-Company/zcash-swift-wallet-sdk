@@ -9,44 +9,6 @@
 import Combine
 import Foundation
 
-/// Represents errors thrown by a Synchronizer
-public enum SynchronizerError: Error {
-    case initFailed(message: String) // ZcashLightClientKit.SynchronizerError error 0.
-    case notPrepared // ZcashLightClientKit.SynchronizerError error 9.
-    case syncFailed // ZcashLightClientKit.SynchronizerError error 10.
-    case connectionFailed(message: Error) // ZcashLightClientKit.SynchronizerError error 1.
-    case generalError(message: String) // ZcashLightClientKit.SynchronizerError error 2.
-    case maxRetryAttemptsReached(attempts: Int) // ZcashLightClientKit.SynchronizerError error 3.
-    case connectionError(status: Int, message: String) // ZcashLightClientKit.SynchronizerError error 4.
-    case networkTimeout // ZcashLightClientKit.SynchronizerError error 11.
-    case uncategorized(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 5.
-    case criticalError // ZcashLightClientKit.SynchronizerError error 12.
-    case parameterMissing(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 6.
-    case rewindError(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 7.
-    case rewindErrorUnknownArchorHeight // ZcashLightClientKit.SynchronizerError error 13.
-    case invalidAccount // ZcashLightClientKit.SynchronizerError error 14.
-    case lightwalletdValidationFailed(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 8.
-}
-
-public enum ShieldFundsError: Error {
-    case noUTXOFound
-    case insuficientTransparentFunds
-    case shieldingFailed(underlyingError: Error)
-}
-
-extension ShieldFundsError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .noUTXOFound:
-            return "Could not find UTXOs for the given t-address"
-        case .insuficientTransparentFunds:
-            return "You don't have enough confirmed transparent funds to perform a shielding transaction."
-        case .shieldingFailed(let underlyingError):
-            return "Shielding transaction failed. Reason: \(underlyingError)"
-        }
-    }
-}
-
 /// Represent the connection state to the lightwalletd server
 public enum ConnectionState {
     /// not in use
@@ -151,12 +113,11 @@ public protocol Synchronizer: AnyObject {
     ///   - viewingKeys: Viewing key derived from seed.
     ///   - walletBirthday: Birthday of wallet.
     /// - Throws:
-    /// `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
-    /// `InitializerError.accountInitFailed` if the account table can't be initialized.
-    /// `InitializerError.aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance
-    /// `InitializerError.cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
-    ///                                           some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance
-    ///                                           won't do anything.
+    ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
+    ///     - `cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
+    ///                                some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance
+    ///                                won't do anything.
+    ///     - Some other `ZcashError` thrown by lower layer of the SDK.
     func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
@@ -330,10 +291,10 @@ public protocol Synchronizer: AnyObject {
     /// fails then something is seriously wrong. If the wipe fails then the SDK may be in inconsistent state. It's suggested to call wipe again until
     /// it succeed.
     ///
-    /// Returned publisher emits `InitializerError.aliasAlreadyInUse` error if the Alias used to create this instance is already used by other
+    /// Returned publisher emits `initializerCantUpdateURLWithAlias` error if the Alias used to create this instance is already used by other
     /// instance.
     ///
-    /// Returned publisher emits `InitializerError.cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When
+    /// Returned publisher emits `initializerAliasAlreadyInUse` if the updating of paths in `Initilizer` according to alias fails. When
     /// this happens it means that some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance won't do anything.
     /// 
     func wipe() -> AnyPublisher<Void, Error>
@@ -365,7 +326,7 @@ public enum SyncStatus: Equatable {
     /// When set, a UI element may want to turn red.
     case disconnected
 
-    case error(_ error: SynchronizerError)
+    case error(_ error: Error)
     
     public var isSyncing: Bool {
         switch self {

@@ -93,10 +93,10 @@ class BlockBatchValidationTests: XCTestCase {
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
-            case CompactBlockProcessorError.wrongConsensusBranchId:
+            case ZcashError.compactBlockProcessorWrongConsensusBranchId:
                 break
             default:
-                XCTFail("Expected CompactBlockProcessorError.wrongConsensusBranchId but found \(error)")
+                XCTFail("Expected ZcashError.compactBlockProcessorWrongConsensusBranchId but found \(error)")
             }
         }
     }
@@ -166,10 +166,10 @@ class BlockBatchValidationTests: XCTestCase {
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
-            case CompactBlockProcessorError.networkMismatch(expected: .mainnet, found: .testnet):
+            case ZcashError.compactBlockProcessorNetworkMismatch(.mainnet, .testnet):
                 break
             default:
-                XCTFail("Expected CompactBlockProcessorError.networkMismatch but found \(error)")
+                XCTFail("Expected ZcashError.compactBlockProcessorNetworkMismatch but found \(error)")
             }
         }
     }
@@ -239,10 +239,10 @@ class BlockBatchValidationTests: XCTestCase {
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
-            case CompactBlockProcessorError.generalError:
+            case ZcashError.compactBlockProcessorChainName:
                 break
             default:
-                XCTFail("Expected CompactBlockProcessorError.generalError but found \(error)")
+                XCTFail("Expected ZcashError.compactBlockProcessorChainName but found \(error)")
             }
         }
     }
@@ -313,13 +313,13 @@ class BlockBatchValidationTests: XCTestCase {
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
-            case CompactBlockProcessorError.saplingActivationMismatch(
-                expected: network.constants.saplingActivationHeight,
-                found: BlockHeight(info.saplingActivationHeight)
+            case ZcashError.compactBlockProcessorSaplingActivationMismatch(
+                network.constants.saplingActivationHeight,
+                BlockHeight(info.saplingActivationHeight)
             ):
                 break
             default:
-                XCTFail("Expected CompactBlockProcessorError.saplingActivationMismatch but found \(error)")
+                XCTFail("Expected ZcashError.compactBlockProcessorSaplingActivationMismatch but found \(error)")
             }
         }
     }

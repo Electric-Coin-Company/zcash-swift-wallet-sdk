@@ -91,17 +91,16 @@ class Zip302MemoTests: XCTestCase {
         """
 
         XCTAssertThrowsError(try Memo(string: tooLongString)) { err in
-            guard let error = err as? MemoBytes.Errors else {
-                XCTFail("Expected `MemoBytes.Errors.TooLong` error but found \(err.localizedDescription)")
+            guard let error = err as? ZcashError else {
+                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err.localizedDescription)")
                 return
             }
 
             switch error {
-            case .tooLong(let length):
+            case .memoTextInputTooLong(let length):
                 XCTAssertEqual(length, 513)
-                
             default:
-                XCTFail("Expected `MemoBytes.Errors.TooLong` error but found \(err.localizedDescription)")
+                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err.localizedDescription)")
             }
         }
     }
@@ -131,18 +130,16 @@ class Zip302MemoTests: XCTestCase {
         """
         
         XCTAssertThrowsError(try Memo(string: almostTooLongString)) { err in
-            guard let error = err as? MemoBytes.Errors else {
-                XCTFail("Expected `MemoBytes.Errors kind of error but found \(err)")
+            guard let error = err as? ZcashError else {
+                XCTFail("Expected `ZcashError.memoTextInputTooLong kind of error but found \(err)")
                 return
             }
 
             switch error {
-            case .tooLong(let count):
+            case .memoTextInputTooLong(let count):
                 XCTAssertEqual(count, 515)
-            case .invalidUTF8:
-                XCTFail("Expected `.tooLong(515) but found `.invalidUTF8`")
-            case .endsWithNullBytes:
-                XCTFail("Expected `.tooLong(515) but found `.endsWithNullBytes`")
+            default:
+                XCTFail("Expected `ZCashError.memoTextInputTooLong` error but found \(err.localizedDescription)")
             }
         }
     }
@@ -165,16 +162,16 @@ class Zip302MemoTests: XCTestCase {
         let nullTrailedString = "This Is a memo with text and trailing null bytes\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}"
 
         XCTAssertThrowsError(try Memo(string: nullTrailedString)) { error in
-            guard let thrownError = error as? MemoBytes.Errors else {
-                XCTFail("Thrown error is not MemoBytes.Error")
+            guard let thrownError = error as? ZcashError else {
+                XCTFail("Thrown error is not ZcashError.memoTextInputEndsWithNullBytes")
                 return
             }
 
             switch thrownError {
-            case .invalidUTF8, .tooLong:
-                XCTFail("Expected .endsWithNullBytes found other errors")
-            case .endsWithNullBytes:
+            case .memoTextInputEndsWithNullBytes:
                 return
+            default:
+                XCTFail("Expected `ZCashError.memoTextInputEndsWithNullBytes` error but found \(thrownError.localizedDescription)")
             }
         }
     }
@@ -183,16 +180,16 @@ class Zip302MemoTests: XCTestCase {
         let nullTrailedString = "\u{0}"
 
         XCTAssertThrowsError(try Memo(string: nullTrailedString)) { error in
-            guard let thrownError = error as? MemoBytes.Errors else {
-                XCTFail("Thrown error is not MemoBytes.Error")
+            guard let thrownError = error as? ZcashError else {
+                XCTFail("Thrown error is not ZcashError.memoTextInputEndsWithNullBytes")
                 return
             }
 
             switch thrownError {
-            case .invalidUTF8, .tooLong:
-                XCTFail("Expected .endsWithNullBytes found other errors")
-            case .endsWithNullBytes:
+            case .memoTextInputEndsWithNullBytes:
                 return
+            default:
+                XCTFail("Expected `ZCashError.memoTextInputEndsWithNullBytes` error but found \(thrownError.localizedDescription)")
             }
         }
     }

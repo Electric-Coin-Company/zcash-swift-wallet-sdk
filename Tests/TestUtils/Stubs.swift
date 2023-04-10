@@ -11,18 +11,20 @@ import GRPC
 import SwiftProtobuf
 @testable import ZcashLightClientKit
 
+extension String: Error { }
+
 class AwfulLightWalletService: MockLightWalletService {
     override func latestBlockHeight() async throws -> BlockHeight {
-        throw LightWalletServiceError.criticalError
+        throw ZcashError.serviceLatestBlockFailed(.criticalError)
     }
 
     override func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        AsyncThrowingStream { continuation in continuation.finish(throwing: LightWalletServiceError.invalidBlock) }
+        AsyncThrowingStream { continuation in continuation.finish(throwing: ZcashError.serviceSubmitFailed(.invalidBlock)) }
     }
 
     /// Submits a raw transaction over lightwalletd.
     override func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
-        throw LightWalletServiceError.invalidBlock
+        throw ZcashError.serviceSubmitFailed(.invalidBlock)
     }
 }
 
@@ -59,7 +61,7 @@ class RustBackendMockHelper {
         mockValidateCombinedChainSuccessRate: Float? = nil,
         mockValidateCombinedChainFailAfterAttempts: Int? = nil,
         mockValidateCombinedChainKeepFailing: Bool = false,
-        mockValidateCombinedChainFailureError: RustWeldingError = .chainValidationFailed(message: nil)
+        mockValidateCombinedChainFailureError: ZcashError = .rustValidateCombinedChainValidationFailed("mock fail")
     ) async {
         self.mockValidateCombinedChainFailAfterAttempts = mockValidateCombinedChainFailAfterAttempts
         self.rustBackendMock = ZcashRustBackendWeldingMock(
@@ -83,7 +85,7 @@ class RustBackendMockHelper {
         rustBackend: ZcashRustBackendWelding,
         mockValidateCombinedChainSuccessRate: Float? = nil,
         mockValidateCombinedChainKeepFailing: Bool = false,
-        mockValidateCombinedChainFailureError: RustWeldingError = .chainValidationFailed(message: nil)
+        mockValidateCombinedChainFailureError: ZcashError
     ) async {
         await rustBackendMock.setLatestCachedBlockHeightReturnValue(.empty())
         await rustBackendMock.setInitBlockMetadataDbClosure() { }
@@ -94,10 +96,10 @@ class RustBackendMockHelper {
         await rustBackendMock.setGetTransparentBalanceAccountReturnValue(0)
         await rustBackendMock.setGetVerifiedBalanceAccountReturnValue(0)
         await rustBackendMock.setListTransparentReceiversAccountReturnValue([])
-        await rustBackendMock.setGetCurrentAddressAccountThrowableError(KeyDerivationErrors.unableToDerive)
-        await rustBackendMock.setGetNextAvailableAddressAccountThrowableError(KeyDerivationErrors.unableToDerive)
+        await rustBackendMock.setGetCurrentAddressAccountThrowableError(ZcashError.rustGetCurrentAddress("mocked error"))
+        await rustBackendMock.setGetNextAvailableAddressAccountThrowableError(ZcashError.rustGetNextAvailableAddress("mocked error"))
         await rustBackendMock.setShieldFundsUskMemoShieldingThresholdReturnValue(-1)
-        await rustBackendMock.setCreateAccountSeedThrowableError(KeyDerivationErrors.unableToDerive)
+        await rustBackendMock.setCreateAccountSeedThrowableError(ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes)
         await rustBackendMock.setGetReceivedMemoIdNoteReturnValue(nil)
         await rustBackendMock.setGetSentMemoIdNoteReturnValue(nil)
         await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
@@ -107,7 +109,7 @@ class RustBackendMockHelper {
         await rustBackendMock.setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure() { _, _, _, _, _ in }
         await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
         await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
-        await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(RustWeldingError.genericError(message: "mock fail"))
+        await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(ZcashError.rustDecryptAndStoreTransaction("mock fail"))
 
         await rustBackendMock.setInitDataDbSeedClosure() { seed in
             return try await rustBackend.initDataDb(seed: seed)
@@ -131,7 +133,7 @@ class RustBackendMockHelper {
         }
 
         await rustBackendMock.setValidateCombinedChainLimitClosure() { [weak self] limit in
-            guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
+            guard let self else { throw ZcashError.rustValidateCombinedChainValidationFailed("Self is nil") }
             if let rate = mockValidateCombinedChainSuccessRate {
                 if Self.shouldSucceed(successRate: rate) {
                     return try await rustBackend.validateCombinedChain(limit: limit)
@@ -174,7 +176,7 @@ class RustBackendMockHelper {
 }
 
 extension SaplingParamsSourceURL {
-    static var tests = SaplingParamsSourceURL(
+    static let tests = SaplingParamsSourceURL(
         spendParamFileURL: Bundle.module.url(forResource: "sapling-spend", withExtension: "params")!,
         outputParamFileURL: Bundle.module.url(forResource: "sapling-output", withExtension: "params")!
     )

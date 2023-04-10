@@ -22,7 +22,7 @@ public protocol ResourceProvider {
 Convenience provider for a data db and cache db resources.
 */
 public struct DefaultResourceProvider: ResourceProvider {
-    var network: ZcashNetwork
+    let network: ZcashNetwork
 
     public var dataDbURL: URL {
         let constants = network.constants

@@ -9,7 +9,7 @@ import Foundation
 import os
 
 public class OSLogger: Logger {
-    public var alias: ZcashSynchronizerAlias?
+    public let alias: ZcashSynchronizerAlias?
     
     public enum LogLevel: Int {
         case debug
@@ -19,7 +19,7 @@ public class OSLogger: Logger {
         case info
     }
 
-    public private(set) var oslog: OSLog?
+    public let oslog: OSLog?
     
     var level: LogLevel
     
@@ -30,6 +30,8 @@ public class OSLogger: Logger {
             var postfix = ""
             if let alias { postfix = "_\(alias.description)" }
             self.oslog = OSLog(subsystem: bundleName, category: "\(category)\(postfix)")
+        } else {
+            oslog = nil
         }
     }
 

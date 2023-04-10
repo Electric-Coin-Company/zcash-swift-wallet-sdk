@@ -8,15 +8,15 @@
 import Foundation
 
 protocol ReceivedNoteEntity {
-    var id: Int { get set }
-    var transactionId: Int { get set }
-    var outputIndex: Int { get set }
-    var account: Int { get set }
-    var value: Int { get set }
-    var memo: Data? { get set }
-    var spent: Int? { get set }
-    var diversifier: Data { get set }
-    var rcm: Data { get set }
-    var nf: Data { get set }
-    var isChange: Bool { get set }
+    var id: Int { get }
+    var transactionId: Int { get }
+    var outputIndex: Int { get }
+    var account: Int { get }
+    var value: Int { get }
+    var memo: Data? { get }
+    var spent: Int? { get }
+    var diversifier: Data { get }
+    var rcm: Data { get }
+    var nf: Data { get }
+    var isChange: Bool { get }
 }

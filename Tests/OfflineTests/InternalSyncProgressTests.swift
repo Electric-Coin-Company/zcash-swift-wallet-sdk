@@ -31,7 +31,7 @@ class InternalSyncProgressTests: XCTestCase {
         await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
         await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        let nextState = try await internalSyncProgress.computeNextState(
+        let nextState = await internalSyncProgress.computeNextState(
             latestBlockHeight: latestHeight,
             latestScannedHeight: 630000,
             walletBirthday: 600000
@@ -53,7 +53,7 @@ class InternalSyncProgressTests: XCTestCase {
         await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
         await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        let nextState = try await internalSyncProgress.computeNextState(
+        let nextState = await internalSyncProgress.computeNextState(
             latestBlockHeight: latestHeight,
             latestScannedHeight: 620000,
             walletBirthday: 600000
@@ -77,7 +77,7 @@ class InternalSyncProgressTests: XCTestCase {
         await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
         await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        let nextState = try await internalSyncProgress.computeNextState(
+        let nextState = await internalSyncProgress.computeNextState(
             latestBlockHeight: latestHeight,
             latestScannedHeight: 630000,
             walletBirthday: 600000

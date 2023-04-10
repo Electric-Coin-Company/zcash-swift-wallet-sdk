@@ -48,8 +48,12 @@ extension UTXOFetcherImpl: UTXOFetcher {
             startHeight: await config.walletBirthdayProvider()
         )
 
-        for try await transaction in stream {
-            utxos.append(transaction)
+        do {
+            for try await transaction in stream {
+                utxos.append(transaction)
+            }
+        } catch {
+            throw ZcashError.unspentTransactionFetcherStream(error)
         }
 
         var refreshed: [UnspentTransactionOutputEntity] = []

@@ -9,14 +9,6 @@ import Foundation
 
 typealias TransactionEncoderResultBlock = (_ result: Result<EncodedTransaction, Error>) -> Void
 
-public enum TransactionEncoderError: Error {
-    case notFound(transactionId: Int)
-    case notEncoded(transactionId: Int)
-    case missingParams
-    case spendingKeyWrongNetwork
-    case couldNotExpand(txId: Data)
-}
-
 protocol TransactionEncoder {
     /// Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
     /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
@@ -28,6 +20,9 @@ protocol TransactionEncoder {
     /// - Parameter to: string containing the recipient address
     /// - Parameter MemoBytes: string containing the memo (optional)
     /// - Parameter accountIndex: index of the account that will be used to send the funds
+    /// - Throws:
+    ///     - `walletTransEncoderCreateTransactionMissingSaplingParams` if the sapling parameters aren't downloaded.
+    ///     - Some `ZcashError.rust*` if the creation of transaction fails.
     func createTransaction(
         spendingKey: UnifiedSpendingKey,
         zatoshi: Zatoshi,
@@ -44,7 +39,9 @@ protocol TransactionEncoder {
     /// - Parameter spendingKey: `UnifiedSpendingKey` to spend the UTXOs
     /// - Parameter memoBytes: containing the memo (optional)
     /// - Parameter accountIndex: index of the account that will be used to send the funds
-    /// - Throws: a TransactionEncoderError
+    /// - Throws:
+    ///     - `walletTransEncoderShieldFundsMissingSaplingParams` if the sapling parameters aren't downloaded.
+    ///     - Some `ZcashError.rust*` if the creation of transaction fails.
     func createShieldingTransaction(
         spendingKey: UnifiedSpendingKey,
         shieldingThreshold: Zatoshi,

@@ -26,11 +26,11 @@ import Foundation
 ///  - orchardTree: the orchard tree corresponding to the given height. This field is optional since it won't be available prior
 ///   to NU5 activation height for the given network.
 struct Checkpoint: Equatable {
-    private(set) var height: BlockHeight
-    private(set) var hash: String
-    private(set) var time: UInt32
-    private(set) var saplingTree: String
-    private(set) var orchardTree: String?
+    let height: BlockHeight
+    let hash: String
+    let time: UInt32
+    let saplingTree: String
+    let orchardTree: String?
 }
 
 extension Checkpoint: Decodable {
@@ -43,12 +43,16 @@ extension Checkpoint: Decodable {
     }
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.height = try Self.getHeight(from: container)
-        self.hash = try container.decode(String.self, forKey: .hash)
-        self.time = try container.decode(UInt32.self, forKey: .time)
-        self.saplingTree = try container.decode(String.self, forKey: .saplingTree)
-        self.orchardTree = try container.decodeIfPresent(String.self, forKey: .orchardTree)
+        do {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.height = try Self.getHeight(from: container)
+            self.hash = try container.decode(String.self, forKey: .hash)
+            self.time = try container.decode(UInt32.self, forKey: .time)
+            self.saplingTree = try container.decode(String.self, forKey: .saplingTree)
+            self.orchardTree = try container.decodeIfPresent(String.self, forKey: .orchardTree)
+        } catch {
+            throw ZcashError.checkpointDecode(error)
+        }
     }
 
     static func getHeight(from container: KeyedDecodingContainer<CodingKeys>) throws -> Int {

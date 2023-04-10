@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import SQLite
 
 protocol AccountEntity {
-    var account: Int { get set }
-    var ufvk: String { get set }
+    var account: Int { get }
+    var ufvk: String { get }
 }
 
 struct Account: AccountEntity, Encodable, Decodable {
@@ -18,8 +19,8 @@ struct Account: AccountEntity, Encodable, Decodable {
         case ufvk
     }
     
-    var account: Int
-    var ufvk: String
+    let account: Int
+    let ufvk: String
 }
 
 extension Account: Hashable {
@@ -44,8 +45,6 @@ protocol AccountRepository {
     func update(_ account: AccountEntity) throws
 }
 
-import SQLite
-
 class AccountSQDAO: AccountRepository {
     enum TableColums {
         static let account = Expression<Int>("account")
@@ -54,41 +53,86 @@ class AccountSQDAO: AccountRepository {
 
     let table = Table("accounts")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     let logger: Logger
     
-    init (dbProvider: ConnectionProvider, logger: Logger) {
+    init(dbProvider: ConnectionProvider, logger: Logger) {
         self.dbProvider = dbProvider
         self.logger = logger
     }
-    
+
+    /// - Throws:
+    ///     - `accountDAOGetAllCantDecode` if account data fetched from the db can't be decoded to the `Account` object.
+    ///     - `accountDAOGetAll` if sqlite query fetching account data failed.
     func getAll() throws -> [AccountEntity] {
-        let allAccounts: [Account] = try dbProvider.connection().prepare(table).map({ row in
-            try row.decode()
-        })
-        
-        return allAccounts
+        do {
+            return try dbProvider.connection()
+                .prepare(table)
+                .map { row -> Account in
+                    do {
+                        return try row.decode()
+                    } catch {
+                        throw ZcashError.accountDAOGetAllCantDecode(error)
+                    }
+                }
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.accountDAOGetAll(error)
+            }
+        }
     }
-    
+
+    /// - Throws:
+    ///     - `accountDAOFindByCantDecode` if account data fetched from the db can't be decoded to the `Account` object.
+    ///     - `accountDAOFindBy` if sqlite query fetching account data failed.
     func findBy(account: Int) throws -> AccountEntity? {
         let query = table.filter(TableColums.account == account).limit(1)
-        return try dbProvider.connection().prepare(query).map({ try $0.decode() as Account }).first
+        do {
+            return try dbProvider.connection()
+                .prepare(query)
+                .map {
+                    do {
+                        return try $0.decode() as Account
+                    } catch {
+                        throw ZcashError.accountDAOFindByCantDecode(error)
+                    }
+                }
+                .first
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.accountDAOFindBy(error)
+            }
+        }
     }
-    
+
+    /// - Throws:
+    ///     - `accountDAOUpdate` if sqlite query updating account failed.
+    ///     - `accountDAOUpdatedZeroRows` if sqlite query updating account pass but it affects 0 rows.
     func update(_ account: AccountEntity) throws {
         guard let acc = account as? Account else {
-            throw DatabaseStorageError.updateFailed
+            throw ZcashError.accountDAOUpdateInvalidAccount
         }
-        let updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
+
+        let updatedRows: Int
+        do {
+            updatedRows = try dbProvider.connection().run(table.filter(TableColums.account == acc.account).update(acc))
+        } catch {
+            throw ZcashError.accountDAOUpdate(error)
+        }
+
         if updatedRows == 0 {
             logger.error("attempted to update pending transactions but no rows were updated")
-            throw DatabaseStorageError.updateFailed
+            throw ZcashError.accountDAOUpdatedZeroRows
         }
     }
 }
 
 class CachingAccountDao: AccountRepository {
-    var dao: AccountRepository
+    let dao: AccountRepository
     lazy var cache: [Int: AccountEntity] = {
         var accountCache: [Int: AccountEntity] = [:]
         guard let all = try? dao.getAll() else {

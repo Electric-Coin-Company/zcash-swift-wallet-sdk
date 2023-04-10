@@ -115,7 +115,7 @@ actor InternalSyncProgress {
         latestBlockHeight: BlockHeight,
         latestScannedHeight: BlockHeight,
         walletBirthday: BlockHeight
-    ) throws -> CompactBlockProcessor.NextState {
+    ) -> CompactBlockProcessor.NextState {
         logger.debug("""
             Init numbers:
             latestBlockHeight:       \(latestBlockHeight)

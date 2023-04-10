@@ -180,12 +180,12 @@ class BlockStreamingTest: XCTestCase {
                 totalProgressRange: startHeight...latestBlockHeight
             )
         } catch {
-            if let lwdError = error as? LightWalletServiceError {
+            if let lwdError = error as? ZcashError {
                 switch lwdError {
-                case .timeOut:
+                case .serviceBlockStreamFailed:
                     XCTAssert(true)
                 default:
-                    XCTFail("LWD Service error found, but should have been a timeLimit reached Error")
+                    XCTFail("LWD Service error found, but should have been a timeLimit reached \(lwdError)")
                 }
             } else {
                 XCTFail("Error should have been a timeLimit reached Error")

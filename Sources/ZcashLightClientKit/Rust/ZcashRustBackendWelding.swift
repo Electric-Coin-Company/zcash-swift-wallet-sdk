@@ -8,26 +8,6 @@
 
 import Foundation
 
-enum RustWeldingError: Error {
-    case genericError(message: String)
-    case dataDbInitFailed(message: String)
-    case dataDbNotEmpty
-    case saplingSpendParametersNotFound
-    case malformedStringInput
-    case noConsensusBranchId(height: Int32)
-    case unableToDeriveKeys
-    case getBalanceError(Int, Error)
-    case invalidInput(message: String)
-    case invalidRewind(suggestedHeight: Int32)
-    /// Thrown when `upperBound` if the combined chain is invalid. `upperBound` is the height of the highest invalid block (on the assumption that
-    /// the highest block in the cache database is correct).
-    case invalidChain(upperBound: Int32)
-    /// Thrown if there was an error during validation unrelated to chain validity.
-    case chainValidationFailed(message: String?)
-    /// Thrown if there was problem with memory allocation on the Swift side while trying to write blocks metadata to DB.
-    case writeBlocksMetadataAllocationProblem
-}
-
 enum ZcashRustBackendWeldingConstants {
     static let validChain: Int32 = -1
 }
@@ -56,6 +36,7 @@ protocol ZcashRustBackendWelding {
     /// automated account recovery).
     /// - parameter seed: byte array of the zip32 seed
     /// - Returns: The `UnifiedSpendingKey` structs for the number of accounts created
+    /// - Throws: `rustCreateAccount`.
     func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey
 
     /// Creates a transaction to the given address from the given account
@@ -63,6 +44,7 @@ protocol ZcashRustBackendWelding {
     /// - Parameter to: recipient address
     /// - Parameter value: transaction amount in Zatoshi
     /// - Parameter memo: the `MemoBytes` for this transaction. pass `nil` when sending to transparent receivers
+    /// - Throws: `rustCreateToAddress`.
     func createToAddress(
         usk: UnifiedSpendingKey,
         to address: String,
@@ -73,14 +55,19 @@ protocol ZcashRustBackendWelding {
     /// Scans a transaction for any information that can be decrypted by the accounts in the wallet, and saves it to the wallet.
     /// - parameter tx:     the transaction to decrypt
     /// - parameter minedHeight: height on which this transaction was mined. this is used to fetch the consensus branch ID.
+    /// - Throws: `rustDecryptAndStoreTransaction`.
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws
 
     /// Get the (unverified) balance from the given account.
     /// - parameter account: index of the given account
+    /// - Throws: `rustGetBalance`.
     func getBalance(account: Int32) async throws -> Int64
 
     /// Returns the most-recently-generated unified payment address for the specified account.
     /// - parameter account: index of the given account
+    /// - Throws:
+    ///     - `rustGetCurrentAddress` if rust layer returns error.
+    ///     - `rustGetCurrentAddressInvalidAddress` if generated unified address isn't valid.
     func getCurrentAddress(account: Int32) async throws -> UnifiedAddress
 
     /// Wallets might need to be rewound because of a reorg, or by user request.
@@ -92,10 +79,14 @@ protocol ZcashRustBackendWelding {
     /// 100 blocks or back to the oldest unspent note that this wallet contains.
     /// - parameter height: height you would like to rewind to.
     /// - Returns: the blockheight of the nearest rewind height.
+    /// - Throws: `rustGetNearestRewindHeight`.
     func getNearestRewindHeight(height: Int32) async throws -> Int32
 
     /// Returns a newly-generated unified payment address for the specified account, with the next available diversifier.
     /// - parameter account: index of the given account
+    /// - Throws:
+    ///     - `rustGetNextAvailableAddress` if rust layer returns error.
+    ///     - `rustGetNextAvailableAddressInvalidAddress` if generated unified address isn't valid.
     func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress
 
     /// Get received memo from note.
@@ -109,11 +100,17 @@ protocol ZcashRustBackendWelding {
 
     /// Get the verified cached transparent balance for the given address
     /// - parameter account; the account index to query
+    /// - Throws:
+    ///     - `rustGetTransparentBalanceNegativeAccount` if `account` is < 0.
+    ///     - `rustGetTransparentBalance` if rust layer returns error.
     func getTransparentBalance(account: Int32) async throws -> Int64
 
     /// Initialize the accounts table from a set of unified full viewing keys.
     /// - Note: this function should only be used when restoring an existing seed phrase. when creating a new wallet, use `createAccount()` instead.
     /// - Parameter ufvks: an array of UnifiedFullViewingKeys
+    /// - Throws:
+    ///     - `rustInitAccountsTableViewingKeyCotainsNullBytes` if any of the key in `ufvks` contains null bytes before end.
+    ///     - `rustInitAccountsTableViewingKeyIsInvalid` if any of the key in `ufvks` isn't valid.
     func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws
 
     /// Initializes the data db. This will performs any migrations needed on the sqlite file
@@ -122,6 +119,7 @@ protocol ZcashRustBackendWelding {
     /// - Returns: `DbInitResult.success` if the dataDb was initialized successfully
     /// or `DbInitResult.seedRequired` if the operation requires the seed to be passed
     /// in order to be completed successfully.
+    /// Throws `rustInitDataDb` if rust layer returns error.
     func initDataDb(seed: [UInt8]?) async throws -> DbInitResult
 
     /// Initialize the blocks table from a given checkpoint (heigh, hash, time, saplingTree and networkType).
@@ -129,6 +127,11 @@ protocol ZcashRustBackendWelding {
     /// - parameter hash: hash of the merkle tree
     /// - parameter time: in milliseconds from reference
     /// - parameter saplingTree: hash of the sapling tree
+    /// - Throws:
+    ///     - `rustInitBlocksTableHashContainsNullBytes` if `hash` contains null bytes before end.
+    ///     - `rustInitBlocksTableSaplingTreeContainsNullBytes` if `saplingTree` contains null bytes before end.
+    ///     - `rustInitBlocksTableDataDbNotEmpty` if data DB is not empty.
+    ///     - `rustInitBlocksTable` if rust layer returns error.
     func initBlocksTable(
         height: Int32,
         hash: String,
@@ -139,14 +142,21 @@ protocol ZcashRustBackendWelding {
     /// Returns a list of the transparent receivers for the diversified unified addresses that have
     /// been allocated for the provided account.
     /// - parameter account: index of the given account
+    /// - Throws:
+    ///     - `rustListTransparentReceivers` if rust layer returns error.
+    ///     - `rustListTransparentReceiversInvalidAddress` if transarent received generated by rust is invalid.
     func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress]
 
     /// Get the verified balance from the given account
     /// - parameter account: index of the given account
+    /// - Throws: `rustGetVerifiedBalance` when rust layer throws error.
     func getVerifiedBalance(account: Int32) async throws -> Int64
 
     /// Get the verified cached transparent balance for the given account
     /// - parameter account: account index to query the balance for.
+    /// - Throws:
+    ///     - `rustGetVerifiedTransparentBalanceNegativeAccount` if `account` is < 0.
+    ///     - `rustGetVerifiedTransparentBalance` if rust layer returns error.
     func getVerifiedTransparentBalance(account: Int32) async throws -> Int64
 
     /// Checks that the scanned blocks in the data database, when combined with the recent
@@ -162,20 +172,22 @@ protocol ZcashRustBackendWelding {
     /// - parameter networkType: the network type
     /// - parameter limit: a limit to validate a fixed number of blocks instead of the whole cache.
     /// - Throws:
-    ///  - `RustWeldingError.chainValidationFailed` if there was an error during validation unrelated to chain validity.
-    ///  - `RustWeldingError.invalidChain(upperBound)` if the combined chain is invalid. `upperBound` is the height of the highest invalid block
-    ///     (on the assumption that the highest block in the cache database is correct).
+    ///  - `rustValidateCombinedChainValidationFailed` if there was an error during validation unrelated to chain validity.
+    ///  - `rustValidateCombinedChainInvalidChain(upperBound)` if the combined chain is invalid. `upperBound` is the height of the highest invalid
+    ///    block(on the assumption that the highest block in the cache database is correct).
     ///
     /// - Important: This function does not mutate either of the databases.
     func validateCombinedChain(limit: UInt32) async throws
 
     /// Resets the state of the database to only contain block and transaction information up to the given height. clears up all derived data as well
     /// - parameter height: height to rewind to.
+    /// - Throws: `rustRewindToHeight` if rust layer returns error.
     func rewindToHeight(height: Int32) async throws
 
     /// Resets the state of the FsBlock database to only contain block and transaction information up to the given height.
     /// - Note: this does not delete the files. Only rolls back the database.
     /// - parameter height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use `getNearestRewindHeight` when unsure
+    /// - Throws: `rustRewindCacheToHeight` if rust layer returns error.
     func rewindCacheToHeight(height: Int32) async throws
 
     /// Scans new blocks added to the cache for any transactions received by the tracked
@@ -191,6 +203,7 @@ protocol ZcashRustBackendWelding {
     /// cache, an error will be signalled.
     ///
     /// - parameter limit: scan up to limit blocks. pass 0 to set no limit.
+    /// - Throws: `rustScanBlocks` if rust layer returns error.
     func scanBlocks(limit: UInt32) async throws
 
     /// Upserts a UTXO into the data db database
@@ -199,6 +212,7 @@ protocol ZcashRustBackendWelding {
     /// - parameter script: the script of the UTXO
     /// - parameter value: the value of the UTXO
     /// - parameter height: the mined height for the UTXO
+    /// - Throws: `rustPutUnspentTransparentOutput` if rust layer returns error.
     func putUnspentTransparentOutput(
         txid: [UInt8],
         index: Int,
@@ -210,6 +224,7 @@ protocol ZcashRustBackendWelding {
     /// Creates a transaction to shield all found UTXOs in data db for the account the provided `UnifiedSpendingKey` has spend authority for.
     /// - Parameter usk: `UnifiedSpendingKey` that spend transparent funds and where the funds will be shielded to.
     /// - Parameter memo: the `Memo` for this transaction
+    /// - Throws: `rustShieldFunds` if rust layer returns error.
     func shieldFunds(
         usk: UnifiedSpendingKey,
         memo: MemoBytes?,
@@ -218,14 +233,18 @@ protocol ZcashRustBackendWelding {
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
+    /// - Throws: `rustNoConsensusBranchId` if rust layer returns error.
     func consensusBranchIdFor(height: Int32) throws -> Int32
 
     /// Initializes Filesystem based block cache
-    /// - throws `RustWeldingError` when fails to initialize
+    /// - Throws: `rustInitBlockMetadataDb` if rust layer returns error.
     func initBlockMetadataDb() async throws
 
     /// Write compact block metadata to a database known to the Rust layer
     /// - Parameter blocks: The `ZcashCompactBlock`s that are going to be marked as stored by the metadata Db.
+    /// - Throws:
+    ///     - `rustWriteBlocksMetadataAllocationProblem` if there problem with allocating memory on Swift side.
+    ///     - `rustWriteBlocksMetadata` if there is problem with writing blocks metadata.
     func writeBlocksMetadata(blocks: [ZcashCompactBlock]) async throws
 
     /// Gets the latest block height stored in the filesystem based cache.

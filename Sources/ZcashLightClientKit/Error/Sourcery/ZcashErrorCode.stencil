@@ -1,0 +1,15 @@
+/*
+!!!!! To edit this file go to ZcashErrorCodeDefinition first and udate/add codes. Then run generateErrorCode.sh script to regenerate this file.
+
+By design each error code should be used only at one place in the app. Thanks to that it is possible to identify exact line in the code from which the
+error originates. And it can help with debugging.
+*/
+
+{% for type in types.enums where type.name == "ZcashErrorDefinition" %}
+public enum ZcashErrorCode: String {
+    {% for case in type.cases %}
+    /// {{ case.documentation[0] }}
+    case {{ case.name }} = "{{ case.annotations["code"] }}"
+    {% endfor %}
+}
+{% endfor %}

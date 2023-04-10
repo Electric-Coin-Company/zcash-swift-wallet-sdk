@@ -27,6 +27,14 @@ so that there is not a discontinuity in the cached block range that could cause 
 discontinuity error on libzcashlc when calling `scan_blocks`. This will have a setback of
 at most 100 blocks that would have to be re-downloaded when resuming sync.
 
+### [#361] Redesign errors inside the SDK
+
+Now the SDK uses only one error type - `ZcashError`. Each method that throws now throws only `ZcashError`. 
+Each publisher (or stream) that can emit error now emitts only `ZcashError`.
+
+Each symbol in `ZcashError` enum represents one error. Each error is used only in one place
+inside the SDK. Each error has assigned unique error code (`ZcashErrorCode`) which can be used in logs.
+
 ### [#959] and [#914] Value of outbound transactions does not match user intended tx input 
 
 This change switches to a new (future) version of the rust crates that will get rid of the sent and received transactions Views in favor of a v_transaction view that will do better accounting of outgoing and incoming funds. Additionally it will support an outputs view for seeing the inner details of transactions enabling the SDKs tell the users the precise movement of value that a tx causes in its multiple possible ways according to the protocol.

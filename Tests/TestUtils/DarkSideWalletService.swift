@@ -65,6 +65,10 @@ class DarksideWalletService: LightWalletService {
     func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         service.blockStream(startHeight: startHeight, endHeight: endHeight)
     }
+
+    func latestBlock() async throws -> ZcashLightClientKit.BlockID {
+        throw "Not mocked"
+    }
     
     func closeConnection() {
     }
@@ -177,7 +181,7 @@ class DarksideWalletService: LightWalletService {
 }
 
 enum DarksideWalletDConstants: NetworkConstants {
-    static var defaultFsBlockDbRootName = "fs_cache"
+    static let defaultFsBlockDbRootName = "fs_cache"
 
     static var saplingActivationHeight: BlockHeight {
         663150
@@ -205,6 +209,6 @@ enum DarksideWalletDConstants: NetworkConstants {
 }
 
 class DarksideWalletDNetwork: ZcashNetwork {
-    var constants: NetworkConstants.Type = DarksideWalletDConstants.self
-    var networkType = NetworkType.mainnet
+    let constants: NetworkConstants.Type = DarksideWalletDConstants.self
+    let networkType = NetworkType.mainnet
 }

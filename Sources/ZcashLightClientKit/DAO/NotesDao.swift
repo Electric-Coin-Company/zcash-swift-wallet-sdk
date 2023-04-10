@@ -23,33 +23,41 @@ struct ReceivedNote: ReceivedNoteEntity, Codable {
         case spent
         case tx
     }
-    var id: Int
-    var diversifier: Data
-    var rcm: Data
-    var nf: Data
-    var isChange: Bool
-    var transactionId: Int
-    var outputIndex: Int
-    var account: Int
-    var value: Int
-    var memo: Data?
-    var spent: Int?
-    var tx: Int
+    let id: Int
+    let diversifier: Data
+    let rcm: Data
+    let nf: Data
+    let isChange: Bool
+    let transactionId: Int
+    let outputIndex: Int
+    let account: Int
+    let value: Int
+    let memo: Data?
+    let spent: Int?
+    let tx: Int
 }
 
 class ReceivedNotesSQLDAO: ReceivedNoteRepository {
     let table = Table("received_notes")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
-    
+
+    /// Throws `notesDAOReceivedCount` if sqlite query fetching count fails.
     func count() throws -> Int {
-        try dbProvider.connection().scalar(table.count)
+        do {
+            return try dbProvider.connection().scalar(table.count)
+        } catch {
+            throw ZcashError.notesDAOReceivedCount(error)
+        }
     }
-    
+
+    /// - Throws:
+    ///     - `notesDAOReceivedCantDecode` if fetched note data from the db can't be decoded to the `ReceivedNote` object.
+    ///     - `notesDAOReceivedNote` if sqlite query fetching note data fails.
     func receivedNote(byRawTransactionId: Data) throws -> ReceivedNoteEntity? {
         let transactions = Table("transactions")
         let idTx = Expression<Int>("id_tx")
@@ -63,13 +71,25 @@ class ReceivedNotesSQLDAO: ReceivedNoteRepository {
             )
             .where(transactions[txid] == Blob(bytes: byRawTransactionId.bytes))
             .limit(1)
-        
-        return try dbProvider.connection()
-            .prepare(joinStatement)
-            .map { row -> ReceivedNote in
-                try row.decode()
+
+        do {
+            return try dbProvider.connection()
+                .prepare(joinStatement)
+                .map { row -> ReceivedNote in
+                    do {
+                        return try row.decode()
+                    } catch {
+                        throw ZcashError.notesDAOReceivedCantDecode(error)
+                    }
+                }
+                .first
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.notesDAOReceivedNote(error)
             }
-            .first
+        }
     }
 }
 
@@ -86,30 +106,38 @@ struct SentNote: SentNoteEntity, Codable {
         case memo
     }
     
-    var id: Int
-    var transactionId: Int
-    var outputPool: Int
-    var outputIndex: Int
-    var fromAccount: Int
-    var toAddress: String?
-    var toAccount: Int?
-    var value: Int
-    var memo: Data?
+    let id: Int
+    let transactionId: Int
+    let outputPool: Int
+    let outputIndex: Int
+    let fromAccount: Int
+    let toAddress: String?
+    let toAccount: Int?
+    let value: Int
+    let memo: Data?
 }
 
 class SentNotesSQLDAO: SentNotesRepository {
     let table = Table("sent_notes")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
-    
+
+    /// - Throws: `notesDAOSentCount` if sqlite query fetching count fails.
     func count() throws -> Int {
-        try dbProvider.connection().scalar(table.count)
+        do {
+            return try dbProvider.connection().scalar(table.count)
+        } catch {
+            throw ZcashError.notesDAOSentCount(error)
+        }
     }
-    
+
+    /// - Throws:
+    ///     - `notesDAOSentCantDecode` if fetched note data from the db can't be decoded to the `SentNote` object.
+    ///     - `notesDAOSentNote` if sqlite query fetching note data fails.
     func sentNote(byRawTransactionId: Data) throws -> SentNoteEntity? {
         let transactions = Table("transactions")
         let idTx = Expression<Int>("id_tx")
@@ -124,12 +152,24 @@ class SentNotesSQLDAO: SentNotesRepository {
             .where(transactions[txid] == Blob(bytes: byRawTransactionId.bytes))
             .limit(1)
 
-        return try dbProvider.connection()
-            .prepare(joinStatement)
-            .map { row -> SentNote in
-                try row.decode()
+        do {
+            return try dbProvider.connection()
+                .prepare(joinStatement)
+                .map { row -> SentNote in
+                    do {
+                        return try row.decode()
+                    } catch {
+                        throw ZcashError.notesDAOSentCantDecode(error)
+                    }
+                }
+                .first
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.notesDAOSentNote(error)
             }
-            .first
+        }
     }
 
     func getRecipients(for id: Int) -> [TransactionRecipient] {
