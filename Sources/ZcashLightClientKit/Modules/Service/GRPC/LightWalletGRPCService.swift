@@ -48,7 +48,8 @@ class LiveLatestBlockHeightProvider: LatestBlockHeightProvider {
             }
             return blockHeight
         } catch {
-            throw error.mapToServiceError()
+            let serviceError = error.mapToServiceError()
+            throw ZcashError.serviceLatestBlockHeightFailed(serviceError)
         }
     }
 }
@@ -128,21 +129,11 @@ class LightWalletGRPCService {
         do {
             return try await compactTxStreamer.getLatestBlock(ChainSpec())
         } catch {
-            throw error.mapToServiceError()
+            let serviceError = error.mapToServiceError()
+            throw ZcashError.serviceLatestBlockFailed(serviceError)
         }
     }
-    
-    func getTx(hash: String) async throws -> RawTransaction {
-        var filter = TxFilter()
-        filter.hash = Data(hash.utf8)
 
-        do {
-            return try await compactTxStreamer.getTransaction(filter)
-        } catch {
-            throw error.mapToServiceError()
-        }
-    }
-    
     static func callOptions(timeLimit: TimeLimit) -> CallOptions {
         CallOptions(
             customMetadata: HPACKHeaders(),
@@ -162,7 +153,8 @@ extension LightWalletGRPCService: LightWalletService {
         do {
             return try await compactTxStreamer.getLightdInfo(Empty())
         } catch {
-            throw error.mapToServiceError()
+            let serviceError = error.mapToServiceError()
+            throw ZcashError.serviceGetInfoFailed(serviceError)
         }
     }
     
@@ -181,7 +173,8 @@ extension LightWalletGRPCService: LightWalletService {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: error.mapToServiceError())
+                    let serviceError = error.mapToServiceError()
+                    continuation.finish(throwing: ZcashError.serviceBlockRangeFailed(serviceError))
                 }
             }
         }
@@ -192,7 +185,8 @@ extension LightWalletGRPCService: LightWalletService {
             let transaction = RawTransaction.with { $0.data = spendTransaction }
             return try await compactTxStreamer.sendTransaction(transaction)
         } catch {
-            throw LightWalletServiceError.sentFailed(error: error)
+            let serviceError = error.mapToServiceError()
+            throw ZcashError.serviceSubmitFailed(serviceError)
         }
     }
     
@@ -204,7 +198,8 @@ extension LightWalletGRPCService: LightWalletService {
             let rawTx = try await compactTxStreamer.getTransaction(txFilter)
             return ZcashTransaction.Fetched(rawID: txId, minedHeight: BlockHeight(rawTx.height), raw: rawTx.data)
         } catch {
-            throw error.mapToServiceError()
+            let serviceError = error.mapToServiceError()
+            throw ZcashError.serviceFetchTransactionFailed(serviceError)
         }
     }
 
@@ -245,7 +240,8 @@ extension LightWalletGRPCService: LightWalletService {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: error.mapToServiceError())
+                    let serviceError = error.mapToServiceError()
+                    continuation.finish(throwing: ZcashError.serviceFetchUTXOsFailed(serviceError))
                 }
             }
         }
@@ -271,7 +267,8 @@ extension LightWalletGRPCService: LightWalletService {
                     }
                     continuation.finish()
                 } catch {
-                    continuation.finish(throwing: error.mapToServiceError())
+                    let serviceError = error.mapToServiceError()
+                    continuation.finish(throwing: ZcashError.serviceBlockStreamFailed(serviceError))
                 }
             }
         }

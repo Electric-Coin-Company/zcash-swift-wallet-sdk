@@ -28,7 +28,8 @@ let package = Package(
             ],
             exclude: [
                 "Modules/Service/GRPC/ProtoBuf/proto/compact_formats.proto",
-                "Modules/Service/GRPC/ProtoBuf/proto/service.proto"
+                "Modules/Service/GRPC/ProtoBuf/proto/service.proto",
+                "Error/Sourcery/"
             ],
             resources: [
                 .copy("Resources/checkpoints")
