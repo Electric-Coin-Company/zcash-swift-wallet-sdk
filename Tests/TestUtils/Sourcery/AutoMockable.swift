@@ -13,6 +13,7 @@
 @testable import ZcashLightClientKit
 
 extension ZcashRustBackendWelding { }
+extension ZcashRustBackendWelding { }
 extension Synchronizer { }
 
 // sourcery:end:

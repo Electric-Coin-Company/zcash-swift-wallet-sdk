@@ -518,7 +518,7 @@ actor CompactBlockProcessor {
         }
 
         // check branch id
-        let localBranch = try await rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
+        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
 
         guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
             throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
@@ -616,7 +616,7 @@ actor CompactBlockProcessor {
 
         let nearestHeight: Int32
         do {
-            nearestHeight = try await rustBackend.getNearestRewindHeight(height: height)
+            nearestHeight = try rustBackend.getNearestRewindHeight(height: height)
         } catch {
             await fail(error)
             return await context.completion(.failure(error))
@@ -626,7 +626,7 @@ actor CompactBlockProcessor {
         let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
 
         do {
-            try await rustBackend.rewindToHeight(height: rewindHeight)
+            try rustBackend.rewindToHeight(height: rewindHeight)
         } catch {
             await fail(error)
             return await context.completion(.failure(error))
@@ -1035,7 +1035,7 @@ actor CompactBlockProcessor {
         self.consecutiveChainValidationErrors += 1
 
         do {
-            try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
+            try rustBackend.rewindToHeight(height: Int32(rewindHeight))
         } catch {
             await fail(error)
             return
@@ -1180,7 +1180,7 @@ extension CompactBlockProcessor.State: Equatable {
 
 extension CompactBlockProcessor {
     func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
-        try await rustBackend.getCurrentAddress(account: Int32(accountIndex))
+        try rustBackend.getCurrentAddress(account: Int32(accountIndex))
     }
     
     func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
@@ -1198,10 +1198,10 @@ extension CompactBlockProcessor {
 
         return WalletBalance(
             verified: Zatoshi(
-                try await rustBackend.getVerifiedTransparentBalance(account: Int32(accountIndex))
+                try rustBackend.getVerifiedTransparentBalance(account: Int32(accountIndex))
             ),
             total: Zatoshi(
-                try await rustBackend.getTransparentBalance(account: Int32(accountIndex))
+                try rustBackend.getTransparentBalance(account: Int32(accountIndex))
             )
         )
     }
@@ -1232,7 +1232,7 @@ extension CompactBlockProcessor {
         var skipped: [UnspentTransactionOutputEntity] = []
         for utxo in utxos {
             do {
-                try await rustBackend.putUnspentTransparentOutput(
+                try rustBackend.putUnspentTransparentOutput(
                     txid: utxo.txid.bytes,
                     index: utxo.index,
                     script: utxo.script.bytes,

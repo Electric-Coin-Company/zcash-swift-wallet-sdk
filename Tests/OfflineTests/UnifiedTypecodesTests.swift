@@ -28,9 +28,9 @@ final class UnifiedTypecodesTests: XCTestCase {
             return
         }
 
-        let address = UnifiedAddress(validatedEncoding: uAddress)
+        let address = UnifiedAddress(validatedEncoding: uAddress, networkType: .testnet)
 
-        let typecodes = try DerivationTool.receiverTypecodesFromUnifiedAddress(address)
+        let typecodes = try DerivationTool(networkType: .testnet).receiverTypecodesFromUnifiedAddress(address)
 
         XCTAssertEqual(typecodes, [.sapling, .p2pkh])
     }
@@ -44,9 +44,9 @@ final class UnifiedTypecodesTests: XCTestCase {
             return
         }
 
-        let address = UnifiedAddress(validatedEncoding: uAddress)
+        let address = UnifiedAddress(validatedEncoding: uAddress, networkType: .testnet)
 
-        let typecodes = try DerivationTool.receiverTypecodesFromUnifiedAddress(address)
+        let typecodes = try DerivationTool(networkType: .testnet).receiverTypecodesFromUnifiedAddress(address)
 
         XCTAssertEqual(
             Set<UnifiedAddress.ReceiverTypecodes>(typecodes),
@@ -70,7 +70,8 @@ final class UnifiedTypecodesTests: XCTestCase {
             validatedEncoding: """
             u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxg\
             pyuj
-            """
+            """,
+            networkType: .testnet
         )
         
         XCTAssertEqual(try ua.availableReceiverTypecodes(), [.sapling, .p2pkh])

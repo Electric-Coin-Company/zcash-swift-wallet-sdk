@@ -63,7 +63,7 @@ enum TestDbBuilder {
 
         let provider = SimpleConnectionProvider(path: url.absoluteString, readonly: true)
 
-        let initResult = try await rustBackend.initDataDb(seed: Environment.seedBytes)
+        let initResult = try rustBackend.initDataDb(seed: Environment.seedBytes)
         
         switch initResult {
         case .success: return provider

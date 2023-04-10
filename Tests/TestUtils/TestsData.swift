@@ -24,13 +24,17 @@ class TestsData {
             saplingParamsSourceURL: .default
         )
     }()
-    lazy var derivationTools: DerivationTool = { initialier.makeDerivationTool() }()
+    lazy var derivationTools: DerivationTool = { DerivationTool(networkType: networkType) }()
     let saplingAddress = SaplingAddress(validatedEncoding: "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6")
-    let unifiedAddress = UnifiedAddress(
-        validatedEncoding: """
-        u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj
-        """
-    )
+    lazy var unifiedAddress = {
+        UnifiedAddress(
+            validatedEncoding: """
+            u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxg\
+            pyuj
+            """,
+            networkType: networkType
+        )
+    }()
     let transparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     lazy var pendingTransactionEntity = {
         PendingTransaction(value: Zatoshi(10), recipient: .address(.transparent(transparentAddress)), memo: .empty(), account: 0)

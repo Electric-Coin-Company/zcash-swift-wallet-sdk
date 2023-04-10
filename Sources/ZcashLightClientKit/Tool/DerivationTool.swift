@@ -36,17 +36,17 @@ public protocol KeyDeriving {
     /// Extracts the `SaplingAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
     /// - Throws `KeyDerivationErrors.receiverNotFound` if the receiver is not present
-    static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress
+    func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress
 
     /// Extracts the `TransparentAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
     /// - Throws `KeyDerivationErrors.receiverNotFound` if the receiver is not present
-    static func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress
+    func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress
 
     /// Extracts the `UnifiedAddress.ReceiverTypecodes` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
     /// - Throws
-    static func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes]
+    func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes]
 }
 
 public enum KeyDerivationErrors: Error {
@@ -62,16 +62,16 @@ public enum KeyDerivationErrors: Error {
 public class DerivationTool: KeyDeriving {
     let backend: ZcashKeyDeriving
     
-    init(networkType: NetworkType) {
+    public init(networkType: NetworkType) {
         self.backend = ZcashKeyDerivationBackend(networkType: networkType)
     }
 
-    public static func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress {
-        try ZcashKeyDerivationBackend.getSaplingReceiver(for: unifiedAddress)
+    public func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress {
+        try backend.getSaplingReceiver(for: unifiedAddress)
     }
 
-    public static func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress {
-        try ZcashKeyDerivationBackend.getTransparentReceiver(for: unifiedAddress)
+    public func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress {
+        try backend.getTransparentReceiver(for: unifiedAddress)
     }
 
     public static func getAddressMetadata(_ addr: String) -> AddressMetadata? {
@@ -82,7 +82,7 @@ public class DerivationTool: KeyDeriving {
     /// - Parameter spendingKey: the `UnifiedSpendingKey` from which to derive the `UnifiedFullViewingKey` from.
     /// - Returns: the viewing key that corresponds to the spending key.
     public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
-        try await backend.deriveUnifiedFullViewingKey(from: spendingKey)
+        try backend.deriveUnifiedFullViewingKey(from: spendingKey)
     }
 
     public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey, completion: @escaping (Result<UnifiedFullViewingKey, Error>) -> Void) {
@@ -109,7 +109,7 @@ public class DerivationTool: KeyDeriving {
             throw KeyDerivationErrors.invalidInput
         }
         do {
-            return try await backend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
+            return try backend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
         } catch {
             throw KeyDerivationErrors.unableToDerive
         }
@@ -129,9 +129,9 @@ public class DerivationTool: KeyDeriving {
         }
     }
 
-    public static func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes] {
+    public func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes] {
         do {
-            return try ZcashKeyDerivationBackend.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
+            return try backend.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
                 .map({ UnifiedAddress.ReceiverTypecodes(typecode: $0) })
         } catch {
             throw KeyDerivationErrors.invalidUnifiedAddress
@@ -196,8 +196,9 @@ extension UnifiedAddress {
     /// already validated by another function. only for internal use. Unless you are
     /// constructing an address from a primitive function of the FFI, you probably
     /// shouldn't be using this..
-    init(validatedEncoding: String) {
+    init(validatedEncoding: String, networkType: NetworkType) {
         self.encoding = validatedEncoding
+        self.networkType = networkType
     }
 }
 
@@ -242,12 +243,12 @@ public extension UnifiedAddress {
     /// Extracts the sapling receiver from this UA if available
     /// - Returns: an `Optional<SaplingAddress>`
     func saplingReceiver() throws -> SaplingAddress {
-        try DerivationTool.saplingReceiver(from: self)
+        try DerivationTool(networkType: networkType).saplingReceiver(from: self)
     }
 
     /// Extracts the transparent receiver from this UA if available
     /// - Returns: an `Optional<TransparentAddress>`
     func transparentReceiver() throws -> TransparentAddress {
-        try DerivationTool.transparentReceiver(from: self)
+        try DerivationTool(networkType: networkType).transparentReceiver(from: self)
     }
 }

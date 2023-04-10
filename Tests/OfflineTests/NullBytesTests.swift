@@ -53,7 +53,7 @@ class NullBytesTests: XCTestCase {
         let rustBackend = ZcashRustBackend.makeForTests(dbData: try! __dataDbURL(), networkType: networkType)
 
         do {
-            _ = try await rustBackend.initBlocksTable(
+            _ = try rustBackend.initBlocksTable(
                 height: height,
                 hash: wrongHash,
                 time: time,
@@ -75,7 +75,7 @@ class NullBytesTests: XCTestCase {
         }
 
         do {
-            try await rustBackend.initBlocksTable(
+            try rustBackend.initBlocksTable(
                 height: height,
                 hash: goodHash,
                 time: time,

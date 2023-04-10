@@ -28,8 +28,8 @@ extension SaplingParametersHandlerImpl: SaplingParametersHandler {
         try Task.checkCancellation()
 
         do {
-            let totalShieldedBalance = try await rustBackend.getBalance(account: Int32(0))
-            let totalTransparentBalance = try await rustBackend.getTransparentBalance(account: Int32(0))
+            let totalShieldedBalance = try rustBackend.getBalance(account: Int32(0))
+            let totalTransparentBalance = try rustBackend.getTransparentBalance(account: Int32(0))
 
             // Download Sapling parameters only if sapling funds are detected.
             guard totalShieldedBalance > 0 || totalTransparentBalance > 0 else { return }

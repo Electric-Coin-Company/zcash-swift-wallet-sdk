@@ -202,6 +202,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     }
 
     var encoding: String
+    let networkType: NetworkType
 
     public var stringEncoded: String { encoding }
 
@@ -212,6 +213,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
+        self.networkType = network
         guard DerivationTool(networkType: network).isValidUnifiedAddress(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
@@ -224,7 +226,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     /// couldn't be extracted
     public func availableReceiverTypecodes() throws -> [UnifiedAddress.ReceiverTypecodes] {
         do {
-            return try DerivationTool.receiverTypecodesFromUnifiedAddress(self)
+            return try DerivationTool(networkType: networkType).receiverTypecodesFromUnifiedAddress(self)
         } catch {
             throw Errors.couldNotExtractTypecodes
         }
@@ -272,7 +274,7 @@ public enum Recipient: Equatable, StringEncoded {
                 metadata.networkType)
             case .p2sh:  return (.transparent(TransparentAddress(validatedEncoding: encoded)), metadata.networkType)
             case .sapling: return (.sapling(SaplingAddress(validatedEncoding: encoded)), metadata.networkType)
-            case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded)), metadata.networkType)
+            case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded, networkType: metadata.networkType)), metadata.networkType)
             }
         }
     }

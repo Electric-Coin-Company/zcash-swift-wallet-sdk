@@ -36,7 +36,7 @@ struct BlockEnhancerImpl {
         logger.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
 
         do {
-            try await rustBackend.decryptAndStoreTransaction(
+            try rustBackend.decryptAndStoreTransaction(
                 txBytes: fetchedTransaction.raw.bytes,
                 minedHeight: Int32(fetchedTransaction.minedHeight)
             )

@@ -228,14 +228,14 @@ extension FSMetadataStore {
             )
         } rewindToHeight: { height in
             do {
-                try await rustBackend.rewindCacheToHeight(height: Int32(height))
+                try rustBackend.rewindCacheToHeight(height: Int32(height))
             } catch {
                 throw CompactBlockRepositoryError.failedToRewind(height)
             }
         } initFsBlockDbRoot: {
-            try await rustBackend.initBlockMetadataDb()
+            try rustBackend.initBlockMetadataDb()
         } latestHeight: {
-            await rustBackend.latestCachedBlockHeight()
+            rustBackend.latestCachedBlockHeight()
         }
     }
 }
@@ -255,7 +255,7 @@ extension FSMetadataStore {
         guard !blocks.isEmpty else { return }
 
         do {
-            try await rustBackend.writeBlocksMetadata(blocks: blocks)
+            try rustBackend.writeBlocksMetadata(blocks: blocks)
         } catch {
             logger.error("Failed to write metadata with error: \(error)")
             throw CompactBlockRepositoryError.failedToWriteMetadata

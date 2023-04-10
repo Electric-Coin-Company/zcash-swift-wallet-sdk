@@ -63,7 +63,7 @@ class CompactBlockReorgTests: XCTestCase {
             networkType: network.networkType
         )
 
-        let branchID = try await rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
+        let branchID = try rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
         service.mockLightDInfo = LightdInfo.with { info in
             info.blockHeight = UInt64(mockLatestHeight)
             info.branch = "asdf"
@@ -89,13 +89,13 @@ class CompactBlockReorgTests: XCTestCase {
 
         try await realCache.create()
 
-        let initResult = try await rustBackend.initDataDb(seed: nil)
+        let initResult = try rustBackend.initDataDb(seed: nil)
         guard case .success = initResult else {
             XCTFail("initDataDb failed. Expected Success but got .seedRequired")
             return
         }
 
-        rustBackendMockHelper = await RustBackendMockHelper(
+        rustBackendMockHelper = RustBackendMockHelper(
             rustBackend: rustBackend,
             mockValidateCombinedChainFailAfterAttempts: 3,
             mockValidateCombinedChainKeepFailing: false,

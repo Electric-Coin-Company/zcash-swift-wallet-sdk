@@ -44,7 +44,7 @@ extension BlockScannerImpl: BlockScanner {
 
             let scanStartTime = Date()
             do {
-                try await self.rustBackend.scanBlocks(limit: batchSize)
+                try rustBackend.scanBlocks(limit: batchSize)
             } catch {
                 logger.debug("block scanning failed with error: \(String(describing: error))")
                 throw error

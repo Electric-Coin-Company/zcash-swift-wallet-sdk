@@ -175,7 +175,7 @@ class RewindRescanTests: XCTestCase {
         let targetHeight: BlockHeight = newChaintTip - 8000
 
         do {
-            _ = try await coordinator.synchronizer.initializer.rustBackend.getNearestRewindHeight(height: Int32(targetHeight))
+            _ = try coordinator.synchronizer.initializer.rustBackend.getNearestRewindHeight(height: Int32(targetHeight))
         } catch {
             XCTFail("get nearest height failed error: \(error)")
             return

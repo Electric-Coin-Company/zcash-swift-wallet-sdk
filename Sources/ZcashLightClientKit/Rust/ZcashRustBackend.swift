@@ -9,7 +9,7 @@
 import Foundation
 import libzcashlc
 
-actor ZcashRustBackend: ZcashRustBackendWelding {
+struct ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
     let useZIP317Fees = false
 
@@ -18,8 +18,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     let spendParamsPath: (String, UInt)
     let outputParamsPath: (String, UInt)
     let keyDeriving: ZcashKeyDeriving
-
-    nonisolated let networkType: NetworkType
+    let networkType: NetworkType
 
     init(dbData: URL, fsBlockDbRoot: URL, spendParamsPath: URL, outputParamsPath: URL, networkType: NetworkType) {
         self.dbData = dbData.osStr()
@@ -30,7 +29,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         self.keyDeriving = ZcashKeyDerivationBackend(networkType: networkType)
     }
 
-    func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey {
+    func createAccount(seed: [UInt8]) throws -> UnifiedSpendingKey {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard let ffiBinaryKeyPtr = zcashlc_create_account(
             dbData.0,
             dbData.1,
@@ -51,7 +53,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         to address: String,
         value: Int64,
         memo: MemoBytes?
-    ) async throws -> Int64 {
+    ) throws -> Int64 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = usk.bytes.withUnsafeBufferPointer { uskPtr in
             zcashlc_create_to_address(
                 dbData.0,
@@ -78,7 +83,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return result
     }
 
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = zcashlc_decrypt_and_store_transaction(
             dbData.0,
             dbData.1,
@@ -93,7 +101,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func getBalance(account: Int32) async throws -> Int64 {
+    func getBalance(account: Int32) throws -> Int64 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let balance = zcashlc_get_balance(dbData.0, dbData.1, account, networkType.networkId)
 
         guard balance >= 0 else {
@@ -103,7 +114,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return balance
     }
 
-    func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
+    func getCurrentAddress(account: Int32) throws -> UnifiedAddress {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard let addressCStr = zcashlc_get_current_address(
             dbData.0,
             dbData.1,
@@ -119,10 +133,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.unableToDeriveKeys
         }
 
-        return UnifiedAddress(validatedEncoding: address)
+        return UnifiedAddress(validatedEncoding: address, networkType: networkType)
     }
 
-    func getNearestRewindHeight(height: Int32) async throws -> Int32 {
+    func getNearestRewindHeight(height: Int32) throws -> Int32 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = zcashlc_get_nearest_rewind_height(
             dbData.0,
             dbData.1,
@@ -137,7 +154,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return result
     }
 
-    func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress {
+    func getNextAvailableAddress(account: Int32) throws -> UnifiedAddress {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
@@ -153,10 +173,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.unableToDeriveKeys
         }
 
-        return UnifiedAddress(validatedEncoding: address)
+        return UnifiedAddress(validatedEncoding: address, networkType: networkType)
     }
 
-    func getReceivedMemo(idNote: Int64) async -> Memo? {
+    func getReceivedMemo(idNote: Int64) -> Memo? {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
         var success = false
 
@@ -169,7 +192,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
     }
 
-    func getSentMemo(idNote: Int64) async -> Memo? {
+    func getSentMemo(idNote: Int64) -> Memo? {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
         var success = false
 
@@ -182,7 +208,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
     }
 
-    func getTransparentBalance(account: Int32) async throws -> Int64 {
+    func getTransparentBalance(account: Int32) throws -> Int64 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard account >= 0 else {
             throw RustWeldingError.invalidInput(message: "Account index must be non-negative")
         }
@@ -201,7 +230,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return balance
     }
 
-    func getVerifiedBalance(account: Int32) async throws -> Int64 {
+    func getVerifiedBalance(account: Int32) throws -> Int64 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let balance = zcashlc_get_verified_balance(
             dbData.0,
             dbData.1,
@@ -217,7 +249,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return balance
     }
 
-    func getVerifiedTransparentBalance(account: Int32) async throws -> Int64 {
+    func getVerifiedTransparentBalance(account: Int32) throws -> Int64 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard account >= 0 else {
             throw RustWeldingError.invalidInput(message: "`account` must be non-negative")
         }
@@ -241,7 +276,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return balance
     }
 
-    private nonisolated func lastError() -> RustWeldingError? {
+    private func lastError() -> RustWeldingError? {
         defer { zcashlc_clear_last_error() }
 
         guard let message = getLastError() else {
@@ -257,7 +292,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return RustWeldingError.genericError(message: message)
     }
 
-    private nonisolated func getLastError() -> String? {
+    private func getLastError() -> String? {
         let errorLen = zcashlc_last_error_length()
         if errorLen > 0 {
             let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
@@ -269,7 +304,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func initDataDb(seed: [UInt8]?) async throws -> DbInitResult {
+    func initDataDb(seed: [UInt8]?) throws -> DbInitResult {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         switch zcashlc_init_data_database(dbData.0, dbData.1, seed, UInt(seed?.count ?? 0), networkType.networkId) {
         case 0: // ok
             return DbInitResult.success
@@ -280,7 +318,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws {
+    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         var ffiUfvks: [FFIEncodedKey] = []
         for ufvk in ufvks {
             guard !ufvk.encoding.containsCStringNullBytesBeforeStringEnding() else {
@@ -326,7 +367,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func initBlockMetadataDb() async throws {
+    func initBlockMetadataDb() throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = zcashlc_init_block_metadata_db(fsBlockDbRoot.0, fsBlockDbRoot.1)
 
         guard result else {
@@ -334,7 +378,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func writeBlocksMetadata(blocks: [ZcashCompactBlock]) async throws {
+    func writeBlocksMetadata(blocks: [ZcashCompactBlock]) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         var ffiBlockMetaVec: [FFIBlockMeta] = []
 
         for block in blocks {
@@ -396,7 +443,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         hash: String,
         time: UInt32,
         saplingTree: String
-    ) async throws {
+    ) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard !hash.containsCStringNullBytesBeforeStringEnding() else {
             throw RustWeldingError.invalidInput(message: "`hash` contains null bytes.")
         }
@@ -418,11 +468,17 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func latestCachedBlockHeight() async -> BlockHeight {
+    func latestCachedBlockHeight() -> BlockHeight {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         return BlockHeight(zcashlc_latest_cached_block_height(fsBlockDbRoot.0, fsBlockDbRoot.1))
     }
 
-    func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
+    func listTransparentReceivers(account: Int32) throws -> [TransparentAddress] {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard let encodedKeysPtr = zcashlc_list_transparent_receivers(
             dbData.0,
             dbData.1,
@@ -457,7 +513,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         script: [UInt8],
         value: Int64,
         height: BlockHeight
-    ) async throws {
+    ) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         guard zcashlc_put_utxo(
             dbData.0,
             dbData.1,
@@ -474,7 +533,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func validateCombinedChain(limit: UInt32 = 0) async throws {
+    func validateCombinedChain(limit: UInt32 = 0) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = zcashlc_validate_combined_chain(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, networkType.networkId, limit)
 
         switch result {
@@ -487,7 +549,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func rewindToHeight(height: Int32) async throws {
+    func rewindToHeight(height: Int32) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = zcashlc_rewind_to_height(dbData.0, dbData.1, height, networkType.networkId)
 
         guard result else {
@@ -495,7 +560,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func rewindCacheToHeight(height: Int32) async throws {
+    func rewindCacheToHeight(height: Int32) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = zcashlc_rewind_fs_block_cache_to_height(fsBlockDbRoot.0, fsBlockDbRoot.1, height)
 
         guard result else {
@@ -503,7 +571,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func scanBlocks(limit: UInt32 = 0) async throws {
+    func scanBlocks(limit: UInt32 = 0) throws {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = zcashlc_scan_blocks(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, limit, networkType.networkId)
 
         guard result != 0 else {
@@ -515,7 +586,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         usk: UnifiedSpendingKey,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi
-    ) async throws -> Int64 {
+    ) throws -> Int64 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let result = usk.bytes.withUnsafeBufferPointer { uskBuffer in
             zcashlc_shield_funds(
                 dbData.0,
@@ -541,7 +615,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return result
     }
 
-    func consensusBranchIdFor(height: Int32) async throws -> Int32 {
+    func consensusBranchIdFor(height: Int32) throws -> Int32 {
+        rustBackendGlobalLock.lock()
+        defer { rustBackendGlobalLock.unlock() }
+
         let branchId = zcashlc_branch_id_for_height(height, networkType.networkId)
 
         guard branchId != -1 else {
