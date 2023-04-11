@@ -41,7 +41,7 @@ class GetUTXOsViewController: UIViewController {
     @IBAction func shieldFunds(_ sender: Any) {
         Task { @MainActor in
             do {
-                let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
+                let derivationTool = AppDelegate.shared.sharedWallet.makeDerivationTool()
 
                 let usk = try await derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
 

@@ -418,8 +418,8 @@ final class FsBlockStorageTests: XCTestCase {
             XCTFail("failed to create sandblasted blocks")
             return
         }
-        let mockBackend = RustBackendMockHelper(rustBackend: rustBackend)
-        mockBackend.rustBackendMock.writeBlocksMetadataBlocksThrowableError = RustWeldingError.genericError(message: "oops")
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
+        await mockBackend.rustBackendMock.setWriteBlocksMetadataBlocksThrowableError(RustWeldingError.genericError(message: "oops"))
 
         do {
             try await FSMetadataStore.saveBlocksMeta(
@@ -436,8 +436,8 @@ final class FsBlockStorageTests: XCTestCase {
     }
 
     func testMetadataStoreThrowsWhenRewindFails() async {
-        let mockBackend = RustBackendMockHelper(rustBackend: rustBackend)
-        mockBackend.rustBackendMock.rewindCacheToHeightHeightThrowableError = RustWeldingError.genericError(message: "oops")
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
+        await mockBackend.rustBackendMock.setRewindCacheToHeightHeightThrowableError(RustWeldingError.genericError(message: "oops"))
 
         let expectedHeight = BlockHeight(1000)
 

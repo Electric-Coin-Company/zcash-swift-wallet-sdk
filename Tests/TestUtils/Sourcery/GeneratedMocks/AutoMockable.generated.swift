@@ -7,11 +7,6 @@ import Combine
 
 // MARK: - AutoMockable protocols
 class SynchronizerMock: Synchronizer {
-
-
-    init(
-    ) {
-    }
     var alias: ZcashSynchronizerAlias {
         get { return underlyingAlias }
     }
@@ -75,7 +70,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return prepareWithViewingKeysWalletBirthdayReturnValue
         }
-
     }
 
     // MARK: - start
@@ -95,7 +89,6 @@ class SynchronizerMock: Synchronizer {
         startRetryCallsCount += 1
         startRetryReceivedRetry = retry
         try await startRetryClosure?(retry)
-
     }
 
     // MARK: - stop
@@ -109,7 +102,6 @@ class SynchronizerMock: Synchronizer {
     func stop() async {
         stopCallsCount += 1
         await stopClosure?()
-
     }
 
     // MARK: - getSaplingAddress
@@ -134,7 +126,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getSaplingAddressAccountIndexReturnValue
         }
-
     }
 
     // MARK: - getUnifiedAddress
@@ -159,7 +150,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getUnifiedAddressAccountIndexReturnValue
         }
-
     }
 
     // MARK: - getTransparentAddress
@@ -184,7 +174,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getTransparentAddressAccountIndexReturnValue
         }
-
     }
 
     // MARK: - sendToAddress
@@ -209,7 +198,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return sendToAddressSpendingKeyZatoshiToAddressMemoReturnValue
         }
-
     }
 
     // MARK: - shieldFunds
@@ -234,7 +222,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return shieldFundsSpendingKeyMemoShieldingThresholdReturnValue
         }
-
     }
 
     // MARK: - cancelSpend
@@ -255,7 +242,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return cancelSpendTransactionReturnValue
         }
-
     }
 
     // MARK: - paginatedTransactions
@@ -276,7 +262,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return paginatedTransactionsOfReturnValue
         }
-
     }
 
     // MARK: - getMemos
@@ -301,7 +286,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getMemosForClearedTransactionReturnValue
         }
-
     }
 
     // MARK: - getMemos
@@ -326,7 +310,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getMemosForReceivedTransactionReturnValue
         }
-
     }
 
     // MARK: - getMemos
@@ -351,7 +334,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getMemosForSentTransactionReturnValue
         }
-
     }
 
     // MARK: - getRecipients
@@ -372,7 +354,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getRecipientsForClearedTransactionReturnValue
         }
-
     }
 
     // MARK: - getRecipients
@@ -393,7 +374,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getRecipientsForSentTransactionReturnValue
         }
-
     }
 
     // MARK: - allConfirmedTransactions
@@ -418,7 +398,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return allConfirmedTransactionsFromLimitReturnValue
         }
-
     }
 
     // MARK: - latestHeight
@@ -441,7 +420,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return latestHeightReturnValue
         }
-
     }
 
     // MARK: - refreshUTXOs
@@ -466,7 +444,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return refreshUTXOsAddressFromReturnValue
         }
-
     }
 
     // MARK: - getTransparentBalance
@@ -491,7 +468,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getTransparentBalanceAccountIndexReturnValue
         }
-
     }
 
     // MARK: - getShieldedBalance
@@ -516,7 +492,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getShieldedBalanceAccountIndexReturnValue
         }
-
     }
 
     // MARK: - getShieldedVerifiedBalance
@@ -541,7 +516,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return getShieldedVerifiedBalanceAccountIndexReturnValue
         }
-
     }
 
     // MARK: - rewind
@@ -562,7 +536,6 @@ class SynchronizerMock: Synchronizer {
         } else {
             return rewindReturnValue
         }
-
     }
 
     // MARK: - wipe
@@ -581,185 +554,265 @@ class SynchronizerMock: Synchronizer {
         } else {
             return wipeReturnValue
         }
-
     }
 
 }
-class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
-
-
-    init(
-    ) {
-    }
+actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - createAccount
 
     var createAccountSeedThrowableError: Error?
+    func setCreateAccountSeedThrowableError(_ param: Error?) async {
+        createAccountSeedThrowableError = param
+    }
     var createAccountSeedCallsCount = 0
     var createAccountSeedCalled: Bool {
         return createAccountSeedCallsCount > 0
     }
     var createAccountSeedReceivedSeed: [UInt8]?
     var createAccountSeedReturnValue: UnifiedSpendingKey!
-    var createAccountSeedClosure: (([UInt8]) throws -> UnifiedSpendingKey)?
+    func setCreateAccountSeedReturnValue(_ param: UnifiedSpendingKey) async {
+        createAccountSeedReturnValue = param
+    }
+    var createAccountSeedClosure: (([UInt8]) async throws -> UnifiedSpendingKey)?
+    func setCreateAccountSeedClosure(_ param: (([UInt8]) async throws -> UnifiedSpendingKey)?) async {
+        createAccountSeedClosure = param
+    }
 
-    func createAccount(seed: [UInt8]) throws -> UnifiedSpendingKey {
+    func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey {
         if let error = createAccountSeedThrowableError {
             throw error
         }
         createAccountSeedCallsCount += 1
         createAccountSeedReceivedSeed = seed
         if let closure = createAccountSeedClosure {
-            return try closure(seed)
+            return try await closure(seed)
         } else {
             return createAccountSeedReturnValue
         }
-
     }
 
     // MARK: - createToAddress
 
     var createToAddressUskToValueMemoThrowableError: Error?
+    func setCreateToAddressUskToValueMemoThrowableError(_ param: Error?) async {
+        createToAddressUskToValueMemoThrowableError = param
+    }
     var createToAddressUskToValueMemoCallsCount = 0
     var createToAddressUskToValueMemoCalled: Bool {
         return createToAddressUskToValueMemoCallsCount > 0
     }
     var createToAddressUskToValueMemoReceivedArguments: (usk: UnifiedSpendingKey, address: String, value: Int64, memo: MemoBytes?)?
     var createToAddressUskToValueMemoReturnValue: Int64!
-    var createToAddressUskToValueMemoClosure: ((UnifiedSpendingKey, String, Int64, MemoBytes?) throws -> Int64)?
+    func setCreateToAddressUskToValueMemoReturnValue(_ param: Int64) async {
+        createToAddressUskToValueMemoReturnValue = param
+    }
+    var createToAddressUskToValueMemoClosure: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Int64)?
+    func setCreateToAddressUskToValueMemoClosure(_ param: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Int64)?) async {
+        createToAddressUskToValueMemoClosure = param
+    }
 
-    func createToAddress(usk: UnifiedSpendingKey, to address: String, value: Int64, memo: MemoBytes?) throws -> Int64 {
+    func createToAddress(usk: UnifiedSpendingKey, to address: String, value: Int64, memo: MemoBytes?) async throws -> Int64 {
         if let error = createToAddressUskToValueMemoThrowableError {
             throw error
         }
         createToAddressUskToValueMemoCallsCount += 1
         createToAddressUskToValueMemoReceivedArguments = (usk: usk, address: address, value: value, memo: memo)
         if let closure = createToAddressUskToValueMemoClosure {
-            return try closure(usk, address, value, memo)
+            return try await closure(usk, address, value, memo)
         } else {
             return createToAddressUskToValueMemoReturnValue
         }
-
     }
 
     // MARK: - decryptAndStoreTransaction
 
     var decryptAndStoreTransactionTxBytesMinedHeightThrowableError: Error?
+    func setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(_ param: Error?) async {
+        decryptAndStoreTransactionTxBytesMinedHeightThrowableError = param
+    }
     var decryptAndStoreTransactionTxBytesMinedHeightCallsCount = 0
     var decryptAndStoreTransactionTxBytesMinedHeightCalled: Bool {
         return decryptAndStoreTransactionTxBytesMinedHeightCallsCount > 0
     }
     var decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments: (txBytes: [UInt8], minedHeight: Int32)?
-    var decryptAndStoreTransactionTxBytesMinedHeightClosure: (([UInt8], Int32) throws -> Void)?
+    var decryptAndStoreTransactionTxBytesMinedHeightClosure: (([UInt8], Int32) async throws -> Void)?
+    func setDecryptAndStoreTransactionTxBytesMinedHeightClosure(_ param: (([UInt8], Int32) async throws -> Void)?) async {
+        decryptAndStoreTransactionTxBytesMinedHeightClosure = param
+    }
 
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) throws {
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
         if let error = decryptAndStoreTransactionTxBytesMinedHeightThrowableError {
             throw error
         }
         decryptAndStoreTransactionTxBytesMinedHeightCallsCount += 1
         decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments = (txBytes: txBytes, minedHeight: minedHeight)
-        try decryptAndStoreTransactionTxBytesMinedHeightClosure?(txBytes, minedHeight)
+        try await decryptAndStoreTransactionTxBytesMinedHeightClosure?(txBytes, minedHeight)
+    }
 
+    // MARK: - deriveUnifiedSpendingKey
+
+    var deriveUnifiedSpendingKeyFromAccountIndexThrowableError: Error?
+    func setDeriveUnifiedSpendingKeyFromAccountIndexThrowableError(_ param: Error?) async {
+        deriveUnifiedSpendingKeyFromAccountIndexThrowableError = param
+    }
+    var deriveUnifiedSpendingKeyFromAccountIndexCallsCount = 0
+    var deriveUnifiedSpendingKeyFromAccountIndexCalled: Bool {
+        return deriveUnifiedSpendingKeyFromAccountIndexCallsCount > 0
+    }
+    var deriveUnifiedSpendingKeyFromAccountIndexReceivedArguments: (seed: [UInt8], accountIndex: Int32)?
+    var deriveUnifiedSpendingKeyFromAccountIndexReturnValue: UnifiedSpendingKey!
+    func setDeriveUnifiedSpendingKeyFromAccountIndexReturnValue(_ param: UnifiedSpendingKey) async {
+        deriveUnifiedSpendingKeyFromAccountIndexReturnValue = param
+    }
+    var deriveUnifiedSpendingKeyFromAccountIndexClosure: (([UInt8], Int32) async throws -> UnifiedSpendingKey)?
+    func setDeriveUnifiedSpendingKeyFromAccountIndexClosure(_ param: (([UInt8], Int32) async throws -> UnifiedSpendingKey)?) async {
+        deriveUnifiedSpendingKeyFromAccountIndexClosure = param
+    }
+
+    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) async throws -> UnifiedSpendingKey {
+        if let error = deriveUnifiedSpendingKeyFromAccountIndexThrowableError {
+            throw error
+        }
+        deriveUnifiedSpendingKeyFromAccountIndexCallsCount += 1
+        deriveUnifiedSpendingKeyFromAccountIndexReceivedArguments = (seed: seed, accountIndex: accountIndex)
+        if let closure = deriveUnifiedSpendingKeyFromAccountIndexClosure {
+            return try await closure(seed, accountIndex)
+        } else {
+            return deriveUnifiedSpendingKeyFromAccountIndexReturnValue
+        }
     }
 
     // MARK: - getBalance
 
     var getBalanceAccountThrowableError: Error?
+    func setGetBalanceAccountThrowableError(_ param: Error?) async {
+        getBalanceAccountThrowableError = param
+    }
     var getBalanceAccountCallsCount = 0
     var getBalanceAccountCalled: Bool {
         return getBalanceAccountCallsCount > 0
     }
     var getBalanceAccountReceivedAccount: Int32?
     var getBalanceAccountReturnValue: Int64!
-    var getBalanceAccountClosure: ((Int32) throws -> Int64)?
+    func setGetBalanceAccountReturnValue(_ param: Int64) async {
+        getBalanceAccountReturnValue = param
+    }
+    var getBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getBalanceAccountClosure = param
+    }
 
-    func getBalance(account: Int32) throws -> Int64 {
+    func getBalance(account: Int32) async throws -> Int64 {
         if let error = getBalanceAccountThrowableError {
             throw error
         }
         getBalanceAccountCallsCount += 1
         getBalanceAccountReceivedAccount = account
         if let closure = getBalanceAccountClosure {
-            return try closure(account)
+            return try await closure(account)
         } else {
             return getBalanceAccountReturnValue
         }
-
     }
 
     // MARK: - getCurrentAddress
 
     var getCurrentAddressAccountThrowableError: Error?
+    func setGetCurrentAddressAccountThrowableError(_ param: Error?) async {
+        getCurrentAddressAccountThrowableError = param
+    }
     var getCurrentAddressAccountCallsCount = 0
     var getCurrentAddressAccountCalled: Bool {
         return getCurrentAddressAccountCallsCount > 0
     }
     var getCurrentAddressAccountReceivedAccount: Int32?
     var getCurrentAddressAccountReturnValue: UnifiedAddress!
-    var getCurrentAddressAccountClosure: ((Int32) throws -> UnifiedAddress)?
+    func setGetCurrentAddressAccountReturnValue(_ param: UnifiedAddress) async {
+        getCurrentAddressAccountReturnValue = param
+    }
+    var getCurrentAddressAccountClosure: ((Int32) async throws -> UnifiedAddress)?
+    func setGetCurrentAddressAccountClosure(_ param: ((Int32) async throws -> UnifiedAddress)?) async {
+        getCurrentAddressAccountClosure = param
+    }
 
-    func getCurrentAddress(account: Int32) throws -> UnifiedAddress {
+    func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
         if let error = getCurrentAddressAccountThrowableError {
             throw error
         }
         getCurrentAddressAccountCallsCount += 1
         getCurrentAddressAccountReceivedAccount = account
         if let closure = getCurrentAddressAccountClosure {
-            return try closure(account)
+            return try await closure(account)
         } else {
             return getCurrentAddressAccountReturnValue
         }
-
     }
 
     // MARK: - getNearestRewindHeight
 
     var getNearestRewindHeightHeightThrowableError: Error?
+    func setGetNearestRewindHeightHeightThrowableError(_ param: Error?) async {
+        getNearestRewindHeightHeightThrowableError = param
+    }
     var getNearestRewindHeightHeightCallsCount = 0
     var getNearestRewindHeightHeightCalled: Bool {
         return getNearestRewindHeightHeightCallsCount > 0
     }
     var getNearestRewindHeightHeightReceivedHeight: Int32?
     var getNearestRewindHeightHeightReturnValue: Int32!
-    var getNearestRewindHeightHeightClosure: ((Int32) throws -> Int32)?
+    func setGetNearestRewindHeightHeightReturnValue(_ param: Int32) async {
+        getNearestRewindHeightHeightReturnValue = param
+    }
+    var getNearestRewindHeightHeightClosure: ((Int32) async throws -> Int32)?
+    func setGetNearestRewindHeightHeightClosure(_ param: ((Int32) async throws -> Int32)?) async {
+        getNearestRewindHeightHeightClosure = param
+    }
 
-    func getNearestRewindHeight(height: Int32) throws -> Int32 {
+    func getNearestRewindHeight(height: Int32) async throws -> Int32 {
         if let error = getNearestRewindHeightHeightThrowableError {
             throw error
         }
         getNearestRewindHeightHeightCallsCount += 1
         getNearestRewindHeightHeightReceivedHeight = height
         if let closure = getNearestRewindHeightHeightClosure {
-            return try closure(height)
+            return try await closure(height)
         } else {
             return getNearestRewindHeightHeightReturnValue
         }
-
     }
 
     // MARK: - getNextAvailableAddress
 
     var getNextAvailableAddressAccountThrowableError: Error?
+    func setGetNextAvailableAddressAccountThrowableError(_ param: Error?) async {
+        getNextAvailableAddressAccountThrowableError = param
+    }
     var getNextAvailableAddressAccountCallsCount = 0
     var getNextAvailableAddressAccountCalled: Bool {
         return getNextAvailableAddressAccountCallsCount > 0
     }
     var getNextAvailableAddressAccountReceivedAccount: Int32?
     var getNextAvailableAddressAccountReturnValue: UnifiedAddress!
-    var getNextAvailableAddressAccountClosure: ((Int32) throws -> UnifiedAddress)?
+    func setGetNextAvailableAddressAccountReturnValue(_ param: UnifiedAddress) async {
+        getNextAvailableAddressAccountReturnValue = param
+    }
+    var getNextAvailableAddressAccountClosure: ((Int32) async throws -> UnifiedAddress)?
+    func setGetNextAvailableAddressAccountClosure(_ param: ((Int32) async throws -> UnifiedAddress)?) async {
+        getNextAvailableAddressAccountClosure = param
+    }
 
-    func getNextAvailableAddress(account: Int32) throws -> UnifiedAddress {
+    func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress {
         if let error = getNextAvailableAddressAccountThrowableError {
             throw error
         }
         getNextAvailableAddressAccountCallsCount += 1
         getNextAvailableAddressAccountReceivedAccount = account
         if let closure = getNextAvailableAddressAccountClosure {
-            return try closure(account)
+            return try await closure(account)
         } else {
             return getNextAvailableAddressAccountReturnValue
         }
-
     }
 
     // MARK: - getReceivedMemo
@@ -770,17 +823,46 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     }
     var getReceivedMemoIdNoteReceivedIdNote: Int64?
     var getReceivedMemoIdNoteReturnValue: Memo?
-    var getReceivedMemoIdNoteClosure: ((Int64) -> Memo?)?
+    func setGetReceivedMemoIdNoteReturnValue(_ param: Memo?) async {
+        getReceivedMemoIdNoteReturnValue = param
+    }
+    var getReceivedMemoIdNoteClosure: ((Int64) async -> Memo?)?
+    func setGetReceivedMemoIdNoteClosure(_ param: ((Int64) async -> Memo?)?) async {
+        getReceivedMemoIdNoteClosure = param
+    }
 
-    func getReceivedMemo(idNote: Int64) -> Memo? {
+    func getReceivedMemo(idNote: Int64) async -> Memo? {
         getReceivedMemoIdNoteCallsCount += 1
         getReceivedMemoIdNoteReceivedIdNote = idNote
         if let closure = getReceivedMemoIdNoteClosure {
-            return closure(idNote)
+            return await closure(idNote)
         } else {
             return getReceivedMemoIdNoteReturnValue
         }
+    }
 
+    // MARK: - getSaplingReceiver
+
+    static var getSaplingReceiverForThrowableError: Error?
+    static var getSaplingReceiverForCallsCount = 0
+    static var getSaplingReceiverForCalled: Bool {
+        return Self.getSaplingReceiverForCallsCount > 0
+    }
+    static var getSaplingReceiverForReceivedUAddr: UnifiedAddress?
+    static var getSaplingReceiverForReturnValue: SaplingAddress!
+    static var getSaplingReceiverForClosure: ((UnifiedAddress) throws -> SaplingAddress)?
+
+    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress {
+        if let error = Self.getSaplingReceiverForThrowableError {
+            throw error
+        }
+        Self.getSaplingReceiverForCallsCount += 1
+        Self.getSaplingReceiverForReceivedUAddr = uAddr
+        if let closure = Self.getSaplingReceiverForClosure {
+            return try closure(uAddr)
+        } else {
+            return Self.getSaplingReceiverForReturnValue
+        }
     }
 
     // MARK: - getSentMemo
@@ -791,370 +873,697 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     }
     var getSentMemoIdNoteReceivedIdNote: Int64?
     var getSentMemoIdNoteReturnValue: Memo?
-    var getSentMemoIdNoteClosure: ((Int64) -> Memo?)?
+    func setGetSentMemoIdNoteReturnValue(_ param: Memo?) async {
+        getSentMemoIdNoteReturnValue = param
+    }
+    var getSentMemoIdNoteClosure: ((Int64) async -> Memo?)?
+    func setGetSentMemoIdNoteClosure(_ param: ((Int64) async -> Memo?)?) async {
+        getSentMemoIdNoteClosure = param
+    }
 
-    func getSentMemo(idNote: Int64) -> Memo? {
+    func getSentMemo(idNote: Int64) async -> Memo? {
         getSentMemoIdNoteCallsCount += 1
         getSentMemoIdNoteReceivedIdNote = idNote
         if let closure = getSentMemoIdNoteClosure {
-            return closure(idNote)
+            return await closure(idNote)
         } else {
             return getSentMemoIdNoteReturnValue
         }
-
     }
 
     // MARK: - getTransparentBalance
 
     var getTransparentBalanceAccountThrowableError: Error?
+    func setGetTransparentBalanceAccountThrowableError(_ param: Error?) async {
+        getTransparentBalanceAccountThrowableError = param
+    }
     var getTransparentBalanceAccountCallsCount = 0
     var getTransparentBalanceAccountCalled: Bool {
         return getTransparentBalanceAccountCallsCount > 0
     }
     var getTransparentBalanceAccountReceivedAccount: Int32?
     var getTransparentBalanceAccountReturnValue: Int64!
-    var getTransparentBalanceAccountClosure: ((Int32) throws -> Int64)?
+    func setGetTransparentBalanceAccountReturnValue(_ param: Int64) async {
+        getTransparentBalanceAccountReturnValue = param
+    }
+    var getTransparentBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetTransparentBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getTransparentBalanceAccountClosure = param
+    }
 
-    func getTransparentBalance(account: Int32) throws -> Int64 {
+    func getTransparentBalance(account: Int32) async throws -> Int64 {
         if let error = getTransparentBalanceAccountThrowableError {
             throw error
         }
         getTransparentBalanceAccountCallsCount += 1
         getTransparentBalanceAccountReceivedAccount = account
         if let closure = getTransparentBalanceAccountClosure {
-            return try closure(account)
+            return try await closure(account)
         } else {
             return getTransparentBalanceAccountReturnValue
         }
+    }
 
+    // MARK: - getTransparentReceiver
+
+    static var getTransparentReceiverForThrowableError: Error?
+    static var getTransparentReceiverForCallsCount = 0
+    static var getTransparentReceiverForCalled: Bool {
+        return Self.getTransparentReceiverForCallsCount > 0
+    }
+    static var getTransparentReceiverForReceivedUAddr: UnifiedAddress?
+    static var getTransparentReceiverForReturnValue: TransparentAddress!
+    static var getTransparentReceiverForClosure: ((UnifiedAddress) throws -> TransparentAddress)?
+
+    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress {
+        if let error = Self.getTransparentReceiverForThrowableError {
+            throw error
+        }
+        Self.getTransparentReceiverForCallsCount += 1
+        Self.getTransparentReceiverForReceivedUAddr = uAddr
+        if let closure = Self.getTransparentReceiverForClosure {
+            return try closure(uAddr)
+        } else {
+            return Self.getTransparentReceiverForReturnValue
+        }
     }
 
     // MARK: - initAccountsTable
 
     var initAccountsTableUfvksThrowableError: Error?
+    func setInitAccountsTableUfvksThrowableError(_ param: Error?) async {
+        initAccountsTableUfvksThrowableError = param
+    }
     var initAccountsTableUfvksCallsCount = 0
     var initAccountsTableUfvksCalled: Bool {
         return initAccountsTableUfvksCallsCount > 0
     }
     var initAccountsTableUfvksReceivedUfvks: [UnifiedFullViewingKey]?
-    var initAccountsTableUfvksClosure: (([UnifiedFullViewingKey]) throws -> Void)?
+    var initAccountsTableUfvksClosure: (([UnifiedFullViewingKey]) async throws -> Void)?
+    func setInitAccountsTableUfvksClosure(_ param: (([UnifiedFullViewingKey]) async throws -> Void)?) async {
+        initAccountsTableUfvksClosure = param
+    }
 
-    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) throws {
+    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws {
         if let error = initAccountsTableUfvksThrowableError {
             throw error
         }
         initAccountsTableUfvksCallsCount += 1
         initAccountsTableUfvksReceivedUfvks = ufvks
-        try initAccountsTableUfvksClosure?(ufvks)
-
+        try await initAccountsTableUfvksClosure?(ufvks)
     }
 
     // MARK: - initDataDb
 
     var initDataDbSeedThrowableError: Error?
+    func setInitDataDbSeedThrowableError(_ param: Error?) async {
+        initDataDbSeedThrowableError = param
+    }
     var initDataDbSeedCallsCount = 0
     var initDataDbSeedCalled: Bool {
         return initDataDbSeedCallsCount > 0
     }
     var initDataDbSeedReceivedSeed: [UInt8]?
     var initDataDbSeedReturnValue: DbInitResult!
-    var initDataDbSeedClosure: (([UInt8]?) throws -> DbInitResult)?
+    func setInitDataDbSeedReturnValue(_ param: DbInitResult) async {
+        initDataDbSeedReturnValue = param
+    }
+    var initDataDbSeedClosure: (([UInt8]?) async throws -> DbInitResult)?
+    func setInitDataDbSeedClosure(_ param: (([UInt8]?) async throws -> DbInitResult)?) async {
+        initDataDbSeedClosure = param
+    }
 
-    func initDataDb(seed: [UInt8]?) throws -> DbInitResult {
+    func initDataDb(seed: [UInt8]?) async throws -> DbInitResult {
         if let error = initDataDbSeedThrowableError {
             throw error
         }
         initDataDbSeedCallsCount += 1
         initDataDbSeedReceivedSeed = seed
         if let closure = initDataDbSeedClosure {
-            return try closure(seed)
+            return try await closure(seed)
         } else {
             return initDataDbSeedReturnValue
         }
+    }
 
+    // MARK: - getAddressMetadata
+
+    static var getAddressMetadataCallsCount = 0
+    static var getAddressMetadataCalled: Bool {
+        return Self.getAddressMetadataCallsCount > 0
+    }
+    static var getAddressMetadataReceivedAddress: String?
+    static var getAddressMetadataReturnValue: AddressMetadata?
+    static var getAddressMetadataClosure: ((String) -> AddressMetadata?)?
+
+    static func getAddressMetadata(_ address: String) -> AddressMetadata? {
+        Self.getAddressMetadataCallsCount += 1
+        Self.getAddressMetadataReceivedAddress = address
+        if let closure = Self.getAddressMetadataClosure {
+            return closure(address)
+        } else {
+            return Self.getAddressMetadataReturnValue
+        }
+    }
+
+    // MARK: - isValidSaplingAddress
+
+    static var isValidSaplingAddressNetworkTypeCallsCount = 0
+    static var isValidSaplingAddressNetworkTypeCalled: Bool {
+        return Self.isValidSaplingAddressNetworkTypeCallsCount > 0
+    }
+    static var isValidSaplingAddressNetworkTypeReceivedArguments: (address: String, networkType: NetworkType)?
+    static var isValidSaplingAddressNetworkTypeReturnValue: Bool!
+    static var isValidSaplingAddressNetworkTypeClosure: ((String, NetworkType) -> Bool)?
+
+    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) -> Bool {
+        Self.isValidSaplingAddressNetworkTypeCallsCount += 1
+        Self.isValidSaplingAddressNetworkTypeReceivedArguments = (address: address, networkType: networkType)
+        if let closure = Self.isValidSaplingAddressNetworkTypeClosure {
+            return closure(address, networkType)
+        } else {
+            return Self.isValidSaplingAddressNetworkTypeReturnValue
+        }
+    }
+
+    // MARK: - isValidSaplingExtendedFullViewingKey
+
+    static var isValidSaplingExtendedFullViewingKeyNetworkTypeCallsCount = 0
+    static var isValidSaplingExtendedFullViewingKeyNetworkTypeCalled: Bool {
+        return Self.isValidSaplingExtendedFullViewingKeyNetworkTypeCallsCount > 0
+    }
+    static var isValidSaplingExtendedFullViewingKeyNetworkTypeReceivedArguments: (key: String, networkType: NetworkType)?
+    static var isValidSaplingExtendedFullViewingKeyNetworkTypeReturnValue: Bool!
+    static var isValidSaplingExtendedFullViewingKeyNetworkTypeClosure: ((String, NetworkType) -> Bool)?
+
+    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) -> Bool {
+        Self.isValidSaplingExtendedFullViewingKeyNetworkTypeCallsCount += 1
+        Self.isValidSaplingExtendedFullViewingKeyNetworkTypeReceivedArguments = (key: key, networkType: networkType)
+        if let closure = Self.isValidSaplingExtendedFullViewingKeyNetworkTypeClosure {
+            return closure(key, networkType)
+        } else {
+            return Self.isValidSaplingExtendedFullViewingKeyNetworkTypeReturnValue
+        }
+    }
+
+    // MARK: - isValidSaplingExtendedSpendingKey
+
+    static var isValidSaplingExtendedSpendingKeyNetworkTypeCallsCount = 0
+    static var isValidSaplingExtendedSpendingKeyNetworkTypeCalled: Bool {
+        return Self.isValidSaplingExtendedSpendingKeyNetworkTypeCallsCount > 0
+    }
+    static var isValidSaplingExtendedSpendingKeyNetworkTypeReceivedArguments: (key: String, networkType: NetworkType)?
+    static var isValidSaplingExtendedSpendingKeyNetworkTypeReturnValue: Bool!
+    static var isValidSaplingExtendedSpendingKeyNetworkTypeClosure: ((String, NetworkType) -> Bool)?
+
+    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: NetworkType) -> Bool {
+        Self.isValidSaplingExtendedSpendingKeyNetworkTypeCallsCount += 1
+        Self.isValidSaplingExtendedSpendingKeyNetworkTypeReceivedArguments = (key: key, networkType: networkType)
+        if let closure = Self.isValidSaplingExtendedSpendingKeyNetworkTypeClosure {
+            return closure(key, networkType)
+        } else {
+            return Self.isValidSaplingExtendedSpendingKeyNetworkTypeReturnValue
+        }
+    }
+
+    // MARK: - isValidTransparentAddress
+
+    static var isValidTransparentAddressNetworkTypeCallsCount = 0
+    static var isValidTransparentAddressNetworkTypeCalled: Bool {
+        return Self.isValidTransparentAddressNetworkTypeCallsCount > 0
+    }
+    static var isValidTransparentAddressNetworkTypeReceivedArguments: (address: String, networkType: NetworkType)?
+    static var isValidTransparentAddressNetworkTypeReturnValue: Bool!
+    static var isValidTransparentAddressNetworkTypeClosure: ((String, NetworkType) -> Bool)?
+
+    static func isValidTransparentAddress(_ address: String, networkType: NetworkType) -> Bool {
+        Self.isValidTransparentAddressNetworkTypeCallsCount += 1
+        Self.isValidTransparentAddressNetworkTypeReceivedArguments = (address: address, networkType: networkType)
+        if let closure = Self.isValidTransparentAddressNetworkTypeClosure {
+            return closure(address, networkType)
+        } else {
+            return Self.isValidTransparentAddressNetworkTypeReturnValue
+        }
+    }
+
+    // MARK: - isValidUnifiedAddress
+
+    static var isValidUnifiedAddressNetworkTypeCallsCount = 0
+    static var isValidUnifiedAddressNetworkTypeCalled: Bool {
+        return Self.isValidUnifiedAddressNetworkTypeCallsCount > 0
+    }
+    static var isValidUnifiedAddressNetworkTypeReceivedArguments: (address: String, networkType: NetworkType)?
+    static var isValidUnifiedAddressNetworkTypeReturnValue: Bool!
+    static var isValidUnifiedAddressNetworkTypeClosure: ((String, NetworkType) -> Bool)?
+
+    static func isValidUnifiedAddress(_ address: String, networkType: NetworkType) -> Bool {
+        Self.isValidUnifiedAddressNetworkTypeCallsCount += 1
+        Self.isValidUnifiedAddressNetworkTypeReceivedArguments = (address: address, networkType: networkType)
+        if let closure = Self.isValidUnifiedAddressNetworkTypeClosure {
+            return closure(address, networkType)
+        } else {
+            return Self.isValidUnifiedAddressNetworkTypeReturnValue
+        }
+    }
+
+    // MARK: - isValidUnifiedFullViewingKey
+
+    static var isValidUnifiedFullViewingKeyNetworkTypeCallsCount = 0
+    static var isValidUnifiedFullViewingKeyNetworkTypeCalled: Bool {
+        return Self.isValidUnifiedFullViewingKeyNetworkTypeCallsCount > 0
+    }
+    static var isValidUnifiedFullViewingKeyNetworkTypeReceivedArguments: (ufvk: String, networkType: NetworkType)?
+    static var isValidUnifiedFullViewingKeyNetworkTypeReturnValue: Bool!
+    static var isValidUnifiedFullViewingKeyNetworkTypeClosure: ((String, NetworkType) -> Bool)?
+
+    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool {
+        Self.isValidUnifiedFullViewingKeyNetworkTypeCallsCount += 1
+        Self.isValidUnifiedFullViewingKeyNetworkTypeReceivedArguments = (ufvk: ufvk, networkType: networkType)
+        if let closure = Self.isValidUnifiedFullViewingKeyNetworkTypeClosure {
+            return closure(ufvk, networkType)
+        } else {
+            return Self.isValidUnifiedFullViewingKeyNetworkTypeReturnValue
+        }
     }
 
     // MARK: - initBlocksTable
 
     var initBlocksTableHeightHashTimeSaplingTreeThrowableError: Error?
+    func setInitBlocksTableHeightHashTimeSaplingTreeThrowableError(_ param: Error?) async {
+        initBlocksTableHeightHashTimeSaplingTreeThrowableError = param
+    }
     var initBlocksTableHeightHashTimeSaplingTreeCallsCount = 0
     var initBlocksTableHeightHashTimeSaplingTreeCalled: Bool {
         return initBlocksTableHeightHashTimeSaplingTreeCallsCount > 0
     }
     var initBlocksTableHeightHashTimeSaplingTreeReceivedArguments: (height: Int32, hash: String, time: UInt32, saplingTree: String)?
-    var initBlocksTableHeightHashTimeSaplingTreeClosure: ((Int32, String, UInt32, String) throws -> Void)?
+    var initBlocksTableHeightHashTimeSaplingTreeClosure: ((Int32, String, UInt32, String) async throws -> Void)?
+    func setInitBlocksTableHeightHashTimeSaplingTreeClosure(_ param: ((Int32, String, UInt32, String) async throws -> Void)?) async {
+        initBlocksTableHeightHashTimeSaplingTreeClosure = param
+    }
 
-    func initBlocksTable(height: Int32, hash: String, time: UInt32, saplingTree: String) throws {
+    func initBlocksTable(height: Int32, hash: String, time: UInt32, saplingTree: String) async throws {
         if let error = initBlocksTableHeightHashTimeSaplingTreeThrowableError {
             throw error
         }
         initBlocksTableHeightHashTimeSaplingTreeCallsCount += 1
         initBlocksTableHeightHashTimeSaplingTreeReceivedArguments = (height: height, hash: hash, time: time, saplingTree: saplingTree)
-        try initBlocksTableHeightHashTimeSaplingTreeClosure?(height, hash, time, saplingTree)
-
+        try await initBlocksTableHeightHashTimeSaplingTreeClosure?(height, hash, time, saplingTree)
     }
 
     // MARK: - listTransparentReceivers
 
     var listTransparentReceiversAccountThrowableError: Error?
+    func setListTransparentReceiversAccountThrowableError(_ param: Error?) async {
+        listTransparentReceiversAccountThrowableError = param
+    }
     var listTransparentReceiversAccountCallsCount = 0
     var listTransparentReceiversAccountCalled: Bool {
         return listTransparentReceiversAccountCallsCount > 0
     }
     var listTransparentReceiversAccountReceivedAccount: Int32?
     var listTransparentReceiversAccountReturnValue: [TransparentAddress]!
-    var listTransparentReceiversAccountClosure: ((Int32) throws -> [TransparentAddress])?
+    func setListTransparentReceiversAccountReturnValue(_ param: [TransparentAddress]) async {
+        listTransparentReceiversAccountReturnValue = param
+    }
+    var listTransparentReceiversAccountClosure: ((Int32) async throws -> [TransparentAddress])?
+    func setListTransparentReceiversAccountClosure(_ param: ((Int32) async throws -> [TransparentAddress])?) async {
+        listTransparentReceiversAccountClosure = param
+    }
 
-    func listTransparentReceivers(account: Int32) throws -> [TransparentAddress] {
+    func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
         if let error = listTransparentReceiversAccountThrowableError {
             throw error
         }
         listTransparentReceiversAccountCallsCount += 1
         listTransparentReceiversAccountReceivedAccount = account
         if let closure = listTransparentReceiversAccountClosure {
-            return try closure(account)
+            return try await closure(account)
         } else {
             return listTransparentReceiversAccountReturnValue
         }
-
     }
 
     // MARK: - getVerifiedBalance
 
     var getVerifiedBalanceAccountThrowableError: Error?
+    func setGetVerifiedBalanceAccountThrowableError(_ param: Error?) async {
+        getVerifiedBalanceAccountThrowableError = param
+    }
     var getVerifiedBalanceAccountCallsCount = 0
     var getVerifiedBalanceAccountCalled: Bool {
         return getVerifiedBalanceAccountCallsCount > 0
     }
     var getVerifiedBalanceAccountReceivedAccount: Int32?
     var getVerifiedBalanceAccountReturnValue: Int64!
-    var getVerifiedBalanceAccountClosure: ((Int32) throws -> Int64)?
+    func setGetVerifiedBalanceAccountReturnValue(_ param: Int64) async {
+        getVerifiedBalanceAccountReturnValue = param
+    }
+    var getVerifiedBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetVerifiedBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getVerifiedBalanceAccountClosure = param
+    }
 
-    func getVerifiedBalance(account: Int32) throws -> Int64 {
+    func getVerifiedBalance(account: Int32) async throws -> Int64 {
         if let error = getVerifiedBalanceAccountThrowableError {
             throw error
         }
         getVerifiedBalanceAccountCallsCount += 1
         getVerifiedBalanceAccountReceivedAccount = account
         if let closure = getVerifiedBalanceAccountClosure {
-            return try closure(account)
+            return try await closure(account)
         } else {
             return getVerifiedBalanceAccountReturnValue
         }
-
     }
 
     // MARK: - getVerifiedTransparentBalance
 
     var getVerifiedTransparentBalanceAccountThrowableError: Error?
+    func setGetVerifiedTransparentBalanceAccountThrowableError(_ param: Error?) async {
+        getVerifiedTransparentBalanceAccountThrowableError = param
+    }
     var getVerifiedTransparentBalanceAccountCallsCount = 0
     var getVerifiedTransparentBalanceAccountCalled: Bool {
         return getVerifiedTransparentBalanceAccountCallsCount > 0
     }
     var getVerifiedTransparentBalanceAccountReceivedAccount: Int32?
     var getVerifiedTransparentBalanceAccountReturnValue: Int64!
-    var getVerifiedTransparentBalanceAccountClosure: ((Int32) throws -> Int64)?
+    func setGetVerifiedTransparentBalanceAccountReturnValue(_ param: Int64) async {
+        getVerifiedTransparentBalanceAccountReturnValue = param
+    }
+    var getVerifiedTransparentBalanceAccountClosure: ((Int32) async throws -> Int64)?
+    func setGetVerifiedTransparentBalanceAccountClosure(_ param: ((Int32) async throws -> Int64)?) async {
+        getVerifiedTransparentBalanceAccountClosure = param
+    }
 
-    func getVerifiedTransparentBalance(account: Int32) throws -> Int64 {
+    func getVerifiedTransparentBalance(account: Int32) async throws -> Int64 {
         if let error = getVerifiedTransparentBalanceAccountThrowableError {
             throw error
         }
         getVerifiedTransparentBalanceAccountCallsCount += 1
         getVerifiedTransparentBalanceAccountReceivedAccount = account
         if let closure = getVerifiedTransparentBalanceAccountClosure {
-            return try closure(account)
+            return try await closure(account)
         } else {
             return getVerifiedTransparentBalanceAccountReturnValue
         }
-
     }
 
     // MARK: - validateCombinedChain
 
     var validateCombinedChainLimitThrowableError: Error?
+    func setValidateCombinedChainLimitThrowableError(_ param: Error?) async {
+        validateCombinedChainLimitThrowableError = param
+    }
     var validateCombinedChainLimitCallsCount = 0
     var validateCombinedChainLimitCalled: Bool {
         return validateCombinedChainLimitCallsCount > 0
     }
     var validateCombinedChainLimitReceivedLimit: UInt32?
-    var validateCombinedChainLimitClosure: ((UInt32) throws -> Void)?
+    var validateCombinedChainLimitClosure: ((UInt32) async throws -> Void)?
+    func setValidateCombinedChainLimitClosure(_ param: ((UInt32) async throws -> Void)?) async {
+        validateCombinedChainLimitClosure = param
+    }
 
-    func validateCombinedChain(limit: UInt32) throws {
+    func validateCombinedChain(limit: UInt32) async throws {
         if let error = validateCombinedChainLimitThrowableError {
             throw error
         }
         validateCombinedChainLimitCallsCount += 1
         validateCombinedChainLimitReceivedLimit = limit
-        try validateCombinedChainLimitClosure?(limit)
-
+        try await validateCombinedChainLimitClosure?(limit)
     }
 
     // MARK: - rewindToHeight
 
     var rewindToHeightHeightThrowableError: Error?
+    func setRewindToHeightHeightThrowableError(_ param: Error?) async {
+        rewindToHeightHeightThrowableError = param
+    }
     var rewindToHeightHeightCallsCount = 0
     var rewindToHeightHeightCalled: Bool {
         return rewindToHeightHeightCallsCount > 0
     }
     var rewindToHeightHeightReceivedHeight: Int32?
-    var rewindToHeightHeightClosure: ((Int32) throws -> Void)?
+    var rewindToHeightHeightClosure: ((Int32) async throws -> Void)?
+    func setRewindToHeightHeightClosure(_ param: ((Int32) async throws -> Void)?) async {
+        rewindToHeightHeightClosure = param
+    }
 
-    func rewindToHeight(height: Int32) throws {
+    func rewindToHeight(height: Int32) async throws {
         if let error = rewindToHeightHeightThrowableError {
             throw error
         }
         rewindToHeightHeightCallsCount += 1
         rewindToHeightHeightReceivedHeight = height
-        try rewindToHeightHeightClosure?(height)
-
+        try await rewindToHeightHeightClosure?(height)
     }
 
     // MARK: - rewindCacheToHeight
 
     var rewindCacheToHeightHeightThrowableError: Error?
+    func setRewindCacheToHeightHeightThrowableError(_ param: Error?) async {
+        rewindCacheToHeightHeightThrowableError = param
+    }
     var rewindCacheToHeightHeightCallsCount = 0
     var rewindCacheToHeightHeightCalled: Bool {
         return rewindCacheToHeightHeightCallsCount > 0
     }
     var rewindCacheToHeightHeightReceivedHeight: Int32?
-    var rewindCacheToHeightHeightClosure: ((Int32) throws -> Void)?
+    var rewindCacheToHeightHeightClosure: ((Int32) async throws -> Void)?
+    func setRewindCacheToHeightHeightClosure(_ param: ((Int32) async throws -> Void)?) async {
+        rewindCacheToHeightHeightClosure = param
+    }
 
-    func rewindCacheToHeight(height: Int32) throws {
+    func rewindCacheToHeight(height: Int32) async throws {
         if let error = rewindCacheToHeightHeightThrowableError {
             throw error
         }
         rewindCacheToHeightHeightCallsCount += 1
         rewindCacheToHeightHeightReceivedHeight = height
-        try rewindCacheToHeightHeightClosure?(height)
-
+        try await rewindCacheToHeightHeightClosure?(height)
     }
 
     // MARK: - scanBlocks
 
     var scanBlocksLimitThrowableError: Error?
+    func setScanBlocksLimitThrowableError(_ param: Error?) async {
+        scanBlocksLimitThrowableError = param
+    }
     var scanBlocksLimitCallsCount = 0
     var scanBlocksLimitCalled: Bool {
         return scanBlocksLimitCallsCount > 0
     }
     var scanBlocksLimitReceivedLimit: UInt32?
-    var scanBlocksLimitClosure: ((UInt32) throws -> Void)?
+    var scanBlocksLimitClosure: ((UInt32) async throws -> Void)?
+    func setScanBlocksLimitClosure(_ param: ((UInt32) async throws -> Void)?) async {
+        scanBlocksLimitClosure = param
+    }
 
-    func scanBlocks(limit: UInt32) throws {
+    func scanBlocks(limit: UInt32) async throws {
         if let error = scanBlocksLimitThrowableError {
             throw error
         }
         scanBlocksLimitCallsCount += 1
         scanBlocksLimitReceivedLimit = limit
-        try scanBlocksLimitClosure?(limit)
-
+        try await scanBlocksLimitClosure?(limit)
     }
 
     // MARK: - putUnspentTransparentOutput
 
     var putUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError: Error?
+    func setPutUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError(_ param: Error?) async {
+        putUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError = param
+    }
     var putUnspentTransparentOutputTxidIndexScriptValueHeightCallsCount = 0
     var putUnspentTransparentOutputTxidIndexScriptValueHeightCalled: Bool {
         return putUnspentTransparentOutputTxidIndexScriptValueHeightCallsCount > 0
     }
     var putUnspentTransparentOutputTxidIndexScriptValueHeightReceivedArguments: (txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight)?
-    var putUnspentTransparentOutputTxidIndexScriptValueHeightClosure: (([UInt8], Int, [UInt8], Int64, BlockHeight) throws -> Void)?
+    var putUnspentTransparentOutputTxidIndexScriptValueHeightClosure: (([UInt8], Int, [UInt8], Int64, BlockHeight) async throws -> Void)?
+    func setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure(_ param: (([UInt8], Int, [UInt8], Int64, BlockHeight) async throws -> Void)?) async {
+        putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = param
+    }
 
-    func putUnspentTransparentOutput(txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) throws {
+    func putUnspentTransparentOutput(txid: [UInt8], index: Int, script: [UInt8], value: Int64, height: BlockHeight) async throws {
         if let error = putUnspentTransparentOutputTxidIndexScriptValueHeightThrowableError {
             throw error
         }
         putUnspentTransparentOutputTxidIndexScriptValueHeightCallsCount += 1
         putUnspentTransparentOutputTxidIndexScriptValueHeightReceivedArguments = (txid: txid, index: index, script: script, value: value, height: height)
-        try putUnspentTransparentOutputTxidIndexScriptValueHeightClosure?(txid, index, script, value, height)
-
+        try await putUnspentTransparentOutputTxidIndexScriptValueHeightClosure?(txid, index, script, value, height)
     }
 
     // MARK: - shieldFunds
 
     var shieldFundsUskMemoShieldingThresholdThrowableError: Error?
+    func setShieldFundsUskMemoShieldingThresholdThrowableError(_ param: Error?) async {
+        shieldFundsUskMemoShieldingThresholdThrowableError = param
+    }
     var shieldFundsUskMemoShieldingThresholdCallsCount = 0
     var shieldFundsUskMemoShieldingThresholdCalled: Bool {
         return shieldFundsUskMemoShieldingThresholdCallsCount > 0
     }
     var shieldFundsUskMemoShieldingThresholdReceivedArguments: (usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi)?
     var shieldFundsUskMemoShieldingThresholdReturnValue: Int64!
-    var shieldFundsUskMemoShieldingThresholdClosure: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) throws -> Int64)?
+    func setShieldFundsUskMemoShieldingThresholdReturnValue(_ param: Int64) async {
+        shieldFundsUskMemoShieldingThresholdReturnValue = param
+    }
+    var shieldFundsUskMemoShieldingThresholdClosure: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Int64)?
+    func setShieldFundsUskMemoShieldingThresholdClosure(_ param: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Int64)?) async {
+        shieldFundsUskMemoShieldingThresholdClosure = param
+    }
 
-    func shieldFunds(usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi) throws -> Int64 {
+    func shieldFunds(usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> Int64 {
         if let error = shieldFundsUskMemoShieldingThresholdThrowableError {
             throw error
         }
         shieldFundsUskMemoShieldingThresholdCallsCount += 1
         shieldFundsUskMemoShieldingThresholdReceivedArguments = (usk: usk, memo: memo, shieldingThreshold: shieldingThreshold)
         if let closure = shieldFundsUskMemoShieldingThresholdClosure {
-            return try closure(usk, memo, shieldingThreshold)
+            return try await closure(usk, memo, shieldingThreshold)
         } else {
             return shieldFundsUskMemoShieldingThresholdReturnValue
         }
+    }
 
+    // MARK: - receiverTypecodesOnUnifiedAddress
+
+    static var receiverTypecodesOnUnifiedAddressThrowableError: Error?
+    static var receiverTypecodesOnUnifiedAddressCallsCount = 0
+    static var receiverTypecodesOnUnifiedAddressCalled: Bool {
+        return Self.receiverTypecodesOnUnifiedAddressCallsCount > 0
+    }
+    static var receiverTypecodesOnUnifiedAddressReceivedAddress: String?
+    static var receiverTypecodesOnUnifiedAddressReturnValue: [UInt32]!
+    static var receiverTypecodesOnUnifiedAddressClosure: ((String) throws -> [UInt32])?
+
+    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
+        if let error = Self.receiverTypecodesOnUnifiedAddressThrowableError {
+            throw error
+        }
+        Self.receiverTypecodesOnUnifiedAddressCallsCount += 1
+        Self.receiverTypecodesOnUnifiedAddressReceivedAddress = address
+        if let closure = Self.receiverTypecodesOnUnifiedAddressClosure {
+            return try closure(address)
+        } else {
+            return Self.receiverTypecodesOnUnifiedAddressReturnValue
+        }
     }
 
     // MARK: - consensusBranchIdFor
 
     var consensusBranchIdForHeightThrowableError: Error?
+    func setConsensusBranchIdForHeightThrowableError(_ param: Error?) async {
+        consensusBranchIdForHeightThrowableError = param
+    }
     var consensusBranchIdForHeightCallsCount = 0
     var consensusBranchIdForHeightCalled: Bool {
         return consensusBranchIdForHeightCallsCount > 0
     }
     var consensusBranchIdForHeightReceivedHeight: Int32?
     var consensusBranchIdForHeightReturnValue: Int32!
-    var consensusBranchIdForHeightClosure: ((Int32) throws -> Int32)?
+    func setConsensusBranchIdForHeightReturnValue(_ param: Int32) async {
+        consensusBranchIdForHeightReturnValue = param
+    }
+    var consensusBranchIdForHeightClosure: ((Int32) async throws -> Int32)?
+    func setConsensusBranchIdForHeightClosure(_ param: ((Int32) async throws -> Int32)?) async {
+        consensusBranchIdForHeightClosure = param
+    }
 
-    func consensusBranchIdFor(height: Int32) throws -> Int32 {
+    func consensusBranchIdFor(height: Int32) async throws -> Int32 {
         if let error = consensusBranchIdForHeightThrowableError {
             throw error
         }
         consensusBranchIdForHeightCallsCount += 1
         consensusBranchIdForHeightReceivedHeight = height
         if let closure = consensusBranchIdForHeightClosure {
-            return try closure(height)
+            return try await closure(height)
         } else {
             return consensusBranchIdForHeightReturnValue
         }
+    }
 
+    // MARK: - deriveUnifiedFullViewingKey
+
+    var deriveUnifiedFullViewingKeyFromThrowableError: Error?
+    func setDeriveUnifiedFullViewingKeyFromThrowableError(_ param: Error?) async {
+        deriveUnifiedFullViewingKeyFromThrowableError = param
+    }
+    var deriveUnifiedFullViewingKeyFromCallsCount = 0
+    var deriveUnifiedFullViewingKeyFromCalled: Bool {
+        return deriveUnifiedFullViewingKeyFromCallsCount > 0
+    }
+    var deriveUnifiedFullViewingKeyFromReceivedSpendingKey: UnifiedSpendingKey?
+    var deriveUnifiedFullViewingKeyFromReturnValue: UnifiedFullViewingKey!
+    func setDeriveUnifiedFullViewingKeyFromReturnValue(_ param: UnifiedFullViewingKey) async {
+        deriveUnifiedFullViewingKeyFromReturnValue = param
+    }
+    var deriveUnifiedFullViewingKeyFromClosure: ((UnifiedSpendingKey) async throws -> UnifiedFullViewingKey)?
+    func setDeriveUnifiedFullViewingKeyFromClosure(_ param: ((UnifiedSpendingKey) async throws -> UnifiedFullViewingKey)?) async {
+        deriveUnifiedFullViewingKeyFromClosure = param
+    }
+
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
+        if let error = deriveUnifiedFullViewingKeyFromThrowableError {
+            throw error
+        }
+        deriveUnifiedFullViewingKeyFromCallsCount += 1
+        deriveUnifiedFullViewingKeyFromReceivedSpendingKey = spendingKey
+        if let closure = deriveUnifiedFullViewingKeyFromClosure {
+            return try await closure(spendingKey)
+        } else {
+            return deriveUnifiedFullViewingKeyFromReturnValue
+        }
     }
 
     // MARK: - initBlockMetadataDb
 
     var initBlockMetadataDbThrowableError: Error?
+    func setInitBlockMetadataDbThrowableError(_ param: Error?) async {
+        initBlockMetadataDbThrowableError = param
+    }
     var initBlockMetadataDbCallsCount = 0
     var initBlockMetadataDbCalled: Bool {
         return initBlockMetadataDbCallsCount > 0
     }
-    var initBlockMetadataDbClosure: (() throws -> Void)?
+    var initBlockMetadataDbClosure: (() async throws -> Void)?
+    func setInitBlockMetadataDbClosure(_ param: (() async throws -> Void)?) async {
+        initBlockMetadataDbClosure = param
+    }
 
-    func initBlockMetadataDb() throws {
+    func initBlockMetadataDb() async throws {
         if let error = initBlockMetadataDbThrowableError {
             throw error
         }
         initBlockMetadataDbCallsCount += 1
-        try initBlockMetadataDbClosure?()
-
+        try await initBlockMetadataDbClosure?()
     }
 
     // MARK: - writeBlocksMetadata
 
     var writeBlocksMetadataBlocksThrowableError: Error?
+    func setWriteBlocksMetadataBlocksThrowableError(_ param: Error?) async {
+        writeBlocksMetadataBlocksThrowableError = param
+    }
     var writeBlocksMetadataBlocksCallsCount = 0
     var writeBlocksMetadataBlocksCalled: Bool {
         return writeBlocksMetadataBlocksCallsCount > 0
     }
     var writeBlocksMetadataBlocksReceivedBlocks: [ZcashCompactBlock]?
-    var writeBlocksMetadataBlocksClosure: (([ZcashCompactBlock]) throws -> Void)?
+    var writeBlocksMetadataBlocksClosure: (([ZcashCompactBlock]) async throws -> Void)?
+    func setWriteBlocksMetadataBlocksClosure(_ param: (([ZcashCompactBlock]) async throws -> Void)?) async {
+        writeBlocksMetadataBlocksClosure = param
+    }
 
-    func writeBlocksMetadata(blocks: [ZcashCompactBlock]) throws {
+    func writeBlocksMetadata(blocks: [ZcashCompactBlock]) async throws {
         if let error = writeBlocksMetadataBlocksThrowableError {
             throw error
         }
         writeBlocksMetadataBlocksCallsCount += 1
         writeBlocksMetadataBlocksReceivedBlocks = blocks
-        try writeBlocksMetadataBlocksClosure?(blocks)
-
+        try await writeBlocksMetadataBlocksClosure?(blocks)
     }
 
     // MARK: - latestCachedBlockHeight
@@ -1164,16 +1573,21 @@ class ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return latestCachedBlockHeightCallsCount > 0
     }
     var latestCachedBlockHeightReturnValue: BlockHeight!
-    var latestCachedBlockHeightClosure: (() -> BlockHeight)?
+    func setLatestCachedBlockHeightReturnValue(_ param: BlockHeight) async {
+        latestCachedBlockHeightReturnValue = param
+    }
+    var latestCachedBlockHeightClosure: (() async -> BlockHeight)?
+    func setLatestCachedBlockHeightClosure(_ param: (() async -> BlockHeight)?) async {
+        latestCachedBlockHeightClosure = param
+    }
 
-    func latestCachedBlockHeight() -> BlockHeight {
+    func latestCachedBlockHeight() async -> BlockHeight {
         latestCachedBlockHeightCallsCount += 1
         if let closure = latestCachedBlockHeightClosure {
-            return closure()
+            return await closure()
         } else {
             return latestCachedBlockHeightReturnValue
         }
-
     }
 
 }

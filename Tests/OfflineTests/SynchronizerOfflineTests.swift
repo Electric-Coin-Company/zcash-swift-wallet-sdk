@@ -257,7 +257,7 @@ class SynchronizerOfflineTests: XCTestCase {
         let synchronizer = SDKSynchronizer(initializer: initializer)
 
         do {
-            let derivationTool = DerivationTool(networkType: .testnet)
+            let derivationTool = initializer.makeDerivationTool()
             let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
                 seed: Environment.seedBytes,
                 accountIndex: 0

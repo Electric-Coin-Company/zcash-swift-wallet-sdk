@@ -31,7 +31,7 @@ extension BlockValidatorImpl: BlockValidator {
 
         let startTime = Date()
         do {
-            try rustBackend.validateCombinedChain(limit: 0)
+            try await rustBackend.validateCombinedChain(limit: 0)
             pushProgressReport(startTime: startTime, finishTime: Date())
             logger.debug("validateChainFinished")
         } catch {

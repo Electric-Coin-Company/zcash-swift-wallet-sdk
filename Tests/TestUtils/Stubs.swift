@@ -65,7 +65,7 @@ class RustBackendMockHelper {
         mockValidateCombinedChainFailAfterAttempts: Int? = nil,
         mockValidateCombinedChainKeepFailing: Bool = false,
         mockValidateCombinedChainFailureError: RustWeldingError = .chainValidationFailed(message: nil)
-    ) {
+    ) async {
         self.rustBackend = rustBackend
         self.consensusBranchID = consensusBranchID
         self.mockValidateCombinedChainSuccessRate = mockValidateCombinedChainSuccessRate
@@ -73,51 +73,63 @@ class RustBackendMockHelper {
         self.mockValidateCombinedChainKeepFailing = mockValidateCombinedChainKeepFailing
         self.mockValidateCombinedChainFailureError = mockValidateCombinedChainFailureError
         self.rustBackendMock = ZcashRustBackendWeldingMock()
-        setupDefaultMock()
+        await setupDefaultMock()
     }
 
-    private func setupDefaultMock() {
-        rustBackendMock.latestCachedBlockHeightReturnValue = .empty()
-        rustBackendMock.initBlockMetadataDbClosure = { }
-        rustBackendMock.writeBlocksMetadataBlocksClosure = { _ in }
-        rustBackendMock.initAccountsTableUfvksClosure = { _ in }
-        rustBackendMock.createToAddressUskToValueMemoReturnValue = -1
-        rustBackendMock.shieldFundsUskMemoShieldingThresholdReturnValue = -1
-        rustBackendMock.getTransparentBalanceAccountReturnValue = 0
-        rustBackendMock.getVerifiedBalanceAccountReturnValue = 0
-        rustBackendMock.listTransparentReceiversAccountReturnValue = []
-        rustBackendMock.getCurrentAddressAccountThrowableError = KeyDerivationErrors.unableToDerive
-        rustBackendMock.getNextAvailableAddressAccountThrowableError = KeyDerivationErrors.unableToDerive
-        rustBackendMock.shieldFundsUskMemoShieldingThresholdReturnValue = -1
-        rustBackendMock.createAccountSeedThrowableError = KeyDerivationErrors.unableToDerive
-        rustBackendMock.getReceivedMemoIdNoteReturnValue = nil
-        rustBackendMock.getSentMemoIdNoteReturnValue = nil
-        rustBackendMock.createToAddressUskToValueMemoReturnValue = -1
-        rustBackendMock.initDataDbSeedReturnValue = .seedRequired
-        rustBackendMock.getNearestRewindHeightHeightReturnValue = -1
-        rustBackendMock.initBlocksTableHeightHashTimeSaplingTreeClosure = { _, _, _, _ in }
-        rustBackendMock.putUnspentTransparentOutputTxidIndexScriptValueHeightClosure = { _, _, _, _, _ in }
-        rustBackendMock.createToAddressUskToValueMemoReturnValue = -1
-        rustBackendMock.createToAddressUskToValueMemoReturnValue = -1
-        rustBackendMock.decryptAndStoreTransactionTxBytesMinedHeightThrowableError = RustWeldingError.genericError(message: "mock fail")
+    private func setupDefaultMock() async {
+        await rustBackendMock.setLatestCachedBlockHeightReturnValue(.empty())
+        await rustBackendMock.setInitBlockMetadataDbClosure() { }
+        await rustBackendMock.setWriteBlocksMetadataBlocksClosure() { _ in }
+        await rustBackendMock.setInitAccountsTableUfvksClosure() { _ in }
+        await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
+        await rustBackendMock.setShieldFundsUskMemoShieldingThresholdReturnValue(-1)
+        ZcashRustBackendWeldingMock.getAddressMetadataReturnValue = nil
+        await rustBackendMock.setGetTransparentBalanceAccountReturnValue(0)
+        await rustBackendMock.setGetVerifiedBalanceAccountReturnValue(0)
+        await rustBackendMock.setListTransparentReceiversAccountReturnValue([])
+        await rustBackendMock.setDeriveUnifiedFullViewingKeyFromThrowableError(KeyDerivationErrors.unableToDerive)
+        await rustBackendMock.setDeriveUnifiedSpendingKeyFromAccountIndexThrowableError(KeyDerivationErrors.unableToDerive)
+        await rustBackendMock.setGetCurrentAddressAccountThrowableError(KeyDerivationErrors.unableToDerive)
+        await rustBackendMock.setGetNextAvailableAddressAccountThrowableError(KeyDerivationErrors.unableToDerive)
+        ZcashRustBackendWeldingMock.getSaplingReceiverForThrowableError = KeyDerivationErrors.unableToDerive
+        ZcashRustBackendWeldingMock.getTransparentReceiverForThrowableError = KeyDerivationErrors.unableToDerive
+        await rustBackendMock.setShieldFundsUskMemoShieldingThresholdReturnValue(-1)
+        ZcashRustBackendWeldingMock.receiverTypecodesOnUnifiedAddressThrowableError = KeyDerivationErrors.receiverNotFound
+        await rustBackendMock.setCreateAccountSeedThrowableError(KeyDerivationErrors.unableToDerive)
+        await rustBackendMock.setGetReceivedMemoIdNoteReturnValue(nil)
+        await rustBackendMock.setGetSentMemoIdNoteReturnValue(nil)
+        await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
+        await rustBackendMock.setInitDataDbSeedReturnValue(.seedRequired)
+        ZcashRustBackendWeldingMock.isValidSaplingAddressNetworkTypeReturnValue = false
+        ZcashRustBackendWeldingMock.isValidUnifiedAddressNetworkTypeReturnValue = false
+        await rustBackendMock.setGetNearestRewindHeightHeightReturnValue(-1)
+        await rustBackendMock.setInitBlocksTableHeightHashTimeSaplingTreeClosure() { _, _, _, _ in }
+        await rustBackendMock.setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure() { _, _, _, _, _ in }
+        await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
+        ZcashRustBackendWeldingMock.isValidSaplingExtendedFullViewingKeyNetworkTypeReturnValue = false
+        ZcashRustBackendWeldingMock.isValidUnifiedFullViewingKeyNetworkTypeReturnValue = false
+        ZcashRustBackendWeldingMock.isValidSaplingAddressNetworkTypeReturnValue = true
+        ZcashRustBackendWeldingMock.isValidTransparentAddressNetworkTypeReturnValue = true
+        await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
+        await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(RustWeldingError.genericError(message: "mock fail"))
 
-        rustBackendMock.consensusBranchIdForHeightClosure = { [weak self] height in
+        await rustBackendMock.setConsensusBranchIdForHeightClosure() { [weak self] height in
             guard let self else { return -1 }
             if let consensusBranchID = self.consensusBranchID {
                 return consensusBranchID
             } else {
-                return try self.rustBackend.consensusBranchIdFor(height: height)
+                return try await self.rustBackend.consensusBranchIdFor(height: height)
             }
         }
 
-        rustBackendMock.initDataDbSeedClosure = { [weak self] seed in
+        await rustBackendMock.setInitDataDbSeedClosure() { [weak self] seed in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
-            return try self.rustBackend.initDataDb(seed: seed)
+            return try await self.rustBackend.initDataDb(seed: seed)
         }
 
-        rustBackendMock.initBlocksTableHeightHashTimeSaplingTreeClosure = { [weak self] height, hash, time, saplingTree in
+        await rustBackendMock.setInitBlocksTableHeightHashTimeSaplingTreeClosure() { [weak self] height, hash, time, saplingTree in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
-            try self.rustBackend.initBlocksTable(
+            try await self.rustBackend.initBlocksTable(
                 height: height,
                 hash: hash,
                 time: time,
@@ -125,52 +137,52 @@ class RustBackendMockHelper {
             )
         }
 
-        rustBackendMock.getBalanceAccountClosure = { [weak self] account in
+        await rustBackendMock.setGetBalanceAccountClosure() { [weak self] account in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
-            return try self.rustBackend.getBalance(account: account)
+            return try await self.rustBackend.getBalance(account: account)
         }
 
-        rustBackendMock.getVerifiedBalanceAccountClosure = { [weak self] account in
+        await rustBackendMock.setGetVerifiedBalanceAccountClosure() { [weak self] account in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
-            return try self.rustBackend.getVerifiedBalance(account: account)
+            return try await self.rustBackend.getVerifiedBalance(account: account)
         }
 
-        rustBackendMock.validateCombinedChainLimitClosure = { [weak self] limit in
+        await rustBackendMock.setValidateCombinedChainLimitClosure() { [weak self] limit in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
             if let rate = self.mockValidateCombinedChainSuccessRate {
                 if Self.shouldSucceed(successRate: rate) {
-                    return try self.rustBackend.validateCombinedChain(limit: limit)
+                    return try await self.rustBackend.validateCombinedChain(limit: limit)
                 } else {
                     throw self.mockValidateCombinedChainFailureError
                 }
             } else if let attempts = self.mockValidateCombinedChainFailAfterAttempts {
                 self.mockValidateCombinedChainFailAfterAttempts = attempts - 1
                 if attempts > 0 {
-                    return try self.rustBackend.validateCombinedChain(limit: limit)
+                    return try await self.rustBackend.validateCombinedChain(limit: limit)
                 } else {
                     if attempts == 0 {
                         throw self.mockValidateCombinedChainFailureError
                     } else if attempts < 0 && self.mockValidateCombinedChainKeepFailing {
                         throw self.mockValidateCombinedChainFailureError
                     } else {
-                        return try self.rustBackend.validateCombinedChain(limit: limit)
+                        return try await self.rustBackend.validateCombinedChain(limit: limit)
                     }
                 }
             } else {
-                return try self.rustBackend.validateCombinedChain(limit: limit)
+                return try await self.rustBackend.validateCombinedChain(limit: limit)
             }
         }
 
-        rustBackendMock.rewindToHeightHeightClosure = { [weak self] height in
+        await rustBackendMock.setRewindToHeightHeightClosure() { [weak self] height in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
-            try self.rustBackend.rewindToHeight(height: height)
+            try await self.rustBackend.rewindToHeight(height: height)
         }
 
-        rustBackendMock.rewindCacheToHeightHeightClosure = { _ in }
+        await rustBackendMock.setRewindCacheToHeightHeightClosure() { _ in }
 
-        rustBackendMock.scanBlocksLimitClosure = { [weak self] limit in
+        await rustBackendMock.setScanBlocksLimitClosure() { [weak self] limit in
             guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
-            try self.rustBackend.scanBlocks(limit: limit)
+            try await self.rustBackend.scanBlocks(limit: limit)
         }
     }
 

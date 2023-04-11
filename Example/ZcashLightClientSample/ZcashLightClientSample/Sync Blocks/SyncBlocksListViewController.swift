@@ -69,7 +69,7 @@ class SyncBlocksListViewController: UIViewController {
             case .stopped, .unprepared, .synced, .disconnected, .error:
                 do {
                     if syncStatus == .unprepared {
-                        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
+                        let derivationTool = AppDelegate.shared.sharedWallet.makeDerivationTool()
                         let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: synchronizerData.seed, accountIndex: 0)
                         let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 

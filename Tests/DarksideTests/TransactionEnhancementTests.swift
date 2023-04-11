@@ -83,14 +83,14 @@ class TransactionEnhancementTests: XCTestCase {
         try? FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
 
-        let dbInit = try rustBackend.initDataDb(seed: nil)
+        let dbInit = try await rustBackend.initDataDb(seed: nil)
 
         let derivationTool = DerivationTool(networkType: network.networkType)
         let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: Environment.seedBytes, accountIndex: 0)
         let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         do {
-            try rustBackend.initAccountsTable(ufvks: [viewingKey])
+            try await rustBackend.initAccountsTable(ufvks: [viewingKey])
         } catch {
             XCTFail("Failed to init accounts table error: \(error)")
             return
@@ -101,7 +101,7 @@ class TransactionEnhancementTests: XCTestCase {
             return
         }
 
-        _ = try rustBackend.initBlocksTable(
+        _ = try await rustBackend.initBlocksTable(
             height: Int32(birthday.height),
             hash: birthday.hash,
             time: birthday.time,

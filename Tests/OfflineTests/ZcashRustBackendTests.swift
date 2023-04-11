@@ -44,7 +44,7 @@ class ZcashRustBackendTests: XCTestCase {
     func testInitWithShortSeedAndFail() async throws {
         let seed = "testreferencealice"
 
-        let dbInit = try rustBackend.initDataDb(seed: nil)
+        let dbInit = try await rustBackend.initDataDb(seed: nil)
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(String(describing: dbInit))")
@@ -52,7 +52,7 @@ class ZcashRustBackendTests: XCTestCase {
         }
 
         do {
-            _ = try rustBackend.createAccount(seed: Array(seed.utf8))
+            _ = try await rustBackend.createAccount(seed: Array(seed.utf8))
             XCTFail("createAccount should fail here.")
         } catch { }
     }
@@ -97,19 +97,19 @@ class ZcashRustBackendTests: XCTestCase {
 
         try? FileManager.default.removeItem(at: tempDBs.dataDB)
 
-        let initResult = try rustBackend.initDataDb(seed: seed)
+        let initResult = try await rustBackend.initDataDb(seed: seed)
         XCTAssertEqual(initResult, .success)
 
-        let usk = try rustBackend.createAccount(seed: seed)
+        let usk = try await rustBackend.createAccount(seed: seed)
         XCTAssertEqual(usk.account, 0)
 
         let expectedReceivers = try testVector.map {
-            UnifiedAddress(validatedEncoding: $0.unified_addr!, networkType: .mainnet)
+            UnifiedAddress(validatedEncoding: $0.unified_addr!)
         }
         .map { try $0.transparentReceiver() }
 
         let expectedUAs = testVector.map {
-            UnifiedAddress(validatedEncoding: $0.unified_addr!, networkType: .mainnet)
+            UnifiedAddress(validatedEncoding: $0.unified_addr!)
         }
 
         guard expectedReceivers.count >= 2 else {
@@ -119,11 +119,11 @@ class ZcashRustBackendTests: XCTestCase {
         var uAddresses: [UnifiedAddress] = []
         for i in 0...2 {
             uAddresses.append(
-                try rustBackend.getCurrentAddress(account: 0)
+                try await rustBackend.getCurrentAddress(account: 0)
             )
 
             if i < 2 {
-                _ = try rustBackend.getNextAvailableAddress(account: 0)
+                _ = try await rustBackend.getNextAvailableAddress(account: 0)
             }
         }
 
@@ -132,7 +132,7 @@ class ZcashRustBackendTests: XCTestCase {
             expectedUAs
         )
 
-        let actualReceivers = try rustBackend.listTransparentReceivers(account: 0)
+        let actualReceivers = try await rustBackend.listTransparentReceivers(account: 0)
 
         XCTAssertEqual(
             expectedReceivers.sorted(),

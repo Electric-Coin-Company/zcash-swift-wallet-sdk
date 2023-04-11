@@ -349,7 +349,7 @@ public class Initializer {
         }
         
         do {
-            if case .seedRequired = try rustBackend.initDataDb(seed: seed) {
+            if case .seedRequired = try await rustBackend.initDataDb(seed: seed) {
                 return .seedRequired
             }
         } catch {
@@ -358,7 +358,7 @@ public class Initializer {
 
         let checkpoint = Checkpoint.birthday(with: walletBirthday, network: network)
         do {
-            try rustBackend.initBlocksTable(
+            try await rustBackend.initBlocksTable(
                 height: Int32(checkpoint.height),
                 hash: checkpoint.hash,
                 time: checkpoint.time,
@@ -373,7 +373,7 @@ public class Initializer {
         self.walletBirthday = checkpoint.height
  
         do {
-            try rustBackend.initAccountsTable(ufvks: viewingKeys)
+            try await rustBackend.initAccountsTable(ufvks: viewingKeys)
         } catch RustWeldingError.dataDbNotEmpty {
             // this is fine
         } catch RustWeldingError.malformedStringInput {
@@ -405,6 +405,10 @@ public class Initializer {
     */
     public func isValidTransparentAddress(_ address: String) -> Bool {
         DerivationTool(networkType: network.networkType).isValidTransparentAddress(address)
+    }
+
+    public func makeDerivationTool() -> DerivationTool {
+        return DerivationTool(networkType: network.networkType)
     }
 }
 

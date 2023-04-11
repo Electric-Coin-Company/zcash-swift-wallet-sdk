@@ -17,8 +17,7 @@ class DerivationToolTestnetTests: XCTestCase {
         validatedEncoding: """
         utest1uqmec4a2njqz2z2rwppchsd06qe7a0jh4jmsqr0yy99m9er9646zlxunf3v8qr0hncgv86e8a62vxy0qa32qzetmj8s57yudmyx9zav6f52nurclsqjkqtjtpz6vg679p6wkcz\
         pl2wu
-        """,
-        networkType: .testnet
+        """
     )
 
     let expectedSpendingKey = UnifiedSpendingKey(
@@ -91,7 +90,7 @@ class DerivationToolTestnetTests: XCTestCase {
 
     func testGetTransparentAddressFromUA() throws {
         XCTAssertEqual(
-            try DerivationTool(networkType: .testnet).transparentReceiver(from: testRecipientAddress),
+            try DerivationTool.transparentReceiver(from: testRecipientAddress),
             expectedTransparentAddress
         )
     }

@@ -79,7 +79,7 @@ class TestCoordinator {
             logLevel: .debug
         )
 
-        let derivationTool = DerivationTool(networkType: network.networkType)
+        let derivationTool = initializer.makeDerivationTool()
 
         self.spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
             seed: Environment.seedBytes,

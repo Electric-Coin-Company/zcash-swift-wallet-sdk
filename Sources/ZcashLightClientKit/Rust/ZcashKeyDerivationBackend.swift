@@ -21,7 +21,7 @@ protocol ZcashKeyDeriving {
     /// - Returns  the `[UInt32]` that compose the given UA
     /// - Throws `RustWeldingError.invalidInput(message: String)` when the UA is either invalid or malformed
     /// - Note: not `NetworkType` bound
-    func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32]
+    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32]
 
     /// Validates the if the given string is a valid Sapling Address
     /// - Parameter address: UTF-8 encoded String to validate
@@ -62,33 +62,52 @@ protocol ZcashKeyDeriving {
     /// - Parameter accountIndex:account index that the key can spend from
     /// - Parameter networkType: network type of this key
     /// - Throws `.unableToDerive` when there's an error
-    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) throws -> UnifiedSpendingKey
+    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) async throws -> UnifiedSpendingKey
 
     /// Derives a `UnifiedFullViewingKey` from a `UnifiedSpendingKey`
     /// - Parameter spendingKey: the `UnifiedSpendingKey` to derive from
     /// - Throws: `RustWeldingError.unableToDeriveKeys` if the SDK couldn't derive the UFVK.
     /// - Returns: the derived `UnifiedFullViewingKey`
-    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) throws -> UnifiedFullViewingKey
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey
 
     /// Returns the Sapling receiver within the given Unified Address, if any.
     /// - Parameter uAddr: a `UnifiedAddress`
     /// - Returns a `SaplingAddress` if any
     /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress
+    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress
 
     /// Returns the transparent receiver within the given Unified Address, if any.
     /// - parameter uAddr: a `UnifiedAddress`
     /// - Returns a `TransparentAddress` if any
     /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress
+    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress
 }
 
 import libzcashlc
 
-struct ZcashKeyDerivationBackend: ZcashKeyDeriving {
-    let networkType: NetworkType
+enum ZcashKeyDerivationBackend {
+    case mainnet
+    case testnet
+
     init(networkType: NetworkType) {
-        self.networkType = networkType
+        switch networkType {
+        case .mainnet:
+            self = .mainnet
+
+        case .testnet:
+            self = .testnet
+        }
+    }
+}
+
+extension ZcashKeyDerivationBackend: ZcashKeyDeriving {
+    var networkType: NetworkType {
+        switch self {
+        case .mainnet:
+            return NetworkType.mainnet
+        case .testnet:
+            return NetworkType.testnet
+        }
     }
 
     // MARK: Address metadata and validation
@@ -113,7 +132,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDeriving {
         return AddressMetadata(network: network, addrType: addrType)
     }
 
-    func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
+    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
         guard !address.containsCStringNullBytesBeforeStringEnding() else {
             throw RustWeldingError.invalidInput(message: "`address` contains null bytes.")
         }
@@ -196,10 +215,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDeriving {
     func deriveUnifiedSpendingKey(
         from seed: [UInt8],
         accountIndex: Int32
-    ) throws -> UnifiedSpendingKey {
-        rustBackendGlobalLock.lock()
-        defer { rustBackendGlobalLock.unlock() }
-
+    ) async throws -> UnifiedSpendingKey {
         let binaryKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
             return zcashlc_derive_spending_key(
                 seedBufferPtr.baseAddress,
@@ -218,10 +234,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDeriving {
         return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
     }
     
-    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) throws -> UnifiedFullViewingKey {
-        rustBackendGlobalLock.lock()
-        defer { rustBackendGlobalLock.unlock() }
-
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
         let extfvk = try spendingKey.bytes.withUnsafeBufferPointer { uskBufferPtr -> UnsafeMutablePointer<CChar> in
             guard let extfvk = zcashlc_spending_key_to_full_viewing_key(
                 uskBufferPtr.baseAddress,
@@ -243,7 +256,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDeriving {
         return UnifiedFullViewingKey(validatedEncoding: derived, account: spendingKey.account)
     }
 
-    func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress {
+    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress {
         guard let saplingCStr = zcashlc_get_sapling_receiver_for_unified_address(
             [CChar](uAddr.encoding.utf8CString)
         ) else {
@@ -259,7 +272,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDeriving {
         return SaplingAddress(validatedEncoding: saplingReceiverStr)
     }
 
-    func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress {
+    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress {
         guard let transparentCStr = zcashlc_get_transparent_receiver_for_unified_address(
             [CChar](uAddr.encoding.utf8CString)
         ) else {

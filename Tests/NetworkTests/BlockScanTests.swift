@@ -69,7 +69,7 @@ class BlockScanTests: XCTestCase {
     func testSingleDownloadAndScan() async throws {
         logger = OSLogger(logLevel: .debug)
 
-        _ = try rustBackend.initDataDb(seed: nil)
+        _ = try await rustBackend.initDataDb(seed: nil)
 
         let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
@@ -139,7 +139,7 @@ class BlockScanTests: XCTestCase {
         let metrics = SDKMetrics()
         metrics.enableMetrics()
         
-        guard try rustBackend.initDataDb(seed: nil) == .success else {
+        guard try await rustBackend.initDataDb(seed: nil) == .success else {
             XCTFail("Seed should not be required for this test")
             return
         }
@@ -149,13 +149,13 @@ class BlockScanTests: XCTestCase {
         let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         do {
-            try rustBackend.initAccountsTable(ufvks: [viewingKey])
+            try await rustBackend.initAccountsTable(ufvks: [viewingKey])
         } catch {
             XCTFail("failed to init account table. error: \(error)")
             return
         }
         
-        try rustBackend.initBlocksTable(
+        try await rustBackend.initBlocksTable(
             height: Int32(walletBirthDay.height),
             hash: walletBirthDay.hash,
             time: walletBirthDay.time,

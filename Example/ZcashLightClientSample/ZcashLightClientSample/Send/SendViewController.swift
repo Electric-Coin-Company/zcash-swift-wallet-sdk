@@ -218,7 +218,7 @@ class SendViewController: UIViewController {
                 return
             }
 
-            let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
+            let derivationTool = AppDelegate.shared.sharedWallet.makeDerivationTool()
             guard let spendingKey = try? await derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0) else {
                 loggerProxy.error("NO SPENDING KEY")
                 return

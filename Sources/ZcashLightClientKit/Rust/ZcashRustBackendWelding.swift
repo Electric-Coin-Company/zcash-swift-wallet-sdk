@@ -8,10 +8,6 @@
 
 import Foundation
 
-/// Any code that uses rust functions that do any IO (access dataDB or blocks metadata DB) or checks for last error
-/// (calls `getError()` or `getLastError()`) must use this lock and protect calls to the rust.
-let rustBackendGlobalLock = NSRecursiveLock()
-
 enum RustWeldingError: Error {
     case genericError(message: String)
     case dataDbInitFailed(message: String)
@@ -42,6 +38,7 @@ public enum DbInitResult {
     case seedRequired
 }
 
+// sourcery: mockActor
 protocol ZcashRustBackendWelding {
     /// Adds the next available account-level spend authority, given the current set of [ZIP 316]
     /// account identifiers known, to the wallet database.
@@ -61,7 +58,7 @@ protocol ZcashRustBackendWelding {
     /// - parameter networkType: network type of this key
     /// - Returns: The `UnifiedSpendingKey` structs for the number of accounts created
     ///
-    func createAccount(seed: [UInt8]) throws -> UnifiedSpendingKey
+    func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey
 
     /// Creates a transaction to the given address from the given account
     /// - Parameter dbData: URL for the Data DB
@@ -77,7 +74,7 @@ protocol ZcashRustBackendWelding {
         to address: String,
         value: Int64,
         memo: MemoBytes?
-    ) throws -> Int64
+    ) async throws -> Int64
 
     /// Scans a transaction for any information that can be decrypted by the accounts in the
     /// wallet, and saves it to the wallet.
@@ -86,19 +83,19 @@ protocol ZcashRustBackendWelding {
     /// - parameter minedHeight: height on which this transaction was mined. this is used to fetch the consensus branch ID.
     /// - parameter networkType: network type of this key
     /// returns false if fails to decrypt.
-    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) throws
+    func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws
 
     /// get the (unverified) balance from the given account
     /// - parameter dbData: location of the data db
     /// - parameter account: index of the given account
     /// - parameter networkType: network type of this key
-    func getBalance(account: Int32) throws -> Int64
+    func getBalance(account: Int32) async throws -> Int64
 
     /// Returns the most-recently-generated unified payment address for the specified account.
     /// - parameter dbData: location of the data db
     /// - parameter account: index of the given account
     /// - parameter networkType: network type of this key
-    func getCurrentAddress(account: Int32) throws -> UnifiedAddress
+    func getCurrentAddress(account: Int32) async throws -> UnifiedAddress
 
     /// Wallets might need to be rewound because of a reorg, or by user request.
     /// There are times where the wallet could get out of sync for many reasons and
@@ -112,32 +109,32 @@ protocol ZcashRustBackendWelding {
     /// - parameter networkType: network type of this key]
     /// - Returns: the blockheight of the nearest rewind height.
     ///
-    func getNearestRewindHeight(height: Int32) throws -> Int32
+    func getNearestRewindHeight(height: Int32) async throws -> Int32
 
     /// Returns a newly-generated unified payment address for the specified account, with the next available diversifier.
     /// - parameter dbData: location of the data db
     /// - parameter account: index of the given account
     /// - parameter networkType: network type of this key
-    func getNextAvailableAddress(account: Int32) throws -> UnifiedAddress
+    func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress
 
     /// get received memo from note
     /// - parameter dbData: location of the data db file
     /// - parameter idNote: note_id of note where the memo is located
     /// - parameter networkType: network type of this key
-    func getReceivedMemo(idNote: Int64) -> Memo?
+    func getReceivedMemo(idNote: Int64) async -> Memo?
 
     /// get sent memo from note
     /// - parameter dbData: location of the data db file
     /// - parameter idNote: note_id of note where the memo is located
     /// - parameter networkType: network type of this key
     /// - Returns: a `Memo` if any
-    func getSentMemo(idNote: Int64) -> Memo?
+    func getSentMemo(idNote: Int64) async -> Memo?
 
     /// Get the verified cached transparent balance for the given address
     /// - parameter dbData: location of the data db file
     /// - parameter account; the account index to query
     /// - parameter networkType: network type of this key
-    func getTransparentBalance(account: Int32) throws -> Int64
+    func getTransparentBalance(account: Int32) async throws -> Int64
 
     /// initialize the accounts table from a set of unified full viewing keys
     /// - Note: this function should only be used when restoring an existing seed phrase.
@@ -145,7 +142,7 @@ protocol ZcashRustBackendWelding {
     /// - Parameter dbData: location of the data db
     /// - Parameter ufvks: an array of UnifiedFullViewingKeys
     /// - Parameter networkType: network type of this key
-    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) throws
+    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws
 
     /// initializes the data db. This will performs any migrations needed on the sqlite file
     /// provided. Some migrations might need that callers provide the seed bytes.
@@ -155,7 +152,7 @@ protocol ZcashRustBackendWelding {
     /// - Returns: `DbInitResult.success` if the dataDb was initialized successfully
     /// or `DbInitResult.seedRequired` if the operation requires the seed to be passed
     /// in order to be completed successfully.
-    func initDataDb(seed: [UInt8]?) throws -> DbInitResult
+    func initDataDb(seed: [UInt8]?) async throws -> DbInitResult
 
     /// initialize the blocks table from a given checkpoint (heigh, hash, time, saplingTree and networkType)
     /// - parameter dbData: location of the data db
@@ -169,26 +166,26 @@ protocol ZcashRustBackendWelding {
         hash: String,
         time: UInt32,
         saplingTree: String
-    ) throws
+    ) async throws
 
     /// Returns a list of the transparent receivers for the diversified unified addresses that have
     /// been allocated for the provided account.
     /// - parameter dbData: location of the data db
     /// - parameter account: index of the given account
     /// - parameter networkType: the network type
-    func listTransparentReceivers(account: Int32) throws -> [TransparentAddress]
+    func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress]
 
     /// get the verified balance from the given account
     /// - parameter dbData: location of the data db
     /// - parameter account: index of the given account
     /// - parameter networkType: the network type
-    func getVerifiedBalance(account: Int32) throws -> Int64
+    func getVerifiedBalance(account: Int32) async throws -> Int64
 
     /// Get the verified cached transparent balance for the given account
     /// - parameter dbData: location of the data db
     /// - parameter account: account index to query the balance for.
     /// - parameter networkType: the network type
-    func getVerifiedTransparentBalance(account: Int32) throws -> Int64
+    func getVerifiedTransparentBalance(account: Int32) async throws -> Int64
 
     /// Checks that the scanned blocks in the data database, when combined with the recent
     /// `CompactBlock`s in the cache database, form a valid chain.
@@ -208,21 +205,21 @@ protocol ZcashRustBackendWelding {
     ///  - `upper_bound` is the height of the highest invalid block (on the assumption that the highest block in the cache database is correct).
     ///  - `0` if there was an error during validation unrelated to chain validity.
     /// - Important: This function does not mutate either of the databases.
-    func validateCombinedChain(limit: UInt32) throws
+    func validateCombinedChain(limit: UInt32) async throws
 
     /// Resets the state of the database to only contain block and transaction information up to the given height. clears up all derived data as well
     /// - parameter dbData: `URL` pointing to the filesystem root directory where the fsBlock cache is.
     /// this directory  is expected to contain a `/blocks` sub-directory with the blocks stored in the convened filename
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - parameter height: height to rewind to.
-    func rewindToHeight(height: Int32) throws
+    func rewindToHeight(height: Int32) async throws
 
     /// Resets the state of the FsBlock database to only contain block and transaction information up to the given height.
     /// - Note: this does not delete the files. Only rolls back the database.
     /// - parameter fsBlockDbRoot: location of the data db file
     /// - parameter height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use getNearestRewindHeight when unsure
     /// - parameter networkType: the network type
-    func rewindCacheToHeight(height: Int32) throws
+    func rewindCacheToHeight(height: Int32) async throws
 
     /// Scans new blocks added to the cache for any transactions received by the tracked
     /// accounts.
@@ -243,7 +240,7 @@ protocol ZcashRustBackendWelding {
     /// - parameter limit: scan up to limit blocks. pass 0 to set no limit.
     /// - parameter networkType: the network type
     /// returns false if fails to scan.
-    func scanBlocks(limit: UInt32) throws
+    func scanBlocks(limit: UInt32) async throws
 
     /// Upserts a UTXO into the data db database
     /// - parameter dbData: location of the data db file
@@ -259,7 +256,7 @@ protocol ZcashRustBackendWelding {
         script: [UInt8],
         value: Int64,
         height: BlockHeight
-    ) throws
+    ) async throws
 
     /// Creates a transaction to shield all found UTXOs in data db for the account the provided `UnifiedSpendingKey` has spend authority for.
     /// - Parameter dbData: URL for the Data DB
@@ -272,19 +269,19 @@ protocol ZcashRustBackendWelding {
         usk: UnifiedSpendingKey,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi
-    ) throws -> Int64
+    ) async throws -> Int64
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
     /// - Parameter networkType: the network type
-    func consensusBranchIdFor(height: Int32) throws -> Int32
+    func consensusBranchIdFor(height: Int32) async throws -> Int32
 
     /// initializes Filesystem based block cache
     /// - Parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
     /// this directory  is expected to contain a `/blocks` sub-directory with the blocks stored in the convened filename
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - throws `RustWeldingError` when fails to initialize
-    func initBlockMetadataDb() throws
+    func initBlockMetadataDb() async throws
 
     /// Write compact block metadata to a database known to the Rust layer
     /// - Parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
@@ -292,12 +289,12 @@ protocol ZcashRustBackendWelding {
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - Parameter blocks: The `ZcashCompactBlock`s that are going to be marked as stored by the
     /// metadata Db.
-    func writeBlocksMetadata(blocks: [ZcashCompactBlock]) throws
+    func writeBlocksMetadata(blocks: [ZcashCompactBlock]) async throws
 
     /// Gets the latest block height stored in the filesystem based cache.
     /// -  Parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
     /// this directory  is expected to contain a `/blocks` sub-directory with the blocks stored in the convened filename
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - Returns `BlockHeight` of the latest cached block or `.empty` if no blocks are stored.
-    func latestCachedBlockHeight() -> BlockHeight
+    func latestCachedBlockHeight() async -> BlockHeight
 }

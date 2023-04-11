@@ -85,7 +85,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw TransactionEncoderError.missingParams
         }
 
-        let txId = try rustBackend.createToAddress(
+        let txId = try await rustBackend.createToAddress(
             usk: spendingKey,
             to: address,
             value: zatoshi.amount,
@@ -126,7 +126,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             throw TransactionEncoderError.missingParams
         }
         
-        let txId = try rustBackend.shieldFunds(
+        let txId = try await rustBackend.shieldFunds(
             usk: spendingKey,
             memo: memo,
             shieldingThreshold: shieldingThreshold
