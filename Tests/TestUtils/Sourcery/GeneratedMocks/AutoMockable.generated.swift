@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.0.1 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.0.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
@@ -7,6 +7,11 @@ import Combine
 
 // MARK: - AutoMockable protocols
 class SynchronizerMock: Synchronizer {
+
+
+    init(
+    ) {
+    }
     var alias: ZcashSynchronizerAlias {
         get { return underlyingAlias }
     }
@@ -559,6 +564,14 @@ class SynchronizerMock: Synchronizer {
 }
 actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
+    nonisolated let consensusBranchIdForHeightClosure: ((Int32) throws -> Int32)?
+
+    init(
+        consensusBranchIdForHeightClosure: ((Int32) throws -> Int32)? = nil
+    ) {
+        self.consensusBranchIdForHeightClosure = consensusBranchIdForHeightClosure
+    }
+
     // MARK: - createAccount
 
     var createAccountSeedThrowableError: Error?
@@ -648,39 +661,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         decryptAndStoreTransactionTxBytesMinedHeightCallsCount += 1
         decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments = (txBytes: txBytes, minedHeight: minedHeight)
         try await decryptAndStoreTransactionTxBytesMinedHeightClosure?(txBytes, minedHeight)
-    }
-
-    // MARK: - deriveUnifiedSpendingKey
-
-    var deriveUnifiedSpendingKeyFromAccountIndexThrowableError: Error?
-    func setDeriveUnifiedSpendingKeyFromAccountIndexThrowableError(_ param: Error?) async {
-        deriveUnifiedSpendingKeyFromAccountIndexThrowableError = param
-    }
-    var deriveUnifiedSpendingKeyFromAccountIndexCallsCount = 0
-    var deriveUnifiedSpendingKeyFromAccountIndexCalled: Bool {
-        return deriveUnifiedSpendingKeyFromAccountIndexCallsCount > 0
-    }
-    var deriveUnifiedSpendingKeyFromAccountIndexReceivedArguments: (seed: [UInt8], accountIndex: Int32)?
-    var deriveUnifiedSpendingKeyFromAccountIndexReturnValue: UnifiedSpendingKey!
-    func setDeriveUnifiedSpendingKeyFromAccountIndexReturnValue(_ param: UnifiedSpendingKey) async {
-        deriveUnifiedSpendingKeyFromAccountIndexReturnValue = param
-    }
-    var deriveUnifiedSpendingKeyFromAccountIndexClosure: (([UInt8], Int32) async throws -> UnifiedSpendingKey)?
-    func setDeriveUnifiedSpendingKeyFromAccountIndexClosure(_ param: (([UInt8], Int32) async throws -> UnifiedSpendingKey)?) async {
-        deriveUnifiedSpendingKeyFromAccountIndexClosure = param
-    }
-
-    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) async throws -> UnifiedSpendingKey {
-        if let error = deriveUnifiedSpendingKeyFromAccountIndexThrowableError {
-            throw error
-        }
-        deriveUnifiedSpendingKeyFromAccountIndexCallsCount += 1
-        deriveUnifiedSpendingKeyFromAccountIndexReceivedArguments = (seed: seed, accountIndex: accountIndex)
-        if let closure = deriveUnifiedSpendingKeyFromAccountIndexClosure {
-            return try await closure(seed, accountIndex)
-        } else {
-            return deriveUnifiedSpendingKeyFromAccountIndexReturnValue
-        }
     }
 
     // MARK: - getBalance
@@ -841,30 +821,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - getSaplingReceiver
-
-    static var getSaplingReceiverForThrowableError: Error?
-    static var getSaplingReceiverForCallsCount = 0
-    static var getSaplingReceiverForCalled: Bool {
-        return Self.getSaplingReceiverForCallsCount > 0
-    }
-    static var getSaplingReceiverForReceivedUAddr: UnifiedAddress?
-    static var getSaplingReceiverForReturnValue: SaplingAddress!
-    static var getSaplingReceiverForClosure: ((UnifiedAddress) throws -> SaplingAddress)?
-
-    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress {
-        if let error = Self.getSaplingReceiverForThrowableError {
-            throw error
-        }
-        Self.getSaplingReceiverForCallsCount += 1
-        Self.getSaplingReceiverForReceivedUAddr = uAddr
-        if let closure = Self.getSaplingReceiverForClosure {
-            return try closure(uAddr)
-        } else {
-            return Self.getSaplingReceiverForReturnValue
-        }
-    }
-
     // MARK: - getSentMemo
 
     var getSentMemoIdNoteCallsCount = 0
@@ -924,30 +880,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - getTransparentReceiver
-
-    static var getTransparentReceiverForThrowableError: Error?
-    static var getTransparentReceiverForCallsCount = 0
-    static var getTransparentReceiverForCalled: Bool {
-        return Self.getTransparentReceiverForCallsCount > 0
-    }
-    static var getTransparentReceiverForReceivedUAddr: UnifiedAddress?
-    static var getTransparentReceiverForReturnValue: TransparentAddress!
-    static var getTransparentReceiverForClosure: ((UnifiedAddress) throws -> TransparentAddress)?
-
-    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress {
-        if let error = Self.getTransparentReceiverForThrowableError {
-            throw error
-        }
-        Self.getTransparentReceiverForCallsCount += 1
-        Self.getTransparentReceiverForReceivedUAddr = uAddr
-        if let closure = Self.getTransparentReceiverForClosure {
-            return try closure(uAddr)
-        } else {
-            return Self.getTransparentReceiverForReturnValue
-        }
-    }
-
     // MARK: - initAccountsTable
 
     var initAccountsTableUfvksThrowableError: Error?
@@ -1003,146 +935,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             return try await closure(seed)
         } else {
             return initDataDbSeedReturnValue
-        }
-    }
-
-    // MARK: - getAddressMetadata
-
-    static var getAddressMetadataCallsCount = 0
-    static var getAddressMetadataCalled: Bool {
-        return Self.getAddressMetadataCallsCount > 0
-    }
-    static var getAddressMetadataReceivedAddress: String?
-    static var getAddressMetadataReturnValue: AddressMetadata?
-    static var getAddressMetadataClosure: ((String) -> AddressMetadata?)?
-
-    static func getAddressMetadata(_ address: String) -> AddressMetadata? {
-        Self.getAddressMetadataCallsCount += 1
-        Self.getAddressMetadataReceivedAddress = address
-        if let closure = Self.getAddressMetadataClosure {
-            return closure(address)
-        } else {
-            return Self.getAddressMetadataReturnValue
-        }
-    }
-
-    // MARK: - isValidSaplingAddress
-
-    static var isValidSaplingAddressNetworkTypeCallsCount = 0
-    static var isValidSaplingAddressNetworkTypeCalled: Bool {
-        return Self.isValidSaplingAddressNetworkTypeCallsCount > 0
-    }
-    static var isValidSaplingAddressNetworkTypeReceivedArguments: (address: String, networkType: NetworkType)?
-    static var isValidSaplingAddressNetworkTypeReturnValue: Bool!
-    static var isValidSaplingAddressNetworkTypeClosure: ((String, NetworkType) -> Bool)?
-
-    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) -> Bool {
-        Self.isValidSaplingAddressNetworkTypeCallsCount += 1
-        Self.isValidSaplingAddressNetworkTypeReceivedArguments = (address: address, networkType: networkType)
-        if let closure = Self.isValidSaplingAddressNetworkTypeClosure {
-            return closure(address, networkType)
-        } else {
-            return Self.isValidSaplingAddressNetworkTypeReturnValue
-        }
-    }
-
-    // MARK: - isValidSaplingExtendedFullViewingKey
-
-    static var isValidSaplingExtendedFullViewingKeyNetworkTypeCallsCount = 0
-    static var isValidSaplingExtendedFullViewingKeyNetworkTypeCalled: Bool {
-        return Self.isValidSaplingExtendedFullViewingKeyNetworkTypeCallsCount > 0
-    }
-    static var isValidSaplingExtendedFullViewingKeyNetworkTypeReceivedArguments: (key: String, networkType: NetworkType)?
-    static var isValidSaplingExtendedFullViewingKeyNetworkTypeReturnValue: Bool!
-    static var isValidSaplingExtendedFullViewingKeyNetworkTypeClosure: ((String, NetworkType) -> Bool)?
-
-    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) -> Bool {
-        Self.isValidSaplingExtendedFullViewingKeyNetworkTypeCallsCount += 1
-        Self.isValidSaplingExtendedFullViewingKeyNetworkTypeReceivedArguments = (key: key, networkType: networkType)
-        if let closure = Self.isValidSaplingExtendedFullViewingKeyNetworkTypeClosure {
-            return closure(key, networkType)
-        } else {
-            return Self.isValidSaplingExtendedFullViewingKeyNetworkTypeReturnValue
-        }
-    }
-
-    // MARK: - isValidSaplingExtendedSpendingKey
-
-    static var isValidSaplingExtendedSpendingKeyNetworkTypeCallsCount = 0
-    static var isValidSaplingExtendedSpendingKeyNetworkTypeCalled: Bool {
-        return Self.isValidSaplingExtendedSpendingKeyNetworkTypeCallsCount > 0
-    }
-    static var isValidSaplingExtendedSpendingKeyNetworkTypeReceivedArguments: (key: String, networkType: NetworkType)?
-    static var isValidSaplingExtendedSpendingKeyNetworkTypeReturnValue: Bool!
-    static var isValidSaplingExtendedSpendingKeyNetworkTypeClosure: ((String, NetworkType) -> Bool)?
-
-    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: NetworkType) -> Bool {
-        Self.isValidSaplingExtendedSpendingKeyNetworkTypeCallsCount += 1
-        Self.isValidSaplingExtendedSpendingKeyNetworkTypeReceivedArguments = (key: key, networkType: networkType)
-        if let closure = Self.isValidSaplingExtendedSpendingKeyNetworkTypeClosure {
-            return closure(key, networkType)
-        } else {
-            return Self.isValidSaplingExtendedSpendingKeyNetworkTypeReturnValue
-        }
-    }
-
-    // MARK: - isValidTransparentAddress
-
-    static var isValidTransparentAddressNetworkTypeCallsCount = 0
-    static var isValidTransparentAddressNetworkTypeCalled: Bool {
-        return Self.isValidTransparentAddressNetworkTypeCallsCount > 0
-    }
-    static var isValidTransparentAddressNetworkTypeReceivedArguments: (address: String, networkType: NetworkType)?
-    static var isValidTransparentAddressNetworkTypeReturnValue: Bool!
-    static var isValidTransparentAddressNetworkTypeClosure: ((String, NetworkType) -> Bool)?
-
-    static func isValidTransparentAddress(_ address: String, networkType: NetworkType) -> Bool {
-        Self.isValidTransparentAddressNetworkTypeCallsCount += 1
-        Self.isValidTransparentAddressNetworkTypeReceivedArguments = (address: address, networkType: networkType)
-        if let closure = Self.isValidTransparentAddressNetworkTypeClosure {
-            return closure(address, networkType)
-        } else {
-            return Self.isValidTransparentAddressNetworkTypeReturnValue
-        }
-    }
-
-    // MARK: - isValidUnifiedAddress
-
-    static var isValidUnifiedAddressNetworkTypeCallsCount = 0
-    static var isValidUnifiedAddressNetworkTypeCalled: Bool {
-        return Self.isValidUnifiedAddressNetworkTypeCallsCount > 0
-    }
-    static var isValidUnifiedAddressNetworkTypeReceivedArguments: (address: String, networkType: NetworkType)?
-    static var isValidUnifiedAddressNetworkTypeReturnValue: Bool!
-    static var isValidUnifiedAddressNetworkTypeClosure: ((String, NetworkType) -> Bool)?
-
-    static func isValidUnifiedAddress(_ address: String, networkType: NetworkType) -> Bool {
-        Self.isValidUnifiedAddressNetworkTypeCallsCount += 1
-        Self.isValidUnifiedAddressNetworkTypeReceivedArguments = (address: address, networkType: networkType)
-        if let closure = Self.isValidUnifiedAddressNetworkTypeClosure {
-            return closure(address, networkType)
-        } else {
-            return Self.isValidUnifiedAddressNetworkTypeReturnValue
-        }
-    }
-
-    // MARK: - isValidUnifiedFullViewingKey
-
-    static var isValidUnifiedFullViewingKeyNetworkTypeCallsCount = 0
-    static var isValidUnifiedFullViewingKeyNetworkTypeCalled: Bool {
-        return Self.isValidUnifiedFullViewingKeyNetworkTypeCallsCount > 0
-    }
-    static var isValidUnifiedFullViewingKeyNetworkTypeReceivedArguments: (ufvk: String, networkType: NetworkType)?
-    static var isValidUnifiedFullViewingKeyNetworkTypeReturnValue: Bool!
-    static var isValidUnifiedFullViewingKeyNetworkTypeClosure: ((String, NetworkType) -> Bool)?
-
-    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool {
-        Self.isValidUnifiedFullViewingKeyNetworkTypeCallsCount += 1
-        Self.isValidUnifiedFullViewingKeyNetworkTypeReceivedArguments = (ufvk: ufvk, networkType: networkType)
-        if let closure = Self.isValidUnifiedFullViewingKeyNetworkTypeClosure {
-            return closure(ufvk, networkType)
-        } else {
-            return Self.isValidUnifiedFullViewingKeyNetworkTypeReturnValue
         }
     }
 
@@ -1428,94 +1220,11 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - receiverTypecodesOnUnifiedAddress
-
-    static var receiverTypecodesOnUnifiedAddressThrowableError: Error?
-    static var receiverTypecodesOnUnifiedAddressCallsCount = 0
-    static var receiverTypecodesOnUnifiedAddressCalled: Bool {
-        return Self.receiverTypecodesOnUnifiedAddressCallsCount > 0
-    }
-    static var receiverTypecodesOnUnifiedAddressReceivedAddress: String?
-    static var receiverTypecodesOnUnifiedAddressReturnValue: [UInt32]!
-    static var receiverTypecodesOnUnifiedAddressClosure: ((String) throws -> [UInt32])?
-
-    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
-        if let error = Self.receiverTypecodesOnUnifiedAddressThrowableError {
-            throw error
-        }
-        Self.receiverTypecodesOnUnifiedAddressCallsCount += 1
-        Self.receiverTypecodesOnUnifiedAddressReceivedAddress = address
-        if let closure = Self.receiverTypecodesOnUnifiedAddressClosure {
-            return try closure(address)
-        } else {
-            return Self.receiverTypecodesOnUnifiedAddressReturnValue
-        }
-    }
-
     // MARK: - consensusBranchIdFor
 
-    var consensusBranchIdForHeightThrowableError: Error?
-    func setConsensusBranchIdForHeightThrowableError(_ param: Error?) async {
-        consensusBranchIdForHeightThrowableError = param
-    }
-    var consensusBranchIdForHeightCallsCount = 0
-    var consensusBranchIdForHeightCalled: Bool {
-        return consensusBranchIdForHeightCallsCount > 0
-    }
-    var consensusBranchIdForHeightReceivedHeight: Int32?
-    var consensusBranchIdForHeightReturnValue: Int32!
-    func setConsensusBranchIdForHeightReturnValue(_ param: Int32) async {
-        consensusBranchIdForHeightReturnValue = param
-    }
-    var consensusBranchIdForHeightClosure: ((Int32) async throws -> Int32)?
-    func setConsensusBranchIdForHeightClosure(_ param: ((Int32) async throws -> Int32)?) async {
-        consensusBranchIdForHeightClosure = param
-    }
 
-    func consensusBranchIdFor(height: Int32) async throws -> Int32 {
-        if let error = consensusBranchIdForHeightThrowableError {
-            throw error
-        }
-        consensusBranchIdForHeightCallsCount += 1
-        consensusBranchIdForHeightReceivedHeight = height
-        if let closure = consensusBranchIdForHeightClosure {
-            return try await closure(height)
-        } else {
-            return consensusBranchIdForHeightReturnValue
-        }
-    }
-
-    // MARK: - deriveUnifiedFullViewingKey
-
-    var deriveUnifiedFullViewingKeyFromThrowableError: Error?
-    func setDeriveUnifiedFullViewingKeyFromThrowableError(_ param: Error?) async {
-        deriveUnifiedFullViewingKeyFromThrowableError = param
-    }
-    var deriveUnifiedFullViewingKeyFromCallsCount = 0
-    var deriveUnifiedFullViewingKeyFromCalled: Bool {
-        return deriveUnifiedFullViewingKeyFromCallsCount > 0
-    }
-    var deriveUnifiedFullViewingKeyFromReceivedSpendingKey: UnifiedSpendingKey?
-    var deriveUnifiedFullViewingKeyFromReturnValue: UnifiedFullViewingKey!
-    func setDeriveUnifiedFullViewingKeyFromReturnValue(_ param: UnifiedFullViewingKey) async {
-        deriveUnifiedFullViewingKeyFromReturnValue = param
-    }
-    var deriveUnifiedFullViewingKeyFromClosure: ((UnifiedSpendingKey) async throws -> UnifiedFullViewingKey)?
-    func setDeriveUnifiedFullViewingKeyFromClosure(_ param: ((UnifiedSpendingKey) async throws -> UnifiedFullViewingKey)?) async {
-        deriveUnifiedFullViewingKeyFromClosure = param
-    }
-
-    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
-        if let error = deriveUnifiedFullViewingKeyFromThrowableError {
-            throw error
-        }
-        deriveUnifiedFullViewingKeyFromCallsCount += 1
-        deriveUnifiedFullViewingKeyFromReceivedSpendingKey = spendingKey
-        if let closure = deriveUnifiedFullViewingKeyFromClosure {
-            return try await closure(spendingKey)
-        } else {
-            return deriveUnifiedFullViewingKeyFromReturnValue
-        }
+    nonisolated func consensusBranchIdFor(height: Int32) throws -> Int32 {
+        try consensusBranchIdForHeightClosure!(height)
     }
 
     // MARK: - initBlockMetadataDb

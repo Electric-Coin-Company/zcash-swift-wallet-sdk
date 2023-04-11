@@ -274,7 +274,7 @@ protocol ZcashRustBackendWelding {
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
     /// - Parameter networkType: the network type
-    func consensusBranchIdFor(height: Int32) async throws -> Int32
+    func consensusBranchIdFor(height: Int32) throws -> Int32
 
     /// initializes Filesystem based block cache
     /// - Parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
