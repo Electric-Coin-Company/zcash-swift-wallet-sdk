@@ -13,28 +13,29 @@ import SQLite
 
 class DownloadTests: XCTestCase {
     let testFileManager = FileManager()
-
     var network = ZcashNetworkBuilder.network(for: .testnet)
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: Environment.testTempDirectory)
+        try? testFileManager.removeItem(at: testTempDirectory)
+        testTempDirectory = nil
     }
 
     func testSingleDownload() async throws {
         let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
-        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: network.networkType)
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: network.networkType)
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),

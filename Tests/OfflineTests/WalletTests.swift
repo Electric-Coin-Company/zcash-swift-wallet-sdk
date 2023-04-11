@@ -13,7 +13,7 @@ import XCTest
 
 class WalletTests: XCTestCase {
     let testFileManager = FileManager()
-
+    var testTempDirectory: URL!
     var dbData: URL! = nil
     var paramDestination: URL! = nil
     var network = ZcashNetworkBuilder.network(for: .testnet)
@@ -21,8 +21,9 @@ class WalletTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        testTempDirectory = Environment.uniqueTestTempDirectory
         dbData = try __dataDbURL()
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         paramDestination = try __documentsDirectory().appendingPathComponent("parameters")
     }
     
@@ -31,7 +32,7 @@ class WalletTests: XCTestCase {
         if testFileManager.fileExists(atPath: dbData.absoluteString) {
             try testFileManager.trashItem(at: dbData, resultingItemURL: nil)
         }
-        try? self.testFileManager.removeItem(at: Environment.testTempDirectory)
+        try? self.testFileManager.removeItem(at: testTempDirectory)
     }
     
     func testWalletInitialization() async throws {
@@ -41,7 +42,7 @@ class WalletTests: XCTestCase {
 
         let wallet = Initializer(
             cacheDbURL: nil,
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             dataDbURL: try __dataDbURL(),
             pendingDbURL: try TestDbBuilder.pendingTransactionsDbURL(),
             endpoint: LightWalletEndpointBuilder.default,

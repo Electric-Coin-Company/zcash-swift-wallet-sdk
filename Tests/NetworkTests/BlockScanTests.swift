@@ -30,21 +30,23 @@ class BlockScanTests: XCTestCase {
     
     var network = ZcashNetworkBuilder.network(for: .testnet)
     var blockRepository: BlockRepository!
+    var testTempDirectory: URL!
 
     let testFileManager = FileManager()
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.
         try super.setUpWithError()
-        self.dataDbURL = try! __dataDbURL()
-        self.spendParamsURL = try! __spendParamsURL()
-        self.outputParamsURL = try! __outputParamsURL()
+        dataDbURL = try! __dataDbURL()
+        spendParamsURL = try! __spendParamsURL()
+        outputParamsURL = try! __outputParamsURL()
+        testTempDirectory = Environment.uniqueTestTempDirectory
 
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
 
         rustBackend = ZcashRustBackend.makeForTests(
             dbData: dataDbURL,
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             networkType: network.networkType
         )
 
@@ -61,9 +63,10 @@ class BlockScanTests: XCTestCase {
         try? testFileManager.removeItem(at: dataDbURL)
         try? testFileManager.removeItem(at: spendParamsURL)
         try? testFileManager.removeItem(at: outputParamsURL)
-        try? testFileManager.removeItem(at: Environment.testTempDirectory)
+        try? testFileManager.removeItem(at: testTempDirectory)
         cancelables = []
         blockRepository = nil
+        testTempDirectory = nil
     }
     
     func testSingleDownloadAndScan() async throws {
@@ -76,12 +79,10 @@ class BlockScanTests: XCTestCase {
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
 
-        let fsDbRootURL = Environment.testTempDirectory
-
         let fsBlockRepository = FSCompactBlockRepository(
-            fsBlockDbRoot: fsDbRootURL,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: fsDbRootURL,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -94,7 +95,7 @@ class BlockScanTests: XCTestCase {
 
         let processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: fsDbRootURL,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
@@ -164,12 +165,10 @@ class BlockScanTests: XCTestCase {
         
         let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
 
-        let fsDbRootURL = Environment.testTempDirectory
-
         let fsBlockRepository = FSCompactBlockRepository(
-            fsBlockDbRoot: fsDbRootURL,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: fsDbRootURL,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -182,7 +181,7 @@ class BlockScanTests: XCTestCase {
         
         var processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: fsDbRootURL,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,

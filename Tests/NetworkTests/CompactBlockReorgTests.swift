@@ -12,20 +12,7 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class CompactBlockReorgTests: XCTestCase {
-    lazy var processorConfig = {
-        let pathProvider = DefaultResourceProvider(network: network)
-        return CompactBlockProcessor.Configuration(
-            alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
-            dataDb: pathProvider.dataDbURL,
-            spendParamsURL: pathProvider.spendParamsURL,
-            outputParamsURL: pathProvider.outputParamsURL,
-            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
-            network: ZcashNetworkBuilder.network(for: .testnet)
-        )
-    }()
-
+    var processorConfig: CompactBlockProcessor.Configuration!
     let testFileManager = FileManager()
     var cancellables: [AnyCancellable] = []
     var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
@@ -39,11 +26,26 @@ class CompactBlockReorgTests: XCTestCase {
     var reorgNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
+    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+
+        let pathProvider = DefaultResourceProvider(network: network)
+        processorConfig = CompactBlockProcessor.Configuration(
+            alias: .default,
+            fsBlockCacheRoot: testTempDirectory,
+            dataDb: pathProvider.dataDbURL,
+            spendParamsURL: pathProvider.spendParamsURL,
+            outputParamsURL: pathProvider.outputParamsURL,
+            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
+            walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
+            network: ZcashNetworkBuilder.network(for: .testnet)
+        )
 
         await InternalSyncProgress(
             alias: .default,

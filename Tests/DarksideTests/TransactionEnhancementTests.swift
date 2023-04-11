@@ -20,6 +20,7 @@ class TransactionEnhancementTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
 
+    var testTempDirectory: URL!
     let testFileManager = FileManager()
 
     var initializer: Initializer!
@@ -39,8 +40,8 @@ class TransactionEnhancementTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
 
         await InternalSyncProgress(
             alias: .default,
@@ -65,7 +66,7 @@ class TransactionEnhancementTests: XCTestCase {
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
-            fsBlockCacheRoot: Environment.testTempDirectory,
+            fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
             spendParamsURL: pathProvider.spendParamsURL,
             outputParamsURL: pathProvider.outputParamsURL,
@@ -76,7 +77,7 @@ class TransactionEnhancementTests: XCTestCase {
 
         rustBackend = ZcashRustBackend.makeForTests(
             dbData: processorConfig.dataDb,
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             networkType: network.networkType
         )
 
@@ -112,9 +113,9 @@ class TransactionEnhancementTests: XCTestCase {
         darksideWalletService = service
         
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -155,6 +156,7 @@ class TransactionEnhancementTests: XCTestCase {
         processor = nil
         darksideWalletService = nil
         downloader = nil
+        testTempDirectory = nil
     }
     
     private func startProcessing() async throws {

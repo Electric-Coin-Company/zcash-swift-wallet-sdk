@@ -31,7 +31,7 @@ class ZcashRustBackendTests: XCTestCase {
         dbData = try! __dataDbURL()
         try? dataDbHandle.setUp()
 
-        rustBackend = ZcashRustBackend.makeForTests(dbData: dbData, networkType: .testnet)
+        rustBackend = ZcashRustBackend.makeForTests(dbData: dbData, fsBlockDbRoot: Environment.uniqueTestTempDirectory, networkType: .testnet)
     }
     
     override func tearDown() {
@@ -93,7 +93,7 @@ class ZcashRustBackendTests: XCTestCase {
         let testVector = [TestVector](TestVector.testVectors![0 ... 2])
         let tempDBs = TemporaryDbBuilder.build()
         let seed = testVector[0].root_seed!
-        rustBackend = ZcashRustBackend.makeForTests(dbData: tempDBs.dataDB, networkType: .mainnet)
+        rustBackend = ZcashRustBackend.makeForTests(dbData: tempDBs.dataDB, fsBlockDbRoot: Environment.uniqueTestTempDirectory, networkType: .mainnet)
 
         try? FileManager.default.removeItem(at: tempDBs.dataDB)
 

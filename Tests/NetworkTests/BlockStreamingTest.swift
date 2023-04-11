@@ -12,11 +12,13 @@ import XCTest
 class BlockStreamingTest: XCTestCase {
     let testFileManager = FileManager()
     var rustBackend: ZcashRustBackendWelding!
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try self.testFileManager.createDirectory(at: Environment.testTempDirectory, withIntermediateDirectories: false)
-        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: Environment.testTempDirectory, networkType: .testnet)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+        rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
         logger = OSLogger(logLevel: .debug)
     }
 
@@ -24,7 +26,8 @@ class BlockStreamingTest: XCTestCase {
         try super.tearDownWithError()
         rustBackend = nil
         try? FileManager.default.removeItem(at: __dataDbURL())
-        try? testFileManager.removeItem(at: Environment.testTempDirectory)
+        try? testFileManager.removeItem(at: testTempDirectory)
+        testTempDirectory = nil
     }
 
     func testStream() async throws {
@@ -67,9 +70,9 @@ class BlockStreamingTest: XCTestCase {
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
@@ -129,9 +132,9 @@ class BlockStreamingTest: XCTestCase {
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
         let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: Environment.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: Environment.testTempDirectory,
+                fsBlockDbRoot: testTempDirectory,
                 rustBackend: rustBackend,
                 logger: logger
             ),
