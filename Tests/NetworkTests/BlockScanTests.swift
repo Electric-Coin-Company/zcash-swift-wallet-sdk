@@ -144,7 +144,7 @@ class BlockScanTests: XCTestCase {
             return
         }
 
-        let derivationTool = DerivationTool(rustBackend: rustBackend)
+        let derivationTool = DerivationTool(networkType: .testnet)
         let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
         let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 

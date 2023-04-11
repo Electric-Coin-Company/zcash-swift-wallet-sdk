@@ -17,6 +17,8 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     let fsBlockDbRoot: (String, UInt)
     let spendParamsPath: (String, UInt)
     let outputParamsPath: (String, UInt)
+    let keyDeriving: ZcashKeyDeriving
+
     nonisolated let networkType: NetworkType
 
     init(dbData: URL, fsBlockDbRoot: URL, spendParamsPath: URL, outputParamsPath: URL, networkType: NetworkType) {
@@ -25,6 +27,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         self.spendParamsPath = spendParamsPath.osPathStr()
         self.outputParamsPath = outputParamsPath.osPathStr()
         self.networkType = networkType
+        self.keyDeriving = ZcashKeyDerivationBackend(networkType: networkType)
     }
 
     func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey {
@@ -88,28 +91,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         guard result != 0 else {
             throw lastError() ?? .genericError(message: "No error message available")
         }
-    }
-
-    func deriveUnifiedSpendingKey(
-        from seed: [UInt8],
-        accountIndex: Int32
-    ) async throws -> UnifiedSpendingKey {
-        let binaryKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
-            return zcashlc_derive_spending_key(
-                seedBufferPtr.baseAddress,
-                UInt(seed.count),
-                accountIndex,
-                networkType.networkId
-            )
-        }
-
-        defer { zcashlc_free_binary_key(binaryKeyPtr) }
-
-        guard let binaryKey = binaryKeyPtr?.pointee else {
-            throw lastError() ?? .genericError(message: "No error message available")
-        }
-
-        return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
     }
 
     func getBalance(account: Int32) async throws -> Int64 {
@@ -186,22 +167,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         guard success else { return nil }
 
         return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
-    }
-
-    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress {
-        guard let saplingCStr = zcashlc_get_sapling_receiver_for_unified_address(
-            [CChar](uAddr.encoding.utf8CString)
-        ) else {
-            throw KeyDerivationErrors.invalidUnifiedAddress
-        }
-
-        defer { zcashlc_string_free(saplingCStr) }
-
-        guard let saplingReceiverStr = String(validatingUTF8: saplingCStr) else {
-            throw KeyDerivationErrors.receiverNotFound
-        }
-
-        return SaplingAddress(validatedEncoding: saplingReceiverStr)
     }
 
     func getSentMemo(idNote: Int64) async -> Memo? {
@@ -292,43 +257,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return RustWeldingError.genericError(message: message)
     }
 
-    static func getAddressMetadata(_ address: String) -> AddressMetadata? {
-        var networkId: UInt32 = 0
-        var addrId: UInt32 = 0
-        guard zcashlc_get_address_metadata(
-            [CChar](address.utf8CString),
-            &networkId,
-            &addrId
-        ) else {
-            return nil
-        }
-
-        guard
-            let network = NetworkType.forNetworkId(networkId),
-            let addrType = AddressType.forId(addrId)
-        else {
-            return nil
-        }
-
-        return AddressMetadata(network: network, addrType: addrType)
-    }
-
-    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress {
-        guard let transparentCStr = zcashlc_get_transparent_receiver_for_unified_address(
-            [CChar](uAddr.encoding.utf8CString)
-        ) else {
-            throw KeyDerivationErrors.invalidUnifiedAddress
-        }
-
-        defer { zcashlc_string_free(transparentCStr) }
-
-        guard let transparentReceiverStr = String(validatingUTF8: transparentCStr) else {
-            throw KeyDerivationErrors.receiverNotFound
-        }
-
-        return TransparentAddress(validatedEncoding: transparentReceiverStr)
-    }
-
     private nonisolated func getLastError() -> String? {
         let errorLen = zcashlc_last_error_length()
         if errorLen > 0 {
@@ -352,54 +280,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) -> Bool {
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_shielded_address([CChar](address.utf8CString), networkType.networkId)
-    }
-
-    static func isValidTransparentAddress(_ address: String, networkType: NetworkType) -> Bool {
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_transparent_address([CChar](address.utf8CString), networkType.networkId)
-    }
-
-    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) -> Bool {
-        guard !key.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_viewing_key([CChar](key.utf8CString), networkType.networkId)
-    }
-
-    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: NetworkType) -> Bool {
-        guard !key.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_sapling_extended_spending_key([CChar](key.utf8CString), networkType.networkId)
-    }
-
-    static func isValidUnifiedAddress(_ address: String, networkType: NetworkType) -> Bool {
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_unified_address([CChar](address.utf8CString), networkType.networkId)
-    }
-
-    static func isValidUnifiedFullViewingKey(_ key: String, networkType: NetworkType) -> Bool {
-        guard !key.containsCStringNullBytesBeforeStringEnding() else {
-            return false
-        }
-
-        return zcashlc_is_valid_unified_full_viewing_key([CChar](key.utf8CString), networkType.networkId)
-    }
-
     func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws {
         var ffiUfvks: [FFIEncodedKey] = []
         for ufvk in ufvks {
@@ -407,7 +287,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
                 throw RustWeldingError.invalidInput(message: "`UFVK` contains null bytes.")
             }
 
-            guard Self.isValidUnifiedFullViewingKey(ufvk.encoding, networkType: networkType) else {
+            guard self.keyDeriving.isValidUnifiedFullViewingKey(ufvk.encoding) else {
                 throw RustWeldingError.invalidInput(message: "UFVK is invalid.")
             }
 
@@ -659,58 +539,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         return result
-    }
-
-    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
-        let extfvk = try spendingKey.bytes.withUnsafeBufferPointer { uskBufferPtr -> UnsafeMutablePointer<CChar> in
-            guard let extfvk = zcashlc_spending_key_to_full_viewing_key(
-                uskBufferPtr.baseAddress,
-                UInt(spendingKey.bytes.count),
-                networkType.networkId
-            ) else {
-                throw lastError() ?? .genericError(message: "No error message available")
-            }
-
-            return extfvk
-        }
-
-        defer { zcashlc_string_free(extfvk) }
-
-        guard let derived = String(validatingUTF8: extfvk) else {
-            throw RustWeldingError.unableToDeriveKeys
-        }
-
-        return UnifiedFullViewingKey(validatedEncoding: derived, account: spendingKey.account)
-    }
-
-    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
-        guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            throw RustWeldingError.invalidInput(message: "`address` contains null bytes.")
-        }
-
-        var len = UInt(0)
-
-        guard let typecodesPointer = zcashlc_get_typecodes_for_unified_address_receivers(
-            [CChar](address.utf8CString),
-            &len
-        ), len > 0
-        else {
-            throw RustWeldingError.malformedStringInput
-        }
-
-        var typecodes: [UInt32] = []
-
-        for typecodeIndex in 0 ..< Int(len) {
-            let pointer = typecodesPointer.advanced(by: typecodeIndex)
-
-            typecodes.append(pointer.pointee)
-        }
-
-        defer {
-            zcashlc_free_typecodes(typecodesPointer, len)
-        }
-
-        return typecodes
     }
 
     func consensusBranchIdFor(height: Int32) async throws -> Int32 {

@@ -85,7 +85,7 @@ class TransactionEnhancementTests: XCTestCase {
 
         let dbInit = try await rustBackend.initDataDb(seed: nil)
 
-        let derivationTool = DerivationTool(rustBackend: rustBackend)
+        let derivationTool = DerivationTool(networkType: network.networkType)
         let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: Environment.seedBytes, accountIndex: 0)
         let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 

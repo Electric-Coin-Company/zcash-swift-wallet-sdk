@@ -35,7 +35,7 @@ public struct SaplingExtendedSpendingKey: Equatable, StringEncoded, Undescribabl
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool.isValidSaplingExtendedSpendingKey(encoding, networkType: network) else {
+        guard DerivationTool(networkType: network).isValidSaplingExtendedSpendingKey(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
         self.encoding = encoding
@@ -63,7 +63,7 @@ public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, account: UInt32, network: NetworkType) throws {
-        guard DerivationTool.rustwelding.isValidUnifiedFullViewingKey(encoding, networkType: network) else {
+        guard DerivationTool(networkType: network).isValidUnifiedFullViewingKey(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
 
@@ -85,7 +85,7 @@ public struct SaplingExtendedFullViewingKey: Equatable, StringEncoded, Undescrib
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(encoding, networkType: network) else {
+        guard ZcashKeyDerivationBackend(networkType: network).isValidSaplingExtendedFullViewingKey(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
         self.encoding = encoding
@@ -136,7 +136,7 @@ public struct TransparentAddress: Equatable, StringEncoded, Comparable {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool.isValidTransparentAddress(encoding, networkType: network) else {
+        guard DerivationTool(networkType: network).isValidTransparentAddress(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
 
@@ -165,7 +165,7 @@ public struct SaplingAddress: Equatable, StringEncoded {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool.isValidSaplingAddress(encoding, networkType: network) else {
+        guard DerivationTool(networkType: network).isValidSaplingAddress(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
 
@@ -212,7 +212,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool.isValidUnifiedAddress(encoding, networkType: network) else {
+        guard DerivationTool(networkType: network).isValidUnifiedAddress(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
 

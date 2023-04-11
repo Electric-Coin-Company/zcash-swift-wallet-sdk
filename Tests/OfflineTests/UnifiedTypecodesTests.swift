@@ -30,9 +30,9 @@ final class UnifiedTypecodesTests: XCTestCase {
 
         let address = UnifiedAddress(validatedEncoding: uAddress)
 
-        let typecodes = try ZcashRustBackend.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
+        let typecodes = try DerivationTool.receiverTypecodesFromUnifiedAddress(address)
 
-        XCTAssertEqual(typecodes, [2, 0])
+        XCTAssertEqual(typecodes, [.sapling, .p2pkh])
     }
 
     func testUnifiedAddressHasTransparentSaplingReceivers() throws {

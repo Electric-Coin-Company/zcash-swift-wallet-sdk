@@ -85,14 +85,6 @@ protocol ZcashRustBackendWelding {
     /// returns false if fails to decrypt.
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws
 
-    /// Derives and returns a unified spending key from the given seed for the given account ID.
-    /// Returns the binary encoding of the spending key. The caller should manage the memory of (and store, if necessary) the returned spending key in a secure fashion.
-    /// - Parameter seed: a Byte Array with the seed
-    /// - Parameter accountIndex:account index that the key can spend from
-    /// - Parameter networkType: network type of this key
-    /// - Throws `.unableToDerive` when there's an error
-    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) async throws -> UnifiedSpendingKey
-
     /// get the (unverified) balance from the given account
     /// - parameter dbData: location of the data db
     /// - parameter account: index of the given account
@@ -131,12 +123,6 @@ protocol ZcashRustBackendWelding {
     /// - parameter networkType: network type of this key
     func getReceivedMemo(idNote: Int64) async -> Memo?
 
-    /// Returns the Sapling receiver within the given Unified Address, if any.
-    /// - Parameter uAddr: a `UnifiedAddress`
-    /// - Returns a `SaplingAddress` if any
-    /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    static func getSaplingReceiver(for uAddr: UnifiedAddress) throws -> SaplingAddress
-
     /// get sent memo from note
     /// - parameter dbData: location of the data db file
     /// - parameter idNote: note_id of note where the memo is located
@@ -149,12 +135,6 @@ protocol ZcashRustBackendWelding {
     /// - parameter account; the account index to query
     /// - parameter networkType: network type of this key
     func getTransparentBalance(account: Int32) async throws -> Int64
-
-    /// Returns the transparent receiver within the given Unified Address, if any.
-    /// - parameter uAddr: a `UnifiedAddress`
-    /// - Returns a `TransparentAddress` if any
-    /// - Throws `receiverNotFound` when the receiver is not found. `invalidUnifiedAddress` if the UA provided is not valid
-    static func getTransparentReceiver(for uAddr: UnifiedAddress) throws -> TransparentAddress
 
     /// initialize the accounts table from a set of unified full viewing keys
     /// - Note: this function should only be used when restoring an existing seed phrase.
@@ -173,52 +153,6 @@ protocol ZcashRustBackendWelding {
     /// or `DbInitResult.seedRequired` if the operation requires the seed to be passed
     /// in order to be completed successfully.
     func initDataDb(seed: [UInt8]?) async throws -> DbInitResult
-
-    /// Returns the network and address type for the given Zcash address string,
-    /// if the string represents a valid Zcash address.
-    static func getAddressMetadata(_ address: String) -> AddressMetadata?
-
-    /// Validates the if the given string is a valid Sapling Address
-    /// - Parameter address: UTF-8 encoded String to validate
-    /// - Parameter networkType: network type of this key
-    /// - Returns: true when the address is valid. Returns false in any other case
-    /// - Throws: Error when the provided address belongs to another network
-    static func isValidSaplingAddress(_ address: String, networkType: NetworkType) -> Bool
-
-    /// Validates the if the given string is a valid Sapling Extended Full Viewing Key
-    /// - Parameter key: UTF-8 encoded String to validate
-    /// - Parameter networkType: network type of this key
-    /// - Returns: `true` when the Sapling Extended Full Viewing Key is valid. `false` in any other case
-    /// - Throws: Error when there's another problem not related to validity of the string in question
-    static func isValidSaplingExtendedFullViewingKey(_ key: String, networkType: NetworkType) -> Bool
-
-    /// Validates the if the given string is a valid Sapling Extended Spending Key
-    /// - Returns: `true` when the Sapling Extended Spending Key is valid, false in any other case.
-    /// - Throws: Error when the key is semantically valid  but it belongs to another network
-    /// - parameter key: String encoded Extended Spending Key
-    /// - parameter networkType: `NetworkType` signaling testnet or mainnet
-    static func isValidSaplingExtendedSpendingKey(_ key: String, networkType: NetworkType) -> Bool
-
-    /// Validates the if the given string is a valid Transparent Address
-    /// - Parameter address: UTF-8 encoded String to validate
-    /// - Parameter networkType: network type of this key
-    /// - Returns: true when the address is valid and transparent. false in any other case
-    /// - Throws: Error when the provided address belongs to another network
-    static func isValidTransparentAddress(_ address: String, networkType: NetworkType) -> Bool
-
-    /// validates whether a string encoded address is a valid Unified Address.
-    /// - Parameter address: UTF-8 encoded String to validate
-    /// - Parameter networkType: network type of this key
-    /// - Returns: true when the address is valid and transparent. false in any other case
-    /// - Throws: Error when the provided address belongs to another network
-    static func isValidUnifiedAddress(_ address: String, networkType: NetworkType) -> Bool
-
-    ///  verifies that the given string-encoded `UnifiedFullViewingKey` is valid.
-    /// - Parameter ufvk: UTF-8 encoded String to validate
-    /// - Parameter networkType: network type of this key
-    /// - Returns: true when the encoded string is a valid UFVK. false in any other case
-    /// - Throws: Error when there's another problem not related to validity of the string in question
-    static func isValidUnifiedFullViewingKey(_ ufvk: String, networkType: NetworkType) -> Bool
 
     /// initialize the blocks table from a given checkpoint (heigh, hash, time, saplingTree and networkType)
     /// - parameter dbData: location of the data db
@@ -337,23 +271,10 @@ protocol ZcashRustBackendWelding {
         shieldingThreshold: Zatoshi
     ) async throws -> Int64
 
-    /// Obtains the available receiver typecodes for the given String encoded Unified Address
-    /// - Parameter address: public key represented as a String
-    /// - Returns  the `[UInt32]` that compose the given UA
-    /// - Throws `RustWeldingError.invalidInput(message: String)` when the UA is either invalid or malformed
-    static func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32]
-
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
     /// - Parameter networkType: the network type
     func consensusBranchIdFor(height: Int32) async throws -> Int32
-
-    /// Derives a `UnifiedFullViewingKey` from a `UnifiedSpendingKey`
-    /// - Parameter spendingKey: the `UnifiedSpendingKey` to derive from
-    /// - Parameter networkType: the network type
-    /// - Throws: `RustWeldingError.unableToDeriveKeys` if the SDK couldn't derive the UFVK.
-    /// - Returns: the derived `UnifiedFullViewingKey`
-    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey
 
     /// initializes Filesystem based block cache
     /// - Parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.

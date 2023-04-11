@@ -397,18 +397,18 @@ public class Initializer {
     checks if the provided address is a valid sapling address
     */
     public func isValidSaplingAddress(_ address: String) -> Bool {
-        ZcashRustBackend.isValidSaplingAddress(address, networkType: network.networkType)
+        DerivationTool(networkType: network.networkType).isValidSaplingAddress(address)
     }
 
     /**
     checks if the provided address is a transparent zAddress
     */
     public func isValidTransparentAddress(_ address: String) -> Bool {
-        ZcashRustBackend.isValidTransparentAddress(address, networkType: network.networkType)
+        DerivationTool(networkType: network.networkType).isValidTransparentAddress(address)
     }
 
     public func makeDerivationTool() -> DerivationTool {
-        return DerivationTool(rustBackend: rustBackend)
+        return DerivationTool(networkType: network.networkType)
     }
 }
 
