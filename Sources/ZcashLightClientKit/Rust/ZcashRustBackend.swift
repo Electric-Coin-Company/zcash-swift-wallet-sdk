@@ -541,7 +541,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return result
     }
 
-    func consensusBranchIdFor(height: Int32) async throws -> Int32 {
+    nonisolated func consensusBranchIdFor(height: Int32) throws -> Int32 {
         let branchId = zcashlc_branch_id_for_height(height, networkType.networkId)
 
         guard branchId != -1 else {

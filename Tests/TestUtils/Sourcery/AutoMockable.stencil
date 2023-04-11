@@ -33,10 +33,11 @@ import Combine
 {% macro methodClosureName method %}{% call methodName method %}Closure{% endmacro %}
 {% macro paramTypeName param, method %}{% if method.annotations[param.name] %}{{method.annotations[param.name]}}{% else %}{{ param.typeName }}{% endif %}{% endmacro %}
 {% macro unwrappedParamTypeName param, method %}{% if method.annotations[param.name] %}{{method.annotations[param.name]}}{% else %}{{ param.typeName.unwrappedTypeName }}{% endif %}{% endmacro %}
+{% macro closureType method type %}({% for param in method.parameters %}{% call paramTypeName param, method %}{% if not forloop.last %}, {% endif %}{% endfor %}) {% if method.isAsync %}async {% endif %}{% if method.throws %}throws {% endif %}-> {% if method.isInitializer %}Void{% else %}{{ method.returnTypeName }}{% endif %}{% endmacro %}
 {% macro methodClosureDeclaration method type %}
-    {% if method.isStatic %}static {% endif %}var {% call methodClosureName method %}: (({% for param in method.parameters %}{% call paramTypeName param, method %}{% if not forloop.last %}, {% endif %}{% endfor %}) {% if method.isAsync %}async {% endif %}{% if method.throws %}throws {% endif %}-> {% if method.isInitializer %}Void{% else %}{{ method.returnTypeName }}{% endif %})?
+    {% if method.isStatic %}static {% endif %}var {% call methodClosureName method %}: ({% call closureType method type %})?
     {% if type|annotated:"mockActor" %}{% if not method.isStatic %}
-    func set{% call methodNameUpper method %}Closure(_ param: (({% for param in method.parameters %}{% call paramTypeName param, method %}{% if not forloop.last %}, {% endif %}{% endfor %}) {% if method.isAsync %}async {% endif %}{% if method.throws %}throws {% endif %}-> {% if method.isInitializer %}Void{% else %}{{ method.returnTypeName }}{% endif %})?) async {
+    func set{% call methodNameUpper method %}Closure(_ param: ({% call closureType method type %})?) async {
         {% call methodName method %}Closure = param
     }
     {% endif %}{% endif %}
@@ -46,6 +47,7 @@ import Combine
 {% if method|!annotated:"skipAutoMock" %}
     // MARK: - {{ method.shortName }}
 
+    {% if ((type|annotated:"mockActor") and (method.isAsync) or (method.isStatic)) or (not type|annotated:"mockActor") %}
     {% if method.throws %}
         {% call methodThrowableErrorDeclaration method type %}
     {% endif %}
@@ -65,6 +67,7 @@ import Combine
     {% call methodMockPropertySetter method type "ReturnValue" method.returnTypeName %}
     {% endif %}
     {% call methodClosureDeclaration method type %}
+    {% endif %}
 
 {% if method.isInitializer %}
     required {{ method.name }} {
@@ -72,7 +75,8 @@ import Combine
         {% call methodClosureName method %}?({% call methodClosureCallParameters method %})
     }
 {% else %}
-    {% if method.isStatic %}static {% endif %}func {{ method.name }}{% if method.isAsync %} async{% endif %}{% if method.throws %} throws{% endif %}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
+    {% if (not method.isAsync) and (not method.isStatic) and (type|annotated:"mockActor") %}nonisolated {% endif %}{% if method.isStatic %}static {% endif %}func {{ method.name }}{% if method.isAsync %} async{% endif %}{% if method.throws %} throws{% endif %}{% if not method.returnTypeName.isVoid %} -> {{ method.returnTypeName }}{% endif %} {
+    {% if ((type|annotated:"mockActor") and ((method.isAsync) or (method.isStatic))) or (not type|annotated:"mockActor") %}
         {% if method.throws %}
         {% call methodThrowableErrorUsage method %}
         {% endif %}
@@ -87,6 +91,9 @@ import Combine
             return {% if method.isStatic %}Self.{% endif %}{% call methodName method %}ReturnValue
         }
         {% endif %}
+    {% else %}
+        {% if method.throws %}try {% endif %}{% call methodClosureName method %}!({% call methodClosureCallParameters method %})
+    {% endif %}
     }
 
 {% endif %}
@@ -121,6 +128,24 @@ import Combine
 #if os({{ type.annotations.targetOS }})
 {% endif %}
 {% if type|annotated:"mockActor" %}actor {% else %}class {% endif %}{{ type.name }}Mock: {% if type|annotated:"baseClass" %}{{ type.annotations.baseClass }}, {% endif %}{% if type|annotated:"moduleName" %}{{ type.annotations.moduleName }}.{% endif %}{{ type.name }} {
+
+{% for method in type.allMethods|!definedInExtension %}
+    {% if (not method.isAsync) and (not method.isStatic) and (type|annotated:"mockActor") %}
+    nonisolated let {% call methodName method %}Closure: ({% call closureType method type %})?
+    {% endif %}
+{% endfor %}
+
+    init(
+{% for method in type.allMethods|!definedInExtension where ((not method.isAsync) and (not method.isStatic) and (type|annotated:"mockActor")) %}
+        {% call methodName method %}Closure: ({% call closureType method type %})? = nil{% if not forloop.last %},{% endif %}
+{% endfor %}
+    ) {
+    {% for method in type.allMethods|!definedInExtension %}
+    {% if (not method.isAsync) and (not method.isStatic) and (type|annotated:"mockActor") %}
+        self.{% call methodName method %}Closure = {% call methodName method %}Closure
+    {% endif %}
+    {% endfor %}
+    }
 {% for variable in type.allVariables|!definedInExtension %}
 {% if variable|!annotated:"skipAutoMock" %}
     {% if variable.isOptional %}{% call mockOptionalVariable variable %}

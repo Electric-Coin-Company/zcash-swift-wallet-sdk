@@ -64,7 +64,7 @@ class CompactBlockProcessorTests: XCTestCase {
             networkType: network.networkType
         )
 
-        let branchID = try await rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
+        let branchID = try rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
         service.mockLightDInfo = LightdInfo.with({ info in
             info.blockHeight = UInt64(mockLatestHeight)
             info.branch = "asdf"
