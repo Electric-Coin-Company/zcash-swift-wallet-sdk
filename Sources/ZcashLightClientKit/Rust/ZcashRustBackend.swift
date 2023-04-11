@@ -17,7 +17,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     let fsBlockDbRoot: (String, UInt)
     let spendParamsPath: (String, UInt)
     let outputParamsPath: (String, UInt)
-    let keyDeriving: ZcashKeyDeriving
+    let keyDeriving: ZcashKeyDerivationBackendWelding
 
     nonisolated let networkType: NetworkType
 
@@ -119,7 +119,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.unableToDeriveKeys
         }
 
-        return UnifiedAddress(validatedEncoding: address)
+        return UnifiedAddress(validatedEncoding: address, networkType: networkType)
     }
 
     func getNearestRewindHeight(height: Int32) async throws -> Int32 {
@@ -153,7 +153,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             throw RustWeldingError.unableToDeriveKeys
         }
 
-        return UnifiedAddress(validatedEncoding: address)
+        return UnifiedAddress(validatedEncoding: address, networkType: networkType)
     }
 
     func getReceivedMemo(idNote: Int64) async -> Memo? {

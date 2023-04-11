@@ -104,12 +104,12 @@ class ZcashRustBackendTests: XCTestCase {
         XCTAssertEqual(usk.account, 0)
 
         let expectedReceivers = try testVector.map {
-            UnifiedAddress(validatedEncoding: $0.unified_addr!)
+            UnifiedAddress(validatedEncoding: $0.unified_addr!, networkType: .mainnet)
         }
         .map { try $0.transparentReceiver() }
 
         let expectedUAs = testVector.map {
-            UnifiedAddress(validatedEncoding: $0.unified_addr!)
+            UnifiedAddress(validatedEncoding: $0.unified_addr!, networkType: .mainnet)
         }
 
         guard expectedReceivers.count >= 2 else {

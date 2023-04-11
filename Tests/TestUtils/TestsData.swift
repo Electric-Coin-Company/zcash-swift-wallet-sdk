@@ -29,7 +29,8 @@ class TestsData {
     let unifiedAddress = UnifiedAddress(
         validatedEncoding: """
         u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj
-        """
+        """,
+        networkType: .testnet
     )
     let transparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     lazy var pendingTransactionEntity = {
