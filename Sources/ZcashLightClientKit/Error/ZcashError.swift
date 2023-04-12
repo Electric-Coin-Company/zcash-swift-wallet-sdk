@@ -1,4 +1,4 @@
-// Generated using Sourcery 1.6.1 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.0.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -11,11 +11,10 @@ error originates. And it can help with debugging.
 public enum ZcashError: Equatable, Error {
     /// Some testing code for now. Will be removed later.
     /// Some multiline super doc:
-    /// - message - Message associated with error
     /// - code - Code for error.
     /// - error - underlying error
     /// ZTEST0001
-    case testCodeWithMessage(_ message: String, _ code: Int, _ error: Error)
+    case testCodeWithMessage(_ code: Int, _ error: Error)
     /// Unknown GRPC Service error
     /// ZSRVC0001
     case serviceUnknownError(_ error: Error)
@@ -43,9 +42,6 @@ public enum ZcashError: Equatable, Error {
     /// LightWalletService.blockStream failed.
     /// ZSRVC0000
     case serviceBlockStreamFailed(_ error: LightWalletServiceError)
-    /// SimpleConnectionProvider init of Connection failed.
-    /// ZSCPC0001
-    case simpleConnectionProvider(_ error: Error)
 
     public var message: String {
         switch self {
@@ -59,7 +55,6 @@ public enum ZcashError: Equatable, Error {
         case .serviceFetchTransactionFailed: return "LightWalletService.fetchTransaction failed."
         case .serviceFetchUTXOsFailed: return "LightWalletService.fetchUTXOs failed."
         case .serviceBlockStreamFailed: return "LightWalletService.blockStream failed."
-        case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
         }
     }
 
@@ -75,7 +70,6 @@ public enum ZcashError: Equatable, Error {
         case .serviceFetchTransactionFailed: return .serviceFetchTransactionFailed
         case .serviceFetchUTXOsFailed: return .serviceFetchUTXOsFailed
         case .serviceBlockStreamFailed: return .serviceBlockStreamFailed
-        case .simpleConnectionProvider: return .simpleConnectionProvider
         }
     }
 

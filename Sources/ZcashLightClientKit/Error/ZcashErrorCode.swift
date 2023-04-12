@@ -1,4 +1,4 @@
-// Generated using Sourcery 1.6.1 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.0.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -33,6 +33,4 @@ public enum ZcashErrorCode: String {
     case serviceFetchUTXOsFailed = "ZSRVC0008"
     /// LightWalletService.blockStream failed.
     case serviceBlockStreamFailed = "ZSRVC0000"
-    /// SimpleConnectionProvider init of Connection failed.
-    case simpleConnectionProvider = "ZSCPC0001"
 }
