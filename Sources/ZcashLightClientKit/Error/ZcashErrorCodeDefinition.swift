@@ -56,7 +56,4 @@ enum ZcashErrorDefinition {
     /// LightWalletService.blockStream failed.
     // sourcery: code="ZSRVC0000"
     case serviceBlockStreamFailed(_ error: LightWalletServiceError)
-    /// SimpleConnectionProvider init of Connection failed.
-    // sourcery: code="ZSCPC0001"
-    case simpleConnectionProvider(_ error: Error)
 }
