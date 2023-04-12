@@ -11,8 +11,6 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-extension String: Error { }
-
 class ClosureSynchronizerOfflineTests: XCTestCase {
     var data: TestsData!
 

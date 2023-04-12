@@ -65,6 +65,10 @@ class DarksideWalletService: LightWalletService {
     func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         service.blockStream(startHeight: startHeight, endHeight: endHeight)
     }
+
+    func latestBlock() async throws -> ZcashLightClientKit.BlockID {
+        throw "Not mocked"
+    }
     
     func closeConnection() {
     }

@@ -700,8 +700,8 @@ actor CompactBlockProcessor {
                 localNetwork: self.config.network,
                 rustBackend: self.rustBackend
             )
-        } catch let error as LightWalletServiceError {
-            await self.severeFailure(error.mapToProcessorError())
+        } catch let error as ZcashError {
+            await self.severeFailure(error.mapServiceErrorToProcessorError())
         } catch {
             await self.severeFailure(error)
         }
@@ -973,8 +973,8 @@ actor CompactBlockProcessor {
         if let processorError = error as? CompactBlockProcessorError {
             return processorError
         }
-        if let lwdError = error as? LightWalletServiceError {
-            return lwdError.mapToProcessorError()
+        if let lwdError = error as? ZcashError {
+            return lwdError.mapServiceErrorToProcessorError()
         }
         return .unspecifiedError(underlyingError: error)
     }
@@ -1135,6 +1135,27 @@ actor CompactBlockProcessor {
         await send(event: .failed(mapError(err)))
     }
     // TODO: [#713] encapsulate service errors better, https://github.com/zcash/ZcashLightClientKit/issues/713
+}
+
+extension ZcashError {
+    func mapServiceErrorToProcessorError() -> CompactBlockProcessorError {
+        switch self {
+        case let .serviceUnknownError(error):
+            return CompactBlockProcessorError.unspecifiedError(underlyingError: error)
+        case
+            let .serviceGetInfoFailed(error),
+            let .serviceLatestBlockFailed(error),
+            let .serviceLatestBlockHeightFailed(error),
+            let .serviceBlockRangeFailed(error),
+            let .serviceSubmitFailed(error),
+            let .serviceFetchTransactionFailed(error),
+            let .serviceFetchUTXOsFailed(error),
+            let .serviceBlockStreamFailed(error):
+            return error.mapToProcessorError()
+        default:
+            return CompactBlockProcessorError.unspecifiedError(underlyingError: self)
+        }
+    }
 }
 
 extension LightWalletServiceError {
