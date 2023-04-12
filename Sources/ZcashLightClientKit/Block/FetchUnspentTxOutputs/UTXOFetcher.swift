@@ -13,8 +13,6 @@ enum UTXOFetcherError: Error {
 }
 
 struct UTXOFetcherConfig {
-    let dataDb: URL
-    let networkType: NetworkType
     let walletBirthdayProvider: () async -> BlockHeight
 }
 
@@ -27,7 +25,7 @@ struct UTXOFetcherImpl {
     let blockDownloaderService: BlockDownloaderService
     let config: UTXOFetcherConfig
     let internalSyncProgress: InternalSyncProgress
-    let rustBackend: ZcashRustBackendWelding.Type
+    let rustBackend: ZcashRustBackendWelding
     let metrics: SDKMetrics
     let logger: Logger
 }
@@ -41,11 +39,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
 
         var tAddresses: [TransparentAddress] = []
         for account in accounts {
-            tAddresses += try await rustBackend.listTransparentReceivers(
-                dbData: config.dataDb,
-                account: Int32(account),
-                networkType: config.networkType
-            )
+            tAddresses += try await rustBackend.listTransparentReceivers(account: Int32(account))
         }
 
         var utxos: [UnspentTransactionOutputEntity] = []
@@ -64,19 +58,15 @@ extension UTXOFetcherImpl: UTXOFetcher {
         let startTime = Date()
         for utxo in utxos {
             do {
-                if try await rustBackend.putUnspentTransparentOutput(
-                    dbData: config.dataDb,
+                try await rustBackend.putUnspentTransparentOutput(
                     txid: utxo.txid.bytes,
                     index: utxo.index,
                     script: utxo.script.bytes,
                     value: Int64(utxo.valueZat),
-                    height: utxo.height,
-                    networkType: config.networkType
-                ) {
-                    refreshed.append(utxo)
-                } else {
-                    skipped.append(utxo)
-                }
+                    height: utxo.height
+                )
+
+                refreshed.append(utxo)
 
                 await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
             } catch {

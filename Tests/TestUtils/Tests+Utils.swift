@@ -9,10 +9,10 @@
 import Combine
 import Foundation
 import GRPC
-import ZcashLightClientKit
 import XCTest
 import NIO
 import NIOTransportServices
+@testable import ZcashLightClientKit
 
 enum Environment {
     static let lightwalletdKey = "LIGHTWALLETD_ADDRESS"
@@ -28,6 +28,11 @@ enum Environment {
     }
 
     static let testRecipientAddress = "zs17mg40levjezevuhdp5pqrd52zere7r7vrjgdwn5sj4xsqtm20euwahv9anxmwr3y3kmwuz8k55a"
+
+    static var uniqueTestTempDirectory: URL {
+        URL(fileURLWithPath: NSString(string: NSTemporaryDirectory())
+            .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
+    }
 }
 
 public enum Constants {
@@ -127,4 +132,22 @@ func parametersReady() -> Bool {
     }
 
     return true
+}
+
+extension ZcashRustBackend {
+    static func makeForTests(
+        dbData: URL = try! __dataDbURL(),
+        fsBlockDbRoot: URL,
+        spendParamsPath: URL = SaplingParamsSourceURL.default.spendParamFileURL,
+        outputParamsPath: URL = SaplingParamsSourceURL.default.outputParamFileURL,
+        networkType: NetworkType
+    ) -> ZcashRustBackendWelding {
+        ZcashRustBackend(
+            dbData: dbData,
+            fsBlockDbRoot: fsBlockDbRoot,
+            spendParamsPath: spendParamsPath,
+            outputParamsPath: outputParamsPath,
+            networkType: networkType
+        )
+    }
 }

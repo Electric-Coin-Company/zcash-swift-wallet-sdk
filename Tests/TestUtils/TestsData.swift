@@ -1,5 +1,5 @@
 //
-//  AlternativeSynchronizerAPITestsData.swift
+//  TestsData.swift
 //
 //
 //  Created by Michal Fousek on 20.03.2023.
@@ -8,13 +8,29 @@
 import Foundation
 @testable import ZcashLightClientKit
 
-class AlternativeSynchronizerAPITestsData {
-    let derivationTools = DerivationTool(networkType: .testnet)
+class TestsData {
+    let networkType: NetworkType
+
+    lazy var initialier = {
+        Initializer(
+            cacheDbURL: nil,
+            fsBlockDbRoot: URL(fileURLWithPath: "/"),
+            dataDbURL: URL(fileURLWithPath: "/"),
+            pendingDbURL: URL(fileURLWithPath: "/"),
+            endpoint: LightWalletEndpointBuilder.default,
+            network: ZcashNetworkBuilder.network(for: networkType),
+            spendParamsURL: URL(fileURLWithPath: "/"),
+            outputParamsURL: URL(fileURLWithPath: "/"),
+            saplingParamsSourceURL: .default
+        )
+    }()
+    lazy var derivationTools: DerivationTool = { initialier.makeDerivationTool() }()
     let saplingAddress = SaplingAddress(validatedEncoding: "ztestsapling1ctuamfer5xjnnrdr3xdazenljx0mu0gutcf9u9e74tr2d3jwjnt0qllzxaplu54hgc2tyjdc2p6")
     let unifiedAddress = UnifiedAddress(
         validatedEncoding: """
         u1l9f0l4348negsncgr9pxd9d3qaxagmqv3lnexcplmufpq7muffvfaue6ksevfvd7wrz7xrvn95rc5zjtn7ugkmgh5rnxswmcj30y0pw52pn0zjvy38rn2esfgve64rj5pcmazxgpyuj
-        """
+        """,
+        networkType: .testnet
     )
     let transparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     lazy var pendingTransactionEntity = {
@@ -73,9 +89,19 @@ class AlternativeSynchronizerAPITestsData {
     }()
 
     var seed: [UInt8] = Environment.seedBytes
-    lazy var spendingKey: UnifiedSpendingKey = { try! derivationTools.deriveUnifiedSpendingKey(seed: seed, accountIndex: 0) }()
-    lazy var viewingKey: UnifiedFullViewingKey = { try! derivationTools.deriveUnifiedFullViewingKey(from: spendingKey) }()
+    var spendingKey: UnifiedSpendingKey {
+        get async {
+            try! await derivationTools.deriveUnifiedSpendingKey(seed: seed, accountIndex: 0)
+        }
+    }
+    var viewingKey: UnifiedFullViewingKey {
+        get async {
+            try! await derivationTools.deriveUnifiedFullViewingKey(from: spendingKey)
+        }
+    }
     var birthday: BlockHeight = 123000
 
-    init() { }
+    init(networkType: NetworkType) {
+        self.networkType = networkType
+    }
 }

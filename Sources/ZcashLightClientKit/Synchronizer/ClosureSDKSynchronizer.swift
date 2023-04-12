@@ -37,37 +37,37 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         walletBirthday: BlockHeight,
         completion: @escaping (Result<Initializer.InitializationResult, Error>) -> Void
     ) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             return try await self.synchronizer.prepare(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday)
         }
     }
 
     public func start(retry: Bool, completion: @escaping (Error?) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.start(retry: retry)
         }
     }
 
     public func stop(completion: @escaping () -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.stop()
         }
     }
 
     public func getSaplingAddress(accountIndex: Int, completion: @escaping (Result<SaplingAddress, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getSaplingAddress(accountIndex: accountIndex)
         }
     }
 
     public func getUnifiedAddress(accountIndex: Int, completion: @escaping (Result<UnifiedAddress, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getUnifiedAddress(accountIndex: accountIndex)
         }
     }
 
     public func getTransparentAddress(accountIndex: Int, completion: @escaping (Result<TransparentAddress, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getTransparentAddress(accountIndex: accountIndex)
         }
     }
@@ -79,7 +79,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         memo: Memo?,
         completion: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo)
         }
     }
@@ -90,37 +90,37 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         shieldingThreshold: Zatoshi,
         completion: @escaping (Result<PendingTransactionEntity, Error>) -> Void
     ) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.shieldFunds(spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
         }
     }
 
     public func cancelSpend(transaction: PendingTransactionEntity, completion: @escaping (Bool) -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.cancelSpend(transaction: transaction)
         }
     }
 
     public func pendingTransactions(completion: @escaping ([PendingTransactionEntity]) -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.pendingTransactions
         }
     }
 
     public func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.clearedTransactions
         }
     }
 
     public func sentTranscations(completion: @escaping ([ZcashTransaction.Sent]) -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.sentTransactions
         }
     }
 
     public func receivedTransactions(completion: @escaping ([ZcashTransaction.Received]) -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.receivedTransactions
         }
     }
@@ -128,31 +128,31 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
     public func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository { synchronizer.paginatedTransactions(of: kind) }
 
     public func getMemos(for transaction: ZcashTransaction.Overview, completion: @escaping (Result<[Memo], Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getMemos(for: transaction)
         }
     }
 
     public func getMemos(for receivedTransaction: ZcashTransaction.Received, completion: @escaping (Result<[Memo], Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getMemos(for: receivedTransaction)
         }
     }
 
     public func getMemos(for sentTransaction: ZcashTransaction.Sent, completion: @escaping (Result<[Memo], Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getMemos(for: sentTransaction)
         }
     }
 
     public func getRecipients(for transaction: ZcashTransaction.Overview, completion: @escaping ([TransactionRecipient]) -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.getRecipients(for: transaction)
         }
     }
 
     public func getRecipients(for transaction: ZcashTransaction.Sent, completion: @escaping ([TransactionRecipient]) -> Void) {
-        executeAction(completion) {
+        AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.getRecipients(for: transaction)
         }
     }
@@ -162,37 +162,37 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         limit: Int,
         completion: @escaping (Result<[ZcashTransaction.Overview], Error>) -> Void
     ) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
         }
     }
 
     public func latestHeight(completion: @escaping (Result<BlockHeight, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.latestHeight()
         }
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight, completion: @escaping (Result<RefreshedUTXOs, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.refreshUTXOs(address: address, from: height)
         }
     }
 
     public func getTransparentBalance(accountIndex: Int, completion: @escaping (Result<WalletBalance, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getTransparentBalance(accountIndex: accountIndex)
         }
     }
 
     public func getShieldedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getShieldedBalance(accountIndex: accountIndex)
         }
     }
 
     public func getShieldedVerifiedBalance(accountIndex: Int, completion: @escaping (Result<Zatoshi, Error>) -> Void) {
-        executeThrowingAction(completion) {
+        AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.getShieldedVerifiedBalance(accountIndex: accountIndex)
         }
     }
@@ -203,42 +203,4 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
      */
     public func rewind(_ policy: RewindPolicy) -> CompletablePublisher<Error> { synchronizer.rewind(policy) }
     public func wipe() -> CompletablePublisher<Error> { synchronizer.wipe() }
-}
-
-extension ClosureSDKSynchronizer {
-    private func executeAction(_ completion: @escaping () -> Void, action: @escaping () async -> Void) {
-        Task {
-            await action()
-            completion()
-        }
-    }
-
-    private func executeAction<R>(_ completion: @escaping (R) -> Void, action: @escaping () async -> R) {
-        Task {
-            let result = await action()
-            completion(result)
-        }
-    }
-
-    private func executeThrowingAction(_ completion: @escaping (Error?) -> Void, action: @escaping () async throws -> Void) {
-        Task {
-            do {
-                try await action()
-                completion(nil)
-            } catch {
-                completion(error)
-            }
-        }
-    }
-
-    private func executeThrowingAction<R>(_ completion: @escaping (Result<R, Error>) -> Void, action: @escaping () async throws -> R) {
-        Task {
-            do {
-                let result = try await action()
-                completion(.success(result))
-            } catch {
-                completion(.failure(error))
-            }
-        }
-    }
 }

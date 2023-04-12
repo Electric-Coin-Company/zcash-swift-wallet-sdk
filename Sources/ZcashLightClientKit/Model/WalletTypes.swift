@@ -63,7 +63,7 @@ public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, account: UInt32, network: NetworkType) throws {
-        guard DerivationTool.rustwelding.isValidUnifiedFullViewingKey(encoding, networkType: network) else {
+        guard DerivationTool(networkType: network).isValidUnifiedFullViewingKey(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
 
@@ -85,7 +85,7 @@ public struct SaplingExtendedFullViewingKey: Equatable, StringEncoded, Undescrib
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
-        guard DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(encoding, networkType: network) else {
+        guard ZcashKeyDerivationBackend(networkType: network).isValidSaplingExtendedFullViewingKey(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
         self.encoding = encoding
@@ -174,6 +174,8 @@ public struct SaplingAddress: Equatable, StringEncoded {
 }
 
 public struct UnifiedAddress: Equatable, StringEncoded {
+    let networkType: NetworkType
+
     public enum Errors: Error {
         case couldNotExtractTypecodes
     }
@@ -212,6 +214,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     /// - Throws: `KeyEncodingError.invalidEncoding`when the provided encoding is
     /// found to be invalid
     public init(encoding: String, network: NetworkType) throws {
+        networkType = network
         guard DerivationTool(networkType: network).isValidUnifiedAddress(encoding) else {
             throw KeyEncodingError.invalidEncoding
         }
@@ -224,7 +227,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     /// couldn't be extracted
     public func availableReceiverTypecodes() throws -> [UnifiedAddress.ReceiverTypecodes] {
         do {
-            return try DerivationTool.receiverTypecodesFromUnifiedAddress(self)
+            return try DerivationTool(networkType: networkType).receiverTypecodesFromUnifiedAddress(self)
         } catch {
             throw Errors.couldNotExtractTypecodes
         }
@@ -272,7 +275,7 @@ public enum Recipient: Equatable, StringEncoded {
                 metadata.networkType)
             case .p2sh:  return (.transparent(TransparentAddress(validatedEncoding: encoded)), metadata.networkType)
             case .sapling: return (.sapling(SaplingAddress(validatedEncoding: encoded)), metadata.networkType)
-            case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded)), metadata.networkType)
+            case .unified: return (.unified(UnifiedAddress(validatedEncoding: encoded, networkType: metadata.networkType)), metadata.networkType)
             }
         }
     }

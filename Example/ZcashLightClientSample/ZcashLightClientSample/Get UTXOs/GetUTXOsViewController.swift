@@ -39,24 +39,26 @@ class GetUTXOsViewController: UIViewController {
     }
     
     @IBAction func shieldFunds(_ sender: Any) {
-        do {
-            let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
+        Task { @MainActor in
+            do {
+                let derivationTool = AppDelegate.shared.sharedWallet.makeDerivationTool()
 
-            let usk = try derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
+                let usk = try await derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
 
-            KRProgressHUD.showMessage("🛡 Shielding 🛡")
+                KRProgressHUD.showMessage("🛡 Shielding 🛡")
 
-            Task { @MainActor in
-                let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
-                    spendingKey: usk,
-                    memo: try Memo(string: "shielding is fun!"),
-                    shieldingThreshold: Zatoshi(10000)
-                )
-                KRProgressHUD.dismiss()
-                self.messageLabel.text = "funds shielded \(transaction)"
+                Task { @MainActor in
+                    let transaction = try await AppDelegate.shared.sharedSynchronizer.shieldFunds(
+                        spendingKey: usk,
+                        memo: try Memo(string: "shielding is fun!"),
+                        shieldingThreshold: Zatoshi(10000)
+                    )
+                    KRProgressHUD.dismiss()
+                    self.messageLabel.text = "funds shielded \(transaction)"
+                }
+            } catch {
+                self.messageLabel.text = "Shielding failed \(error)"
             }
-        } catch {
-            self.messageLabel.text = "Shielding failed \(error)"
         }
     }
 }

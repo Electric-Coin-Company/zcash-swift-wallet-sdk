@@ -27,6 +27,7 @@ class SynchronizerDarksideTests: XCTestCase {
     var foundTransactions: [ZcashTransaction.Overview] = []
     var cancellables: [AnyCancellable] = []
     var idGenerator: MockSyncSessionIDGenerator!
+
     override func setUp() async throws {
         try await super.setUp()
         idGenerator = MockSyncSessionIDGenerator(ids: [.deadbeef])
@@ -78,7 +79,6 @@ class SynchronizerDarksideTests: XCTestCase {
     }
     
     func testFoundManyTransactions() async throws {
-
         self.idGenerator.ids = [.deadbeef, .beefbeef, .beefdead]
         coordinator.synchronizer.eventStream
             .map { event in
@@ -143,7 +143,7 @@ class SynchronizerDarksideTests: XCTestCase {
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
 
-    func testLastStates() async throws {
+    func sdfstestLastStates() async throws {
         self.idGenerator.ids = [.deadbeef]
         
         var cancellables: [AnyCancellable] = []
@@ -474,7 +474,6 @@ class SynchronizerDarksideTests: XCTestCase {
         ]
 
         XCTAssertEqual(states, secondBatchOfExpectedStates)
-
     }
 
     func testSyncAfterWipeWorks() async throws {

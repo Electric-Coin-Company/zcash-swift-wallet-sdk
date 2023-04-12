@@ -17,15 +17,15 @@ class NullBytesTests: XCTestCase {
         let validZaddr = "zs1gqtfu59z20s9t20mxlxj86zpw6p69l0ev98uxrmlykf2nchj2dw8ny5e0l22kwmld2afc37gkfp"
         let zAddrWithNullBytes = "\(validZaddr)\0something else that makes the address invalid"
         
-        XCTAssertFalse(ZcashRustBackend.isValidSaplingAddress(zAddrWithNullBytes, networkType: networkType))
+        XCTAssertFalse(DerivationTool(networkType: networkType).isValidSaplingAddress(zAddrWithNullBytes))
     }
-    
+
     func testTaddrNullBytes() throws {
         // this is a valid tAddr. if you send ZEC to it, you will be contributing to Human Rights Foundation. see more ways to help at https://paywithz.cash/
         let validTAddr = "t1J5pTRzJi7j8Xw9VJTrPxPEkaigr69gKVT"
         let tAddrWithNullBytes = "\(validTAddr)\0fasdfasdf"
 
-        XCTAssertFalse(ZcashRustBackend.isValidTransparentAddress(tAddrWithNullBytes, networkType: networkType))
+        XCTAssertFalse(DerivationTool(networkType: networkType).isValidTransparentAddress(tAddrWithNullBytes))
     }
     
     func testInitAccountTableNullBytes() async throws {
@@ -50,14 +50,18 @@ class NullBytesTests: XCTestCase {
         934dc76f087935a5c07788000b4e3aae24883adfec51b5f4d260
         """
 
+        let rustBackend = ZcashRustBackend.makeForTests(
+            dbData: try! __dataDbURL(),
+            fsBlockDbRoot: Environment.uniqueTestTempDirectory,
+            networkType: networkType
+        )
+
         do {
-            _ = try await ZcashRustBackend.initBlocksTable(
-                dbData: __dataDbURL(),
+            _ = try await rustBackend.initBlocksTable(
                 height: height,
                 hash: wrongHash,
                 time: time,
-                saplingTree: goodTree,
-                networkType: networkType
+                saplingTree: goodTree
             )
             XCTFail("InitBlocksTable with Null bytes on hash string should have failed")
         } catch {
@@ -75,13 +79,11 @@ class NullBytesTests: XCTestCase {
         }
 
         do {
-            try await ZcashRustBackend.initBlocksTable(
-                dbData: __dataDbURL(),
+            try await rustBackend.initBlocksTable(
                 height: height,
                 hash: goodHash,
                 time: time,
-                saplingTree: wrongTree,
-                networkType: networkType
+                saplingTree: wrongTree
             )
             XCTFail("InitBlocksTable with Null bytes on saplingTree string should have failed")
         } catch {
@@ -106,7 +108,7 @@ class NullBytesTests: XCTestCase {
 //        let goodSpendingKeys = SaplingExtendedSpendingKey(validatedEncoding: "secret-extended-key-main1qw28psv0qqqqpqr2ru0kss5equx6h0xjsuk5299xrsgdqnhe0cknkl8uqff34prwkyuegyhh5d4rdr8025nl7e0hm8r2txx3fuea5mquy3wnsr9tlajsg4wwvw0xcfk8357k4h850rgj72kt4rx3fjdz99zs9f4neda35cq8tn3848yyvlg4w38gx75cyv9jdpve77x9eq6rtl6d9qyh8det4edevlnc70tg5kse670x50764gzhy60dta0yv3wsd4fsuaz686lgszc7nc9vv")
 //
 //        XCTAssertThrowsError(
-//            try ZcashRustBackend.deriveSaplingExtendedFullViewingKey(wrongSpendingKeys, networkType: networkType),
+//            try DerivationTool(networkType: networkType)deriveSaplingExtendedFullViewingKey(wrongSpendingKeys, networkType: networkType),
 //            "Should have thrown an error but didn't! this is dangerous!"
 //        ) { error in
 //            guard let rustError = error as? RustWeldingError else {
@@ -122,7 +124,7 @@ class NullBytesTests: XCTestCase {
 //            }
 //        }
 //
-//        XCTAssertNoThrow(try ZcashRustBackend.deriveSaplingExtendedFullViewingKey(goodSpendingKeys, networkType: networkType))
+//        XCTAssertNoThrow(try DerivationTool(networkType: networkType)deriveSaplingExtendedFullViewingKey(goodSpendingKeys, networkType: networkType))
     }
     
     func testCheckNullBytes() throws {

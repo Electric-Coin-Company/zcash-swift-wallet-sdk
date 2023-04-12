@@ -12,36 +12,31 @@ import SQLite
 @testable import ZcashLightClientKit
 
 class DownloadTests: XCTestCase {
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
-
     var network = ZcashNetworkBuilder.network(for: .testnet)
+    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         try? testFileManager.removeItem(at: testTempDirectory)
+        testTempDirectory = nil
     }
 
     func testSingleDownload() async throws {
         let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
-
-        let realRustBackend = ZcashRustBackend.self
+        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: network.networkType)
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -63,7 +58,7 @@ class DownloadTests: XCTestCase {
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: realRustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger

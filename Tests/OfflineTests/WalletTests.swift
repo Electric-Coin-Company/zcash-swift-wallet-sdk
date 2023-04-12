@@ -12,13 +12,8 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class WalletTests: XCTestCase {
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
     let testFileManager = FileManager()
-
+    var testTempDirectory: URL!
     var dbData: URL! = nil
     var paramDestination: URL! = nil
     var network = ZcashNetworkBuilder.network(for: .testnet)
@@ -26,8 +21,9 @@ class WalletTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        testTempDirectory = Environment.uniqueTestTempDirectory
         dbData = try __dataDbURL()
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         paramDestination = try __documentsDirectory().appendingPathComponent("parameters")
     }
     
@@ -36,17 +32,17 @@ class WalletTests: XCTestCase {
         if testFileManager.fileExists(atPath: dbData.absoluteString) {
             try testFileManager.trashItem(at: dbData, resultingItemURL: nil)
         }
-        try? self.testFileManager.removeItem(at: self.testTempDirectory)
+        try? self.testFileManager.removeItem(at: testTempDirectory)
     }
     
     func testWalletInitialization() async throws {
-        let derivationTool = DerivationTool(networkType: network.networkType)
-        let ufvk = try derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
-            .map({ try derivationTool.deriveUnifiedFullViewingKey(from: $0) })
+        let derivationTool = TestsData(networkType: network.networkType).derivationTools
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: seedData.bytes, accountIndex: 0)
+        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         let wallet = Initializer(
             cacheDbURL: nil,
-            fsBlockDbRoot: self.testTempDirectory,
+            fsBlockDbRoot: testTempDirectory,
             dataDbURL: try __dataDbURL(),
             pendingDbURL: try TestDbBuilder.pendingTransactionsDbURL(),
             endpoint: LightWalletEndpointBuilder.default,
@@ -58,7 +54,7 @@ class WalletTests: XCTestCase {
         
         let synchronizer = SDKSynchronizer(initializer: wallet)
         do {
-            guard case .success = try await synchronizer.prepare(with: seedData.bytes, viewingKeys: [ufvk], walletBirthday: 663194) else {
+            guard case .success = try await synchronizer.prepare(with: seedData.bytes, viewingKeys: [viewingKey], walletBirthday: 663194) else {
                 XCTFail("Failed to initDataDb. Expected `.success` got: `.seedRequired`")
                 return
             }

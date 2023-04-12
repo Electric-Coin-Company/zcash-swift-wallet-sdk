@@ -7,6 +7,7 @@
 // swift-format-ignore-file
 
 import XCTest
+@testable import TestUtils
 @testable import ZcashLightClientKit
 
 class DerivationToolTestnetTests: XCTestCase {
@@ -16,7 +17,8 @@ class DerivationToolTestnetTests: XCTestCase {
         validatedEncoding: """
         utest1uqmec4a2njqz2z2rwppchsd06qe7a0jh4jmsqr0yy99m9er9646zlxunf3v8qr0hncgv86e8a62vxy0qa32qzetmj8s57yudmyx9zav6f52nurclsqjkqtjtpz6vg679p6wkcz\
         pl2wu
-        """
+        """,
+        networkType: .testnet
     )
 
     let expectedSpendingKey = UnifiedSpendingKey(
@@ -53,15 +55,14 @@ class DerivationToolTestnetTests: XCTestCase {
         validatedEncoding: "ztestsapling1475xtm56czrzmleqzzlu4cxvjjfsy2p6rv78q07232cpsx5ee52k0mn5jyndq09mampkgvrxnwg"
     )
 
-    let derivationTool = DerivationTool(networkType: NetworkType.testnet)
+    let derivationTool = TestsData(networkType: .testnet).derivationTools
     let expectedTransparentAddress = TransparentAddress(validatedEncoding: "tmXuTnE11JojToagTqxXUn6KvdxDE3iLKbp")
 
-    func testDeriveViewingKeysFromSeed() throws {
+    func testDeriveViewingKeysFromSeed() async throws {
         let seedBytes = [UInt8](seedData)
 
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
-
-        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         XCTAssertEqual(expectedViewingKey, viewingKey)
     }
@@ -73,62 +74,54 @@ class DerivationToolTestnetTests: XCTestCase {
 //        )
     }
 
-    func testDeriveSpendingKeysFromSeed() throws {
+    func testDeriveSpendingKeysFromSeed() async throws {
         let seedBytes = [UInt8](seedData)
 
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
         XCTAssertEqual(expectedSpendingKey, spendingKey)
     }
 
-    func testDeriveUnifiedSpendingKeyFromSeed() throws {
+    func testDeriveUnifiedSpendingKeyFromSeed() async throws {
         let account = 0
         let seedBytes = [UInt8](seedData)
 
-        XCTAssertNoThrow(try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: account))
+        _ = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: account)
     }
 
     func testGetTransparentAddressFromUA() throws {
         XCTAssertEqual(
-            try DerivationTool.transparentReceiver(from: testRecipientAddress),
+            try DerivationTool(networkType: .testnet).transparentReceiver(from: testRecipientAddress),
             expectedTransparentAddress
         )
     }
 
     func testIsValidViewingKey() throws {
         XCTAssertTrue(
-            DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(
+            ZcashKeyDerivationBackend(networkType: .testnet).isValidSaplingExtendedFullViewingKey(
                 """
                 zxviewtestsapling1qdxykmuaqqqqpqqg3x5c02p4rhw0rtszr8ln4xl7g6wg6qzsqgn445qsu3cq4vd6l5smlqrckkl2x5rnrauzc4gp665q3zyw0qf2sfdsx5wpp832htf\
                 avqk72uchuuvq2dpmgk8jfaza5t5l56u66fpx0sr8ewp9s3wj2txavmhhlazn5rj8mshh470fkrmzg4xarhrqlygg8f486307ujhndwhsw2h7ddzf89k3534aeu0ypz2tjgrz\
                 lcqtat380vhe8awm03f58cqgegsaj
-                """,
-                networkType: .testnet
+                """
             )
         )
 
         XCTAssertFalse(
-            DerivationTool.rustwelding.isValidSaplingExtendedFullViewingKey(
-                "zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7",
-                networkType: .testnet
+            ZcashKeyDerivationBackend(networkType: .testnet).isValidSaplingExtendedFullViewingKey(
+                "zxviews1q0dm7hkzky5skvnd9ldwj2u8fz2ry94s5q8p9lyp3j96yckudmp087d2jr2rnfuvjp7f56v78vpe658vljjddj7s645q399jd7"
             )
         )
     }
 
-    func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
+    func testDeriveQuiteALotOfUnifiedKeysFromSeed() async throws {
         let numberOfAccounts: Int = 10
-        let ufvks = try (0 ..< numberOfAccounts)
-            .map({
-                try derivationTool.deriveUnifiedSpendingKey(
-                    seed: [UInt8](seedData),
-                    accountIndex: $0
-                )
-            })
-            .map {
-                try derivationTool.deriveUnifiedFullViewingKey(
-                    from: $0
-                )
-            }
+        var ufvks: [UnifiedFullViewingKey] = []
+        for i in 0..<numberOfAccounts {
+            let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: [UInt8](seedData), accountIndex: i)
+            let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+            ufvks.append(viewingKey)
+        }
 
         XCTAssertEqual(ufvks.count, numberOfAccounts)
         XCTAssertEqual(ufvks[0].account, 0)
@@ -137,7 +130,7 @@ class DerivationToolTestnetTests: XCTestCase {
 
     func testShouldFailOnInvalidChecksumAddresses() throws {
         let testAddress = "t14oHp2v54vfmdgQ3v3SNuQga8JKHTNi2a1"
-        XCTAssertFalse(derivationTool.isValidTransparentAddress(testAddress))
+        XCTAssertFalse(DerivationTool(networkType: .testnet).isValidTransparentAddress(testAddress))
     }
 
     func testSpendingKeyValidationFailsOnInvalidKey() {
@@ -147,7 +140,7 @@ class DerivationToolTestnetTests: XCTestCase {
         4fsuaz686lgszc7nc9vvZzZzZz
         """
 
-        XCTAssertFalse(derivationTool.isValidSaplingExtendedSpendingKey(wrongSpendingKey))
+        XCTAssertFalse(DerivationTool(networkType: .testnet).isValidSaplingExtendedSpendingKey(wrongSpendingKey))
     }
     // TODO: [#509] Address encoding does not catch this test https://github.com/zcash/ZcashLightClientKit/issues/509
 //    func testSpendingKeyValidationThrowsWhenWrongNetwork() throws {

@@ -12,9 +12,30 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class CompactBlockProcessorTests: XCTestCase {
-    lazy var processorConfig = {
+    var processorConfig: CompactBlockProcessor.Configuration!
+    var cancellables: [AnyCancellable] = []
+    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
+    var rustBackend: ZcashRustBackendWelding!
+    var processor: CompactBlockProcessor!
+    var syncStartedExpect: XCTestExpectation!
+    var updatedNotificationExpectation: XCTestExpectation!
+    var stopNotificationExpectation: XCTestExpectation!
+    var finishedNotificationExpectation: XCTestExpectation!
+    let network = ZcashNetworkBuilder.network(for: .testnet)
+    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
+
+    let testFileManager = FileManager()
+    var testTempDirectory: URL!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        logger = OSLogger(logLevel: .debug)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+
         let pathProvider = DefaultResourceProvider(network: network)
-        return CompactBlockProcessor.Configuration(
+        processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
@@ -24,28 +45,6 @@ class CompactBlockProcessorTests: XCTestCase {
             walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
-    }()
-
-    var cancellables: [AnyCancellable] = []
-    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
-    var processor: CompactBlockProcessor!
-    var syncStartedExpect: XCTestExpectation!
-    var updatedNotificationExpectation: XCTestExpectation!
-    var stopNotificationExpectation: XCTestExpectation!
-    var finishedNotificationExpectation: XCTestExpectation!
-    let network = ZcashNetworkBuilder.network(for: .testnet)
-    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
-    let testFileManager = FileManager()
-
-    override func setUp() async throws {
-        try await super.setUp()
-        logger = OSLogger(logLevel: .debug)
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
         await InternalSyncProgress(
             alias: .default,
@@ -58,7 +57,14 @@ class CompactBlockProcessorTests: XCTestCase {
             latestBlockHeight: mockLatestHeight,
             service: liveService
         )
-        let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
+
+        rustBackend = ZcashRustBackend.makeForTests(
+            dbData: processorConfig.dataDb,
+            fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
+            networkType: network.networkType
+        )
+
+        let branchID = try rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
         service.mockLightDInfo = LightdInfo.with({ info in
             info.blockHeight = UInt64(mockLatestHeight)
             info.branch = "asdf"
@@ -70,13 +76,11 @@ class CompactBlockProcessorTests: XCTestCase {
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         })
 
-        let realRustBackend = ZcashRustBackend.self
-
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -89,13 +93,13 @@ class CompactBlockProcessorTests: XCTestCase {
         processor = CompactBlockProcessor(
             service: service,
             storage: storage,
-            backend: realRustBackend,
+            rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger
         )
 
-        let dbInit = try await realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+        let dbInit = try await rustBackend.initDataDb(seed: nil)
 
         guard case .success = dbInit else {
             XCTFail("Failed to initDataDb. Expected `.success` got: \(dbInit)")
@@ -125,6 +129,8 @@ class CompactBlockProcessorTests: XCTestCase {
         cancellables = []
         processor = nil
         processorEventHandler = nil
+        rustBackend = nil
+        testTempDirectory = nil
     }
     
     func processorFailed(event: CompactBlockProcessor.Event) {

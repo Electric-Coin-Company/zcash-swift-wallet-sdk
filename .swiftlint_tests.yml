@@ -11,6 +11,7 @@ excluded:
   - ZcashLightClientKitTests/Constants.generated.swift
   - build/
   - docs/
+  - Tests/TestUtils/Sourcery/GeneratedMocks/AutoMockable.generated.swift
 
 disabled_rules:
   - notification_center_detachment

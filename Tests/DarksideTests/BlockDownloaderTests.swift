@@ -13,10 +13,6 @@ import XCTest
 class BlockDownloaderTests: XCTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
 
     let testFileManager = FileManager()
     var darksideWalletService: DarksideWalletService!
@@ -24,16 +20,25 @@ class BlockDownloaderTests: XCTestCase {
     var service: LightWalletService!
     var storage: CompactBlockRepository!
     var network = DarksideWalletDNetwork()
+    var rustBackend: ZcashRustBackendWelding!
+    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
+        testTempDirectory = Environment.uniqueTestTempDirectory
+
         service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
+
+        rustBackend = ZcashRustBackend.makeForTests(
+            fsBlockDbRoot: testTempDirectory,
+            networkType: network.networkType
+        )
 
         storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: testTempDirectory,
-                rustBackend: ZcashRustBackend.self,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -58,6 +63,8 @@ class BlockDownloaderTests: XCTestCase {
         service = nil
         storage = nil
         downloader = nil
+        rustBackend = nil
+        testTempDirectory = nil
     }
 
     func testSmallDownload() async {

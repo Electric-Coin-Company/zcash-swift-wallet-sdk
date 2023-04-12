@@ -12,9 +12,31 @@ import XCTest
 @testable import ZcashLightClientKit
 
 class CompactBlockReorgTests: XCTestCase {
-    lazy var processorConfig = {
+    var processorConfig: CompactBlockProcessor.Configuration!
+    let testFileManager = FileManager()
+    var cancellables: [AnyCancellable] = []
+    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
+    var rustBackend: ZcashRustBackendWelding!
+    var rustBackendMockHelper: RustBackendMockHelper!
+    var processor: CompactBlockProcessor!
+    var syncStartedExpect: XCTestExpectation!
+    var updatedNotificationExpectation: XCTestExpectation!
+    var stopNotificationExpectation: XCTestExpectation!
+    var finishedNotificationExpectation: XCTestExpectation!
+    var reorgNotificationExpectation: XCTestExpectation!
+    let network = ZcashNetworkBuilder.network(for: .testnet)
+    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
+    var testTempDirectory: URL!
+
+    override func setUp() async throws {
+        try await super.setUp()
+        logger = OSLogger(logLevel: .debug)
+        testTempDirectory = Environment.uniqueTestTempDirectory
+
+        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
+
         let pathProvider = DefaultResourceProvider(network: network)
-        return CompactBlockProcessor.Configuration(
+        processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: pathProvider.dataDbURL,
@@ -24,30 +46,6 @@ class CompactBlockReorgTests: XCTestCase {
             walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
-    }()
-
-    let testTempDirectory = URL(fileURLWithPath: NSString(
-        string: NSTemporaryDirectory()
-    )
-        .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
-
-    let testFileManager = FileManager()
-    var cancellables: [AnyCancellable] = []
-    var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
-
-    var processor: CompactBlockProcessor!
-    var syncStartedExpect: XCTestExpectation!
-    var updatedNotificationExpectation: XCTestExpectation!
-    var stopNotificationExpectation: XCTestExpectation!
-    var finishedNotificationExpectation: XCTestExpectation!
-    var reorgNotificationExpectation: XCTestExpectation!
-    let network = ZcashNetworkBuilder.network(for: .testnet)
-    let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-
-    override func setUp() async throws {
-        try await super.setUp()
-        logger = OSLogger(logLevel: .debug)
-        try self.testFileManager.createDirectory(at: self.testTempDirectory, withIntermediateDirectories: false)
 
         await InternalSyncProgress(
             alias: .default,
@@ -60,8 +58,14 @@ class CompactBlockReorgTests: XCTestCase {
             latestBlockHeight: mockLatestHeight,
             service: liveService
         )
-        
-        let branchID = try ZcashRustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight), networkType: network.networkType)
+
+        rustBackend = ZcashRustBackend.makeForTests(
+            dbData: processorConfig.dataDb,
+            fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
+            networkType: network.networkType
+        )
+
+        let branchID = try rustBackend.consensusBranchIdFor(height: Int32(mockLatestHeight))
         service.mockLightDInfo = LightdInfo.with { info in
             info.blockHeight = UInt64(mockLatestHeight)
             info.branch = "asdf"
@@ -73,13 +77,11 @@ class CompactBlockReorgTests: XCTestCase {
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         }
 
-        let realRustBackend = ZcashRustBackend.self
-
         let realCache = FSCompactBlockRepository(
             fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
             metadataStore: FSMetadataStore.live(
                 fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: realRustBackend,
+                rustBackend: rustBackend,
                 logger: logger
             ),
             blockDescriptor: .live,
@@ -89,21 +91,23 @@ class CompactBlockReorgTests: XCTestCase {
 
         try await realCache.create()
 
-        let initResult = try await realRustBackend.initDataDb(dbData: processorConfig.dataDb, seed: nil, networkType: .testnet)
+        let initResult = try await rustBackend.initDataDb(seed: nil)
         guard case .success = initResult else {
             XCTFail("initDataDb failed. Expected Success but got .seedRequired")
             return
         }
 
-        let mockBackend = MockRustBackend.self
-        mockBackend.mockValidateCombinedChainFailAfterAttempts = 3
-        mockBackend.mockValidateCombinedChainKeepFailing = false
-        mockBackend.mockValidateCombinedChainFailureHeight = self.network.constants.saplingActivationHeight + 320
-        
+        rustBackendMockHelper = await RustBackendMockHelper(
+            rustBackend: rustBackend,
+            mockValidateCombinedChainFailAfterAttempts: 3,
+            mockValidateCombinedChainKeepFailing: false,
+            mockValidateCombinedChainFailureError: .invalidChain(upperBound: Int32(network.constants.saplingActivationHeight + 320))
+        )
+
         processor = CompactBlockProcessor(
             service: service,
             storage: realCache,
-            backend: mockBackend,
+            rustBackend: rustBackendMockHelper.rustBackendMock,
             config: processorConfig,
             metrics: SDKMetrics(),
             logger: logger
@@ -134,6 +138,8 @@ class CompactBlockReorgTests: XCTestCase {
         cancellables = []
         processorEventHandler = nil
         processor = nil
+        rustBackend = nil
+        rustBackendMockHelper = nil
     }
     
     func processorHandledReorg(event: CompactBlockProcessor.Event) {
