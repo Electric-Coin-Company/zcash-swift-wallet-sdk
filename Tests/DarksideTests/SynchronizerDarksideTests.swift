@@ -143,8 +143,9 @@ class SynchronizerDarksideTests: XCTestCase {
         XCTAssertEqual(self.foundTransactions.count, 2)
     }
 
-    func sdfstestLastStates() async throws {
-        self.idGenerator.ids = [.deadbeef]
+    func testLastStates() async throws {
+        self.idGenerator.ids = [.deadbeef, .beefbeef, .beefdead]
+        let uuids = self.idGenerator.ids
         
         var cancellables: [AnyCancellable] = []
 
@@ -172,8 +173,6 @@ class SynchronizerDarksideTests: XCTestCase {
         )
 
         wait(for: [preTxExpectation], timeout: 5)
-
-        let uuids = self.idGenerator.ids
 
         let expectedStates: [SynchronizerState] = [
             SynchronizerState(
@@ -284,7 +283,8 @@ class SynchronizerDarksideTests: XCTestCase {
     func testSyncSessionUpdates() async throws {
         var cancellables: [AnyCancellable] = []
 
-        self.idGenerator.ids = [.deadbeef, .beefbeef]
+        self.idGenerator.ids = [.deadbeef, .beefbeef, .beefdead]
+        let uuids = idGenerator.ids
 
         var states: [SynchronizerState] = []
 
@@ -310,8 +310,6 @@ class SynchronizerDarksideTests: XCTestCase {
         )
 
         wait(for: [preTxExpectation], timeout: 5)
-
-        let uuids = idGenerator.ids
 
         let expectedStates: [SynchronizerState] = [
             SynchronizerState(
@@ -420,7 +418,7 @@ class SynchronizerDarksideTests: XCTestCase {
 
         try coordinator.service.applyStaged(nextLatestHeight: 663_200)
 
-        sleep(1)
+        sleep(2)
 
         states.removeAll()
 
@@ -477,6 +475,7 @@ class SynchronizerDarksideTests: XCTestCase {
     }
 
     func testSyncAfterWipeWorks() async throws {
+        idGenerator.ids = [.deadbeef, .beefbeef, .beefdead]
         try FakeChainBuilder.buildChain(darksideWallet: self.coordinator.service, branchID: branchID, chainName: chainName)
         let receivedTxHeight: BlockHeight = 663188
 
