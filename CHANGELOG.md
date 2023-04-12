@@ -1,4 +1,21 @@
 # unreleased
+
+### [#959] and [#914] Value of outbound transactions does not match user intended tx input 
+
+This change switches to a new (future) version of the rust crates that will get rid of the sent and received transactions Views in favor of a v_transaction view that will do better accounting of outgoing and incoming funds. Additionally it will support an outputs view for seeing the inner details of transactions enabling the SDKs tell the users the precise movement of value that a tx causes in its multiple possible ways according to the protocol.
+
+the v_tx_outputs view is not yet implemented.
+
+Sent and Received transaction sub-types are kept for compatibility purposes but they are generated from Overviews instead of queried from a specific view.
+
+In the transaction Overview the value represents the whole value transfer for the transaction from the point of view of a given account including fees. This means that the value for a single transaction Overview struct represents the addition or subtraction of ZEC value to the account's balance.
+
+Future updates will give clients the possibility to drill into the inner workings of those value changes in a per-output basis for each transaction.
+
+Also, the field pending_unmined field was added to v_transactions so that wallets can query DataDb for pending but yet unmined txs
+
+This will prepare the field for removing the notion of a "PendingDb" and its nuances.
+
 ### [#888] Updates to layer between Swift and Rust
 
 This is mostly internal change. But it also touches the public API.

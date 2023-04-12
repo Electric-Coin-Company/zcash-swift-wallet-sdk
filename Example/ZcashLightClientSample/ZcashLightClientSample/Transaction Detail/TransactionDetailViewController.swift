@@ -18,24 +18,24 @@ final class TransactionDetailModel {
     }
 
     let transaction: Transaction
-    var id: String?
-    var minedHeight: String?
-    var expiryHeight: String?
-    var created: String?
-    var zatoshi: String?
-    var memo: String?
+    var id: Data?
+    var minedHeight: BlockHeight?
+    var expiryHeight: BlockHeight?
+    var created: Date?
+    var zatoshi: Zatoshi
+    var memo: Memo?
     
     init(sendTransaction transaction: ZcashTransaction.Sent, memos: [Memo]) {
         self.transaction = .sent(transaction)
-        self.id = transaction.rawID?.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight?.description
-        self.expiryHeight = transaction.expiryHeight?.description
+        self.id = transaction.rawID
+        self.minedHeight = transaction.minedHeight
+        self.expiryHeight = transaction.expiryHeight
 
-        self.zatoshi = transaction.value.decimalString()
-        self.memo = memos.first?.toString()
+        self.zatoshi = transaction.value
+        self.memo = memos.first
 
         if let blockTime = transaction.blockTime {
-            created = Date(timeIntervalSince1970: blockTime).description
+            created = Date(timeIntervalSince1970: blockTime)
         } else {
             created = nil
         }
@@ -43,32 +43,37 @@ final class TransactionDetailModel {
 
     init(receivedTransaction transaction: ZcashTransaction.Received, memos: [Memo]) {
         self.transaction = .received(transaction)
-        self.id = transaction.rawID?.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight.description
-        self.expiryHeight = transaction.expiryHeight?.description
-        self.created = Date(timeIntervalSince1970: transaction.blockTime).description
-        self.zatoshi = transaction.value.decimalString()
-        self.memo = memos.first?.toString()
+        self.id = transaction.rawID
+        self.minedHeight = transaction.minedHeight
+        self.expiryHeight = transaction.expiryHeight
+        self.zatoshi = transaction.value
+        self.memo = memos.first
+        self.created = Date(timeIntervalSince1970: transaction.blockTime)
     }
     
     init(pendingTransaction transaction: PendingTransactionEntity, memos: [Memo]) {
         self.transaction = .pending(transaction)
-        self.id = transaction.rawTransactionId?.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight.description
-        self.expiryHeight = transaction.expiryHeight.description
-        self.created = Date(timeIntervalSince1970: transaction.createTime).description
-        self.zatoshi = transaction.value.decimalString()
-        self.memo = memos.first?.toString()
+        self.id = transaction.rawTransactionId
+        self.minedHeight = transaction.minedHeight
+        self.expiryHeight = transaction.expiryHeight
+        self.created = Date(timeIntervalSince1970: transaction.createTime)
+        self.zatoshi = transaction.value
+        self.memo = memos.first
     }
     
     init(transaction: ZcashTransaction.Overview, memos: [Memo]) {
         self.transaction = .cleared(transaction)
-        self.id = transaction.rawID.toHexStringTxId()
-        self.minedHeight = transaction.minedHeight?.description
-        self.expiryHeight = transaction.expiryHeight?.description
-        self.created = transaction.blockTime?.description
-        self.zatoshi = transaction.value.decimalString()
-        self.memo = memos.first?.toString()
+        self.id = transaction.rawID
+        self.minedHeight = transaction.minedHeight
+        self.expiryHeight = transaction.expiryHeight
+        self.zatoshi = transaction.value
+        self.memo = memos.first
+
+        if let blockTime = transaction.blockTime {
+            created = Date(timeIntervalSince1970: blockTime)
+        } else {
+            created = nil
+        }
     }
 
     func loadMemos(from synchronizer: Synchronizer) async throws -> [Memo] {
@@ -99,6 +104,15 @@ final class TransactionDetailModel {
         }
     }
 }
+extension TransactionDetailModel {
+    var dateDescription: String {
+        self.created?.formatted(date: .abbreviated, time: .shortened) ?? "No date"
+    }
+
+    var amountDescription: String {
+        self.zatoshi.amount.description
+    }
+}
 
 // swiftlint:disable implicitly_unwrapped_optional
 class TransactionDetailViewController: UITableViewController {
@@ -119,13 +133,13 @@ class TransactionDetailViewController: UITableViewController {
     
     func setup() {
         guard model != nil else { return }
-        idLabel.text = model.id
-        minedHeightLabel.text = model.minedHeight ?? "no height"
-        expiryHeightLabel.text = model.expiryHeight ?? "no height"
-        createdLabel.text = model.created
-        zatoshiLabel.text = model.zatoshi
-        memoLabel.text = model.memo ?? "No memo"
-        loggerProxy.debug("tx id: \(model.id ?? "no id!!"))")
+        idLabel.text = model.id?.toHexStringTxId()
+        minedHeightLabel.text = model.minedHeight?.description ?? "no height"
+        expiryHeightLabel.text = model.expiryHeight?.description ?? "no height"
+        createdLabel.text = model.created?.ISO8601Format()
+        zatoshiLabel.text = model.zatoshi.amount.description
+        memoLabel.text = model.memo?.toString() ?? "No memo"
+        loggerProxy.debug("tx id: \(model.id?.toHexStringTxId() ?? "no id!!"))")
 
         Task {
             do {

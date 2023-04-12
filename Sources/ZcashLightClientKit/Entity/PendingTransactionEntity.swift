@@ -200,12 +200,12 @@ public extension PendingTransactionEntity {
 public extension PendingTransactionEntity {
     func makeTransactionEntity(defaultFee: Zatoshi) -> ZcashTransaction.Overview {
         return ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: createTime,
             expiryHeight: expiryHeight,
             fee: fee,
             id: id ?? -1,
             index: nil,
-            isWalletInternal: false,
             hasChange: false,
             memoCount: 0,
             minedHeight: minedHeight,
@@ -213,7 +213,8 @@ public extension PendingTransactionEntity {
             rawID: rawTransactionId ?? Data(),
             receivedNoteCount: 0,
             sentNoteCount: 0,
-            value: value
+            value: value,
+            isExpiredUmined: false
         )
     }
 }

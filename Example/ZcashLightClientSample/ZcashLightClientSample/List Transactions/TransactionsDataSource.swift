@@ -92,9 +92,10 @@ extension TransactionsDataSource: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: Self.cellIdentifier, for: indexPath)
 
         let transaction = transactions[indexPath.row]
-        cell.detailTextLabel?.text = transaction.id ?? "no id"
-        cell.textLabel?.text = transaction.created ?? "No date"
+        cell.detailTextLabel?.text = transaction.id?.toHexStringTxId() ?? "no id"
+        cell.textLabel?.text = "\(transaction.dateDescription) \t\(transaction.amountDescription)"
 
+        cell.accessoryType = .disclosureIndicator
         return cell
     }
 }
