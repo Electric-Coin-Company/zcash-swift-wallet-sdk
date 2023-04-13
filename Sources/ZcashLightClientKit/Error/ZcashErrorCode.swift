@@ -33,4 +33,12 @@ public enum ZcashErrorCode: String {
     case serviceFetchUTXOsFailed = "ZSRVC0008"
     /// LightWalletService.blockStream failed.
     case serviceBlockStreamFailed = "ZSRVC0000"
+    /// Migration of the pending DB failed because of unspecific reason.
+    case dbMigrationGenericFailure = "ZDBMG0001"
+    /// Migration of the pending DB failed because unknown version of the existing database.
+    case dbMigrationInvalidVersion = "ZDBMG00002"
+    /// Migration of the pending DB to version 1 failed.
+    case dbMigrationV1 = "ZDBMG00003"
+    /// Migration of the pending DB to version 2 failed.
+    case dbMigrationV2 = "ZDBMG00004"
 }

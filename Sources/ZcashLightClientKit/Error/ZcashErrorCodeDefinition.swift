@@ -28,7 +28,7 @@ enum ZcashErrorDefinition {
     /// - code - Code for error.
     /// - error - underlying error
     // sourcery: code="ZTEST0001"
-    case testCodeWithMessage(_ message: String, _ code: Int, _ error: Error)
+    case testCodeWithMessage(_ code: Int, _ error: Error)
     /// Unknown GRPC Service error
     // sourcery: code="ZSRVC0001"
     case serviceUnknownError(_ error: Error)
@@ -56,4 +56,17 @@ enum ZcashErrorDefinition {
     /// LightWalletService.blockStream failed.
     // sourcery: code="ZSRVC0000"
     case serviceBlockStreamFailed(_ error: LightWalletServiceError)
+
+    /// Migration of the pending DB failed because of unspecific reason.
+    // sourcery: code="ZDBMG0001"
+    case dbMigrationGenericFailure(_ error: Error)
+    /// Migration of the pending DB failed because unknown version of the existing database.
+    // sourcery: code="ZDBMG00002"
+    case dbMigrationInvalidVersion
+    /// Migration of the pending DB to version 1 failed.
+    // sourcery: code="ZDBMG00003"
+    case dbMigrationV1(_ dbError: Error)
+    /// Migration of the pending DB to version 2 failed.
+    // sourcery: code="ZDBMG00004"
+    case dbMigrationV2(_ dbError: Error)
 }

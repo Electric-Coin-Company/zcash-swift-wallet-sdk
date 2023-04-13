@@ -11,10 +11,11 @@ error originates. And it can help with debugging.
 public enum ZcashError: Equatable, Error {
     /// Some testing code for now. Will be removed later.
     /// Some multiline super doc:
+    /// - message - Message associated with error
     /// - code - Code for error.
     /// - error - underlying error
     /// ZTEST0001
-    case testCodeWithMessage(_ code: Int, _ error: Error)
+    case testCodeWithMessage(_ message: String, _ code: Int, _ error: Error)
     /// Unknown GRPC Service error
     /// ZSRVC0001
     case serviceUnknownError(_ error: Error)
@@ -42,6 +43,18 @@ public enum ZcashError: Equatable, Error {
     /// LightWalletService.blockStream failed.
     /// ZSRVC0000
     case serviceBlockStreamFailed(_ error: LightWalletServiceError)
+    /// Migration of the pending DB failed because of unspecific reason.
+    /// ZDBMG0001
+    case dbMigrationGenericFailure(_ error: Error)
+    /// Migration of the pending DB failed because unknown version of the existing database.
+    /// ZDBMG00002
+    case dbMigrationInvalidVersion
+    /// Migration of the pending DB to version 1 failed.
+    /// ZDBMG00003
+    case dbMigrationV1(_ dbError: Error)
+    /// Migration of the pending DB to version 2 failed.
+    /// ZDBMG00004
+    case dbMigrationV2(_ dbError: Error)
 
     public var message: String {
         switch self {
@@ -55,6 +68,10 @@ public enum ZcashError: Equatable, Error {
         case .serviceFetchTransactionFailed: return "LightWalletService.fetchTransaction failed."
         case .serviceFetchUTXOsFailed: return "LightWalletService.fetchUTXOs failed."
         case .serviceBlockStreamFailed: return "LightWalletService.blockStream failed."
+        case .dbMigrationGenericFailure: return "Migration of the pending DB failed because of unspecific reason."
+        case .dbMigrationInvalidVersion: return "Migration of the pending DB failed because unknown version of the existing database."
+        case .dbMigrationV1: return "Migration of the pending DB to version 1 failed."
+        case .dbMigrationV2: return "Migration of the pending DB to version 2 failed."
         }
     }
 
@@ -70,6 +87,10 @@ public enum ZcashError: Equatable, Error {
         case .serviceFetchTransactionFailed: return .serviceFetchTransactionFailed
         case .serviceFetchUTXOsFailed: return .serviceFetchUTXOsFailed
         case .serviceBlockStreamFailed: return .serviceBlockStreamFailed
+        case .dbMigrationGenericFailure: return .dbMigrationGenericFailure
+        case .dbMigrationInvalidVersion: return .dbMigrationInvalidVersion
+        case .dbMigrationV1: return .dbMigrationV1
+        case .dbMigrationV2: return .dbMigrationV2
         }
     }
 
