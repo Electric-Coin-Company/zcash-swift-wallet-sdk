@@ -38,7 +38,7 @@ extension BlockValidatorImpl: BlockValidator {
             pushProgressReport(startTime: startTime, finishTime: Date())
 
             switch error {
-            case let RustWeldingError.invalidChain(upperBound):
+            case let ZcashError.rustValidateCombinedChainInvalidChain(upperBound):
                 throw BlockValidatorError.validationFailed(height: BlockHeight(upperBound))
 
             default:

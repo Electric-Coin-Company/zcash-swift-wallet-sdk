@@ -39,7 +39,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
     func receiverTypecodesOnUnifiedAddress(_ address: String) throws -> [UInt32] {
         guard !address.containsCStringNullBytesBeforeStringEnding() else {
-            throw RustWeldingError.invalidInput(message: "`address` contains null bytes.")
+            throw ZcashError.rustReceiverTypecodesOnUnifiedAddressContainsNullBytes(address)
         }
 
         var len = UInt(0)
@@ -49,7 +49,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
             &len
         ), len > 0
         else {
-            throw RustWeldingError.malformedStringInput
+            throw ZcashError.rustRustReceiverTypecodesOnUnifiedAddressMalformed
         }
 
         var typecodes: [UInt32] = []
@@ -133,7 +133,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         defer { zcashlc_free_binary_key(binaryKeyPtr) }
 
         guard let binaryKey = binaryKeyPtr?.pointee else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustDeriveUnifiedSpendingKey(lastErrorMessage(fallback: "`deriveUnifiedSpendingKey` failed with unknown error"))
         }
 
         return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
@@ -146,7 +146,9 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
                 UInt(spendingKey.bytes.count),
                 networkType.networkId
             ) else {
-                throw lastError() ?? .genericError(message: "No error message available")
+                throw ZcashError.rustDeriveUnifiedFullViewingKey(
+                    lastErrorMessage(fallback: "`deriveUnifiedFullViewingKey` failed with unknown error")
+                )
             }
 
             return extfvk
@@ -155,7 +157,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         defer { zcashlc_string_free(extfvk) }
 
         guard let derived = String(validatingUTF8: extfvk) else {
-            throw RustWeldingError.unableToDeriveKeys
+            throw ZcashError.rustDeriveUnifiedFullViewingKeyInvalidDerivedKey
         }
 
         return UnifiedFullViewingKey(validatedEncoding: derived, account: spendingKey.account)
@@ -165,13 +167,13 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         guard let saplingCStr = zcashlc_get_sapling_receiver_for_unified_address(
             [CChar](uAddr.encoding.utf8CString)
         ) else {
-            throw KeyDerivationErrors.invalidUnifiedAddress
+            throw ZcashError.rustGetSaplingReceiverInvalidAddress(uAddr)
         }
 
         defer { zcashlc_string_free(saplingCStr) }
 
         guard let saplingReceiverStr = String(validatingUTF8: saplingCStr) else {
-            throw KeyDerivationErrors.receiverNotFound
+            throw ZcashError.rustGetSaplingReceiverInvalidReceiver
         }
 
         return SaplingAddress(validatedEncoding: saplingReceiverStr)
@@ -181,13 +183,13 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         guard let transparentCStr = zcashlc_get_transparent_receiver_for_unified_address(
             [CChar](uAddr.encoding.utf8CString)
         ) else {
-            throw KeyDerivationErrors.invalidUnifiedAddress
+            throw ZcashError.rustGetTransparentReceiverInvalidAddress(uAddr)
         }
 
         defer { zcashlc_string_free(transparentCStr) }
 
         guard let transparentReceiverStr = String(validatingUTF8: transparentCStr) else {
-            throw KeyDerivationErrors.receiverNotFound
+            throw ZcashError.rustGetTransparentReceiverInvalidReceiver
         }
 
         return TransparentAddress(validatedEncoding: transparentReceiverStr)
@@ -195,31 +197,22 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
 
     // MARK: Error Handling
 
-    private func lastError() -> RustWeldingError? {
+    private func lastErrorMessage(fallback: String) -> String {
+        let errorLen = zcashlc_last_error_length()
         defer { zcashlc_clear_last_error() }
 
-        guard let message = getLastError() else {
-            return nil
-        }
-
-        if message.contains("couldn't load Sapling spend parameters") {
-            return RustWeldingError.saplingSpendParametersNotFound
-        } else if message.contains("is not empty") {
-            return RustWeldingError.dataDbNotEmpty
-        }
-
-        return RustWeldingError.genericError(message: message)
-    }
-
-    private func getLastError() -> String? {
-        let errorLen = zcashlc_last_error_length()
         if errorLen > 0 {
             let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
+            defer { error.deallocate() }
+
             zcashlc_error_message_utf8(error, errorLen)
-            zcashlc_clear_last_error()
-            return String(validatingUTF8: error)
+            if let errorMessage = String(validatingUTF8: error) {
+                return errorMessage
+            } else {
+                return fallback
+            }
         } else {
-            return nil
+            return fallback
         }
     }
 }

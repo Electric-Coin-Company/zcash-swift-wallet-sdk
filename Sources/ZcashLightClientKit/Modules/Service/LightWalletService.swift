@@ -151,41 +151,41 @@ protocol LightWalletService: AnyObject {
     var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)? { get set }
 
     /// Returns the info for this lightwalletd server
-    /// Throws `serviceGetInfoFailed` when GRPC call fails.
+    /// - Throws: `serviceGetInfoFailed` when GRPC call fails.
     func getInfo() async throws -> LightWalletdInfo
 
-    /// Throws `serviceLatestBlockHeightFailed` when GRPC call fails.
+    /// - Throws: `serviceLatestBlockHeightFailed` when GRPC call fails.
     func latestBlock() async throws -> BlockID
 
     /// Return the latest block height known to the service.
-    /// Throws `serviceLatestBlockFailed` when GRPC call fails.
+    /// - Throws: `serviceLatestBlockFailed` when GRPC call fails.
     func latestBlockHeight() async throws -> BlockHeight
 
     /// Return the given range of blocks.
     /// - Parameter range: the inclusive range to fetch.
     ///     For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
-    /// Stream throws `serviceBlockRangeFailed` when GRPC call fails.
+    /// - Throws: `serviceBlockRangeFailed` when GRPC call fails.
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error>
     
     /// Submits a raw transaction over lightwalletd. Non-Blocking
     /// - Parameter spendTransaction: data representing the transaction to be sent
-    /// Throws `serviceSubmitFailed` when GRPC call fails.
+    /// - Throws: `serviceSubmitFailed` when GRPC call fails.
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse
     
     /// Gets a transaction by id
     /// - Parameter txId: data representing the transaction ID
     /// - Throws: LightWalletServiceError
     /// - Returns: LightWalletServiceResponse
-    /// Throws `serviceFetchTransactionFailed` when GRPC call fails.
+    /// - Throws: `serviceFetchTransactionFailed` when GRPC call fails.
     func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched
 
-    /// Stream throws `serviceFetchUTXOsFailed` when GRPC call fails.
+    /// - Throws: `serviceFetchUTXOsFailed` when GRPC call fails.
     func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
-    /// Stream throws `serviceFetchUTXOsFailed` when GRPC call fails.
+    /// - Throws: `serviceFetchUTXOsFailed` when GRPC call fails.
     func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
-    /// Throws `serviceBlockStreamFailed` when GRPC call fails.
+    /// - Throws: `serviceBlockStreamFailed` when GRPC call fails.
     func blockStream(
         startHeight: BlockHeight,
         endHeight: BlockHeight

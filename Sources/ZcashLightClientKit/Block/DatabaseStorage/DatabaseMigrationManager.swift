@@ -38,11 +38,11 @@ class MigrationManager {
 }
 
 private extension MigrationManager {
-    /// Throws:
-    /// - `dbMigrationGenericFailure` when can't read current version of the pending DB.
-    /// - `dbMigrationInvalidVersion` when unknown version is read from the current pending DB.
-    /// - `dbMigrationV1` when migration to version 1 fails.
-    /// - `dbMigrationV2` when migration to version 2 fails.
+    /// - Throws:
+    ///     - `dbMigrationGenericFailure` when can't read current version of the pending DB.
+    ///     - `dbMigrationInvalidVersion` when unknown version is read from the current pending DB.
+    ///     - `dbMigrationV1` when migration to version 1 fails.
+    ///     - `dbMigrationV2` when migration to version 2 fails.
     func migratePendingDb() throws {
         // getUserVersion returns a default value of zero for an unmigrated database.
         let currentPendingDbVersion: Int32

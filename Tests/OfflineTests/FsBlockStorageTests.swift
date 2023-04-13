@@ -421,7 +421,7 @@ final class FsBlockStorageTests: XCTestCase {
             return
         }
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
-        await mockBackend.rustBackendMock.setWriteBlocksMetadataBlocksThrowableError(RustWeldingError.genericError(message: "oops"))
+        await mockBackend.rustBackendMock.setWriteBlocksMetadataBlocksThrowableError(ZcashError.rustWriteBlocksMetadata("oops"))
 
         do {
             try await FSMetadataStore.saveBlocksMeta(
@@ -439,7 +439,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     func testMetadataStoreThrowsWhenRewindFails() async {
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
-        await mockBackend.rustBackendMock.setRewindCacheToHeightHeightThrowableError(RustWeldingError.genericError(message: "oops"))
+        await mockBackend.rustBackendMock.setRewindCacheToHeightHeightThrowableError(ZcashError.rustRewindCacheToHeight("oops"))
 
         let expectedHeight = BlockHeight(1000)
 
