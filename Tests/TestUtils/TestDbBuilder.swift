@@ -68,7 +68,7 @@ enum TestDbBuilder {
         switch initResult {
         case .success: return provider
         case .seedRequired:
-            throw DatabaseStorageError.migrationFailedWithMessage(message: "Seed value required to initialize the wallet database")
+            throw ZcashError.dbMigrationGenericFailure("Seed value required to initialize the wallet database")
         }
     }
     
