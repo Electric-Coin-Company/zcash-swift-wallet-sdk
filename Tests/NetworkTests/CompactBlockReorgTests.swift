@@ -101,7 +101,7 @@ class CompactBlockReorgTests: XCTestCase {
             rustBackend: rustBackend,
             mockValidateCombinedChainFailAfterAttempts: 3,
             mockValidateCombinedChainKeepFailing: false,
-            mockValidateCombinedChainFailureError: .invalidChain(upperBound: Int32(network.constants.saplingActivationHeight + 320))
+            mockValidateCombinedChainFailureError: .rustValidateCombinedChainInvalidChain(Int32(network.constants.saplingActivationHeight + 320))
         )
 
         let transactionRepository = MockTransactionRepository(

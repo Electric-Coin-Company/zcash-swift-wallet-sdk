@@ -243,7 +243,7 @@ extension FSMetadataStore {
 extension FSMetadataStore {
     /// saves blocks to the FsBlockDb metadata database.
     /// - Parameter blocks: Array of `ZcashCompactBlock` to save
-    /// - Throws `CompactBlockRepositoryError.failedToWriteMetadata` if the
+    /// - Throws: `CompactBlockRepositoryError.failedToWriteMetadata` if the
     /// operation fails. the underlying error is logged through `LoggerProxy`
     /// - Note: This shouldn't be called in parallel by many threads or workers. Won't do anything if `blocks` is empty
     static func saveBlocksMeta(
@@ -310,7 +310,7 @@ class SortedDirectoryContentProvider: SortedDirectoryListing {
     /// sorting provided by `sorting` property of this provider.
     /// - Parameter url: url to list the contents from. It must be a directory or the call will fail.
     /// - Returns an array with the contained files or an empty one if the directory is empty
-    /// - Throws rethrows any errors from the underlying `FileManager`
+    /// - Throws: rethrows any errors from the underlying `FileManager`
     func listContents(of url: URL) throws -> [URL] {
         try fileManager.contentsOfDirectory(
             at: url,
@@ -357,7 +357,7 @@ extension String {
     /// - Parameter descriptor: The block descriptor that corresponds to the filename
     /// convention of the FsBlockDb
     /// - Returns if the height from this filename is greater that the one received by parameter
-    /// - Throws `CompactBlockRepositoryError.malformedCacheEntry` if this String
+    /// - Throws: `CompactBlockRepositoryError.malformedCacheEntry` if this String
     /// can't be parsed by the given `ZcashCompactBlockDescriptor`
     func filterGreaterThan(_ height: BlockHeight, with descriptor: ZcashCompactBlockDescriptor) throws -> Bool {
         guard let blockHeight = descriptor.height(self) else {

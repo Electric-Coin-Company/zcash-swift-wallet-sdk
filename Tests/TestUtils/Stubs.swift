@@ -61,7 +61,7 @@ class RustBackendMockHelper {
         mockValidateCombinedChainSuccessRate: Float? = nil,
         mockValidateCombinedChainFailAfterAttempts: Int? = nil,
         mockValidateCombinedChainKeepFailing: Bool = false,
-        mockValidateCombinedChainFailureError: RustWeldingError = .chainValidationFailed(message: nil)
+        mockValidateCombinedChainFailureError: ZcashError = .rustValidateCombinedChainValidationFailed("mock fail")
     ) async {
         self.mockValidateCombinedChainFailAfterAttempts = mockValidateCombinedChainFailAfterAttempts
         self.rustBackendMock = ZcashRustBackendWeldingMock(
@@ -85,7 +85,7 @@ class RustBackendMockHelper {
         rustBackend: ZcashRustBackendWelding,
         mockValidateCombinedChainSuccessRate: Float? = nil,
         mockValidateCombinedChainKeepFailing: Bool = false,
-        mockValidateCombinedChainFailureError: RustWeldingError = .chainValidationFailed(message: nil)
+        mockValidateCombinedChainFailureError: ZcashError
     ) async {
         await rustBackendMock.setLatestCachedBlockHeightReturnValue(.empty())
         await rustBackendMock.setInitBlockMetadataDbClosure() { }
@@ -109,7 +109,7 @@ class RustBackendMockHelper {
         await rustBackendMock.setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure() { _, _, _, _, _ in }
         await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
         await rustBackendMock.setCreateToAddressUskToValueMemoReturnValue(-1)
-        await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(RustWeldingError.genericError(message: "mock fail"))
+        await rustBackendMock.setDecryptAndStoreTransactionTxBytesMinedHeightThrowableError(ZcashError.rustDecryptAndStoreTransaction("mock fail"))
 
         await rustBackendMock.setInitDataDbSeedClosure() { seed in
             return try await rustBackend.initDataDb(seed: seed)
@@ -133,7 +133,7 @@ class RustBackendMockHelper {
         }
 
         await rustBackendMock.setValidateCombinedChainLimitClosure() { [weak self] limit in
-            guard let self else { throw RustWeldingError.genericError(message: "Self is nil") }
+            guard let self else { throw ZcashError.rustValidateCombinedChainValidationFailed("Self is nil") }
             if let rate = mockValidateCombinedChainSuccessRate {
                 if Self.shouldSucceed(successRate: rate) {
                     return try await rustBackend.validateCombinedChain(limit: limit)
