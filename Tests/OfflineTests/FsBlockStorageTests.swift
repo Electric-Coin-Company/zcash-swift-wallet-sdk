@@ -251,7 +251,7 @@ final class FsBlockStorageTests: XCTestCase {
             var url = self.fsBlockDb.appendingPathComponent(filename)
             guard self.testFileManager.createFile(atPath: url.path, contents: nil) else {
                 XCTFail("couldn't create file at \(url.absoluteString)")
-                throw CompactBlockRepositoryError.malformedCacheEntry("couldn't create file at \(url.path)")
+                throw "couldn't create file at \(url.path)"
             }
             var resourceValues = URLResourceValues()
             resourceValues.name = filename
@@ -369,7 +369,7 @@ final class FsBlockStorageTests: XCTestCase {
             try await realCache.write(blocks: sandblastedBlocks)
             XCTFail("This call should have failed")
         } catch {
-            XCTAssertEqual(error as? CompactBlockRepositoryError, CompactBlockRepositoryError.failedToWriteBlock(sandblastedBlocks[0]))
+            XCTAssertEqual(error as? ZcashError, ZcashError.blockRepositoryWriteBlock(sandblastedBlocks[0]))
         }
     }
 
@@ -421,7 +421,7 @@ final class FsBlockStorageTests: XCTestCase {
             return
         }
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
-        await mockBackend.rustBackendMock.setWriteBlocksMetadataBlocksThrowableError(ZcashError.rustWriteBlocksMetadata("oops"))
+        await mockBackend.rustBackendMock.setWriteBlocksMetadataBlocksThrowableError(ZcashError.rustWriteBlocksMetadataAllocationProblem)
 
         do {
             try await FSMetadataStore.saveBlocksMeta(
@@ -430,7 +430,7 @@ final class FsBlockStorageTests: XCTestCase {
                 rustBackend: mockBackend.rustBackendMock,
                 logger: logger
             )
-        } catch CompactBlockRepositoryError.failedToWriteMetadata {
+        } catch ZcashError.rustWriteBlocksMetadataAllocationProblem {
             // this is fine
         } catch {
             XCTFail("Expected `CompactBlockRepositoryError.failedToWriteMetadata` but found: \(error.localizedDescription)")
@@ -438,10 +438,10 @@ final class FsBlockStorageTests: XCTestCase {
     }
 
     func testMetadataStoreThrowsWhenRewindFails() async {
-        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
-        await mockBackend.rustBackendMock.setRewindCacheToHeightHeightThrowableError(ZcashError.rustRewindCacheToHeight("oops"))
-
         let expectedHeight = BlockHeight(1000)
+
+        let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend)
+        await mockBackend.rustBackendMock.setRewindCacheToHeightHeightThrowableError(ZcashError.rustRewindToHeight(Int32(expectedHeight), "oops"))
 
         do {
             try await FSMetadataStore.live(
@@ -452,16 +452,16 @@ final class FsBlockStorageTests: XCTestCase {
             .rewindToHeight(expectedHeight)
             XCTFail("rewindToHeight should fail")
         } catch {
-            guard let repositoryError = error as? CompactBlockRepositoryError else {
-                XCTFail("Expected CompactBlockRepositoryError. Found \(error)")
+            guard let error = error as? ZcashError else {
+                XCTFail("Expected ZcashError. Found \(error)")
                 return
             }
 
-            switch repositoryError {
-            case .failedToRewind(let height):
-                XCTAssertEqual(height, expectedHeight)
+            switch error {
+            case let .rustRewindToHeight(height, _):
+                XCTAssertEqual(BlockHeight(height), expectedHeight)
             default:
-                XCTFail("Expected `CompactBlockRepositoryError.failedToRewind`. Found \(error)")
+                XCTFail("Expected `ZcashError.rustRewindToHeight`. Found \(error)")
             }
         }
     }

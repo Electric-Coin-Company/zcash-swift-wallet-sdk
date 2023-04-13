@@ -346,4 +346,34 @@ enum ZcashErrorDefinition {
     /// Update of the account updated 0 rows in the database. One row should be updated.
     // sourcery: code="ZADAO0007"
     case accountDAOUpdatedZeroRows
+
+    // MARK: - Block storage
+
+    /// Failed to write block to disk.
+    // sourcery: code="ZBLRP00001"
+    case blockRepositoryWriteBlock(_ block: ZcashCompactBlock)
+    /// Failed to get filename for the block from file URL.
+    // sourcery: code="ZBLRP0002"
+    case blockRepositoryGetFilename(_ url: URL)
+    /// Failed to parse block height from filename.
+    // sourcery: code="ZBLRP0003"
+    case blockRepositoryParseHeightFromFilename(_ filename: String)
+    /// Failed to remove existing block from disk.
+    // sourcery: code="ZBLRP0004"
+    case blockRepositoryRemoveExistingBlock(_ error: Error)
+    /// Failed to get filename and information if url points to directory from file URL.
+    // sourcery: code="ZBLRP0005"
+    case blockRepositoryGetFilenameAndIsDirectory(_ url: URL)
+    /// Failed to create blocks cache directory.
+    // sourcery: code="ZBLRP0006"
+    case blockRepositoryCreateBlocksCacheDirectory(_ url: URL)
+    /// Failed to read content of directory.
+    // sourcery: code="ZBLRP0007"
+    case blockRepositoryReadDirectoryContent(_ url: URL)
+    /// Failed to remove block from disk after rewind operation.
+    // sourcery: code="ZBLRP0008"
+    case blockRepositoryRemoveBlockAfterRewind(_ url: URL)
+    /// Failed to remove blocks cache directory while clearing storage.
+    // sourcery: code="ZBLRP0009"
+    case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL)
 }
