@@ -49,14 +49,18 @@ class FSCompactBlockRepository {
 extension FSCompactBlockRepository: CompactBlockRepository {
     func create() async throws {
         if !fileManager.fileExists(atPath: blocksDirectory.path) {
-            try fileManager.createDirectory(at: blocksDirectory, withIntermediateDirectories: true)
+            do {
+                try fileManager.createDirectory(at: blocksDirectory, withIntermediateDirectories: true)
+            } catch {
+                throw ZcashError.blockRepositoryCreateBlocksCacheDirectory(blocksDirectory)
+            }
         }
 
         do {
             try await self.metadataStore.initFsBlockDbRoot()
         } catch {
             logger.error("Blocks metadata store init failed with error: \(error)")
-            throw CompactBlockRepositoryError.failedToInitializeCache
+            throw error
         }
     }
 
@@ -74,7 +78,11 @@ extension FSCompactBlockRepository: CompactBlockRepository {
 
                 if self.blockExistsInCache(block) {
                     // remove if needed
-                    try self.fileManager.removeItem(at: blockURL)
+                    do {
+                        try self.fileManager.removeItem(at: blockURL)
+                    } catch {
+                        throw ZcashError.blockRepositoryRemoveExistingBlock(error)
+                    }
                 }
 
                 // store atomically
@@ -82,7 +90,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
                     try self.fileWriter.writeToURL(block.data, blockURL)
                 } catch {
                     logger.error("Failed to write block: \(block.height) to path: \(blockURL.path) with error: \(error)")
-                    throw CompactBlockRepositoryError.failedToWriteBlock(block)
+                    throw ZcashError.blockRepositoryWriteBlock(block)
                 }
 
                 savedBlocks.append(block)
@@ -116,13 +124,21 @@ extension FSCompactBlockRepository: CompactBlockRepository {
         else { return }
 
         for item in deleteList {
-            try self.fileManager.removeItem(at: item)
+            do {
+                try self.fileManager.removeItem(at: item)
+            } catch {
+                throw ZcashError.blockRepositoryRemoveBlockAfterRewind(item)
+            }
         }
     }
 
     func clear() async throws {
         if self.fileManager.fileExists(atPath: self.fsBlockDbRoot.path) {
-            try self.fileManager.removeItem(at: self.fsBlockDbRoot)
+            do {
+                try self.fileManager.removeItem(at: self.fsBlockDbRoot)
+            } catch {
+                throw ZcashError.blockRepositoryRemoveBlocksCacheDirectory(fsBlockDbRoot)
+            }
         }
         try await create()
     }
@@ -175,7 +191,7 @@ extension FSCompactBlockRepository {
         // then return their URLs
         let deleteList = try sortedCachedContents.filter({ url in
             guard let filename = try url.resourceValues(forKeys: [.nameKey]).name else {
-                throw CompactBlockRepositoryError.malformedCacheEntry("failed to get url \(url) from cache")
+                throw ZcashError.blockRepositoryGetFilename(url)
             }
 
             return try filename.filterGreaterThan(toHeight, with: blockDescriptor)
@@ -227,11 +243,7 @@ extension FSMetadataStore {
                 logger: logger
             )
         } rewindToHeight: { height in
-            do {
-                try await rustBackend.rewindCacheToHeight(height: Int32(height))
-            } catch {
-                throw CompactBlockRepositoryError.failedToRewind(height)
-            }
+            try await rustBackend.rewindCacheToHeight(height: Int32(height))
         } initFsBlockDbRoot: {
             try await rustBackend.initBlockMetadataDb()
         } latestHeight: {
@@ -258,7 +270,7 @@ extension FSMetadataStore {
             try await rustBackend.writeBlocksMetadata(blocks: blocks)
         } catch {
             logger.error("Failed to write metadata with error: \(error)")
-            throw CompactBlockRepositoryError.failedToWriteMetadata
+            throw error
         }
     }
 }
@@ -312,12 +324,16 @@ class SortedDirectoryContentProvider: SortedDirectoryListing {
     /// - Returns an array with the contained files or an empty one if the directory is empty
     /// - Throws: rethrows any errors from the underlying `FileManager`
     func listContents(of url: URL) throws -> [URL] {
-        try fileManager.contentsOfDirectory(
-            at: url,
-            includingPropertiesForKeys: [.nameKey, .isDirectoryKey],
-            options: recursive ? [] : .skipsSubdirectoryDescendants
-        )
-        .sorted(by: sorting)
+        do {
+            return try fileManager.contentsOfDirectory(
+                at: url,
+                includingPropertiesForKeys: [.nameKey, .isDirectoryKey],
+                options: recursive ? [] : .skipsSubdirectoryDescendants
+            )
+            .sorted(by: sorting)
+        } catch {
+            throw ZcashError.blockRepositoryReadDirectoryContent(url)
+        }
     }
 }
 
@@ -329,13 +345,17 @@ protocol SortedDirectoryListing {
 extension URL {
     /// asumes that URLs are from the same directory for efficiency reasons
     static let areInIncreasingOrderByFilename: (URL, URL) throws -> Bool = { lhs, rhs in
-        guard
-            let lhsName = try lhs.resourceValues(forKeys: [.nameKey, .isDirectoryKey]).name,
-            let rhsName = try rhs.resourceValues(forKeys: [.nameKey, .isDirectoryKey]).name else {
-            throw URLError(URLError.badURL)
+        guard let lhsName = try lhs.resourceValues(forKeys: [.nameKey, .isDirectoryKey]).name else {
+            throw ZcashError.blockRepositoryGetFilenameAndIsDirectory(lhs)
         }
 
-        guard let strcmp = FSCompactBlockRepository.filenameComparison(lhsName, rhsName) else { throw URLError(URLError.badURL) }
+        guard let rhsName = try rhs.resourceValues(forKeys: [.nameKey, .isDirectoryKey]).name else {
+            throw ZcashError.blockRepositoryGetFilenameAndIsDirectory(rhs)
+        }
+
+        guard let strcmp = FSCompactBlockRepository.filenameComparison(lhsName, rhsName) else {
+            throw ZcashError.blockRepositoryGetFilenameAndIsDirectory(lhs)
+        }
 
         return strcmp < 0
     }
@@ -343,11 +363,15 @@ extension URL {
 
 extension FileManager: SortedDirectoryListing {
     func listContents(of url: URL) throws -> [URL] {
-        try contentsOfDirectory(
-            at: url,
-            includingPropertiesForKeys: [.nameKey, .isDirectoryKey],
-            options: .skipsSubdirectoryDescendants
-        )
+        do {
+            return try contentsOfDirectory(
+                at: url,
+                includingPropertiesForKeys: [.nameKey, .isDirectoryKey],
+                options: .skipsSubdirectoryDescendants
+            )
+        } catch {
+            throw ZcashError.blockRepositoryReadDirectoryContent(url)
+        }
     }
 }
 
@@ -361,7 +385,7 @@ extension String {
     /// can't be parsed by the given `ZcashCompactBlockDescriptor`
     func filterGreaterThan(_ height: BlockHeight, with descriptor: ZcashCompactBlockDescriptor) throws -> Bool {
         guard let blockHeight = descriptor.height(self) else {
-            throw CompactBlockRepositoryError.malformedCacheEntry("couldn't retrieve filename from file \(self)")
+            throw ZcashError.blockRepositoryParseHeightFromFilename(self)
         }
 
         return blockHeight > height

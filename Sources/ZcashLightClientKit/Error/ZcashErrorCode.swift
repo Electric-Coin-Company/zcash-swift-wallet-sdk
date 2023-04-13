@@ -221,4 +221,22 @@ public enum ZcashErrorCode: String {
     case accountDAOUpdate = "ZADAO0006"
     /// Update of the account updated 0 rows in the database. One row should be updated.
     case accountDAOUpdatedZeroRows = "ZADAO0007"
+    /// Failed to write block to disk.
+    case blockRepositoryWriteBlock = "ZBLRP00001"
+    /// Failed to get filename for the block from file URL.
+    case blockRepositoryGetFilename = "ZBLRP0002"
+    /// Failed to parse block height from filename.
+    case blockRepositoryParseHeightFromFilename = "ZBLRP0003"
+    /// Failed to remove existing block from disk.
+    case blockRepositoryRemoveExistingBlock = "ZBLRP0004"
+    /// Failed to get filename and information if url points to directory from file URL.
+    case blockRepositoryGetFilenameAndIsDirectory = "ZBLRP0005"
+    /// Failed to create blocks cache directory.
+    case blockRepositoryCreateBlocksCacheDirectory = "ZBLRP0006"
+    /// Failed to read content of directory.
+    case blockRepositoryReadDirectoryContent = "ZBLRP0007"
+    /// Failed to remove block from disk after rewind operation.
+    case blockRepositoryRemoveBlockAfterRewind = "ZBLRP0008"
+    /// Failed to remove blocks cache directory while clearing storage.
+    case blockRepositoryRemoveBlocksCacheDirectory = "ZBLRP0009"
 }
