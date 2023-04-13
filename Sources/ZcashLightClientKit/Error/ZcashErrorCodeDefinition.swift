@@ -22,13 +22,6 @@ import Foundation
 */
 
 enum ZcashErrorDefinition {
-    /// Some testing code for now. Will be removed later.
-    /// Some multiline super doc:
-    /// - message - Message associated with error
-    /// - code - Code for error.
-    /// - error - underlying error
-    // sourcery: code="ZTEST0001"
-    case testCodeWithMessage(_ code: Int, _ error: Error)
     /// Unknown GRPC Service error
     // sourcery: code="ZSRVC0001"
     case serviceUnknownError(_ error: Error)
@@ -69,4 +62,8 @@ enum ZcashErrorDefinition {
     /// Migration of the pending DB to version 2 failed.
     // sourcery: code="ZDBMG00004"
     case dbMigrationV2(_ dbError: Error)
+
+    /// SimpleConnectionProvider init of Connection failed.
+    // sourcery: code="ZSCPC0001"
+    case simpleConnectionProvider(_ error: Error)
 }

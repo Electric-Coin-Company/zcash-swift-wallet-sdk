@@ -9,13 +9,6 @@ error originates. And it can help with debugging.
 */
 
 public enum ZcashError: Equatable, Error {
-    /// Some testing code for now. Will be removed later.
-    /// Some multiline super doc:
-    /// - message - Message associated with error
-    /// - code - Code for error.
-    /// - error - underlying error
-    /// ZTEST0001
-    case testCodeWithMessage(_ message: String, _ code: Int, _ error: Error)
     /// Unknown GRPC Service error
     /// ZSRVC0001
     case serviceUnknownError(_ error: Error)
@@ -55,10 +48,12 @@ public enum ZcashError: Equatable, Error {
     /// Migration of the pending DB to version 2 failed.
     /// ZDBMG00004
     case dbMigrationV2(_ dbError: Error)
+    /// SimpleConnectionProvider init of Connection failed.
+    /// ZSCPC0001
+    case simpleConnectionProvider(_ error: Error)
 
     public var message: String {
         switch self {
-        case .testCodeWithMessage: return "Some testing code for now. Will be removed later."
         case .serviceUnknownError: return "Unknown GRPC Service error"
         case .serviceGetInfoFailed: return "LightWalletService.getInfo failed."
         case .serviceLatestBlockFailed: return "LightWalletService.latestBlock failed."
@@ -72,12 +67,12 @@ public enum ZcashError: Equatable, Error {
         case .dbMigrationInvalidVersion: return "Migration of the pending DB failed because unknown version of the existing database."
         case .dbMigrationV1: return "Migration of the pending DB to version 1 failed."
         case .dbMigrationV2: return "Migration of the pending DB to version 2 failed."
+        case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
         }
     }
 
     public var code: ZcashErrorCode {
         switch self {
-        case .testCodeWithMessage: return .testCodeWithMessage
         case .serviceUnknownError: return .serviceUnknownError
         case .serviceGetInfoFailed: return .serviceGetInfoFailed
         case .serviceLatestBlockFailed: return .serviceLatestBlockFailed
@@ -91,6 +86,7 @@ public enum ZcashError: Equatable, Error {
         case .dbMigrationInvalidVersion: return .dbMigrationInvalidVersion
         case .dbMigrationV1: return .dbMigrationV1
         case .dbMigrationV2: return .dbMigrationV2
+        case .simpleConnectionProvider: return .simpleConnectionProvider
         }
     }
 

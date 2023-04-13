@@ -9,12 +9,6 @@ error originates. And it can help with debugging.
 */
 
 public enum ZcashErrorCode: String {
-    /// Some testing code for now. Will be removed later.
-    /// Some multiline super doc:
-    /// - message - Message associated with error
-    /// - code - Code for error.
-    /// - error - underlying error
-    case testCodeWithMessage = "ZTEST0001"
     /// Unknown GRPC Service error
     case serviceUnknownError = "ZSRVC0001"
     /// LightWalletService.getInfo failed.
@@ -41,4 +35,6 @@ public enum ZcashErrorCode: String {
     case dbMigrationV1 = "ZDBMG00003"
     /// Migration of the pending DB to version 2 failed.
     case dbMigrationV2 = "ZDBMG00004"
+    /// SimpleConnectionProvider init of Connection failed.
+    case simpleConnectionProvider = "ZSCPC0001"
 }
