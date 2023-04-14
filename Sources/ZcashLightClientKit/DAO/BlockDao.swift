@@ -48,24 +48,60 @@ class BlockSQLDAO: BlockDao {
         self.table = Table("Blocks")
     }
 
+    /// - Throws:
+    ///     - `blockDAOCantDecode` if block data loaded from DB can't be decoded to `Block` object.
+    ///     - `blockDAOBlock` if sqlite query to load block metadata failed.
     func block(at height: BlockHeight) throws -> Block? {
-        try dbProvider
-            .connection()
-            .prepare(Block.table.filter(Block.TableStructure.height == height).limit(1))
-            .map({ try $0.decode() })
-            .first
+        do {
+            return try dbProvider
+                .connection()
+                .prepare(Block.table.filter(Block.TableStructure.height == height).limit(1))
+                .map {
+                    do {
+                        return try $0.decode()
+                    } catch {
+                        throw ZcashError.blockDAOCantDecode(error)
+                    }
+                }
+                .first
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.blockDAOBlock(error)
+            }
+        }
     }
 
+    /// - Throws: `blockDAOLatestBlockHeight` if sqlite to fetch height fails.
     func latestBlockHeight() throws -> BlockHeight {
-        try dbProvider.connection().scalar(table.select(height.max)) ?? BlockHeight.empty()
+        do {
+            return try dbProvider.connection().scalar(table.select(height.max)) ?? BlockHeight.empty()
+        } catch {
+            throw ZcashError.blockDAOLatestBlockHeight(error)
+        }
     }
     
     func latestBlock() throws -> Block? {
-        try dbProvider
-            .connection()
-            .prepare(Block.table.order(height.desc).limit(1))
-            .map({ try $0.decode() })
-            .first
+        do {
+            return try dbProvider
+                .connection()
+                .prepare(Block.table.order(height.desc).limit(1))
+                .map {
+                    do {
+                        return try $0.decode()
+                    } catch {
+                        throw ZcashError.blockDAOLatestBlockCantDecode(error)
+                    }
+                }
+                .first
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.blockDAOLatestBlock(error)
+            }
+        }
     }
 }
 

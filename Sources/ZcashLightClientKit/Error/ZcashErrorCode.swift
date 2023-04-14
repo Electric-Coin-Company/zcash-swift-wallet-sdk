@@ -68,4 +68,19 @@ public enum ZcashErrorCode: String {
     /// Fetched note from the SQLite but can't decode that.
     /// - `error` is decoding error.
     case notesDAOSentCantDecode = "ZNDAO0006"
+    /// SQLite query failed when fetching block information from database.
+    /// - `sqliteError` is error produced by SQLite library.
+    case blockDAOBlock = "ZBDAO0001"
+    /// Fetched block information from DB but can't decode them.
+    /// - `error` is decoding error.
+    case blockDAOCantDecode = "ZBDAO0002"
+    /// SQLite query failed when fetching height of the latest block from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    case blockDAOLatestBlockHeight = "ZBDAO0003"
+    /// SQLite query failed when fetching the latest block from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    case blockDAOLatestBlock = "ZBDAO0004"
+    /// Fetched latesxt block information from DB but can't decode them.
+    /// - `error` is decoding error.
+    case blockDAOLatestBlockCantDecode = "ZBDAO0005"
 }

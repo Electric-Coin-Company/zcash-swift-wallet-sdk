@@ -94,6 +94,26 @@ public enum ZcashError: Equatable, Error {
     /// - `error` is decoding error.
     /// ZNDAO0006
     case notesDAOSentCantDecode(_ error: Error)
+    /// SQLite query failed when fetching block information from database.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZBDAO0001
+    case blockDAOBlock(_ sqliteError: Error)
+    /// Fetched block information from DB but can't decode them.
+    /// - `error` is decoding error.
+    /// ZBDAO0002
+    case blockDAOCantDecode(_ error: Error)
+    /// SQLite query failed when fetching height of the latest block from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZBDAO0003
+    case blockDAOLatestBlockHeight(_ sqliteError: Error)
+    /// SQLite query failed when fetching the latest block from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZBDAO0004
+    case blockDAOLatestBlock(_ sqliteError: Error)
+    /// Fetched latesxt block information from DB but can't decode them.
+    /// - `error` is decoding error.
+    /// ZBDAO0005
+    case blockDAOLatestBlockCantDecode(_ error: Error)
 
     public var message: String {
         switch self {
@@ -121,6 +141,11 @@ public enum ZcashError: Equatable, Error {
         case .notesDAOSentCount: return "SQLite query failed when fetching sent notes count from the database."
         case .notesDAOSentNote: return "SQLite query failed when fetching sent notes from the database."
         case .notesDAOSentCantDecode: return "Fetched note from the SQLite but can't decode that."
+        case .blockDAOBlock: return "SQLite query failed when fetching block information from database."
+        case .blockDAOCantDecode: return "Fetched block information from DB but can't decode them."
+        case .blockDAOLatestBlockHeight: return "SQLite query failed when fetching height of the latest block from the database."
+        case .blockDAOLatestBlock: return "SQLite query failed when fetching the latest block from the database."
+        case .blockDAOLatestBlockCantDecode: return "Fetched latesxt block information from DB but can't decode them."
         }
     }
 
@@ -150,6 +175,11 @@ public enum ZcashError: Equatable, Error {
         case .notesDAOSentCount: return .notesDAOSentCount
         case .notesDAOSentNote: return .notesDAOSentNote
         case .notesDAOSentCantDecode: return .notesDAOSentCantDecode
+        case .blockDAOBlock: return .blockDAOBlock
+        case .blockDAOCantDecode: return .blockDAOCantDecode
+        case .blockDAOLatestBlockHeight: return .blockDAOLatestBlockHeight
+        case .blockDAOLatestBlock: return .blockDAOLatestBlock
+        case .blockDAOLatestBlockCantDecode: return .blockDAOLatestBlockCantDecode
         }
     }
 
