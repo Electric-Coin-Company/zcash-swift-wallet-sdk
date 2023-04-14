@@ -15,16 +15,16 @@ extension String: Error { }
 
 class AwfulLightWalletService: MockLightWalletService {
     override func latestBlockHeight() async throws -> BlockHeight {
-        throw LightWalletServiceError.criticalError
+        throw ZcashError.serviceLatestBlockFailed(.criticalError)
     }
 
     override func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
-        AsyncThrowingStream { continuation in continuation.finish(throwing: LightWalletServiceError.invalidBlock) }
+        AsyncThrowingStream { continuation in continuation.finish(throwing: ZcashError.serviceSubmitFailed(.invalidBlock)) }
     }
 
     /// Submits a raw transaction over lightwalletd.
     override func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
-        throw LightWalletServiceError.invalidBlock
+        throw ZcashError.serviceSubmitFailed(.invalidBlock)
     }
 }
 

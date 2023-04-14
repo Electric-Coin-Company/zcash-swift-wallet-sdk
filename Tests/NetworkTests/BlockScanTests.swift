@@ -235,9 +235,9 @@ class BlockScanTests: XCTestCase {
             try await compactBlockProcessor.blockScanner.scanBlocks(at: range, totalProgressRange: range, didScan: { _ in })
             XCTAssertFalse(Task.isCancelled)
         } catch {
-            if let lwdError = error as? LightWalletServiceError {
+            if let lwdError = error as? ZcashError {
                 switch lwdError {
-                case .timeOut:
+                case .serviceBlockStreamFailed:
                     XCTAssert(true)
                 default:
                     XCTFail("LWD Service error found, but should have been a timeLimit reached Error - \(lwdError)")
