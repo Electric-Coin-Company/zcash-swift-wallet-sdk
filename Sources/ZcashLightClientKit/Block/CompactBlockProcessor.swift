@@ -1420,7 +1420,7 @@ extension CompactBlockProcessor {
                 await latestBlocksDataProvider.updateScannedData()
                 await latestBlocksDataProvider.updateBlockData()
 
-                return try await internalSyncProgress.computeNextState(
+                return await internalSyncProgress.computeNextState(
                     latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
                     latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
                     walletBirthday: config.walletBirthday
