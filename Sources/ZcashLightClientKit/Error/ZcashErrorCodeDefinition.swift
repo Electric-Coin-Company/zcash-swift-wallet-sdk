@@ -66,4 +66,25 @@ enum ZcashErrorDefinition {
     /// SimpleConnectionProvider init of Connection failed.
     // sourcery: code="ZSCPC0001"
     case simpleConnectionProvider(_ error: Error)
+
+    // MARK: - Sapling parameters download
+
+    /// Downloaded file with sapling spending parameters isn't valid.
+    // sourcery: code="ZSAPP0001"
+    case saplingParamsInvalidSpendParams
+    /// Downloaded file with sapling output parameters isn't valid.
+    // sourcery: code="ZSAPP0002"
+    case saplingParamsInvalidOutputParams
+    /// Failed to download sapling parameters file
+    /// - `error` is download error.
+    /// - `downloadURL` is URL from which was file downloaded.
+    // sourcery: code="ZSAPP0003"
+    case saplingParamsDownload(_ error: Error, _ downloadURL: URL)
+    /// Failed to move sapling parameters file to final destination after download.
+    /// - `error` is move error.
+    /// - `downloadURL` is URL from which was file downloaded.
+    /// - `destination` is filesystem URL pointing to location where downloaded file should be moved.
+    // sourcery: code="ZSAPP0004"
+    case saplingParamsCantMoveDownloadedFile(_ error: Error, _ downloadURL: URL, _ destination: URL)
+
 }
