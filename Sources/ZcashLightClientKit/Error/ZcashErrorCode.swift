@@ -50,4 +50,22 @@ public enum ZcashErrorCode: String {
     /// - `downloadURL` is URL from which was file downloaded.
     /// - `destination` is filesystem URL pointing to location where downloaded file should be moved.
     case saplingParamsCantMoveDownloadedFile = "ZSAPP0004"
+    /// SQLite query failed when fetching received notes count from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    case notesDAOReceivedCount = "ZNDAO0001"
+    /// SQLite query failed when fetching received notes from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    case notesDAOReceivedNote = "ZNDAO0002"
+    /// Fetched note from the SQLite but can't decode that.
+    /// - `error` is decoding error.
+    case notesDAOReceivedCantDecode = "ZNDAO0003"
+    /// SQLite query failed when fetching sent notes count from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    case notesDAOSentCount = "ZNDAO0004"
+    /// SQLite query failed when fetching sent notes from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    case notesDAOSentNote = "ZNDAO0005"
+    /// Fetched note from the SQLite but can't decode that.
+    /// - `error` is decoding error.
+    case notesDAOSentCantDecode = "ZNDAO0006"
 }
