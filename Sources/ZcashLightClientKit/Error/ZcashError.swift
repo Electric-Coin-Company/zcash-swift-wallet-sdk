@@ -8,6 +8,8 @@ By design each error should be used only at one place in the app. Thanks to that
 error originates. And it can help with debugging.
 */
 
+import Foundation
+
 public enum ZcashError: Equatable, Error {
     /// Unknown GRPC Service error
     /// ZSRVC0001
@@ -51,6 +53,23 @@ public enum ZcashError: Equatable, Error {
     /// SimpleConnectionProvider init of Connection failed.
     /// ZSCPC0001
     case simpleConnectionProvider(_ error: Error)
+    /// Downloaded file with sapling spending parameters isn't valid.
+    /// ZSAPP0001
+    case saplingParamsInvalidSpendParams
+    /// Downloaded file with sapling output parameters isn't valid.
+    /// ZSAPP0002
+    case saplingParamsInvalidOutputParams
+    /// Failed to download sapling parameters file
+    /// - `error` is download error.
+    /// - `downloadURL` is URL from which was file downloaded.
+    /// ZSAPP0003
+    case saplingParamsDownload(_ error: Error, _ downloadURL: URL)
+    /// Failed to move sapling parameters file to final destination after download.
+    /// - `error` is move error.
+    /// - `downloadURL` is URL from which was file downloaded.
+    /// - `destination` is filesystem URL pointing to location where downloaded file should be moved.
+    /// ZSAPP0004
+    case saplingParamsCantMoveDownloadedFile(_ error: Error, _ downloadURL: URL, _ destination: URL)
 
     public var message: String {
         switch self {
@@ -68,6 +87,10 @@ public enum ZcashError: Equatable, Error {
         case .dbMigrationV1: return "Migration of the pending DB to version 1 failed."
         case .dbMigrationV2: return "Migration of the pending DB to version 2 failed."
         case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
+        case .saplingParamsInvalidSpendParams: return "Downloaded file with sapling spending parameters isn't valid."
+        case .saplingParamsInvalidOutputParams: return "Downloaded file with sapling output parameters isn't valid."
+        case .saplingParamsDownload: return "Failed to download sapling parameters file"
+        case .saplingParamsCantMoveDownloadedFile: return "Failed to move sapling parameters file to final destination after download."
         }
     }
 
@@ -87,6 +110,10 @@ public enum ZcashError: Equatable, Error {
         case .dbMigrationV1: return .dbMigrationV1
         case .dbMigrationV2: return .dbMigrationV2
         case .simpleConnectionProvider: return .simpleConnectionProvider
+        case .saplingParamsInvalidSpendParams: return .saplingParamsInvalidSpendParams
+        case .saplingParamsInvalidOutputParams: return .saplingParamsInvalidOutputParams
+        case .saplingParamsDownload: return .saplingParamsDownload
+        case .saplingParamsCantMoveDownloadedFile: return .saplingParamsCantMoveDownloadedFile
         }
     }
 

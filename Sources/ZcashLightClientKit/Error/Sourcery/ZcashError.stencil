@@ -5,6 +5,8 @@ By design each error should be used only at one place in the app. Thanks to that
 error originates. And it can help with debugging.
 */
 
+import Foundation
+
 {% for type in types.enums where type.name == "ZcashErrorDefinition" %}
 public enum ZcashError: Equatable, Error {
     {% for case in type.cases %}

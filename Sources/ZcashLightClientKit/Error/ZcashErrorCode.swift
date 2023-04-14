@@ -37,4 +37,17 @@ public enum ZcashErrorCode: String {
     case dbMigrationV2 = "ZDBMG00004"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
+    /// Downloaded file with sapling spending parameters isn't valid.
+    case saplingParamsInvalidSpendParams = "ZSAPP0001"
+    /// Downloaded file with sapling output parameters isn't valid.
+    case saplingParamsInvalidOutputParams = "ZSAPP0002"
+    /// Failed to download sapling parameters file
+    /// - `error` is download error.
+    /// - `downloadURL` is URL from which was file downloaded.
+    case saplingParamsDownload = "ZSAPP0003"
+    /// Failed to move sapling parameters file to final destination after download.
+    /// - `error` is move error.
+    /// - `downloadURL` is URL from which was file downloaded.
+    /// - `destination` is filesystem URL pointing to location where downloaded file should be moved.
+    case saplingParamsCantMoveDownloadedFile = "ZSAPP0004"
 }
