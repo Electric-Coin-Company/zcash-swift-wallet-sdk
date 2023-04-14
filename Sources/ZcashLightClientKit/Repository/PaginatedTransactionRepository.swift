@@ -24,12 +24,12 @@ public protocol PaginatedTransactionRepository {
     var itemCount: Int { get async }
 
     /**
-    Returns the page number if exists. Blocking
+    Returns the page number if exists.
     */
     func page(_ number: Int) async throws -> [ZcashTransaction.Overview]?
     
     /**
-    Returns the page number if exists. Non-blocking
+    Returns the page number if exists.
     */
     func page(_ number: Int, result: @escaping (Result<[ZcashTransaction.Overview]?, Error>) -> Void)
 }

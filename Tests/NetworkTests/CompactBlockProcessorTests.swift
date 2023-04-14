@@ -90,13 +90,22 @@ class CompactBlockProcessorTests: XCTestCase {
 
         try await storage.create()
         
+        let transactionRepository = MockTransactionRepository(
+            unminedCount: 0,
+            receivedCount: 0,
+            sentCount: 0,
+            scannedHeight: 0,
+            network: network
+        )
+        
         processor = CompactBlockProcessor(
             service: service,
             storage: storage,
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
         )
 
         let dbInit = try await rustBackend.initDataDb(seed: nil)

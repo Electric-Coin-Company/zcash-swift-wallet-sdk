@@ -100,7 +100,11 @@ extension MockTransactionRepository: TransactionRepository {
     }
 
     func lastScannedHeight() throws -> BlockHeight {
-        return scannedHeight
+        scannedHeight
+    }
+
+    func lastScannedBlock() throws -> Block? {
+        nil
     }
 
     func isInitialized() throws -> Bool {

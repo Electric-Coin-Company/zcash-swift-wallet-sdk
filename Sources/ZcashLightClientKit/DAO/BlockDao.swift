@@ -11,6 +11,7 @@ import SQLite
 
 protocol BlockDao {
     func latestBlockHeight() throws -> BlockHeight
+    func latestBlock() throws -> Block?
     func block(at height: BlockHeight) throws -> Block?
 }
 
@@ -41,7 +42,7 @@ class BlockSQLDAO: BlockDao {
     var dbProvider: ConnectionProvider
     var table: Table
     var height = Expression<Int>("height")
-    
+
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
         self.table = Table("Blocks")
@@ -54,9 +55,17 @@ class BlockSQLDAO: BlockDao {
             .map({ try $0.decode() })
             .first
     }
-    
+
     func latestBlockHeight() throws -> BlockHeight {
         try dbProvider.connection().scalar(table.select(height.max)) ?? BlockHeight.empty()
+    }
+    
+    func latestBlock() throws -> Block? {
+        try dbProvider
+            .connection()
+            .prepare(Block.table.order(height.desc).limit(1))
+            .map({ try $0.decode() })
+            .first
     }
 }
 

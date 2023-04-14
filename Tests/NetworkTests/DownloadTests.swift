@@ -61,7 +61,8 @@ class DownloadTests: XCTestCase {
             rustBackend: rustBackend,
             config: processorConfig,
             metrics: SDKMetrics(),
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: LatestBlocksDataProviderMock()
         )
         
         do {

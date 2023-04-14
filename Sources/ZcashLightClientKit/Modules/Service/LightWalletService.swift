@@ -154,7 +154,6 @@ protocol LightWalletService: AnyObject {
     func getInfo() async throws -> LightWalletdInfo
 
     /// Return the latest block height known to the service.
-    /// Blocking API
     func latestBlockHeight() async throws -> BlockHeight
 
     /// Return the given range of blocks.
@@ -162,7 +161,7 @@ protocol LightWalletService: AnyObject {
     ///     For instance if 1..5 is given, then every block in that will be fetched, including 1 and 5.
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error>
     
-    /// Submits a raw transaction over lightwalletd. Non-Blocking
+    /// Submits a raw transaction over lightwalletd.
     /// - Parameter spendTransaction: data representing the transaction to be sent
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse
     

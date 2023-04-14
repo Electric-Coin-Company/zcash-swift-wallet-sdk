@@ -200,3 +200,17 @@ extension CompactBlockProcessor.Configuration {
         )
     }
 }
+
+extension SynchronizerState {
+    static var mock: SynchronizerState {
+        SynchronizerState(
+            syncSessionID: .nullID,
+            shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
+            transparentBalance: WalletBalance(verified: Zatoshi(200), total: Zatoshi(300)),
+            syncStatus: .fetching,
+            latestScannedHeight: 111111,
+            latestBlockHeight: 222222,
+            latestScannedTime: 12345678
+        )
+    }
+}
