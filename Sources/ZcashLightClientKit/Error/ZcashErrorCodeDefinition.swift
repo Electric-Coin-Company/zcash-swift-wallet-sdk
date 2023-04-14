@@ -87,4 +87,30 @@ enum ZcashErrorDefinition {
     // sourcery: code="ZSAPP0004"
     case saplingParamsCantMoveDownloadedFile(_ error: Error, _ downloadURL: URL, _ destination: URL)
 
+    // MARK: - NotesDAO
+
+    /// SQLite query failed when fetching received notes count from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZNDAO0001"
+    case notesDAOReceivedCount(_ sqliteError: Error)
+    /// SQLite query failed when fetching received notes from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZNDAO0002"
+    case notesDAOReceivedNote(_ sqliteError: Error)
+    /// Fetched note from the SQLite but can't decode that.
+    /// - `error` is decoding error.
+    // sourcery: code="ZNDAO0003"
+    case notesDAOReceivedCantDecode(_ error: Error)
+    /// SQLite query failed when fetching sent notes count from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZNDAO0004"
+    case notesDAOSentCount(_ sqliteError: Error)
+    /// SQLite query failed when fetching sent notes from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZNDAO0005"
+    case notesDAOSentNote(_ sqliteError: Error)
+    /// Fetched note from the SQLite but can't decode that.
+    /// - `error` is decoding error.
+    // sourcery: code="ZNDAO0006"
+    case notesDAOSentCantDecode(_ error: Error)
 }

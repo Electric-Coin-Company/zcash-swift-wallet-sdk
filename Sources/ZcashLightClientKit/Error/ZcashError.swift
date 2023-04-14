@@ -70,6 +70,30 @@ public enum ZcashError: Equatable, Error {
     /// - `destination` is filesystem URL pointing to location where downloaded file should be moved.
     /// ZSAPP0004
     case saplingParamsCantMoveDownloadedFile(_ error: Error, _ downloadURL: URL, _ destination: URL)
+    /// SQLite query failed when fetching received notes count from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZNDAO0001
+    case notesDAOReceivedCount(_ sqliteError: Error)
+    /// SQLite query failed when fetching received notes from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZNDAO0002
+    case notesDAOReceivedNote(_ sqliteError: Error)
+    /// Fetched note from the SQLite but can't decode that.
+    /// - `error` is decoding error.
+    /// ZNDAO0003
+    case notesDAOReceivedCantDecode(_ error: Error)
+    /// SQLite query failed when fetching sent notes count from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZNDAO0004
+    case notesDAOSentCount(_ sqliteError: Error)
+    /// SQLite query failed when fetching sent notes from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZNDAO0005
+    case notesDAOSentNote(_ sqliteError: Error)
+    /// Fetched note from the SQLite but can't decode that.
+    /// - `error` is decoding error.
+    /// ZNDAO0006
+    case notesDAOSentCantDecode(_ error: Error)
 
     public var message: String {
         switch self {
@@ -91,6 +115,12 @@ public enum ZcashError: Equatable, Error {
         case .saplingParamsInvalidOutputParams: return "Downloaded file with sapling output parameters isn't valid."
         case .saplingParamsDownload: return "Failed to download sapling parameters file"
         case .saplingParamsCantMoveDownloadedFile: return "Failed to move sapling parameters file to final destination after download."
+        case .notesDAOReceivedCount: return "SQLite query failed when fetching received notes count from the database."
+        case .notesDAOReceivedNote: return "SQLite query failed when fetching received notes from the database."
+        case .notesDAOReceivedCantDecode: return "Fetched note from the SQLite but can't decode that."
+        case .notesDAOSentCount: return "SQLite query failed when fetching sent notes count from the database."
+        case .notesDAOSentNote: return "SQLite query failed when fetching sent notes from the database."
+        case .notesDAOSentCantDecode: return "Fetched note from the SQLite but can't decode that."
         }
     }
 
@@ -114,6 +144,12 @@ public enum ZcashError: Equatable, Error {
         case .saplingParamsInvalidOutputParams: return .saplingParamsInvalidOutputParams
         case .saplingParamsDownload: return .saplingParamsDownload
         case .saplingParamsCantMoveDownloadedFile: return .saplingParamsCantMoveDownloadedFile
+        case .notesDAOReceivedCount: return .notesDAOReceivedCount
+        case .notesDAOReceivedNote: return .notesDAOReceivedNote
+        case .notesDAOReceivedCantDecode: return .notesDAOReceivedCantDecode
+        case .notesDAOSentCount: return .notesDAOSentCount
+        case .notesDAOSentNote: return .notesDAOSentNote
+        case .notesDAOSentCantDecode: return .notesDAOSentCantDecode
         }
     }
 
