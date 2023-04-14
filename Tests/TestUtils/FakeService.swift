@@ -62,7 +62,7 @@ class MockLightWalletService: LightWalletService {
     
     func getInfo() async throws -> LightWalletdInfo {
         guard let info = mockLightDInfo else {
-            throw LightWalletServiceError.generalError(message: "Not Implemented")
+            throw ZcashError.serviceGetInfoFailed(.generalError(message: "Not Implemented"))
         }
         return info
     }
