@@ -1391,7 +1391,7 @@ extension CompactBlockProcessor {
                 let latestBlockHeight = try await service.latestBlockHeight()
                 let latestScannedHeight = try await transactionRepository.lastScannedHeight()
 
-                return try await internalSyncProgress.computeNextState(
+                return await internalSyncProgress.computeNextState(
                     latestBlockHeight: latestBlockHeight,
                     latestScannedHeight: latestScannedHeight,
                     walletBirthday: config.walletBirthday
