@@ -1416,7 +1416,7 @@ extension CompactBlockProcessor {
 
     /// Deletes the SQLite cacheDb and attempts to initialize the fsBlockDbRoot
     /// - parameter legacyCacheDbURL: the URL where the cache Db used to be stored.
-    /// - Throws `InitializerError.fsCacheInitFailedSameURL` when the given URL
+    /// - Throws: `InitializerError.fsCacheInitFailedSameURL` when the given URL
     /// is the same URL than the one provided as `self.fsBlockDbRoot` assuming that's a
     /// programming error being the `legacyCacheDbURL` a sqlite database file and not a
     /// directory. Also throws errors from initializing the fsBlockDbRoot.

@@ -40,14 +40,16 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey {
-        guard let ffiBinaryKeyPtr = zcashlc_create_account(
+        let ffiBinaryKeyPtr = zcashlc_create_account(
             dbData.0,
             dbData.1,
             seed,
             UInt(seed.count),
             networkType.networkId
-        ) else {
-            throw lastError() ?? .genericError(message: "No error message available")
+        )
+
+        guard let ffiBinaryKeyPtr else {
+            throw ZcashError.rustCreateAccount(lastErrorMessage(fallback: "`createAccount` failed with unknown error"))
         }
 
         defer { zcashlc_free_binary_key(ffiBinaryKeyPtr) }
@@ -81,7 +83,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         guard result > 0 else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createToAddress` failed with unknown error"))
         }
 
         return result
@@ -98,7 +100,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard result != 0 else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustDecryptAndStoreTransaction(lastErrorMessage(fallback: "`decryptAndStoreTransaction` failed with unknown error"))
         }
     }
 
@@ -106,26 +108,28 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         let balance = zcashlc_get_balance(dbData.0, dbData.1, account, networkType.networkId)
 
         guard balance >= 0 else {
-            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting total balance from account \(account)")
+            throw ZcashError.rustGetBalance(Int(account), lastErrorMessage(fallback: "Error getting total balance from account \(account)"))
         }
 
         return balance
     }
 
     func getCurrentAddress(account: Int32) async throws -> UnifiedAddress {
-        guard let addressCStr = zcashlc_get_current_address(
+        let addressCStr = zcashlc_get_current_address(
             dbData.0,
             dbData.1,
             account,
             networkType.networkId
-        ) else {
-            throw lastError() ?? .genericError(message: "No error message available")
+        )
+
+        guard let addressCStr else {
+            throw ZcashError.rustGetCurrentAddress(lastErrorMessage(fallback: "`getCurrentAddress` failed with unknown error"))
         }
 
         defer { zcashlc_string_free(addressCStr) }
 
         guard let address = String(validatingUTF8: addressCStr) else {
-            throw RustWeldingError.unableToDeriveKeys
+            throw ZcashError.rustGetCurrentAddressInvalidAddress
         }
 
         return UnifiedAddress(validatedEncoding: address, networkType: networkType)
@@ -140,26 +144,28 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard result > 0 else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustGetNearestRewindHeight(lastErrorMessage(fallback: "`getNearestRewindHeight` failed with unknown error"))
         }
 
         return result
     }
 
     func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress {
-        guard let addressCStr = zcashlc_get_next_available_address(
+        let addressCStr = zcashlc_get_next_available_address(
             dbData.0,
             dbData.1,
             account,
             networkType.networkId
-        ) else {
-            throw lastError() ?? .genericError(message: "No error message available")
+        )
+
+        guard let addressCStr else {
+            throw ZcashError.rustGetNextAvailableAddress(lastErrorMessage(fallback: "`getNextAvailableAddress` failed with unknown error"))
         }
 
         defer { zcashlc_string_free(addressCStr) }
 
         guard let address = String(validatingUTF8: addressCStr) else {
-            throw RustWeldingError.unableToDeriveKeys
+            throw ZcashError.rustGetNextAvailableAddressInvalidAddress
         }
 
         return UnifiedAddress(validatedEncoding: address, networkType: networkType)
@@ -193,7 +199,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
     func getTransparentBalance(account: Int32) async throws -> Int64 {
         guard account >= 0 else {
-            throw RustWeldingError.invalidInput(message: "Account index must be non-negative")
+            throw ZcashError.rustGetTransparentBalanceNegativeAccount(Int(account))
         }
 
         let balance = zcashlc_get_total_transparent_balance_for_account(
@@ -204,7 +210,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard balance >= 0 else {
-            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting Total Transparent balance from account \(account)")
+            throw ZcashError.rustGetTransparentBalance(
+                Int(account),
+                lastErrorMessage(fallback: "Error getting Total Transparent balance from account \(account)")
+            )
         }
 
         return balance
@@ -220,7 +229,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard balance >= 0 else {
-            throw throwBalanceError(account: account, lastError(), fallbackMessage: "Error getting verified balance from account \(account)")
+            throw ZcashError.rustGetVerifiedBalance(
+                Int(account),
+                lastErrorMessage(fallback: "Error getting verified balance from account \(account)")
+            )
         }
 
         return balance
@@ -228,7 +240,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
     func getVerifiedTransparentBalance(account: Int32) async throws -> Int64 {
         guard account >= 0 else {
-            throw RustWeldingError.invalidInput(message: "`account` must be non-negative")
+            throw ZcashError.rustGetVerifiedTransparentBalanceNegativeAccount(Int(account))
         }
 
         let balance = zcashlc_get_verified_transparent_balance_for_account(
@@ -240,42 +252,13 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         )
 
         guard balance >= 0 else {
-            throw throwBalanceError(
-                account: account,
-                lastError(),
-                fallbackMessage: "Error getting verified transparent balance from account \(account)"
+            throw ZcashError.rustGetVerifiedTransparentBalance(
+                Int(account),
+                lastErrorMessage(fallback: "Error getting verified transparent balance from account \(account)")
             )
         }
 
         return balance
-    }
-
-    private nonisolated func lastError() -> RustWeldingError? {
-        defer { zcashlc_clear_last_error() }
-
-        guard let message = getLastError() else {
-            return nil
-        }
-
-        if message.contains("couldn't load Sapling spend parameters") {
-            return RustWeldingError.saplingSpendParametersNotFound
-        } else if message.contains("is not empty") {
-            return RustWeldingError.dataDbNotEmpty
-        }
-
-        return RustWeldingError.genericError(message: message)
-    }
-
-    private nonisolated func getLastError() -> String? {
-        let errorLen = zcashlc_last_error_length()
-        if errorLen > 0 {
-            let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
-            zcashlc_error_message_utf8(error, errorLen)
-            zcashlc_clear_last_error()
-            return String(validatingUTF8: error)
-        } else {
-            return nil
-        }
     }
 
     func initDataDb(seed: [UInt8]?) async throws -> DbInitResult {
@@ -285,7 +268,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         case 1:
             return DbInitResult.seedRequired
         default:
-            throw throwDataDbError(lastError() ?? .genericError(message: "No error message found"))
+            throw ZcashError.rustInitDataDb(lastErrorMessage(fallback: "`initDataDb` failed with unknown error"))
         }
     }
 
@@ -293,11 +276,11 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         var ffiUfvks: [FFIEncodedKey] = []
         for ufvk in ufvks {
             guard !ufvk.encoding.containsCStringNullBytesBeforeStringEnding() else {
-                throw RustWeldingError.invalidInput(message: "`UFVK` contains null bytes.")
+                throw ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
             }
 
             guard self.keyDeriving.isValidUnifiedFullViewingKey(ufvk.encoding) else {
-                throw RustWeldingError.invalidInput(message: "UFVK is invalid.")
+                throw ZcashError.rustInitAccountsTableViewingKeyIsInvalid
             }
 
             let ufvkCStr = [CChar](String(ufvk.encoding).utf8CString)
@@ -331,7 +314,12 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         guard result else {
-            throw lastError() ?? .genericError(message: "`initAccountsTable` failed with unknown error")
+            let message = lastErrorMessage(fallback: "`initAccountsTable` failed with unknown error")
+            if message.isDbNotEmptyErrorMessage() {
+                throw ZcashError.rustInitAccountsTableDataDbNotEmpty
+            } else {
+                throw ZcashError.rustInitAccountsTable(message)
+            }
         }
     }
 
@@ -339,7 +327,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         let result = zcashlc_init_block_metadata_db(fsBlockDbRoot.0, fsBlockDbRoot.1)
 
         guard result else {
-            throw lastError() ?? .genericError(message: "`initAccountsTable` failed with unknown error")
+            throw ZcashError.rustInitBlockMetadataDb(lastErrorMessage(fallback: "`initBlockMetadataDb` failed with unknown error"))
         }
     }
 
@@ -362,7 +350,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
                     hashPtr.deallocate()
                     ffiBlockMetaVec.deallocateElements()
                 }
-                throw RustWeldingError.writeBlocksMetadataAllocationProblem
+                throw ZcashError.rustWriteBlocksMetadataAllocationProblem
             }
 
             ffiBlockMetaVec.append(
@@ -395,7 +383,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             let res = zcashlc_write_block_metadata(fsBlockDbRoot.0, fsBlockDbRoot.1, fsBlocks)
 
             guard res else {
-                throw lastError() ?? RustWeldingError.genericError(message: "failed to write block metadata")
+                throw ZcashError.rustWriteBlocksMetadata(lastErrorMessage(fallback: "`writeBlocksMetadata` failed with unknown error"))
             }
         }
     }
@@ -407,14 +395,14 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         saplingTree: String
     ) async throws {
         guard !hash.containsCStringNullBytesBeforeStringEnding() else {
-            throw RustWeldingError.invalidInput(message: "`hash` contains null bytes.")
+            throw ZcashError.rustInitBlocksTableHashContainsNullBytes
         }
 
         guard !saplingTree.containsCStringNullBytesBeforeStringEnding() else {
-            throw RustWeldingError.invalidInput(message: "`saplingTree` contains null bytes.")
+            throw ZcashError.rustInitBlocksTableSaplingTreeContainsNullBytes
         }
 
-        guard zcashlc_init_blocks_table(
+        let result = zcashlc_init_blocks_table(
             dbData.0,
             dbData.1,
             height,
@@ -422,8 +410,15 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             time,
             [CChar](saplingTree.utf8CString),
             networkType.networkId
-        ) != 0 else {
-            throw lastError() ?? .genericError(message: "No error message available")
+        )
+
+        guard result != 0 else {
+            let message = lastErrorMessage(fallback: "`initBlocksTable` failed with unknown error")
+            if message.isDbNotEmptyErrorMessage() {
+                throw ZcashError.rustInitBlocksTableDataDbNotEmpty
+            } else {
+                throw ZcashError.rustInitBlocksTable(message)
+            }
         }
     }
 
@@ -432,13 +427,15 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
-        guard let encodedKeysPtr = zcashlc_list_transparent_receivers(
+        let encodedKeysPtr = zcashlc_list_transparent_receivers(
             dbData.0,
             dbData.1,
             account,
             networkType.networkId
-        ) else {
-            throw lastError() ?? .genericError(message: "No error message available")
+        )
+
+        guard let encodedKeysPtr else {
+            throw ZcashError.rustListTransparentReceivers(lastErrorMessage(fallback: "`listTransparentReceivers` failed with unknown error"))
         }
 
         defer { zcashlc_free_keys(encodedKeysPtr) }
@@ -449,7 +446,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             let key = encodedKeysPtr.pointee.ptr.advanced(by: i).pointee
 
             guard let taddrStr = String(validatingUTF8: key.encoding) else {
-                throw RustWeldingError.unableToDeriveKeys
+                throw ZcashError.rustListTransparentReceiversInvalidAddress
             }
 
             addresses.append(
@@ -467,7 +464,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         value: Int64,
         height: BlockHeight
     ) async throws {
-        guard zcashlc_put_utxo(
+        let result = zcashlc_put_utxo(
             dbData.0,
             dbData.1,
             txid,
@@ -478,8 +475,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             value,
             Int32(height),
             networkType.networkId
-        ) else {
-            throw lastError() ?? .genericError(message: "No error message available")
+        )
+
+        guard result else {
+            throw ZcashError.rustPutUnspentTransparentOutput(lastErrorMessage(fallback: "`putUnspentTransparentOutput` failed with unknown error"))
         }
     }
 
@@ -490,9 +489,11 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         case -1:
             return
         case 0:
-            throw RustWeldingError.chainValidationFailed(message: getLastError())
+            throw ZcashError.rustValidateCombinedChainValidationFailed(
+                lastErrorMessage(fallback: "`validateCombinedChain` failed with unknown error")
+            )
         default:
-            throw RustWeldingError.invalidChain(upperBound: result)
+            throw ZcashError.rustValidateCombinedChainInvalidChain(result)
         }
     }
 
@@ -500,7 +501,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         let result = zcashlc_rewind_to_height(dbData.0, dbData.1, height, networkType.networkId)
 
         guard result else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustRewindToHeight(height, lastErrorMessage(fallback: "`rewindToHeight` failed with unknown error"))
         }
     }
 
@@ -508,7 +509,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         let result = zcashlc_rewind_fs_block_cache_to_height(fsBlockDbRoot.0, fsBlockDbRoot.1, height)
 
         guard result else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustRewindCacheToHeight(lastErrorMessage(fallback: "`rewindCacheToHeight` failed with unknown error"))
         }
     }
 
@@ -516,7 +517,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         let result = zcashlc_scan_blocks(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, limit, networkType.networkId)
 
         guard result != 0 else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustScanBlocks(lastErrorMessage(fallback: "`scanBlocks` failed with unknown error"))
         }
     }
 
@@ -544,7 +545,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         guard result > 0 else {
-            throw lastError() ?? .genericError(message: "No error message available")
+            throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "`shieldFunds` failed with unknown error"))
         }
 
         return result
@@ -554,7 +555,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         let branchId = zcashlc_branch_id_for_height(height, networkType.networkId)
 
         guard branchId != -1 else {
-            throw RustWeldingError.noConsensusBranchId(height: height)
+            throw ZcashError.rustNoConsensusBranchId(height)
         }
 
         return branchId
@@ -562,20 +563,23 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 }
 
 private extension ZcashRustBackend {
-    func throwDataDbError(_ error: RustWeldingError) -> Error {
-        if case RustWeldingError.genericError(let message) = error, message.contains("is not empty") {
-            return RustWeldingError.dataDbNotEmpty
+    nonisolated func lastErrorMessage(fallback: String) -> String {
+        let errorLen = zcashlc_last_error_length()
+        defer { zcashlc_clear_last_error() }
+
+        if errorLen > 0 {
+            let error = UnsafeMutablePointer<Int8>.allocate(capacity: Int(errorLen))
+            defer { error.deallocate() }
+
+            zcashlc_error_message_utf8(error, errorLen)
+            if let errorMessage = String(validatingUTF8: error) {
+                return errorMessage
+            } else {
+                return fallback
+            }
+        } else {
+            return fallback
         }
-
-        return RustWeldingError.dataDbInitFailed(message: error.localizedDescription)
-    }
-
-    func throwBalanceError(account: Int32, _ error: RustWeldingError?, fallbackMessage: String) -> Error {
-        guard let balanceError = error else {
-            return RustWeldingError.genericError(message: fallbackMessage)
-        }
-
-        return RustWeldingError.getBalanceError(Int(account), balanceError)
     }
 }
 
@@ -598,6 +602,10 @@ extension String {
     */
     func containsCStringNullBytesBeforeStringEnding() -> Bool {
         self.utf8CString.firstIndex(of: 0) != (self.utf8CString.count - 1)
+    }
+
+    func isDbNotEmptyErrorMessage() -> Bool {
+        return contains("is not empty")
     }
 }
 
@@ -625,41 +633,6 @@ extension UnsafeMutablePointer where Pointee == UInt8 {
         }
 
         return bytes
-    }
-}
-extension RustWeldingError: LocalizedError {
-    var errorDescription: String? {
-        switch self {
-        case .genericError(let message):
-            return "RustWeldingError generic error: \(message)"
-        case .dataDbInitFailed(let message):
-            return "`RustWeldingError.dataDbInitFailed` with message: \(message)"
-        case .dataDbNotEmpty:
-            return "`.DataDbNotEmpty`. This is usually not an error."
-        case .invalidInput(let message):
-            return "`RustWeldingError.invalidInput` with message: \(message)"
-        case .malformedStringInput:
-            return "`.malformedStringInput` Called a function with a malformed string input."
-        case .invalidRewind:
-            return "`.invalidRewind` called the rewind API with an arbitrary height that is not valid."
-        case .noConsensusBranchId(let branchId):
-            return "`.noConsensusBranchId` number \(branchId)"
-        case .saplingSpendParametersNotFound:
-            return "`.saplingSpendParametersNotFound` sapling parameters not present at specified URL"
-        case .unableToDeriveKeys:
-            return "`.unableToDeriveKeys` the requested keys could not be derived from the source provided"
-        case let .getBalanceError(account, error):
-            return "`.getBalanceError` could not retrieve balance from account: \(account), error:\(error)"
-        case let .invalidChain(upperBound: upperBound):
-            return "`.validateCombinedChain` failed to validate chain. Upper bound: \(upperBound)."
-        case let .chainValidationFailed(message):
-            return """
-            `.validateCombinedChain` failed to validate chain because of error unrelated to chain validity. \
-            Message: \(String(describing: message))
-            """
-        case .writeBlocksMetadataAllocationProblem:
-            return "`.writeBlocksMetadata` failed to allocate memory on Swift side necessary to write blocks metadata to db."
-        }
     }
 }
 

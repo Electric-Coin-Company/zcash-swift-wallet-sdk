@@ -364,7 +364,7 @@ public class Initializer {
                 time: checkpoint.time,
                 saplingTree: checkpoint.saplingTree
             )
-        } catch RustWeldingError.dataDbNotEmpty {
+        } catch ZcashError.rustInitBlocksTableDataDbNotEmpty {
             // this is fine
         } catch {
             throw InitializerError.dataDbInitFailed(error)
@@ -374,10 +374,10 @@ public class Initializer {
  
         do {
             try await rustBackend.initAccountsTable(ufvks: viewingKeys)
-        } catch RustWeldingError.dataDbNotEmpty {
+        } catch ZcashError.rustInitAccountsTableDataDbNotEmpty {
             // this is fine
-        } catch RustWeldingError.malformedStringInput {
-            throw RustWeldingError.malformedStringInput
+        } catch ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes {
+            throw ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
         } catch {
             throw InitializerError.accountInitFailed(error)
         }
