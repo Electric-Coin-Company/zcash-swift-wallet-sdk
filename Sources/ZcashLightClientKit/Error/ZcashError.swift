@@ -332,6 +332,9 @@ public enum ZcashError: Equatable, Error {
     /// Stream downloading the given block range failed.
     /// ZBDSEO0001
     case blockDownloaderServiceDownloadBlockRange(_ error: Error)
+    /// The AsyncThrowingStream's iterator failed to return next block.
+    /// ZBDS0001
+    case blockDownloaderStreamNextBlock(_ error: Error)
 
     public var message: String {
         switch self {
@@ -424,6 +427,7 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryRemoveBlockAfterRewind: return "Failed to remove block from disk after rewind operation."
         case .blockRepositoryRemoveBlocksCacheDirectory: return "Failed to remove blocks cache directory while clearing storage."
         case .blockDownloaderServiceDownloadBlockRange: return "Stream downloading the given block range failed."
+        case .blockDownloaderStreamNextBlock: return "The AsyncThrowingStream's iterator failed to return next block."
         }
     }
 
@@ -518,6 +522,7 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryRemoveBlockAfterRewind: return .blockRepositoryRemoveBlockAfterRewind
         case .blockRepositoryRemoveBlocksCacheDirectory: return .blockRepositoryRemoveBlocksCacheDirectory
         case .blockDownloaderServiceDownloadBlockRange: return .blockDownloaderServiceDownloadBlockRange
+        case .blockDownloaderStreamNextBlock: return .blockDownloaderStreamNextBlock
         }
     }
 
