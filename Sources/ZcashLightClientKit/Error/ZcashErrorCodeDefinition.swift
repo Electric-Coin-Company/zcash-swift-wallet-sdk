@@ -368,4 +368,10 @@ enum ZcashErrorDefinition {
     /// Failed to remove blocks cache directory while clearing storage.
     // sourcery: code="ZBLRP0009"
     case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL)
+    
+    // MARK: - BlockDownloaderService
+
+    /// Stream downloading the given block range failed.
+    // sourcery: code="ZBDSEO0001"
+    case blockDownloaderServiceDownloadBlockRange(_ error: Error)
 }
