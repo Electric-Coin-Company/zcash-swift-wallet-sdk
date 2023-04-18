@@ -20,7 +20,7 @@ public protocol KeyDeriving {
     /// Given the seed bytes tand the account index, return the UnifiedSpendingKey
     /// - Parameter seed: `[Uint8]` seed bytes
     /// - Parameter accountNumber: `Int` with the account number
-    /// - Throws `.unableToDerive` if there's a problem deriving this key
+    /// - Throws: `.unableToDerive` if there's a problem deriving this key
     /// - Returns a `UnifiedSpendingKey`
     func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) async throws -> UnifiedSpendingKey
     func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int, completion: @escaping (Result<UnifiedSpendingKey, Error>) -> Void)
@@ -35,17 +35,16 @@ public protocol KeyDeriving {
 
     /// Extracts the `SaplingAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
-    /// - Throws `KeyDerivationErrors.receiverNotFound` if the receiver is not present
+    /// - Throws: `KeyDerivationErrors.receiverNotFound` if the receiver is not present
     func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress
 
     /// Extracts the `TransparentAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
-    /// - Throws `KeyDerivationErrors.receiverNotFound` if the receiver is not present
+    /// - Throws: `KeyDerivationErrors.receiverNotFound` if the receiver is not present
     func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress
 
     /// Extracts the `UnifiedAddress.ReceiverTypecodes` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
-    /// - Throws
     func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes]
 
     static func getAddressMetadata(_ addr: String) -> AddressMetadata?

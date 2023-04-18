@@ -302,6 +302,33 @@ public enum ZcashError: Equatable, Error {
     /// Update of the account updated 0 rows in the database. One row should be updated.
     /// ZADAO0007
     case accountDAOUpdatedZeroRows
+    /// Failed to write block to disk.
+    /// ZBLRP00001
+    case blockRepositoryWriteBlock(_ block: ZcashCompactBlock)
+    /// Failed to get filename for the block from file URL.
+    /// ZBLRP0002
+    case blockRepositoryGetFilename(_ url: URL)
+    /// Failed to parse block height from filename.
+    /// ZBLRP0003
+    case blockRepositoryParseHeightFromFilename(_ filename: String)
+    /// Failed to remove existing block from disk.
+    /// ZBLRP0004
+    case blockRepositoryRemoveExistingBlock(_ error: Error)
+    /// Failed to get filename and information if url points to directory from file URL.
+    /// ZBLRP0005
+    case blockRepositoryGetFilenameAndIsDirectory(_ url: URL)
+    /// Failed to create blocks cache directory.
+    /// ZBLRP0006
+    case blockRepositoryCreateBlocksCacheDirectory(_ url: URL)
+    /// Failed to read content of directory.
+    /// ZBLRP0007
+    case blockRepositoryReadDirectoryContent(_ url: URL)
+    /// Failed to remove block from disk after rewind operation.
+    /// ZBLRP0008
+    case blockRepositoryRemoveBlockAfterRewind(_ url: URL)
+    /// Failed to remove blocks cache directory while clearing storage.
+    /// ZBLRP0009
+    case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL)
 
     public var message: String {
         switch self {
@@ -384,6 +411,15 @@ public enum ZcashError: Equatable, Error {
         case .accountDAOUpdateInvalidAccount: return "Object passed to update() method conforms to `AccountEntity` protocol but isn't exactly `Account` type."
         case .accountDAOUpdate: return "SQLite query failed when updating account in the database."
         case .accountDAOUpdatedZeroRows: return "Update of the account updated 0 rows in the database. One row should be updated."
+        case .blockRepositoryWriteBlock: return "Failed to write block to disk."
+        case .blockRepositoryGetFilename: return "Failed to get filename for the block from file URL."
+        case .blockRepositoryParseHeightFromFilename: return "Failed to parse block height from filename."
+        case .blockRepositoryRemoveExistingBlock: return "Failed to remove existing block from disk."
+        case .blockRepositoryGetFilenameAndIsDirectory: return "Failed to get filename and information if url points to directory from file URL."
+        case .blockRepositoryCreateBlocksCacheDirectory: return "Failed to create blocks cache directory."
+        case .blockRepositoryReadDirectoryContent: return "Failed to read content of directory."
+        case .blockRepositoryRemoveBlockAfterRewind: return "Failed to remove block from disk after rewind operation."
+        case .blockRepositoryRemoveBlocksCacheDirectory: return "Failed to remove blocks cache directory while clearing storage."
         }
     }
 
@@ -468,6 +504,15 @@ public enum ZcashError: Equatable, Error {
         case .accountDAOUpdateInvalidAccount: return .accountDAOUpdateInvalidAccount
         case .accountDAOUpdate: return .accountDAOUpdate
         case .accountDAOUpdatedZeroRows: return .accountDAOUpdatedZeroRows
+        case .blockRepositoryWriteBlock: return .blockRepositoryWriteBlock
+        case .blockRepositoryGetFilename: return .blockRepositoryGetFilename
+        case .blockRepositoryParseHeightFromFilename: return .blockRepositoryParseHeightFromFilename
+        case .blockRepositoryRemoveExistingBlock: return .blockRepositoryRemoveExistingBlock
+        case .blockRepositoryGetFilenameAndIsDirectory: return .blockRepositoryGetFilenameAndIsDirectory
+        case .blockRepositoryCreateBlocksCacheDirectory: return .blockRepositoryCreateBlocksCacheDirectory
+        case .blockRepositoryReadDirectoryContent: return .blockRepositoryReadDirectoryContent
+        case .blockRepositoryRemoveBlockAfterRewind: return .blockRepositoryRemoveBlockAfterRewind
+        case .blockRepositoryRemoveBlocksCacheDirectory: return .blockRepositoryRemoveBlocksCacheDirectory
         }
     }
 
