@@ -377,6 +377,12 @@ public enum ZcashError: Equatable, Error {
     /// Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo.
     /// ZMEMO0005
     case memoBytesInvalidUTF8
+    /// Failed to load JSON with checkpoint from disk.
+    /// ZCHKP0001
+    case checkpointCantLoadFromDisk(_ error: Error)
+    /// Failed to decode `Checkpoint` object.
+    /// ZCHKP0002
+    case checkpointDecode(_ error: Error)
 
     public var message: String {
         switch self {
@@ -484,6 +490,8 @@ public enum ZcashError: Equatable, Error {
         case .memoTextInputTooLong: return "The resulting bytes provided are too long to be stored as a MemoText."
         case .memoBytesInputTooLong: return "The resulting bytes provided are too long to be stored as a MemoBytes."
         case .memoBytesInvalidUTF8: return "Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo."
+        case .checkpointCantLoadFromDisk: return "Failed to load JSON with checkpoint from disk."
+        case .checkpointDecode: return "Failed to decode `Checkpoint` object."
         }
     }
 
@@ -593,6 +601,8 @@ public enum ZcashError: Equatable, Error {
         case .memoTextInputTooLong: return .memoTextInputTooLong
         case .memoBytesInputTooLong: return .memoBytesInputTooLong
         case .memoBytesInvalidUTF8: return .memoBytesInvalidUTF8
+        case .checkpointCantLoadFromDisk: return .checkpointCantLoadFromDisk
+        case .checkpointDecode: return .checkpointDecode
         }
     }
 

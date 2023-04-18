@@ -271,4 +271,8 @@ public enum ZcashErrorCode: String {
     case memoBytesInputTooLong = "ZMEMO0004"
     /// Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo.
     case memoBytesInvalidUTF8 = "ZMEMO0005"
+    /// Failed to load JSON with checkpoint from disk.
+    case checkpointCantLoadFromDisk = "ZCHKP0001"
+    /// Failed to decode `Checkpoint` object.
+    case checkpointDecode = "ZCHKP0002"
 }
