@@ -171,7 +171,7 @@ extension MockTransactionRepository: TransactionRepository {
 
     func find(id: Int) throws -> ZcashTransaction.Overview {
         guard let transaction = transactions.first(where: { $0.id == id }) else {
-            throw TransactionRepositoryError.notFound
+            throw ZcashError.transactionRepositoryEntityNotFound
         }
 
         return transaction
@@ -179,7 +179,7 @@ extension MockTransactionRepository: TransactionRepository {
 
     func find(rawID: Data) throws -> ZcashTransaction.Overview {
         guard let transaction = transactions.first(where: { $0.rawID == rawID }) else {
-            throw TransactionRepositoryError.notFound
+            throw ZcashError.transactionRepositoryEntityNotFound
         }
 
         return transaction

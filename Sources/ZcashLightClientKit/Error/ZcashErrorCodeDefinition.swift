@@ -392,4 +392,25 @@ enum ZcashErrorDefinition {
     /// Initialization of `ZcashTransaction.Sent` failed.
     // sourcery: code="ZTEZT0003"
     case zcashTransactionSentInit(_ error: Error)
+
+    // MARK: - Transaction Repository
+    
+    /// Entity not found in the database, result of `createEntity` execution.
+    // sourcery: code="ZTREE0001"
+    case transactionRepositoryEntityNotFound
+    /// `Find` call is missing fields, required fields are transaction `index` and `blockTime`.
+    // sourcery: code="ZTREE0002"
+    case transactionRepositoryTransactionMissingRequiredFields
+    /// Counting all transactions failed.
+    // sourcery: code="ZTREE0003"
+    case transactionRepositoryCountAll(_ error: Error)
+    /// Counting all unmined transactions failed.
+    // sourcery: code="ZTREE0004"
+    case transactionRepositoryCountUnmined(_ error: Error)
+    /// Execution of a query failed.
+    // sourcery: code="ZTREE0005"
+    case transactionRepositoryQueryExecute(_ error: Error)
+    /// Finding memos in the database failed.
+    // sourcery: code="ZTREE0006"
+    case transactionRepositoryFindMemos(_ error: Error)
 }
