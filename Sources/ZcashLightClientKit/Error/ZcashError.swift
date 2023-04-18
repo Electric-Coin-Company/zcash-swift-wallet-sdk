@@ -391,6 +391,55 @@ public enum ZcashError: Equatable, Error {
     /// Failed to decode `Checkpoint` object.
     /// ZCHKP0002
     case checkpointDecode(_ error: Error)
+    /// Decoding of `PendingTransaction` failed because of specific invalid data.
+    /// - `field` is list of fields names that contain invalid data.
+    /// ZPETR0001
+    case pendingTransactionDecodeInvalidData(_ fields: [String])
+    /// Can't decode `PendingTransaction`.
+    /// - `error` is error which described why decoding failed.
+    /// ZPETR0002
+    case pendingTransactionCantDecode(_ error: Error)
+    /// Can't encode `PendingTransaction`.
+    /// - `error` is error which described why encoding failed.
+    /// ZPETR0003
+    case pendingTransactionCantEncode(_ error: Error)
+    /// SQLite query failed when creating pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZPETR0004
+    case pendingTransactionDAOCreate(_ sqliteError: Error)
+    /// Pending transaction which should be updated is missing ID.
+    /// ZPETR0005
+    case pendingTransactionDAOUpdateMissingID
+    /// SQLite query failed when updating pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZPETR0006
+    case pendingTransactionDAOUpdate(_ sqliteError: Error)
+    /// Pending transaction which should be deleted is missing ID.
+    /// ZPETR0007
+    case pendingTransactionDAODeleteMissingID
+    /// SQLite query failed when deleting pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZPETR0008
+    case pendingTransactionDAODelete(_ sqliteError: Error)
+    /// Pending transaction which should be canceled is missing ID.
+    /// ZPETR0009
+    case pendingTransactionDAOCancelMissingID
+    /// SQLite query failed when canceling pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZPETR0010
+    case pendingTransactionDAOCancel(_ sqliteError: Error)
+    /// SQLite query failed when seaching for pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZPETR0011
+    case pendingTransactionDAOFind(_ sqliteError: Error)
+    /// SQLite query failed when getting pending transactions.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZPETR0012
+    case pendingTransactionDAOGetAll(_ sqliteError: Error)
+    /// SQLite query failed when applying mined height.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZPETR0013
+    case pendingTransactionDAOApplyMinedHeight(_ sqliteError: Error)
 
     public var message: String {
         switch self {
@@ -502,6 +551,19 @@ public enum ZcashError: Equatable, Error {
         case .memoBytesInvalidUTF8: return "Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo."
         case .checkpointCantLoadFromDisk: return "Failed to load JSON with checkpoint from disk."
         case .checkpointDecode: return "Failed to decode `Checkpoint` object."
+        case .pendingTransactionDecodeInvalidData: return "Decoding of `PendingTransaction` failed because of specific invalid data."
+        case .pendingTransactionCantDecode: return "Can't decode `PendingTransaction`."
+        case .pendingTransactionCantEncode: return "Can't encode `PendingTransaction`."
+        case .pendingTransactionDAOCreate: return "SQLite query failed when creating pending transaction."
+        case .pendingTransactionDAOUpdateMissingID: return "Pending transaction which should be updated is missing ID."
+        case .pendingTransactionDAOUpdate: return "SQLite query failed when updating pending transaction."
+        case .pendingTransactionDAODeleteMissingID: return "Pending transaction which should be deleted is missing ID."
+        case .pendingTransactionDAODelete: return "SQLite query failed when deleting pending transaction."
+        case .pendingTransactionDAOCancelMissingID: return "Pending transaction which should be canceled is missing ID."
+        case .pendingTransactionDAOCancel: return "SQLite query failed when canceling pending transaction."
+        case .pendingTransactionDAOFind: return "SQLite query failed when seaching for pending transaction."
+        case .pendingTransactionDAOGetAll: return "SQLite query failed when getting pending transactions."
+        case .pendingTransactionDAOApplyMinedHeight: return "SQLite query failed when applying mined height."
         }
     }
 
@@ -615,6 +677,19 @@ public enum ZcashError: Equatable, Error {
         case .memoBytesInvalidUTF8: return .memoBytesInvalidUTF8
         case .checkpointCantLoadFromDisk: return .checkpointCantLoadFromDisk
         case .checkpointDecode: return .checkpointDecode
+        case .pendingTransactionDecodeInvalidData: return .pendingTransactionDecodeInvalidData
+        case .pendingTransactionCantDecode: return .pendingTransactionCantDecode
+        case .pendingTransactionCantEncode: return .pendingTransactionCantEncode
+        case .pendingTransactionDAOCreate: return .pendingTransactionDAOCreate
+        case .pendingTransactionDAOUpdateMissingID: return .pendingTransactionDAOUpdateMissingID
+        case .pendingTransactionDAOUpdate: return .pendingTransactionDAOUpdate
+        case .pendingTransactionDAODeleteMissingID: return .pendingTransactionDAODeleteMissingID
+        case .pendingTransactionDAODelete: return .pendingTransactionDAODelete
+        case .pendingTransactionDAOCancelMissingID: return .pendingTransactionDAOCancelMissingID
+        case .pendingTransactionDAOCancel: return .pendingTransactionDAOCancel
+        case .pendingTransactionDAOFind: return .pendingTransactionDAOFind
+        case .pendingTransactionDAOGetAll: return .pendingTransactionDAOGetAll
+        case .pendingTransactionDAOApplyMinedHeight: return .pendingTransactionDAOApplyMinedHeight
         }
     }
 

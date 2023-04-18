@@ -8,9 +8,7 @@ error originates. And it can help with debugging.
 {% for type in types.enums where type.name == "ZcashErrorDefinition" %}
 public enum ZcashErrorCode: String {
     {% for case in type.cases %}
-    {% for docLine in case.documentation %}
-    /// {{ docLine }}
-    {% endfor %}
+    /// {{ case.documentation[0] }}
     case {{ case.name }} = "{{ case.annotations["code"] }}"
     {% endfor %}
 }
