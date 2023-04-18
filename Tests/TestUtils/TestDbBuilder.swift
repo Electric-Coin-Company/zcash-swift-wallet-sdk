@@ -77,6 +77,12 @@ enum TestDbBuilder {
         
         return TransactionSQLDAO(dbProvider: provider)
     }
+
+    static func transactionRepository(rustBackend: ZcashRustBackendWelding, withTrace closure: @escaping ((String) -> Void)) async throws -> TransactionRepository? {
+        guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
+
+        return TransactionSQLDAO(dbProvider: provider, traceClosure: closure)
+    }
     
     static func sentNotesRepository(rustBackend: ZcashRustBackendWelding) async throws -> SentNotesRepository? {
         guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }

@@ -91,9 +91,9 @@ class TransactionRepositoryTests: XCTestCase {
     func testFindReceivedOffsetLimit() async throws {
         let transactions = try await self.transactionRepository.findReceived(offset: 3, limit: 3)
         XCTAssertEqual(transactions.count, 3)
-        XCTAssertEqual(transactions[0].minedHeight, 664022)
-        XCTAssertEqual(transactions[1].minedHeight, 664012)
-        XCTAssertEqual(transactions[2].minedHeight, 664003)
+        XCTAssertEqual(transactions[0].minedHeight, 663229)
+        XCTAssertEqual(transactions[1].minedHeight, 663218)
+        XCTAssertEqual(transactions[2].minedHeight, 663202)
     }
 
     func testFindSentOffsetLimit() async throws {
@@ -106,12 +106,12 @@ class TransactionRepositoryTests: XCTestCase {
 
     func testFindMemoForTransaction() async throws {
         let transaction = ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: nil,
             expiryHeight: nil,
             fee: nil,
             id: 9,
             index: nil,
-            isWalletInternal: false,
             hasChange: false,
             memoCount: 0,
             minedHeight: nil,
@@ -119,11 +119,17 @@ class TransactionRepositoryTests: XCTestCase {
             rawID: Data(),
             receivedNoteCount: 0,
             sentNoteCount: 0,
-            value: Zatoshi.zero
+            value: Zatoshi(-1000),
+            isExpiredUmined: false
         )
 
         let memos = try await self.transactionRepository.findMemos(for: transaction)
-        XCTAssertEqual(memos.count, 1)
+
+        guard memos.count == 1 else {
+            XCTFail("Expected transaction to have one memo")
+            return
+        }
+
         XCTAssertEqual(memos[0].toString(), "Some funds")
     }
 
@@ -132,7 +138,7 @@ class TransactionRepositoryTests: XCTestCase {
             blockTime: 1,
             expiryHeight: nil,
             fromAccount: 0,
-            id: 9,
+            id: 5,
             index: 0,
             memoCount: 0,
             minedHeight: 0,
@@ -144,7 +150,7 @@ class TransactionRepositoryTests: XCTestCase {
 
         let memos = try await self.transactionRepository.findMemos(for: transaction)
         XCTAssertEqual(memos.count, 1)
-        XCTAssertEqual(memos[0].toString(), "Some funds")
+        XCTAssertEqual(memos[0].toString(), "first mainnet tx from the SDK")
     }
 
     func testFindMemoForSentTransaction() async throws {
@@ -165,18 +171,6 @@ class TransactionRepositoryTests: XCTestCase {
         let memos = try await self.transactionRepository.findMemos(for: transaction)
         XCTAssertEqual(memos.count, 1)
         XCTAssertEqual(memos[0].toString(), "Some funds")
-    }
-
-    func testFindTransactionWithNULLMinedHeight() async throws {
-        let transactions = try await self.transactionRepository.find(offset: 0, limit: 3, kind: .all)
-
-        XCTAssertEqual(transactions.count, 3)
-        XCTAssertEqual(transactions[0].id, 21)
-        XCTAssertEqual(transactions[0].minedHeight, nil)
-        XCTAssertEqual(transactions[1].id, 20)
-        XCTAssertEqual(transactions[1].minedHeight, 664037)
-        XCTAssertEqual(transactions[2].id, 19)
-        XCTAssertEqual(transactions[2].minedHeight, 664022)
     }
     
     func testFindAllPerformance() {

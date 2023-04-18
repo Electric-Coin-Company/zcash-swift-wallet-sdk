@@ -221,12 +221,12 @@ class SynchronizerDarksideTests: XCTestCase {
                         totalTransactions: 2,
                         enhancedTransactions: 1,
                         lastFoundTransaction: ZcashTransaction.Overview(
+                            accountId: 0,
                             blockTime: 1.0,
                             expiryHeight: 663206,
                             fee: Zatoshi(0),
                             id: 2,
                             index: 1,
-                            isWalletInternal: true,
                             hasChange: false,
                             memoCount: 1,
                             minedHeight: 663188,
@@ -234,7 +234,8 @@ class SynchronizerDarksideTests: XCTestCase {
                             rawID: Data(),
                             receivedNoteCount: 1,
                             sentNoteCount: 0,
-                            value: Zatoshi(100000)
+                            value: Zatoshi(100000),
+                            isExpiredUmined: false
                         ),
                         range: 663150...663189
                     )
@@ -252,12 +253,12 @@ class SynchronizerDarksideTests: XCTestCase {
                         totalTransactions: 2,
                         enhancedTransactions: 2,
                         lastFoundTransaction: ZcashTransaction.Overview(
+                            accountId: 0,
                             blockTime: 1.0,
                             expiryHeight: 663192,
                             fee: Zatoshi(0),
                             id: 1,
                             index: 1,
-                            isWalletInternal: true,
                             hasChange: false,
                             memoCount: 1,
                             minedHeight: 663174,
@@ -265,7 +266,8 @@ class SynchronizerDarksideTests: XCTestCase {
                             rawID: Data(),
                             receivedNoteCount: 1,
                             sentNoteCount: 0,
-                            value: Zatoshi(100000)
+                            value: Zatoshi(100000),
+                            isExpiredUmined: false
                         ),
                         range: 663150...663189
                     )
@@ -374,12 +376,12 @@ class SynchronizerDarksideTests: XCTestCase {
                         totalTransactions: 2,
                         enhancedTransactions: 1,
                         lastFoundTransaction: ZcashTransaction.Overview(
+                            accountId: 0,
                             blockTime: 1.0,
                             expiryHeight: 663206,
                             fee: Zatoshi(0),
                             id: 2,
                             index: 1,
-                            isWalletInternal: true,
                             hasChange: false,
                             memoCount: 1,
                             minedHeight: 663188,
@@ -387,7 +389,8 @@ class SynchronizerDarksideTests: XCTestCase {
                             rawID: Data(),
                             receivedNoteCount: 1,
                             sentNoteCount: 0,
-                            value: Zatoshi(100000)
+                            value: Zatoshi(100000),
+                            isExpiredUmined: false
                         ),
                         range: 663150...663189
                     )
@@ -405,12 +408,12 @@ class SynchronizerDarksideTests: XCTestCase {
                         totalTransactions: 2,
                         enhancedTransactions: 2,
                         lastFoundTransaction: ZcashTransaction.Overview(
+                            accountId: 0,
                             blockTime: 1.0,
                             expiryHeight: 663192,
                             fee: Zatoshi(0),
                             id: 1,
                             index: 1,
-                            isWalletInternal: true,
                             hasChange: false,
                             memoCount: 1,
                             minedHeight: 663174,
@@ -418,7 +421,8 @@ class SynchronizerDarksideTests: XCTestCase {
                             rawID: Data(),
                             receivedNoteCount: 1,
                             sentNoteCount: 0,
-                            value: Zatoshi(100000)
+                            value: Zatoshi(100000),
+                            isExpiredUmined: false
                         ),
                         range: 663150...663189
                     )

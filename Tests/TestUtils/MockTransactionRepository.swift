@@ -131,12 +131,12 @@ extension MockTransactionRepository: TransactionRepository {
 
     func mockSent(_ index: Int) -> ZcashTransaction.Overview {
         return ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
             id: index,
             index: index,
-            isWalletInternal: true,
             hasChange: true,
             memoCount: 0,
             minedHeight: randomBlockHeight(),
@@ -144,18 +144,19 @@ extension MockTransactionRepository: TransactionRepository {
             rawID: Data(),
             receivedNoteCount: 0,
             sentNoteCount: 1,
-            value: Zatoshi(-Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi))
+            value: Zatoshi(-Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi)),
+            isExpiredUmined: false
         )
     }
 
     func mockReceived(_ index: Int) -> ZcashTransaction.Overview {
         return ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: randomTimeInterval(),
             expiryHeight: BlockHeight.max,
             fee: Zatoshi(2),
             id: index,
             index: index,
-            isWalletInternal: true,
             hasChange: true,
             memoCount: 0,
             minedHeight: randomBlockHeight(),
@@ -163,7 +164,8 @@ extension MockTransactionRepository: TransactionRepository {
             rawID: Data(),
             receivedNoteCount: 1,
             sentNoteCount: 0,
-            value: Zatoshi(Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi))
+            value: Zatoshi(Int64.random(in: 1 ... Zatoshi.Constants.oneZecInZatoshi)),
+            isExpiredUmined: false
         )
     }
 

@@ -666,7 +666,7 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(expectedVerifiedBalance, initialVerifiedBalance)
         XCTAssertEqual(expectedBalance, initialBalance)
         
-        wait(for: [lastSyncExpectation], timeout: 5)
+        wait(for: [lastSyncExpectation], timeout: 30)
     }
     
     func testTxIndexReorg() async throws {

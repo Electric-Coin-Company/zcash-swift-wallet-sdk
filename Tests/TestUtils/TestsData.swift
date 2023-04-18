@@ -39,12 +39,12 @@ class TestsData {
 
     let clearedTransaction = {
         ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: Date().timeIntervalSince1970,
             expiryHeight: 123000,
             fee: Zatoshi(10),
             id: 333,
             index: nil,
-            isWalletInternal: false,
             hasChange: false,
             memoCount: 0,
             minedHeight: 120000,
@@ -52,7 +52,8 @@ class TestsData {
             rawID: Data(),
             receivedNoteCount: 0,
             sentNoteCount: 0,
-            value: Zatoshi(100)
+            value: Zatoshi(100),
+            isExpiredUmined: false
         )
     }()
 
