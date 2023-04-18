@@ -20,7 +20,6 @@ extension Digest {
 
 /// Helper class to handle the download of Sapling parameters
 public enum SaplingParameterDownloader {
-
     /// Download a Spend parameter from default host and stores it at given URL
     /// - Parameters:
     ///     - at: The destination URL for the download

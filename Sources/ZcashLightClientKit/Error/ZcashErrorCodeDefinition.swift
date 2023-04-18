@@ -374,7 +374,7 @@ enum ZcashErrorDefinition {
     /// Stream downloading the given block range failed.
     // sourcery: code="ZBDSEO0001"
     case blockDownloaderServiceDownloadBlockRange(_ error: Error)
-    
+
     // MARK: - BlockDownloaderStream
 
     /// The AsyncThrowingStream's iterator failed to return next block.
@@ -413,4 +413,10 @@ enum ZcashErrorDefinition {
     /// Finding memos in the database failed.
     // sourcery: code="ZTREE0006"
     case transactionRepositoryFindMemos(_ error: Error)
+
+    // MARK: - ZcashCompactBlock
+
+    /// Can't encode `ZcashCompactBlock` object.
+    // sourcery: code="ZCMPB0001"
+    case compactBlockEncode(_ error: Error)
 }
