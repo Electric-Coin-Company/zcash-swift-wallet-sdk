@@ -18,11 +18,7 @@ class BlockDownloaderStream {
     }
 
     func nextBlock() async throws -> ZcashCompactBlock? {
-        do {
-            return try await iterator.next()
-        } catch {
-            throw ZcashError.blockDownloaderStreamNextBlock(error)
-        }
+        return try await iterator.next()
     }
 }
 

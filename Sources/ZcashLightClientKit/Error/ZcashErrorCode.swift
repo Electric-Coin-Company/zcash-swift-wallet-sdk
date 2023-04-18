@@ -247,8 +247,6 @@ public enum ZcashErrorCode: String {
     case blockRepositoryRemoveBlocksCacheDirectory = "ZBLRP0009"
     /// Stream downloading the given block range failed.
     case blockDownloaderServiceDownloadBlockRange = "ZBDSEO0001"
-    /// The AsyncThrowingStream's iterator failed to return next block.
-    case blockDownloaderStreamNextBlock = "ZBDS0001"
     /// Initialization of `ZcashTransaction.Overview` failed.
     case zcashTransactionOverviewInit = "ZTEZT0001"
     /// Initialization of `ZcashTransaction.Received` failed.
@@ -269,4 +267,14 @@ public enum ZcashErrorCode: String {
     case transactionRepositoryFindMemos = "ZTREE0006"
     /// Can't encode `ZcashCompactBlock` object.
     case compactBlockEncode = "ZCMPB0001"
+    /// Invalid UTF-8 Bytes where detected when attempting to create a MemoText.
+    case memoTextInvalidUTF8 = "ZMEMO0001"
+    /// Trailing null-bytes were found when attempting to create a MemoText.
+    case memoTextInputEndsWithNullBytes = "ZMEMO0002"
+    /// The resulting bytes provided are too long to be stored as a MemoText.
+    case memoTextInputTooLong = "ZMEMO0003"
+    /// The resulting bytes provided are too long to be stored as a MemoBytes.
+    case memoBytesInputTooLong = "ZMEMO0004"
+    /// Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo.
+    case memoBytesInvalidUTF8 = "ZMEMO0005"
 }

@@ -383,12 +383,6 @@ enum ZcashErrorDefinition {
     // sourcery: code="ZBDSEO0001"
     case blockDownloaderServiceDownloadBlockRange(_ error: Error)
 
-    // MARK: - BlockDownloaderStream
-
-    /// The AsyncThrowingStream's iterator failed to return next block.
-    // sourcery: code="ZBDS0001"
-    case blockDownloaderStreamNextBlock(_ error: Error)
-    
     // MARK: - Transaction Entity / ZcashTransaction
 
     /// Initialization of `ZcashTransaction.Overview` failed.
@@ -422,9 +416,28 @@ enum ZcashErrorDefinition {
     // sourcery: code="ZTREE0006"
     case transactionRepositoryFindMemos(_ error: Error)
 
+
     // MARK: - ZcashCompactBlock
 
     /// Can't encode `ZcashCompactBlock` object.
     // sourcery: code="ZCMPB0001"
     case compactBlockEncode(_ error: Error)
+
+    // MARK: - Memo
+
+    /// Invalid UTF-8 Bytes where detected when attempting to create a MemoText.
+    // sourcery: code="ZMEMO0001"
+    case memoTextInvalidUTF8
+    /// Trailing null-bytes were found when attempting to create a MemoText.
+    // sourcery: code="ZMEMO0002"
+    case memoTextInputEndsWithNullBytes
+    /// The resulting bytes provided are too long to be stored as a MemoText.
+    // sourcery: code="ZMEMO0003"
+    case memoTextInputTooLong(_ length: Int)
+    /// The resulting bytes provided are too long to be stored as a MemoBytes.
+    // sourcery: code="ZMEMO0004"
+    case memoBytesInputTooLong(_ length: Int)
+    /// Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo.
+    // sourcery: code="ZMEMO0005"
+    case memoBytesInvalidUTF8
 }
