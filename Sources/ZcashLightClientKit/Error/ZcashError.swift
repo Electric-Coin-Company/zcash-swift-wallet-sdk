@@ -332,9 +332,6 @@ public enum ZcashError: Equatable, Error {
     /// Stream downloading the given block range failed.
     /// ZBDSEO0001
     case blockDownloaderServiceDownloadBlockRange(_ error: Error)
-    /// The AsyncThrowingStream's iterator failed to return next block.
-    /// ZBDS0001
-    case blockDownloaderStreamNextBlock(_ error: Error)
     /// Initialization of `ZcashTransaction.Overview` failed.
     /// ZTEZT0001
     case zcashTransactionOverviewInit(_ error: Error)
@@ -365,6 +362,21 @@ public enum ZcashError: Equatable, Error {
     /// Can't encode `ZcashCompactBlock` object.
     /// ZCMPB0001
     case compactBlockEncode(_ error: Error)
+    /// Invalid UTF-8 Bytes where detected when attempting to create a MemoText.
+    /// ZMEMO0001
+    case memoTextInvalidUTF8
+    /// Trailing null-bytes were found when attempting to create a MemoText.
+    /// ZMEMO0002
+    case memoTextInputEndsWithNullBytes
+    /// The resulting bytes provided are too long to be stored as a MemoText.
+    /// ZMEMO0003
+    case memoTextInputTooLong(_ length: Int)
+    /// The resulting bytes provided are too long to be stored as a MemoBytes.
+    /// ZMEMO0004
+    case memoBytesInputTooLong(_ length: Int)
+    /// Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo.
+    /// ZMEMO0005
+    case memoBytesInvalidUTF8
 
     public var message: String {
         switch self {
@@ -457,7 +469,6 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryRemoveBlockAfterRewind: return "Failed to remove block from disk after rewind operation."
         case .blockRepositoryRemoveBlocksCacheDirectory: return "Failed to remove blocks cache directory while clearing storage."
         case .blockDownloaderServiceDownloadBlockRange: return "Stream downloading the given block range failed."
-        case .blockDownloaderStreamNextBlock: return "The AsyncThrowingStream's iterator failed to return next block."
         case .zcashTransactionOverviewInit: return "Initialization of `ZcashTransaction.Overview` failed."
         case .zcashTransactionReceivedInit: return "Initialization of `ZcashTransaction.Received` failed."
         case .zcashTransactionSentInit: return "Initialization of `ZcashTransaction.Sent` failed."
@@ -468,6 +479,11 @@ public enum ZcashError: Equatable, Error {
         case .transactionRepositoryQueryExecute: return "Execution of a query failed."
         case .transactionRepositoryFindMemos: return "Finding memos in the database failed."
         case .compactBlockEncode: return "Can't encode `ZcashCompactBlock` object."
+        case .memoTextInvalidUTF8: return "Invalid UTF-8 Bytes where detected when attempting to create a MemoText."
+        case .memoTextInputEndsWithNullBytes: return "Trailing null-bytes were found when attempting to create a MemoText."
+        case .memoTextInputTooLong: return "The resulting bytes provided are too long to be stored as a MemoText."
+        case .memoBytesInputTooLong: return "The resulting bytes provided are too long to be stored as a MemoBytes."
+        case .memoBytesInvalidUTF8: return "Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo."
         }
     }
 
@@ -562,7 +578,6 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryRemoveBlockAfterRewind: return .blockRepositoryRemoveBlockAfterRewind
         case .blockRepositoryRemoveBlocksCacheDirectory: return .blockRepositoryRemoveBlocksCacheDirectory
         case .blockDownloaderServiceDownloadBlockRange: return .blockDownloaderServiceDownloadBlockRange
-        case .blockDownloaderStreamNextBlock: return .blockDownloaderStreamNextBlock
         case .zcashTransactionOverviewInit: return .zcashTransactionOverviewInit
         case .zcashTransactionReceivedInit: return .zcashTransactionReceivedInit
         case .zcashTransactionSentInit: return .zcashTransactionSentInit
@@ -573,6 +588,11 @@ public enum ZcashError: Equatable, Error {
         case .transactionRepositoryQueryExecute: return .transactionRepositoryQueryExecute
         case .transactionRepositoryFindMemos: return .transactionRepositoryFindMemos
         case .compactBlockEncode: return .compactBlockEncode
+        case .memoTextInvalidUTF8: return .memoTextInvalidUTF8
+        case .memoTextInputEndsWithNullBytes: return .memoTextInputEndsWithNullBytes
+        case .memoTextInputTooLong: return .memoTextInputTooLong
+        case .memoBytesInputTooLong: return .memoBytesInputTooLong
+        case .memoBytesInvalidUTF8: return .memoBytesInvalidUTF8
         }
     }
 
