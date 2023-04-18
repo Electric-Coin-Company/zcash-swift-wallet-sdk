@@ -370,6 +370,9 @@ public enum ZcashError: Equatable, Error {
     /// Finding memos in the database failed.
     /// ZTREE0006
     case transactionRepositoryFindMemos(_ error: Error)
+    /// Can't encode `ZcashCompactBlock` object.
+    /// ZCMPB0001
+    case compactBlockEncode(_ error: Error)
 
     public var message: String {
         switch self {
@@ -474,6 +477,7 @@ public enum ZcashError: Equatable, Error {
         case .transactionRepositoryCountUnmined: return "Counting all unmined transactions failed."
         case .transactionRepositoryQueryExecute: return "Execution of a query failed."
         case .transactionRepositoryFindMemos: return "Finding memos in the database failed."
+        case .compactBlockEncode: return "Can't encode `ZcashCompactBlock` object."
         }
     }
 
@@ -580,6 +584,7 @@ public enum ZcashError: Equatable, Error {
         case .transactionRepositoryCountUnmined: return .transactionRepositoryCountUnmined
         case .transactionRepositoryQueryExecute: return .transactionRepositoryQueryExecute
         case .transactionRepositoryFindMemos: return .transactionRepositoryFindMemos
+        case .compactBlockEncode: return .compactBlockEncode
         }
     }
 
