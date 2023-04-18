@@ -261,4 +261,6 @@ public enum ZcashErrorCode: String {
     case transactionRepositoryQueryExecute = "ZTREE0005"
     /// Finding memos in the database failed.
     case transactionRepositoryFindMemos = "ZTREE0006"
+    /// Can't encode `ZcashCompactBlock` object.
+    case compactBlockEncode = "ZCMPB0001"
 }

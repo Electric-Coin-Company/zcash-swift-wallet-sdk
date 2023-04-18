@@ -11,10 +11,6 @@ import Foundation
 public typealias BlockHeight = Int
 public typealias CompactBlockRange = ClosedRange<BlockHeight>
 
-enum ZcashCompactBlockError: Error {
-    case unreadableBlock(compactBlock: CompactBlock)
-}
-
 extension BlockHeight {
     static func empty() -> BlockHeight {
         BlockHeight(-1)
@@ -46,9 +42,13 @@ extension ZcashCompactBlock: Encodable {
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(data, forKey: .data)
-        try container.encode(height, forKey: .height)
+        do {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(data, forKey: .data)
+            try container.encode(height, forKey: .height)
+        } catch {
+            throw ZcashError.compactBlockEncode(error)
+        }
     }
 }
 
