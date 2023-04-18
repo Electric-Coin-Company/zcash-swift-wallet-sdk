@@ -440,4 +440,56 @@ enum ZcashErrorDefinition {
     /// Failed to decode `Checkpoint` object.
     // sourcery: code="ZCHKP0002"
     case checkpointDecode(_ error: Error)
+
+    // MARK: - PendingTransactionDAO
+
+    /// Decoding of `PendingTransaction` failed because of specific invalid data.
+    /// - `field` is list of fields names that contain invalid data.
+    // sourcery: code="ZPETR0001"
+    case pendingTransactionDecodeInvalidData(_ fields: [String])
+    /// Can't decode `PendingTransaction`.
+    /// - `error` is error which described why decoding failed.
+    // sourcery: code="ZPETR0002"
+    case pendingTransactionCantDecode(_ error: Error)
+    /// Can't encode `PendingTransaction`.
+    /// - `error` is error which described why encoding failed.
+    // sourcery: code="ZPETR0003"
+    case pendingTransactionCantEncode(_ error: Error)
+    /// SQLite query failed when creating pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZPETR0004"
+    case pendingTransactionDAOCreate(_ sqliteError: Error)
+    /// Pending transaction which should be updated is missing ID.
+    // sourcery: code="ZPETR0005"
+    case pendingTransactionDAOUpdateMissingID
+    /// SQLite query failed when updating pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZPETR0006"
+    case pendingTransactionDAOUpdate(_ sqliteError: Error)
+    /// Pending transaction which should be deleted is missing ID.
+    // sourcery: code="ZPETR0007"
+    case pendingTransactionDAODeleteMissingID
+    /// SQLite query failed when deleting pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZPETR0008"
+    case pendingTransactionDAODelete(_ sqliteError: Error)
+    /// Pending transaction which should be canceled is missing ID.
+    // sourcery: code="ZPETR0009"
+    case pendingTransactionDAOCancelMissingID
+    /// SQLite query failed when canceling pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZPETR0010"
+    case pendingTransactionDAOCancel(_ sqliteError: Error)
+    /// SQLite query failed when seaching for pending transaction.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZPETR0011"
+    case pendingTransactionDAOFind(_ sqliteError: Error)
+    /// SQLite query failed when getting pending transactions.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZPETR0012"
+    case pendingTransactionDAOGetAll(_ sqliteError: Error)
+    /// SQLite query failed when applying mined height.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZPETR0013"
+    case pendingTransactionDAOApplyMinedHeight(_ sqliteError: Error)
 }
