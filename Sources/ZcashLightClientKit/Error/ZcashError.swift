@@ -337,6 +337,9 @@ public enum ZcashError: Equatable, Error {
     /// Failed to remove blocks cache directory while clearing storage.
     /// ZBLRP0009
     case blockRepositoryRemoveBlocksCacheDirectory(_ url: URL)
+    /// Stream downloading the given block range failed.
+    /// ZBDSEO0001
+    case blockDownloaderServiceDownloadBlockRange(_ error: Error)
 
     public var message: String {
         switch self {
@@ -430,6 +433,7 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryReadDirectoryContent: return "Failed to read content of directory."
         case .blockRepositoryRemoveBlockAfterRewind: return "Failed to remove block from disk after rewind operation."
         case .blockRepositoryRemoveBlocksCacheDirectory: return "Failed to remove blocks cache directory while clearing storage."
+        case .blockDownloaderServiceDownloadBlockRange: return "Stream downloading the given block range failed."
         }
     }
 
@@ -525,6 +529,7 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryReadDirectoryContent: return .blockRepositoryReadDirectoryContent
         case .blockRepositoryRemoveBlockAfterRewind: return .blockRepositoryRemoveBlockAfterRewind
         case .blockRepositoryRemoveBlocksCacheDirectory: return .blockRepositoryRemoveBlocksCacheDirectory
+        case .blockDownloaderServiceDownloadBlockRange: return .blockDownloaderServiceDownloadBlockRange
         }
     }
 

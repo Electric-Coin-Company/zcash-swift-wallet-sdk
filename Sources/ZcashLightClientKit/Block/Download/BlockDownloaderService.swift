@@ -99,7 +99,7 @@ extension BlockDownloaderServiceImpl: BlockDownloaderService {
             }
             try await self.storage.write(blocks: compactBlocks)
         } catch {
-            throw error
+            throw ZcashError.blockDownloaderServiceDownloadBlockRange(error)
         }
     }
 

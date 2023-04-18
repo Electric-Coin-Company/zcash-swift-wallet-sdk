@@ -245,4 +245,6 @@ public enum ZcashErrorCode: String {
     case blockRepositoryRemoveBlockAfterRewind = "ZBLRP0008"
     /// Failed to remove blocks cache directory while clearing storage.
     case blockRepositoryRemoveBlocksCacheDirectory = "ZBLRP0009"
+    /// Stream downloading the given block range failed.
+    case blockDownloaderServiceDownloadBlockRange = "ZBDSEO0001"
 }
