@@ -335,6 +335,15 @@ public enum ZcashError: Equatable, Error {
     /// The AsyncThrowingStream's iterator failed to return next block.
     /// ZBDS0001
     case blockDownloaderStreamNextBlock(_ error: Error)
+    /// Initialization of `ZcashTransaction.Overview` failed.
+    /// ZTEZT0001
+    case zcashTransactionOverviewInit(_ error: Error)
+    /// Initialization of `ZcashTransaction.Received` failed.
+    /// ZTEZT0002
+    case zcashTransactionReceivedInit(_ error: Error)
+    /// Initialization of `ZcashTransaction.Sent` failed.
+    /// ZTEZT0003
+    case zcashTransactionSentInit(_ error: Error)
 
     public var message: String {
         switch self {
@@ -428,6 +437,9 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryRemoveBlocksCacheDirectory: return "Failed to remove blocks cache directory while clearing storage."
         case .blockDownloaderServiceDownloadBlockRange: return "Stream downloading the given block range failed."
         case .blockDownloaderStreamNextBlock: return "The AsyncThrowingStream's iterator failed to return next block."
+        case .zcashTransactionOverviewInit: return "Initialization of `ZcashTransaction.Overview` failed."
+        case .zcashTransactionReceivedInit: return "Initialization of `ZcashTransaction.Received` failed."
+        case .zcashTransactionSentInit: return "Initialization of `ZcashTransaction.Sent` failed."
         }
     }
 
@@ -523,6 +535,9 @@ public enum ZcashError: Equatable, Error {
         case .blockRepositoryRemoveBlocksCacheDirectory: return .blockRepositoryRemoveBlocksCacheDirectory
         case .blockDownloaderServiceDownloadBlockRange: return .blockDownloaderServiceDownloadBlockRange
         case .blockDownloaderStreamNextBlock: return .blockDownloaderStreamNextBlock
+        case .zcashTransactionOverviewInit: return .zcashTransactionOverviewInit
+        case .zcashTransactionReceivedInit: return .zcashTransactionReceivedInit
+        case .zcashTransactionSentInit: return .zcashTransactionSentInit
         }
     }
 
