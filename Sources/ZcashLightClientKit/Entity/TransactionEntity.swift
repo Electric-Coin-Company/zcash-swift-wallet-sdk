@@ -84,34 +84,38 @@ extension ZcashTransaction.Overview {
     }
 
     init(row: Row) throws {
-        self.accountId = try row.get(Column.accountId)
-        self.expiryHeight = try row.get(Column.expiryHeight)
-        self.id = try row.get(Column.id)
-        self.index = try row.get(Column.index)
-        self.hasChange = try row.get(Column.hasChange)
-        self.memoCount = try row.get(Column.memoCount)
-        self.minedHeight = try row.get(Column.minedHeight)
-        self.rawID = Data(blob: try row.get(Column.rawID))
-        self.receivedNoteCount = try row.get(Column.receivedNoteCount)
-        self.sentNoteCount = try row.get(Column.sentNoteCount)
-        self.value = Zatoshi(try row.get(Column.value))
-        self.isExpiredUmined = try row.get(Column.expiredUnmined)
-        if let blockTime = try row.get(Column.blockTime) {
-            self.blockTime = TimeInterval(blockTime)
-        } else {
-            self.blockTime = nil
-        }
+        do {
+            self.accountId = try row.get(Column.accountId)
+            self.expiryHeight = try row.get(Column.expiryHeight)
+            self.id = try row.get(Column.id)
+            self.index = try row.get(Column.index)
+            self.hasChange = try row.get(Column.hasChange)
+            self.memoCount = try row.get(Column.memoCount)
+            self.minedHeight = try row.get(Column.minedHeight)
+            self.rawID = Data(blob: try row.get(Column.rawID))
+            self.receivedNoteCount = try row.get(Column.receivedNoteCount)
+            self.sentNoteCount = try row.get(Column.sentNoteCount)
+            self.value = Zatoshi(try row.get(Column.value))
+            self.isExpiredUmined = try row.get(Column.expiredUnmined)
+            if let blockTime = try row.get(Column.blockTime) {
+                self.blockTime = TimeInterval(blockTime)
+            } else {
+                self.blockTime = nil
+            }
 
-        if let fee = try row.get(Column.fee) {
-            self.fee = Zatoshi(fee)
-        } else {
-            self.fee = nil
-        }
+            if let fee = try row.get(Column.fee) {
+                self.fee = Zatoshi(fee)
+            } else {
+                self.fee = nil
+            }
 
-        if let raw = try row.get(Column.raw) {
-            self.raw = Data(blob: raw)
-        } else {
-            self.raw = nil
+            if let raw = try row.get(Column.raw) {
+                self.raw = Data(blob: raw)
+            } else {
+                self.raw = nil
+            }
+        } catch {
+            throw ZcashError.zcashTransactionOverviewInit(error)
         }
     }
 

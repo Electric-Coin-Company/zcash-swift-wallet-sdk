@@ -388,4 +388,16 @@ enum ZcashErrorDefinition {
     /// The AsyncThrowingStream's iterator failed to return next block.
     // sourcery: code="ZBDS0001"
     case blockDownloaderStreamNextBlock(_ error: Error)
+    
+    // MARK: - Transaction Entity / ZcashTransaction
+
+    /// Initialization of `ZcashTransaction.Overview` failed.
+    // sourcery: code="ZTEZT0001"
+    case zcashTransactionOverviewInit(_ error: Error)
+    /// Initialization of `ZcashTransaction.Received` failed.
+    // sourcery: code="ZTEZT0002"
+    case zcashTransactionReceivedInit(_ error: Error)
+    /// Initialization of `ZcashTransaction.Sent` failed.
+    // sourcery: code="ZTEZT0003"
+    case zcashTransactionSentInit(_ error: Error)
 }
