@@ -48,7 +48,7 @@ struct BlockEnhancerImpl {
         do {
             confirmedTx = try await transactionRepository.find(rawID: fetchedTransaction.rawID)
         } catch {
-            if let err = error as? TransactionRepositoryError, case .notFound = err {
+            if let err = error as? ZcashError, case .transactionRepositoryEntityNotFound = err {
                 throw BlockEnhancerError.txIdNotFound(txId: fetchedTransaction.rawID)
             } else {
                 throw error
