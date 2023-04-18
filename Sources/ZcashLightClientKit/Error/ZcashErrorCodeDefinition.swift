@@ -416,7 +416,6 @@ enum ZcashErrorDefinition {
     // sourcery: code="ZTREE0006"
     case transactionRepositoryFindMemos(_ error: Error)
 
-
     // MARK: - ZcashCompactBlock
 
     /// Can't encode `ZcashCompactBlock` object.
@@ -440,4 +439,13 @@ enum ZcashErrorDefinition {
     /// Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo.
     // sourcery: code="ZMEMO0005"
     case memoBytesInvalidUTF8
+
+    // MARK: - Checkpoint
+
+    /// Failed to load JSON with checkpoint from disk.
+    // sourcery: code="ZCHKP0001"
+    case checkpointCantLoadFromDisk(_ error: Error)
+    /// Failed to decode `Checkpoint` object.
+    // sourcery: code="ZCHKP0002"
+    case checkpointDecode(_ error: Error)
 }

@@ -43,12 +43,16 @@ extension Checkpoint: Decodable {
     }
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.height = try Self.getHeight(from: container)
-        self.hash = try container.decode(String.self, forKey: .hash)
-        self.time = try container.decode(UInt32.self, forKey: .time)
-        self.saplingTree = try container.decode(String.self, forKey: .saplingTree)
-        self.orchardTree = try container.decodeIfPresent(String.self, forKey: .orchardTree)
+        do {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            self.height = try Self.getHeight(from: container)
+            self.hash = try container.decode(String.self, forKey: .hash)
+            self.time = try container.decode(UInt32.self, forKey: .time)
+            self.saplingTree = try container.decode(String.self, forKey: .saplingTree)
+            self.orchardTree = try container.decodeIfPresent(String.self, forKey: .orchardTree)
+        } catch {
+            throw ZcashError.checkpointDecode(error)
+        }
     }
 
     static func getHeight(from container: KeyedDecodingContainer<CodingKeys>) throws -> Int {
