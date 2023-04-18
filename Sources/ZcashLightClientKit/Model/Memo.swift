@@ -65,7 +65,7 @@ public extension Memo {
 
         case .text(let textMemo):
             guard let bytes = textMemo.string.data(using: .utf8)?.bytes else {
-                throw MemoBytes.Errors.invalidUTF8
+                throw ZcashError.memoTextInvalidUTF8
             }
 
             return try MemoBytes(bytes: bytes)
@@ -88,11 +88,11 @@ public struct MemoText: Equatable {
         let trimmedString = String(string.reversed().drop(while: { $0 == "\u{0}" }).reversed())
 
         guard trimmedString.count == string.count else {
-            throw MemoBytes.Errors.endsWithNullBytes
+            throw ZcashError.memoTextInputEndsWithNullBytes
         }
 
         guard string.utf8.count <= MemoBytes.capacity else {
-            throw MemoBytes.Errors.tooLong(string.utf8.count)
+            throw ZcashError.memoTextInputTooLong(string.utf8.count)
         }
 
         self.string = string
@@ -119,7 +119,7 @@ public struct MemoBytes: Equatable {
     /// 512 bytes.
     ///
     public init(bytes: [UInt8]) throws {
-        guard bytes.count <= Self.capacity else { throw Errors.tooLong(bytes.count) }
+        guard bytes.count <= Self.capacity else { throw ZcashError.memoBytesInputTooLong(bytes.count) }
 
         var rawBytes = [UInt8](repeating: 0x0, count: Self.capacity)
 
@@ -132,7 +132,7 @@ public struct MemoBytes: Equatable {
     }
 
     init(contiguousBytes: ContiguousArray<UInt8>) throws {
-        guard contiguousBytes.capacity <= Self.capacity else { throw Errors.tooLong(contiguousBytes.capacity) }
+        guard contiguousBytes.capacity <= Self.capacity else { throw ZcashError.memoBytesInputTooLong(contiguousBytes.capacity) }
 
         var rawBytes = [UInt8](repeating: 0x0, count: Self.capacity)
 
@@ -146,19 +146,6 @@ public struct MemoBytes: Equatable {
     public static func empty() -> Self {
         // swiftlint:disable:next force_try
         try! Self(bytes: .emptyMemoBytes)
-    }
-}
-
-extension MemoBytes.Errors: LocalizedError {
-    var localizedDescription: String {
-        switch self {
-        case .endsWithNullBytes:
-            return "MemoBytes.Errors.endsWithNullBytes: The UTF-8 bytes provided have trailing null-bytes."
-        case .invalidUTF8:
-            return "MemoBytes.Errors.invalidUTF8: Invalid UTF-8 byte found on memo bytes"
-        case .tooLong(let length):
-            return "MemoBytes.Errors.tooLong(\(length)): found more bytes than the 512 bytes a ZIP-302 memo is allowed to contain."
-        }
     }
 }
 
@@ -179,7 +166,7 @@ public extension MemoBytes {
         switch self.bytes[0] {
         case 0x00 ... 0xF4:
             guard let validatedUTF8String = String(validatingUTF8: self.unpaddedRawBytes()) else {
-                throw MemoBytes.Errors.invalidUTF8
+                throw ZcashError.memoBytesInvalidUTF8
             }
 
             return .text(try MemoText(validatedUTF8String))
@@ -256,6 +243,6 @@ extension Optional where WrappedType == String {
 
 extension Data {
     func intoMemoBytes() throws -> MemoBytes? {
-        try .init(bytes: self.bytes)
+        try MemoBytes(bytes: self.bytes)
     }
 }
