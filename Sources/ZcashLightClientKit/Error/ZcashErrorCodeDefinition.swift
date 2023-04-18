@@ -382,4 +382,10 @@ enum ZcashErrorDefinition {
     /// Stream downloading the given block range failed.
     // sourcery: code="ZBDSEO0001"
     case blockDownloaderServiceDownloadBlockRange(_ error: Error)
+    
+    // MARK: - BlockDownloaderStream
+
+    /// The AsyncThrowingStream's iterator failed to return next block.
+    // sourcery: code="ZBDS0001"
+    case blockDownloaderStreamNextBlock(_ error: Error)
 }

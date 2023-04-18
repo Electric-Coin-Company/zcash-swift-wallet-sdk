@@ -247,4 +247,6 @@ public enum ZcashErrorCode: String {
     case blockRepositoryRemoveBlocksCacheDirectory = "ZBLRP0009"
     /// Stream downloading the given block range failed.
     case blockDownloaderServiceDownloadBlockRange = "ZBDSEO0001"
+    /// The AsyncThrowingStream's iterator failed to return next block.
+    case blockDownloaderStreamNextBlock = "ZBDS0001"
 }
