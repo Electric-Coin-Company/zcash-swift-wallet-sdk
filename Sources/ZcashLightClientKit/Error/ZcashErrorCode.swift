@@ -255,4 +255,16 @@ public enum ZcashErrorCode: String {
     case zcashTransactionReceivedInit = "ZTEZT0002"
     /// Initialization of `ZcashTransaction.Sent` failed.
     case zcashTransactionSentInit = "ZTEZT0003"
+    /// Entity not found in the database, result of `createEntity` execution.
+    case transactionRepositoryEntityNotFound = "ZTREE0001"
+    /// `Find` call is missing fields, required fields are transaction `index` and `blockTime`.
+    case transactionRepositoryTransactionMissingRequiredFields = "ZTREE0002"
+    /// Counting all transactions failed.
+    case transactionRepositoryCountAll = "ZTREE0003"
+    /// Counting all unmined transactions failed.
+    case transactionRepositoryCountUnmined = "ZTREE0004"
+    /// Execution of a query failed.
+    case transactionRepositoryQueryExecute = "ZTREE0005"
+    /// Finding memos in the database failed.
+    case transactionRepositoryFindMemos = "ZTREE0006"
 }

@@ -7,12 +7,6 @@
 
 import Foundation
 
-enum TransactionRepositoryError: Error {
-    case malformedTransaction
-    case notFound
-    case transactionMissingRequiredFields
-}
-
 protocol TransactionRepository {
     func closeDBConnection()
     func countAll() async throws -> Int

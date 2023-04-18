@@ -352,6 +352,24 @@ public enum ZcashError: Equatable, Error {
     /// Initialization of `ZcashTransaction.Sent` failed.
     /// ZTEZT0003
     case zcashTransactionSentInit(_ error: Error)
+    /// Entity not found in the database, result of `createEntity` execution.
+    /// ZTREE0001
+    case transactionRepositoryEntityNotFound
+    /// `Find` call is missing fields, required fields are transaction `index` and `blockTime`.
+    /// ZTREE0002
+    case transactionRepositoryTransactionMissingRequiredFields
+    /// Counting all transactions failed.
+    /// ZTREE0003
+    case transactionRepositoryCountAll(_ error: Error)
+    /// Counting all unmined transactions failed.
+    /// ZTREE0004
+    case transactionRepositoryCountUnmined(_ error: Error)
+    /// Execution of a query failed.
+    /// ZTREE0005
+    case transactionRepositoryQueryExecute(_ error: Error)
+    /// Finding memos in the database failed.
+    /// ZTREE0006
+    case transactionRepositoryFindMemos(_ error: Error)
 
     public var message: String {
         switch self {
@@ -450,6 +468,12 @@ public enum ZcashError: Equatable, Error {
         case .zcashTransactionOverviewInit: return "Initialization of `ZcashTransaction.Overview` failed."
         case .zcashTransactionReceivedInit: return "Initialization of `ZcashTransaction.Received` failed."
         case .zcashTransactionSentInit: return "Initialization of `ZcashTransaction.Sent` failed."
+        case .transactionRepositoryEntityNotFound: return "Entity not found in the database, result of `createEntity` execution."
+        case .transactionRepositoryTransactionMissingRequiredFields: return "`Find` call is missing fields, required fields are transaction `index` and `blockTime`."
+        case .transactionRepositoryCountAll: return "Counting all transactions failed."
+        case .transactionRepositoryCountUnmined: return "Counting all unmined transactions failed."
+        case .transactionRepositoryQueryExecute: return "Execution of a query failed."
+        case .transactionRepositoryFindMemos: return "Finding memos in the database failed."
         }
     }
 
@@ -550,6 +574,12 @@ public enum ZcashError: Equatable, Error {
         case .zcashTransactionOverviewInit: return .zcashTransactionOverviewInit
         case .zcashTransactionReceivedInit: return .zcashTransactionReceivedInit
         case .zcashTransactionSentInit: return .zcashTransactionSentInit
+        case .transactionRepositoryEntityNotFound: return .transactionRepositoryEntityNotFound
+        case .transactionRepositoryTransactionMissingRequiredFields: return .transactionRepositoryTransactionMissingRequiredFields
+        case .transactionRepositoryCountAll: return .transactionRepositoryCountAll
+        case .transactionRepositoryCountUnmined: return .transactionRepositoryCountUnmined
+        case .transactionRepositoryQueryExecute: return .transactionRepositoryQueryExecute
+        case .transactionRepositoryFindMemos: return .transactionRepositoryFindMemos
         }
     }
 
