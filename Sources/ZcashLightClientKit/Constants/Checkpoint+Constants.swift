@@ -52,10 +52,16 @@ extension Checkpoint {
         return try? checkpoint(at: url)
     }
 
+    /// - Throws:
+    ///     - `checkpointCantLoadFromDisk` if can't load JSON with checkpoint from disk.
     private static func checkpoint(at url: URL) throws -> Checkpoint {
-        let data = try Data(contentsOf: url)
-        let checkpoint = try JSONDecoder().decode(Checkpoint.self, from: data)
-        return checkpoint
+        do {
+            let data = try Data(contentsOf: url)
+            let checkpoint = try JSONDecoder().decode(Checkpoint.self, from: data)
+            return checkpoint
+        } catch {
+            throw ZcashError.checkpointCantLoadFromDisk(error)
+        }
     }
 }
 
