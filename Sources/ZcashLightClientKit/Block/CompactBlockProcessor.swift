@@ -843,16 +843,23 @@ actor CompactBlockProcessor {
 
             logger.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
 
-            try await blockDownloader.downloadAndStoreBlocks(
-                using: downloadStream,
-                at: processingRange,
-                maxBlockBufferSize: config.downloadBufferSize,
-                totalProgressRange: totalProgressRange
-            )
+            do {
+                try await blockDownloader.downloadAndStoreBlocks(
+                    using: downloadStream,
+                    at: processingRange,
+                    maxBlockBufferSize: config.downloadBufferSize,
+                    totalProgressRange: totalProgressRange
+                )
+            } catch {
+                await ifTaskIsNotCanceledClearCompactBlockCache()
+                throw error
+            }
 
             do {
                 try await blockValidator.validate()
             } catch {
+                await ifTaskIsNotCanceledClearCompactBlockCache()
+
                 guard let validationError = error as? BlockValidatorError else {
                     logger.error("Block validation failed with generic error: \(error)")
                     throw error
@@ -882,6 +889,7 @@ actor CompactBlockProcessor {
                 }
             } catch {
                 logger.error("Scanning failed with error: \(error)")
+                await ifTaskIsNotCanceledClearCompactBlockCache()
                 throw error
             }
 
@@ -1076,6 +1084,15 @@ actor CompactBlockProcessor {
         await send(event: .finished(height, foundBlocks))
         await updateState(.synced)
         await setTimer()
+    }
+
+    private func ifTaskIsNotCanceledClearCompactBlockCache() async {
+        guard !Task.isCancelled else { return }
+        do {
+            try await clearCompactBlockCache()
+        } catch {
+            logger.error("`clearCompactBlockCache` failed after error: \(error.localizedDescription)")
+        }
     }
 
     private func clearCompactBlockCache() async throws {
