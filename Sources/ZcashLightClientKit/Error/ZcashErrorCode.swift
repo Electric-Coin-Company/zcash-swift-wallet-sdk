@@ -243,4 +243,10 @@ public enum ZcashErrorCode: String {
     case blockDownloaderServiceDownloadBlockRange = "ZBDSEO0001"
     /// The AsyncThrowingStream's iterator failed to return next block.
     case blockDownloaderStreamNextBlock = "ZBDS0001"
+    /// Initialization of `ZcashTransaction.Overview` failed.
+    case zcashTransactionOverviewInit = "ZTEZT0001"
+    /// Initialization of `ZcashTransaction.Received` failed.
+    case zcashTransactionReceivedInit = "ZTEZT0002"
+    /// Initialization of `ZcashTransaction.Sent` failed.
+    case zcashTransactionSentInit = "ZTEZT0003"
 }
