@@ -494,6 +494,33 @@ public enum ZcashError: Equatable, Error {
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
     /// ZWLTE0002
     case walletTransEncoderShieldFundsMissingSaplingParams
+    /// PersistentTransactionsManager cant create transaction.
+    /// ZPTRM0001
+    case persistentTransManagerCantCreateTransaction(_ recipient: PendingTransactionRecipient, _ account: Int, _ zatoshi: Zatoshi)
+    /// PersistentTransactionsManager cant get to address from pending transaction.
+    /// ZPTRM0002
+    case persistentTransManagerEncodeUknownToAddress(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id.
+    /// ZPTRM0003
+    case persistentTransManagerSubmitTransactionIDMissing(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored.
+    /// ZPTRM0004
+    case persistentTransManagerSubmitTransactionNotFound(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is canceled.
+    /// ZPTRM0005
+    case persistentTransManagerSubmitTransactionCanceled(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data.
+    /// ZPTRM0006
+    case persistentTransManagerSubmitTransactionRawDataMissing(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but submit API call failed.
+    /// ZPTRM0007
+    case persistentTransManagerSubmitFailed(_ entity: PendingTransactionEntity, _ serviceErrorCode: Int)
+    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored.
+    /// ZPTRM0008
+    case persistentTransManagerApplyMinedHeightTransactionIDMissing(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
+    /// ZPTRM0009
+    case persistentTransManagerApplyMinedHeightTransactionNotFound(_ entity: PendingTransactionEntity)
 
     public var message: String {
         switch self {
@@ -634,6 +661,15 @@ public enum ZcashError: Equatable, Error {
         case .recipientInvalidInput: return "Can't create `Recipient` because input is invalid."
         case .walletTransEncoderCreateTransactionMissingSaplingParams: return "WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk."
         case .walletTransEncoderShieldFundsMissingSaplingParams: return "WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk."
+        case .persistentTransManagerCantCreateTransaction: return "PersistentTransactionsManager cant create transaction."
+        case .persistentTransManagerEncodeUknownToAddress: return "PersistentTransactionsManager cant get to address from pending transaction."
+        case .persistentTransManagerSubmitTransactionIDMissing: return "PersistentTransactionsManager wants to submit pending transaction but transaction is missing id."
+        case .persistentTransManagerSubmitTransactionNotFound: return "PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored."
+        case .persistentTransManagerSubmitTransactionCanceled: return "PersistentTransactionsManager wants to submit pending transaction but transaction is canceled."
+        case .persistentTransManagerSubmitTransactionRawDataMissing: return "PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data."
+        case .persistentTransManagerSubmitFailed: return "PersistentTransactionsManager wants to submit pending transaction but submit API call failed."
+        case .persistentTransManagerApplyMinedHeightTransactionIDMissing: return "PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored."
+        case .persistentTransManagerApplyMinedHeightTransactionNotFound: return "PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored."
         }
     }
 
@@ -776,6 +812,15 @@ public enum ZcashError: Equatable, Error {
         case .recipientInvalidInput: return .recipientInvalidInput
         case .walletTransEncoderCreateTransactionMissingSaplingParams: return .walletTransEncoderCreateTransactionMissingSaplingParams
         case .walletTransEncoderShieldFundsMissingSaplingParams: return .walletTransEncoderShieldFundsMissingSaplingParams
+        case .persistentTransManagerCantCreateTransaction: return .persistentTransManagerCantCreateTransaction
+        case .persistentTransManagerEncodeUknownToAddress: return .persistentTransManagerEncodeUknownToAddress
+        case .persistentTransManagerSubmitTransactionIDMissing: return .persistentTransManagerSubmitTransactionIDMissing
+        case .persistentTransManagerSubmitTransactionNotFound: return .persistentTransManagerSubmitTransactionNotFound
+        case .persistentTransManagerSubmitTransactionCanceled: return .persistentTransManagerSubmitTransactionCanceled
+        case .persistentTransManagerSubmitTransactionRawDataMissing: return .persistentTransManagerSubmitTransactionRawDataMissing
+        case .persistentTransManagerSubmitFailed: return .persistentTransManagerSubmitFailed
+        case .persistentTransManagerApplyMinedHeightTransactionIDMissing: return .persistentTransManagerApplyMinedHeightTransactionIDMissing
+        case .persistentTransManagerApplyMinedHeightTransactionNotFound: return .persistentTransManagerApplyMinedHeightTransactionNotFound
         }
     }
 

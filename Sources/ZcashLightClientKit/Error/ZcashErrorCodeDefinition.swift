@@ -566,4 +566,34 @@ enum ZcashErrorDefinition {
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
     // sourcery: code="ZWLTE0002"
     case walletTransEncoderShieldFundsMissingSaplingParams
+
+    // MARK: - PersistentTransactionManager
+
+    /// PersistentTransactionsManager cant create transaction.
+    // sourcery: code="ZPTRM0001"
+    case persistentTransManagerCantCreateTransaction(_ recipient: PendingTransactionRecipient, _ account: Int, _ zatoshi: Zatoshi)
+    /// PersistentTransactionsManager cant get to address from pending transaction.
+    // sourcery: code="ZPTRM0002"
+    case persistentTransManagerEncodeUknownToAddress(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id.
+    // sourcery: code="ZPTRM0003"
+    case persistentTransManagerSubmitTransactionIDMissing(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored.
+    // sourcery: code="ZPTRM0004"
+    case persistentTransManagerSubmitTransactionNotFound(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is canceled.
+    // sourcery: code="ZPTRM0005"
+    case persistentTransManagerSubmitTransactionCanceled(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data.
+    // sourcery: code="ZPTRM0006"
+    case persistentTransManagerSubmitTransactionRawDataMissing(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to submit pending transaction but submit API call failed.
+    // sourcery: code="ZPTRM0007"
+    case persistentTransManagerSubmitFailed(_ entity: PendingTransactionEntity, _ serviceErrorCode: Int)
+    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored.
+    // sourcery: code="ZPTRM0008"
+    case persistentTransManagerApplyMinedHeightTransactionIDMissing(_ entity: PendingTransactionEntity)
+    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
+    // sourcery: code="ZPTRM0009"
+    case persistentTransManagerApplyMinedHeightTransactionNotFound(_ entity: PendingTransactionEntity)
 }

@@ -283,4 +283,22 @@ public enum ZcashErrorCode: String {
     case walletTransEncoderCreateTransactionMissingSaplingParams = "ZWLTE0001"
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
     case walletTransEncoderShieldFundsMissingSaplingParams = "ZWLTE0002"
+    /// PersistentTransactionsManager cant create transaction.
+    case persistentTransManagerCantCreateTransaction = "ZPTRM0001"
+    /// PersistentTransactionsManager cant get to address from pending transaction.
+    case persistentTransManagerEncodeUknownToAddress = "ZPTRM0002"
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id.
+    case persistentTransManagerSubmitTransactionIDMissing = "ZPTRM0003"
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored.
+    case persistentTransManagerSubmitTransactionNotFound = "ZPTRM0004"
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is canceled.
+    case persistentTransManagerSubmitTransactionCanceled = "ZPTRM0005"
+    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data.
+    case persistentTransManagerSubmitTransactionRawDataMissing = "ZPTRM0006"
+    /// PersistentTransactionsManager wants to submit pending transaction but submit API call failed.
+    case persistentTransManagerSubmitFailed = "ZPTRM0007"
+    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored.
+    case persistentTransManagerApplyMinedHeightTransactionIDMissing = "ZPTRM0008"
+    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
+    case persistentTransManagerApplyMinedHeightTransactionNotFound = "ZPTRM0009"
 }

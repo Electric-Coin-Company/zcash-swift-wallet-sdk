@@ -7,18 +7,6 @@
 
 import Foundation
 
-enum TransactionManagerError: Error {
-    case couldNotCreateSpend(recipient: PendingTransactionRecipient, account: Int, zatoshi: Zatoshi)
-    case encodingFailed(PendingTransactionEntity)
-    case updateFailed(PendingTransactionEntity)
-    case notPending(PendingTransactionEntity)
-    case cancelled(PendingTransactionEntity)
-    case internalInconsistency(PendingTransactionEntity)
-    case submitFailed(PendingTransactionEntity, errorCode: Int)
-    case shieldingEncodingFailed(PendingTransactionEntity, reason: String)
-    case cannotEncodeInternalTx(PendingTransactionEntity)
-}
-
 class PersistentTransactionManager: OutboundTransactionManager {
     var repository: PendingTransactionRepository
     var encoder: TransactionEncoder
@@ -58,11 +46,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
                 )
             )
         ) else {
-            throw TransactionManagerError.couldNotCreateSpend(
-                recipient: recipient,
-                account: accountIndex,
-                zatoshi: zatoshi
-            )
+            throw ZcashError.persistentTransManagerCantCreateTransaction(recipient, accountIndex, zatoshi)
         }
         logger.debug("pending transaction \(String(describing: insertedTx.id)) created")
         return insertedTx
@@ -73,36 +57,23 @@ class PersistentTransactionManager: OutboundTransactionManager {
         shieldingThreshold: Zatoshi,
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
-        do {
-            let transaction = try await self.encoder.createShieldingTransaction(
-                spendingKey: spendingKey,
-                shieldingThreshold: shieldingThreshold,
-                memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
-                from: pendingTransaction.accountIndex
-            )
-            
-            var pending = pendingTransaction
-            pending.encodeAttempts += 1
-            pending.raw = transaction.raw
-            pending.rawTransactionId = transaction.rawID
-            pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
-            pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
-            
-            try self.repository.update(pending)
-            
-            return pending
-        } catch DatabaseStorageError.updateFailed {
-            throw TransactionManagerError.updateFailed(pendingTransaction)
-        } catch MemoBytes.Errors.invalidUTF8 {
-            throw TransactionManagerError.shieldingEncodingFailed(pendingTransaction, reason: "Memo contains invalid UTF-8 bytes")
-        } catch MemoBytes.Errors.tooLong(let length) {
-            throw TransactionManagerError.shieldingEncodingFailed(
-                pendingTransaction,
-                reason: "Memo is too long. expected 512 bytes, received \(length)"
-            )
-        } catch {
-            throw error
-        }
+        let transaction = try await self.encoder.createShieldingTransaction(
+            spendingKey: spendingKey,
+            shieldingThreshold: shieldingThreshold,
+            memoBytes: try pendingTransaction.memo?.intoMemoBytes(),
+            from: pendingTransaction.accountIndex
+        )
+
+        var pending = pendingTransaction
+        pending.encodeAttempts += 1
+        pending.raw = transaction.raw
+        pending.rawTransactionId = transaction.rawID
+        pending.expiryHeight = transaction.expiryHeight ?? BlockHeight.empty()
+        pending.minedHeight = transaction.minedHeight ?? BlockHeight.empty()
+
+        try self.repository.update(pending)
+
+        return pending
     }
 
     func encode(
@@ -119,7 +90,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
             }
 
             guard let toAddress else {
-                throw TransactionManagerError.cannotEncodeInternalTx(pendingTransaction)
+                throw ZcashError.persistentTransManagerEncodeUknownToAddress(pendingTransaction)
             }
             
             let transaction = try await self.encoder.createTransaction(
@@ -140,14 +111,8 @@ class PersistentTransactionManager: OutboundTransactionManager {
             try self.repository.update(pending)
             
             return pending
-        } catch DatabaseStorageError.updateFailed {
-            throw TransactionManagerError.updateFailed(pendingTransaction)
         } catch {
-            do {
-                try await self.updateOnFailure(transaction: pendingTransaction, error: error)
-            } catch {
-                throw TransactionManagerError.updateFailed(pendingTransaction)
-            }
+            try await self.updateOnFailure(transaction: pendingTransaction, error: error)
             throw error
         }
     }
@@ -156,56 +121,53 @@ class PersistentTransactionManager: OutboundTransactionManager {
         pendingTransaction: PendingTransactionEntity
     ) async throws -> PendingTransactionEntity {
         guard let txId = pendingTransaction.id else {
-            throw TransactionManagerError.notPending(pendingTransaction) // this transaction is not stored
+            // this transaction is not stored
+            throw ZcashError.persistentTransManagerSubmitTransactionIDMissing(pendingTransaction)
         }
         
         do {
             guard let storedTx = try self.repository.find(by: txId) else {
-                throw TransactionManagerError.notPending(pendingTransaction)
+                throw ZcashError.persistentTransManagerSubmitTransactionNotFound(pendingTransaction)
             }
             
             guard !storedTx.isCancelled  else {
                 logger.debug("ignoring cancelled transaction \(storedTx)")
-                throw TransactionManagerError.cancelled(storedTx)
+                throw ZcashError.persistentTransManagerSubmitTransactionCanceled(storedTx)
             }
             
             guard let raw = storedTx.raw else {
                 logger.debug("INCONSISTENCY: attempt to send pending transaction \(txId) that has not raw data")
-                throw TransactionManagerError.internalInconsistency(storedTx)
+                throw ZcashError.persistentTransManagerSubmitTransactionRawDataMissing(storedTx)
             }
             
             let response = try await self.service.submit(spendTransaction: raw)
             let transaction = try await self.update(transaction: storedTx, on: response)
             
             guard response.errorCode >= 0 else {
-                throw TransactionManagerError.submitFailed(transaction, errorCode: Int(response.errorCode))
+                throw ZcashError.persistentTransManagerSubmitFailed(transaction, Int(response.errorCode))
             }
             
             return transaction
         } catch {
-            try? await self.updateOnFailure(transaction: pendingTransaction, error: error)
+            try await self.updateOnFailure(transaction: pendingTransaction, error: error)
             throw error
         }
     }
     
     func applyMinedHeight(pendingTransaction: PendingTransactionEntity, minedHeight: BlockHeight) async throws -> PendingTransactionEntity {
         guard let id = pendingTransaction.id else {
-            throw TransactionManagerError.internalInconsistency(pendingTransaction)
+            throw ZcashError.persistentTransManagerApplyMinedHeightTransactionIDMissing(pendingTransaction)
         }
         
         guard var transaction = try repository.find(by: id) else {
-            throw TransactionManagerError.notPending(pendingTransaction)
+            throw ZcashError.persistentTransManagerApplyMinedHeightTransactionNotFound(pendingTransaction)
         }
         
         transaction.minedHeight = minedHeight
         guard let pendingTxId = pendingTransaction.id else {
-            throw TransactionManagerError.updateFailed(pendingTransaction)
+            throw ZcashError.persistentTransManagerApplyMinedHeightTransactionIDMissing(pendingTransaction)
         }
-        do {
-            try repository.applyMinedHeight(minedHeight, id: pendingTxId)
-        } catch {
-            throw TransactionManagerError.updateFailed(transaction)
-        }
+        try repository.applyMinedHeight(minedHeight, id: pendingTxId)
         return transaction
     }
     
@@ -257,11 +219,7 @@ class PersistentTransactionManager: OutboundTransactionManager {
     }
     
     func delete(pendingTransaction: PendingTransactionEntity) async throws {
-        do {
-            try repository.delete(pendingTransaction)
-        } catch {
-            throw TransactionManagerError.notPending(pendingTransaction)
-        }
+        try repository.delete(pendingTransaction)
     }
 
     func closeDBConnection() {
