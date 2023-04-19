@@ -605,4 +605,13 @@ enum ZcashErrorDefinition {
     /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
     // sourcery: code="ZPTRM0009"
     case persistentTransManagerApplyMinedHeightTransactionNotFound(_ entity: PendingTransactionEntity)
+    
+    // MARK: - Zatoshi
+    
+    /// Initiatilzation fo `Zatoshi` from a decoder failed.
+    // sourcery: code="ZTSHO0001"
+    case zatoshiDecode(_ error: Error)
+    /// Encode of `Zatoshi` failed.
+    // sourcery: code="ZTSHO0002"
+    case zatoshiEncode(_ error: Error)
 }
