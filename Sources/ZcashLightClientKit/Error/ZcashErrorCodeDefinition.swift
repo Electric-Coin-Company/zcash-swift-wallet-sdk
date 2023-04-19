@@ -506,4 +506,31 @@ enum ZcashErrorDefinition {
     /// Invalid account when trying to derive spending key
     // sourcery: code="ZDRVT0001"
     case derivationToolSpendingKeyInvalidAccount
+
+    // MARK: - UnspentTransactionOutputDAO
+
+    /// Creation of the table for unspent transaction output failed.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZUTOD0001"
+    case unspentTransactionOutputDAOCreateTable(_ sqliteError: Error)
+    /// SQLite query failed when storing unspent transaction output.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZUTOD0002"
+    case unspentTransactionOutputDAOStore(_ sqliteError: Error)
+    /// SQLite query failed when removing all the unspent transation outputs.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZUTOD0003"
+    case unspentTransactionOutputDAOClearAll(_ sqliteError: Error)
+    /// Fetched information about unspent transaction output from the DB but it can't be decoded to `UTXO` object.
+    /// - `error` decoding error.
+    // sourcery: code="ZUTOD0004"
+    case unspentTransactionOutputDAOGetAllCantDecode(_ error: Error)
+    /// SQLite query failed when getting all the unspent transation outputs.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZUTOD0005"
+    case unspentTransactionOutputDAOGetAll(_ sqliteError: Error)
+    /// SQLite query failed when getting balance.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZUTOD0006"
+    case unspentTransactionOutputDAOBalance(_ sqliteError: Error)
 }
