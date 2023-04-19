@@ -66,12 +66,8 @@ class WalletTransactionEncoder: TransactionEncoder {
             from: accountIndex
         )
 
-        do {
-            logger.debug("transaction id: \(txId)")
-            return try await repository.find(id: txId)
-        } catch {
-            throw TransactionEncoderError.notFound(transactionId: txId)
-        }
+        logger.debug("transaction id: \(txId)")
+        return try await repository.find(id: txId)
     }
     
     func createSpend(
@@ -82,7 +78,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         from accountIndex: Int
     ) async throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
-            throw TransactionEncoderError.missingParams
+            throw ZcashError.walletTransEncoderCreateTransactionMissingSaplingParams
         }
 
         let txId = try await rustBackend.createToAddress(
@@ -108,12 +104,8 @@ class WalletTransactionEncoder: TransactionEncoder {
             accountIndex: accountIndex
         )
         
-        do {
-            logger.debug("transaction id: \(txId)")
-            return try await repository.find(id: txId)
-        } catch {
-            throw TransactionEncoderError.notFound(transactionId: txId)
-        }
+        logger.debug("transaction id: \(txId)")
+        return try await repository.find(id: txId)
     }
 
     func createShieldingSpend(
@@ -123,7 +115,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         accountIndex: Int
     ) async throws -> Int {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
-            throw TransactionEncoderError.missingParams
+            throw ZcashError.walletTransEncoderShieldFundsMissingSaplingParams
         }
         
         let txId = try await rustBackend.shieldFunds(
