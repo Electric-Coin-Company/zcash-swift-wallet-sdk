@@ -533,4 +533,28 @@ enum ZcashErrorDefinition {
     /// - `sqliteError` is error produced by SQLite library.
     // sourcery: code="ZUTOD0006"
     case unspentTransactionOutputDAOBalance(_ sqliteError: Error)
+
+    // MARK: - WalletTypes
+
+    /// Can't create `SaplingExtendedSpendingKey` because input is invalid.
+    // sourcery: code="ZWLTP0001"
+    case spendingKeyInvalidInput
+    /// Can't create `UnifiedFullViewingKey` because input is invalid.
+    // sourcery: code="ZWLTP0002"
+    case unifiedFullViewingKeyInvalidInput
+    /// Can't create `SaplingExtendedFullViewingKey` because input is invalid.
+    // sourcery: code="ZWLTP0003"
+    case extetendedFullViewingKeyInvalidInput
+    /// Can't create `TransparentAddress` because input is invalid.
+    // sourcery: code="ZWLTP0004"
+    case transparentAddressInvalidInput
+    /// Can't create `SaplingAddress` because input is invalid.
+    // sourcery: code="ZWLTP0005"
+    case saplingAddressInvalidInput
+    /// Can't create `UnifiedAddress` because input is invalid.
+    // sourcery: code="ZWLTP0006"
+    case unifiedAddressInvalidInput
+    /// Can't create `Recipient` because input is invalid.
+    // sourcery: code="ZWLTP0007"
+    case recipientInvalidInput
 }
