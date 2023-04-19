@@ -500,4 +500,10 @@ enum ZcashErrorDefinition {
     /// - `sqliteError` is error produced by SQLite library.
     // sourcery: code="ZPETR0013"
     case pendingTransactionDAOApplyMinedHeight(_ sqliteError: Error)
+
+    // MARK: - DerivationTool
+
+    /// Invalid account when trying to derive spending key
+    // sourcery: code="ZDRVT0001"
+    case derivationToolSpendingKeyInvalidAccount
 }

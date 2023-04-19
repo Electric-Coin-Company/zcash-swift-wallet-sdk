@@ -20,7 +20,9 @@ public protocol KeyDeriving {
     /// Given the seed bytes tand the account index, return the UnifiedSpendingKey
     /// - Parameter seed: `[Uint8]` seed bytes
     /// - Parameter accountNumber: `Int` with the account number
-    /// - Throws: `.unableToDerive` if there's a problem deriving this key
+    /// - Throws:
+    ///     - `derivationToolSpendingKeyInvalidAccount` if the `accountIndex` is invalid.
+    ///     - some `ZcashError.rust*` error if the derivation fails.
     /// - Returns a `UnifiedSpendingKey`
     func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) async throws -> UnifiedSpendingKey
     func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int, completion: @escaping (Result<UnifiedSpendingKey, Error>) -> Void)
@@ -28,6 +30,7 @@ public protocol KeyDeriving {
 
     /// Given a spending key, return the associated viewing key.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` from which to derive the `UnifiedFullViewingKey` from.
+    /// - Throws: some `ZcashError.rust*` error if the derivation fails.
     /// - Returns: the viewing key that corresponds to the spending key.
     func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey
     func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey, completion: @escaping (Result<UnifiedFullViewingKey, Error>) -> Void)
@@ -35,29 +38,20 @@ public protocol KeyDeriving {
 
     /// Extracts the `SaplingAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
-    /// - Throws: `KeyDerivationErrors.receiverNotFound` if the receiver is not present
+    /// - Throws: some `ZcashError.rust*` error if the derivation fails.
     func saplingReceiver(from unifiedAddress: UnifiedAddress) throws -> SaplingAddress
 
     /// Extracts the `TransparentAddress` from the given `UnifiedAddress`
     /// - Parameter address: the `UnifiedAddress`
-    /// - Throws: `KeyDerivationErrors.receiverNotFound` if the receiver is not present
+    /// - Throws: some `ZcashError.rust*` error if the derivation fails.
     func transparentReceiver(from unifiedAddress: UnifiedAddress) throws -> TransparentAddress
 
     /// Extracts the `UnifiedAddress.ReceiverTypecodes` from the given `UnifiedAddress`
+    /// - Throws: some `ZcashError.rust*` error if the derivation fails.
     /// - Parameter address: the `UnifiedAddress`
     func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes]
 
     static func getAddressMetadata(_ addr: String) -> AddressMetadata?
-}
-
-public enum KeyDerivationErrors: Error {
-    case derivationError(underlyingError: Error)
-    // When something happens that is not related to derivation itself happens. For example if self is nil in closure.
-    case genericOtherError
-    case unableToDerive
-    case invalidInput
-    case invalidUnifiedAddress
-    case receiverNotFound
 }
 
 public class DerivationTool: KeyDeriving {
@@ -87,16 +81,14 @@ public class DerivationTool: KeyDeriving {
     }
 
     public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey, completion: @escaping (Result<UnifiedFullViewingKey, Error>) -> Void) {
-        AsyncToClosureGateway.executeThrowingAction(completion) { [weak self] in
-            guard let self else { throw KeyDerivationErrors.genericOtherError }
-            return try await self.deriveUnifiedFullViewingKey(from: spendingKey)
+        AsyncToClosureGateway.executeThrowingAction(completion) { [backend] in
+            return try await backend.deriveUnifiedFullViewingKey(from: spendingKey)
         }
     }
 
     public func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) -> SinglePublisher<UnifiedFullViewingKey, Error> {
-        AsyncToCombineGateway.executeThrowingAction() { [weak self] in
-            guard let self else { throw KeyDerivationErrors.genericOtherError }
-            return try await self.deriveUnifiedFullViewingKey(from: spendingKey)
+        AsyncToCombineGateway.executeThrowingAction() { [backend] in
+            return try await backend.deriveUnifiedFullViewingKey(from: spendingKey)
         }
     }
 
@@ -106,37 +98,27 @@ public class DerivationTool: KeyDeriving {
     /// supported so the default value of 1 is recommended.
     /// - Returns: the spending keys that correspond to the seed, formatted as Strings.
     public func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) async throws -> UnifiedSpendingKey {
-        guard accountIndex >= 0, let accountIndex = Int32(exactly: accountIndex) else {
-            throw KeyDerivationErrors.invalidInput
-        }
-        do {
-            return try await backend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
-        } catch {
-            throw KeyDerivationErrors.unableToDerive
-        }
+        guard accountIndex >= 0, let accountIndex = Int32(exactly: accountIndex) else { throw ZcashError.derivationToolSpendingKeyInvalidAccount }
+        return try await backend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
     }
 
     public func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int, completion: @escaping (Result<UnifiedSpendingKey, Error>) -> Void) {
-        AsyncToClosureGateway.executeThrowingAction(completion) { [weak self] in
-            guard let self else { throw KeyDerivationErrors.genericOtherError }
-            return try await self.deriveUnifiedSpendingKey(seed: seed, accountIndex: accountIndex)
+        AsyncToClosureGateway.executeThrowingAction(completion) { [backend] in
+            guard accountIndex >= 0, let accountIndex = Int32(exactly: accountIndex) else { throw ZcashError.derivationToolSpendingKeyInvalidAccount }
+            return try await backend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
         }
     }
 
     public func deriveUnifiedSpendingKey(seed: [UInt8], accountIndex: Int) -> SinglePublisher<UnifiedSpendingKey, Error> {
-        AsyncToCombineGateway.executeThrowingAction() { [weak self] in
-            guard let self else { throw KeyDerivationErrors.genericOtherError }
-            return try await self.deriveUnifiedSpendingKey(seed: seed, accountIndex: accountIndex)
+        AsyncToCombineGateway.executeThrowingAction() { [backend] in
+            guard accountIndex >= 0, let accountIndex = Int32(exactly: accountIndex) else { throw ZcashError.derivationToolSpendingKeyInvalidAccount }
+            return try await backend.deriveUnifiedSpendingKey(from: seed, accountIndex: accountIndex)
         }
     }
 
     public func receiverTypecodesFromUnifiedAddress(_ address: UnifiedAddress) throws -> [UnifiedAddress.ReceiverTypecodes] {
-        do {
-            return try backend.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
-                .map({ UnifiedAddress.ReceiverTypecodes(typecode: $0) })
-        } catch {
-            throw KeyDerivationErrors.invalidUnifiedAddress
-        }
+        return try backend.receiverTypecodesOnUnifiedAddress(address.stringEncoded)
+            .map { UnifiedAddress.ReceiverTypecodes(typecode: $0) }
     }
 }
 
