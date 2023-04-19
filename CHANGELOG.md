@@ -1,4 +1,31 @@
-# unreleased
+# 0.21.0-beta
+
+New checkpoints
+
+Mainnet:
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2032500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2035000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2037500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2040000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2042500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2045000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2047500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2050000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2052500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2055000.json
+````
+
+Testnet
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2290000.json
+````
+### [#969] Clear cache on error to avoid discontinuities when verifying
+This change drops the file-system cache whenever an error occurs when storing blocks
+so that there is not a discontinuity in the cached block range that could cause a 
+discontinuity error on libzcashlc when calling `scan_blocks`. This will have a setback of
+at most 100 blocks that would have to be re-downloaded when resuming sync.
 
 ### [#959] and [#914] Value of outbound transactions does not match user intended tx input 
 
