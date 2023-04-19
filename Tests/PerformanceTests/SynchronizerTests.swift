@@ -72,7 +72,6 @@ class SynchronizerTests: XCTestCase {
                 cacheDbURL: nil,
                 fsBlockDbRoot: databases.fsCacheDbRoot,
                 dataDbURL: databases.dataDB,
-                pendingDbURL: databases.pendingDB,
                 endpoint: endpoint,
                 network: network,
                 spendParamsURL: try __spendParamsURL(),
@@ -84,7 +83,6 @@ class SynchronizerTests: XCTestCase {
             
             try? FileManager.default.removeItem(at: databases.fsCacheDbRoot)
             try? FileManager.default.removeItem(at: databases.dataDB)
-            try? FileManager.default.removeItem(at: databases.pendingDB)
             
             synchronizer = SDKSynchronizer(initializer: initializer)
             

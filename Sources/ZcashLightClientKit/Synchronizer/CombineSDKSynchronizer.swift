@@ -74,7 +74,7 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?
-    ) -> SinglePublisher<PendingTransactionEntity, Error> {
+    ) -> SinglePublisher<ZcashTransaction.Overview, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo)
         }
@@ -84,37 +84,31 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi
-    ) -> SinglePublisher<PendingTransactionEntity, Error> {
+    ) -> SinglePublisher<ZcashTransaction.Overview, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
             try await self.synchronizer.shieldFunds(spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
         }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity) -> SinglePublisher<Bool, Never> {
-        AsyncToCombineGateway.executeAction() {
-            await self.synchronizer.cancelSpend(transaction: transaction)
-        }
-    }
-
-    public var pendingTransactions: SinglePublisher<[PendingTransactionEntity], Never> {
+    public var pendingTransactions: AnyPublisher<[ZcashTransaction.Overview], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.pendingTransactions
         }
     }
 
-    public var clearedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
+    public var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
         AsyncToCombineGateway.executeAction() {
-            await self.synchronizer.clearedTransactions
+            await self.synchronizer.transactions
         }
     }
 
-    public var sentTransactions: SinglePublisher<[ZcashTransaction.Sent], Never> {
+    public var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.sentTransactions
         }
     }
 
-    public var receivedTransactions: SinglePublisher<[ZcashTransaction.Received], Never> {
+    public var receivedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.receivedTransactions
         }
@@ -128,33 +122,21 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func getMemos(for receivedTransaction: ZcashTransaction.Received) -> SinglePublisher<[Memo], Error> {
-        AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getMemos(for: receivedTransaction)
-        }
-    }
-
-    public func getMemos(for sentTransaction: ZcashTransaction.Sent) -> SinglePublisher<[Memo], Error> {
-        AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.getMemos(for: sentTransaction)
-        }
-    }
-
     public func getRecipients(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[TransactionRecipient], Never> {
         AsyncToCombineGateway.executeAction() {
             await self.synchronizer.getRecipients(for: transaction)
         }
     }
 
-    public func getRecipients(for transaction: ZcashTransaction.Sent) -> SinglePublisher<[TransactionRecipient], Never> {
-        AsyncToCombineGateway.executeAction() {
-            await self.synchronizer.getRecipients(for: transaction)
+    public func allPendingTransactions() -> AnyPublisher<[ZcashTransaction.Overview], Error> {
+        AsyncToCombineGateway.executeThrowingAction() {
+            try await self.synchronizer.allPendingTransactions()
         }
     }
 
-    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> SinglePublisher<[ZcashTransaction.Overview], Error> {
+    public func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> SinglePublisher<[ZcashTransaction.Overview], Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            try await self.synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
+            try await self.synchronizer.allTransactions(from: transaction, limit: limit)
         }
     }
 

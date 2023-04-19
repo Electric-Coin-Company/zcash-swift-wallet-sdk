@@ -31,14 +31,6 @@ public enum ZcashErrorCode: String {
     case serviceFetchUTXOsFailed = "ZSRVC0008"
     /// LightWalletService.blockStream failed.
     case serviceBlockStreamFailed = "ZSRVC0000"
-    /// Migration of the pending DB failed because of unspecific reason.
-    case dbMigrationGenericFailure = "ZDBMG0001"
-    /// Migration of the pending DB failed because unknown version of the existing database.
-    case dbMigrationInvalidVersion = "ZDBMG00002"
-    /// Migration of the pending DB to version 1 failed.
-    case dbMigrationV1 = "ZDBMG00003"
-    /// Migration of the pending DB to version 2 failed.
-    case dbMigrationV2 = "ZDBMG00004"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.
@@ -49,18 +41,6 @@ public enum ZcashErrorCode: String {
     case saplingParamsDownload = "ZSAPP0003"
     /// Failed to move sapling parameters file to final destination after download.
     case saplingParamsCantMoveDownloadedFile = "ZSAPP0004"
-    /// SQLite query failed when fetching received notes count from the database.
-    case notesDAOReceivedCount = "ZNDAO0001"
-    /// SQLite query failed when fetching received notes from the database.
-    case notesDAOReceivedNote = "ZNDAO0002"
-    /// Fetched note from the SQLite but can't decode that.
-    case notesDAOReceivedCantDecode = "ZNDAO0003"
-    /// SQLite query failed when fetching sent notes count from the database.
-    case notesDAOSentCount = "ZNDAO0004"
-    /// SQLite query failed when fetching sent notes from the database.
-    case notesDAOSentNote = "ZNDAO0005"
-    /// Fetched note from the SQLite but can't decode that.
-    case notesDAOSentCantDecode = "ZNDAO0006"
     /// SQLite query failed when fetching block information from database.
     case blockDAOBlock = "ZBDAO0001"
     /// Fetched block information from DB but can't decode them.
@@ -205,6 +185,10 @@ public enum ZcashErrorCode: String {
     case zcashTransactionReceivedInit = "ZTEZT0002"
     /// Initialization of `ZcashTransaction.Sent` failed.
     case zcashTransactionSentInit = "ZTEZT0003"
+    /// Initialization of `ZcashTransaction.Output` failed.
+    case zcashTransactionOutputInit = "ZTEZT0004"
+    /// Initialization of `ZcashTransaction.Output` failed because there an inconsistency in the output recipient.
+    case zcashTransactionOutputInconsistentRecipient = "ZTEZT0005"
     /// Entity not found in the database, result of `createEntity` execution.
     case transactionRepositoryEntityNotFound = "ZTREE0001"
     /// `Find` call is missing fields, required fields are transaction `index` and `blockTime`.
@@ -233,32 +217,6 @@ public enum ZcashErrorCode: String {
     case checkpointCantLoadFromDisk = "ZCHKP0001"
     /// Failed to decode `Checkpoint` object.
     case checkpointDecode = "ZCHKP0002"
-    /// Decoding of `PendingTransaction` failed because of specific invalid data.
-    case pendingTransactionDecodeInvalidData = "ZPETR0001"
-    /// Can't decode `PendingTransaction`.
-    case pendingTransactionCantDecode = "ZPETR0002"
-    /// Can't encode `PendingTransaction`.
-    case pendingTransactionCantEncode = "ZPETR0003"
-    /// SQLite query failed when creating pending transaction.
-    case pendingTransactionDAOCreate = "ZPETR0004"
-    /// Pending transaction which should be updated is missing ID.
-    case pendingTransactionDAOUpdateMissingID = "ZPETR0005"
-    /// SQLite query failed when updating pending transaction.
-    case pendingTransactionDAOUpdate = "ZPETR0006"
-    /// Pending transaction which should be deleted is missing ID.
-    case pendingTransactionDAODeleteMissingID = "ZPETR0007"
-    /// SQLite query failed when deleting pending transaction.
-    case pendingTransactionDAODelete = "ZPETR0008"
-    /// Pending transaction which should be canceled is missing ID.
-    case pendingTransactionDAOCancelMissingID = "ZPETR0009"
-    /// SQLite query failed when canceling pending transaction.
-    case pendingTransactionDAOCancel = "ZPETR0010"
-    /// SQLite query failed when seaching for pending transaction.
-    case pendingTransactionDAOFind = "ZPETR0011"
-    /// SQLite query failed when getting pending transactions.
-    case pendingTransactionDAOGetAll = "ZPETR0012"
-    /// SQLite query failed when applying mined height.
-    case pendingTransactionDAOApplyMinedHeight = "ZPETR0013"
     /// Invalid account when trying to derive spending key
     case derivationToolSpendingKeyInvalidAccount = "ZDRVT0001"
     /// Creation of the table for unspent transaction output failed.
@@ -291,24 +249,6 @@ public enum ZcashErrorCode: String {
     case walletTransEncoderCreateTransactionMissingSaplingParams = "ZWLTE0001"
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
     case walletTransEncoderShieldFundsMissingSaplingParams = "ZWLTE0002"
-    /// PersistentTransactionsManager cant create transaction.
-    case persistentTransManagerCantCreateTransaction = "ZPTRM0001"
-    /// PersistentTransactionsManager cant get to address from pending transaction.
-    case persistentTransManagerEncodeUknownToAddress = "ZPTRM0002"
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id.
-    case persistentTransManagerSubmitTransactionIDMissing = "ZPTRM0003"
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored.
-    case persistentTransManagerSubmitTransactionNotFound = "ZPTRM0004"
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is canceled.
-    case persistentTransManagerSubmitTransactionCanceled = "ZPTRM0005"
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data.
-    case persistentTransManagerSubmitTransactionRawDataMissing = "ZPTRM0006"
-    /// PersistentTransactionsManager wants to submit pending transaction but submit API call failed.
-    case persistentTransManagerSubmitFailed = "ZPTRM0007"
-    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored.
-    case persistentTransManagerApplyMinedHeightTransactionIDMissing = "ZPTRM0008"
-    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
-    case persistentTransManagerApplyMinedHeightTransactionNotFound = "ZPTRM0009"
     /// Initiatilzation fo `Zatoshi` from a decoder failed.
     case zatoshiDecode = "ZTSHO0001"
     /// Encode of `Zatoshi` failed.

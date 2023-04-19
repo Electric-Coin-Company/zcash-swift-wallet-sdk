@@ -213,6 +213,11 @@ public struct UnifiedAddress: Equatable, StringEncoded {
     }
 }
 
+public enum TransactionRecipient: Equatable {
+    case address(Recipient)
+    case internalAccount(UInt32)
+}
+
 /// Represents a valid recipient of Zcash
 public enum Recipient: Equatable, StringEncoded {
     case transparent(TransparentAddress)

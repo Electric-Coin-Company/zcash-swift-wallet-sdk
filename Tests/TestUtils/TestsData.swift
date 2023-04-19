@@ -16,7 +16,6 @@ class TestsData {
             cacheDbURL: nil,
             fsBlockDbRoot: URL(fileURLWithPath: "/"),
             dataDbURL: URL(fileURLWithPath: "/"),
-            pendingDbURL: URL(fileURLWithPath: "/"),
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: networkType),
             spendParamsURL: URL(fileURLWithPath: "/"),
@@ -34,7 +33,23 @@ class TestsData {
     )
     let transparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
     lazy var pendingTransactionEntity = {
-        PendingTransaction(value: Zatoshi(10), recipient: .address(.transparent(transparentAddress)), memo: .empty(), account: 0)
+        ZcashTransaction.Overview(
+            accountId: 0,
+            blockTime: nil,
+            expiryHeight: nil,
+            fee: Zatoshi(1000),
+            id: 0,
+            index: nil,
+            hasChange: true,
+            memoCount: 0,
+            minedHeight: nil,
+            raw: nil,
+            rawID: Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 0,
+            value: Zatoshi(10),
+            isExpiredUmined: false
+        )
     }()
 
     let clearedTransaction = {
@@ -58,34 +73,42 @@ class TestsData {
     }()
 
     let sentTransaction = {
-        ZcashTransaction.Sent(
+        ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: 1,
             expiryHeight: nil,
-            fromAccount: 0,
+            fee: Zatoshi(10000),
             id: 9,
             index: 0,
+            hasChange: true,
             memoCount: 0,
             minedHeight: 0,
-            noteCount: 0,
             raw: nil,
-            rawID: nil,
-            value: Zatoshi.zero
+            rawID: Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 2,
+            value: .zero,
+            isExpiredUmined: false
         )
     }()
 
     let receivedTransaction = {
-        ZcashTransaction.Received(
+        ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: 1,
             expiryHeight: nil,
-            fromAccount: 0,
+            fee: nil,
             id: 9,
             index: 0,
+            hasChange: true,
             memoCount: 0,
             minedHeight: 0,
-            noteCount: 0,
             raw: nil,
-            rawID: nil,
-            value: Zatoshi.zero
+            rawID: Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 2,
+            value: .zero,
+            isExpiredUmined: false
         )
     }()
 

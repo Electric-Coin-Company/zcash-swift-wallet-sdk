@@ -41,7 +41,6 @@ class DarksideSanityCheckTests: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
     
     func testDarkside() async throws {

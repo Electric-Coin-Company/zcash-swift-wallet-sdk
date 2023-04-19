@@ -37,7 +37,7 @@ public class SDKSynchronizer: Synchronizer {
     public let initializer: Initializer
     public var connectionState: ConnectionState
     public let network: ZcashNetwork
-    private let transactionManager: OutboundTransactionManager
+    private let transactionEncoder: TransactionEncoder
     private let transactionRepository: TransactionRepository
     private let utxoRepository: UnspentTransactionOutputRepository
 
@@ -58,7 +58,7 @@ public class SDKSynchronizer: Synchronizer {
         self.init(
             status: .unprepared,
             initializer: initializer,
-            transactionManager: OutboundTransactionManagerBuilder.build(initializer: initializer),
+            transactionEncoder: WalletTransactionEncoder(initializer: initializer),
             transactionRepository: initializer.transactionRepository,
             utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
             blockProcessor: CompactBlockProcessor(
@@ -78,7 +78,7 @@ public class SDKSynchronizer: Synchronizer {
     init(
         status: SyncStatus,
         initializer: Initializer,
-        transactionManager: OutboundTransactionManager,
+        transactionEncoder: TransactionEncoder,
         transactionRepository: TransactionRepository,
         utxoRepository: UnspentTransactionOutputRepository,
         blockProcessor: CompactBlockProcessor,
@@ -90,7 +90,7 @@ public class SDKSynchronizer: Synchronizer {
         self.connectionState = .idle
         self.underlyingStatus = GenericActor(status)
         self.initializer = initializer
-        self.transactionManager = transactionManager
+        self.transactionEncoder = transactionEncoder
         self.transactionRepository = transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
@@ -224,7 +224,8 @@ public class SDKSynchronizer: Synchronizer {
                 self?.foundTransactions(transactions: transactions, in: range)
 
             case let .handledReorg(reorgHeight, rewindHeight):
-                await self?.handledReorg(reorgHeight: reorgHeight, rewindHeight: rewindHeight)
+                // log reorg information
+                self?.logger.info("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
 
             case let .progressUpdated(progress):
                 await self?.progressUpdated(progress: progress)
@@ -255,8 +256,7 @@ public class SDKSynchronizer: Synchronizer {
 
     private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) async {
         await latestBlocksDataProvider.updateScannedData()
-        // FIX: Pending transaction updates fail if done from another thread. Improvement needed: explicitly define queues for sql repositories see: https://github.com/zcash/ZcashLightClientKit/issues/450
-        await refreshPendingTransactions()
+
         await updateStatus(.synced)
 
         if let syncStartDate {
@@ -270,16 +270,6 @@ public class SDKSynchronizer: Synchronizer {
     private func foundTransactions(transactions: [ZcashTransaction.Overview], in range: CompactBlockRange) {
         streamsUpdateQueue.async { [weak self] in
             self?.eventSubject.send(.foundTransactions(transactions, range))
-        }
-    }
-
-    private func handledReorg(reorgHeight: BlockHeight, rewindHeight: BlockHeight) async {
-        logger.debug("handling reorg at: \(reorgHeight) with rewind height: \(rewindHeight)")
-
-        do {
-            try await transactionManager.handleReorg(at: rewindHeight)
-        } catch {
-            logger.debug("error handling reorg: \(error)")
         }
     }
 
@@ -301,8 +291,12 @@ public class SDKSynchronizer: Synchronizer {
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?
-    ) async throws -> PendingTransactionEntity {
+    ) async throws -> ZcashTransaction.Overview {
         try throwIfUnprepared()
+
+        if case Recipient.transparent = toAddress, memo != nil {
+            throw ZcashError.synchronizerSendMemoToTransparentAddress
+        }
 
         try await SaplingParameterDownloader.downloadParamsIfnotPresent(
             spendURL: initializer.spendParamsURL,
@@ -311,10 +305,6 @@ public class SDKSynchronizer: Synchronizer {
             outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
             logger: logger
         )
-
-        if case Recipient.transparent = toAddress, memo != nil {
-            throw ZcashError.synchronizerSendMemoToTransparentAddress
-        }
 
         return try await createToAddress(
             spendingKey: spendingKey,
@@ -328,33 +318,30 @@ public class SDKSynchronizer: Synchronizer {
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi
-    ) async throws -> PendingTransactionEntity {
+    ) async throws -> ZcashTransaction.Overview {
         try throwIfUnprepared()
 
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
         let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
-        
-        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
+
+        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
         guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.latestScannedHeight) else {
             throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
-        
-        let shieldingSpend = try await transactionManager.initSpend(
-            zatoshi: tBalance.verified,
-            recipient: .internalAccount(spendingKey.account),
-            memo: try memo.asMemoBytes(),
-            from: accountIndex
-        )
-        
-        // TODO: [#487] Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
-        let transaction = try await transactionManager.encodeShieldingTransaction(
+
+        let transaction = try await transactionEncoder.createShieldingTransaction(
             spendingKey: spendingKey,
             shieldingThreshold: shieldingThreshold,
-            pendingTransaction: shieldingSpend
+            memoBytes: memo.asMemoBytes(),
+            from: Int(spendingKey.account)
         )
-        
-        return try await transactionManager.submit(pendingTransaction: transaction)
+
+        let encodedTx = try transaction.encodedTransaction()
+
+        try await transactionEncoder.submit(transaction: encodedTx)
+
+        return transaction
     }
 
     func createToAddress(
@@ -362,43 +349,51 @@ public class SDKSynchronizer: Synchronizer {
         zatoshi: Zatoshi,
         recipient: Recipient,
         memo: Memo?
-    ) async throws -> PendingTransactionEntity {
-        let spend = try await transactionManager.initSpend(
-            zatoshi: zatoshi,
-            recipient: .address(recipient),
-            memo: memo?.asMemoBytes(),
-            from: Int(spendingKey.account)
-        )
-        
-        let transaction = try await transactionManager.encode(
-            spendingKey: spendingKey,
-            pendingTransaction: spend
-        )
-        let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
-        return submittedTx
+    ) async throws -> ZcashTransaction.Overview {
+        do {
+            if
+                case .transparent = recipient,
+                memo != nil {
+                throw ZcashError.synchronizerSendMemoToTransparentAddress
+            }
+
+            let transaction = try await transactionEncoder.createTransaction(
+                spendingKey: spendingKey,
+                zatoshi: zatoshi,
+                to: recipient.stringEncoded,
+                memoBytes: memo?.asMemoBytes(),
+                from: Int(spendingKey.account)
+            )
+
+            let encodedTransaction = try transaction.encodedTransaction()
+
+            try await transactionEncoder.submit(transaction: encodedTransaction)
+            
+            return transaction
+        } catch {
+            throw error
+        }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity) async -> Bool {
-        await transactionManager.cancel(pendingTransaction: transaction)
-    }
-
-    public func allReceivedTransactions() async throws -> [ZcashTransaction.Received] {
+    public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)
     }
 
-    public func allPendingTransactions() async throws -> [PendingTransactionEntity] {
-        try await transactionManager.allPendingTransactions()
+    public func allPendingTransactions() async throws -> [ZcashTransaction.Overview] {
+        let latestScannedHeight = self.latestState.latestScannedHeight
+        
+        return try await transactionRepository.findPendingTransactions(latestHeight: latestScannedHeight, offset: 0, limit: .max)
     }
 
-    public func allClearedTransactions() async throws -> [ZcashTransaction.Overview] {
+    public func allTransactions() async throws -> [ZcashTransaction.Overview] {
         return try await transactionRepository.find(offset: 0, limit: Int.max, kind: .all)
     }
 
-    public func allSentTransactions() async throws -> [ZcashTransaction.Sent] {
+    public func allSentTransactions() async throws -> [ZcashTransaction.Overview] {
         return try await transactionRepository.findSent(offset: 0, limit: Int.max)
     }
 
-    public func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview] {
+    public func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview] {
         return try await transactionRepository.find(from: transaction, limit: limit, kind: .all)
     }
 
@@ -410,20 +405,12 @@ public class SDKSynchronizer: Synchronizer {
         return try await transactionRepository.findMemos(for: transaction)
     }
 
-    public func getMemos(for receivedTransaction: ZcashTransaction.Received) async throws -> [Memo] {
-        return try await transactionRepository.findMemos(for: receivedTransaction)
-    }
-
-    public func getMemos(for sentTransaction: ZcashTransaction.Sent) async throws -> [Memo] {
-        return try await transactionRepository.findMemos(for: sentTransaction)
-    }
-
     public func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient] {
-        return await transactionRepository.getRecipients(for: transaction.id)
+        return (try? await transactionRepository.getRecipients(for: transaction.id)) ?? []
     }
 
-    public func getRecipients(for transaction: ZcashTransaction.Sent) async -> [TransactionRecipient] {
-        return await transactionRepository.getRecipients(for: transaction.id)
+    public func getTransactionOutputs(for transaction: ZcashTransaction.Overview) async -> [ZcashTransaction.Output] {
+        return (try? await transactionRepository.getTransactionOutputs(for: transaction.id)) ?? []
     }
 
     public func latestHeight() async throws -> BlockHeight {
@@ -515,15 +502,10 @@ public class SDKSynchronizer: Synchronizer {
 
             let context = AfterSyncHooksManager.RewindContext(
                 height: height,
-                completion: { [weak self] result in
+                completion: { result in
                     switch result {
-                    case let .success(rewindHeight):
-                        do {
-                            try await self?.transactionManager.handleReorg(at: rewindHeight)
-                            subject.send(completion: .finished)
-                        } catch {
-                            subject.send(completion: .failure(error))
-                        }
+                    case .success:
+                        subject.send(completion: .finished)
 
                     case let .failure(error):
                         subject.send(completion: .failure(error))
@@ -547,9 +529,8 @@ public class SDKSynchronizer: Synchronizer {
             }
 
             let context = AfterSyncHooksManager.WipeContext(
-                pendingDbURL: initializer.pendingDbURL,
                 prewipe: { [weak self] in
-                    self?.transactionManager.closeDBConnection()
+                    self?.transactionEncoder.closeDBConnection()
                     self?.transactionRepository.closeDBConnection()
                 },
                 completion: { [weak self] possibleError in
@@ -617,44 +598,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    // MARK: book keeping
-
-    private func updateMinedTransactions() async throws {
-        let transactions = try await transactionManager.allPendingTransactions()
-            .filter { $0.isSubmitSuccess && !$0.isMined }
-
-        for pendingTx in transactions {
-            guard let rawID = pendingTx.rawTransactionId else { return }
-            let transaction = try await transactionRepository.find(rawID: rawID)
-            guard let minedHeight = transaction.minedHeight else { return }
-
-            let minedTx = try await transactionManager.applyMinedHeight(pendingTransaction: pendingTx, minedHeight: minedHeight)
-
-            notifyMinedTransaction(minedTx)
-        }
-    }
-
-    private func removeConfirmedTransactions() async throws {
-        let latestHeight = try await transactionRepository.lastScannedHeight()
-
-        let transactions = try await transactionManager.allPendingTransactions()
-            .filter { $0.minedHeight > 0 && abs($0.minedHeight - latestHeight) >= ZcashSDK.defaultStaleTolerance }
-
-        for transaction in transactions {
-            try await transactionManager.delete(pendingTransaction: transaction)
-        }
-    }
-
-    private func refreshPendingTransactions() async {
-        do {
-            try await updateMinedTransactions()
-            try await removeConfirmedTransactions()
-        } catch {
-            logger.debug("error refreshing pending transactions: \(error)")
-        }
-    }
-
-    private func notifyMinedTransaction(_ transaction: PendingTransactionEntity) {
+    private func notifyMinedTransaction(_ transaction: ZcashTransaction.Overview) {
         streamsUpdateQueue.async { [weak self] in
             self?.eventSubject.send(.minedTransaction(transaction))
         }
@@ -662,27 +606,27 @@ public class SDKSynchronizer: Synchronizer {
 }
 
 extension SDKSynchronizer {
-    public var pendingTransactions: [PendingTransactionEntity] {
+    public var transactions: [ZcashTransaction.Overview] {
         get async {
-            (try? await self.allPendingTransactions()) ?? [PendingTransactionEntity]()
+            (try? await self.allTransactions()) ?? []
         }
     }
 
-    public var clearedTransactions: [ZcashTransaction.Overview] {
-        get async {
-            (try? await allClearedTransactions()) ?? []
-        }
-    }
-
-    public var sentTransactions: [ZcashTransaction.Sent] {
+    public var sentTransactions: [ZcashTransaction.Overview] {
         get async {
             (try? await allSentTransactions()) ?? []
         }
     }
 
-    public var receivedTransactions: [ZcashTransaction.Received] {
+    public var receivedTransactions: [ZcashTransaction.Overview] {
         get async {
             (try? await allReceivedTransactions()) ?? []
+        }
+    }
+
+    public var pendingTransactions: [ZcashTransaction.Overview] {
+        get async {
+            (try? await allPendingTransactions()) ?? []
         }
     }
 }

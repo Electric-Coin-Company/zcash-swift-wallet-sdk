@@ -10,6 +10,39 @@ import SQLite
 
 public enum ZcashTransaction {
     public struct Overview {
+        /// Represents the transaction state based on current height of the chain,
+        /// mined height and expiry height of a transaction.
+       public enum State {
+            /// transaction has a `minedHeight` that's greater or equal than
+            /// `ZcashSDK.defaultStaleTolerance` confirmations.
+            case confirmed
+            /// transaction has no `minedHeight` but current known height is less than
+            /// `expiryHeight`.
+            case pending
+            /// transaction has no
+            case expired
+
+            init(currentHeight: BlockHeight,
+                 minedHeight: BlockHeight?,
+                 expiredUnmined: Bool
+            ) {
+                guard !expiredUnmined else {
+                    self = .expired
+                    return
+                }
+
+                if let minedHeight, (currentHeight - minedHeight) >= ZcashSDK.defaultStaleTolerance {
+                    self = .confirmed
+                } else if let minedHeight, (currentHeight - minedHeight) < ZcashSDK.defaultStaleTolerance {
+                    self = .pending
+                } else if minedHeight == nil {
+                    self = .pending
+                } else {
+                    self = .expired
+                }
+            }
+        }
+
         public let accountId: Int
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
@@ -28,32 +61,31 @@ public enum ZcashTransaction {
         public let isExpiredUmined: Bool
     }
 
-    public struct Received {
-        public let blockTime: TimeInterval
-        public let expiryHeight: BlockHeight?
-        public let fromAccount: Int
-        public let id: Int
-        public let index: Int
-        public let memoCount: Int
-        public let minedHeight: BlockHeight
-        public let noteCount: Int
-        public let raw: Data?
-        public let rawID: Data?
-        public let value: Zatoshi
-    }
+    public struct Output {
+        public enum Pool {
+            case transaparent
+            case sapling
+            case other(Int)
+            init(rawValue: Int) {
+                switch rawValue {
+                case 0:
+                    self = .transaparent
+                case 2:
+                    self = .sapling
+                default:
+                    self = .other(rawValue)
+                }
+            }
+        }
 
-    public struct Sent {
-        public let blockTime: TimeInterval?
-        public let expiryHeight: BlockHeight?
-        public let fromAccount: Int
-        public let id: Int
-        public let index: Int?
-        public let memoCount: Int
-        public let minedHeight: BlockHeight?
-        public let noteCount: Int
-        public let raw: Data?
-        public let rawID: Data?
+        public let idTx: Int
+        public let pool: Pool
+        public let index: Int
+        public let fromAccount: Int?
+        public let recipient: TransactionRecipient
         public let value: Zatoshi
+        public let isChange: Bool
+        public let memo: Memo?
     }
 
     /// Used when fetching blocks from the lightwalletd
@@ -61,6 +93,50 @@ public enum ZcashTransaction {
         public let rawID: Data
         public let minedHeight: BlockHeight
         public let raw: Data
+    }
+}
+
+extension ZcashTransaction.Output {
+    enum Column {
+        static let idTx = Expression<Int>("id_tx")
+        static let pool = Expression<Int>("output_pool")
+        static let index = Expression<Int>("output_index")
+        static let toAccount = Expression<Int?>("to_account")
+        static let fromAccount = Expression<Int?>("from_account")
+        static let toAddress = Expression<String?>("to_address")
+        static let value = Expression<Int64>("value")
+        static let isChange = Expression<Bool>("is_change")
+        static let memo = Expression<Blob?>("memo")
+    }
+
+    init(row: Row) throws {
+        do {
+            idTx = try row.get(Column.idTx)
+            pool = .init(rawValue: try row.get(Column.pool))
+            index = try row.get(Column.index)
+            fromAccount = try row.get(Column.fromAccount)
+            value = Zatoshi(try row.get(Column.value))
+            isChange = try row.get(Column.isChange)
+            
+            if
+                let outputRecipient = try row.get(Column.toAddress),
+                let metadata = DerivationTool.getAddressMetadata(outputRecipient)
+            {
+                recipient = TransactionRecipient.address(try Recipient(outputRecipient, network: metadata.networkType))
+            } else if let toAccount = try row.get(Column.toAccount) {
+                recipient = .internalAccount(UInt32(toAccount))
+            } else {
+                throw ZcashError.zcashTransactionOutputInconsistentRecipient
+            }
+
+            if let memoData = try row.get(Column.memo) {
+                memo = try Memo(bytes: memoData.bytes)
+            } else {
+                memo = nil
+            }
+        } catch {
+            throw ZcashError.zcashTransactionOutputInit(error)
+        }
     }
 }
 
@@ -97,6 +173,7 @@ extension ZcashTransaction.Overview {
             self.sentNoteCount = try row.get(Column.sentNoteCount)
             self.value = Zatoshi(try row.get(Column.value))
             self.isExpiredUmined = try row.get(Column.expiredUnmined)
+            
             if let blockTime = try row.get(Column.blockTime) {
                 self.blockTime = TimeInterval(blockTime)
             } else {
@@ -134,51 +211,21 @@ extension ZcashTransaction.Overview {
     }
 }
 
-extension ZcashTransaction.Received {
-    /// Attempts to create a `ZcashTransaction.Received` from an `Overview`
-    /// given that the transaction might not be a "sent" transaction, so it won't have the necessary
-    /// data to actually create it as it is currently defined, this initializer is optional
-    /// - returns: Optional<Received>. `Some` if the values present suffice to create a received
-    /// transaction otherwise `.none`
-    init?(overview: ZcashTransaction.Overview) {
-        guard
-            !overview.isSentTransaction,
-            let txBlocktime = overview.blockTime,
-            let txIndex = overview.index,
-            let txMinedHeight = overview.minedHeight
-        else { return nil }
+/// extension to handle pending states
+public extension ZcashTransaction.Overview {
+    func getState(for currentHeight: BlockHeight) -> State {
+        State(
+            currentHeight: currentHeight,
+            minedHeight: minedHeight,
+            expiredUnmined: self.isExpiredUmined
+        )
+    }
 
-        self.blockTime = txBlocktime
-        self.expiryHeight = overview.expiryHeight
-        self.fromAccount = overview.accountId
-        self.id = overview.id
-        self.index = txIndex
-        self.memoCount = overview.memoCount
-        self.minedHeight = txMinedHeight
-        self.noteCount = overview.receivedNoteCount
-        self.value = overview.value
-        self.raw = overview.raw
-        self.rawID = overview.rawID
+    func isPending(currentHeight: BlockHeight) -> Bool {
+        getState(for: currentHeight) == .pending
     }
 }
 
-extension ZcashTransaction.Sent {
-    init?(overview: ZcashTransaction.Overview) {
-        guard overview.isSentTransaction else { return nil }
-
-        self.blockTime = overview.blockTime
-        self.expiryHeight = overview.expiryHeight
-        self.fromAccount = overview.accountId
-        self.id = overview.id
-        self.index = overview.index
-        self.memoCount = overview.memoCount
-        self.minedHeight = overview.minedHeight
-        self.noteCount = overview.sentNoteCount
-        self.value = overview.value
-        self.raw = overview.raw
-        self.rawID = overview.rawID
-    }
-}
 
 /**
 Capabilities of an entity that can be uniquely identified by a raw transaction id

@@ -41,7 +41,6 @@ class Z2TReceiveTests: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
     
     func subscribeToFoundTransactions() {
@@ -134,7 +133,7 @@ class Z2TReceiveTests: XCTestCase {
         await fulfillment(of: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
 
         let sendExpectation = XCTestExpectation(description: "sendToAddress")
-        var pendingEntity: PendingTransactionEntity?
+        var pendingEntity: ZcashTransaction.Overview?
         var testError: Error?
         let sendAmount = Zatoshi(10000)
         /*

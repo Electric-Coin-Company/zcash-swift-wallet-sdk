@@ -40,31 +40,28 @@ public protocol CombineSynchronizer {
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?
-    ) -> SinglePublisher<PendingTransactionEntity, Error>
+    ) -> SinglePublisher<ZcashTransaction.Overview, Error>
 
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi
-    ) -> SinglePublisher<PendingTransactionEntity, Error>
+    ) -> SinglePublisher<ZcashTransaction.Overview, Error>
 
-    func cancelSpend(transaction: PendingTransactionEntity) -> SinglePublisher<Bool, Never>
-
-    var pendingTransactions: SinglePublisher<[PendingTransactionEntity], Never> { get }
-    var clearedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
-    var sentTransactions: SinglePublisher<[ZcashTransaction.Sent], Never> { get }
-    var receivedTransactions: SinglePublisher<[ZcashTransaction.Received], Never> { get }
+    var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
+    var pendingTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
+    var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
+    var receivedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
 
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
 
     func getMemos(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[Memo], Error>
-    func getMemos(for receivedTransaction: ZcashTransaction.Received) -> SinglePublisher<[Memo], Error>
-    func getMemos(for sentTransaction: ZcashTransaction.Sent) -> SinglePublisher<[Memo], Error>
 
     func getRecipients(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[TransactionRecipient], Never>
-    func getRecipients(for transaction: ZcashTransaction.Sent) -> SinglePublisher<[TransactionRecipient], Never>
 
-    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> SinglePublisher<[ZcashTransaction.Overview], Error>
+    func allPendingTransactions() -> SinglePublisher<[ZcashTransaction.Overview], Error>
+
+    func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> SinglePublisher<[ZcashTransaction.Overview], Error>
 
     func latestHeight() -> SinglePublisher<BlockHeight, Error>
 

@@ -41,7 +41,6 @@ final class InternalStateConsistencyTests: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
 
     func testInternalStateIsConsistentWhenMigrating() async throws {
@@ -70,7 +69,7 @@ final class InternalStateConsistencyTests: XCTestCase {
         let coordinator = self.coordinator!
         DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
             Task(priority: .userInitiated) {
-                await coordinator.synchronizer.stop()
+                coordinator.synchronizer.stop()
             }
         }
 

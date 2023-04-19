@@ -8,6 +8,7 @@
 import Foundation
 
 class WalletTransactionEncoder: TransactionEncoder {
+    let lightWalletService: LightWalletService
     let rustBackend: ZcashRustBackendWelding
     let repository: TransactionRepository
     let logger: Logger
@@ -22,6 +23,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         rustBackend: ZcashRustBackendWelding,
         dataDb: URL,
         fsBlockDbRoot: URL,
+        service: LightWalletService,
         repository: TransactionRepository,
         outputParams: URL,
         spendParams: URL,
@@ -31,6 +33,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         self.rustBackend = rustBackend
         self.dataDbURL = dataDb
         self.fsBlockDbRoot = fsBlockDbRoot
+        self.lightWalletService = service
         self.repository = repository
         self.outputParamsURL = outputParams
         self.spendParamsURL = spendParams
@@ -43,6 +46,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             rustBackend: initializer.rustBackend,
             dataDb: initializer.dataDbURL,
             fsBlockDbRoot: initializer.fsBlockDbRoot,
+            service: initializer.lightWalletService,
             repository: initializer.transactionRepository,
             outputParams: initializer.outputParamsURL,
             spendParams: initializer.spendParamsURL,
@@ -126,6 +130,17 @@ class WalletTransactionEncoder: TransactionEncoder {
                 
         return Int(txId)
     }
+
+    func submit(
+        transaction: EncodedTransaction
+    ) async throws {
+        let response = try await self.lightWalletService.submit(spendTransaction: transaction.raw)
+
+        guard response.errorCode >= 0 else {
+            throw TransactionEncoderError.submitError(code: Int(response.errorCode) , message: response.errorMessage)
+        }
+    }
+
     
     func ensureParams(spend: URL, output: URL) -> Bool {
         let readableSpend = FileManager.default.isReadableFile(atPath: spend.path)
@@ -133,5 +148,19 @@ class WalletTransactionEncoder: TransactionEncoder {
         
         // TODO: [#713] change this to something that makes sense, https://github.com/zcash/ZcashLightClientKit/issues/713
         return readableSpend && readableOutput
+    }
+
+    func closeDBConnection() {
+        self.repository.closeDBConnection()
+    }
+}
+
+extension ZcashTransaction.Overview {
+    func encodedTransaction() throws -> EncodedTransaction {
+        guard let raw else {
+            throw TransactionEncoderError.notEncoded(transactionId: self.id)
+        }
+
+        return EncodedTransaction(transactionId: self.rawID, raw: raw)
     }
 }

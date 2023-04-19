@@ -59,25 +59,71 @@ class TestCoordinator {
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true,
         endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint,
-        syncSessionIDGenerator: SyncSessionIDGenerator = UniqueSyncSessionIDGenerator()
+        syncSessionIDGenerator: SyncSessionIDGenerator = UniqueSyncSessionIDGenerator(),
+        dbTracingClosure: ((String) -> Void)? = nil
     ) async throws {
         await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
         let databases = TemporaryDbBuilder.build()
         self.databases = databases
 
-        let initializer = Initializer(
-            cacheDbURL: nil,
+        let urls = Initializer.URLs(
             fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
-            pendingDbURL: databases.pendingDB,
-            endpoint: endpoint,
-            network: network,
             spendParamsURL: try __spendParamsURL(),
-            outputParamsURL: try __outputParamsURL(),
+            outputParamsURL: try __outputParamsURL()
+        )
+
+        let (updatedURLs, parsingError) = Initializer.tryToUpdateURLs(with: alias, urls: urls)
+
+        let backend = ZcashRustBackend(
+            dbData: updatedURLs.dataDbURL,
+            fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
+            spendParamsPath: updatedURLs.spendParamsURL,
+            outputParamsPath: updatedURLs.outputParamsURL,
+            networkType: network.networkType
+        )
+
+        let transactionRepository = TransactionSQLDAO(
+            dbProvider: SimpleConnectionProvider(path: updatedURLs.dataDbURL.absoluteString),
+            traceClosure: dbTracingClosure
+        )
+
+        let accountRepository = AccountRepositoryBuilder.build(
+            dataDbURL: updatedURLs.dataDbURL,
+            readOnly: true,
+            caching: true,
+            logger: logger
+        )
+
+        let fsBlockRepository = FSCompactBlockRepository(
+            fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
+            metadataStore: .live(
+                fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
+                rustBackend: backend,
+                logger: logger
+            ),
+            blockDescriptor: .live,
+            contentProvider: DirectoryListingProviders.defaultSorted,
+            logger: logger
+        )
+
+        let service = Initializer.makeLightWalletServiceFactory(endpoint: endpoint).make()
+
+        let initializer = Initializer(
+            rustBackend: backend,
+            network: network,
+            cacheDbURL: nil,
+            urls: updatedURLs,
+            endpoint: endpoint,
+            service: service,
+            repository: transactionRepository,
+            accountRepository: accountRepository,
+            storage: fsBlockRepository,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             alias: alias,
-            loggingPolicy: .default(.debug)
+            urlsParsingError: parsingError,
+            logger: OSLogger(logLevel: .debug)
         )
 
         let derivationTool = DerivationTool(networkType: network.networkType)
@@ -243,7 +289,6 @@ extension TestCoordinator {
 struct TemporaryTestDatabases {
     var fsCacheDbRoot: URL
     var dataDB: URL
-    var pendingDB: URL
 }
 
 enum TemporaryDbBuilder {
@@ -253,8 +298,7 @@ enum TemporaryDbBuilder {
         
         return TemporaryTestDatabases(
             fsCacheDbRoot: tempUrl.appendingPathComponent("fs_cache_\(timestamp)"),
-            dataDB: tempUrl.appendingPathComponent("data_db_\(timestamp).db"),
-            pendingDB: tempUrl.appendingPathComponent("pending_db_\(timestamp).db")
+            dataDB: tempUrl.appendingPathComponent("data_db_\(timestamp).db")
         )
     }
 }

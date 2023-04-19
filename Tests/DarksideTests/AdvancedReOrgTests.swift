@@ -28,7 +28,12 @@ class AdvancedReOrgTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         // don't use an exact birthday, users never do.
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday + 50, network: network)
+        self.coordinator = try await TestCoordinator(
+            walletBirthday: birthday + 50,
+            network: network,
+            dbTracingClosure: { logger.debug($0) }
+        )
+
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
 
@@ -41,7 +46,6 @@ class AdvancedReOrgTests: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
     
     func handleReorg(event: CompactBlockProcessor.Event) {
@@ -305,7 +309,7 @@ class AdvancedReOrgTests: XCTestCase {
         await fulfillment(of: [preTxExpectation], timeout: 5)
         
         let sendExpectation = XCTestExpectation(description: "sendToAddress")
-        var pendingEntity: PendingTransactionEntity?
+        var pendingEntity: ZcashTransaction.Overview?
         var testError: Error?
         let sendAmount = Zatoshi(10000)
 
@@ -436,13 +440,14 @@ class AdvancedReOrgTests: XCTestCase {
 
         await fulfillment(of: [lastSyncExpectation], timeout: 5)
 
-        let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let expectedVerifiedBalance = initialTotalBalance + pendingTx.value
+        let currentVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let expectedPendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
         XCTAssertEqual(expectedPendingTransactionsCount, 0)
-        XCTAssertEqual(initialTotalBalance - pendingTx.value - Zatoshi(1000), expectedVerifiedBalance)
+        XCTAssertEqual(expectedVerifiedBalance, currentVerifiedBalance)
 
         let resultingBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
-        XCTAssertEqual(resultingBalance, expectedVerifiedBalance)
+        XCTAssertEqual(resultingBalance, currentVerifiedBalance)
     }
     
     func testIncomingTransactionIndexChange() async throws {
@@ -571,6 +576,27 @@ class AdvancedReOrgTests: XCTestCase {
         
         XCTAssertEqual(afterReOrgBalance, initialBalance)
         XCTAssertEqual(afterReOrgVerifiedBalance, initialVerifiedBalance)
+
+        guard
+            let receivedTransaction = try await coordinator.synchronizer.allTransactions().first
+        else {
+            XCTFail("expected to have a received transaction, but found none")
+            return
+        }
+
+        let transactionOutputs = await coordinator.synchronizer.getTransactionOutputs(
+            for: receivedTransaction
+        )
+        
+        guard transactionOutputs.count == 1 else {
+            XCTFail("expected output count to be 1")
+            return
+        }
+
+        let output = transactionOutputs[0]
+
+        XCTAssertEqual(output.recipient, .internalAccount(0))
+        XCTAssertEqual(output.value, Zatoshi(100000))
     }
     
     /// Steps:
@@ -598,7 +624,7 @@ class AdvancedReOrgTests: XCTestCase {
         
         var initialBalance = Zatoshi(-1)
         var initialVerifiedBalance = Zatoshi(-1)
-        var incomingTx: ZcashTransaction.Received!
+        var incomingTx: ZcashTransaction.Overview!
 
         try await coordinator.sync(
             completion: { _ in
@@ -765,16 +791,18 @@ class AdvancedReOrgTests: XCTestCase {
         let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var pendingEntity: PendingTransactionEntity?
+        var pendingEntity: ZcashTransaction.Overview?
         
         /*
         2. send transaction to recipient address
         */
+        let recipient = try Recipient(Environment.testRecipientAddress, network: self.network.networkType)
+
         do {
             let pendingTx = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: self.coordinator.spendingKey,
                 zatoshi: Zatoshi(20000),
-                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
+                toAddress: recipient,
                 memo: try Memo(string: "this is a test")
             )
             pendingEntity = pendingTx
@@ -889,7 +917,7 @@ class AdvancedReOrgTests: XCTestCase {
             return
         }
         
-        XCTAssertEqual(newPendingTx.minedHeight, BlockHeight.empty())
+        XCTAssertNil(newPendingTx.minedHeight)
         
         /*
         11. applyHeight(sentTxHeight + 2)
@@ -920,7 +948,7 @@ class AdvancedReOrgTests: XCTestCase {
         */
         pendingTransactionsCount = await coordinator.synchronizer.pendingTransactions.count
         XCTAssertEqual(pendingTransactionsCount, 1)
-        guard let newlyPendingTx = try await coordinator.synchronizer.allPendingTransactions().first else {
+        guard let newlyPendingTx = try await coordinator.synchronizer.allPendingTransactions().first(where: { $0.isSentTransaction }) else {
             XCTFail("no pending transaction")
             try await coordinator.stop()
             return
@@ -962,7 +990,7 @@ class AdvancedReOrgTests: XCTestCase {
         let sentTransactions = await coordinator.synchronizer.sentTransactions
             .first(
                 where: { transaction in
-                    return transaction.rawID == newlyPendingTx.rawTransactionId
+                    return transaction.rawID == newlyPendingTx.rawID
                 }
             )
 
@@ -975,14 +1003,19 @@ class AdvancedReOrgTests: XCTestCase {
         let expectedBalance = try await coordinator.synchronizer.getShieldedBalance()
 
         XCTAssertEqual(
-            initialTotalBalance - newlyPendingTx.value - Zatoshi(1000),
+            initialTotalBalance + newlyPendingTx.value, // Note: sent transactions have negative values
             expectedBalance
         )
 
         XCTAssertEqual(
-            initialTotalBalance - newlyPendingTx.value - Zatoshi(1000),
+            initialTotalBalance + newlyPendingTx.value, // Note: sent transactions have negative values
             expectedVerifiedBalance
         )
+
+        let txRecipients = await coordinator.synchronizer.getRecipients(for: newPendingTx)
+        XCTAssertEqual(txRecipients.count, 2)
+        XCTAssertNotNil(txRecipients.first(where: { $0 == .internalAccount(0) }))
+        XCTAssertNotNil(txRecipients.first(where: { $0 == .address(recipient) }))
     }
 
     /// Uses the zcash-hackworks data set.
@@ -1180,7 +1213,7 @@ class AdvancedReOrgTests: XCTestCase {
         let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var pendingEntity: PendingTransactionEntity?
+        var pendingEntity: ZcashTransaction.Overview?
         
         /*
         2. send transaction to recipient address
@@ -1274,7 +1307,7 @@ class AdvancedReOrgTests: XCTestCase {
             return
         }
         
-        XCTAssertFalse(pendingTx.isMined)
+        XCTAssertNil(pendingTx.minedHeight)
         
         LoggerProxy.info("applyStaged(blockheight: \(sentTxHeight + extraBlocks - 1))")
         try coordinator.applyStaged(blockheight: sentTxHeight + extraBlocks - 1)
