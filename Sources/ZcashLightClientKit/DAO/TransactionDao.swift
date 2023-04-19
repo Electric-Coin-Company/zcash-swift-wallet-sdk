@@ -20,15 +20,21 @@ class TransactionSQLDAO: TransactionRepository {
     private var blockDao: BlockSQLDAO
     private var sentNotesRepository: SentNotesRepository
     private let transactionsView = View("v_transactions")
-    private let receivedTransactionsView = View("v_tx_received")
-    private let sentTransactionsView = View("v_tx_sent")
     private let receivedNotesTable = Table("received_notes")
     private let sentNotesTable = Table("sent_notes")
+    private let traceClosure: ((String) -> Void)?
     
-    init(dbProvider: ConnectionProvider) {
+    init(dbProvider: ConnectionProvider, traceClosure: ((String) -> Void)? = nil) {
         self.dbProvider = dbProvider
         self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
         self.sentNotesRepository = SentNotesSQLDAO(dbProvider: dbProvider)
+        self.traceClosure = traceClosure
+    }
+
+    private func connection() throws -> Connection {
+        let conn = try dbProvider.connection()
+        conn.trace(traceClosure)
+        return conn
     }
 
     func closeDBConnection() {
@@ -43,13 +49,17 @@ class TransactionSQLDAO: TransactionRepository {
         try blockDao.latestBlockHeight()
     }
 
+    func lastScannedBlock() async throws -> Block? {
+        try blockDao.latestBlock()
+    }
+
     func isInitialized() async throws -> Bool {
         true
     }
     
     func countAll() async throws -> Int {
         do {
-            return try dbProvider.connection().scalar(transactions.count)
+            return try connection().scalar(transactions.count)
         } catch {
             throw ZcashError.transactionRepositoryCountAll(error)
         }
@@ -57,7 +67,7 @@ class TransactionSQLDAO: TransactionRepository {
     
     func countUnmined() async throws -> Int {
         do {
-            return try dbProvider.connection().scalar(transactions.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
+            return try connection().scalar(transactions.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
         } catch {
             throw ZcashError.transactionRepositoryCountUnmined(error)
         }
@@ -122,23 +132,31 @@ class TransactionSQLDAO: TransactionRepository {
     }
 
     func findReceived(offset: Int, limit: Int) async throws -> [ZcashTransaction.Received] {
-        let query = receivedTransactionsView
-            .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, ZcashTransaction.Overview.Column.id.desc)
+        let query = transactionsView
+            .filterQueryFor(kind: .received)
+            .order(ZcashTransaction.Overview.Column.id.desc,(ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc )
             .limit(limit, offset: offset)
 
-        return try execute(query) { try ZcashTransaction.Received(row: $0) }
+        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+            .compactMap { ZcashTransaction.Received(overview: $0) }
     }
 
     func findSent(offset: Int, limit: Int) async throws -> [ZcashTransaction.Sent] {
-        let query = sentTransactionsView
+        let query = transactionsView
+            .filterQueryFor(kind: .sent)
             .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc, ZcashTransaction.Overview.Column.id.desc)
             .limit(limit, offset: offset)
 
-        return try execute(query) { try ZcashTransaction.Sent(row: $0) }
+        return try execute(query) { try ZcashTransaction.Overview(row: $0) }
+            .compactMap { ZcashTransaction.Sent(overview: $0) }
     }
 
     func findMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo] {
-        return try await findMemos(for: transaction.id, table: receivedNotesTable)
+        if transaction.isSentTransaction {
+            return try await findMemos(for: transaction.id, table: sentNotesTable)
+        } else {
+            return try await findMemos(for: transaction.id, table: receivedNotesTable)
+        }
     }
 
     func findMemos(for receivedTransaction: ZcashTransaction.Received) async throws -> [Memo] {
@@ -158,7 +176,7 @@ class TransactionSQLDAO: TransactionRepository {
             .filter(NotesTableStructure.transactionID == transactionID)
         
         do {
-            let memos = try dbProvider.connection().prepare(query).compactMap { row in
+            let memos = try connection().prepare(query).compactMap { row in
                 do {
                     let rawMemo = try row.get(NotesTableStructure.memo)
                     return try Memo(bytes: rawMemo.bytes)
@@ -181,8 +199,7 @@ class TransactionSQLDAO: TransactionRepository {
 
     private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> [Entity] {
         do {
-            let entities = try dbProvider
-                .connection()
+            let entities = try connection()
                 .prepare(query)
                 .map(createEntity)
             

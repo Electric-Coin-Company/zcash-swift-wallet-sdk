@@ -10,12 +10,12 @@ import SQLite
 
 public enum ZcashTransaction {
     public struct Overview {
+        public let accountId: Int
         public let blockTime: TimeInterval?
         public let expiryHeight: BlockHeight?
         public let fee: Zatoshi?
         public let id: Int
         public let index: Int?
-        public let isWalletInternal: Bool
         public var isSentTransaction: Bool { value < Zatoshi(0) }
         public let hasChange: Bool
         public let memoCount: Int
@@ -25,6 +25,7 @@ public enum ZcashTransaction {
         public let receivedNoteCount: Int
         public let sentNoteCount: Int
         public let value: Zatoshi
+        public let isExpiredUmined: Bool
     }
 
     public struct Received {
@@ -65,28 +66,29 @@ public enum ZcashTransaction {
 
 extension ZcashTransaction.Overview {
     enum Column {
+        static let accountId = Expression<Int>("account_id")
         static let id = Expression<Int>("id_tx")
         static let minedHeight = Expression<BlockHeight?>("mined_height")
         static let index = Expression<Int?>("tx_index")
         static let rawID = Expression<Blob>("txid")
         static let expiryHeight = Expression<BlockHeight?>("expiry_height")
         static let raw = Expression<Blob?>("raw")
-        static let value = Expression<Int64>("net_value")
+        static let value = Expression<Int64>("account_balance_delta")
         static let fee = Expression<Int64?>("fee_paid")
-        static let isWalletInternal = Expression<Bool>("is_wallet_internal")
         static let hasChange = Expression<Bool>("has_change")
         static let sentNoteCount = Expression<Int>("sent_note_count")
         static let receivedNoteCount = Expression<Int>("received_note_count")
         static let memoCount = Expression<Int>("memo_count")
         static let blockTime = Expression<Int64?>("block_time")
+        static let expiredUnmined = Expression<Bool>("expired_unmined")
     }
 
     init(row: Row) throws {
         do {
+            self.accountId = try row.get(Column.accountId)
             self.expiryHeight = try row.get(Column.expiryHeight)
             self.id = try row.get(Column.id)
             self.index = try row.get(Column.index)
-            self.isWalletInternal = try row.get(Column.isWalletInternal)
             self.hasChange = try row.get(Column.hasChange)
             self.memoCount = try row.get(Column.memoCount)
             self.minedHeight = try row.get(Column.minedHeight)
@@ -94,19 +96,19 @@ extension ZcashTransaction.Overview {
             self.receivedNoteCount = try row.get(Column.receivedNoteCount)
             self.sentNoteCount = try row.get(Column.sentNoteCount)
             self.value = Zatoshi(try row.get(Column.value))
-            
+            self.isExpiredUmined = try row.get(Column.expiredUnmined)
             if let blockTime = try row.get(Column.blockTime) {
                 self.blockTime = TimeInterval(blockTime)
             } else {
                 self.blockTime = nil
             }
-            
+
             if let fee = try row.get(Column.fee) {
                 self.fee = Zatoshi(fee)
             } else {
                 self.fee = nil
             }
-            
+
             if let raw = try row.get(Column.raw) {
                 self.raw = Data(blob: raw)
             } else {
@@ -133,92 +135,48 @@ extension ZcashTransaction.Overview {
 }
 
 extension ZcashTransaction.Received {
-    enum Column {
-        static let id = Expression<Int>("id_tx")
-        static let minedHeight = Expression<BlockHeight>("mined_height")
-        static let index = Expression<Int>("tx_index")
-        static let rawID = Expression<Blob?>("txid")
-        static let expiryHeight = Expression<BlockHeight?>("expiry_height")
-        static let raw = Expression<Blob?>("raw")
-        static let fromAccount = Expression<Int>("received_by_account")
-        static let value = Expression<Int64>("received_total")
-        static let fee = Expression<Int64>("fee_paid")
-        static let noteCount = Expression<Int>("received_note_count")
-        static let memoCount = Expression<Int>("memo_count")
-        static let blockTime = Expression<Int64>("block_time")
-    }
+    /// Attempts to create a `ZcashTransaction.Received` from an `Overview`
+    /// given that the transaction might not be a "sent" transaction, so it won't have the necessary
+    /// data to actually create it as it is currently defined, this initializer is optional
+    /// - returns: Optional<Received>. `Some` if the values present suffice to create a received
+    /// transaction otherwise `.none`
+    init?(overview: ZcashTransaction.Overview) {
+        guard
+            !overview.isSentTransaction,
+            let txBlocktime = overview.blockTime,
+            let txIndex = overview.index,
+            let txMinedHeight = overview.minedHeight
+        else { return nil }
 
-    init(row: Row) throws {
-        do {
-            self.blockTime = TimeInterval(try row.get(Column.blockTime))
-            self.expiryHeight = try row.get(Column.expiryHeight)
-            self.fromAccount = try row.get(Column.fromAccount)
-            self.id = try row.get(Column.id)
-            self.index = try row.get(Column.index)
-            self.memoCount = try row.get(Column.memoCount)
-            self.minedHeight = try row.get(Column.minedHeight)
-            self.noteCount = try row.get(Column.noteCount)
-            self.value = Zatoshi(try row.get(Column.value))
-            
-            if let raw = try row.get(Column.raw) {
-                self.raw = Data(blob: raw)
-            } else {
-                self.raw = nil
-            }
-            
-            if let rawID = try row.get(Column.rawID) {
-                self.rawID = Data(blob: rawID)
-            } else {
-                self.rawID = nil
-            }
-        } catch {
-            throw ZcashError.zcashTransactionReceivedInit(error)
-        }
+        self.blockTime = txBlocktime
+        self.expiryHeight = overview.expiryHeight
+        self.fromAccount = overview.accountId
+        self.id = overview.id
+        self.index = txIndex
+        self.memoCount = overview.memoCount
+        self.minedHeight = txMinedHeight
+        self.noteCount = overview.receivedNoteCount
+        self.value = overview.value
+        self.raw = overview.raw
+        self.rawID = overview.rawID
     }
 }
 
 extension ZcashTransaction.Sent {
-    enum Column {
-        static let id = Expression<Int>("id_tx")
-        static let minedHeight = Expression<BlockHeight?>("mined_height")
-        static let index = Expression<Int?>("tx_index")
-        static let rawID = Expression<Blob?>("txid")
-        static let expiryHeight = Expression<BlockHeight?>("expiry_height")
-        static let raw = Expression<Blob?>("raw")
-        static let fromAccount = Expression<Int>("sent_from_account")
-        static let value = Expression<Int64>("sent_total")
-        static let fee = Expression<Int64>("fee_paid")
-        static let noteCount = Expression<Int>("sent_note_count")
-        static let memoCount = Expression<Int>("memo_count")
-        static let blockTime = Expression<Int64?>("block_time")
-    }
+    init?(overview: ZcashTransaction.Overview) {
+        guard overview.isSentTransaction else { return nil }
 
-    init(row: Row) throws {
-        do {
-            self.blockTime = try row.get(Column.blockTime).map { TimeInterval($0) }
-            self.expiryHeight = try row.get(Column.expiryHeight)
-            self.fromAccount = try row.get(Column.fromAccount)
-            self.id = try row.get(Column.id)
-            self.index = try row.get(Column.index)
-            self.memoCount = try row.get(Column.memoCount)
-            self.minedHeight = try row.get(Column.minedHeight)
-            self.noteCount = try row.get(Column.noteCount)
-            self.value = Zatoshi(try row.get(Column.value))
-            
-            if let raw = try row.get(Column.raw) {
-                self.raw = Data(blob: raw)
-            } else {
-                self.raw = nil
-            }
-            
-            if let rawID = try row.get(Column.rawID) {
-                self.rawID = Data(blob: rawID)
-            } else {
-                self.rawID = nil
-            }
-        } catch {
-            throw ZcashError.zcashTransactionSentInit(error)
-        }
+        self.blockTime = overview.blockTime
+        self.expiryHeight = overview.expiryHeight
+        self.fromAccount = overview.accountId
+        self.id = overview.id
+        self.index = overview.index
+        self.memoCount = overview.memoCount
+        self.minedHeight = overview.minedHeight
+        self.noteCount = overview.sentNoteCount
+        self.value = overview.value
+        self.raw = overview.raw
+        self.rawID = overview.rawID
     }
 }
 

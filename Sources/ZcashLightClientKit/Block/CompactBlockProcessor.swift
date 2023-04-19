@@ -311,6 +311,7 @@ actor CompactBlockProcessor {
     let blockEnhancer: BlockEnhancer
     let utxoFetcher: UTXOFetcher
     let saplingParametersHandler: SaplingParametersHandler
+    private let latestBlocksDataProvider: LatestBlocksDataProvider
 
     var service: LightWalletService
     var storage: CompactBlockRepository
@@ -347,7 +348,8 @@ actor CompactBlockProcessor {
         rustBackend: ZcashRustBackendWelding,
         config: Configuration,
         metrics: SDKMetrics,
-        logger: Logger
+        logger: Logger,
+        latestBlocksDataProvider: LatestBlocksDataProvider
     ) {
         self.init(
             service: service,
@@ -357,7 +359,8 @@ actor CompactBlockProcessor {
             repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb),
             accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: logger),
             metrics: metrics,
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: latestBlocksDataProvider
         )
     }
 
@@ -368,6 +371,7 @@ actor CompactBlockProcessor {
         initializer: Initializer,
         metrics: SDKMetrics,
         logger: Logger,
+        latestBlocksDataProvider: LatestBlocksDataProvider,
         walletBirthdayProvider: @escaping () -> BlockHeight
     ) {
         self.init(
@@ -387,7 +391,8 @@ actor CompactBlockProcessor {
             repository: initializer.transactionRepository,
             accountRepository: initializer.accountRepository,
             metrics: metrics,
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: latestBlocksDataProvider
         )
     }
     
@@ -399,10 +404,12 @@ actor CompactBlockProcessor {
         repository: TransactionRepository,
         accountRepository: AccountRepository,
         metrics: SDKMetrics,
-        logger: Logger
+        logger: Logger,
+        latestBlocksDataProvider: LatestBlocksDataProvider
     ) {
         self.metrics = metrics
         self.logger = logger
+        self.latestBlocksDataProvider = latestBlocksDataProvider
         let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard, logger: logger)
         self.internalSyncProgress = internalSyncProgress
         let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
@@ -433,7 +440,8 @@ actor CompactBlockProcessor {
             rustBackend: rustBackend,
             transactionRepository: repository,
             metrics: metrics,
-            logger: logger
+            logger: logger,
+            latestBlocksDataProvider: latestBlocksDataProvider
         )
 
         self.blockEnhancer = BlockEnhancerImpl(
@@ -710,8 +718,6 @@ actor CompactBlockProcessor {
     /// Processes new blocks on the given range based on the configuration set for this instance
     func processNewBlocks(ranges: SyncRanges) async {
         self.foundBlocks = true
-        self.backoffTimer?.invalidate()
-        self.backoffTimer = nil
         
         cancelableTask = Task(priority: .userInitiated) {
             do {
@@ -837,16 +843,23 @@ actor CompactBlockProcessor {
 
             logger.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
 
-            try await blockDownloader.downloadAndStoreBlocks(
-                using: downloadStream,
-                at: processingRange,
-                maxBlockBufferSize: config.downloadBufferSize,
-                totalProgressRange: totalProgressRange
-            )
+            do {
+                try await blockDownloader.downloadAndStoreBlocks(
+                    using: downloadStream,
+                    at: processingRange,
+                    maxBlockBufferSize: config.downloadBufferSize,
+                    totalProgressRange: totalProgressRange
+                )
+            } catch {
+                await ifTaskIsNotCanceledClearCompactBlockCache()
+                throw error
+            }
 
             do {
                 try await blockValidator.validate()
             } catch {
+                await ifTaskIsNotCanceledClearCompactBlockCache()
+
                 guard let validationError = error as? BlockValidatorError else {
                     logger.error("Block validation failed with generic error: \(error)")
                     throw error
@@ -876,6 +889,7 @@ actor CompactBlockProcessor {
                 }
             } catch {
                 logger.error("Scanning failed with error: \(error)")
+                await ifTaskIsNotCanceledClearCompactBlockCache()
                 throw error
             }
 
@@ -991,11 +1005,12 @@ actor CompactBlockProcessor {
 
     private func nextBatch() async {
         await updateState(.syncing)
+        if backoffTimer == nil { await setTimer() }
         do {
             let nextState = try await NextStateHelper.nextState(
                 service: self.service,
                 downloaderService: blockDownloaderService,
-                transactionRepository: transactionRepository,
+                latestBlocksDataProvider: latestBlocksDataProvider,
                 config: self.config,
                 rustBackend: self.rustBackend,
                 internalSyncProgress: internalSyncProgress
@@ -1071,6 +1086,15 @@ actor CompactBlockProcessor {
         await setTimer()
     }
 
+    private func ifTaskIsNotCanceledClearCompactBlockCache() async {
+        guard !Task.isCancelled else { return }
+        do {
+            try await clearCompactBlockCache()
+        } catch {
+            logger.error("`clearCompactBlockCache` failed after error: \(error.localizedDescription)")
+        }
+    }
+
     private func clearCompactBlockCache() async throws {
         try await storage.clear()
         logger.info("Cache removed")
@@ -1085,18 +1109,23 @@ actor CompactBlockProcessor {
             block: { [weak self] _ in
                 Task { [weak self] in
                     guard let self else { return }
-                    if await self.shouldStart {
-                        self.logger.debug(
-                            """
-                            Timer triggered: Starting compact Block processor!.
-                            Processor State: \(await self.state)
-                            latestHeight: \(try await self.transactionRepository.lastScannedHeight())
-                            attempts: \(await self.retryAttempts)
-                            """
-                        )
-                        await self.start()
-                    } else if await self.maxAttemptsReached {
-                        await self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
+                    switch await self.state {
+                    case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
+                        await self.latestBlocksDataProvider.updateBlockData()
+                    case .stopped, .error, .synced:
+                        if await self.shouldStart {
+                            self.logger.debug(
+                                """
+                                Timer triggered: Starting compact Block processor!.
+                                Processor State: \(await self.state)
+                                latestHeight: \(try await self.transactionRepository.lastScannedHeight())
+                                attempts: \(await self.retryAttempts)
+                                """
+                            )
+                            await self.start()
+                        } else if await self.maxAttemptsReached {
+                            await self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
+                        }
                     }
                 }
             }
@@ -1350,7 +1379,7 @@ extension CompactBlockProcessor {
             return try await CompactBlockProcessor.NextStateHelper.nextState(
                 service: service,
                 downloaderService: downloaderService,
-                transactionRepository: transactionRepository,
+                latestBlocksDataProvider: latestBlocksDataProvider,
                 config: config,
                 rustBackend: rustBackend,
                 internalSyncProgress: internalSyncProgress
@@ -1367,7 +1396,7 @@ extension CompactBlockProcessor {
         static func nextState(
             service: LightWalletService,
             downloaderService: BlockDownloaderService,
-            transactionRepository: TransactionRepository,
+            latestBlocksDataProvider: LatestBlocksDataProvider,
             config: Configuration,
             rustBackend: ZcashRustBackendWelding,
             internalSyncProgress: InternalSyncProgress
@@ -1388,12 +1417,12 @@ extension CompactBlockProcessor {
 
                 await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight)
 
-                let latestBlockHeight = try await service.latestBlockHeight()
-                let latestScannedHeight = try await transactionRepository.lastScannedHeight()
+                await latestBlocksDataProvider.updateScannedData()
+                await latestBlocksDataProvider.updateBlockData()
 
                 return await internalSyncProgress.computeNextState(
-                    latestBlockHeight: latestBlockHeight,
-                    latestScannedHeight: latestScannedHeight,
+                    latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
+                    latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
                     walletBirthday: config.walletBirthday
                 )
             }

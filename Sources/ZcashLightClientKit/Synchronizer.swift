@@ -80,6 +80,11 @@ public struct SynchronizerState: Equatable {
     public var syncStatus: SyncStatus
     /// height of the latest scanned block known to this synchronizer.
     public var latestScannedHeight: BlockHeight
+    /// height of the latest block on the blockchain known to this synchronizer.
+    public var latestBlockHeight: BlockHeight
+    /// timestamp of the latest scanned block on the blockchain known to this synchronizer.
+    /// The anchor point is timeIntervalSince1970
+    public var latestScannedTime: TimeInterval
 
     /// Represents a synchronizer that has made zero progress hasn't done a sync attempt
     public static var zero: SynchronizerState {
@@ -88,7 +93,9 @@ public struct SynchronizerState: Equatable {
             shieldedBalance: .zero,
             transparentBalance: .zero,
             syncStatus: .unprepared,
-            latestScannedHeight: .zero
+            latestScannedHeight: .zero,
+            latestBlockHeight: .zero,
+            latestScannedTime: 0
         )
     }
 }
@@ -268,7 +275,6 @@ public protocol Synchronizer: AnyObject {
     func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
-    /// Blocking
     func latestHeight() async throws -> BlockHeight
 
     /// Returns the latests UTXOs for the given address from the specified height on

@@ -22,6 +22,7 @@ struct BlockScannerImpl {
     let transactionRepository: TransactionRepository
     let metrics: SDKMetrics
     let logger: Logger
+    let latestBlocksDataProvider: LatestBlocksDataProvider
 }
 
 extension BlockScannerImpl: BlockScanner {
@@ -52,8 +53,12 @@ extension BlockScannerImpl: BlockScanner {
 
             let scanFinishTime = Date()
 
-            lastScannedHeight = try await transactionRepository.lastScannedHeight()
-
+            if let lastScannedBlock = try await transactionRepository.lastScannedBlock() {
+                lastScannedHeight = lastScannedBlock.height
+                await latestBlocksDataProvider.updateLatestScannedHeight(lastScannedHeight)
+                await latestBlocksDataProvider.updateLatestScannedTime(TimeInterval(lastScannedBlock.time))
+            }
+            
             scannedNewBlocks = previousScannedHeight != lastScannedHeight
             if scannedNewBlocks {
                 await didScan(lastScannedHeight)

@@ -13,6 +13,7 @@ protocol TransactionRepository {
     func countUnmined() async throws -> Int
     func blockForHeight(_ height: BlockHeight) async throws -> Block?
     func lastScannedHeight() async throws -> BlockHeight
+    func lastScannedBlock() async throws -> Block?
     func isInitialized() async throws -> Bool
     func find(id: Int) async throws -> ZcashTransaction.Overview
     func find(rawID: Data) async throws -> ZcashTransaction.Overview

@@ -63,6 +63,10 @@ public enum ZcashErrorCode: String {
     case blockDAOCantDecode = "ZBDAO0002"
     /// SQLite query failed when fetching height of the latest block from the database.
     case blockDAOLatestBlockHeight = "ZBDAO0003"
+    /// SQLite query failed when fetching the latest block from the database.
+    case blockDAOLatestBlock = "ZBDAO0004"
+    /// Fetched latesxt block information from DB but can't decode them.
+    case blockDAOLatestBlockCantDecode = "ZBDAO0005"
     /// Error from rust layer when calling ZcashRustBackend.createAccount
     case rustCreateAccount = "ZRUST0001"
     /// Error from rust layer when calling ZcashRustBackend.createToAddress

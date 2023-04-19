@@ -167,7 +167,7 @@ protocol LightWalletService: AnyObject {
     /// - Throws: `serviceBlockRangeFailed` when GRPC call fails.
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error>
     
-    /// Submits a raw transaction over lightwalletd. Non-Blocking
+    /// Submits a raw transaction over lightwalletd.
     /// - Parameter spendTransaction: data representing the transaction to be sent
     /// - Throws: `serviceSubmitFailed` when GRPC call fails.
     func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse

@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  SDKSynchronizer+Utils.swift
 //  
 //
 //  Created by Francisco Gindre on 3/31/23.
@@ -11,6 +11,10 @@ import Foundation
 extension SDKSynchronizer {
     convenience init(initializer: Initializer, sessionGenerator: SyncSessionIDGenerator, sessionTicker: SessionTicker) {
         let metrics = SDKMetrics()
+        let latestBlocksDataProvider = LatestBlocksDataProviderImpl(
+            service: initializer.lightWalletService,
+            transactionRepository: initializer.transactionRepository
+        )
         self.init(
             status: .unprepared,
             initializer: initializer,
@@ -21,11 +25,13 @@ extension SDKSynchronizer {
                 initializer: initializer,
                 metrics: metrics,
                 logger: initializer.logger,
+                latestBlocksDataProvider: latestBlocksDataProvider,
                 walletBirthdayProvider: { initializer.walletBirthday }
             ),
             metrics: metrics,
             syncSessionIDGenerator: sessionGenerator,
-            syncSessionTicker: sessionTicker
+            syncSessionTicker: sessionTicker,
+            latestBlocksDataProvider: latestBlocksDataProvider
         )
     }
 }

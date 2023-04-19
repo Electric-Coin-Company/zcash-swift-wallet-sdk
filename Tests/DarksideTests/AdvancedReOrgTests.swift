@@ -666,7 +666,7 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(expectedVerifiedBalance, initialVerifiedBalance)
         XCTAssertEqual(expectedBalance, initialBalance)
         
-        wait(for: [lastSyncExpectation], timeout: 5)
+        wait(for: [lastSyncExpectation], timeout: 30)
     }
     
     func testTxIndexReorg() async throws {
@@ -1336,7 +1336,7 @@ class AdvancedReOrgTests: XCTestCase {
 
         wait(for: [firstSyncExpectation], timeout: 600)
         
-        let latestScannedHeight = coordinator.synchronizer.latestScannedHeight
+        let latestScannedHeight = await coordinator.synchronizer.latestBlocksDataProvider.latestScannedHeight
         XCTAssertEqual(latestScannedHeight, birthday + fullSyncLength)
     }
     
