@@ -11,6 +11,12 @@ error originates. And it can help with debugging.
 import Foundation
 
 public enum ZcashError: Equatable, Error {
+    /// Updating of paths in `Initilizer` according to alias failed.
+    /// ZINIT0001
+    case initializerCantUpdateURLWithAlias(_ url: URL)
+    /// Alias used to create this instance of the `SDKSynchronizer` is already used by other instance.
+    /// ZINIT0002
+    case initializerAliasAlreadyInUse(_ alias: ZcashSynchronizerAlias)
     /// Unknown GRPC Service error
     /// ZSRVC0001
     case serviceUnknownError(_ error: Error)
@@ -524,6 +530,8 @@ public enum ZcashError: Equatable, Error {
 
     public var message: String {
         switch self {
+        case .initializerCantUpdateURLWithAlias: return "Updating of paths in `Initilizer` according to alias failed."
+        case .initializerAliasAlreadyInUse: return "Alias used to create this instance of the `SDKSynchronizer` is already used by other instance."
         case .serviceUnknownError: return "Unknown GRPC Service error"
         case .serviceGetInfoFailed: return "LightWalletService.getInfo failed."
         case .serviceLatestBlockFailed: return "LightWalletService.latestBlock failed."
@@ -675,6 +683,8 @@ public enum ZcashError: Equatable, Error {
 
     public var code: ZcashErrorCode {
         switch self {
+        case .initializerCantUpdateURLWithAlias: return .initializerCantUpdateURLWithAlias
+        case .initializerAliasAlreadyInUse: return .initializerAliasAlreadyInUse
         case .serviceUnknownError: return .serviceUnknownError
         case .serviceGetInfoFailed: return .serviceGetInfoFailed
         case .serviceLatestBlockFailed: return .serviceLatestBlockFailed

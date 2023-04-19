@@ -24,6 +24,15 @@ import Foundation
 */
 
 enum ZcashErrorDefinition {
+    // MARK: - Initializer
+
+    /// Updating of paths in `Initilizer` according to alias failed.
+    // sourcery: code="ZINIT0001"
+    case initializerCantUpdateURLWithAlias(_ url: URL)
+    /// Alias used to create this instance of the `SDKSynchronizer` is already used by other instance.
+    // sourcery: code="ZINIT0002"
+    case initializerAliasAlreadyInUse(_ alias: ZcashSynchronizerAlias)
+
     // MARK: - LightWalletService
 
     /// Unknown GRPC Service error

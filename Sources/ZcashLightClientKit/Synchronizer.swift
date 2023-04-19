@@ -151,12 +151,11 @@ public protocol Synchronizer: AnyObject {
     ///   - viewingKeys: Viewing key derived from seed.
     ///   - walletBirthday: Birthday of wallet.
     /// - Throws:
-    /// `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
-    /// `InitializerError.accountInitFailed` if the account table can't be initialized.
-    /// `InitializerError.aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance
-    /// `InitializerError.cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
-    ///                                           some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance
-    ///                                           won't do anything.
+    ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
+    ///     - `cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
+    ///                                some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance
+    ///                                won't do anything.
+    ///     - Some other `ZcashError` thrown by lower layer of the SDK.
     func prepare(
         with seed: [UInt8]?,
         viewingKeys: [UnifiedFullViewingKey],
@@ -330,10 +329,10 @@ public protocol Synchronizer: AnyObject {
     /// fails then something is seriously wrong. If the wipe fails then the SDK may be in inconsistent state. It's suggested to call wipe again until
     /// it succeed.
     ///
-    /// Returned publisher emits `InitializerError.aliasAlreadyInUse` error if the Alias used to create this instance is already used by other
+    /// Returned publisher emits `initializerCantUpdateURLWithAlias` error if the Alias used to create this instance is already used by other
     /// instance.
     ///
-    /// Returned publisher emits `InitializerError.cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When
+    /// Returned publisher emits `initializerAliasAlreadyInUse` if the updating of paths in `Initilizer` according to alias fails. When
     /// this happens it means that some path passed to `Initializer` is invalid. The SDK can't recover from this and this instance won't do anything.
     /// 
     func wipe() -> AnyPublisher<Void, Error>

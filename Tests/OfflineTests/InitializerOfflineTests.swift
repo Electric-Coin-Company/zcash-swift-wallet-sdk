@@ -69,7 +69,7 @@ class InitializerOfflineTests: XCTestCase {
             alias: alias
         )
 
-        if let error = initializer.urlsParsingError, case let .cantUpdateURLWithAlias(failedURL) = error {
+        if let error = initializer.urlsParsingError, case let .initializerCantUpdateURLWithAlias(failedURL) = error {
             XCTAssertEqual(failedURL, invalidPathURL, "Failing \(function)")
         } else {
             XCTFail("URLs parsing error expected. Failing \(function)")

@@ -114,7 +114,7 @@ class SynchronizerOfflineTests: XCTestCase {
                     case .finished:
                         XCTFail("Second wipe should fail with error.")
                     case let .failure(error):
-                        if let error = error as? InitializerError, case .aliasAlreadyInUse = error {
+                        if let error = error as? ZcashError, case .initializerAliasAlreadyInUse = error {
                             secondWipeExpectation.fulfill()
                         } else {
                             XCTFail("Wipe failed with unexpected error: \(error)")
@@ -266,7 +266,7 @@ class SynchronizerOfflineTests: XCTestCase {
             _ = try await synchronizer.prepare(with: Environment.seedBytes, viewingKeys: [viewingKey], walletBirthday: 123000)
             XCTFail("Failure of prepare is expected.")
         } catch {
-            if let error = error as? InitializerError, case let .cantUpdateURLWithAlias(failedURL) = error {
+            if let error = error as? ZcashError, case let .initializerCantUpdateURLWithAlias(failedURL) = error {
                 XCTAssertEqual(failedURL, invalidPathURL)
             } else {
                 XCTFail("Failed with unexpected error: \(error)")
@@ -305,7 +305,7 @@ class SynchronizerOfflineTests: XCTestCase {
                     case .finished:
                         XCTFail("Failure of wipe is expected.")
                     case let .failure(error):
-                        if let error = error as? InitializerError, case let .cantUpdateURLWithAlias(failedURL) = error {
+                        if let error = error as? ZcashError, case let .initializerCantUpdateURLWithAlias(failedURL) = error {
                             XCTAssertEqual(failedURL, invalidPathURL)
                             expectation.fulfill()
                         } else {
