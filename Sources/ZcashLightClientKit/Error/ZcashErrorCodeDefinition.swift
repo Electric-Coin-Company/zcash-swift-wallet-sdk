@@ -614,4 +614,10 @@ enum ZcashErrorDefinition {
     /// Encode of `Zatoshi` failed.
     // sourcery: code="ZTSHO0002"
     case zatoshiEncode(_ error: Error)
+
+    // MARK: - UTXOFetcher
+    
+    /// Awaiting transactions from the stream failed.
+    // sourcery: code="ZUTXO0001"
+    case unspentTransactionFetcherStream(_ error: Error)
 }
