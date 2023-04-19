@@ -799,8 +799,8 @@ actor CompactBlockProcessor {
                     await updateState(.stopped)
                     await handleAfterSyncHooks()
                 } else {
-                    if case BlockValidatorError.validationFailed(let height) = error {
-                        await validationFailed(at: height)
+                    if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
+                        await validationFailed(at: BlockHeight(height))
                     } else {
                         logger.error("processing failed with error: \(error)")
                         await fail(error)
@@ -859,23 +859,8 @@ actor CompactBlockProcessor {
                 try await blockValidator.validate()
             } catch {
                 await ifTaskIsNotCanceledClearCompactBlockCache()
-
-                guard let validationError = error as? BlockValidatorError else {
-                    logger.error("Block validation failed with generic error: \(error)")
-                    throw error
-                }
-
-                switch validationError {
-                case .validationFailed:
-                    throw error
-
-                case .failedWithError(let genericError):
-                    throw genericError
-
-                case .failedWithUnknownError:
-                    logger.error("validation failed without a specific error")
-                    throw CompactBlockProcessorError.generalError(message: "validation failed without a specific error")
-                }
+                logger.error("Block validation failed with error: \(error)")
+                throw error
             }
 
             do {
