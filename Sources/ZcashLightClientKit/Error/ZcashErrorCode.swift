@@ -64,10 +64,8 @@ public enum ZcashErrorCode: String {
     /// SQLite query failed when fetching height of the latest block from the database.
     case blockDAOLatestBlockHeight = "ZBDAO0003"
     /// SQLite query failed when fetching the latest block from the database.
-    /// - `sqliteError` is error produced by SQLite library.
     case blockDAOLatestBlock = "ZBDAO0004"
     /// Fetched latesxt block information from DB but can't decode them.
-    /// - `error` is decoding error.
     case blockDAOLatestBlockCantDecode = "ZBDAO0005"
     /// Error from rust layer when calling ZcashRustBackend.createAccount
     case rustCreateAccount = "ZRUST0001"
@@ -253,4 +251,6 @@ public enum ZcashErrorCode: String {
     case pendingTransactionDAOGetAll = "ZPETR0012"
     /// SQLite query failed when applying mined height.
     case pendingTransactionDAOApplyMinedHeight = "ZPETR0013"
+    /// Invalid account when trying to derive spending key
+    case derivationToolSpendingKeyInvalidAccount = "ZDRVT0001"
 }

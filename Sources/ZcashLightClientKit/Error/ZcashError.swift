@@ -440,6 +440,9 @@ public enum ZcashError: Equatable, Error {
     /// - `sqliteError` is error produced by SQLite library.
     /// ZPETR0013
     case pendingTransactionDAOApplyMinedHeight(_ sqliteError: Error)
+    /// Invalid account when trying to derive spending key
+    /// ZDRVT0001
+    case derivationToolSpendingKeyInvalidAccount
 
     public var message: String {
         switch self {
@@ -564,6 +567,7 @@ public enum ZcashError: Equatable, Error {
         case .pendingTransactionDAOFind: return "SQLite query failed when seaching for pending transaction."
         case .pendingTransactionDAOGetAll: return "SQLite query failed when getting pending transactions."
         case .pendingTransactionDAOApplyMinedHeight: return "SQLite query failed when applying mined height."
+        case .derivationToolSpendingKeyInvalidAccount: return "Invalid account when trying to derive spending key"
         }
     }
 
@@ -690,6 +694,7 @@ public enum ZcashError: Equatable, Error {
         case .pendingTransactionDAOFind: return .pendingTransactionDAOFind
         case .pendingTransactionDAOGetAll: return .pendingTransactionDAOGetAll
         case .pendingTransactionDAOApplyMinedHeight: return .pendingTransactionDAOApplyMinedHeight
+        case .derivationToolSpendingKeyInvalidAccount: return .derivationToolSpendingKeyInvalidAccount
         }
     }
 
