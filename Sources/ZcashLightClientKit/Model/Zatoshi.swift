@@ -96,12 +96,20 @@ extension Zatoshi: Codable {
     }
 
     public init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        self.amount = try values.decode(Int64.self, forKey: .amount)
+        do {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            self.amount = try values.decode(Int64.self, forKey: .amount)
+        } catch {
+            throw ZcashError.zatoshiDecode(error)
+        }
     }
-
+    
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.amount, forKey: .amount)
+        do {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(self.amount, forKey: .amount)
+        } catch {
+            throw ZcashError.zatoshiEncode(error)
+        }
     }
 }

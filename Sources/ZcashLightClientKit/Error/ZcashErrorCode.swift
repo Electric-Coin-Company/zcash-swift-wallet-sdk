@@ -305,4 +305,8 @@ public enum ZcashErrorCode: String {
     case persistentTransManagerApplyMinedHeightTransactionIDMissing = "ZPTRM0008"
     /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
     case persistentTransManagerApplyMinedHeightTransactionNotFound = "ZPTRM0009"
+    /// Initiatilzation fo `Zatoshi` from a decoder failed.
+    case zatoshiDecode = "ZTSHO0001"
+    /// Encode of `Zatoshi` failed.
+    case zatoshiEncode = "ZTSHO0002"
 }
