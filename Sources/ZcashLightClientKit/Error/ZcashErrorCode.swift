@@ -309,4 +309,6 @@ public enum ZcashErrorCode: String {
     case zatoshiDecode = "ZTSHO0001"
     /// Encode of `Zatoshi` failed.
     case zatoshiEncode = "ZTSHO0002"
+    /// Awaiting transactions from the stream failed.
+    case unspentTransactionFetcherStream = "ZUTXO0001"
 }

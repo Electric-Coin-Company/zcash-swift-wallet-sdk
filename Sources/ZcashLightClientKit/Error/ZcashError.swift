@@ -533,6 +533,9 @@ public enum ZcashError: Equatable, Error {
     /// Encode of `Zatoshi` failed.
     /// ZTSHO0002
     case zatoshiEncode(_ error: Error)
+    /// Awaiting transactions from the stream failed.
+    /// ZUTXO0001
+    case unspentTransactionFetcherStream(_ error: Error)
 
     public var message: String {
         switch self {
@@ -686,6 +689,7 @@ public enum ZcashError: Equatable, Error {
         case .persistentTransManagerApplyMinedHeightTransactionNotFound: return "PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored."
         case .zatoshiDecode: return "Initiatilzation fo `Zatoshi` from a decoder failed."
         case .zatoshiEncode: return "Encode of `Zatoshi` failed."
+        case .unspentTransactionFetcherStream: return "Awaiting transactions from the stream failed."
         }
     }
 
@@ -841,6 +845,7 @@ public enum ZcashError: Equatable, Error {
         case .persistentTransManagerApplyMinedHeightTransactionNotFound: return .persistentTransManagerApplyMinedHeightTransactionNotFound
         case .zatoshiDecode: return .zatoshiDecode
         case .zatoshiEncode: return .zatoshiEncode
+        case .unspentTransactionFetcherStream: return .unspentTransactionFetcherStream
         }
     }
 
