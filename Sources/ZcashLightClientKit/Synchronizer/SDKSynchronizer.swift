@@ -127,13 +127,13 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    func checkIfCanContinueInitialisation() -> InitializerError? {
+    func checkIfCanContinueInitialisation() -> ZcashError? {
         if let initialisationError = initializer.urlsParsingError {
             return initialisationError
         }
 
         if !UsedAliasesChecker.tryToUse(alias: initializer.alias, id: initializer.id) {
-            return InitializerError.aliasAlreadyInUse(initializer.alias)
+            return .initializerAliasAlreadyInUse(initializer.alias)
         }
 
         return nil

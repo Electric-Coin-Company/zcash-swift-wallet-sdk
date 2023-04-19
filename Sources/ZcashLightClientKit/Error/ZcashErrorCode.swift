@@ -9,6 +9,10 @@ error originates. And it can help with debugging.
 */
 
 public enum ZcashErrorCode: String {
+    /// Updating of paths in `Initilizer` according to alias failed.
+    case initializerCantUpdateURLWithAlias = "ZINIT0001"
+    /// Alias used to create this instance of the `SDKSynchronizer` is already used by other instance.
+    case initializerAliasAlreadyInUse = "ZINIT0002"
     /// Unknown GRPC Service error
     case serviceUnknownError = "ZSRVC0001"
     /// LightWalletService.getInfo failed.
