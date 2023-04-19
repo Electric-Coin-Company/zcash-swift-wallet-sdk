@@ -488,6 +488,12 @@ public enum ZcashError: Equatable, Error {
     /// Can't create `Recipient` because input is invalid.
     /// ZWLTP0007
     case recipientInvalidInput
+    /// WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk.
+    /// ZWLTE0001
+    case walletTransEncoderCreateTransactionMissingSaplingParams
+    /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
+    /// ZWLTE0002
+    case walletTransEncoderShieldFundsMissingSaplingParams
 
     public var message: String {
         switch self {
@@ -626,6 +632,8 @@ public enum ZcashError: Equatable, Error {
         case .saplingAddressInvalidInput: return "Can't create `SaplingAddress` because input is invalid."
         case .unifiedAddressInvalidInput: return "Can't create `UnifiedAddress` because input is invalid."
         case .recipientInvalidInput: return "Can't create `Recipient` because input is invalid."
+        case .walletTransEncoderCreateTransactionMissingSaplingParams: return "WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk."
+        case .walletTransEncoderShieldFundsMissingSaplingParams: return "WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk."
         }
     }
 
@@ -766,6 +774,8 @@ public enum ZcashError: Equatable, Error {
         case .saplingAddressInvalidInput: return .saplingAddressInvalidInput
         case .unifiedAddressInvalidInput: return .unifiedAddressInvalidInput
         case .recipientInvalidInput: return .recipientInvalidInput
+        case .walletTransEncoderCreateTransactionMissingSaplingParams: return .walletTransEncoderCreateTransactionMissingSaplingParams
+        case .walletTransEncoderShieldFundsMissingSaplingParams: return .walletTransEncoderShieldFundsMissingSaplingParams
         }
     }
 

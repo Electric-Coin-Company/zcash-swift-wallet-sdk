@@ -557,4 +557,13 @@ enum ZcashErrorDefinition {
     /// Can't create `Recipient` because input is invalid.
     // sourcery: code="ZWLTP0007"
     case recipientInvalidInput
+
+    // MARK: - WalletTransactionEncoder
+
+    /// WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk.
+    // sourcery: code="ZWLTE0001"
+    case walletTransEncoderCreateTransactionMissingSaplingParams
+    /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
+    // sourcery: code="ZWLTE0002"
+    case walletTransEncoderShieldFundsMissingSaplingParams
 }

@@ -279,4 +279,8 @@ public enum ZcashErrorCode: String {
     case unifiedAddressInvalidInput = "ZWLTP0006"
     /// Can't create `Recipient` because input is invalid.
     case recipientInvalidInput = "ZWLTP0007"
+    /// WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk.
+    case walletTransEncoderCreateTransactionMissingSaplingParams = "ZWLTE0001"
+    /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
+    case walletTransEncoderShieldFundsMissingSaplingParams = "ZWLTE0002"
 }
