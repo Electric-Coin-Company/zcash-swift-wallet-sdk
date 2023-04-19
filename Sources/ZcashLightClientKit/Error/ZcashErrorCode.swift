@@ -265,4 +265,18 @@ public enum ZcashErrorCode: String {
     case unspentTransactionOutputDAOGetAll = "ZUTOD0005"
     /// SQLite query failed when getting balance.
     case unspentTransactionOutputDAOBalance = "ZUTOD0006"
+    /// Can't create `SaplingExtendedSpendingKey` because input is invalid.
+    case spendingKeyInvalidInput = "ZWLTP0001"
+    /// Can't create `UnifiedFullViewingKey` because input is invalid.
+    case unifiedFullViewingKeyInvalidInput = "ZWLTP0002"
+    /// Can't create `SaplingExtendedFullViewingKey` because input is invalid.
+    case extetendedFullViewingKeyInvalidInput = "ZWLTP0003"
+    /// Can't create `TransparentAddress` because input is invalid.
+    case transparentAddressInvalidInput = "ZWLTP0004"
+    /// Can't create `SaplingAddress` because input is invalid.
+    case saplingAddressInvalidInput = "ZWLTP0005"
+    /// Can't create `UnifiedAddress` because input is invalid.
+    case unifiedAddressInvalidInput = "ZWLTP0006"
+    /// Can't create `Recipient` because input is invalid.
+    case recipientInvalidInput = "ZWLTP0007"
 }

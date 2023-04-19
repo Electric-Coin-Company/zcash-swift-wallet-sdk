@@ -467,6 +467,27 @@ public enum ZcashError: Equatable, Error {
     /// - `sqliteError` is error produced by SQLite library.
     /// ZUTOD0006
     case unspentTransactionOutputDAOBalance(_ sqliteError: Error)
+    /// Can't create `SaplingExtendedSpendingKey` because input is invalid.
+    /// ZWLTP0001
+    case spendingKeyInvalidInput
+    /// Can't create `UnifiedFullViewingKey` because input is invalid.
+    /// ZWLTP0002
+    case unifiedFullViewingKeyInvalidInput
+    /// Can't create `SaplingExtendedFullViewingKey` because input is invalid.
+    /// ZWLTP0003
+    case extetendedFullViewingKeyInvalidInput
+    /// Can't create `TransparentAddress` because input is invalid.
+    /// ZWLTP0004
+    case transparentAddressInvalidInput
+    /// Can't create `SaplingAddress` because input is invalid.
+    /// ZWLTP0005
+    case saplingAddressInvalidInput
+    /// Can't create `UnifiedAddress` because input is invalid.
+    /// ZWLTP0006
+    case unifiedAddressInvalidInput
+    /// Can't create `Recipient` because input is invalid.
+    /// ZWLTP0007
+    case recipientInvalidInput
 
     public var message: String {
         switch self {
@@ -598,6 +619,13 @@ public enum ZcashError: Equatable, Error {
         case .unspentTransactionOutputDAOGetAllCantDecode: return "Fetched information about unspent transaction output from the DB but it can't be decoded to `UTXO` object."
         case .unspentTransactionOutputDAOGetAll: return "SQLite query failed when getting all the unspent transation outputs."
         case .unspentTransactionOutputDAOBalance: return "SQLite query failed when getting balance."
+        case .spendingKeyInvalidInput: return "Can't create `SaplingExtendedSpendingKey` because input is invalid."
+        case .unifiedFullViewingKeyInvalidInput: return "Can't create `UnifiedFullViewingKey` because input is invalid."
+        case .extetendedFullViewingKeyInvalidInput: return "Can't create `SaplingExtendedFullViewingKey` because input is invalid."
+        case .transparentAddressInvalidInput: return "Can't create `TransparentAddress` because input is invalid."
+        case .saplingAddressInvalidInput: return "Can't create `SaplingAddress` because input is invalid."
+        case .unifiedAddressInvalidInput: return "Can't create `UnifiedAddress` because input is invalid."
+        case .recipientInvalidInput: return "Can't create `Recipient` because input is invalid."
         }
     }
 
@@ -731,6 +759,13 @@ public enum ZcashError: Equatable, Error {
         case .unspentTransactionOutputDAOGetAllCantDecode: return .unspentTransactionOutputDAOGetAllCantDecode
         case .unspentTransactionOutputDAOGetAll: return .unspentTransactionOutputDAOGetAll
         case .unspentTransactionOutputDAOBalance: return .unspentTransactionOutputDAOBalance
+        case .spendingKeyInvalidInput: return .spendingKeyInvalidInput
+        case .unifiedFullViewingKeyInvalidInput: return .unifiedFullViewingKeyInvalidInput
+        case .extetendedFullViewingKeyInvalidInput: return .extetendedFullViewingKeyInvalidInput
+        case .transparentAddressInvalidInput: return .transparentAddressInvalidInput
+        case .saplingAddressInvalidInput: return .saplingAddressInvalidInput
+        case .unifiedAddressInvalidInput: return .unifiedAddressInvalidInput
+        case .recipientInvalidInput: return .recipientInvalidInput
         }
     }
 
