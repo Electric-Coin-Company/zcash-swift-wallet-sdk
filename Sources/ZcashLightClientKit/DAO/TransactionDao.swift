@@ -134,7 +134,7 @@ class TransactionSQLDAO: TransactionRepository {
     func findReceived(offset: Int, limit: Int) async throws -> [ZcashTransaction.Received] {
         let query = transactionsView
             .filterQueryFor(kind: .received)
-            .order(ZcashTransaction.Overview.Column.id.desc,(ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc )
+            .order(ZcashTransaction.Overview.Column.id.desc, (ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).desc)
             .limit(limit, offset: offset)
 
         return try execute(query) { try ZcashTransaction.Overview(row: $0) }

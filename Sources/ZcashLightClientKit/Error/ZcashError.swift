@@ -443,6 +443,30 @@ public enum ZcashError: Equatable, Error {
     /// Invalid account when trying to derive spending key
     /// ZDRVT0001
     case derivationToolSpendingKeyInvalidAccount
+    /// Creation of the table for unspent transaction output failed.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZUTOD0001
+    case unspentTransactionOutputDAOCreateTable(_ sqliteError: Error)
+    /// SQLite query failed when storing unspent transaction output.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZUTOD0002
+    case unspentTransactionOutputDAOStore(_ sqliteError: Error)
+    /// SQLite query failed when removing all the unspent transation outputs.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZUTOD0003
+    case unspentTransactionOutputDAOClearAll(_ sqliteError: Error)
+    /// Fetched information about unspent transaction output from the DB but it can't be decoded to `UTXO` object.
+    /// - `error` decoding error.
+    /// ZUTOD0004
+    case unspentTransactionOutputDAOGetAllCantDecode(_ error: Error)
+    /// SQLite query failed when getting all the unspent transation outputs.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZUTOD0005
+    case unspentTransactionOutputDAOGetAll(_ sqliteError: Error)
+    /// SQLite query failed when getting balance.
+    /// - `sqliteError` is error produced by SQLite library.
+    /// ZUTOD0006
+    case unspentTransactionOutputDAOBalance(_ sqliteError: Error)
 
     public var message: String {
         switch self {
@@ -568,6 +592,12 @@ public enum ZcashError: Equatable, Error {
         case .pendingTransactionDAOGetAll: return "SQLite query failed when getting pending transactions."
         case .pendingTransactionDAOApplyMinedHeight: return "SQLite query failed when applying mined height."
         case .derivationToolSpendingKeyInvalidAccount: return "Invalid account when trying to derive spending key"
+        case .unspentTransactionOutputDAOCreateTable: return "Creation of the table for unspent transaction output failed."
+        case .unspentTransactionOutputDAOStore: return "SQLite query failed when storing unspent transaction output."
+        case .unspentTransactionOutputDAOClearAll: return "SQLite query failed when removing all the unspent transation outputs."
+        case .unspentTransactionOutputDAOGetAllCantDecode: return "Fetched information about unspent transaction output from the DB but it can't be decoded to `UTXO` object."
+        case .unspentTransactionOutputDAOGetAll: return "SQLite query failed when getting all the unspent transation outputs."
+        case .unspentTransactionOutputDAOBalance: return "SQLite query failed when getting balance."
         }
     }
 
@@ -695,6 +725,12 @@ public enum ZcashError: Equatable, Error {
         case .pendingTransactionDAOGetAll: return .pendingTransactionDAOGetAll
         case .pendingTransactionDAOApplyMinedHeight: return .pendingTransactionDAOApplyMinedHeight
         case .derivationToolSpendingKeyInvalidAccount: return .derivationToolSpendingKeyInvalidAccount
+        case .unspentTransactionOutputDAOCreateTable: return .unspentTransactionOutputDAOCreateTable
+        case .unspentTransactionOutputDAOStore: return .unspentTransactionOutputDAOStore
+        case .unspentTransactionOutputDAOClearAll: return .unspentTransactionOutputDAOClearAll
+        case .unspentTransactionOutputDAOGetAllCantDecode: return .unspentTransactionOutputDAOGetAllCantDecode
+        case .unspentTransactionOutputDAOGetAll: return .unspentTransactionOutputDAOGetAll
+        case .unspentTransactionOutputDAOBalance: return .unspentTransactionOutputDAOBalance
         }
     }
 

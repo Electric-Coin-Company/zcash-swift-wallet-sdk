@@ -253,4 +253,16 @@ public enum ZcashErrorCode: String {
     case pendingTransactionDAOApplyMinedHeight = "ZPETR0013"
     /// Invalid account when trying to derive spending key
     case derivationToolSpendingKeyInvalidAccount = "ZDRVT0001"
+    /// Creation of the table for unspent transaction output failed.
+    case unspentTransactionOutputDAOCreateTable = "ZUTOD0001"
+    /// SQLite query failed when storing unspent transaction output.
+    case unspentTransactionOutputDAOStore = "ZUTOD0002"
+    /// SQLite query failed when removing all the unspent transation outputs.
+    case unspentTransactionOutputDAOClearAll = "ZUTOD0003"
+    /// Fetched information about unspent transaction output from the DB but it can't be decoded to `UTXO` object.
+    case unspentTransactionOutputDAOGetAllCantDecode = "ZUTOD0004"
+    /// SQLite query failed when getting all the unspent transation outputs.
+    case unspentTransactionOutputDAOGetAll = "ZUTOD0005"
+    /// SQLite query failed when getting balance.
+    case unspentTransactionOutputDAOBalance = "ZUTOD0006"
 }
