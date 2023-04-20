@@ -168,7 +168,7 @@ class SynchronizerOfflineTests: XCTestCase {
             )
             XCTFail("Send to address should fail.")
         } catch {
-            if let error = error as? SynchronizerError, case .notPrepared = error {
+            if let error = error as? ZcashError, case .synchronizerNotPrepared = error {
             } else {
                 XCTFail("Send to address failed with unexpected error: \(error)")
             }
@@ -186,7 +186,7 @@ class SynchronizerOfflineTests: XCTestCase {
             )
             XCTFail("Shield funds should fail.")
         } catch {
-            if let error = error as? SynchronizerError, case .notPrepared = error {
+            if let error = error as? ZcashError, case .synchronizerNotPrepared = error {
             } else {
                 XCTFail("Shield funds failed with unexpected error: \(error)")
             }
@@ -200,7 +200,7 @@ class SynchronizerOfflineTests: XCTestCase {
             _ = try await testCoordinator.synchronizer.refreshUTXOs(address: data.transparentAddress, from: 1)
             XCTFail("Shield funds should fail.")
         } catch {
-            if let error = error as? SynchronizerError, case .notPrepared = error {
+            if let error = error as? ZcashError, case .synchronizerNotPrepared = error {
             } else {
                 XCTFail("Shield funds failed with unexpected error: \(error)")
             }
@@ -219,7 +219,7 @@ class SynchronizerOfflineTests: XCTestCase {
                     case .finished:
                         XCTFail("Rewind should fail with error.")
                     case let .failure(error):
-                        if let error = error as? SynchronizerError, case .notPrepared = error {
+                        if let error = error as? ZcashError, case .synchronizerNotPrepared = error {
                             expectation.fulfill()
                         } else {
                             XCTFail("Rewind failed with unexpected error: \(error)")
@@ -325,7 +325,6 @@ class SynchronizerOfflineTests: XCTestCase {
     }
 
     func testIsNotNewSessionOnUnpreparedToStateThatWontSync() {
-        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .error(SynchronizerError.criticalError)))
         XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .disconnected))
         XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .unprepared))
     }
@@ -342,17 +341,6 @@ class SynchronizerOfflineTests: XCTestCase {
                 .syncing(
                     BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 3)
                 ),
-                .syncing(
-                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
-                )
-            )
-        )
-    }
-
-    func testIsNewSyncSessionWhenRestartingFromError() {
-        XCTAssertTrue(
-            SessionTicker.live.isNewSyncSession(
-                .error(SynchronizerError.generalError(message: "some error")),
                 .syncing(
                     BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
                 )
@@ -394,7 +382,6 @@ class SynchronizerOfflineTests: XCTestCase {
     }
 
     func testSyncStatusesDontDifferWhenOuterStatusIsTheSame() {
-        XCTAssertFalse(SyncStatus.error(SynchronizerError.criticalError).isDifferent(from: .error(.invalidAccount)))
         XCTAssertFalse(SyncStatus.disconnected.isDifferent(from: .disconnected))
         XCTAssertFalse(SyncStatus.fetching.isDifferent(from: .fetching))
         XCTAssertFalse(SyncStatus.stopped.isDifferent(from: .stopped))

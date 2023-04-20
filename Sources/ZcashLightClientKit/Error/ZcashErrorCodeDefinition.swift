@@ -674,4 +674,22 @@ enum ZcashErrorDefinition {
     /// Consensus BranchIDs don't match this is probably an API or programming error.
     // sourcery: code="ZCBPEO0017"
     case compactBlockProcessorConsensusBranchID
+    
+    // MARK: - SDKSynchronizer
+    
+    /// The synchronizer is unprepared.
+    // sourcery: code="ZSYNCO0001"
+    case synchronizerNotPrepared
+    /// Memos can't be sent to transparent addresses.
+    // sourcery: code="ZSYNCO0002"
+    case synchronizerSendMemoToTransparentAddress
+    /// There is not enough transparent funds to cover fee for the shielding.
+    // sourcery: code="ZSYNCO0003"
+    case synchronizerShieldFundsInsuficientTransparentFunds
+    /// LatestUTXOs for the address failed, invalid t-address.
+    // sourcery: code="ZSYNCO0004"
+    case synchronizerLatestUTXOsInvalidTAddress
+    /// Rewind failed, unknown archor height
+    // sourcery: code="ZSYNCO0005"
+    case synchronizerRewindUnknownArchorHeight
 }

@@ -98,13 +98,11 @@ class Z2TReceiveTests: XCTestCase {
             XCTFail("Should have thrown error")
         } catch {
             sendExpectation.fulfill()
-            if case let SynchronizerError.generalError(message) = error {
-                XCTAssertEqual(message, "Memos can't be sent to transparent addresses.")
-            } else {
+            guard case ZcashError.synchronizerSendMemoToTransparentAddress = error else {
                 // swiftlint:disable:next line_length
                 XCTFail("expected SynchronizerError.genericError(\"Memos can't be sent to transparent addresses.\") but received \(error.localizedDescription)")
+                return
             }
-            return
         }
     }
 
