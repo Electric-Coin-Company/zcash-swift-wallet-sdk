@@ -23,24 +23,24 @@ struct ReceivedNote: ReceivedNoteEntity, Codable {
         case spent
         case tx
     }
-    var id: Int
-    var diversifier: Data
-    var rcm: Data
-    var nf: Data
-    var isChange: Bool
-    var transactionId: Int
-    var outputIndex: Int
-    var account: Int
-    var value: Int
-    var memo: Data?
-    var spent: Int?
-    var tx: Int
+    let id: Int
+    let diversifier: Data
+    let rcm: Data
+    let nf: Data
+    let isChange: Bool
+    let transactionId: Int
+    let outputIndex: Int
+    let account: Int
+    let value: Int
+    let memo: Data?
+    let spent: Int?
+    let tx: Int
 }
 
 class ReceivedNotesSQLDAO: ReceivedNoteRepository {
     let table = Table("received_notes")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
@@ -106,21 +106,21 @@ struct SentNote: SentNoteEntity, Codable {
         case memo
     }
     
-    var id: Int
-    var transactionId: Int
-    var outputPool: Int
-    var outputIndex: Int
-    var fromAccount: Int
-    var toAddress: String?
-    var toAccount: Int?
-    var value: Int
-    var memo: Data?
+    let id: Int
+    let transactionId: Int
+    let outputPool: Int
+    let outputIndex: Int
+    let fromAccount: Int
+    let toAddress: String?
+    let toAccount: Int?
+    let value: Int
+    let memo: Data?
 }
 
 class SentNotesSQLDAO: SentNotesRepository {
     let table = Table("sent_notes")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider

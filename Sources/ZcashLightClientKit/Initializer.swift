@@ -12,11 +12,11 @@ import Foundation
 Represents a lightwallet instance endpoint to connect to
 */
 public struct LightWalletEndpoint {
-    public var host: String
-    public var port: Int
-    public var secure: Bool
-    public var singleCallTimeoutInMillis: Int64
-    public var streamingCallTimeoutInMillis: Int64
+    public let host: String
+    public let port: Int
+    public let secure: Bool
+    public let singleCallTimeoutInMillis: Int64
+    public let streamingCallTimeoutInMillis: Int64
     
     /**
     initializes a LightWalletEndpoint
@@ -122,10 +122,10 @@ public class Initializer {
     /// The effective birthday of the wallet based on the height provided when initializing and the checkpoints available on this SDK.
     ///
     /// This contains valid value only after `initialize` function is called.
-    private(set) public var walletBirthday: BlockHeight
+    public private(set) var walletBirthday: BlockHeight
 
     /// The purpose of this to migrate from cacheDb to fsBlockDb
-    private var cacheDbURL: URL?
+    private let cacheDbURL: URL?
 
     /// Error that can be created when updating URLs according to alias. If this error is created then it is thrown from `SDKSynchronizer.prepare()`
     /// or `SDKSynchronizer.wipe()`.
@@ -141,7 +141,7 @@ public class Initializer {
     ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
     ///  - spendParamsURL: location of the spend parameters
     ///  - outputParamsURL: location of the output parameters
-    convenience public init (
+    convenience public init(
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
         dataDbURL: URL,

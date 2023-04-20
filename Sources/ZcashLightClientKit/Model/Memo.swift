@@ -82,7 +82,7 @@ public extension Memo {
 
 /// A wrapper on `String` so that `Memo` can't be created with an invalid String
 public struct MemoText: Equatable {
-    public private(set) var string: String
+    public let string: String
 
     init(_ string: String) throws {
         let trimmedString = String(string.reversed().drop(while: { $0 == "\u{0}" }).reversed())
@@ -111,7 +111,7 @@ public struct MemoBytes: Equatable {
 
     public static let capacity: Int = 512
 
-    public private(set) var bytes: [UInt8]
+    public let bytes: [UInt8]
 
     /// Copies the given bytes into the inner array if this struct in the context of ZIP-302
     /// and returns a `MemoBytes`  struct

@@ -24,24 +24,24 @@ struct Block: Codable {
     }
 
     enum TableStructure {
-        static var height = Expression<Int>(Block.CodingKeys.height.rawValue)
-        static var hash = Expression<Blob>(Block.CodingKeys.hash.rawValue)
-        static var time = Expression<Int>(Block.CodingKeys.time.rawValue)
-        static var saplingTree = Expression<Blob>(Block.CodingKeys.saplingTree.rawValue)
+        static let height = Expression<Int>(Block.CodingKeys.height.rawValue)
+        static let hash = Expression<Blob>(Block.CodingKeys.hash.rawValue)
+        static let time = Expression<Int>(Block.CodingKeys.time.rawValue)
+        static let saplingTree = Expression<Blob>(Block.CodingKeys.saplingTree.rawValue)
     }
 
-    var height: BlockHeight
-    var hash: Data
-    var time: Int
-    var saplingTree: Data
+    let height: BlockHeight
+    let hash: Data
+    let time: Int
+    let saplingTree: Data
     
-    static var table = Table("blocks")
+    static let table = Table("blocks")
 }
 
 class BlockSQLDAO: BlockDao {
-    var dbProvider: ConnectionProvider
-    var table: Table
-    var height = Expression<Int>("height")
+    let dbProvider: ConnectionProvider
+    let table: Table
+    let height = Expression<Int>("height")
 
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider

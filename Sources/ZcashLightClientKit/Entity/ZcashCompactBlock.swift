@@ -22,16 +22,16 @@ A Zcash compact block to store on cache DB
 */
 public struct ZcashCompactBlock {
     struct Meta {
-        var hash: Data
-        var time: UInt32
-        var saplingOutputs: UInt32
-        var orchardOutputs: UInt32
+        let hash: Data
+        let time: UInt32
+        let saplingOutputs: UInt32
+        let orchardOutputs: UInt32
     }
 
-    public var height: BlockHeight
-    public var data: Data
+    public let height: BlockHeight
+    public let data: Data
 
-    var meta: Meta
+    let meta: Meta
 }
 
 extension ZcashCompactBlock: Encodable {

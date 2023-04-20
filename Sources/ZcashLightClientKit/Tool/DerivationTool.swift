@@ -123,8 +123,8 @@ public class DerivationTool: KeyDeriving {
 }
 
 public struct AddressMetadata {
-    var networkType: NetworkType
-    var addressType: AddressType
+    let networkType: NetworkType
+    let addressType: AddressType
 
     public init(network: NetworkType, addrType: AddressType) {
         self.networkType = network

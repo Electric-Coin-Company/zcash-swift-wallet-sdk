@@ -180,17 +180,18 @@ class BlockScanTests: XCTestCase {
 
         try await fsBlockRepository.create()
         
-        var processorConfig = CompactBlockProcessor.Configuration(
+        let processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
+            downloadBatchSize: 1000,
+            scanningBatchSize: 1000,
             walletBirthdayProvider: { [weak self] in self?.network.constants.saplingActivationHeight ?? .zero },
             network: network
         )
-        processorConfig.scanningBatchSize = 1000
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,

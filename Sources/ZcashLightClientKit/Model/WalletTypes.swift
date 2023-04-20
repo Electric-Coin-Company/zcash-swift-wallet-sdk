@@ -11,14 +11,14 @@ public protocol StringEncoded {
 }
 
 public struct UnifiedSpendingKey: Equatable, Undescribable {
-    private(set) var network: NetworkType
-    var bytes: [UInt8]
-    public private(set) var account: UInt32
+    let network: NetworkType
+    let bytes: [UInt8]
+    public let account: UInt32
 }
 
 /// Sapling Extended Spending Key
 public struct SaplingExtendedSpendingKey: Equatable, StringEncoded, Undescribable {
-    var encoding: String
+    let encoding: String
 
     public var stringEncoded: String {
         encoding
@@ -39,14 +39,13 @@ public struct SaplingExtendedSpendingKey: Equatable, StringEncoded, Undescribabl
 
 /// A Transparent Account Private Key
 public struct TransparentAccountPrivKey: Equatable, Undescribable {
-    var encoding: String
+    let encoding: String
 }
 
 /// A ZIP 316 Unified Full Viewing Key.
 public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
-    var encoding: String
-
-    public var account: UInt32
+    let encoding: String
+    public let account: UInt32
 
     public var stringEncoded: String { encoding }
 
@@ -67,7 +66,7 @@ public struct UnifiedFullViewingKey: Equatable, StringEncoded, Undescribable {
 }
 
 public struct SaplingExtendedFullViewingKey: Equatable, StringEncoded, Undescribable {
-    var encoding: String
+    let encoding: String
     public var stringEncoded: String {
         encoding
     }
@@ -118,7 +117,7 @@ extension AddressType {
 /// Transactions sent to this address are totally visible in the public
 /// ledger. See "Multiple transaction types" in https://z.cash/technology/
 public struct TransparentAddress: Equatable, StringEncoded, Comparable {
-    var encoding: String
+    let encoding: String
 
     public var stringEncoded: String { encoding }
 
@@ -145,7 +144,7 @@ public struct TransparentAddress: Equatable, StringEncoded, Comparable {
 /// Although this it is fully functional, we encourage developers to
 /// choose `UnifiedAddress` before Sapling or Transparent ones.
 public struct SaplingAddress: Equatable, StringEncoded {
-    var encoding: String
+    let encoding: String
 
     public var stringEncoded: String { encoding }
 
@@ -190,7 +189,7 @@ public struct UnifiedAddress: Equatable, StringEncoded {
         }
     }
 
-    var encoding: String
+    let encoding: String
 
     public var stringEncoded: String { encoding }
 
@@ -261,8 +260,8 @@ public enum Recipient: Equatable, StringEncoded {
 }
 
 public struct WalletBalance: Equatable {
-    public var verified: Zatoshi
-    public var total: Zatoshi
+    public let verified: Zatoshi
+    public let total: Zatoshi
     
     public init(verified: Zatoshi, total: Zatoshi) {
         self.verified = verified

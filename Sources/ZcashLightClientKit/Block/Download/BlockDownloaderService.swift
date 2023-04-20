@@ -61,7 +61,7 @@ data; although, by default the SDK uses gRPC and SQL.
 - Property storage: responsible for persisting the compact blocks that are received
 */
 class BlockDownloaderServiceImpl {
-    var lightwalletService: LightWalletService
+    let lightwalletService: LightWalletService
     let storage: CompactBlockRepository
     
     init(service: LightWalletService, storage: CompactBlockRepository) {

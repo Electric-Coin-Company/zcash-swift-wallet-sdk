@@ -67,7 +67,7 @@ class LightWalletGRPCService {
         set { connectionManager.connectionStateChange = newValue }
     }
 
-    var queue: DispatchQueue
+    let queue: DispatchQueue
     
     convenience init(endpoint: LightWalletEndpoint) {
         self.init(

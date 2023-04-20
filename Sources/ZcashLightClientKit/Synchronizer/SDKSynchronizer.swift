@@ -34,16 +34,16 @@ public class SDKSynchronizer: Synchronizer {
     let blockProcessor: CompactBlockProcessor
     lazy var blockProcessorEventProcessingQueue = { DispatchQueue(label: "blockProcessorEventProcessingQueue_\(initializer.alias.description)") }()
 
-    public private(set) var initializer: Initializer
-    public private(set) var connectionState: ConnectionState
-    public private(set) var network: ZcashNetwork
-    private var transactionManager: OutboundTransactionManager
-    private var transactionRepository: TransactionRepository
-    private var utxoRepository: UnspentTransactionOutputRepository
+    public let initializer: Initializer
+    public var connectionState: ConnectionState
+    public let network: ZcashNetwork
+    private let transactionManager: OutboundTransactionManager
+    private let transactionRepository: TransactionRepository
+    private let utxoRepository: UnspentTransactionOutputRepository
 
-    private var syncSessionIDGenerator: SyncSessionIDGenerator
-    private var syncSession: SyncSession
-    private var syncSessionTicker: SessionTicker
+    private let syncSessionIDGenerator: SyncSessionIDGenerator
+    private let syncSession: SyncSession
+    private let syncSessionTicker: SessionTicker
     private var syncStartDate: Date?
     let latestBlocksDataProvider: LatestBlocksDataProvider
 

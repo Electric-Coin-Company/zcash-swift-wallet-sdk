@@ -8,15 +8,15 @@
 import Foundation
 
 class WalletTransactionEncoder: TransactionEncoder {
-    var rustBackend: ZcashRustBackendWelding
-    var repository: TransactionRepository
+    let rustBackend: ZcashRustBackendWelding
+    let repository: TransactionRepository
     let logger: Logger
 
-    private var outputParamsURL: URL
-    private var spendParamsURL: URL
-    private var dataDbURL: URL
-    private var fsBlockDbRoot: URL
-    private var networkType: NetworkType
+    private let outputParamsURL: URL
+    private let spendParamsURL: URL
+    private let dataDbURL: URL
+    private let fsBlockDbRoot: URL
+    private let networkType: NetworkType
     
     init(
         rustBackend: ZcashRustBackendWelding,

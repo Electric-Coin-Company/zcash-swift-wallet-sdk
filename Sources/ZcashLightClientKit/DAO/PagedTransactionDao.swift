@@ -8,9 +8,9 @@
 import Foundation
 
 class PagedTransactionDAO: PaginatedTransactionRepository {
-    var pageSize: Int
-    var transactionRepository: TransactionRepository
-    var kind: TransactionKind
+    let pageSize: Int
+    let transactionRepository: TransactionRepository
+    let kind: TransactionKind
     
     var pageCount: Int {
         get async {

@@ -8,8 +8,8 @@
 import Foundation
 
 struct EncodedTransaction {
-    var transactionId: Data
-    var raw: Data?
+    let transactionId: Data
+    let raw: Data?
 }
 
 extension EncodedTransaction: Hashable {

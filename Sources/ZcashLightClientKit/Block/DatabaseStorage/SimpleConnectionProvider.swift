@@ -10,8 +10,8 @@ import Foundation
 import SQLite
 
 class SimpleConnectionProvider: ConnectionProvider {
-    var path: String
-    var readonly: Bool
+    let path: String
+    let readonly: Bool
     var db: Connection?
     
     init(path: String, readonly: Bool = false) {

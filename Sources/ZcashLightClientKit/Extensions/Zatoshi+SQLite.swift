@@ -8,7 +8,7 @@
 import SQLite
 
 extension Zatoshi: Value {
-    public static var declaredDatatype = Int64.declaredDatatype
+    public static let declaredDatatype = Int64.declaredDatatype
 
     public static func fromDatatypeValue(_ datatypeValue: Int64) -> Zatoshi {
         Zatoshi(datatypeValue)
