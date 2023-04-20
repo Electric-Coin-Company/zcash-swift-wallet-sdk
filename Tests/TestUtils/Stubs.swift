@@ -176,7 +176,7 @@ class RustBackendMockHelper {
 }
 
 extension SaplingParamsSourceURL {
-    static var tests = SaplingParamsSourceURL(
+    static let tests = SaplingParamsSourceURL(
         spendParamFileURL: Bundle.module.url(forResource: "sapling-spend", withExtension: "params")!,
         outputParamFileURL: Bundle.module.url(forResource: "sapling-output", withExtension: "params")!
     )

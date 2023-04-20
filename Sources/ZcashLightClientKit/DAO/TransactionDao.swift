@@ -14,11 +14,11 @@ class TransactionSQLDAO: TransactionRepository {
         static let memo = Expression<Blob>("memo")
     }
 
-    var dbProvider: ConnectionProvider
-    var transactions = Table("transactions")
+    let dbProvider: ConnectionProvider
+    let transactions = Table("transactions")
     
-    private var blockDao: BlockSQLDAO
-    private var sentNotesRepository: SentNotesRepository
+    private let blockDao: BlockSQLDAO
+    private let sentNotesRepository: SentNotesRepository
     private let transactionsView = View("v_transactions")
     private let receivedNotesTable = Table("received_notes")
     private let sentNotesTable = Table("sent_notes")

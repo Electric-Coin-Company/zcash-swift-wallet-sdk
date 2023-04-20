@@ -6,10 +6,11 @@
 //
 
 import Foundation
+import SQLite
 
 protocol AccountEntity {
-    var account: Int { get set }
-    var ufvk: String { get set }
+    var account: Int { get }
+    var ufvk: String { get }
 }
 
 struct Account: AccountEntity, Encodable, Decodable {
@@ -18,8 +19,8 @@ struct Account: AccountEntity, Encodable, Decodable {
         case ufvk
     }
     
-    var account: Int
-    var ufvk: String
+    let account: Int
+    let ufvk: String
 }
 
 extension Account: Hashable {
@@ -44,8 +45,6 @@ protocol AccountRepository {
     func update(_ account: AccountEntity) throws
 }
 
-import SQLite
-
 class AccountSQDAO: AccountRepository {
     enum TableColums {
         static let account = Expression<Int>("account")
@@ -54,10 +53,10 @@ class AccountSQDAO: AccountRepository {
 
     let table = Table("accounts")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     let logger: Logger
     
-    init (dbProvider: ConnectionProvider, logger: Logger) {
+    init(dbProvider: ConnectionProvider, logger: Logger) {
         self.dbProvider = dbProvider
         self.logger = logger
     }
@@ -133,7 +132,7 @@ class AccountSQDAO: AccountRepository {
 }
 
 class CachingAccountDao: AccountRepository {
-    var dao: AccountRepository
+    let dao: AccountRepository
     lazy var cache: [Int: AccountEntity] = {
         var accountCache: [Int: AccountEntity] = [:]
         guard let all = try? dao.getAll() else {

@@ -29,8 +29,8 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
         case fee
     }
 
-    var recipient: PendingTransactionRecipient
-    var accountIndex: Int
+    let recipient: PendingTransactionRecipient
+    let accountIndex: Int
     var minedHeight: BlockHeight
     var expiryHeight: BlockHeight
     var cancelled: Int
@@ -38,13 +38,13 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
     var submitAttempts: Int
     var errorMessage: String?
     var errorCode: Int?
-    var createTime: TimeInterval
+    let createTime: TimeInterval
     var raw: Data?
     var id: Int?
-    var value: Zatoshi
-    var memo: Data?
+    let value: Zatoshi
+    let memo: Data?
     var rawTransactionId: Data?
-    var fee: Zatoshi?
+    let fee: Zatoshi?
     
     static func from(entity: PendingTransactionEntity) -> PendingTransaction {
         PendingTransaction(
@@ -143,6 +143,8 @@ struct PendingTransaction: PendingTransactionEntity, Decodable, Encodable {
             self.rawTransactionId = try container.decodeIfPresent(Data.self, forKey: .rawTransactionId)
             if let feeValue = try container.decodeIfPresent(Int64.self, forKey: .fee) {
                 self.fee = Zatoshi(feeValue)
+            } else {
+                self.fee = nil
             }
         } catch {
             if let error = error as? ZcashError {
@@ -226,28 +228,28 @@ extension PendingTransaction {
 
 class PendingTransactionSQLDAO: PendingTransactionRepository {
     enum TableColumns {
-        static var toAddress = Expression<String?>("to_address")
-        static var toInternalAccount = Expression<Int?>("to_internal")
-        static var accountIndex = Expression<Int>("account_index")
-        static var minedHeight = Expression<Int?>("mined_height")
-        static var expiryHeight = Expression<Int?>("expiry_height")
-        static var cancelled = Expression<Int?>("cancelled")
-        static var encodeAttempts = Expression<Int?>("encode_attempts")
-        static var errorMessage = Expression<String?>("error_message")
-        static var submitAttempts = Expression<Int?>("submit_attempts")
-        static var errorCode = Expression<Int?>("error_code")
-        static var createTime = Expression<TimeInterval?>("create_time")
-        static var raw = Expression<Blob?>("raw")
-        static var id = Expression<Int>("id")
-        static var value = Expression<Zatoshi>("value")
-        static var memo = Expression<Blob?>("memo")
-        static var rawTransactionId = Expression<Blob?>("txid")
-        static var fee = Expression<Zatoshi?>("fee")
+        static let toAddress = Expression<String?>("to_address")
+        static let toInternalAccount = Expression<Int?>("to_internal")
+        static let accountIndex = Expression<Int>("account_index")
+        static let minedHeight = Expression<Int?>("mined_height")
+        static let expiryHeight = Expression<Int?>("expiry_height")
+        static let cancelled = Expression<Int?>("cancelled")
+        static let encodeAttempts = Expression<Int?>("encode_attempts")
+        static let errorMessage = Expression<String?>("error_message")
+        static let submitAttempts = Expression<Int?>("submit_attempts")
+        static let errorCode = Expression<Int?>("error_code")
+        static let createTime = Expression<TimeInterval?>("create_time")
+        static let raw = Expression<Blob?>("raw")
+        static let id = Expression<Int>("id")
+        static let value = Expression<Zatoshi>("value")
+        static let memo = Expression<Blob?>("memo")
+        static let rawTransactionId = Expression<Blob?>("txid")
+        static let fee = Expression<Zatoshi?>("fee")
     }
     
     static let table = Table("pending_transactions")
     
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     let logger: Logger
     
     init(dbProvider: ConnectionProvider, logger: Logger) {

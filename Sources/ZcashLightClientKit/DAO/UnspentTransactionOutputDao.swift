@@ -19,14 +19,14 @@ struct UTXO: Decodable, Encodable {
         case spentInTx = "spent_in_tx"
     }
     
-    var id: Int?
-    var address: String
+    let id: Int?
+    let address: String
     var prevoutTxId: Data
     var prevoutIndex: Int
-    var script: Data
-    var valueZat: Int
-    var height: Int
-    var spentInTx: Int?
+    let script: Data
+    let valueZat: Int
+    let height: Int
+    let spentInTx: Int?
 }
 
 extension UTXO: UnspentTransactionOutputEntity {
@@ -69,21 +69,21 @@ extension UnspentTransactionOutputEntity {
 import SQLite
 class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     enum TableColumns {
-        static var id = Expression<Int>("id_utxo")
-        static var address = Expression<String>("address")
-        static var txid = Expression<Blob>("prevout_txid")
-        static var index = Expression<Int>("prevout_idx")
-        static var script = Expression<Blob>("script")
-        static var valueZat = Expression<Int>("value_zat")
-        static var height = Expression<Int>("height")
-        static var spentInTx = Expression<Int?>("spent_in_tx")
+        static let id = Expression<Int>("id_utxo")
+        static let address = Expression<String>("address")
+        static let txid = Expression<Blob>("prevout_txid")
+        static let index = Expression<Int>("prevout_idx")
+        static let script = Expression<Blob>("script")
+        static let valueZat = Expression<Int>("value_zat")
+        static let height = Expression<Int>("height")
+        static let spentInTx = Expression<Int?>("spent_in_tx")
     }
 
     let table = Table("utxos")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     
-    init (dbProvider: ConnectionProvider) {
+    init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
 

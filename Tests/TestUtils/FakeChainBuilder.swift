@@ -116,7 +116,7 @@ enum FakeChainBuilder {
         "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/\(id).txt"
     }
     
-    static var txUrls = [
+    static let txUrls = [
         663174: buildTxUrl(for: "8f064d23c66dc36e32445e5f3b50e0f32ac3ddb78cff21fb521eb6c19c07c99a"),
         663188: buildTxUrl(for: "15a677b6770c5505fb47439361d3d3a7c21238ee1a6874fdedad18ae96850590"),
         663202: buildTxUrl(for: "d2e7be14bbb308f9d4d68de424d622cbf774226d01cd63cc6f155fafd5cd212c"),

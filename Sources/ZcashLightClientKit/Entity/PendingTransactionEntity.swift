@@ -26,14 +26,14 @@ public protocol PendingTransactionEntity: RawIdentifiable {
     /**
     value in zatoshi
     */
-    var value: Zatoshi { get set }
+    var value: Zatoshi { get }
 
     /**
     data containing the memo if any
     */
-    var memo: Data? { get set }
+    var memo: Data? { get }
 
-    var fee: Zatoshi? { get set }
+    var fee: Zatoshi? { get }
 
     var raw: Data? { get set }
 
@@ -61,7 +61,7 @@ public protocol PendingTransactionEntity: RawIdentifiable {
     /**
     value is 1 if the transaction was cancelled
     */
-    var cancelled: Int { get }
+    var cancelled: Int { get set }
 
     /**
     how many times this transaction encoding was attempted

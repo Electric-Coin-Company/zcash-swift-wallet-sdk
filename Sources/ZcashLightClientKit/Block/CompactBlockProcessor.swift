@@ -79,10 +79,10 @@ public enum CompactBlockProgress {
 }
 
 public struct EnhancementProgress: Equatable {
-    public var totalTransactions: Int
-    public var enhancedTransactions: Int
-    public var lastFoundTransaction: ZcashTransaction.Overview?
-    public var range: CompactBlockRange
+    public let totalTransactions: Int
+    public let enhancedTransactions: Int
+    public let lastFoundTransaction: ZcashTransaction.Overview?
+    public let range: CompactBlockRange
 
     public init(totalTransactions: Int, enhancedTransactions: Int, lastFoundTransaction: ZcashTransaction.Overview?, range: CompactBlockRange) {
         self.totalTransactions = totalTransactions
@@ -156,27 +156,27 @@ actor CompactBlockProcessor {
     struct Configuration {
         let alias: ZcashSynchronizerAlias
         let saplingParamsSourceURL: SaplingParamsSourceURL
-        public var fsBlockCacheRoot: URL
-        public var dataDb: URL
-        public var spendParamsURL: URL
-        public var outputParamsURL: URL
-        public var downloadBatchSize = ZcashSDK.DefaultDownloadBatch
-        public var scanningBatchSize = ZcashSDK.DefaultScanningBatch
-        public var retries = ZcashSDK.defaultRetries
-        public var maxBackoffInterval = ZcashSDK.defaultMaxBackOffInterval
-        public var maxReorgSize = ZcashSDK.maxReorgSize
-        public var rewindDistance = ZcashSDK.defaultRewindDistance
+        let fsBlockCacheRoot: URL
+        let dataDb: URL
+        let spendParamsURL: URL
+        let outputParamsURL: URL
+        let downloadBatchSize: Int
+        let scanningBatchSize: Int
+        let retries: Int
+        let maxBackoffInterval: TimeInterval
+        let maxReorgSize = ZcashSDK.maxReorgSize
+        let rewindDistance: Int
         let walletBirthdayProvider: () -> BlockHeight
-        public var walletBirthday: BlockHeight { walletBirthdayProvider() }
-        public private(set) var downloadBufferSize: Int = 10
-        private(set) var network: ZcashNetwork
-        private(set) var saplingActivation: BlockHeight
-        private(set) var cacheDbURL: URL?
+        var walletBirthday: BlockHeight { walletBirthdayProvider() }
+        let downloadBufferSize: Int = 10
+        let network: ZcashNetwork
+        let saplingActivation: BlockHeight
+        let cacheDbURL: URL?
         var blockPollInterval: TimeInterval {
             TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
         }
         
-        init (
+        init(
             alias: ZcashSynchronizerAlias,
             cacheDbURL: URL? = nil,
             fsBlockCacheRoot: URL,
@@ -184,10 +184,11 @@ actor CompactBlockProcessor {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
-            downloadBatchSize: Int,
-            retries: Int,
-            maxBackoffInterval: TimeInterval,
-            rewindDistance: Int,
+            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            retries: Int = ZcashSDK.defaultRetries,
+            maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
+            rewindDistance: Int = ZcashSDK.defaultRewindDistance,
+            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             saplingActivation: BlockHeight,
             network: ZcashNetwork
@@ -203,6 +204,7 @@ actor CompactBlockProcessor {
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
+            self.scanningBatchSize = scanningBatchSize
             self.walletBirthdayProvider = walletBirthdayProvider
             self.saplingActivation = saplingActivation
             self.cacheDbURL = cacheDbURL
@@ -216,6 +218,11 @@ actor CompactBlockProcessor {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
+            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            retries: Int = ZcashSDK.defaultRetries,
+            maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
+            rewindDistance: Int = ZcashSDK.defaultRewindDistance,
+            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             network: ZcashNetwork
         ) {
@@ -229,6 +236,11 @@ actor CompactBlockProcessor {
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
             self.cacheDbURL = nil
+            self.downloadBatchSize = downloadBatchSize
+            self.retries = retries
+            self.maxBackoffInterval = maxBackoffInterval
+            self.rewindDistance = rewindDistance
+            self.scanningBatchSize = scanningBatchSize
 
             assert(downloadBatchSize >= scanningBatchSize)
         }
@@ -313,11 +325,11 @@ actor CompactBlockProcessor {
     let saplingParametersHandler: SaplingParametersHandler
     private let latestBlocksDataProvider: LatestBlocksDataProvider
 
-    var service: LightWalletService
-    var storage: CompactBlockRepository
-    var transactionRepository: TransactionRepository
-    var accountRepository: AccountRepository
-    var rustBackend: ZcashRustBackendWelding
+    let service: LightWalletService
+    let storage: CompactBlockRepository
+    let transactionRepository: TransactionRepository
+    let accountRepository: AccountRepository
+    let rustBackend: ZcashRustBackendWelding
     private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
     private var lastChainValidationFailure: BlockHeight?

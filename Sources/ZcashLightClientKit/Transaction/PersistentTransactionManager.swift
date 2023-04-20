@@ -8,11 +8,11 @@
 import Foundation
 
 class PersistentTransactionManager: OutboundTransactionManager {
-    var repository: PendingTransactionRepository
-    var encoder: TransactionEncoder
-    var service: LightWalletService
-    var queue: DispatchQueue
-    var network: NetworkType
+    let repository: PendingTransactionRepository
+    let encoder: TransactionEncoder
+    let service: LightWalletService
+    let queue: DispatchQueue
+    let network: NetworkType
     let logger: Logger
     
     init(

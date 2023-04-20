@@ -217,7 +217,7 @@ extension FSCompactBlockRepository {
 // MARK: Associated and Helper types
 
 struct FSBlockFileWriter {
-    var writeToURL: (Data, URL) throws -> Void
+    let writeToURL: (Data, URL) throws -> Void
 }
 
 extension FSBlockFileWriter {
@@ -227,10 +227,10 @@ extension FSBlockFileWriter {
 }
 
 struct FSMetadataStore {
-    var saveBlocksMeta: ([ZcashCompactBlock]) async throws -> Void
-    var rewindToHeight: (BlockHeight) async throws -> Void
-    var initFsBlockDbRoot: () async throws -> Void
-    var latestHeight: () async -> BlockHeight
+    let saveBlocksMeta: ([ZcashCompactBlock]) async throws -> Void
+    let rewindToHeight: (BlockHeight) async throws -> Void
+    let initFsBlockDbRoot: () async throws -> Void
+    let latestHeight: () async -> BlockHeight
 }
 
 extension FSMetadataStore {
@@ -276,9 +276,9 @@ extension FSMetadataStore {
 }
 
 struct ZcashCompactBlockDescriptor {
-    var height: (String) -> BlockHeight?
-    var describe: (ZcashCompactBlock) -> String
-    var compare: (String, String) -> Int?
+    let height: (String) -> BlockHeight?
+    let describe: (ZcashCompactBlock) -> String
+    let compare: (String, String) -> Int?
 }
 
 extension ZcashCompactBlockDescriptor {

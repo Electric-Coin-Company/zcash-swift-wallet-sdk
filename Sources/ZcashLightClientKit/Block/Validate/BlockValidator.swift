@@ -20,7 +20,6 @@ struct BlockValidatorImpl {
 }
 
 extension BlockValidatorImpl: BlockValidator {
-    
     /// - Throws:
     ///  - `rustValidateCombinedChainValidationFailed` if there was an error during validation unrelated to chain validity.
     ///  - `rustValidateCombinedChainInvalidChain(upperBound)` if the combined chain is invalid. `upperBound` is the height of the highest invalid

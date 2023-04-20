@@ -26,11 +26,11 @@ import Foundation
 ///  - orchardTree: the orchard tree corresponding to the given height. This field is optional since it won't be available prior
 ///   to NU5 activation height for the given network.
 struct Checkpoint: Equatable {
-    private(set) var height: BlockHeight
-    private(set) var hash: String
-    private(set) var time: UInt32
-    private(set) var saplingTree: String
-    private(set) var orchardTree: String?
+    let height: BlockHeight
+    let hash: String
+    let time: UInt32
+    let saplingTree: String
+    let orchardTree: String?
 }
 
 extension Checkpoint: Decodable {

@@ -8,9 +8,9 @@
 import Foundation
 
 public struct BlockProgress: Equatable {
-    public var startHeight: BlockHeight
-    public var targetHeight: BlockHeight
-    public var progressHeight: BlockHeight
+    public let startHeight: BlockHeight
+    public let targetHeight: BlockHeight
+    public let progressHeight: BlockHeight
 
     public var progress: Float {
         let overall = self.targetHeight - self.startHeight

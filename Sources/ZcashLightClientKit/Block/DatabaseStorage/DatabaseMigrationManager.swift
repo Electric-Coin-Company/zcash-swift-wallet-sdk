@@ -18,8 +18,8 @@ class MigrationManager {
 
     static let nextPendingDbMigration = PendingDbMigration.v2
 
-    var pendingDb: ConnectionProvider
-    var network: NetworkType
+    let pendingDb: ConnectionProvider
+    let network: NetworkType
     let logger: Logger
 
     init(
