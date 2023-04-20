@@ -433,7 +433,7 @@ final class FsBlockStorageTests: XCTestCase {
         } catch ZcashError.rustWriteBlocksMetadataAllocationProblem {
             // this is fine
         } catch {
-            XCTFail("Expected `CompactBlockRepositoryError.failedToWriteMetadata` but found: \(error.localizedDescription)")
+            XCTFail("Expected `CompactBlockRepositoryError.failedToWriteMetadata` but found: \(error)")
         }
     }
 

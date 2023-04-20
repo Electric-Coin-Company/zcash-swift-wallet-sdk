@@ -165,7 +165,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     /// Starts the synchronizer
-    /// - Throws: CompactBlockProcessorError when failures occur
+    /// - Throws: ZcashError when failures occur
     public func start(retry: Bool = false) async throws {
         switch await status {
         case .unprepared:
@@ -244,7 +244,7 @@ public class SDKSynchronizer: Synchronizer {
         await processor.updateEventClosure(identifier: "SDKSynchronizer", closure: eventClosure)
     }
 
-    private func failed(error: CompactBlockProcessorError) async {
+    private func failed(error: Error) async {
         await updateStatus(.error(self.mapError(error)))
     }
 
@@ -673,38 +673,35 @@ public class SDKSynchronizer: Synchronizer {
 
     // swiftlint:disable cyclomatic_complexity
     private func mapError(_ error: Error) -> SynchronizerError {
-        if let compactBlockProcessorError = error as? CompactBlockProcessorError {
-            switch compactBlockProcessorError {
-            case .dataDbInitFailed(let path):
+        if let zcashError = error as? ZcashError {
+            switch zcashError {
+            case .compactBlockProcessorDataDbInitFailed(let path):
                 return SynchronizerError.initFailed(message: "DataDb init failed at path: \(path)")
-            case .connectionError(let message):
+            case .compactBlockProcessorConnection(let message):
                 return SynchronizerError.connectionFailed(message: message)
-            case .invalidConfiguration:
+            case .compactBlockProcessorInvalidConfiguration:
                 return SynchronizerError.generalError(message: "Invalid Configuration")
-            case .missingDbPath(let path):
+            case .compactBlockProcessorMissingDbPath(let path):
                 return SynchronizerError.initFailed(message: "missing Db path: \(path)")
-            case .generalError(let message):
-                return SynchronizerError.generalError(message: message)
-            case .maxAttemptsReached(attempts: let attempts):
+            case .compactBlockProcessorMaxAttemptsReached(attempts: let attempts):
                 return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)
-            case let .grpcError(statusCode, message):
+            case let .compactBlockProcessorGrpcError(statusCode, message):
                 return SynchronizerError.connectionError(status: statusCode, message: message)
-            case .connectionTimeout:
+            case .compactBlockProcessorConnectionTimeout:
                 return SynchronizerError.networkTimeout
-            case .unspecifiedError(let underlyingError):
+            case .compactBlockProcessorUnspecified(let underlyingError):
                 return SynchronizerError.uncategorized(underlyingError: underlyingError)
-            case .criticalError:
+            case .compactBlockProcessorCritical:
                 return SynchronizerError.criticalError
-            case .invalidAccount:
+            case .compactBlockProcessorInvalidAccount:
                 return SynchronizerError.invalidAccount
-            case .wrongConsensusBranchId:
-                return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
-            case .networkMismatch:
-                return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
-            case .saplingActivationMismatch:
-                return SynchronizerError.lightwalletdValidationFailed(underlyingError: compactBlockProcessorError)
-            case .unknown:
-                break
+            case .compactBlockProcessorWrongConsensusBranchId:
+                return SynchronizerError.lightwalletdValidationFailed(underlyingError: zcashError)
+            case .compactBlockProcessorNetworkMismatch:
+                return SynchronizerError.lightwalletdValidationFailed(underlyingError: zcashError)
+            case .compactBlockProcessorSaplingActivationMismatch:
+                return SynchronizerError.lightwalletdValidationFailed(underlyingError: zcashError)
+            default: break
             }
         }
 
