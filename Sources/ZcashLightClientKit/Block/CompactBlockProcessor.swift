@@ -12,27 +12,6 @@ import Combine
 
 public typealias RefreshedUTXOs = (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 
-/**
-Errors thrown by CompactBlock Processor
-*/
-public enum CompactBlockProcessorError: Error {
-    case invalidConfiguration
-    case missingDbPath(path: String)
-    case dataDbInitFailed(path: String)
-    case connectionError(underlyingError: Error)
-    case grpcError(statusCode: Int, message: String)
-    case connectionTimeout
-    case generalError(message: String)
-    case maxAttemptsReached(attempts: Int)
-    case unspecifiedError(underlyingError: Error)
-    case criticalError
-    case invalidAccount
-    case wrongConsensusBranchId(expectedLocally: ConsensusBranchID, found: ConsensusBranchID)
-    case networkMismatch(expected: NetworkType, found: NetworkType)
-    case saplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
-    case unknown
-}
-
 public enum CompactBlockProgress {
     case syncing(_ progress: BlockProgress)
     case enhance(_ progress: EnhancementProgress)
@@ -115,7 +94,7 @@ actor CompactBlockProcessor {
 
     enum Event {
         /// Event sent when the CompactBlockProcessor presented an error.
-        case failed (CompactBlockProcessorError)
+        case failed (Error)
 
         /// Event sent when the CompactBlockProcessor has finished syncing the blockchain to latest height
         case finished (_ lastScannedHeight: BlockHeight, _ foundBlocks: Bool)
@@ -523,29 +502,26 @@ actor CompactBlockProcessor {
     ) async throws {
         // check network types
         guard let remoteNetworkType = NetworkType.forChainName(info.chainName) else {
-            throw CompactBlockProcessorError.generalError(
-                message: "Chain name does not match. Expected either 'test' or 'main' but received '\(info.chainName)'." +
-                    "this is probably an API or programming error"
-            )
+            throw ZcashError.compactBlockProcessorChainName(info.chainName)
         }
 
         guard remoteNetworkType == localNetwork.networkType else {
-            throw CompactBlockProcessorError.networkMismatch(expected: localNetwork.networkType, found: remoteNetworkType)
+            throw ZcashError.compactBlockProcessorNetworkMismatch(localNetwork.networkType, remoteNetworkType)
         }
 
         guard saplingActivation == info.saplingActivationHeight else {
-            throw CompactBlockProcessorError.saplingActivationMismatch(expected: saplingActivation, found: BlockHeight(info.saplingActivationHeight))
+            throw ZcashError.compactBlockProcessorSaplingActivationMismatch(saplingActivation, BlockHeight(info.saplingActivationHeight))
         }
 
         // check branch id
         let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
 
         guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
-            throw CompactBlockProcessorError.generalError(message: "Consensus BranchIDs don't match this is probably an API or programming error")
+            throw ZcashError.compactBlockProcessorConsensusBranchID
         }
 
         guard remoteBranchID == localBranch else {
-            throw CompactBlockProcessorError.wrongConsensusBranchId(expectedLocally: localBranch, found: remoteBranchID)
+            throw ZcashError.compactBlockProcessorWrongConsensusBranchId(localBranch, remoteBranchID)
         }
     }
 
@@ -567,16 +543,16 @@ actor CompactBlockProcessor {
             case .error(let error):
                 // max attempts have been reached
                 logger.info("max retry attempts reached with error: \(error)")
-                await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
                 await updateState(.stopped)
             case .stopped:
                 // max attempts have been reached
                 logger.info("max retry attempts reached")
-                await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
             case .synced:
                 // max attempts have been reached
                 logger.warn("max retry attempts reached on synced state, this indicates malfunction")
-                await notifyError(CompactBlockProcessorError.maxAttemptsReached(attempts: self.maxAttempts))
+                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
             case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
                 logger.debug("Warning: compact block processor was started while busy!!!!")
                 afterSyncHooksManager.insert(hook: .anotherSync)
@@ -720,8 +696,6 @@ actor CompactBlockProcessor {
                 localNetwork: self.config.network,
                 rustBackend: self.rustBackend
             )
-        } catch let error as ZcashError {
-            await self.severeFailure(error.mapServiceErrorToProcessorError())
         } catch {
             await self.severeFailure(error)
         }
@@ -980,23 +954,13 @@ actor CompactBlockProcessor {
         await self.setTimer()
     }
 
-    func mapError(_ error: Error) -> CompactBlockProcessorError {
-        if let processorError = error as? CompactBlockProcessorError {
-            return processorError
-        }
-        if let lwdError = error as? ZcashError {
-            return lwdError.mapServiceErrorToProcessorError()
-        }
-        return .unspecifiedError(underlyingError: error)
-    }
-
     private func validateConfiguration() throws {
         guard FileManager.default.isReadableFile(atPath: config.fsBlockCacheRoot.absoluteString) else {
-            throw CompactBlockProcessorError.missingDbPath(path: config.fsBlockCacheRoot.absoluteString)
+            throw ZcashError.compactBlockProcessorMissingDbPath(config.fsBlockCacheRoot.absoluteString)
         }
 
         guard FileManager.default.isReadableFile(atPath: config.dataDb.absoluteString) else {
-            throw CompactBlockProcessorError.missingDbPath(path: config.dataDb.absoluteString)
+            throw ZcashError.compactBlockProcessorMissingDbPath(config.dataDb.absoluteString)
         }
     }
 
@@ -1121,7 +1085,7 @@ actor CompactBlockProcessor {
                             )
                             await self.start()
                         } else if await self.maxAttemptsReached {
-                            await self.fail(CompactBlockProcessorError.maxAttemptsReached(attempts: self.config.retries))
+                            await self.fail(ZcashError.compactBlockProcessorMaxAttemptsReached(self.config.retries))
                         }
                     }
                 }
@@ -1158,56 +1122,11 @@ actor CompactBlockProcessor {
     }
 
     private func notifyError(_ err: Error) async {
-        await send(event: .failed(mapError(err)))
+        await send(event: .failed(err))
     }
     // TODO: [#713] encapsulate service errors better, https://github.com/zcash/ZcashLightClientKit/issues/713
 }
 
-extension ZcashError {
-    func mapServiceErrorToProcessorError() -> CompactBlockProcessorError {
-        switch self {
-        case let .serviceUnknownError(error):
-            return CompactBlockProcessorError.unspecifiedError(underlyingError: error)
-        case
-            let .serviceGetInfoFailed(error),
-            let .serviceLatestBlockFailed(error),
-            let .serviceLatestBlockHeightFailed(error),
-            let .serviceBlockRangeFailed(error),
-            let .serviceSubmitFailed(error),
-            let .serviceFetchTransactionFailed(error),
-            let .serviceFetchUTXOsFailed(error),
-            let .serviceBlockStreamFailed(error):
-            return error.mapToProcessorError()
-        default:
-            return CompactBlockProcessorError.unspecifiedError(underlyingError: self)
-        }
-    }
-}
-
-extension LightWalletServiceError {
-    func mapToProcessorError() -> CompactBlockProcessorError {
-        switch self {
-        case let .failed(statusCode, message):
-            return CompactBlockProcessorError.grpcError(statusCode: statusCode, message: message)
-        case .invalidBlock:
-            return CompactBlockProcessorError.generalError(message: "\(self)")
-        case .generalError(let message):
-            return CompactBlockProcessorError.generalError(message: message)
-        case .sentFailed(let error):
-            return CompactBlockProcessorError.connectionError(underlyingError: error)
-        case .genericError(let error):
-            return CompactBlockProcessorError.unspecifiedError(underlyingError: error)
-        case .timeOut:
-            return CompactBlockProcessorError.connectionTimeout
-        case .criticalError:
-            return CompactBlockProcessorError.criticalError
-        case .userCancelled:
-            return CompactBlockProcessorError.connectionTimeout
-        case .unknown:
-            return CompactBlockProcessorError.unspecifiedError(underlyingError: self)
-        }
-    }
-}
 extension CompactBlockProcessor.State: Equatable {
     public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
         switch  (lhs, rhs) {
@@ -1240,7 +1159,7 @@ extension CompactBlockProcessor {
     
     func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
         guard accountIndex >= 0 else {
-            throw CompactBlockProcessorError.invalidAccount
+            throw ZcashError.compactBlockProcessorInvalidAccount
         }
 
         return WalletBalance(
@@ -1270,7 +1189,7 @@ extension CompactBlockProcessor {
             }
             return await storeUTXOs(utxos, in: dataDb)
         } catch {
-            throw mapError(error)
+            throw error
         }
     }
     
@@ -1294,68 +1213,6 @@ extension CompactBlockProcessor {
             }
         }
         return (inserted: refreshed, skipped: skipped)
-    }
-}
-
-extension CompactBlockProcessorError: LocalizedError {
-    /// A localized message describing what error occurred.
-    public var errorDescription: String? {
-        switch self {
-        case .dataDbInitFailed(let path):
-            return "Data Db file couldn't be initialized at path: \(path)"
-        case .connectionError(let underlyingError):
-            return "There's a problem with the Network Connection. Underlying error: \(underlyingError.localizedDescription)"
-        case .connectionTimeout:
-            return "Network connection timeout"
-        case .criticalError:
-            return "Critical Error"
-        case .generalError(let message):
-            return "Error Processing Blocks - \(message)"
-        case let .grpcError(statusCode, message):
-            return "Error on gRPC - Status Code: \(statusCode) - Message: \(message)"
-        case .invalidAccount:
-            return "Invalid Account"
-        case .invalidConfiguration:
-            return "CompactBlockProcessor was started with an Invalid Configuration"
-        case .maxAttemptsReached(let attempts):
-            return "Compact Block failed \(attempts) times and reached the maximum amount of retries it was set up to do"
-        case .missingDbPath(let path):
-            return "CompactBlockProcessor was set up with path \(path) but that location couldn't be reached"
-        case let .networkMismatch(expected, found):
-            return """
-            A server was reached, but it's targeting the wrong network Type. App Expected \(expected) but found \(found). Make sure you are pointing \
-            to the right server
-            """
-        case let .saplingActivationMismatch(expected, found):
-            return """
-            A server was reached, it's showing a different sapling activation. App expected sapling activation height to be \(expected) but instead \
-            it found \(found). Are you sure you are pointing to the right server?
-            """
-        case .unspecifiedError(let underlyingError):
-            return "Unspecified error caused by this underlying error: \(underlyingError)"
-        case let .wrongConsensusBranchId(expectedLocally, found):
-            return """
-            The remote server you are connecting to is publishing a different branch ID \(found) than the one your App is expecting to \
-            be (\(expectedLocally)). This could be caused by your App being out of date or the server you are connecting you being either on a \
-            different network or out of date after a network upgrade.
-            """
-        case .unknown: return "Unknown error occured."
-        }
-    }
-
-    /// A localized message describing the reason for the failure.
-    public var failureReason: String? {
-        self.localizedDescription
-    }
-
-    /// A localized message describing how one might recover from the failure.
-    public var recoverySuggestion: String? {
-        self.localizedDescription
-    }
-
-    /// A localized message providing "help" text if the user requests help.
-    public var helpAnchor: String? {
-        self.localizedDescription
     }
 }
 
@@ -1450,7 +1307,7 @@ extension CompactBlockProcessor {
     /// - Note: Errors from deleting the `legacyCacheDbURL` won't be throwns.
     func migrateCacheDb(_ legacyCacheDbURL: URL) async throws {
         guard legacyCacheDbURL != config.fsBlockCacheRoot else {
-            throw CacheDbMigrationError.fsCacheMigrationFailedSameURL
+            throw ZcashError.compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL
         }
 
         // Instance with alias `default` is same as instance before the Alias was introduced. So it makes sense that only this instance handles
@@ -1471,26 +1328,18 @@ extension CompactBlockProcessor {
             // if there's a readable file at the provided URL, delete it.
             try FileManager.default.removeItem(at: legacyCacheDbURL)
         } catch {
-            throw CacheDbMigrationError.failedToDeleteLegacyDb(error)
+            throw ZcashError.compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb(error)
         }
 
         // create the storage
-        do {
-            try await self.storage.create()
-        } catch {
-            throw CacheDbMigrationError.failedToInitFsBlockDb(error)
-        }
+        try await self.storage.create()
 
         // The database has been deleted, so we have adjust the internal state of the
         // `CompactBlockProcessor` so that it doesn't rely on download heights set
         // by a previous processing cycle.
-        do {
-            let lastScannedHeight = try await transactionRepository.lastScannedHeight()
-
-            await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
-        } catch {
-            throw CacheDbMigrationError.failedToSetDownloadHeight(error)
-        }
+        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        
+        await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
     }
 
     func wipeLegacyCacheDbIfNeeded() {

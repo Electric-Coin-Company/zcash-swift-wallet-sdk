@@ -620,4 +620,58 @@ enum ZcashErrorDefinition {
     /// Awaiting transactions from the stream failed.
     // sourcery: code="ZUTXO0001"
     case unspentTransactionFetcherStream(_ error: Error)
+
+    // MARK: - CompactBlockProcessor
+
+    /// CompactBlockProcessor was started with an invalid configuration.
+    // sourcery: code="ZCBPEO0001"
+    case compactBlockProcessorInvalidConfiguration
+    /// CompactBlockProcessor was set up with path but that location couldn't be reached.
+    // sourcery: code="ZCBPEO0002"
+    case compactBlockProcessorMissingDbPath(_ path: String)
+    /// Data Db file couldn't be initialized at path.
+    // sourcery: code="ZCBPEO0003"
+    case compactBlockProcessorDataDbInitFailed(_ path: String)
+    /// There's a problem with the network connection.
+    // sourcery: code="ZCBPEO0004"
+    case compactBlockProcessorConnection(_ underlyingError: Error)
+    /// Error on gRPC happened.
+    // sourcery: code="ZCBPEO0005"
+    case compactBlockProcessorGrpcError(statusCode: Int, message: String)
+    /// Network connection timeout.
+    // sourcery: code="ZCBPEO0006"
+    case compactBlockProcessorConnectionTimeout
+    /// Compact Block failed and reached the maximum amount of retries it was set up to do.
+    // sourcery: code="ZCBPEO0007"
+    case compactBlockProcessorMaxAttemptsReached(_ attempts: Int)
+    /// Unspecified error occured.
+    // sourcery: code="ZCBPEO0008"
+    case compactBlockProcessorUnspecified(_ underlyingError: Error)
+    /// Critical error occured.
+    // sourcery: code="ZCBPEO0009"
+    case compactBlockProcessorCritical
+    /// Invalid Account.
+    // sourcery: code="ZCBPEO0010"
+    case compactBlockProcessorInvalidAccount
+    /// The remote server you are connecting to is publishing a different branch ID than the one your App is expecting This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade.
+    // sourcery: code="ZCBPEO0011"
+    case compactBlockProcessorWrongConsensusBranchId(expectedLocally: ConsensusBranchID, found: ConsensusBranchID)
+    /// A server was reached, but it's targeting the wrong network Type. Make sure you are pointing to the right server.
+    // sourcery: code="ZCBPEO0012"
+    case compactBlockProcessorNetworkMismatch(expected: NetworkType, found: NetworkType)
+    /// A server was reached, it's showing a different sapling activation. Are you sure you are pointing to the right server?
+    // sourcery: code="ZCBPEO0013"
+    case compactBlockProcessorSaplingActivationMismatch(expected: BlockHeight, found: BlockHeight)
+    /// when the given URL is the same URL than the one provided as `self.fsBlockDbRoot` assuming that's a programming error being the `legacyCacheDbURL` a sqlite database file and not a directory
+    // sourcery: code="ZCBPEO0014"
+    case compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL
+    /// Deletion of readable file at the provided URL failed.
+    // sourcery: code="ZCBPEO0015"
+    case compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb(_ error: Error)
+    /// Chain name does not match. Expected either 'test' or 'main'. This is probably an API or programming error.
+    // sourcery: code="ZCBPEO0016"
+    case compactBlockProcessorChainName(_ name: String)
+    /// Consensus BranchIDs don't match this is probably an API or programming error.
+    // sourcery: code="ZCBPEO0017"
+    case compactBlockProcessorConsensusBranchID
 }

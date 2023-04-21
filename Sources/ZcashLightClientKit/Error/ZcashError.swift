@@ -536,6 +536,57 @@ public enum ZcashError: Equatable, Error {
     /// Awaiting transactions from the stream failed.
     /// ZUTXO0001
     case unspentTransactionFetcherStream(_ error: Error)
+    /// CompactBlockProcessor was started with an invalid configuration.
+    /// ZCBPEO0001
+    case compactBlockProcessorInvalidConfiguration
+    /// CompactBlockProcessor was set up with path but that location couldn't be reached.
+    /// ZCBPEO0002
+    case compactBlockProcessorMissingDbPath(_ path: String)
+    /// Data Db file couldn't be initialized at path.
+    /// ZCBPEO0003
+    case compactBlockProcessorDataDbInitFailed(_ path: String)
+    /// There's a problem with the network connection.
+    /// ZCBPEO0004
+    case compactBlockProcessorConnection(_ underlyingError: Error)
+    /// Error on gRPC happened.
+    /// ZCBPEO0005
+    case compactBlockProcessorGrpcError(_ statusCode: Int, _ message: String)
+    /// Network connection timeout.
+    /// ZCBPEO0006
+    case compactBlockProcessorConnectionTimeout
+    /// Compact Block failed and reached the maximum amount of retries it was set up to do.
+    /// ZCBPEO0007
+    case compactBlockProcessorMaxAttemptsReached(_ attempts: Int)
+    /// Unspecified error occured.
+    /// ZCBPEO0008
+    case compactBlockProcessorUnspecified(_ underlyingError: Error)
+    /// Critical error occured.
+    /// ZCBPEO0009
+    case compactBlockProcessorCritical
+    /// Invalid Account.
+    /// ZCBPEO0010
+    case compactBlockProcessorInvalidAccount
+    /// The remote server you are connecting to is publishing a different branch ID than the one your App is expecting This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade.
+    /// ZCBPEO0011
+    case compactBlockProcessorWrongConsensusBranchId(_ expectedLocally: ConsensusBranchID, _ found: ConsensusBranchID)
+    /// A server was reached, but it's targeting the wrong network Type. Make sure you are pointing to the right server.
+    /// ZCBPEO0012
+    case compactBlockProcessorNetworkMismatch(_ expected: NetworkType, _ found: NetworkType)
+    /// A server was reached, it's showing a different sapling activation. Are you sure you are pointing to the right server?
+    /// ZCBPEO0013
+    case compactBlockProcessorSaplingActivationMismatch(_ expected: BlockHeight, _ found: BlockHeight)
+    /// when the given URL is the same URL than the one provided as `self.fsBlockDbRoot` assuming that's a programming error being the `legacyCacheDbURL` a sqlite database file and not a directory
+    /// ZCBPEO0014
+    case compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL
+    /// Deletion of readable file at the provided URL failed.
+    /// ZCBPEO0015
+    case compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb(_ error: Error)
+    /// Chain name does not match. Expected either 'test' or 'main'. This is probably an API or programming error.
+    /// ZCBPEO0016
+    case compactBlockProcessorChainName(_ name: String)
+    /// Consensus BranchIDs don't match this is probably an API or programming error.
+    /// ZCBPEO0017
+    case compactBlockProcessorConsensusBranchID
 
     public var message: String {
         switch self {
@@ -690,6 +741,23 @@ public enum ZcashError: Equatable, Error {
         case .zatoshiDecode: return "Initiatilzation fo `Zatoshi` from a decoder failed."
         case .zatoshiEncode: return "Encode of `Zatoshi` failed."
         case .unspentTransactionFetcherStream: return "Awaiting transactions from the stream failed."
+        case .compactBlockProcessorInvalidConfiguration: return "CompactBlockProcessor was started with an invalid configuration."
+        case .compactBlockProcessorMissingDbPath: return "CompactBlockProcessor was set up with path but that location couldn't be reached."
+        case .compactBlockProcessorDataDbInitFailed: return "Data Db file couldn't be initialized at path."
+        case .compactBlockProcessorConnection: return "There's a problem with the network connection."
+        case .compactBlockProcessorGrpcError: return "Error on gRPC happened."
+        case .compactBlockProcessorConnectionTimeout: return "Network connection timeout."
+        case .compactBlockProcessorMaxAttemptsReached: return "Compact Block failed and reached the maximum amount of retries it was set up to do."
+        case .compactBlockProcessorUnspecified: return "Unspecified error occured."
+        case .compactBlockProcessorCritical: return "Critical error occured."
+        case .compactBlockProcessorInvalidAccount: return "Invalid Account."
+        case .compactBlockProcessorWrongConsensusBranchId: return "The remote server you are connecting to is publishing a different branch ID than the one your App is expecting This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade."
+        case .compactBlockProcessorNetworkMismatch: return "A server was reached, but it's targeting the wrong network Type. Make sure you are pointing to the right server."
+        case .compactBlockProcessorSaplingActivationMismatch: return "A server was reached, it's showing a different sapling activation. Are you sure you are pointing to the right server?"
+        case .compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL: return "when the given URL is the same URL than the one provided as `self.fsBlockDbRoot` assuming that's a programming error being the `legacyCacheDbURL` a sqlite database file and not a directory"
+        case .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb: return "Deletion of readable file at the provided URL failed."
+        case .compactBlockProcessorChainName: return "Chain name does not match. Expected either 'test' or 'main'. This is probably an API or programming error."
+        case .compactBlockProcessorConsensusBranchID: return "Consensus BranchIDs don't match this is probably an API or programming error."
         }
     }
 
@@ -846,6 +914,23 @@ public enum ZcashError: Equatable, Error {
         case .zatoshiDecode: return .zatoshiDecode
         case .zatoshiEncode: return .zatoshiEncode
         case .unspentTransactionFetcherStream: return .unspentTransactionFetcherStream
+        case .compactBlockProcessorInvalidConfiguration: return .compactBlockProcessorInvalidConfiguration
+        case .compactBlockProcessorMissingDbPath: return .compactBlockProcessorMissingDbPath
+        case .compactBlockProcessorDataDbInitFailed: return .compactBlockProcessorDataDbInitFailed
+        case .compactBlockProcessorConnection: return .compactBlockProcessorConnection
+        case .compactBlockProcessorGrpcError: return .compactBlockProcessorGrpcError
+        case .compactBlockProcessorConnectionTimeout: return .compactBlockProcessorConnectionTimeout
+        case .compactBlockProcessorMaxAttemptsReached: return .compactBlockProcessorMaxAttemptsReached
+        case .compactBlockProcessorUnspecified: return .compactBlockProcessorUnspecified
+        case .compactBlockProcessorCritical: return .compactBlockProcessorCritical
+        case .compactBlockProcessorInvalidAccount: return .compactBlockProcessorInvalidAccount
+        case .compactBlockProcessorWrongConsensusBranchId: return .compactBlockProcessorWrongConsensusBranchId
+        case .compactBlockProcessorNetworkMismatch: return .compactBlockProcessorNetworkMismatch
+        case .compactBlockProcessorSaplingActivationMismatch: return .compactBlockProcessorSaplingActivationMismatch
+        case .compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL: return .compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL
+        case .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb: return .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb
+        case .compactBlockProcessorChainName: return .compactBlockProcessorChainName
+        case .compactBlockProcessorConsensusBranchID: return .compactBlockProcessorConsensusBranchID
         }
     }
 

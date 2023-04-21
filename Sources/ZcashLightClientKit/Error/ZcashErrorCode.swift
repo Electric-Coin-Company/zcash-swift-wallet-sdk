@@ -311,4 +311,38 @@ public enum ZcashErrorCode: String {
     case zatoshiEncode = "ZTSHO0002"
     /// Awaiting transactions from the stream failed.
     case unspentTransactionFetcherStream = "ZUTXO0001"
+    /// CompactBlockProcessor was started with an invalid configuration.
+    case compactBlockProcessorInvalidConfiguration = "ZCBPEO0001"
+    /// CompactBlockProcessor was set up with path but that location couldn't be reached.
+    case compactBlockProcessorMissingDbPath = "ZCBPEO0002"
+    /// Data Db file couldn't be initialized at path.
+    case compactBlockProcessorDataDbInitFailed = "ZCBPEO0003"
+    /// There's a problem with the network connection.
+    case compactBlockProcessorConnection = "ZCBPEO0004"
+    /// Error on gRPC happened.
+    case compactBlockProcessorGrpcError = "ZCBPEO0005"
+    /// Network connection timeout.
+    case compactBlockProcessorConnectionTimeout = "ZCBPEO0006"
+    /// Compact Block failed and reached the maximum amount of retries it was set up to do.
+    case compactBlockProcessorMaxAttemptsReached = "ZCBPEO0007"
+    /// Unspecified error occured.
+    case compactBlockProcessorUnspecified = "ZCBPEO0008"
+    /// Critical error occured.
+    case compactBlockProcessorCritical = "ZCBPEO0009"
+    /// Invalid Account.
+    case compactBlockProcessorInvalidAccount = "ZCBPEO0010"
+    /// The remote server you are connecting to is publishing a different branch ID than the one your App is expecting This could be caused by your App being out of date or the server you are connecting you being either on a different network or out of date after a network upgrade.
+    case compactBlockProcessorWrongConsensusBranchId = "ZCBPEO0011"
+    /// A server was reached, but it's targeting the wrong network Type. Make sure you are pointing to the right server.
+    case compactBlockProcessorNetworkMismatch = "ZCBPEO0012"
+    /// A server was reached, it's showing a different sapling activation. Are you sure you are pointing to the right server?
+    case compactBlockProcessorSaplingActivationMismatch = "ZCBPEO0013"
+    /// when the given URL is the same URL than the one provided as `self.fsBlockDbRoot` assuming that's a programming error being the `legacyCacheDbURL` a sqlite database file and not a directory
+    case compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL = "ZCBPEO0014"
+    /// Deletion of readable file at the provided URL failed.
+    case compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb = "ZCBPEO0015"
+    /// Chain name does not match. Expected either 'test' or 'main'. This is probably an API or programming error.
+    case compactBlockProcessorChainName = "ZCBPEO0016"
+    /// Consensus BranchIDs don't match this is probably an API or programming error.
+    case compactBlockProcessorConsensusBranchID = "ZCBPEO0017"
 }
