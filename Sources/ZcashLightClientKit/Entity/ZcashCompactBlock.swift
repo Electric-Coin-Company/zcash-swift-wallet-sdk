@@ -11,10 +11,6 @@ import Foundation
 public typealias BlockHeight = Int
 public typealias CompactBlockRange = ClosedRange<BlockHeight>
 
-enum ZcashCompactBlockError: Error {
-    case unreadableBlock(compactBlock: CompactBlock)
-}
-
 extension BlockHeight {
     static func empty() -> BlockHeight {
         BlockHeight(-1)
@@ -26,16 +22,16 @@ A Zcash compact block to store on cache DB
 */
 public struct ZcashCompactBlock {
     struct Meta {
-        var hash: Data
-        var time: UInt32
-        var saplingOutputs: UInt32
-        var orchardOutputs: UInt32
+        let hash: Data
+        let time: UInt32
+        let saplingOutputs: UInt32
+        let orchardOutputs: UInt32
     }
 
-    public var height: BlockHeight
-    public var data: Data
+    public let height: BlockHeight
+    public let data: Data
 
-    var meta: Meta
+    let meta: Meta
 }
 
 extension ZcashCompactBlock: Encodable {
@@ -46,9 +42,13 @@ extension ZcashCompactBlock: Encodable {
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(data, forKey: .data)
-        try container.encode(height, forKey: .height)
+        do {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(data, forKey: .data)
+            try container.encode(height, forKey: .height)
+        } catch {
+            throw ZcashError.compactBlockEncode(error)
+        }
     }
 }
 

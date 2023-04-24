@@ -19,14 +19,14 @@ struct UTXO: Decodable, Encodable {
         case spentInTx = "spent_in_tx"
     }
     
-    var id: Int?
-    var address: String
+    let id: Int?
+    let address: String
     var prevoutTxId: Data
     var prevoutIndex: Int
-    var script: Data
-    var valueZat: Int
-    var height: Int
-    var spentInTx: Int?
+    let script: Data
+    let valueZat: Int
+    let height: Int
+    let spentInTx: Int?
 }
 
 extension UTXO: UnspentTransactionOutputEntity {
@@ -69,29 +69,30 @@ extension UnspentTransactionOutputEntity {
 import SQLite
 class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
     enum TableColumns {
-        static var id = Expression<Int>("id_utxo")
-        static var address = Expression<String>("address")
-        static var txid = Expression<Blob>("prevout_txid")
-        static var index = Expression<Int>("prevout_idx")
-        static var script = Expression<Blob>("script")
-        static var valueZat = Expression<Int>("value_zat")
-        static var height = Expression<Int>("height")
-        static var spentInTx = Expression<Int?>("spent_in_tx")
+        static let id = Expression<Int>("id_utxo")
+        static let address = Expression<String>("address")
+        static let txid = Expression<Blob>("prevout_txid")
+        static let index = Expression<Int>("prevout_idx")
+        static let script = Expression<Blob>("script")
+        static let valueZat = Expression<Int>("value_zat")
+        static let height = Expression<Int>("height")
+        static let spentInTx = Expression<Int?>("spent_in_tx")
     }
 
     let table = Table("utxos")
 
-    var dbProvider: ConnectionProvider
+    let dbProvider: ConnectionProvider
     
-    init (dbProvider: ConnectionProvider) {
+    init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
     }
 
+    /// - Throws: `unspentTransactionOutputDAOCreateTable` if creation table fails.
     func initialise() async throws {
         try await createTableIfNeeded()
     }
     
-    func createTableIfNeeded() async throws {
+    private func createTableIfNeeded() async throws {
         let stringStatement =
             """
             CREATE TABLE IF NOT EXISTS utxos (
@@ -107,10 +108,14 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
                 CONSTRAINT tx_outpoint UNIQUE (prevout_txid, prevout_idx)
             )
             """
-        
-        try dbProvider.connection().run(stringStatement)
+        do {
+            try dbProvider.connection().run(stringStatement)
+        } catch {
+            throw ZcashError.unspentTransactionOutputDAOCreateTable(error)
+        }
     }
 
+    /// - Throws: `unspentTransactionOutputDAOStore` if sqlite query fails.
     func store(utxos: [UnspentTransactionOutputEntity]) async throws {
         do {
             let db = try dbProvider.connection()
@@ -120,44 +125,57 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
                 }
             }
         } catch {
-            throw DatabaseStorageError.transactionFailed(underlyingError: error)
+            throw ZcashError.unspentTransactionOutputDAOStore(error)
         }
     }
 
+    /// - Throws: `unspentTransactionOutputDAOClearAll` if sqlite query fails.
     func clearAll(address: String?) async throws {
-        if let tAddr = address {
-            do {
+        do {
+            if let tAddr = address {
                 try dbProvider.connection().run(table.filter(TableColumns.address == tAddr).delete())
-            } catch {
-                throw DatabaseStorageError.operationFailed
-            }
-        } else {
-            do {
+            } else {
                 try dbProvider.connection().run(table.delete())
-            } catch {
-                throw DatabaseStorageError.operationFailed
+            }
+        } catch {
+            throw ZcashError.unspentTransactionOutputDAOClearAll(error)
+        }
+    }
+
+    ///  - Throws:
+    ///     - `unspentTransactionOutputDAOClearAll` if the data fetched from the DB can't be decoded to `UTXO` object.
+    ///     - `unspentTransactionOutputDAOGetAll` if sqlite query fails.
+    func getAll(address: String?) async throws -> [UnspentTransactionOutputEntity] {
+        do {
+            if let tAddress = address {
+                let allTxs: [UTXO] = try dbProvider.connection()
+                    .prepare(table.filter(TableColumns.address == tAddress))
+                    .map { row in
+                        do {
+                            return try row.decode()
+                        } catch {
+                            throw ZcashError.unspentTransactionOutputDAOGetAllCantDecode(error)
+                        }
+                    }
+                return allTxs
+            } else {
+                let allTxs: [UTXO] = try dbProvider.connection()
+                    .prepare(table)
+                    .map { row in
+                        try row.decode()
+                    }
+                return allTxs
+            }
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.unspentTransactionOutputDAOGetAll(error)
             }
         }
     }
-    
-    func getAll(address: String?) async throws -> [UnspentTransactionOutputEntity] {
-        if let tAddress = address {
-            let allTxs: [UTXO] = try dbProvider.connection()
-                .prepare(table.filter(TableColumns.address == tAddress))
-                .map { row in
-                    try row.decode()
-                }
-            return allTxs
-        } else {
-            let allTxs: [UTXO] = try dbProvider.connection()
-                .prepare(table)
-                .map { row in
-                    try row.decode()
-                }
-            return allTxs
-        }
-    }
-    
+
+    /// - Throws: `unspentTransactionOutputDAOBalance` if sqlite query fails.
     func balance(address: String, latestHeight: BlockHeight) async throws -> WalletBalance {
         do {
             let verified = try dbProvider.connection().scalar(
@@ -175,7 +193,7 @@ class UnspentTransactionOutputSQLDAO: UnspentTransactionOutputRepository {
                 total: Zatoshi(Int64(total))
             )
         } catch {
-            throw DatabaseStorageError.operationFailed
+            throw ZcashError.unspentTransactionOutputDAOBalance(error)
         }
     }
 }

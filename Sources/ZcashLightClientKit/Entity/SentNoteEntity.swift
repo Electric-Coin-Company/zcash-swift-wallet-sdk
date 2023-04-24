@@ -8,14 +8,14 @@
 import Foundation
 
 protocol SentNoteEntity {
-    var id: Int { get set }
-    var transactionId: Int { get set }
-    var outputIndex: Int { get set }
-    var fromAccount: Int { get set }
-    var toAddress: String? { get set }
-    var toAccount: Int? { get set }
-    var value: Int { get set }
-    var memo: Data? { get set }
+    var id: Int { get }
+    var transactionId: Int { get }
+    var outputIndex: Int { get }
+    var fromAccount: Int { get }
+    var toAddress: String? { get }
+    var toAccount: Int? { get }
+    var value: Int { get }
+    var memo: Data? { get }
 }
     
 extension SentNoteEntity {

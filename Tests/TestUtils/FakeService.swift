@@ -32,6 +32,10 @@ class MockLightWalletService: LightWalletService {
         service.blockStream(startHeight: startHeight, endHeight: endHeight)
     }
 
+    func latestBlock() async throws -> ZcashLightClientKit.BlockID {
+        throw "Not mocked"
+    }
+
     func closeConnection() {
     }
 
@@ -58,7 +62,7 @@ class MockLightWalletService: LightWalletService {
     
     func getInfo() async throws -> LightWalletdInfo {
         guard let info = mockLightDInfo else {
-            throw LightWalletServiceError.generalError(message: "Not Implemented")
+            throw ZcashError.serviceGetInfoFailed(.generalError(message: "Not Implemented"))
         }
         return info
     }

@@ -37,7 +37,7 @@ URL to the `cacheDb` location to migrate the internal state of the
 `CompactBlockProcessor` and delete that database. 
 
 ````Swift
-    convenience public init (
+    convenience public init(
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
         dataDbURL: URL,

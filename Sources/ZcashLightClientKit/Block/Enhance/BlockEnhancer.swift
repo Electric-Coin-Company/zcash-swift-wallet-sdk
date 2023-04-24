@@ -7,13 +7,6 @@
 
 import Foundation
 
-enum BlockEnhancerError: Error {
-    case noRawData(message: String)
-    case unknownError
-    case decryptError(error: Error)
-    case txIdNotFound(txId: Data)
-}
-
 protocol BlockEnhancer {
     func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]
 }
@@ -35,38 +28,16 @@ struct BlockEnhancerImpl {
         let block = String(describing: transaction.minedHeight)
         logger.debug("Decrypting and storing transaction id: \(transactionID) block: \(block)")
 
-        do {
-            try await rustBackend.decryptAndStoreTransaction(
-                txBytes: fetchedTransaction.raw.bytes,
-                minedHeight: Int32(fetchedTransaction.minedHeight)
-            )
-        } catch {
-            throw BlockEnhancerError.decryptError(error: error)
-        }
+        try await rustBackend.decryptAndStoreTransaction(
+            txBytes: fetchedTransaction.raw.bytes,
+            minedHeight: Int32(fetchedTransaction.minedHeight)
+        )
 
-        let confirmedTx: ZcashTransaction.Overview
-        do {
-            confirmedTx = try await transactionRepository.find(rawID: fetchedTransaction.rawID)
-        } catch {
-            if let err = error as? TransactionRepositoryError, case .notFound = err {
-                throw BlockEnhancerError.txIdNotFound(txId: fetchedTransaction.rawID)
-            } else {
-                throw error
-            }
-        }
-
-        return confirmedTx
+        return try await transactionRepository.find(rawID: fetchedTransaction.rawID)
     }
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
-    enum EnhancementError: Error {
-        case noRawData(message: String)
-        case unknownError
-        case decryptError(error: Error)
-        case txIdNotFound(txId: Data)
-    }
-
     func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview] {
         try Task.checkCancellation()
         

@@ -14,11 +14,11 @@ class TransactionSQLDAO: TransactionRepository {
         static let memo = Expression<Blob>("memo")
     }
 
-    var dbProvider: ConnectionProvider
-    var transactions = Table("transactions")
+    let dbProvider: ConnectionProvider
+    let transactions = Table("transactions")
     
-    private var blockDao: BlockSQLDAO
-    private var sentNotesRepository: SentNotesRepository
+    private let blockDao: BlockSQLDAO
+    private let sentNotesRepository: SentNotesRepository
     private let transactionsView = View("v_transactions")
     private let receivedNotesTable = Table("received_notes")
     private let sentNotesTable = Table("sent_notes")
@@ -58,11 +58,19 @@ class TransactionSQLDAO: TransactionRepository {
     }
     
     func countAll() async throws -> Int {
-        try connection().scalar(transactions.count)
+        do {
+            return try connection().scalar(transactions.count)
+        } catch {
+            throw ZcashError.transactionRepositoryCountAll(error)
+        }
     }
     
     func countUnmined() async throws -> Int {
-        try connection().scalar(transactions.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
+        do {
+            return try connection().scalar(transactions.filter(ZcashTransaction.Overview.Column.minedHeight == nil).count)
+        } catch {
+            throw ZcashError.transactionRepositoryCountUnmined(error)
+        }
     }
 
     func find(id: Int) async throws -> ZcashTransaction.Overview {
@@ -107,7 +115,7 @@ class TransactionSQLDAO: TransactionRepository {
         guard
             let transactionIndex = transaction.index,
             let transactionBlockTime = transaction.blockTime
-        else { throw TransactionRepositoryError.transactionMissingRequiredFields }
+        else { throw ZcashError.transactionRepositoryTransactionMissingRequiredFields }
         
         let query = transactionsView
             .order(
@@ -167,30 +175,42 @@ class TransactionSQLDAO: TransactionRepository {
         let query = table
             .filter(NotesTableStructure.transactionID == transactionID)
         
-        let memos = try connection().prepare(query).compactMap { row in
-            do {
-                let rawMemo = try row.get(NotesTableStructure.memo)
-                return try Memo(bytes: rawMemo.bytes)
-            } catch {
-                return nil
+        do {
+            let memos = try connection().prepare(query).compactMap { row in
+                do {
+                    let rawMemo = try row.get(NotesTableStructure.memo)
+                    return try Memo(bytes: rawMemo.bytes)
+                } catch {
+                    return nil
+                }
             }
+            
+            return memos
+        } catch {
+            throw ZcashError.transactionRepositoryFindMemos(error)
         }
-
-        return memos
     }
 
     private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> Entity {
         let entities: [Entity] = try execute(query, createEntity: createEntity)
-        guard let entity = entities.first else { throw TransactionRepositoryError.notFound }
+        guard let entity = entities.first else { throw ZcashError.transactionRepositoryEntityNotFound }
         return entity
     }
 
     private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> [Entity] {
-        let entities = try connection()
-            .prepare(query)
-            .map(createEntity)
-
-        return entities
+        do {
+            let entities = try connection()
+                .prepare(query)
+                .map(createEntity)
+            
+            return entities
+        } catch {
+            if let error = error as? ZcashError {
+                throw error
+            } else {
+                throw ZcashError.transactionRepositoryQueryExecute(error)
+            }
+        }
     }
 }
 

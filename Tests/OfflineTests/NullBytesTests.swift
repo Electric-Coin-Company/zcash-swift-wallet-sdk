@@ -65,16 +65,13 @@ class NullBytesTests: XCTestCase {
             )
             XCTFail("InitBlocksTable with Null bytes on hash string should have failed")
         } catch {
-            guard let rustError = error as? RustWeldingError else {
-                XCTFail("Expected RustWeldingError")
+            guard let rustError = error as? ZcashError else {
+                XCTFail("Expected ZcashError")
                 return
             }
 
-            switch rustError {
-            case .invalidInput:
-                XCTAssertTrue(true)
-            default:
-                XCTFail("expected \(String(describing: RustWeldingError.invalidInput)) and got \(rustError)")
+            if rustError.code != .rustInitBlocksTableHashContainsNullBytes {
+                XCTFail("expected error code \(ZcashError.rustInitBlocksTableHashContainsNullBytes.code.rawValue) and got error \(rustError)")
             }
         }
 
@@ -87,16 +84,13 @@ class NullBytesTests: XCTestCase {
             )
             XCTFail("InitBlocksTable with Null bytes on saplingTree string should have failed")
         } catch {
-            guard let rustError = error as? RustWeldingError else {
-                XCTFail("Expected RustWeldingError")
+            guard let rustError = error as? ZcashError else {
+                XCTFail("Expected ZcashError")
                 return
             }
 
-            switch rustError {
-            case .invalidInput:
-                XCTAssertTrue(true)
-            default:
-                XCTFail("expected \(String(describing: RustWeldingError.invalidInput)) and got \(rustError)")
+            if rustError.code != .rustInitBlocksTableSaplingTreeContainsNullBytes {
+                XCTFail("expected error code \(ZcashError.rustInitBlocksTableSaplingTreeContainsNullBytes.code.rawValue) and got error \(rustError)")
             }
         }
     }

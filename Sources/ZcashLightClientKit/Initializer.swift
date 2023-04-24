@@ -9,27 +9,14 @@
 import Foundation
 
 /**
-Wrapper for the Rust backend. This class basically represents all the Rust-wallet
-capabilities and the supporting data required to exercise those abilities.
-*/
-public enum InitializerError: Error {
-    case fsCacheInitFailed(Error)
-    case dataDbInitFailed(Error)
-    case accountInitFailed(Error)
-    case invalidViewingKey(key: String)
-    case aliasAlreadyInUse(ZcashSynchronizerAlias)
-    case cantUpdateURLWithAlias(URL)
-}
-
-/**
 Represents a lightwallet instance endpoint to connect to
 */
 public struct LightWalletEndpoint {
-    public var host: String
-    public var port: Int
-    public var secure: Bool
-    public var singleCallTimeoutInMillis: Int64
-    public var streamingCallTimeoutInMillis: Int64
+    public let host: String
+    public let port: Int
+    public let secure: Bool
+    public let singleCallTimeoutInMillis: Int64
+    public let streamingCallTimeoutInMillis: Int64
     
     /**
     initializes a LightWalletEndpoint
@@ -135,14 +122,14 @@ public class Initializer {
     /// The effective birthday of the wallet based on the height provided when initializing and the checkpoints available on this SDK.
     ///
     /// This contains valid value only after `initialize` function is called.
-    private(set) public var walletBirthday: BlockHeight
+    public private(set) var walletBirthday: BlockHeight
 
     /// The purpose of this to migrate from cacheDb to fsBlockDb
-    private var cacheDbURL: URL?
+    private let cacheDbURL: URL?
 
     /// Error that can be created when updating URLs according to alias. If this error is created then it is thrown from `SDKSynchronizer.prepare()`
     /// or `SDKSynchronizer.wipe()`.
-    var urlsParsingError: InitializerError?
+    var urlsParsingError: ZcashError?
 
     /// Constructs the Initializer and migrates an old cacheDb to the new file system block cache if a `cacheDbURL` is provided.
     /// - Parameters:
@@ -154,7 +141,7 @@ public class Initializer {
     ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
     ///  - spendParamsURL: location of the spend parameters
     ///  - outputParamsURL: location of the output parameters
-    convenience public init (
+    convenience public init(
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
         dataDbURL: URL,
@@ -235,7 +222,7 @@ public class Initializer {
         storage: CompactBlockRepository,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
-        urlsParsingError: InitializerError?,
+        urlsParsingError: ZcashError?,
         logger: Logger
     ) {
         self.cacheDbURL = cacheDbURL
@@ -274,10 +261,10 @@ public class Initializer {
     private static func tryToUpdateURLs(
         with alias: ZcashSynchronizerAlias,
         urls: URLs
-    ) -> (URLs, InitializerError?) {
+    ) -> (URLs, ZcashError?) {
         let updatedURLsResult = Self.updateURLs(with: alias, urls: urls)
 
-        let parsingError: InitializerError?
+        let parsingError: ZcashError?
         let updatedURLs: URLs
         switch updatedURLsResult {
         case let .success(updated):
@@ -296,25 +283,25 @@ public class Initializer {
     private static func updateURLs(
         with alias: ZcashSynchronizerAlias,
         urls: URLs
-    ) -> Result<URLs, InitializerError> {
+    ) -> Result<URLs, ZcashError> {
         guard let updatedFsBlockDbRoot = urls.fsBlockDbRoot.updateLastPathComponent(with: alias) else {
-            return .failure(.cantUpdateURLWithAlias(urls.fsBlockDbRoot))
+            return .failure(.initializerCantUpdateURLWithAlias(urls.fsBlockDbRoot))
         }
 
         guard let updatedDataDbURL = urls.dataDbURL.updateLastPathComponent(with: alias) else {
-            return .failure(.cantUpdateURLWithAlias(urls.dataDbURL))
+            return .failure(.initializerCantUpdateURLWithAlias(urls.dataDbURL))
         }
 
         guard let updatedPendingDbURL = urls.pendingDbURL.updateLastPathComponent(with: alias) else {
-            return .failure(.cantUpdateURLWithAlias(urls.pendingDbURL))
+            return .failure(.initializerCantUpdateURLWithAlias(urls.pendingDbURL))
         }
 
         guard let updatedSpendParamsURL = urls.spendParamsURL.updateLastPathComponent(with: alias) else {
-            return .failure(.cantUpdateURLWithAlias(urls.spendParamsURL))
+            return .failure(.initializerCantUpdateURLWithAlias(urls.spendParamsURL))
         }
 
         guard let updateOutputParamsURL = urls.outputParamsURL.updateLastPathComponent(with: alias) else {
-            return .failure(.cantUpdateURLWithAlias(urls.outputParamsURL))
+            return .failure(.initializerCantUpdateURLWithAlias(urls.outputParamsURL))
         }
 
         return .success(
@@ -342,18 +329,10 @@ public class Initializer {
     /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
     /// `InitializerError.accountInitFailed` if the account table can't be initialized. 
     func initialize(with seed: [UInt8]?, viewingKeys: [UnifiedFullViewingKey], walletBirthday: BlockHeight) async throws -> InitializationResult {
-        do {
-            try await storage.create()
-        } catch {
-            throw InitializerError.fsCacheInitFailed(error)
-        }
-        
-        do {
-            if case .seedRequired = try await rustBackend.initDataDb(seed: seed) {
-                return .seedRequired
-            }
-        } catch {
-            throw InitializerError.dataDbInitFailed(error)
+        try await storage.create()
+
+        if case .seedRequired = try await rustBackend.initDataDb(seed: seed) {
+            return .seedRequired
         }
 
         let checkpoint = Checkpoint.birthday(with: walletBirthday, network: network)
@@ -364,22 +343,20 @@ public class Initializer {
                 time: checkpoint.time,
                 saplingTree: checkpoint.saplingTree
             )
-        } catch RustWeldingError.dataDbNotEmpty {
+        } catch ZcashError.rustInitBlocksTableDataDbNotEmpty {
             // this is fine
         } catch {
-            throw InitializerError.dataDbInitFailed(error)
+            throw error
         }
 
         self.walletBirthday = checkpoint.height
  
         do {
             try await rustBackend.initAccountsTable(ufvks: viewingKeys)
-        } catch RustWeldingError.dataDbNotEmpty {
+        } catch ZcashError.rustInitAccountsTableDataDbNotEmpty {
             // this is fine
-        } catch RustWeldingError.malformedStringInput {
-            throw RustWeldingError.malformedStringInput
         } catch {
-            throw InitializerError.accountInitFailed(error)
+            throw error
         }
 
         let migrationManager = MigrationManager(
@@ -405,27 +382,5 @@ public class Initializer {
     */
     public func isValidTransparentAddress(_ address: String) -> Bool {
         DerivationTool(networkType: network.networkType).isValidTransparentAddress(address)
-    }
-}
-
-extension InitializerError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .invalidViewingKey:
-            return "The provided viewing key is invalid"
-        case .dataDbInitFailed(let error):
-            return "dataDb init failed with error: \(error.localizedDescription)"
-        case .accountInitFailed(let error):
-            return "account table init failed with error: \(error.localizedDescription)"
-        case .fsCacheInitFailed(let error):
-            return "Compact Block Cache failed to initialize with error: \(error.localizedDescription)"
-        case let .aliasAlreadyInUse(alias):
-            return """
-            The Alias \(alias) used for this instance of the SDKSynchronizer is already in use. Each instance of the SDKSynchronizer must use unique \
-            Alias.
-            """
-        case .cantUpdateURLWithAlias(let url):
-            return "Can't update path URL with alias. \(url)"
-        }
     }
 }

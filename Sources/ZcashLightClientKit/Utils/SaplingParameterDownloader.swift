@@ -20,18 +20,16 @@ extension Digest {
 
 /// Helper class to handle the download of Sapling parameters
 public enum SaplingParameterDownloader {
-    public enum Errors: Error {
-        case failed(error: Error)
-        case spendParamsInvalidSHA1
-        case outputParamsInvalidSHA1
-    }
-
     /// Download a Spend parameter from default host and stores it at given URL
     /// - Parameters:
     ///     - at: The destination URL for the download
+    /// - Throws:
+    ///     - `saplingParamsDownload` if file downloading fails.
+    ///     - `saplingParamsCantMoveDownloadedFile` if file is downloaded but moving to final destination fails.
+    ///     - `saplingParamsInvalidSpendParams` if the downloaded file is invalid.
     @discardableResult
     public static func downloadSpendParameter(_ at: URL, sourceURL: URL, logger: Logger) async throws -> URL {
-        let resultURL = try await downloadFileWithRequestWithContinuation(URLRequest(url: sourceURL), logger: logger, at: at)
+        let resultURL = try await downloadFileWithRequestWithContinuation(sourceURL, logger: logger, at: at)
         try isSpendParamsSHA1Valid(url: resultURL)
         return resultURL
     }
@@ -39,9 +37,13 @@ public enum SaplingParameterDownloader {
     /// Download an Output parameter from default host and stores it at given URL
     /// - Parameters:
     ///     - at: The destination URL for the download
+    /// - Throws:
+    ///     - `saplingParamsDownload` if file downloading fails.
+    ///     - `saplingParamsCantMoveDownloadedFile` if file is downloaded but moving to final destination fails.
+    ///     - `saplingParamsInvalidOutputParams` if the downloaded file is invalid.
     @discardableResult
     public static func downloadOutputParameter(_ at: URL, sourceURL: URL, logger: Logger) async throws -> URL {
-        let resultURL = try await downloadFileWithRequestWithContinuation(URLRequest(url: sourceURL), logger: logger, at: at)
+        let resultURL = try await downloadFileWithRequestWithContinuation(sourceURL, logger: logger, at: at)
         try isOutputParamsSHA1Valid(url: resultURL)
         return resultURL
     }
@@ -50,6 +52,11 @@ public enum SaplingParameterDownloader {
     /// - Parameters:
     ///     - spendURL: URL to check whether the parameter is already downloaded
     ///     - outputURL: URL to check whether the parameter is already downloaded
+    /// - Throws:
+    ///     - `saplingParamsDownload` if file downloading fails.
+    ///     - `saplingParamsCantMoveDownloadedFile` if file is downloaded but moving to final destination fails.
+    ///     - `saplingParamsInvalidSpendParams` if the downloaded file is invalid.
+    ///     - `saplingParamsInvalidOutputParams` if the downloaded file is invalid.
     @discardableResult
     public static func downloadParamsIfnotPresent(
         spendURL: URL,
@@ -58,15 +65,11 @@ public enum SaplingParameterDownloader {
         outputSourceURL: URL,
         logger: Logger
     ) async throws -> (spend: URL, output: URL) {
-        do {
-            async let spendResultURL = ensureSpendParameter(at: spendURL, sourceURL: spendSourceURL, logger: logger)
-            async let outputResultURL = ensureOutputParameter(at: outputURL, sourceURL: outputSourceURL, logger: logger)
-            
-            let results = try await [spendResultURL, outputResultURL]
-            return (spend: results[0], output: results[1])
-        } catch {
-            throw Errors.failed(error: error)
-        }
+        async let spendResultURL = ensureSpendParameter(at: spendURL, sourceURL: spendSourceURL, logger: logger)
+        async let outputResultURL = ensureOutputParameter(at: outputURL, sourceURL: outputSourceURL, logger: logger)
+
+        let results = try await [spendResultURL, outputResultURL]
+        return (spend: results[0], output: results[1])
     }
         
     static func ensureSpendParameter(at url: URL, sourceURL: URL, logger: Logger) async throws -> URL {
@@ -93,15 +96,15 @@ public enum SaplingParameterDownloader {
     
     static func isSpendParamsSHA1Valid(url: URL) throws {
         if Insecure.SHA1.hash(data: try Data(contentsOf: url)).hexString != Constants.spendParamFileSHA1 {
-            try FileManager.default.removeItem(at: url)
-            throw Errors.spendParamsInvalidSHA1
+            try? FileManager.default.removeItem(at: url)
+            throw ZcashError.saplingParamsInvalidSpendParams
         }
     }
 
     static func isOutputParamsSHA1Valid(url: URL) throws {
         if Insecure.SHA1.hash(data: try Data(contentsOf: url)).hexString != Constants.outputParamFileSHA1 {
-            try FileManager.default.removeItem(at: url)
-            throw Errors.outputParamsInvalidSHA1
+            try? FileManager.default.removeItem(at: url)
+            throw ZcashError.saplingParamsInvalidOutputParams
         }
     }
 }
@@ -113,12 +116,12 @@ private extension SaplingParameterDownloader {
     }
 
     static func downloadFileWithRequestWithContinuation(
-    _ request: URLRequest,
+    _ sourceURL: URL,
     logger: Logger,
     at destination: URL
     ) async throws -> URL {
         return try await withCheckedThrowingContinuation { continuation in
-            downloadFileWithRequest(request, at: destination, logger: logger) { result in
+            downloadFileWithRequest(sourceURL, at: destination, logger: logger) { result in
                 switch result {
                 case .success(let outputResultURL):
                     continuation.resume(returning: outputResultURL)
@@ -130,22 +133,23 @@ private extension SaplingParameterDownloader {
     }
 
     static func downloadFileWithRequest(
-        _ request: URLRequest,
+        _ sourceURL: URL,
         at destination: URL,
         logger: Logger,
         result: @escaping (Result<URL, Error>) -> Void
     ) {
-        logger.debug("Downloading sapling file from \(String(describing: request.url))")
+        logger.debug("Downloading sapling file from \(sourceURL)")
+        let request = URLRequest(url: sourceURL)
         let task = URLSession.shared.downloadTask(with: request) { url, _, error in
             if let error {
-                result(.failure(Errors.failed(error: error)))
+                result(.failure(ZcashError.saplingParamsDownload(error, sourceURL)))
                 return
             } else if let localUrl = url {
                 do {
                     try FileManager.default.moveItem(at: localUrl, to: destination)
                     result(.success(destination))
                 } catch {
-                    result(.failure(error))
+                    result(.failure(ZcashError.saplingParamsCantMoveDownloadedFile(error, sourceURL, destination)))
                 }
             }
         }

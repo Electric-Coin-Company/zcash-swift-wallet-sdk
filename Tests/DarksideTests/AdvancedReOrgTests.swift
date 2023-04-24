@@ -454,7 +454,7 @@ class AdvancedReOrgTests: XCTestCase {
         try coordinator.applyStaged(blockheight: 663195)
         sleep(1)
         let firstSyncExpectation = XCTestExpectation(description: "first sync expectation")
-        
+
         var preReorgTotalBalance = Zatoshi.zero
         var preReorgVerifiedBalance = Zatoshi.zero
         try await coordinator.sync(

@@ -1,0 +1,40 @@
+/*
+!!!!! To edit this file go to ZcashErrorCodeDefinition first and udate/add codes. Then run generateErrorCode.sh script to regenerate this file.
+
+By design each error should be used only at one place in the app. Thanks to that it is possible to identify exact line in the code from which the
+error originates. And it can help with debugging.
+*/
+
+import Foundation
+
+{% for type in types.enums where type.name == "ZcashErrorDefinition" %}
+public enum ZcashError: Equatable, Error {
+    {% for case in type.cases %}
+    {% for docLine in case.documentation %}
+    /// {{ docLine }}
+    {% endfor %}
+    /// {{ case.annotations["code"] }}
+    case {{ case.name }}{% if case.associatedValues.count > 0 %}({% for value in case.associatedValues %}_ {{ value.externalName }}: {{ value.typeName }}{% if not forloop.last%}, {% endif %}{% endfor %}){% endif %}
+    {% endfor %}
+
+    public var message: String {
+        switch self {
+        {% for case in type.cases %}
+        case .{{ case.name }}: return "{{ case.documentation[0] }}"
+        {% endfor %}
+        }
+    }
+
+    public var code: ZcashErrorCode {
+        switch self {
+            {% for case in type.cases %}
+        case .{{ case.name }}: return .{{ case.name}}
+            {% endfor %}
+        }
+    }
+
+    public static func == (lhs: ZcashError, rhs: ZcashError) -> Bool {
+        return lhs.code == rhs.code
+    }
+}
+{% endfor %}

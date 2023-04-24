@@ -180,17 +180,18 @@ class BlockScanTests: XCTestCase {
 
         try await fsBlockRepository.create()
         
-        var processorConfig = CompactBlockProcessor.Configuration(
+        let processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
             dataDb: dataDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL,
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
+            downloadBatchSize: 1000,
+            scanningBatchSize: 1000,
             walletBirthdayProvider: { [weak self] in self?.network.constants.saplingActivationHeight ?? .zero },
             network: network
         )
-        processorConfig.scanningBatchSize = 1000
         
         let compactBlockProcessor = CompactBlockProcessor(
             service: service,
@@ -235,9 +236,9 @@ class BlockScanTests: XCTestCase {
             try await compactBlockProcessor.blockScanner.scanBlocks(at: range, totalProgressRange: range, didScan: { _ in })
             XCTAssertFalse(Task.isCancelled)
         } catch {
-            if let lwdError = error as? LightWalletServiceError {
+            if let lwdError = error as? ZcashError {
                 switch lwdError {
-                case .timeOut:
+                case .serviceBlockStreamFailed:
                     XCTAssert(true)
                 default:
                     XCTFail("LWD Service error found, but should have been a timeLimit reached Error - \(lwdError)")
