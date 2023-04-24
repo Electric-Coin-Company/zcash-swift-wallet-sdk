@@ -123,7 +123,7 @@ public class SDKSynchronizer: Synchronizer {
 
     func throwIfUnprepared() throws {
         if !latestState.syncStatus.isPrepared {
-            throw SynchronizerError.notPrepared
+            throw ZcashError.synchronizerNotPrepared
         }
     }
 
@@ -169,7 +169,7 @@ public class SDKSynchronizer: Synchronizer {
     public func start(retry: Bool = false) async throws {
         switch await status {
         case .unprepared:
-            throw SynchronizerError.notPrepared
+            throw ZcashError.synchronizerNotPrepared
 
         case .syncing, .enhancing, .fetching:
             logger.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
@@ -245,7 +245,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func failed(error: Error) async {
-        await updateStatus(.error(self.mapError(error)))
+        await updateStatus(.error(error))
     }
 
     private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) async {
@@ -299,20 +299,16 @@ public class SDKSynchronizer: Synchronizer {
     ) async throws -> PendingTransactionEntity {
         try throwIfUnprepared()
 
-        do {
-            try await SaplingParameterDownloader.downloadParamsIfnotPresent(
-                spendURL: initializer.spendParamsURL,
-                spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
-                outputURL: initializer.outputParamsURL,
-                outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
-                logger: logger
-            )
-        } catch {
-            throw SynchronizerError.parameterMissing(underlyingError: error)
-        }
+        try await SaplingParameterDownloader.downloadParamsIfnotPresent(
+            spendURL: initializer.spendParamsURL,
+            spendSourceURL: initializer.saplingParamsSourceURL.spendParamFileURL,
+            outputURL: initializer.outputParamsURL,
+            outputSourceURL: initializer.saplingParamsSourceURL.outputParamFileURL,
+            logger: logger
+        )
 
         if case Recipient.transparent = toAddress, memo != nil {
-            throw SynchronizerError.generalError(message: "Memos can't be sent to transparent addresses.")
+            throw ZcashError.synchronizerSendMemoToTransparentAddress
         }
 
         return try await createToAddress(
@@ -332,32 +328,28 @@ public class SDKSynchronizer: Synchronizer {
 
         // let's see if there are funds to shield
         let accountIndex = Int(spendingKey.account)
-        do {
-            let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
-
-            // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
-            guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.latestScannedHeight) else {
-                throw ShieldFundsError.insuficientTransparentFunds
-            }
-
-            let shieldingSpend = try await transactionManager.initSpend(
-                zatoshi: tBalance.verified,
-                recipient: .internalAccount(spendingKey.account),
-                memo: try memo.asMemoBytes(),
-                from: accountIndex
-            )
-
-            // TODO: [#487] Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
-            let transaction = try await transactionManager.encodeShieldingTransaction(
-                spendingKey: spendingKey,
-                shieldingThreshold: shieldingThreshold,
-                pendingTransaction: shieldingSpend
-            )
-
-            return try await transactionManager.submit(pendingTransaction: transaction)
-        } catch {
-            throw error
+        let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
+        
+        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
+        guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.latestScannedHeight) else {
+            throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
+        
+        let shieldingSpend = try await transactionManager.initSpend(
+            zatoshi: tBalance.verified,
+            recipient: .internalAccount(spendingKey.account),
+            memo: try memo.asMemoBytes(),
+            from: accountIndex
+        )
+        
+        // TODO: [#487] Task will be removed when this method is changed to async, issue 487, https://github.com/zcash/ZcashLightClientKit/issues/487
+        let transaction = try await transactionManager.encodeShieldingTransaction(
+            spendingKey: spendingKey,
+            shieldingThreshold: shieldingThreshold,
+            pendingTransaction: shieldingSpend
+        )
+        
+        return try await transactionManager.submit(pendingTransaction: transaction)
     }
 
     func createToAddress(
@@ -366,23 +358,19 @@ public class SDKSynchronizer: Synchronizer {
         recipient: Recipient,
         memo: Memo?
     ) async throws -> PendingTransactionEntity {
-        do {
-            let spend = try await transactionManager.initSpend(
-                zatoshi: zatoshi,
-                recipient: .address(recipient),
-                memo: memo?.asMemoBytes(),
-                from: Int(spendingKey.account)
-            )
-
-            let transaction = try await transactionManager.encode(
-                spendingKey: spendingKey,
-                pendingTransaction: spend
-            )
-            let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
-            return submittedTx
-        } catch {
-            throw error
-        }
+        let spend = try await transactionManager.initSpend(
+            zatoshi: zatoshi,
+            recipient: .address(recipient),
+            memo: memo?.asMemoBytes(),
+            from: Int(spendingKey.account)
+        )
+        
+        let transaction = try await transactionManager.encode(
+            spendingKey: spendingKey,
+            pendingTransaction: spend
+        )
+        let submittedTx = try await transactionManager.submit(pendingTransaction: transaction)
+        return submittedTx
     }
 
     public func cancelSpend(transaction: PendingTransactionEntity) async -> Bool {
@@ -441,23 +429,19 @@ public class SDKSynchronizer: Synchronizer {
         try throwIfUnprepared()
 
         guard initializer.isValidTransparentAddress(address) else {
-            throw SynchronizerError.generalError(message: "invalid t-address")
+            throw ZcashError.synchronizerLatestUTXOsInvalidTAddress
         }
         
         let stream = initializer.lightWalletService.fetchUTXOs(for: address, height: network.constants.saplingActivationHeight)
         
-        do {
-            // swiftlint:disable:next array_constructor
-            var utxos: [UnspentTransactionOutputEntity] = []
-            for try await transactionEntity in stream {
-                utxos.append(transactionEntity)
-            }
-            try await self.utxoRepository.clearAll(address: address)
-            try await self.utxoRepository.store(utxos: utxos)
-            return utxos
-        } catch {
-            throw SynchronizerError.generalError(message: "\(error)")
+        // swiftlint:disable:next array_constructor
+        var utxos: [UnspentTransactionOutputEntity] = []
+        for try await transactionEntity in stream {
+            utxos.append(transactionEntity)
         }
+        try await self.utxoRepository.clearAll(address: address)
+        try await self.utxoRepository.store(utxos: utxos)
+        return utxos
     }
 
     public func refreshUTXOs(address: TransparentAddress, from height: BlockHeight) async throws -> RefreshedUTXOs {
@@ -500,7 +484,7 @@ public class SDKSynchronizer: Synchronizer {
         let subject = PassthroughSubject<Void, Error>()
         Task(priority: .high) {
             if !latestState.syncStatus.isPrepared {
-                subject.send(completion: .failure(SynchronizerError.notPrepared))
+                subject.send(completion: .failure(ZcashError.synchronizerNotPrepared))
                 return
             }
 
@@ -519,7 +503,7 @@ public class SDKSynchronizer: Synchronizer {
 
             case .transaction(let transaction):
                 guard let txHeight = transaction.anchor(network: self.network) else {
-                    throw SynchronizerError.rewindErrorUnknownArchorHeight
+                    throw ZcashError.synchronizerRewindUnknownArchorHeight
                 }
                 height = txHeight
             }
@@ -533,7 +517,7 @@ public class SDKSynchronizer: Synchronizer {
                             try await self?.transactionManager.handleReorg(at: rewindHeight)
                             subject.send(completion: .finished)
                         } catch {
-                            subject.send(completion: .failure(SynchronizerError.rewindError(underlyingError: error)))
+                            subject.send(completion: .failure(error))
                         }
 
                     case let .failure(error):
@@ -669,43 +653,6 @@ public class SDKSynchronizer: Synchronizer {
         streamsUpdateQueue.async { [weak self] in
             self?.eventSubject.send(.minedTransaction(transaction))
         }
-    }
-
-    // swiftlint:disable cyclomatic_complexity
-    private func mapError(_ error: Error) -> SynchronizerError {
-        if let zcashError = error as? ZcashError {
-            switch zcashError {
-            case .compactBlockProcessorDataDbInitFailed(let path):
-                return SynchronizerError.initFailed(message: "DataDb init failed at path: \(path)")
-            case .compactBlockProcessorConnection(let message):
-                return SynchronizerError.connectionFailed(message: message)
-            case .compactBlockProcessorInvalidConfiguration:
-                return SynchronizerError.generalError(message: "Invalid Configuration")
-            case .compactBlockProcessorMissingDbPath(let path):
-                return SynchronizerError.initFailed(message: "missing Db path: \(path)")
-            case .compactBlockProcessorMaxAttemptsReached(attempts: let attempts):
-                return SynchronizerError.maxRetryAttemptsReached(attempts: attempts)
-            case let .compactBlockProcessorGrpcError(statusCode, message):
-                return SynchronizerError.connectionError(status: statusCode, message: message)
-            case .compactBlockProcessorConnectionTimeout:
-                return SynchronizerError.networkTimeout
-            case .compactBlockProcessorUnspecified(let underlyingError):
-                return SynchronizerError.uncategorized(underlyingError: underlyingError)
-            case .compactBlockProcessorCritical:
-                return SynchronizerError.criticalError
-            case .compactBlockProcessorInvalidAccount:
-                return SynchronizerError.invalidAccount
-            case .compactBlockProcessorWrongConsensusBranchId:
-                return SynchronizerError.lightwalletdValidationFailed(underlyingError: zcashError)
-            case .compactBlockProcessorNetworkMismatch:
-                return SynchronizerError.lightwalletdValidationFailed(underlyingError: zcashError)
-            case .compactBlockProcessorSaplingActivationMismatch:
-                return SynchronizerError.lightwalletdValidationFailed(underlyingError: zcashError)
-            default: break
-            }
-        }
-
-        return SynchronizerError.uncategorized(underlyingError: error)
     }
 }
 

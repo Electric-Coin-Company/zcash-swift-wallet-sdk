@@ -587,6 +587,21 @@ public enum ZcashError: Equatable, Error {
     /// Consensus BranchIDs don't match this is probably an API or programming error.
     /// ZCBPEO0017
     case compactBlockProcessorConsensusBranchID
+    /// The synchronizer is unprepared.
+    /// ZSYNCO0001
+    case synchronizerNotPrepared
+    /// Memos can't be sent to transparent addresses.
+    /// ZSYNCO0002
+    case synchronizerSendMemoToTransparentAddress
+    /// There is not enough transparent funds to cover fee for the shielding.
+    /// ZSYNCO0003
+    case synchronizerShieldFundsInsuficientTransparentFunds
+    /// LatestUTXOs for the address failed, invalid t-address.
+    /// ZSYNCO0004
+    case synchronizerLatestUTXOsInvalidTAddress
+    /// Rewind failed, unknown archor height
+    /// ZSYNCO0005
+    case synchronizerRewindUnknownArchorHeight
 
     public var message: String {
         switch self {
@@ -758,6 +773,11 @@ public enum ZcashError: Equatable, Error {
         case .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb: return "Deletion of readable file at the provided URL failed."
         case .compactBlockProcessorChainName: return "Chain name does not match. Expected either 'test' or 'main'. This is probably an API or programming error."
         case .compactBlockProcessorConsensusBranchID: return "Consensus BranchIDs don't match this is probably an API or programming error."
+        case .synchronizerNotPrepared: return "The synchronizer is unprepared."
+        case .synchronizerSendMemoToTransparentAddress: return "Memos can't be sent to transparent addresses."
+        case .synchronizerShieldFundsInsuficientTransparentFunds: return "There is not enough transparent funds to cover fee for the shielding."
+        case .synchronizerLatestUTXOsInvalidTAddress: return "LatestUTXOs for the address failed, invalid t-address."
+        case .synchronizerRewindUnknownArchorHeight: return "Rewind failed, unknown archor height"
         }
     }
 
@@ -931,6 +951,11 @@ public enum ZcashError: Equatable, Error {
         case .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb: return .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb
         case .compactBlockProcessorChainName: return .compactBlockProcessorChainName
         case .compactBlockProcessorConsensusBranchID: return .compactBlockProcessorConsensusBranchID
+        case .synchronizerNotPrepared: return .synchronizerNotPrepared
+        case .synchronizerSendMemoToTransparentAddress: return .synchronizerSendMemoToTransparentAddress
+        case .synchronizerShieldFundsInsuficientTransparentFunds: return .synchronizerShieldFundsInsuficientTransparentFunds
+        case .synchronizerLatestUTXOsInvalidTAddress: return .synchronizerLatestUTXOsInvalidTAddress
+        case .synchronizerRewindUnknownArchorHeight: return .synchronizerRewindUnknownArchorHeight
         }
     }
 

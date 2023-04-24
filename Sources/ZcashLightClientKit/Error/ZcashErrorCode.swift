@@ -345,4 +345,14 @@ public enum ZcashErrorCode: String {
     case compactBlockProcessorChainName = "ZCBPEO0016"
     /// Consensus BranchIDs don't match this is probably an API or programming error.
     case compactBlockProcessorConsensusBranchID = "ZCBPEO0017"
+    /// The synchronizer is unprepared.
+    case synchronizerNotPrepared = "ZSYNCO0001"
+    /// Memos can't be sent to transparent addresses.
+    case synchronizerSendMemoToTransparentAddress = "ZSYNCO0002"
+    /// There is not enough transparent funds to cover fee for the shielding.
+    case synchronizerShieldFundsInsuficientTransparentFunds = "ZSYNCO0003"
+    /// LatestUTXOs for the address failed, invalid t-address.
+    case synchronizerLatestUTXOsInvalidTAddress = "ZSYNCO0004"
+    /// Rewind failed, unknown archor height
+    case synchronizerRewindUnknownArchorHeight = "ZSYNCO0005"
 }

@@ -9,44 +9,6 @@
 import Combine
 import Foundation
 
-/// Represents errors thrown by a Synchronizer
-public enum SynchronizerError: Error {
-    case initFailed(message: String) // ZcashLightClientKit.SynchronizerError error 0.
-    case notPrepared // ZcashLightClientKit.SynchronizerError error 9.
-    case syncFailed // ZcashLightClientKit.SynchronizerError error 10.
-    case connectionFailed(message: Error) // ZcashLightClientKit.SynchronizerError error 1.
-    case generalError(message: String) // ZcashLightClientKit.SynchronizerError error 2.
-    case maxRetryAttemptsReached(attempts: Int) // ZcashLightClientKit.SynchronizerError error 3.
-    case connectionError(status: Int, message: String) // ZcashLightClientKit.SynchronizerError error 4.
-    case networkTimeout // ZcashLightClientKit.SynchronizerError error 11.
-    case uncategorized(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 5.
-    case criticalError // ZcashLightClientKit.SynchronizerError error 12.
-    case parameterMissing(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 6.
-    case rewindError(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 7.
-    case rewindErrorUnknownArchorHeight // ZcashLightClientKit.SynchronizerError error 13.
-    case invalidAccount // ZcashLightClientKit.SynchronizerError error 14.
-    case lightwalletdValidationFailed(underlyingError: Error) // ZcashLightClientKit.SynchronizerError error 8.
-}
-
-public enum ShieldFundsError: Error {
-    case noUTXOFound
-    case insuficientTransparentFunds
-    case shieldingFailed(underlyingError: Error)
-}
-
-extension ShieldFundsError: LocalizedError {
-    public var errorDescription: String? {
-        switch self {
-        case .noUTXOFound:
-            return "Could not find UTXOs for the given t-address"
-        case .insuficientTransparentFunds:
-            return "You don't have enough confirmed transparent funds to perform a shielding transaction."
-        case .shieldingFailed(let underlyingError):
-            return "Shielding transaction failed. Reason: \(underlyingError)"
-        }
-    }
-}
-
 /// Represent the connection state to the lightwalletd server
 public enum ConnectionState {
     /// not in use
@@ -364,7 +326,7 @@ public enum SyncStatus: Equatable {
     /// When set, a UI element may want to turn red.
     case disconnected
 
-    case error(_ error: SynchronizerError)
+    case error(_ error: Error)
     
     public var isSyncing: Bool {
         switch self {
