@@ -64,7 +64,7 @@ public enum KeyDerivationErrors: Error {
 public class DerivationTool: KeyDeriving {
     let backend: ZcashKeyDerivationBackendWelding
     
-    init(networkType: NetworkType) {
+    public init(networkType: NetworkType) {
         self.backend = ZcashKeyDerivationBackend(networkType: networkType)
     }
 

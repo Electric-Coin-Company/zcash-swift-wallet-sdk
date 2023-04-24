@@ -406,10 +406,6 @@ public class Initializer {
     public func isValidTransparentAddress(_ address: String) -> Bool {
         DerivationTool(networkType: network.networkType).isValidTransparentAddress(address)
     }
-
-    public func makeDerivationTool() -> DerivationTool {
-        return DerivationTool(networkType: network.networkType)
-    }
 }
 
 extension InitializerError: LocalizedError {
