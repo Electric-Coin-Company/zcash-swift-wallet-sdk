@@ -622,10 +622,10 @@ class AdvancedReOrgTests: XCTestCase {
         })
         
         /*
-        2. stage 4 blocks from incomingTxHeight - 1 with different nonce
+        2. stage 10 blocks from incomingTxHeight - 1 with different nonce
         */
-        let blockCount = 4
-        try coordinator.stageBlockCreate(height: incomingTxHeight - 1, count: blockCount, nonce: Int.random(in: 0 ... Int.max))
+        let blockCount = 10
+        try coordinator.stageBlockCreate(height: incomingTxHeight - 1, count: blockCount, nonce: 1)
         
         /*
         3. stage otherTx at incomingTxHeight
@@ -634,16 +634,13 @@ class AdvancedReOrgTests: XCTestCase {
         
         /*
         4. stage incomingTx at incomingTxHeight
-        5. applyHeight(incomingHeight + 3)
-        6. sync to latest height
-        7. check that balances still match
         */
         try coordinator.stageTransaction(rawTransaction, at: incomingTxHeight)
         
         /*
-        5. applyHeight(incomingHeight + 2)
+        5. applyHeight(incomingHeight + 3)
         */
-        try coordinator.applyStaged(blockheight: incomingTxHeight + 2)
+        try coordinator.applyStaged(blockheight: incomingTxHeight + 3)
 
         sleep(1)
         
@@ -657,7 +654,7 @@ class AdvancedReOrgTests: XCTestCase {
                 lastSyncExpectation.fulfill()
             }, error: self.handleError
         )
-        
+        wait(for: [lastSyncExpectation], timeout: 30)
         /*
         7. check that balances still match
         */
@@ -666,7 +663,7 @@ class AdvancedReOrgTests: XCTestCase {
         XCTAssertEqual(expectedVerifiedBalance, initialVerifiedBalance)
         XCTAssertEqual(expectedBalance, initialBalance)
         
-        wait(for: [lastSyncExpectation], timeout: 30)
+
     }
     
     func testTxIndexReorg() async throws {
@@ -1096,7 +1093,7 @@ class AdvancedReOrgTests: XCTestCase {
         let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         
-        try coordinator.applyStaged(blockheight: reorgHeight)
+        try coordinator.applyStaged(blockheight: reorgHeight - 1)
         sleep(1)
         
         let secondSyncExpectation = XCTestExpectation(description: "second sync expectation")
