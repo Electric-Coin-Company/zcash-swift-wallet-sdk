@@ -57,11 +57,11 @@ class SynchronizerTests: XCTestCase {
             return
         }
         let seedBytes = [UInt8](seedData)
-        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
             seed: seedBytes,
             accountIndex: 0
         )
-        let ufvk = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let endpoint = LightWalletEndpoint(address: "lightwalletd.electriccoin.co", port: 9067, secure: true)
 

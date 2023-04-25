@@ -50,33 +50,33 @@ class DerivationToolMainnetTests: XCTestCase {
     let derivationTool = TestsData(networkType: .mainnet).derivationTools
     let expectedTransparentAddress = TransparentAddress(validatedEncoding: "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz")
 
-    func testDeriveViewingKeysFromSeed() async throws {
+    func testDeriveViewingKeysFromSeed() throws {
         let seedBytes = [UInt8](seedData)
 
-        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
-        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         XCTAssertEqual(expectedViewingKey, viewingKey)
     }
     
-    func testDeriveViewingKeyFromSpendingKeys() async throws {
-        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: expectedSpendingKey)
+    func testDeriveViewingKeyFromSpendingKeys() throws {
+        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: expectedSpendingKey)
         XCTAssertEqual(expectedViewingKey, viewingKey)
     }
     
-    func testDeriveSpendingKeysFromSeed() async throws {
+    func testDeriveSpendingKeysFromSeed() throws {
         let seedBytes = [UInt8](seedData)
         
-        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: 0)
 
         XCTAssertEqual(expectedSpendingKey, spendingKey)
     }
 
-    func testDeriveUnifiedSpendingKeyFromSeed() async throws {
+    func testDeriveUnifiedSpendingKeyFromSeed() throws {
         let account = 0
         let seedBytes = [UInt8](seedData)
 
-        _ = try await derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: account)
+        _ = try derivationTool.deriveUnifiedSpendingKey(seed: seedBytes, accountIndex: account)
     }
 
     func testGetTransparentAddressFromUA() throws {
@@ -104,12 +104,12 @@ class DerivationToolMainnetTests: XCTestCase {
         )
     }
     
-    func testDeriveQuiteALotOfUnifiedKeysFromSeed() async throws {
+    func testDeriveQuiteALotOfUnifiedKeysFromSeed() throws {
         let numberOfAccounts: Int = 10
         var ufvks: [UnifiedFullViewingKey] = []
         for i in 0..<numberOfAccounts {
-            let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: [UInt8](seedData), accountIndex: i)
-            let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+            let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: [UInt8](seedData), accountIndex: i)
+            let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
             ufvks.append(viewingKey)
         }
 

@@ -100,8 +100,8 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         XCTAssertEqual(synchronizer.connectionState, .reconnecting)
     }
 
-    func testPrepareSucceed() async throws {
-        let mockedViewingKey = await self.data.viewingKey
+    func testPrepareSucceed() throws {
+        let mockedViewingKey = self.data.viewingKey
         synchronizerMock.prepareWithViewingKeysWalletBirthdayClosure = { receivedSeed, receivedViewingKeys, receivedWalletBirthday in
             XCTAssertEqual(receivedSeed, self.data.seed)
             XCTAssertEqual(receivedViewingKeys, [mockedViewingKey])
@@ -130,8 +130,8 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testPrepareThrowsError() async throws {
-        let mockedViewingKey = await self.data.viewingKey
+    func testPrepareThrowsError() throws {
+        let mockedViewingKey = self.data.viewingKey
         synchronizerMock.prepareWithViewingKeysWalletBirthdayClosure = { _, _, _ in
             throw "Some error"
         }
@@ -319,11 +319,11 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testSendToAddressSucceed() async throws {
+    func testSendToAddressSucceed() throws {
         let amount = Zatoshi(100)
         let recipient: Recipient = .transparent(data.transparentAddress)
         let memo: Memo = .text(try MemoText("Some message"))
-        let mockedSpendingKey = await data.spendingKey
+        let mockedSpendingKey = data.spendingKey
 
         synchronizerMock
             .sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { receivedSpendingKey, receivedZatoshi, receivedToAddress, receivedMemo in
@@ -355,11 +355,11 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testSendToAddressThrowsError() async throws {
+    func testSendToAddressThrowsError() throws {
         let amount = Zatoshi(100)
         let recipient: Recipient = .transparent(data.transparentAddress)
         let memo: Memo = .text(try MemoText("Some message"))
-        let mockedSpendingKey = await data.spendingKey
+        let mockedSpendingKey = data.spendingKey
 
         synchronizerMock.sendToAddressSpendingKeyZatoshiToAddressMemoClosure = { _, _, _, _ in
             throw "Some error"
@@ -386,10 +386,10 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testShieldFundsSucceed() async throws {
+    func testShieldFundsSucceed() throws {
         let memo: Memo = .text(try MemoText("Some message"))
         let shieldingThreshold = Zatoshi(1)
-        let mockedSpendingKey = await data.spendingKey
+        let mockedSpendingKey = data.spendingKey
 
         synchronizerMock.shieldFundsSpendingKeyMemoShieldingThresholdClosure = { receivedSpendingKey, receivedMemo, receivedShieldingThreshold in
             XCTAssertEqual(receivedSpendingKey, mockedSpendingKey)
@@ -419,10 +419,10 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testShieldFundsThrowsError() async throws {
+    func testShieldFundsThrowsError() throws {
         let memo: Memo = .text(try MemoText("Some message"))
         let shieldingThreshold = Zatoshi(1)
-        let mockedSpendingKey = await data.spendingKey
+        let mockedSpendingKey = data.spendingKey
 
         synchronizerMock.shieldFundsSpendingKeyMemoShieldingThresholdClosure = { _, _, _ in
             throw "Some error"

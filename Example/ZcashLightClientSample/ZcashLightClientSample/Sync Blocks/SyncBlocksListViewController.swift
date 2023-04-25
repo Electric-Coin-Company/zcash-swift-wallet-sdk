@@ -70,8 +70,8 @@ class SyncBlocksListViewController: UIViewController {
                 do {
                     if syncStatus == .unprepared {
                         let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-                        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: synchronizerData.seed, accountIndex: 0)
-                        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+                        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: synchronizerData.seed, accountIndex: 0)
+                        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
                         _ = try! await synchronizer.prepare(
                             with: synchronizerData.seed,

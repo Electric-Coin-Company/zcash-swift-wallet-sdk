@@ -43,14 +43,12 @@ class SendViewController: UIViewController {
         self.view.addGestureRecognizer(tapRecognizer)
         setUp()
 
-        Task { @MainActor in
-            closureSynchronizer.prepare(
-                with: DemoAppConfig.defaultSeed,
-                viewingKeys: [await AppDelegate.shared.sharedViewingKey],
-                walletBirthday: DemoAppConfig.defaultBirthdayHeight
-            ) { result in
-                loggerProxy.debug("Prepare result: \(result)")
-            }
+        closureSynchronizer.prepare(
+            with: DemoAppConfig.defaultSeed,
+            viewingKeys: [AppDelegate.shared.sharedViewingKey],
+            walletBirthday: DemoAppConfig.defaultBirthdayHeight
+        ) { result in
+            loggerProxy.debug("Prepare result: \(result)")
         }
     }
     
@@ -219,7 +217,7 @@ class SendViewController: UIViewController {
             }
 
             let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-            guard let spendingKey = try? await derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0) else {
+            guard let spendingKey = try? derivationTool.deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0) else {
                 loggerProxy.error("NO SPENDING KEY")
                 return
             }
