@@ -258,11 +258,11 @@ class SynchronizerOfflineTests: XCTestCase {
 
         do {
             let derivationTool = DerivationTool(networkType: network.networkType)
-            let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
+            let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
                 seed: Environment.seedBytes,
                 accountIndex: 0
             )
-            let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+            let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
             _ = try await synchronizer.prepare(with: Environment.seedBytes, viewingKeys: [viewingKey], walletBirthday: 123000)
             XCTFail("Failure of prepare is expected.")
         } catch {

@@ -32,13 +32,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     var sharedViewingKey: UnifiedFullViewingKey {
-        get async {
-            let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
-            let spendingKey = try! await derivationTool
-                .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
+        let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
+        let spendingKey = try! derivationTool
+            .deriveUnifiedSpendingKey(seed: DemoAppConfig.defaultSeed, accountIndex: 0)
 
-            return try! await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
-        }
+        return try! derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
     }
     
     var sharedWallet: Initializer {

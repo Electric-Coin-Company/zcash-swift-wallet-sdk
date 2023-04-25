@@ -82,12 +82,12 @@ class TestCoordinator {
 
         let derivationTool = DerivationTool(networkType: network.networkType)
 
-        self.spendingKey = try await derivationTool.deriveUnifiedSpendingKey(
+        self.spendingKey = try derivationTool.deriveUnifiedSpendingKey(
             seed: Environment.seedBytes,
             accountIndex: 0
         )
 
-        self.viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        self.viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
         self.birthday = walletBirthday
         self.network = network
 

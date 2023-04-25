@@ -60,7 +60,7 @@ protocol ZcashKeyDerivationBackendWelding {
     /// - Parameter seed: a Byte Array with the seed
     /// - Parameter accountIndex:account index that the key can spend from
     /// - Throws: `rustDeriveUnifiedSpendingKey` if rust layer returns error.
-    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) async throws -> UnifiedSpendingKey
+    func deriveUnifiedSpendingKey(from seed: [UInt8], accountIndex: Int32) throws -> UnifiedSpendingKey
 
     /// Derives a `UnifiedFullViewingKey` from a `UnifiedSpendingKey`
     /// - Parameter spendingKey: the `UnifiedSpendingKey` to derive from
@@ -68,7 +68,7 @@ protocol ZcashKeyDerivationBackendWelding {
     /// - Throws:
     ///     - `rustDeriveUnifiedFullViewingKey` if rust layer returns error.
     ///     - `rustDeriveUnifiedFullViewingKeyInvalidDerivedKey` if derived viewing key is invalid.
-    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) throws -> UnifiedFullViewingKey
 
     /// Returns the Sapling receiver within the given Unified Address, if any.
     /// - Parameter uAddr: a `UnifiedAddress`

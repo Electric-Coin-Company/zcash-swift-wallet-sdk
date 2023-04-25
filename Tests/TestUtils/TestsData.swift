@@ -90,16 +90,8 @@ class TestsData {
     }()
 
     var seed: [UInt8] = Environment.seedBytes
-    var spendingKey: UnifiedSpendingKey {
-        get async {
-            try! await derivationTools.deriveUnifiedSpendingKey(seed: seed, accountIndex: 0)
-        }
-    }
-    var viewingKey: UnifiedFullViewingKey {
-        get async {
-            try! await derivationTools.deriveUnifiedFullViewingKey(from: spendingKey)
-        }
-    }
+    var spendingKey: UnifiedSpendingKey { try! derivationTools.deriveUnifiedSpendingKey(seed: seed, accountIndex: 0) }
+    var viewingKey: UnifiedFullViewingKey { try! derivationTools.deriveUnifiedFullViewingKey(from: spendingKey) }
     var birthday: BlockHeight = 123000
 
     init(networkType: NetworkType) {

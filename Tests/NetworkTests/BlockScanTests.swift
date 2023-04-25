@@ -147,8 +147,8 @@ class BlockScanTests: XCTestCase {
         }
 
         let derivationTool = DerivationTool(networkType: .testnet)
-        let spendingKey = try await derivationTool.deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
-        let viewingKey = try await derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
+        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(seed: Array(seed.utf8), accountIndex: 0)
+        let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         do {
             try await rustBackend.initAccountsTable(ufvks: [viewingKey])

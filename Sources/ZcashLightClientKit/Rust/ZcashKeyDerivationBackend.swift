@@ -120,7 +120,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
     func deriveUnifiedSpendingKey(
         from seed: [UInt8],
         accountIndex: Int32
-    ) async throws -> UnifiedSpendingKey {
+    ) throws -> UnifiedSpendingKey {
         let binaryKeyPtr = seed.withUnsafeBufferPointer { seedBufferPtr in
             return zcashlc_derive_spending_key(
                 seedBufferPtr.baseAddress,
@@ -139,7 +139,7 @@ struct ZcashKeyDerivationBackend: ZcashKeyDerivationBackendWelding {
         return binaryKey.unsafeToUnifiedSpendingKey(network: networkType)
     }
     
-    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) async throws -> UnifiedFullViewingKey {
+    func deriveUnifiedFullViewingKey(from spendingKey: UnifiedSpendingKey) throws -> UnifiedFullViewingKey {
         let extfvk = try spendingKey.bytes.withUnsafeBufferPointer { uskBufferPtr -> UnsafeMutablePointer<CChar> in
             guard let extfvk = zcashlc_spending_key_to_full_viewing_key(
                 uskBufferPtr.baseAddress,
