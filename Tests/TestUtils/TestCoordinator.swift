@@ -195,7 +195,7 @@ extension TestCoordinator {
     }
     
     func stageBlockCreate(height: BlockHeight, count: Int = 1, nonce: Int = 0) throws {
-        try service.stageBlocksCreate(from: height, count: count, nonce: 0)
+        try service.stageBlocksCreate(from: height, count: count, nonce: nonce)
     }
     
     func applyStaged(blockheight: BlockHeight) throws {
