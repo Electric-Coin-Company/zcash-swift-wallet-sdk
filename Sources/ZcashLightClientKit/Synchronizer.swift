@@ -26,6 +26,7 @@ public enum ConnectionState {
     /// the connection has been closed
     case shutdown
 }
+
 /// Reports the state of a synchronizer.
 public struct SynchronizerState: Equatable {
     /// Unique Identifier for the current sync attempt
@@ -39,6 +40,7 @@ public struct SynchronizerState: Equatable {
     /// transparent balance known to this synchronizer given the data that has processed locally
     public var transparentBalance: WalletBalance
     /// status of the whole sync process
+    var internalSyncStatus: InternalSyncStatus
     public var syncStatus: SyncStatus
     /// height of the latest scanned block known to this synchronizer.
     public var latestScannedHeight: BlockHeight
@@ -54,11 +56,30 @@ public struct SynchronizerState: Equatable {
             syncSessionID: .nullID,
             shieldedBalance: .zero,
             transparentBalance: .zero,
-            syncStatus: .unprepared,
+            internalSyncStatus: .unprepared,
             latestScannedHeight: .zero,
             latestBlockHeight: .zero,
             latestScannedTime: 0
         )
+    }
+    
+    init(
+        syncSessionID: UUID,
+        shieldedBalance: WalletBalance,
+        transparentBalance: WalletBalance,
+        internalSyncStatus: InternalSyncStatus,
+        latestScannedHeight: BlockHeight,
+        latestBlockHeight: BlockHeight,
+        latestScannedTime: TimeInterval
+    ) {
+        self.syncSessionID = syncSessionID
+        self.shieldedBalance = shieldedBalance
+        self.transparentBalance = transparentBalance
+        self.internalSyncStatus = internalSyncStatus
+        self.latestScannedHeight = latestScannedHeight
+        self.latestBlockHeight = latestBlockHeight
+        self.latestScannedTime = latestScannedTime
+        self.syncStatus = internalSyncStatus.mapToSyncStatus()
     }
 }
 
@@ -86,9 +107,9 @@ public protocol Synchronizer: AnyObject {
     var connectionState: ConnectionState { get }
 
     /// This stream is backed by `CurrentValueSubject`. This is primary source of information about what is the SDK doing. New values are emitted when
-    /// `SyncStatus` is changed inside the SDK.
+    /// `InternalSyncStatus` is changed inside the SDK.
     ///
-    /// Synchronization progress is part of the `SyncStatus` so this stream emits lot of values. `throttle` can be used to control amout of values
+    /// Synchronization progress is part of the `InternalSyncStatus` so this stream emits lot of values. `throttle` can be used to control amout of values
     /// delivered. Values are delivered on random background thread.
     var stateStream: AnyPublisher<SynchronizerState, Never> { get }
 
@@ -290,6 +311,55 @@ public protocol Synchronizer: AnyObject {
 }
 
 public enum SyncStatus: Equatable {
+    public static func == (lhs: SyncStatus, rhs: SyncStatus) -> Bool {
+        switch (lhs, rhs) {
+        case (.unprepared, .unprepared): return true
+        case let (.syncing(lhsProgress), .syncing(rhsProgress)): return lhsProgress == rhsProgress
+        case (.upToDate, .upToDate): return true
+        case (.error, .error): return true
+        default: return false
+        }
+    }
+    
+    /// Indicates that this Synchronizer is actively preparing to start,
+    /// which usually involves setting up database tables, migrations or
+    /// taking other maintenance steps that need to occur after an upgrade.
+    case unprepared
+
+    case syncing(_ progress: Float)
+
+    /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
+    /// When set, a UI element may want to turn green.
+    case upToDate
+
+    case error(_ error: Error)
+    
+    public var isSyncing: Bool {
+        guard case .syncing = self else { return true }
+        return false
+    }
+    
+    public var isSynced: Bool {
+        guard case .upToDate = self else { return true }
+        return false
+    }
+
+    public var isPrepared: Bool {
+        guard case .unprepared = self else { return false }
+        return true
+    }
+
+    public var briefDebugDescription: String {
+        switch self {
+        case .unprepared: return "unprepared"
+        case .syncing: return "syncing"
+        case .upToDate: return "up to date"
+        case .error: return "error"
+        }
+    }
+}
+
+enum InternalSyncStatus: Equatable {
     /// Indicates that this Synchronizer is actively preparing to start,
     /// which usually involves setting up database tables, migrations or
     /// taking other maintenance steps that need to occur after an upgrade.
@@ -302,7 +372,7 @@ public enum SyncStatus: Equatable {
     case enhancing(_ progress: EnhancementProgress)
 
     /// fetches the transparent balance and stores it locally
-    case fetching
+    case fetching(_ progress: Float)
 
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
@@ -373,8 +443,8 @@ public enum RewindPolicy {
     case quick
 }
 
-extension SyncStatus {
-    public static func == (lhs: SyncStatus, rhs: SyncStatus) -> Bool {
+extension InternalSyncStatus {
+    public static func == (lhs: InternalSyncStatus, rhs: InternalSyncStatus) -> Bool {
         switch (lhs, rhs) {
         case (.unprepared, .unprepared): return true
         case let (.syncing(lhsProgress), .syncing(rhsProgress)): return lhsProgress == rhsProgress
@@ -389,15 +459,38 @@ extension SyncStatus {
     }
 }
 
-extension SyncStatus {
+extension InternalSyncStatus {
     init(_ blockProcessorProgress: CompactBlockProgress) {
         switch blockProcessorProgress {
         case .syncing(let progressReport):
             self = .syncing(progressReport)
         case .enhance(let enhancingReport):
             self = .enhancing(enhancingReport)
-        case .fetch:
-            self = .fetching
+        case .fetch(let fetchingProgress):
+            self = .fetching(fetchingProgress)
+        }
+    }
+}
+
+extension InternalSyncStatus {
+    func mapToSyncStatus() -> SyncStatus {
+        switch self {
+        case .unprepared:
+            return .unprepared
+        case .syncing(let progress):
+            return .syncing(0.9 * progress.progress)
+        case .enhancing(let progress):
+            return .syncing(0.9 + 0.08 * progress.progress)
+        case .fetching(let progress):
+            return .syncing(0.98 + 0.02 * progress)
+        case .synced:
+            return .upToDate
+        case .stopped:
+            return .upToDate
+        case .disconnected:
+            return .error(ZcashError.synchronizerDisconnected)
+        case .error(let error):
+            return .error(error)
         }
     }
 }

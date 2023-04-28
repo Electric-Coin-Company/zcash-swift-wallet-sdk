@@ -10,7 +10,7 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-class SDKSynchronizerSyncStatusHandler {
+class SDKSynchronizerInternalSyncStatusHandler {
     enum StatusIdentifier: String {
         case unprepared
         case syncing
@@ -22,20 +22,20 @@ class SDKSynchronizerSyncStatusHandler {
         case error
     }
 
-    private let queue = DispatchQueue(label: "SDKSynchronizerSyncStatusHandler")
+    private let queue = DispatchQueue(label: "SDKSynchronizerInternalSyncStatusHandler")
     private var cancellables: [AnyCancellable] = []
 
     func subscribe(to stateStream: AnyPublisher<SynchronizerState, Never>, expectations: [StatusIdentifier: XCTestExpectation]) {
         stateStream
             .receive(on: queue)
-            .map { $0.syncStatus }
+            .map { $0.internalSyncStatus }
             .sink { status in expectations[status.identifier]?.fulfill() }
             .store(in: &cancellables)
     }
 }
 
-extension SyncStatus {
-    var identifier: SDKSynchronizerSyncStatusHandler.StatusIdentifier {
+extension InternalSyncStatus {
+    var identifier: SDKSynchronizerInternalSyncStatusHandler.StatusIdentifier {
         switch self {
         case .unprepared: return .unprepared
         case .syncing: return .syncing

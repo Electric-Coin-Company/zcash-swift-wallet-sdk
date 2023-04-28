@@ -299,4 +299,6 @@ public enum ZcashErrorCode: String {
     case synchronizerLatestUTXOsInvalidTAddress = "ZSYNCO0004"
     /// Rewind failed, unknown archor height
     case synchronizerRewindUnknownArchorHeight = "ZSYNCO0005"
+    /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
+    case synchronizerDisconnected = "ZSYNCO0006"
 }

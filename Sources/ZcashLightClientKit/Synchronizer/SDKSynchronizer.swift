@@ -26,8 +26,8 @@ public class SDKSynchronizer: Synchronizer {
     public let logger: Logger
     
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
-    private var underlyingStatus: GenericActor<SyncStatus>
-    var status: SyncStatus {
+    private var underlyingStatus: GenericActor<InternalSyncStatus>
+    var status: InternalSyncStatus {
         get async { await underlyingStatus.value }
     }
 
@@ -65,7 +65,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     init(
-        status: SyncStatus,
+        status: InternalSyncStatus,
         initializer: Initializer,
         transactionEncoder: TransactionEncoder,
         transactionRepository: TransactionRepository,
@@ -102,13 +102,13 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    func updateStatus(_ newValue: SyncStatus) async {
+    func updateStatus(_ newValue: InternalSyncStatus) async {
         let oldValue = await underlyingStatus.update(newValue)
         await notify(oldStatus: oldValue, newStatus: newValue)
     }
 
     func throwIfUnprepared() throws {
-        if !latestState.syncStatus.isPrepared {
+        if !latestState.internalSyncStatus.isPrepared {
             throw ZcashError.synchronizerNotPrepared
         }
     }
@@ -223,7 +223,7 @@ public class SDKSynchronizer: Synchronizer {
                 await self?.updateStatus(.enhancing(.zero))
 
             case .startedFetching:
-                await self?.updateStatus(.fetching)
+                await self?.updateStatus(.fetching(0))
 
             case .startedSyncing:
                 await self?.updateStatus(.syncing(.nullProgress))
@@ -260,7 +260,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     private func progressUpdated(progress: CompactBlockProgress) async {
-        let newStatus = SyncStatus(progress)
+        let newStatus = InternalSyncStatus(progress)
         await updateStatus(newStatus)
     }
 
@@ -461,7 +461,7 @@ public class SDKSynchronizer: Synchronizer {
     public func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error> {
         let subject = PassthroughSubject<Void, Error>()
         Task(priority: .high) {
-            if !latestState.syncStatus.isPrepared {
+            if !latestState.internalSyncStatus.isPrepared {
                 subject.send(completion: .failure(ZcashError.synchronizerNotPrepared))
                 return
             }
@@ -537,7 +537,7 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: notify state
 
-    private func snapshotState(status: SyncStatus) async -> SynchronizerState {
+    private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {
         return await SynchronizerState(
             syncSessionID: syncSession.value,
             shieldedBalance: WalletBalance(
@@ -545,14 +545,14 @@ public class SDKSynchronizer: Synchronizer {
                 total: (try? await getShieldedBalance()) ?? .zero
             ),
             transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
-            syncStatus: status,
+            internalSyncStatus: status,
             latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
             latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
             latestScannedTime: latestBlocksDataProvider.latestScannedTime
         )
     }
 
-    private func notify(oldStatus: SyncStatus, newStatus: SyncStatus) async {
+    private func notify(oldStatus: InternalSyncStatus, newStatus: InternalSyncStatus) async {
         guard oldStatus != newStatus else { return }
 
         let newState: SynchronizerState
@@ -617,8 +617,8 @@ extension SDKSynchronizer {
     }
 }
 
-extension SyncStatus {
-    func isDifferent(from otherStatus: SyncStatus) -> Bool {
+extension InternalSyncStatus {
+    func isDifferent(from otherStatus: InternalSyncStatus) -> Bool {
         switch (self, otherStatus) {
         case (.unprepared, .unprepared): return false
         case (.syncing, .syncing): return false
@@ -636,7 +636,7 @@ extension SyncStatus {
 struct SessionTicker {
     /// Helper function to determine whether we are in front of a SyncSession change for a given syncStatus
     /// transition we consider that every sync attempt is a new sync session and should have it's unique UUID reported.
-    var isNewSyncSession: (SyncStatus, SyncStatus) -> Bool
+    var isNewSyncSession: (InternalSyncStatus, InternalSyncStatus) -> Bool
 }
 
 extension SessionTicker {

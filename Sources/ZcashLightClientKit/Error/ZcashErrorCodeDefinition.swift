@@ -584,4 +584,7 @@ enum ZcashErrorDefinition {
     /// Rewind failed, unknown archor height
     // sourcery: code="ZSYNCO0005"
     case synchronizerRewindUnknownArchorHeight
+    /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
+    // sourcery: code="ZSYNCO0006"
+    case synchronizerDisconnected
 }

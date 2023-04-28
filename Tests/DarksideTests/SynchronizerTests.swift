@@ -22,7 +22,7 @@ final class SynchronizerTests: ZcashTestCase {
     let chainName = "main"
     let network = DarksideWalletDNetwork()
     var cancellables: [AnyCancellable] = []
-    var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
+    var sdkSynchronizerInternalSyncStatusHandler: SDKSynchronizerInternalSyncStatusHandler! = SDKSynchronizerInternalSyncStatusHandler()
 
     override func setUp() async throws {
         try await super.setUp()
@@ -49,7 +49,7 @@ final class SynchronizerTests: ZcashTestCase {
         try await super.tearDown()
         let coordinator = self.coordinator!
         self.coordinator = nil
-        sdkSynchronizerSyncStatusHandler = nil
+        sdkSynchronizerInternalSyncStatusHandler = nil
         cancellables = []
 
         try await coordinator.stop()
@@ -79,7 +79,7 @@ final class SynchronizerTests: ZcashTestCase {
         sleep(10)
 
         let syncStoppedExpectation = XCTestExpectation(description: "SynchronizerStopped Expectation")
-        sdkSynchronizerSyncStatusHandler.subscribe(
+        sdkSynchronizerInternalSyncStatusHandler.subscribe(
             to: coordinator.synchronizer.stateStream,
             expectations: [.stopped: syncStoppedExpectation]
         )

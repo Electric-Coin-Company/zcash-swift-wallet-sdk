@@ -502,6 +502,9 @@ public enum ZcashError: Equatable, Error {
     /// Rewind failed, unknown archor height
     /// ZSYNCO0005
     case synchronizerRewindUnknownArchorHeight
+    /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
+    /// ZSYNCO0006
+    case synchronizerDisconnected
 
     public var message: String {
         switch self {
@@ -650,6 +653,7 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerShieldFundsInsuficientTransparentFunds: return "There is not enough transparent funds to cover fee for the shielding."
         case .synchronizerLatestUTXOsInvalidTAddress: return "LatestUTXOs for the address failed, invalid t-address."
         case .synchronizerRewindUnknownArchorHeight: return "Rewind failed, unknown archor height"
+        case .synchronizerDisconnected: return "Indicates that this Synchronizer is disconnected from its lightwalletd server."
         }
     }
 
@@ -800,6 +804,7 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerShieldFundsInsuficientTransparentFunds: return .synchronizerShieldFundsInsuficientTransparentFunds
         case .synchronizerLatestUTXOsInvalidTAddress: return .synchronizerLatestUTXOsInvalidTAddress
         case .synchronizerRewindUnknownArchorHeight: return .synchronizerRewindUnknownArchorHeight
+        case .synchronizerDisconnected: return .synchronizerDisconnected
         }
     }
 

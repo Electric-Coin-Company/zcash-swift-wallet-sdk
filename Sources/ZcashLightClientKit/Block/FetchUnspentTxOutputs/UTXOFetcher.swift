@@ -17,7 +17,7 @@ struct UTXOFetcherConfig {
 }
 
 protocol UTXOFetcher {
-    func fetch(at range: CompactBlockRange) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
+    func fetch(at range: CompactBlockRange, didFetch: (Float) async -> ()) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 }
 
 struct UTXOFetcherImpl {
@@ -31,7 +31,7 @@ struct UTXOFetcherImpl {
 }
 
 extension UTXOFetcherImpl: UTXOFetcher {
-    func fetch(at range: CompactBlockRange) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
+    func fetch(at range: CompactBlockRange, didFetch: (Float) async -> ()) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
         try Task.checkCancellation()
 
         let accounts = try accountRepository.getAll()
@@ -60,6 +60,8 @@ extension UTXOFetcherImpl: UTXOFetcher {
         var skipped: [UnspentTransactionOutputEntity] = []
 
         let startTime = Date()
+        let all = Float(utxos.count)
+        var counter = Float(0)
         for utxo in utxos {
             do {
                 try await rustBackend.putUnspentTransparentOutput(
@@ -72,6 +74,8 @@ extension UTXOFetcherImpl: UTXOFetcher {
 
                 refreshed.append(utxo)
 
+                counter += 1
+                await didFetch(counter / all)
                 await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
             } catch {
                 logger.error("failed to put utxo - error: \(error)")
