@@ -71,9 +71,15 @@ public protocol Logger {
     
 }
 ```
-To enable logging you need to do 2 simple steps:
-1. have one class conform the `Logger` protocol
-2. inject that logger when creating the `Initializer`
+
+You have a few different options when it comes to logging:
+1. Leave it to the SDK. It will use its own `Logger` with sensible defaults. For this option, simply omit the `loggingPolicy` parameter when creating the `Initializer`
+
+2. Provide a custom logger. For this option, do the following:
+    a). have one class conform to the `Logger` protocol
+    b). inject that logger when creating the `Initializer` by passing a `loggingPolicy` of `.custom(yourLogger)`
+
+3. No logging. The SDK will not log any events. For this option, pass a `loggingPolicy` of `.noLogging` when creating the `Initializer` 
 
 For more details look the Sample App's `AppDelegate` code.
 

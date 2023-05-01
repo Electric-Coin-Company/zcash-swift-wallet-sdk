@@ -98,6 +98,12 @@ public class Initializer {
         case success
         case seedRequired
     }
+    
+    public enum LoggingPolicy {
+        case `default`(OSLogger.LogLevel)
+        case custom(Logger)
+        case noLogging
+    }
 
     // This is used to uniquely identify instance of the SDKSynchronizer. It's used when checking if the Alias is already used or not.
     let id = UUID()
@@ -152,7 +158,7 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
-        logLevel: OSLogger.LogLevel = .debug
+        loggingPolicy: LoggingPolicy = .default(.debug)
     ) {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
@@ -166,7 +172,16 @@ public class Initializer {
         // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
         let (updatedURLs, parsingError) = Self.tryToUpdateURLs(with: alias, urls: urls)
 
-        let logger = OSLogger(logLevel: logLevel, alias: alias)
+        let logger: Logger
+        switch loggingPolicy {
+        case let .default(logLevel):
+            logger = OSLogger(logLevel: logLevel, alias: alias)
+        case let .custom(customLogger):
+            logger = customLogger
+        case .noLogging:
+            logger = NullLogger()
+        }
+        
         let rustBackend = ZcashRustBackend(
             dbData: updatedURLs.dataDbURL,
             fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
