@@ -11,7 +11,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class CompactBlockReorgTests: XCTestCase {
+class CompactBlockReorgTests: ZcashTestCase {
     var processorConfig: CompactBlockProcessor.Configuration!
     let testFileManager = FileManager()
     var cancellables: [AnyCancellable] = []
@@ -110,15 +110,28 @@ class CompactBlockReorgTests: XCTestCase {
             network: network
         )
 
-        processor = CompactBlockProcessor(
-            service: service,
-            storage: realCache,
-            rustBackend: rustBackendMockHelper.rustBackendMock,
-            config: processorConfig,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        Dependencies.setup(
+            in: mockContainer,
+            urls: Initializer.URLs(
+                fsBlockDbRoot: testTempDirectory,
+                dataDbURL: processorConfig.dataDb,
+                spendParamsURL: processorConfig.spendParamsURL,
+                outputParamsURL: processorConfig.outputParamsURL
+            ),
+            alias: .default,
+            networkType: .testnet,
+            endpoint: LightWalletEndpointBuilder.default,
+            loggingPolicy: .default(.debug)
         )
+        
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in
+            LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        }
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackendMockHelper.rustBackendMock }
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }
+        mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in realCache }
+
+        processor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
         
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")

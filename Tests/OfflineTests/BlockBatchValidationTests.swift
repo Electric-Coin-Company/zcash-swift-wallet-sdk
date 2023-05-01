@@ -9,7 +9,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class BlockBatchValidationTests: XCTestCase {
+class BlockBatchValidationTests: ZcashTestCase {
     let testFileManager = FileManager()
     var rustBackend: ZcashRustBackendWelding!
     var testTempDirectory: URL!
@@ -17,6 +17,23 @@ class BlockBatchValidationTests: XCTestCase {
     override func setUpWithError() throws {
         try super.setUpWithError()
         testTempDirectory = Environment.uniqueTestTempDirectory
+
+        Dependencies.setup(
+            in: mockContainer,
+            urls: Initializer.URLs(
+                fsBlockDbRoot: testTempDirectory,
+                dataDbURL: try! __dataDbURL(),
+                spendParamsURL: try! __spendParamsURL(),
+                outputParamsURL: try! __outputParamsURL()
+            ),
+            alias: .default,
+            networkType: .testnet,
+            endpoint: LightWalletEndpointBuilder.default,
+            loggingPolicy: .default(.debug)
+        )
+
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in LatestBlocksDataProviderMock() }
+
         try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
     }
@@ -34,6 +51,7 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: 1210000,
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
@@ -46,11 +64,15 @@ class BlockBatchValidationTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
         )
+        mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in storage }
 
         try await storage.create()
 
-        let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
+        mockContainer.mock(type: BlockDownloaderService.self, isSingleton: true) { _ in
+            let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
+            return BlockDownloaderServiceImpl(service: service, storage: repository)
+        }
+
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
@@ -77,19 +99,15 @@ class BlockBatchValidationTests: XCTestCase {
         service.mockLightDInfo = info
 
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: Int32(0xd34d))
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in mockBackend.rustBackendMock }
         
         let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: mockBackend.rustBackendMock,
-            config: config,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
+            container: mockContainer,
+            config: config
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: mockContainer.resolve(BlockDownloaderService.self))
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -107,6 +125,7 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: 1210000,
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
@@ -119,11 +138,15 @@ class BlockBatchValidationTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
         )
+        mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in storage }
 
         try await storage.create()
 
-        let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
+        mockContainer.mock(type: BlockDownloaderService.self, isSingleton: true) { _ in
+            let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
+            return BlockDownloaderServiceImpl(service: service, storage: repository)
+        }
+
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
@@ -150,19 +173,15 @@ class BlockBatchValidationTests: XCTestCase {
         service.mockLightDInfo = info
 
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in mockBackend.rustBackendMock }
         
         let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: mockBackend.rustBackendMock,
-            config: config,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
+            container: mockContainer,
+            config: config
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: mockContainer.resolve(BlockDownloaderService.self))
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -180,6 +199,7 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: 1210000,
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
@@ -192,11 +212,15 @@ class BlockBatchValidationTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
         )
+        mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in storage }
 
         try await storage.create()
 
-        let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
+        mockContainer.mock(type: BlockDownloaderService.self, isSingleton: true) { _ in
+            let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
+            return BlockDownloaderServiceImpl(service: service, storage: repository)
+        }
+
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
@@ -223,19 +247,15 @@ class BlockBatchValidationTests: XCTestCase {
         service.mockLightDInfo = info
         
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in mockBackend.rustBackendMock }
         
         let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: mockBackend.rustBackendMock,
-            config: config,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
+            container: mockContainer,
+            config: config
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: mockContainer.resolve(BlockDownloaderService.self))
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {
@@ -253,6 +273,7 @@ class BlockBatchValidationTests: XCTestCase {
             latestBlockHeight: 1210000,
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.default).make()
         )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
@@ -265,11 +286,15 @@ class BlockBatchValidationTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
         )
+        mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in storage }
 
         try await storage.create()
 
-        let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
-        let downloaderService = BlockDownloaderServiceImpl(service: service, storage: repository)
+        mockContainer.mock(type: BlockDownloaderService.self, isSingleton: true) { _ in
+            let repository = ZcashConsoleFakeStorage(latestBlockHeight: 1220000)
+            return BlockDownloaderServiceImpl(service: service, storage: repository)
+        }
+
         let config = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
@@ -297,19 +322,15 @@ class BlockBatchValidationTests: XCTestCase {
         service.mockLightDInfo = info
         
         let mockBackend = await RustBackendMockHelper(rustBackend: rustBackend, consensusBranchID: 0xd34db4d)
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in mockBackend.rustBackendMock }
         
         let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: mockBackend.rustBackendMock,
-            config: config,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
+            container: mockContainer,
+            config: config
         )
         
         do {
-            try await compactBlockProcessor.figureNextBatch(downloaderService: downloaderService)
+            try await compactBlockProcessor.figureNextBatch(downloaderService: mockContainer.resolve(BlockDownloaderService.self))
             XCTAssertFalse(Task.isCancelled)
         } catch {
             switch error {

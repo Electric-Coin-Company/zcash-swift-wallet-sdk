@@ -10,7 +10,7 @@ import Combine
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class SynchronizerDarksideTests: XCTestCase {
+class SynchronizerDarksideTests: ZcashTestCase {
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let branchID = "2bb40e60"
@@ -30,8 +30,16 @@ class SynchronizerDarksideTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        idGenerator = MockSyncSessionIDGenerator(ids: [.deadbeef])
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network, syncSessionIDGenerator: idGenerator)
+        let idGenerator = MockSyncSessionIDGenerator(ids: [.deadbeef])
+        mockContainer.mock(type: SyncSessionIDGenerator.self, isSingleton: false) { _ in idGenerator }
+        self.idGenerator = idGenerator
+
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday,
+            network: network
+        )
+        
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
 
@@ -295,14 +303,11 @@ class SynchronizerDarksideTests: XCTestCase {
         ]
 
         XCTAssertEqual(states.count, expectedStates.count)
-        XCTAssertEqual(states[0], expectedStates[0])
-        XCTAssertEqual(states[1], expectedStates[1])
-        XCTAssertEqual(states[2], expectedStates[2])
-        XCTAssertEqual(states[3], expectedStates[3])
-        XCTAssertEqual(states[4], expectedStates[4])
-        XCTAssertEqual(states[5], expectedStates[5])
-        XCTAssertEqual(states[6], expectedStates[6])
-        XCTAssertEqual(states[7], expectedStates[7])
+
+        for (index, state) in states.enumerated() {
+            let expectedState = expectedStates[index]
+            XCTAssertEqual(state, expectedState, "Failed state comparison at index \(index).")
+        }
     }
 
     func testSyncSessionUpdates() async throws {
@@ -458,13 +463,11 @@ class SynchronizerDarksideTests: XCTestCase {
         ]
 
         XCTAssertEqual(states.count, expectedStates.count)
-        XCTAssertEqual(states[0], expectedStates[0])
-        XCTAssertEqual(states[1], expectedStates[1])
-        XCTAssertEqual(states[2], expectedStates[2])
-        XCTAssertEqual(states[3], expectedStates[3])
-        XCTAssertEqual(states[4], expectedStates[4])
-        XCTAssertEqual(states[5], expectedStates[5])
-        XCTAssertEqual(states[7], expectedStates[7])
+
+        for (index, state) in states.enumerated() {
+            let expectedState = expectedStates[index]
+            XCTAssertEqual(state, expectedState, "Failed state comparison at index \(index).")
+        }
 
         try coordinator.service.applyStaged(nextLatestHeight: 663_200)
 
@@ -532,11 +535,11 @@ class SynchronizerDarksideTests: XCTestCase {
         ]
 
         XCTAssertEqual(states.count, secondBatchOfExpectedStates.count)
-        XCTAssertEqual(states[0], secondBatchOfExpectedStates[0])
-        XCTAssertEqual(states[1], secondBatchOfExpectedStates[1])
-        XCTAssertEqual(states[2], secondBatchOfExpectedStates[2])
-        XCTAssertEqual(states[3], secondBatchOfExpectedStates[3])
-        XCTAssertEqual(states[4], secondBatchOfExpectedStates[4])
+
+        for (index, state) in states.enumerated() {
+            let expectedState = secondBatchOfExpectedStates[index]
+            XCTAssertEqual(state, expectedState, "Failed state comparison at index \(index).")
+        }
     }
 
     func testSyncAfterWipeWorks() async throws {

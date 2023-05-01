@@ -55,6 +55,7 @@ class TestCoordinator {
     
     init(
         alias: ZcashSynchronizerAlias = .default,
+        container: DIContainer,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true,
@@ -63,86 +64,40 @@ class TestCoordinator {
         dbTracingClosure: ((String) -> Void)? = nil
     ) async throws {
         await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
-
+        
         let databases = TemporaryDbBuilder.build()
         self.databases = databases
-
-        let urls = Initializer.URLs(
+        
+        let initializer = Initializer(
+            container: container,
+            cacheDbURL: nil,
             fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
-            spendParamsURL: try __spendParamsURL(),
-            outputParamsURL: try __outputParamsURL()
-        )
-
-        let (updatedURLs, parsingError) = Initializer.tryToUpdateURLs(with: alias, urls: urls)
-
-        let backend = ZcashRustBackend(
-            dbData: updatedURLs.dataDbURL,
-            fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-            spendParamsPath: updatedURLs.spendParamsURL,
-            outputParamsPath: updatedURLs.outputParamsURL,
-            networkType: network.networkType
-        )
-
-        let transactionRepository = TransactionSQLDAO(
-            dbProvider: SimpleConnectionProvider(path: updatedURLs.dataDbURL.absoluteString),
-            traceClosure: dbTracingClosure
-        )
-
-        let accountRepository = AccountRepositoryBuilder.build(
-            dataDbURL: updatedURLs.dataDbURL,
-            readOnly: true,
-            caching: true,
-            logger: logger
-        )
-
-        let fsBlockRepository = FSCompactBlockRepository(
-            fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-            metadataStore: .live(
-                fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-                rustBackend: backend,
-                logger: logger
-            ),
-            blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted,
-            logger: logger
-        )
-
-        let service = Initializer.makeLightWalletServiceFactory(endpoint: endpoint).make()
-
-        let initializer = Initializer(
-            rustBackend: backend,
-            network: network,
-            cacheDbURL: nil,
-            urls: updatedURLs,
             endpoint: endpoint,
-            service: service,
-            repository: transactionRepository,
-            accountRepository: accountRepository,
-            storage: fsBlockRepository,
+            network: network,
+            spendParamsURL: try __spendParamsURL(),
+            outputParamsURL: try __outputParamsURL(),
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             alias: alias,
-            urlsParsingError: parsingError,
-            logger: OSLogger(logLevel: .debug)
+            loggingPolicy: .default(.debug)
         )
-
+        
         let derivationTool = DerivationTool(networkType: network.networkType)
-
+        
         self.spendingKey = try derivationTool.deriveUnifiedSpendingKey(
             seed: Environment.seedBytes,
             accountIndex: 0
         )
-
+        
         self.viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
         self.birthday = walletBirthday
         self.network = network
-
+        
         let liveService = LightWalletServiceFactory(endpoint: endpoint).make()
         self.service = DarksideWalletService(endpoint: endpoint, service: liveService)
-
-        self.synchronizer = SDKSynchronizer(initializer: initializer, sessionGenerator: syncSessionIDGenerator, sessionTicker: .live)
+        self.synchronizer = SDKSynchronizer(initializer: initializer)
         subscribeToState(synchronizer: self.synchronizer)
-
+        
         if callPrepareInConstructor {
             if case .seedRequired = try await prepare(seed: Environment.seedBytes) {
                 throw TestCoordinator.CoordinatorError.seedRequiredForMigration

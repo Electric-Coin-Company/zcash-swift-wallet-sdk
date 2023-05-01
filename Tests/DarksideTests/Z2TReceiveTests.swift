@@ -10,7 +10,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class Z2TReceiveTests: XCTestCase {
+class Z2TReceiveTests: ZcashTestCase {
     let testRecipientAddress = "t1dRJRY7GmyeykJnMH38mdQoaZtFhn1QmGz"
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
@@ -28,7 +28,11 @@ class Z2TReceiveTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday,
+            network: network
+        )
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
 

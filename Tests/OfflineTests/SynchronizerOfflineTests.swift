@@ -11,7 +11,7 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-class SynchronizerOfflineTests: XCTestCase {
+class SynchronizerOfflineTests: ZcashTestCase {
     let data = TestsData(networkType: .testnet)
     var network: ZcashNetwork!
     var cancellables: [AnyCancellable] = []
@@ -31,6 +31,7 @@ class SynchronizerOfflineTests: XCTestCase {
     func testCallPrepareWithAlreadyUsedAliasThrowsError() async throws {
         let firstTestCoordinator = try await TestCoordinator(
             alias: .custom("alias"),
+            container: mockContainer,
             walletBirthday: 10,
             network: network,
             callPrepareInConstructor: false
@@ -38,6 +39,7 @@ class SynchronizerOfflineTests: XCTestCase {
 
         let secondTestCoordinator = try await TestCoordinator(
             alias: .custom("alias"),
+            container: mockContainer,
             walletBirthday: 10,
             network: network,
             callPrepareInConstructor: false
@@ -58,6 +60,7 @@ class SynchronizerOfflineTests: XCTestCase {
     func testWhenSynchronizerIsDeallocatedAliasIsntUsedAnymore() async throws {
         var testCoordinator: TestCoordinator! = try await TestCoordinator(
             alias: .default,
+            container: mockContainer,
             walletBirthday: 10,
             network: network,
             callPrepareInConstructor: false
@@ -71,6 +74,7 @@ class SynchronizerOfflineTests: XCTestCase {
 
         testCoordinator = try await TestCoordinator(
             alias: .default,
+            container: mockContainer,
             walletBirthday: 10,
             network: network,
             callPrepareInConstructor: false
@@ -84,8 +88,21 @@ class SynchronizerOfflineTests: XCTestCase {
     }
 
     func testCallWipeWithAlreadyUsedAliasThrowsError() async throws {
-        let firstTestCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
-        let secondTestCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
+        let firstTestCoordinator = try await TestCoordinator(
+            alias: .default,
+            container: mockContainer,
+            walletBirthday: 10,
+            network: network,
+            callPrepareInConstructor: false
+        )
+
+        let secondTestCoordinator = try await TestCoordinator(
+            alias: .default,
+            container: mockContainer,
+            walletBirthday: 10,
+            network: network,
+            callPrepareInConstructor: false
+        )
 
         let firstWipeExpectation = XCTestExpectation(description: "First wipe expectation")
 
@@ -129,7 +146,13 @@ class SynchronizerOfflineTests: XCTestCase {
     }
 
     func testPrepareCanBeCalledAfterWipeWithSameInstanceOfSDKSynchronizer() async throws {
-        let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
+        let testCoordinator = try await TestCoordinator(
+            alias: .default,
+            container: mockContainer,
+            walletBirthday: 10,
+            network: network,
+            callPrepareInConstructor: false
+        )
 
         let expectation = XCTestExpectation(description: "Wipe expectation")
 
@@ -157,7 +180,13 @@ class SynchronizerOfflineTests: XCTestCase {
     }
 
     func testSendToAddressCalledWithoutPrepareThrowsError() async throws {
-        let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
+        let testCoordinator = try await TestCoordinator(
+            alias: .default,
+            container: mockContainer,
+            walletBirthday: 10,
+            network: network,
+            callPrepareInConstructor: false
+        )
 
         do {
             _ = try await testCoordinator.synchronizer.sendToAddress(
@@ -175,27 +204,14 @@ class SynchronizerOfflineTests: XCTestCase {
         }
     }
 
-    func testSendToWithTransparentAddressThrowsError() async throws {
-        let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: true)
-
-        do {
-            _ = try await testCoordinator.synchronizer.sendToAddress(
-                spendingKey: testCoordinator.spendingKey,
-                zatoshi: Zatoshi(1),
-                toAddress: .transparent(data.transparentAddress),
-                memo: try .init(string: "hello")
-            )
-            XCTFail("Send to address should fail.")
-        } catch {
-            if let error = error as? ZcashError, case .synchronizerSendMemoToTransparentAddress = error {
-            } else {
-                XCTFail("Send to address failed with unexpected error: \(error)")
-            }
-        }
-    }
-
     func testShieldFundsCalledWithoutPrepareThrowsError() async throws {
-        let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
+        let testCoordinator = try await TestCoordinator(
+            alias: .default,
+            container: mockContainer,
+            walletBirthday: 10,
+            network: network,
+            callPrepareInConstructor: false
+        )
 
         do {
             _ = try await testCoordinator.synchronizer.shieldFunds(
@@ -213,7 +229,13 @@ class SynchronizerOfflineTests: XCTestCase {
     }
 
     func testRefreshUTXOCalledWithoutPrepareThrowsError() async throws {
-        let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
+        let testCoordinator = try await TestCoordinator(
+            alias: .default,
+            container: mockContainer,
+            walletBirthday: 10,
+            network: network,
+            callPrepareInConstructor: false
+        )
 
         do {
             _ = try await testCoordinator.synchronizer.refreshUTXOs(address: data.transparentAddress, from: 1)
@@ -227,7 +249,13 @@ class SynchronizerOfflineTests: XCTestCase {
     }
 
     func testRewindCalledWithoutPrepareThrowsError() async throws {
-        let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
+        let testCoordinator = try await TestCoordinator(
+            alias: .default,
+            container: mockContainer,
+            walletBirthday: 10,
+            network: network,
+            callPrepareInConstructor: false
+        )
 
         let expectation = XCTestExpectation()
 

@@ -12,7 +12,7 @@ import SQLite
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class BlockScanTests: XCTestCase {
+class BlockScanTests: ZcashTestCase {
     var cancelables: [AnyCancellable] = []
 
     var dataDbURL: URL!
@@ -51,6 +51,23 @@ class BlockScanTests: XCTestCase {
         )
 
         deleteDBs()
+        
+        Dependencies.setup(
+            in: mockContainer,
+            urls: Initializer.URLs(
+                fsBlockDbRoot: testTempDirectory,
+                dataDbURL: dataDbURL,
+                spendParamsURL: spendParamsURL,
+                outputParamsURL: outputParamsURL
+            ),
+            alias: .default,
+            networkType: .testnet,
+            endpoint: LightWalletEndpointBuilder.default,
+            loggingPolicy: .default(.debug)
+        )
+
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in LatestBlocksDataProviderMock() }
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackend }
     }
     
     private func deleteDBs() {
@@ -73,23 +90,8 @@ class BlockScanTests: XCTestCase {
         _ = try await rustBackend.initDataDb(seed: nil)
 
         let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
-        let service = LightWalletServiceFactory(endpoint: endpoint).make()
         let blockCount = 100
         let range = network.constants.saplingActivationHeight ... network.constants.saplingActivationHeight + blockCount
-
-        let fsBlockRepository = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: rustBackend,
-                logger: logger
-            ),
-            blockDescriptor: ZcashCompactBlockDescriptor.live,
-            contentProvider: DirectoryListingProviders.defaultSorted,
-            logger: logger
-        )
-
-        try await fsBlockRepository.create()
 
         let processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
@@ -102,15 +104,12 @@ class BlockScanTests: XCTestCase {
             network: network
         )
 
-        let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: fsBlockRepository,
-            rustBackend: rustBackend,
-            config: processorConfig,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
-        )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletServiceFactory(endpoint: endpoint).make()
+        }
+        try await mockContainer.resolve(CompactBlockRepository.self).create()
+
+        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
         
         let repository = BlockSQLDAO(dbProvider: SimpleConnectionProvider.init(path: self.dataDbURL.absoluteString, readonly: true))
         var latestScannedheight = BlockHeight.empty()
@@ -162,22 +161,6 @@ class BlockScanTests: XCTestCase {
             saplingTree: walletBirthDay.saplingTree
         )
         
-        let service = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
-
-        let fsBlockRepository = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: rustBackend,
-                logger: logger
-            ),
-            blockDescriptor: ZcashCompactBlockDescriptor.live,
-            contentProvider: DirectoryListingProviders.defaultSorted,
-            logger: logger
-        )
-
-        try await fsBlockRepository.create()
-        
         let processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
             fsBlockCacheRoot: testTempDirectory,
@@ -191,15 +174,12 @@ class BlockScanTests: XCTestCase {
             network: network
         )
         
-        let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: fsBlockRepository,
-            rustBackend: rustBackend,
-            config: processorConfig,
-            metrics: metrics,
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
-        )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
+        }
+        try await mockContainer.resolve(CompactBlockRepository.self).create()
+
+        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {
@@ -220,7 +200,7 @@ class BlockScanTests: XCTestCase {
             try await blockDownloader.setSyncRange(range)
             await blockDownloader.startDownload(maxBlockBufferSize: 10)
             try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: range)
-
+            
             XCTAssertFalse(Task.isCancelled)
             
             try await compactBlockProcessor.blockValidator.validate()

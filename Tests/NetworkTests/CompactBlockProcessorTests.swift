@@ -11,7 +11,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class CompactBlockProcessorTests: XCTestCase {
+class CompactBlockProcessorTests: ZcashTestCase {
     var processorConfig: CompactBlockProcessor.Configuration!
     var cancellables: [AnyCancellable] = []
     var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
@@ -73,20 +73,6 @@ class CompactBlockProcessorTests: XCTestCase {
             info.estimatedHeight = UInt64(mockLatestHeight)
             info.saplingActivationHeight = UInt64(network.constants.saplingActivationHeight)
         })
-
-        let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-            metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: processorConfig.fsBlockCacheRoot,
-                rustBackend: rustBackend,
-                logger: logger
-            ),
-            blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted,
-            logger: logger
-        )
-
-        try await storage.create()
         
         let transactionRepository = MockTransactionRepository(
             unminedCount: 0,
@@ -96,15 +82,28 @@ class CompactBlockProcessorTests: XCTestCase {
             network: network
         )
         
-        processor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: rustBackend,
-            config: processorConfig,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        Dependencies.setup(
+            in: mockContainer,
+            urls: Initializer.URLs(
+                fsBlockDbRoot: testTempDirectory,
+                dataDbURL: processorConfig.dataDb,
+                spendParamsURL: processorConfig.spendParamsURL,
+                outputParamsURL: processorConfig.outputParamsURL
+            ),
+            alias: .default,
+            networkType: .testnet,
+            endpoint: LightWalletEndpointBuilder.default,
+            loggingPolicy: .default(.debug)
         )
+        
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in
+            LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        }
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackend }
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }
+        try await mockContainer.resolve(CompactBlockRepository.self).create()
+        
+        processor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
 
         let dbInit = try await rustBackend.initDataDb(seed: nil)
 
