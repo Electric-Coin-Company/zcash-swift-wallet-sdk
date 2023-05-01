@@ -37,7 +37,7 @@ class LightWalletServiceTests: XCTestCase {
 //            expect.fulfill()
 //
 //        }
-//        wait(for: [expect], timeout: 20)
+//        await fulfillment(of: [expect], timeout: 20)
 //    }
     
     func testHundredBlocks() async throws {

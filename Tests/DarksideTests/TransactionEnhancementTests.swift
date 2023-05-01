@@ -217,8 +217,8 @@ class TransactionEnhancementTests: XCTestCase {
             XCTFail("Error: \(error)")
         }
 
-        wait(
-            for: [
+        await fulfillment(
+            of: [
                 syncStartedExpect,
                 txFoundNotificationExpectation,
                 finishedNotificationExpectation

@@ -80,7 +80,7 @@ class Z2TReceiveTests: XCTestCase {
         } catch {
             await handleError(error)
         }
-        wait(for: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
+        await fulfillment(of: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
         
         let sendExpectation = XCTestExpectation(description: "sendToAddress")
         let sendAmount = Zatoshi(10000)
@@ -132,7 +132,7 @@ class Z2TReceiveTests: XCTestCase {
         } catch {
             await handleError(error)
         }
-        wait(for: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
+        await fulfillment(of: [preTxExpectation, foundTransactionsExpectation], timeout: 5)
 
         let sendExpectation = XCTestExpectation(description: "sendToAddress")
         var pendingEntity: PendingTransactionEntity?
@@ -154,7 +154,7 @@ class Z2TReceiveTests: XCTestCase {
             testError = error
         }
 
-        wait(for: [sendExpectation], timeout: 12)
+        await fulfillment(of: [sendExpectation], timeout: 12)
 
         guard pendingEntity != nil else {
             XCTFail("error sending to address. Error: \(String(describing: testError))")
@@ -205,7 +205,7 @@ class Z2TReceiveTests: XCTestCase {
             await handleError(error)
         }
 
-        wait(for: [sentTxSyncExpectation, foundTransactionsExpectation], timeout: 5)
+        await fulfillment(of: [sentTxSyncExpectation, foundTransactionsExpectation], timeout: 5)
     }
 
     func handleError(_ error: Error?) async {

@@ -74,7 +74,7 @@ final class InternalStateConsistencyTests: XCTestCase {
             }
         }
 
-        wait(for: [firstSyncExpectation], timeout: 2)
+        await fulfillment(of: [firstSyncExpectation], timeout: 2)
 
         let isSyncing = await coordinator.synchronizer.status.isSyncing
         let status = await coordinator.synchronizer.status
@@ -131,7 +131,7 @@ final class InternalStateConsistencyTests: XCTestCase {
             handleError(error)
         }
 
-        wait(for: [secondSyncAttemptExpectation], timeout: 10)
+        await fulfillment(of: [secondSyncAttemptExpectation], timeout: 10)
     }
 
     func handleError(_ error: Error?) {

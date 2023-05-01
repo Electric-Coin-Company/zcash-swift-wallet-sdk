@@ -108,7 +108,7 @@ class SynchronizerTests: XCTestCase {
             
             try await synchronizer.start()
             
-            wait(for: [syncSyncedExpectation], timeout: 100)
+            await fulfillment(of: [syncSyncedExpectation], timeout: 100)
             
             synchronizer.metrics.cumulateReportsAndStartNewSet()
         }

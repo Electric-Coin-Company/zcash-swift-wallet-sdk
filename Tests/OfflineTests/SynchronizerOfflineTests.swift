@@ -103,7 +103,7 @@ class SynchronizerOfflineTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [firstWipeExpectation], timeout: 1)
+        await fulfillment(of: [firstWipeExpectation], timeout: 1)
 
         let secondWipeExpectation = XCTestExpectation(description: "Second wipe expectation")
 
@@ -125,7 +125,7 @@ class SynchronizerOfflineTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [secondWipeExpectation], timeout: 1)
+        await fulfillment(of: [secondWipeExpectation], timeout: 1)
     }
 
     func testPrepareCanBeCalledAfterWipeWithSameInstanceOfSDKSynchronizer() async throws {
@@ -147,7 +147,7 @@ class SynchronizerOfflineTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
 
         do {
             _ = try await testCoordinator.prepare(seed: Environment.seedBytes)
@@ -230,7 +230,7 @@ class SynchronizerOfflineTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
     }
 
     func testURLsParsingFailsInInitialierPrepareThenThrowsError() async throws {
@@ -317,7 +317,7 @@ class SynchronizerOfflineTests: XCTestCase {
             )
             .store(in: &cancellables)
 
-        wait(for: [expectation], timeout: 1)
+        await fulfillment(of: [expectation], timeout: 1)
     }
 
     func testIsNewSessionOnUnpreparedToValidTransition() {

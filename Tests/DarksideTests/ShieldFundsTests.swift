@@ -122,7 +122,7 @@ class ShieldFundsTests: XCTestCase {
             await handleError(error)
         }
 
-        wait(for: [preTxExpectation], timeout: 10)
+        await fulfillment(of: [preTxExpectation], timeout: 10)
 
         guard shouldContinue else {
             XCTFail("pre receive sync failed")
@@ -162,7 +162,7 @@ class ShieldFundsTests: XCTestCase {
         } catch {
             await handleError(error)
         }
-        wait(for: [tFundsDetectionExpectation], timeout: 2)
+        await fulfillment(of: [tFundsDetectionExpectation], timeout: 2)
 
         // at this point the balance should be zero for shielded, then zero verified transparent funds
         // and 10000 zatoshi of total (not verified) transparent funds.
@@ -193,7 +193,7 @@ class ShieldFundsTests: XCTestCase {
             await handleError(error)
         }
 
-        wait(for: [tFundsConfirmationSyncExpectation], timeout: 5)
+        await fulfillment(of: [tFundsConfirmationSyncExpectation], timeout: 5)
 
         // the transparent funds should be 10000 zatoshis both total and verified
         let confirmedTFundsBalance = try await coordinator.synchronizer.getTransparentBalance(accountIndex: 0)
@@ -224,7 +224,7 @@ class ShieldFundsTests: XCTestCase {
             XCTFail("Failed With error: \(error.localizedDescription)")
         }
 
-        wait(for: [shieldFundsExpectation], timeout: 30)
+        await fulfillment(of: [shieldFundsExpectation], timeout: 30)
 
         guard shouldContinue else { return }
 
@@ -277,7 +277,7 @@ class ShieldFundsTests: XCTestCase {
             postShieldSyncExpectation.fulfill()
         }
 
-        wait(for: [postShieldSyncExpectation], timeout: 3)
+        await fulfillment(of: [postShieldSyncExpectation], timeout: 3)
 
         guard shouldContinue else { return }
 
@@ -315,7 +315,7 @@ class ShieldFundsTests: XCTestCase {
             confirmationExpectation.fulfill()
         }
 
-        wait(for: [confirmationExpectation], timeout: 5)
+        await fulfillment(of: [confirmationExpectation], timeout: 5)
 
         guard shouldContinue else { return }
 
