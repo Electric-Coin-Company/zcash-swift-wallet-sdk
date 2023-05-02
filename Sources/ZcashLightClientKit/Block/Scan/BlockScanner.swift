@@ -90,8 +90,10 @@ extension BlockScannerImpl: BlockScanner {
         assert(config.scanningBatchSize > 0, "ZcashSDK.DefaultScanningBatch must be larger than 0!")
         guard network == .mainnet else { return UInt32(config.scanningBatchSize) }
 
-        if height > 1_600_000 {
-            return 5
+        if height > 1_650_000 {
+            // librustzcash thread saturation at a number of blocks
+            // that contains 100 * num_cores Sapling outputs.
+            return UInt32(max(ProcessInfo().activeProcessorCount, 10))
         }
 
         return UInt32(config.scanningBatchSize)
