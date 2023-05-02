@@ -114,7 +114,7 @@ class SyncBlocksListViewController: UIViewController {
             outputParamsURL: try! outputParamsURLHelper(),
             saplingParamsSourceURL: SaplingParamsSourceURL.default,
             alias: data.alias,
-            logLevel: .debug
+            loggingPolicy: .default(.debug)
         )
 
         return SDKSynchronizer(initializer: initializer)
