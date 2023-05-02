@@ -1,3 +1,14 @@
+### [#1013] Enable more granular control over logging behavior
+
+Now the SDK allows for more fine-tuning of its logging behavior. The `LoggingPolicy` enum
+provides for three options: `.default(OSLogger.LogLevel)` wherein the SDK will use its own logger, with the option
+to customize the log level by passing an `OSLogger.LogLevel` to the enum case. 
+`custom` allows one to pass a custom `Logger` implementation for completely customized logging.
+Lastly, `noLogging` disables logging entirely.
+
+To utilize this new configuration option, pass a `loggingPolicy` into the `Initializer`. If unspecified, the SDK
+will utilize an internal `Logger` implementation with an `OSLogger.LogLevel` of `.debug`
+
 # 0.21.0-beta
 
 New checkpoints

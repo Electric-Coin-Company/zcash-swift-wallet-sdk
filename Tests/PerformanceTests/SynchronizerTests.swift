@@ -79,7 +79,7 @@ class SynchronizerTests: XCTestCase {
                 outputParamsURL: try __outputParamsURL(),
                 saplingParamsSourceURL: SaplingParamsSourceURL.tests,
                 alias: .default,
-                logLevel: .debug
+                loggingPolicy: .default(.debug)
             )
             
             try? FileManager.default.removeItem(at: databases.fsCacheDbRoot)

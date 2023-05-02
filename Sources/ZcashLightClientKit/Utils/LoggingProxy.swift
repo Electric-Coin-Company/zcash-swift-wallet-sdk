@@ -43,3 +43,14 @@ extension Logger {
         error(message, file: file, function: function, line: line)
     }
 }
+
+/**
+A concrete logger implementation that logs nothing at all
+ */
+struct NullLogger: Logger {
+    func debug(_ message: String, file: StaticString, function: StaticString, line: Int) {}
+    func info(_ message: String, file: StaticString, function: StaticString, line: Int) {}
+    func event(_ message: String, file: StaticString, function: StaticString, line: Int) {}
+    func warn(_ message: String, file: StaticString, function: StaticString, line: Int) {}
+    func error(_ message: String, file: StaticString, function: StaticString, line: Int) {}
+}

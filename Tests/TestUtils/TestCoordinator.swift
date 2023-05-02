@@ -77,7 +77,7 @@ class TestCoordinator {
             outputParamsURL: try __outputParamsURL(),
             saplingParamsSourceURL: SaplingParamsSourceURL.tests,
             alias: alias,
-            logLevel: .debug
+            loggingPolicy: .default(.debug)
         )
 
         let derivationTool = DerivationTool(networkType: network.networkType)
