@@ -334,41 +334,22 @@ actor CompactBlockProcessor {
     ///  - backend: a class that complies to `ZcashRustBackendWelding`
     ///  - config: `Configuration` struct for this processor
     init(
-        service: LightWalletService,
-        storage: CompactBlockRepository,
-        rustBackend: ZcashRustBackendWelding,
-        config: Configuration,
-        metrics: SDKMetrics,
-        logger: Logger,
-        latestBlocksDataProvider: LatestBlocksDataProvider
+        container: DIContainer,
+        config: Configuration
     ) {
         self.init(
-            service: service,
-            storage: storage,
-            rustBackend: rustBackend,
+            container: container,
             config: config,
-            repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb),
-            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: logger),
-            metrics: metrics,
-            logger: logger,
-            latestBlocksDataProvider: latestBlocksDataProvider
+            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: container.resolve(OSLogger.self))
         )
     }
 
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    init(
-        initializer: Initializer,
-        metrics: SDKMetrics,
-        logger: Logger,
-        latestBlocksDataProvider: LatestBlocksDataProvider,
-        walletBirthdayProvider: @escaping () -> BlockHeight
-    ) {
+    init(initializer: Initializer, walletBirthdayProvider: @escaping () -> BlockHeight) {
         self.init(
-            service: initializer.lightWalletService,
-            storage: initializer.storage,
-            rustBackend: initializer.rustBackend,
+            container: initializer.container,
             config: Configuration(
                 alias: initializer.alias,
                 fsBlockCacheRoot: initializer.fsBlockDbRoot,
@@ -379,31 +360,27 @@ actor CompactBlockProcessor {
                 walletBirthdayProvider: walletBirthdayProvider,
                 network: initializer.network
             ),
-            repository: initializer.transactionRepository,
-            accountRepository: initializer.accountRepository,
-            metrics: metrics,
-            logger: logger,
-            latestBlocksDataProvider: latestBlocksDataProvider
+            accountRepository: initializer.accountRepository
         )
     }
     
     internal init(
-        service: LightWalletService,
-        storage: CompactBlockRepository,
-        rustBackend: ZcashRustBackendWelding,
+        container: DIContainer,
         config: Configuration,
-        repository: TransactionRepository,
-        accountRepository: AccountRepository,
-        metrics: SDKMetrics,
-        logger: Logger,
-        latestBlocksDataProvider: LatestBlocksDataProvider
+        accountRepository: AccountRepository
     ) {
-        self.metrics = metrics
-        self.logger = logger
-        self.latestBlocksDataProvider = latestBlocksDataProvider
+        self.metrics = container.resolve(SDKMetrics.self)
+        self.logger = container.resolve(OSLogger.self)
+        self.latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
+
+        let transactionRepository = container.resolve(TransactionRepository.self)
+        let rustBackend = container.resolve(ZcashRustBackendWelding.self)
+        let service = container.resolve(LightWalletService.self)
+        let storage = container.resolve(CompactBlockRepository.self)
+
         let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard, logger: logger)
         self.internalSyncProgress = internalSyncProgress
-        let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
+        let blockDownloaderService = container.resolve(BlockDownloaderService.self)
         let blockDownloader = BlockDownloaderImpl(
             service: service,
             downloaderService: blockDownloaderService,
@@ -429,7 +406,7 @@ actor CompactBlockProcessor {
         self.blockScanner = BlockScannerImpl(
             config: blockScannerConfig,
             rustBackend: rustBackend,
-            transactionRepository: repository,
+            transactionRepository: transactionRepository,
             metrics: metrics,
             logger: logger,
             latestBlocksDataProvider: latestBlocksDataProvider
@@ -439,7 +416,7 @@ actor CompactBlockProcessor {
             blockDownloaderService: blockDownloaderService,
             internalSyncProgress: internalSyncProgress,
             rustBackend: rustBackend,
-            transactionRepository: repository,
+            transactionRepository: transactionRepository,
             metrics: metrics,
             logger: logger
         )
@@ -470,7 +447,7 @@ actor CompactBlockProcessor {
         self.rustBackend = rustBackend
         self.storage = storage
         self.config = config
-        self.transactionRepository = repository
+        self.transactionRepository = transactionRepository
         self.accountRepository = accountRepository
     }
     

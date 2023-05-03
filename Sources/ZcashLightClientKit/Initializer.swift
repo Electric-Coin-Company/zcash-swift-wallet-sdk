@@ -85,6 +85,7 @@ class initializes the Rust backend and the supporting data required to exercise 
 The [cash.z.wallet.sdk.block.CompactBlockProcessor] handles all the remaining Rust backend
 functionality, related to processing blocks.
 */
+// swiftlint:disable:next type_body_length
 public class Initializer {
     struct URLs {
         let fsBlockDbRoot: URL
@@ -102,6 +103,7 @@ public class Initializer {
     // This is used to uniquely identify instance of the SDKSynchronizer. It's used when checking if the Alias is already used or not.
     let id = UUID()
 
+    let container: DIContainer
     let alias: ZcashSynchronizerAlias
     let endpoint: LightWalletEndpoint
     let fsBlockDbRoot: URL
@@ -154,6 +156,140 @@ public class Initializer {
         alias: ZcashSynchronizerAlias = .default,
         logLevel: OSLogger.LogLevel = .debug
     ) {
+        let container = DIContainer()
+
+        // It's not possible to fail from constructor. Technically it's possible but it can be pain for the client apps to handle errors thrown
+        // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
+        let (updatedURLs, parsingError) = Self.setup(
+            container: container,
+            cacheDbURL: cacheDbURL,
+            fsBlockDbRoot: fsBlockDbRoot,
+            dataDbURL: dataDbURL,
+            pendingDbURL: pendingDbURL,
+            endpoint: endpoint,
+            network: network,
+            spendParamsURL: spendParamsURL,
+            outputParamsURL: outputParamsURL,
+            saplingParamsSourceURL: saplingParamsSourceURL,
+            alias: alias,
+            logLevel: logLevel
+        )
+
+        self.init(
+            container: container,
+            cacheDbURL: cacheDbURL,
+            urls: updatedURLs,
+            endpoint: endpoint,
+            network: network,
+            saplingParamsSourceURL: saplingParamsSourceURL,
+            alias: alias,
+            urlsParsingError: parsingError,
+            logLevel: logLevel
+        )
+    }
+
+    /// Internal for dependency injection purposes.
+    convenience init(
+        container: DIContainer,
+        cacheDbURL: URL?,
+        fsBlockDbRoot: URL,
+        dataDbURL: URL,
+        pendingDbURL: URL,
+        endpoint: LightWalletEndpoint,
+        network: ZcashNetwork,
+        spendParamsURL: URL,
+        outputParamsURL: URL,
+        saplingParamsSourceURL: SaplingParamsSourceURL,
+        alias: ZcashSynchronizerAlias = .default,
+        logLevel: OSLogger.LogLevel = .debug
+    ) {
+        // It's not possible to fail from constructor. Technically it's possible but it can be pain for the client apps to handle errors thrown
+        // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
+        let (updatedURLs, parsingError) = Self.setup(
+            container: container,
+            cacheDbURL: cacheDbURL,
+            fsBlockDbRoot: fsBlockDbRoot,
+            dataDbURL: dataDbURL,
+            pendingDbURL: pendingDbURL,
+            endpoint: endpoint,
+            network: network,
+            spendParamsURL: spendParamsURL,
+            outputParamsURL: outputParamsURL,
+            saplingParamsSourceURL: saplingParamsSourceURL,
+            alias: alias,
+            logLevel: logLevel
+        )
+
+        self.init(
+            container: container,
+            cacheDbURL: cacheDbURL,
+            urls: updatedURLs,
+            endpoint: endpoint,
+            network: network,
+            saplingParamsSourceURL: saplingParamsSourceURL,
+            alias: alias,
+            urlsParsingError: parsingError,
+            logLevel: logLevel
+        )
+    }
+
+    private init(
+        container: DIContainer,
+        cacheDbURL: URL?,
+        urls: URLs,
+        endpoint: LightWalletEndpoint,
+        network: ZcashNetwork,
+        saplingParamsSourceURL: SaplingParamsSourceURL,
+        alias: ZcashSynchronizerAlias,
+        urlsParsingError: ZcashError?,
+        logLevel: OSLogger.LogLevel
+    ) {
+        self.container = container
+        self.cacheDbURL = cacheDbURL
+        self.rustBackend = container.resolve(ZcashRustBackendWelding.self)
+        self.fsBlockDbRoot = urls.fsBlockDbRoot
+        self.dataDbURL = urls.dataDbURL
+        self.pendingDbURL = urls.pendingDbURL
+        self.endpoint = endpoint
+        self.spendParamsURL = urls.spendParamsURL
+        self.outputParamsURL = urls.outputParamsURL
+        self.saplingParamsSourceURL = saplingParamsSourceURL
+        self.alias = alias
+        self.lightWalletService = container.resolve(LightWalletService.self)
+        self.transactionRepository = container.resolve(TransactionRepository.self)
+        self.accountRepository = AccountRepositoryBuilder.build(
+            dataDbURL: urls.dataDbURL,
+            readOnly: true,
+            caching: true,
+            logger: container.resolve(OSLogger.self)
+        )
+        self.storage = container.resolve(CompactBlockRepository.self)
+        self.blockDownloaderService = container.resolve(BlockDownloaderService.self)
+        self.network = network
+        self.walletBirthday = Checkpoint.birthday(with: 0, network: network).height
+        self.urlsParsingError = urlsParsingError
+        self.logger = container.resolve(OSLogger.self)
+    }
+
+    private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
+        return LightWalletServiceFactory(endpoint: endpoint)
+    }
+
+    // swiftlint:disable:next function_parameter_count
+    private static func setup(
+        container: DIContainer,
+        cacheDbURL: URL?,
+        fsBlockDbRoot: URL,
+        dataDbURL: URL,
+        pendingDbURL: URL,
+        endpoint: LightWalletEndpoint,
+        network: ZcashNetwork,
+        spendParamsURL: URL,
+        outputParamsURL: URL,
+        saplingParamsSourceURL: SaplingParamsSourceURL,
+        alias: ZcashSynchronizerAlias,
+        logLevel: OSLogger.LogLevel
+    ) -> (URLs, ZcashError?) {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
@@ -166,88 +302,16 @@ public class Initializer {
         // from constructor. So `parsingError` is just stored in initializer and `SDKSynchronizer.prepare()` throw this error if it exists.
         let (updatedURLs, parsingError) = Self.tryToUpdateURLs(with: alias, urls: urls)
 
-        let logger = OSLogger(logLevel: logLevel, alias: alias)
-        let rustBackend = ZcashRustBackend(
-            dbData: updatedURLs.dataDbURL,
-            fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-            spendParamsPath: updatedURLs.spendParamsURL,
-            outputParamsPath: updatedURLs.outputParamsURL,
-            networkType: network.networkType
-        )
-
-        self.init(
-            rustBackend: rustBackend,
-            network: network,
-            cacheDbURL: cacheDbURL,
+        Dependencies.setup(
+            in: container,
             urls: updatedURLs,
-            endpoint: endpoint,
-            service: Self.makeLightWalletServiceFactory(endpoint: endpoint).make(),
-            repository: TransactionRepositoryBuilder.build(dataDbURL: updatedURLs.dataDbURL),
-            accountRepository: AccountRepositoryBuilder.build(
-                dataDbURL: updatedURLs.dataDbURL,
-                readOnly: true,
-                caching: true,
-                logger: logger
-            ),
-            storage: FSCompactBlockRepository(
-                fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-                metadataStore: .live(
-                    fsBlockDbRoot: updatedURLs.fsBlockDbRoot,
-                    rustBackend: rustBackend,
-                    logger: logger
-                ),
-                blockDescriptor: .live,
-                contentProvider: DirectoryListingProviders.defaultSorted,
-                logger: logger
-            ),
-            saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
-            urlsParsingError: parsingError,
-            logger: logger
+            networkType: network.networkType,
+            endpoint: endpoint,
+            logLevel: logLevel
         )
-    }
 
-    /// Internal for dependency injection purposes.
-    ///
-    /// !!! It's expected that URLs put here are already update with the Alias.
-    init(
-        rustBackend: ZcashRustBackendWelding,
-        network: ZcashNetwork,
-        cacheDbURL: URL?,
-        urls: URLs,
-        endpoint: LightWalletEndpoint,
-        service: LightWalletService,
-        repository: TransactionRepository,
-        accountRepository: AccountRepository,
-        storage: CompactBlockRepository,
-        saplingParamsSourceURL: SaplingParamsSourceURL,
-        alias: ZcashSynchronizerAlias,
-        urlsParsingError: ZcashError?,
-        logger: Logger
-    ) {
-        self.cacheDbURL = cacheDbURL
-        self.rustBackend = rustBackend
-        self.fsBlockDbRoot = urls.fsBlockDbRoot
-        self.dataDbURL = urls.dataDbURL
-        self.pendingDbURL = urls.pendingDbURL
-        self.endpoint = endpoint
-        self.spendParamsURL = urls.spendParamsURL
-        self.outputParamsURL = urls.outputParamsURL
-        self.saplingParamsSourceURL = saplingParamsSourceURL
-        self.alias = alias
-        self.lightWalletService = service
-        self.transactionRepository = repository
-        self.accountRepository = accountRepository
-        self.storage = storage
-        self.blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
-        self.network = network
-        self.walletBirthday = Checkpoint.birthday(with: 0, network: network).height
-        self.urlsParsingError = urlsParsingError
-        self.logger = logger
-    }
-
-    private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
-        return LightWalletServiceFactory(endpoint: endpoint)
+        return (updatedURLs, parsingError)
     }
 
     /// Try to update URLs with `alias`.

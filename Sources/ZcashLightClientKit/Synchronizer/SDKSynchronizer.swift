@@ -50,28 +50,16 @@ public class SDKSynchronizer: Synchronizer {
     /// Creates an SDKSynchronizer instance
     /// - Parameter initializer: a wallet Initializer object
     public convenience init(initializer: Initializer) {
-        let metrics = SDKMetrics()
-        let latestBlocksDataProvider = LatestBlocksDataProviderImpl(
-            service: initializer.lightWalletService,
-            transactionRepository: initializer.transactionRepository
-        )
         self.init(
             status: .unprepared,
             initializer: initializer,
             transactionManager: OutboundTransactionManagerBuilder.build(initializer: initializer),
-            transactionRepository: initializer.transactionRepository,
             utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
             blockProcessor: CompactBlockProcessor(
                 initializer: initializer,
-                metrics: metrics,
-                logger: initializer.logger,
-                latestBlocksDataProvider: latestBlocksDataProvider,
                 walletBirthdayProvider: { initializer.walletBirthday }
             ),
-            metrics: metrics,
-            syncSessionIDGenerator: UniqueSyncSessionIDGenerator(),
-            syncSessionTicker: .live,
-            latestBlocksDataProvider: latestBlocksDataProvider
+            syncSessionTicker: .live
         )
     }
 
@@ -79,28 +67,24 @@ public class SDKSynchronizer: Synchronizer {
         status: SyncStatus,
         initializer: Initializer,
         transactionManager: OutboundTransactionManager,
-        transactionRepository: TransactionRepository,
         utxoRepository: UnspentTransactionOutputRepository,
         blockProcessor: CompactBlockProcessor,
-        metrics: SDKMetrics,
-        syncSessionIDGenerator: SyncSessionIDGenerator,
-        syncSessionTicker: SessionTicker,
-        latestBlocksDataProvider: LatestBlocksDataProvider
+        syncSessionTicker: SessionTicker
     ) {
         self.connectionState = .idle
         self.underlyingStatus = GenericActor(status)
         self.initializer = initializer
         self.transactionManager = transactionManager
-        self.transactionRepository = transactionRepository
+        self.transactionRepository = initializer.transactionRepository
         self.utxoRepository = utxoRepository
         self.blockProcessor = blockProcessor
         self.network = initializer.network
-        self.metrics = metrics
+        self.metrics = initializer.container.resolve(SDKMetrics.self)
         self.logger = initializer.logger
-        self.syncSessionIDGenerator = syncSessionIDGenerator
+        self.syncSessionIDGenerator = initializer.container.resolve(SyncSessionIDGenerator.self)
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
-        self.latestBlocksDataProvider = latestBlocksDataProvider
+        self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
         
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)

@@ -55,11 +55,11 @@ class TestCoordinator {
     
     init(
         alias: ZcashSynchronizerAlias = .default,
+        container: DIContainer,
         walletBirthday: BlockHeight,
         network: ZcashNetwork,
         callPrepareInConstructor: Bool = true,
-        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint,
-        syncSessionIDGenerator: SyncSessionIDGenerator = UniqueSyncSessionIDGenerator()
+        endpoint: LightWalletEndpoint = TestCoordinator.defaultEndpoint
     ) async throws {
         await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
@@ -67,6 +67,7 @@ class TestCoordinator {
         self.databases = databases
 
         let initializer = Initializer(
+            container: container,
             cacheDbURL: nil,
             fsBlockDbRoot: databases.fsCacheDbRoot,
             dataDbURL: databases.dataDB,
@@ -94,7 +95,7 @@ class TestCoordinator {
         let liveService = LightWalletServiceFactory(endpoint: endpoint).make()
         self.service = DarksideWalletService(endpoint: endpoint, service: liveService)
 
-        self.synchronizer = SDKSynchronizer(initializer: initializer, sessionGenerator: syncSessionIDGenerator, sessionTicker: .live)
+        self.synchronizer = SDKSynchronizer(initializer: initializer)
         subscribeToState(synchronizer: self.synchronizer)
 
         if callPrepareInConstructor {
