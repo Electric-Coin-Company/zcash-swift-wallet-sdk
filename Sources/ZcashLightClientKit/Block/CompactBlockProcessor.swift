@@ -775,7 +775,8 @@ actor CompactBlockProcessor {
                 try await clearCompactBlockCache()
 
                 if !Task.isCancelled {
-                    await processBatchFinished(height: anyActionExecuted ? ranges.latestBlockHeight : nil)
+                    let newBlocksMined = await ranges.latestBlockHeight < latestBlocksDataProvider.latestBlockHeight
+                    await processBatchFinished(height: (anyActionExecuted && !newBlocksMined) ? ranges.latestBlockHeight : nil)
                 }
             } catch {
                 logger.error("Sync failed with error: \(error)")
