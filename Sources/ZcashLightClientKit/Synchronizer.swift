@@ -366,15 +366,9 @@ enum InternalSyncStatus: Equatable {
     /// taking other maintenance steps that need to occur after an upgrade.
     case unprepared
 
-    case syncing(_ progress: BlockProgress)
-
-    /// Indicates that this Synchronizer is actively enhancing newly scanned blocks
-    /// with additional transaction details, fetched from the server.
-    case enhancing(_ progress: EnhancementProgress)
-
-    /// fetches the transparent balance and stores it locally
-    case fetching(_ progress: Float)
-
+    /// Indicates that this Synchronizer is actively processing new blocks (consists of fetch, scan and enhance operations)
+    case syncing(Float)
+    
     /// Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
     /// When set, a UI element may want to turn green.
     case synced
@@ -390,7 +384,7 @@ enum InternalSyncStatus: Equatable {
     
     public var isSyncing: Bool {
         switch self {
-        case .syncing, .enhancing, .fetching:
+        case .syncing:
             return true
         default:
             return false
@@ -416,8 +410,6 @@ enum InternalSyncStatus: Equatable {
         switch self {
         case .unprepared: return "unprepared"
         case .syncing: return "syncing"
-        case .enhancing: return "enhancing"
-        case .fetching: return "fetching"
         case .synced: return "synced"
         case .stopped: return "stopped"
         case .disconnected: return "disconnected"
@@ -449,8 +441,6 @@ extension InternalSyncStatus {
         switch (lhs, rhs) {
         case (.unprepared, .unprepared): return true
         case let (.syncing(lhsProgress), .syncing(rhsProgress)): return lhsProgress == rhsProgress
-        case let (.enhancing(lhsProgress), .enhancing(rhsProgress)): return lhsProgress == rhsProgress
-        case (.fetching, .fetching): return true
         case (.synced, .synced): return true
         case (.stopped, .stopped): return true
         case (.disconnected, .disconnected): return true
@@ -461,15 +451,8 @@ extension InternalSyncStatus {
 }
 
 extension InternalSyncStatus {
-    init(_ blockProcessorProgress: CompactBlockProgress) {
-        switch blockProcessorProgress {
-        case .syncing(let progressReport):
-            self = .syncing(progressReport)
-        case .enhance(let enhancingReport):
-            self = .enhancing(enhancingReport)
-        case .fetch(let fetchingProgress):
-            self = .fetching(fetchingProgress)
-        }
+    init(_ blockProcessorProgress: Float) {
+        self = .syncing(blockProcessorProgress)
     }
 }
 
@@ -479,11 +462,7 @@ extension InternalSyncStatus {
         case .unprepared:
             return .unprepared
         case .syncing(let progress):
-            return .syncing(0.9 * progress.progress)
-        case .enhancing(let progress):
-            return .syncing(0.9 + 0.08 * progress.progress)
-        case .fetching(let progress):
-            return .syncing(0.98 + 0.02 * progress)
+            return .syncing(progress)
         case .synced:
             return .upToDate
         case .stopped:

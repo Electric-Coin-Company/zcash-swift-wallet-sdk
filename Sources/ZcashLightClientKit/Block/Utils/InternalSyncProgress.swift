@@ -9,20 +9,35 @@ import Foundation
 
 struct SyncRanges: Equatable {
     let latestBlockHeight: BlockHeight
-    /// The sync process can be interrupted in any phase. It may happen that it's interrupted while downloading blocks. In that case in next sync
-    /// process already downloaded blocks needs to be scanned before the sync process starts to download new blocks. And the range of blocks that are
-    /// already downloaded but not scanned is stored in this variable.
-    let downloadedButUnscannedRange: CompactBlockRange?
-    /// Range of blocks that are not yet downloaded and not yet scanned.
-    let downloadAndScanRange: CompactBlockRange?
+    // Range of blocks that are not yet downloaded
+    let downloadRange: CompactBlockRange?
+    /// Range of blocks that are not yet scanned.
+    let scanRange: CompactBlockRange?
     /// Range of blocks that are not enhanced yet.
     let enhanceRange: CompactBlockRange?
     /// Range of blocks for which no UTXOs are fetched yet.
     let fetchUTXORange: CompactBlockRange?
 
     let latestScannedHeight: BlockHeight?
-
     let latestDownloadedBlockHeight: BlockHeight?
+
+    static var empty: SyncRanges {
+        SyncRanges(
+            latestBlockHeight: 0,
+            downloadRange: nil,
+            scanRange: nil,
+            enhanceRange: nil,
+            fetchUTXORange: nil,
+            latestScannedHeight: nil,
+            latestDownloadedBlockHeight: nil
+        )
+    }
+}
+
+enum NextState: Equatable {
+    case finishProcessing(height: BlockHeight)
+    case processNewBlocks(ranges: SyncRanges)
+    case wait(latestHeight: BlockHeight, latestDownloadHeight: BlockHeight)
 }
 
 protocol InternalSyncProgressStorage {
@@ -30,6 +45,7 @@ protocol InternalSyncProgressStorage {
     func bool(for key: String) async throws -> Bool
     func integer(for key: String) async throws -> Int
     func set(_ value: Int, for key: String) async throws
+    // sourcery: mockedName="setBool"
     func set(_ value: Bool, for key: String) async throws
 }
 
@@ -132,7 +148,7 @@ actor InternalSyncProgress {
         latestBlockHeight: BlockHeight,
         latestScannedHeight: BlockHeight,
         walletBirthday: BlockHeight
-    ) async throws -> CompactBlockProcessor.NextState {
+    ) async throws -> NextState {
         let latestDownloadedBlockHeight = try await self.latestDownloadedBlockHeight
         let latestEnhancedHeight = try await self.latestEnhancedHeight
         let latestUTXOFetchedHeight = try await self.latestUTXOFetchedHeight
@@ -174,15 +190,6 @@ actor InternalSyncProgress {
         let latestEnhancedHeight = try await self.latestEnhancedHeight
         let latestUTXOFetchedHeight = try await self.latestUTXOFetchedHeight
 
-        // If there is more downloaded then scanned blocks we have to range for these blocks. The sync process will then start with scanning these
-        // blocks instead of downloading new ones.
-        let downloadedButUnscannedRange: CompactBlockRange?
-        if latestScannedHeight < latestDownloadedBlockHeight {
-            downloadedButUnscannedRange = latestScannedHeight + 1...latestDownloadedBlockHeight
-        } else {
-            downloadedButUnscannedRange = nil
-        }
-
         if latestScannedHeight > latestDownloadedBlockHeight {
             logger.warn("""
             InternalSyncProgress found inconsistent state.
@@ -191,24 +198,16 @@ actor InternalSyncProgress {
                 latestScannedHeight:     \(latestScannedHeight)
                 latestEnhancedHeight:    \(latestEnhancedHeight)
                 latestUTXOFetchedHeight: \(latestUTXOFetchedHeight)
-
-            latest downloaded height
             """)
         }
 
-        // compute the range that must be downloaded and scanned based on
-        // birthday, `latestDownloadedBlockHeight`, `latestScannedHeight` and
-        // latest block height fetched from the chain.
-        let downloadAndScanRange = computeRange(
-            latestHeight: max(latestDownloadedBlockHeight, latestScannedHeight),
-            birthday: birthday,
-            latestBlockHeight: latestBlockHeight
-        )
+        let downloadRange = computeRange(latestHeight: latestDownloadedBlockHeight, birthday: birthday, latestBlockHeight: latestBlockHeight)
+        let scanRange = computeRange(latestHeight: latestScannedHeight, birthday: birthday, latestBlockHeight: latestBlockHeight)
 
         return SyncRanges(
             latestBlockHeight: latestBlockHeight,
-            downloadedButUnscannedRange: downloadedButUnscannedRange,
-            downloadAndScanRange: downloadAndScanRange,
+            downloadRange: downloadRange,
+            scanRange: scanRange,
             enhanceRange: computeRange(latestHeight: latestEnhancedHeight, birthday: birthday, latestBlockHeight: latestBlockHeight),
             fetchUTXORange: computeRange(latestHeight: latestUTXOFetchedHeight, birthday: birthday, latestBlockHeight: latestBlockHeight),
             latestScannedHeight: latestScannedHeight,

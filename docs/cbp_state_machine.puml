@@ -1,0 +1,90 @@
+@startuml
+hide empty description
+
+note as Lines
+    Green lines are happy paths. 
+    Red lines are error paths.
+    Blue lines are stop paths.
+
+    In general any action for any state can produce error.
+    And the sync process can be stopped during any action.
+end note
+
+
+[*] -> idle
+
+idle -[#green,bold]-> migrateLegacyCacheDB
+
+migrateLegacyCacheDB : MigrateLegacyCacheDBAction
+migrateLegacyCacheDB -[#green,bold]-> validateServer
+migrateLegacyCacheDB -[#red]-> failed : Error occured.
+migrateLegacyCacheDB -[#blue]-> stopped : Sync was stopped.
+
+validateServer : ValidateServerAction
+validateServer -[#green,bold]-> computeSyncRanges
+validateServer -[#red]-> failed : Error occured.
+validateServer -[#blue]-> stopped : Sync was stopped.
+
+computeSyncRanges : ComputeSyncRangesAction
+computeSyncRanges -[#green,bold]-> checksBeforeSync
+computeSyncRanges -[#red]-> failed : Error occured.
+computeSyncRanges -[#blue]-> stopped : Sync was stopped.
+
+checksBeforeSync : ChecksBeforeSyncAction
+checksBeforeSync -[#green,bold]-> fetchUTXO
+checksBeforeSync -[#red]-> failed : Error occured.
+checksBeforeSync -[#blue]-> stopped : Sync was stopped.
+
+fetchUTXO : FetchUTXOAction
+fetchUTXO -[#green,bold]-> handleSaplingParams
+fetchUTXO -[#red]-> failed : Error occured.
+fetchUTXO -[#blue]-> stopped : Sync was stopped.
+
+handleSaplingParams : SaplingParamsAction
+handleSaplingParams -[#green,bold]-> download
+handleSaplingParams -[#red]-> failed : Error occured.
+handleSaplingParams -[#blue]-> stopped : Sync was stopped.
+
+download : DownloadAction
+download -[#green,bold]-> validate
+download -[#red]-> failed : Error occured.
+download -[#blue]-> stopped : Sync was stopped.
+
+validate : ValidateAction
+validate -[#green,bold]-> scan
+validate -[#red]-> failed : Error occured.
+validate -[#blue]-> stopped : Sync was stopped.
+
+scan : ScanAction
+scan -[#green,bold]-> clearAlreadyScannedBlocks
+scan -[#red]-> failed : Error occured.
+scan -[#blue]-> stopped : Sync was stopped.
+
+clearAlreadyScannedBlocks : ClearAlreadyScannedBlocksAction
+clearAlreadyScannedBlocks -[#green,bold]-> enhance
+clearAlreadyScannedBlocks -[#red]-> failed : Error occured.
+clearAlreadyScannedBlocks -[#blue]-> stopped : Sync was stopped.
+
+enhance : EnhanceAction
+enhance -[#green,bold]-> download : Not all blocks in the\nsync range are downloaded\nand scanned yet.
+enhance -[#green,bold]-> clearCache : All the blocks in\nthe sync range are downloaded\nand scanned.
+enhance -[#red]-> failed : Error occured.
+enhance -[#blue]-> stopped : Sync was stopped.
+
+note right of enhance
+    Enhance transactions in batches of 1000 
+    blocks. Dont't do it for each scan batch 
+    which is usualy 100 blocks.
+end note
+
+clearCache : ClearCacheAction
+clearCache --> finished
+clearCache -[#red]-> failed : Error occured.
+clearCache -[#blue]-> stopped : Sync was stopped.
+
+finished --> [*]
+failed --> [*]
+stopped --> [*]
+
+@enduml
+

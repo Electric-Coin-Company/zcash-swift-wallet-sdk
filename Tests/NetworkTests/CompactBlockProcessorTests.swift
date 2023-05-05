@@ -30,6 +30,10 @@ class CompactBlockProcessorTests: ZcashTestCase {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
 
+        for key in InternalSyncProgress.Key.allCases {
+            UserDefaults.standard.set(0, forKey: key.with(.default))
+        }
+
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
@@ -170,7 +174,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
         let expectedUpdates = expectedBatches(
             currentHeight: processorConfig.walletBirthday,
             targetHeight: mockLatestHeight,
-            batchSize: processorConfig.downloadBatchSize
+            batchSize: processorConfig.batchSize
         )
         updatedNotificationExpectation.expectedFulfillmentCount = expectedUpdates
         
@@ -189,8 +193,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
         
         var expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
-            downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight...latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight...latestBlockchainHeight,
+            scanRange: latestDownloadedHeight...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,
@@ -217,13 +221,13 @@ class CompactBlockProcessorTests: ZcashTestCase {
         )
 
         // Test mid-range
-        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + ZcashSDK.DefaultDownloadBatch)
+        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + ZcashSDK.DefaultBatchSize)
         latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
 
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
-            downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,
@@ -256,8 +260,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
 
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
-            downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,
@@ -282,72 +286,6 @@ class CompactBlockProcessorTests: ZcashTestCase {
             syncRanges,
             "Failure when testing last range"
         )
-    }
-
-    func testShouldClearBlockCacheReturnsNilWhenScannedHeightEqualsDownloadedHeight() {
-        /*
-         downloaded but not scanned: -1...-1
-         download and scan:          1493120...2255953
-         enhance range:              1410000...2255953
-         fetchUTXO range:            1410000...2255953
-         total progress range:       1493120...2255953
-         */
-
-        let range = SyncRanges(
-            latestBlockHeight: 2255953,
-            downloadedButUnscannedRange: -1 ... -1,
-            downloadAndScanRange: 1493120...2255953,
-            enhanceRange: 1410000...2255953,
-            fetchUTXORange: 1410000...2255953,
-            latestScannedHeight: 1493119,
-            latestDownloadedBlockHeight: 1493119
-        )
-
-        XCTAssertNil(range.shouldClearBlockCacheAndUpdateInternalState())
-    }
-
-    func testShouldClearBlockCacheReturnsAHeightWhenScannedIsGreaterThanDownloaded() {
-        /*
-         downloaded but not scanned: -1...-1
-         download and scan:          1493120...2255953
-         enhance range:              1410000...2255953
-         fetchUTXO range:            1410000...2255953
-         total progress range:       1493120...2255953
-         */
-
-        let range = SyncRanges(
-            latestBlockHeight: 2255953,
-            downloadedButUnscannedRange: -1 ... -1,
-            downloadAndScanRange: 1493120...2255953,
-            enhanceRange: 1410000...2255953,
-            fetchUTXORange: 1410000...2255953,
-            latestScannedHeight: 1493129,
-            latestDownloadedBlockHeight: 1493119
-        )
-
-        XCTAssertEqual(range.shouldClearBlockCacheAndUpdateInternalState(), BlockHeight(1493129))
-    }
-
-    func testShouldClearBlockCacheReturnsNilWhenScannedIsGreaterThanDownloaded() {
-        /*
-         downloaded but not scanned: 1493120...1494120
-         download and scan:          1494121...2255953
-         enhance range:              1410000...2255953
-         fetchUTXO range:            1410000...2255953
-         total progress range:       1493120...2255953
-         */
-
-        let range = SyncRanges(
-            latestBlockHeight: 2255953,
-            downloadedButUnscannedRange: 1493120...1494120,
-            downloadAndScanRange: 1494121...2255953,
-            enhanceRange: 1410000...2255953,
-            fetchUTXORange: 1410000...2255953,
-            latestScannedHeight: 1493119,
-            latestDownloadedBlockHeight: 1494120
-        )
-
-        XCTAssertNil(range.shouldClearBlockCacheAndUpdateInternalState())
     }
     
     func testDetermineLowerBoundPastBirthday() async {
