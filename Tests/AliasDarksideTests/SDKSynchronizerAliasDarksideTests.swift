@@ -59,7 +59,7 @@ class SDKSynchronizerAliasDarksideTests: ZcashTestCase {
                 endpoint: endpoint
             )
 
-            try coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
+            try await coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
 
             coordinators.append(coordinator)
         }

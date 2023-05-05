@@ -18,6 +18,7 @@ class CompactBlockProcessorEventHandler {
         case minedTransaction
         case handleReorg
         case progressUpdated
+        case progressPartialUpdate
         case storedUTXOs
         case startedEnhancing
         case startedFetching
@@ -63,6 +64,8 @@ extension CompactBlockProcessor.Event {
             return .stopped
         case .minedTransaction:
             return .minedTransaction
+        case .progressPartialUpdate:
+            return .progressPartialUpdate
         }
     }
 }

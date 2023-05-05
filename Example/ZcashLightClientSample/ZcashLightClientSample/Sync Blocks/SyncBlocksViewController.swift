@@ -150,7 +150,6 @@ class SyncBlocksViewController: UIViewController {
         case .unprepared, .error:
             do {
                 if syncStatus == .unprepared {
-                    // swiftlint:disable:next force_try
                     do {
                         _ = try await synchronizer.prepare(
                             with: DemoAppConfig.defaultSeed,

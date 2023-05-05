@@ -12,7 +12,22 @@
 
 @testable import ZcashLightClientKit
 
-extension ZcashRustBackendWelding { }
+extension BlockDownloader { }
+extension BlockDownloaderService { }
+extension BlockEnhancer { }
+extension BlockScanner { }
+extension BlockValidator { }
+extension CompactBlockRepository { }
+extension InternalSyncProgressStorage { }
+extension LatestBlocksDataProvider { }
+extension LightWalletdInfo { }
+extension LightWalletService { }
+extension Logger { }
+extension SaplingParametersHandler { }
 extension Synchronizer { }
+extension TransactionRepository { }
+extension UTXOFetcher { }
+extension ZcashFileManager { }
+extension ZcashRustBackendWelding { }
 
 // sourcery:end:

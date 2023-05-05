@@ -33,7 +33,7 @@ final class SynchronizerTests: ZcashTestCase {
             walletBirthday: birthday + 50,
             network: network
         )
-        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        try await coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {
@@ -101,8 +101,6 @@ final class SynchronizerTests: ZcashTestCase {
 
         let status = await coordinator.synchronizer.status
         XCTAssertEqual(status, .stopped)
-        let state = await coordinator.synchronizer.blockProcessor.state
-        XCTAssertEqual(state, .stopped)
     }
 
     // MARK: Wipe tests
@@ -188,8 +186,13 @@ final class SynchronizerTests: ZcashTestCase {
         try await Task.sleep(nanoseconds: 2_000_000_000)
 
         // Just to be sure that blockProcessor is still syncing and that this test does what it should.
-        let blockProcessorState = await coordinator.synchronizer.blockProcessor.state
-        XCTAssertEqual(blockProcessorState, .syncing)
+        let synchronizerState = coordinator.synchronizer.latestState.syncStatus
+        switch synchronizerState {
+        case .syncing:
+            break
+        default:
+            XCTFail("Synchornizer should be in syncing state.")
+        }
 
         let wipeFinished = XCTestExpectation(description: "SynchronizerWipeFinished Expectation")
         /*
@@ -223,8 +226,7 @@ final class SynchronizerTests: ZcashTestCase {
     private func checkThatWipeWorked() async throws {
         let storage = await self.coordinator.synchronizer.blockProcessor.storage as! FSCompactBlockRepository
         let fm = FileManager.default
-        print(coordinator.synchronizer.initializer.dataDbURL.path)
-        
+
         XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.dataDbURL.path), "Data DB should be deleted.")
         XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
         XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [], "FS Cache directory should be empty")
@@ -238,9 +240,6 @@ final class SynchronizerTests: ZcashTestCase {
         XCTAssertEqual(latestDownloadedBlockHeight, 0, "internalSyncProgress latestDownloadedBlockHeight should be 0")
         XCTAssertEqual(latestEnhancedHeight, 0, "internalSyncProgress latestEnhancedHeight should be 0")
         XCTAssertEqual(latestUTXOFetchedHeight, 0, "internalSyncProgress latestUTXOFetchedHeight should be 0")
-
-        let blockProcessorState = await coordinator.synchronizer.blockProcessor.state
-        XCTAssertEqual(blockProcessorState, .stopped, "CompactBlockProcessor state should be stopped")
 
         let status = await coordinator.synchronizer.status
         XCTAssertEqual(status, .unprepared, "SDKSynchronizer state should be unprepared")
