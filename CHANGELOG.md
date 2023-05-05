@@ -1,5 +1,72 @@
 # Unreleased
 
+### Changed
+- `WalletTransactionEncoder` now uses a `LightWalletService` to submit the
+encoded transactions.
+
+- Functions returning or receiving `ZcashTransaction.Sent` or `ZcashTransaction.Received` now
+will be simplified by returning `ZcashTransaction.Overview` or be replaced by their Overview 
+counterparts
+
+### Added
+
+- `ZcashTransaction.Overview` can be checked for "pending-ness" by calling`.isPending(latestHeight:)` latest height must be provided so that minedHeight
+can be compared with the lastest and the `defaultStaleTolerance` constant.
+
+`TransactionRecipient` is now a public type.
+
+- `ZcashTransaction.Output` can be queried to know the inner details of a 
+`ZcashTransaction.Overview`. It will return an array with all the tracked
+outputs for that transaction so that they can be shown to users who request them
+
+- `ZcashTransaction.Overview.State` is introduced to represent `confirmed`, 
+`pending` or `expired` states. This State is relative to the current height
+of the chain that is passed to the function `getState(for currentHeight: BlockHeight)`.
+
+State should be a transient value and it's not adviced to store it unless
+transactions have stale values such as `confirmed` or `expired`.
+
+
+#### Synchronizer
+
+- `public func getTransactionOutputs(transaction) async -> [ZcashTransaction.Output]` is added to
+get the outputs related to the given transaction. You can use this to know every detail of the 
+transaction Overview and show it in a more fine-grained UI.
+
+- `TransactionRecipient` is returned on `getRecipients(for:)`. 
+### Renamed
+- `AccountEntity` called `Account` is now `DbAccount`
+
+### Removed
+- `ZcashTransaction.Received` and `ZcashTransaction.Sent` are removed
+and replaced by `Overview` since the notion of Sent and received is 
+not entirely applicable to Zcash transactions where value can be 
+sent and received at the same time. Transactions with negative value
+will be considered as "sent" but that won't be enforced with a type
+anymore
+- `cancelSpend()`: support for cancel spend was removed since its
+completion was not guaranteed
+- `PendingTransactionEntity` and all of its related components.
+Pending items are still tracked and visualized by the existing APIs
+but they are retrieved from the `TransactionRepository` instead by
+returning `ZcashTransaction.Overview` instead.
+- `pendingDbURL` is removed from every place it was required. Its
+deletion is responsibility of wallet developers.
+- `ClearedTransactions` are now just `transactions`.`MigrationManager` 
+is deleted. Now all migrations are in charge of the rust welding layer.
+- `PendingTransactionDao.swift` is removed.
+- `PendingTransactionRepository` protocol is removed.
+- `TransactionManagerError`
+- `PersistentTransactionManager`
+- `OutboundTransactionManager` is deleted and replaced by `TransactionEncoder`
+which now incorporates `submit(encoded:)` functionality
+- `DatabaseMigrationManager` is remove since it's no longer needed all Database
+migrations shall be hanlded by the rust layer.
+- `ZcashSDK.defaultPendingDbName` along with any sibling members 
+- `TransactionRepository` 
+    - `findMemos(for receivedTransaction: ZcashTransaction.Received)`
+    - `findMemos(for sentTransaction: ZcashTransaction.Sent)`
+
 ### [#1013] Enable more granular control over logging behavior
 
 Now the SDK allows for more fine-tuning of its logging behavior. The `LoggingPolicy` enum

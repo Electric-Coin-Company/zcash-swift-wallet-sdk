@@ -75,7 +75,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?,
-        completion: @escaping (Result<PendingTransactionEntity, Error>) -> Void
+        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.sendToAddress(spendingKey: spendingKey, zatoshi: zatoshi, toAddress: toAddress, memo: memo)
@@ -86,20 +86,14 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi,
-        completion: @escaping (Result<PendingTransactionEntity, Error>) -> Void
+        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
             try await self.synchronizer.shieldFunds(spendingKey: spendingKey, memo: memo, shieldingThreshold: shieldingThreshold)
         }
     }
 
-    public func cancelSpend(transaction: PendingTransactionEntity, completion: @escaping (Bool) -> Void) {
-        AsyncToClosureGateway.executeAction(completion) {
-            await self.synchronizer.cancelSpend(transaction: transaction)
-        }
-    }
-
-    public func pendingTransactions(completion: @escaping ([PendingTransactionEntity]) -> Void) {
+    public func pendingTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
         AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.pendingTransactions
         }
@@ -107,17 +101,17 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
 
     public func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
         AsyncToClosureGateway.executeAction(completion) {
-            await self.synchronizer.clearedTransactions
+            await self.synchronizer.transactions
         }
     }
 
-    public func sentTranscations(completion: @escaping ([ZcashTransaction.Sent]) -> Void) {
+    public func sentTranscations(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
         AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.sentTransactions
         }
     }
 
-    public func receivedTransactions(completion: @escaping ([ZcashTransaction.Received]) -> Void) {
+    public func receivedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
         AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.receivedTransactions
         }
@@ -131,25 +125,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func getMemos(for receivedTransaction: ZcashTransaction.Received, completion: @escaping (Result<[Memo], Error>) -> Void) {
-        AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getMemos(for: receivedTransaction)
-        }
-    }
-
-    public func getMemos(for sentTransaction: ZcashTransaction.Sent, completion: @escaping (Result<[Memo], Error>) -> Void) {
-        AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.getMemos(for: sentTransaction)
-        }
-    }
-
     public func getRecipients(for transaction: ZcashTransaction.Overview, completion: @escaping ([TransactionRecipient]) -> Void) {
-        AsyncToClosureGateway.executeAction(completion) {
-            await self.synchronizer.getRecipients(for: transaction)
-        }
-    }
-
-    public func getRecipients(for transaction: ZcashTransaction.Sent, completion: @escaping ([TransactionRecipient]) -> Void) {
         AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.getRecipients(for: transaction)
         }
@@ -161,7 +137,7 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         completion: @escaping (Result<[ZcashTransaction.Overview], Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            try await self.synchronizer.allConfirmedTransactions(from: transaction, limit: limit)
+            try await self.synchronizer.allTransactions(from: transaction, limit: limit)
         }
     }
 

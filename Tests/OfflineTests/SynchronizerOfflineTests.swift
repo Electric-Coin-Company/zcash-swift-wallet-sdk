@@ -175,6 +175,25 @@ class SynchronizerOfflineTests: XCTestCase {
         }
     }
 
+    func testSendToWithTransparentAddressThrowsError() async throws {
+        let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: true)
+
+        do {
+            _ = try await testCoordinator.synchronizer.sendToAddress(
+                spendingKey: testCoordinator.spendingKey,
+                zatoshi: Zatoshi(1),
+                toAddress: .transparent(data.transparentAddress),
+                memo: try .init(string: "hello")
+            )
+            XCTFail("Send to address should fail.")
+        } catch {
+            if let error = error as? ZcashError, case .synchronizerSendMemoToTransparentAddress = error {
+            } else {
+                XCTFail("Send to address failed with unexpected error: \(error)")
+            }
+        }
+    }
+
     func testShieldFundsCalledWithoutPrepareThrowsError() async throws {
         let testCoordinator = try await TestCoordinator(alias: .default, walletBirthday: 10, network: network, callPrepareInConstructor: false)
 
@@ -233,7 +252,7 @@ class SynchronizerOfflineTests: XCTestCase {
         await fulfillment(of: [expectation], timeout: 1)
     }
 
-    func testURLsParsingFailsInInitialierPrepareThenThrowsError() async throws {
+    func testURLsParsingFailsInInitializerPrepareThenThrowsError() async throws {
         let validFileURL = URL(fileURLWithPath: "/some/valid/path/to.file")
         let validDirectoryURL = URL(fileURLWithPath: "/some/valid/path/to/directory")
         let invalidPathURL = URL(string: "https://whatever")!
@@ -241,8 +260,7 @@ class SynchronizerOfflineTests: XCTestCase {
         let initializer = Initializer(
             cacheDbURL: nil,
             fsBlockDbRoot: validDirectoryURL,
-            dataDbURL: validFileURL,
-            pendingDbURL: invalidPathURL,
+            dataDbURL: invalidPathURL,
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: .testnet),
             spendParamsURL: validFileURL,
@@ -274,7 +292,7 @@ class SynchronizerOfflineTests: XCTestCase {
         }
     }
 
-    func testURLsParsingFailsInInitialierWipeThenThrowsError() async throws {
+    func testURLsParsingFailsInInitializerWipeThenThrowsError() async throws {
         let validFileURL = URL(fileURLWithPath: "/some/valid/path/to.file")
         let validDirectoryURL = URL(fileURLWithPath: "/some/valid/path/to/directory")
         let invalidPathURL = URL(string: "https://whatever")!
@@ -282,8 +300,7 @@ class SynchronizerOfflineTests: XCTestCase {
         let initializer = Initializer(
             cacheDbURL: nil,
             fsBlockDbRoot: validDirectoryURL,
-            dataDbURL: validFileURL,
-            pendingDbURL: invalidPathURL,
+            dataDbURL: invalidPathURL,
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: .testnet),
             spendParamsURL: validFileURL,

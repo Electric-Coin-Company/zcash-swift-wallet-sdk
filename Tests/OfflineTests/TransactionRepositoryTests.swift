@@ -134,18 +134,22 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindMemoForReceivedTransaction() async throws {
-        let transaction = ZcashTransaction.Received(
+        let transaction = ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: 1,
             expiryHeight: nil,
-            fromAccount: 0,
+            fee: nil,
             id: 5,
             index: 0,
-            memoCount: 0,
+            hasChange: false,
+            memoCount: 1,
             minedHeight: 0,
-            noteCount: 0,
             raw: nil,
-            rawID: nil,
-            value: Zatoshi.zero
+            rawID: Data(),
+            receivedNoteCount: 1,
+            sentNoteCount: 0,
+            value: .zero,
+            isExpiredUmined: false
         )
 
         let memos = try await self.transactionRepository.findMemos(for: transaction)
@@ -154,18 +158,22 @@ class TransactionRepositoryTests: XCTestCase {
     }
 
     func testFindMemoForSentTransaction() async throws {
-        let transaction = ZcashTransaction.Sent(
+        let transaction = ZcashTransaction.Overview(
+            accountId: 0,
             blockTime: 1,
             expiryHeight: nil,
-            fromAccount: 0,
+            fee: nil,
             id: 9,
             index: 0,
-            memoCount: 0,
-            minedHeight: 0,
-            noteCount: 0,
+            hasChange: false,
+            memoCount: 1,
+            minedHeight: nil,
             raw: nil,
-            rawID: nil,
-            value: Zatoshi.zero
+            rawID: Data(),
+            receivedNoteCount: 0,
+            sentNoteCount: 2,
+            value: .zero,
+            isExpiredUmined: false
         )
 
         let memos = try await self.transactionRepository.findMemos(for: transaction)

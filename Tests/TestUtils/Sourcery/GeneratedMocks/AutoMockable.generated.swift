@@ -36,22 +36,22 @@ class SynchronizerMock: Synchronizer {
         get { return underlyingMetrics }
     }
     var underlyingMetrics: SDKMetrics!
-    var pendingTransactions: [PendingTransactionEntity] {
+    var pendingTransactions: [ZcashTransaction.Overview] {
         get async { return underlyingPendingTransactions }
     }
-    var underlyingPendingTransactions: [PendingTransactionEntity] = []
-    var clearedTransactions: [ZcashTransaction.Overview] {
-        get async { return underlyingClearedTransactions }
+    var underlyingPendingTransactions: [ZcashTransaction.Overview] = []
+    var transactions: [ZcashTransaction.Overview] {
+        get async { return underlyingTransactions }
     }
-    var underlyingClearedTransactions: [ZcashTransaction.Overview] = []
-    var sentTransactions: [ZcashTransaction.Sent] {
+    var underlyingTransactions: [ZcashTransaction.Overview] = []
+    var sentTransactions: [ZcashTransaction.Overview] {
         get async { return underlyingSentTransactions }
     }
-    var underlyingSentTransactions: [ZcashTransaction.Sent] = []
-    var receivedTransactions: [ZcashTransaction.Received] {
+    var underlyingSentTransactions: [ZcashTransaction.Overview] = []
+    var receivedTransactions: [ZcashTransaction.Overview] {
         get async { return underlyingReceivedTransactions }
     }
-    var underlyingReceivedTransactions: [ZcashTransaction.Received] = []
+    var underlyingReceivedTransactions: [ZcashTransaction.Overview] = []
 
     // MARK: - prepare
 
@@ -189,10 +189,10 @@ class SynchronizerMock: Synchronizer {
         return sendToAddressSpendingKeyZatoshiToAddressMemoCallsCount > 0
     }
     var sendToAddressSpendingKeyZatoshiToAddressMemoReceivedArguments: (spendingKey: UnifiedSpendingKey, zatoshi: Zatoshi, toAddress: Recipient, memo: Memo?)?
-    var sendToAddressSpendingKeyZatoshiToAddressMemoReturnValue: PendingTransactionEntity!
-    var sendToAddressSpendingKeyZatoshiToAddressMemoClosure: ((UnifiedSpendingKey, Zatoshi, Recipient, Memo?) async throws -> PendingTransactionEntity)?
+    var sendToAddressSpendingKeyZatoshiToAddressMemoReturnValue: ZcashTransaction.Overview!
+    var sendToAddressSpendingKeyZatoshiToAddressMemoClosure: ((UnifiedSpendingKey, Zatoshi, Recipient, Memo?) async throws -> ZcashTransaction.Overview)?
 
-    func sendToAddress(spendingKey: UnifiedSpendingKey, zatoshi: Zatoshi, toAddress: Recipient, memo: Memo?) async throws -> PendingTransactionEntity {
+    func sendToAddress(spendingKey: UnifiedSpendingKey, zatoshi: Zatoshi, toAddress: Recipient, memo: Memo?) async throws -> ZcashTransaction.Overview {
         if let error = sendToAddressSpendingKeyZatoshiToAddressMemoThrowableError {
             throw error
         }
@@ -213,10 +213,10 @@ class SynchronizerMock: Synchronizer {
         return shieldFundsSpendingKeyMemoShieldingThresholdCallsCount > 0
     }
     var shieldFundsSpendingKeyMemoShieldingThresholdReceivedArguments: (spendingKey: UnifiedSpendingKey, memo: Memo, shieldingThreshold: Zatoshi)?
-    var shieldFundsSpendingKeyMemoShieldingThresholdReturnValue: PendingTransactionEntity!
-    var shieldFundsSpendingKeyMemoShieldingThresholdClosure: ((UnifiedSpendingKey, Memo, Zatoshi) async throws -> PendingTransactionEntity)?
+    var shieldFundsSpendingKeyMemoShieldingThresholdReturnValue: ZcashTransaction.Overview!
+    var shieldFundsSpendingKeyMemoShieldingThresholdClosure: ((UnifiedSpendingKey, Memo, Zatoshi) async throws -> ZcashTransaction.Overview)?
 
-    func shieldFunds(spendingKey: UnifiedSpendingKey, memo: Memo, shieldingThreshold: Zatoshi) async throws -> PendingTransactionEntity {
+    func shieldFunds(spendingKey: UnifiedSpendingKey, memo: Memo, shieldingThreshold: Zatoshi) async throws -> ZcashTransaction.Overview {
         if let error = shieldFundsSpendingKeyMemoShieldingThresholdThrowableError {
             throw error
         }
@@ -226,26 +226,6 @@ class SynchronizerMock: Synchronizer {
             return try await closure(spendingKey, memo, shieldingThreshold)
         } else {
             return shieldFundsSpendingKeyMemoShieldingThresholdReturnValue
-        }
-    }
-
-    // MARK: - cancelSpend
-
-    var cancelSpendTransactionCallsCount = 0
-    var cancelSpendTransactionCalled: Bool {
-        return cancelSpendTransactionCallsCount > 0
-    }
-    var cancelSpendTransactionReceivedTransaction: PendingTransactionEntity?
-    var cancelSpendTransactionReturnValue: Bool!
-    var cancelSpendTransactionClosure: ((PendingTransactionEntity) async -> Bool)?
-
-    func cancelSpend(transaction: PendingTransactionEntity) async -> Bool {
-        cancelSpendTransactionCallsCount += 1
-        cancelSpendTransactionReceivedTransaction = transaction
-        if let closure = cancelSpendTransactionClosure {
-            return await closure(transaction)
-        } else {
-            return cancelSpendTransactionReturnValue
         }
     }
 
@@ -293,54 +273,6 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - getMemos
-
-    var getMemosForReceivedTransactionThrowableError: Error?
-    var getMemosForReceivedTransactionCallsCount = 0
-    var getMemosForReceivedTransactionCalled: Bool {
-        return getMemosForReceivedTransactionCallsCount > 0
-    }
-    var getMemosForReceivedTransactionReceivedReceivedTransaction: ZcashTransaction.Received?
-    var getMemosForReceivedTransactionReturnValue: [Memo]!
-    var getMemosForReceivedTransactionClosure: ((ZcashTransaction.Received) async throws -> [Memo])?
-
-    func getMemos(for receivedTransaction: ZcashTransaction.Received) async throws -> [Memo] {
-        if let error = getMemosForReceivedTransactionThrowableError {
-            throw error
-        }
-        getMemosForReceivedTransactionCallsCount += 1
-        getMemosForReceivedTransactionReceivedReceivedTransaction = receivedTransaction
-        if let closure = getMemosForReceivedTransactionClosure {
-            return try await closure(receivedTransaction)
-        } else {
-            return getMemosForReceivedTransactionReturnValue
-        }
-    }
-
-    // MARK: - getMemos
-
-    var getMemosForSentTransactionThrowableError: Error?
-    var getMemosForSentTransactionCallsCount = 0
-    var getMemosForSentTransactionCalled: Bool {
-        return getMemosForSentTransactionCallsCount > 0
-    }
-    var getMemosForSentTransactionReceivedSentTransaction: ZcashTransaction.Sent?
-    var getMemosForSentTransactionReturnValue: [Memo]!
-    var getMemosForSentTransactionClosure: ((ZcashTransaction.Sent) async throws -> [Memo])?
-
-    func getMemos(for sentTransaction: ZcashTransaction.Sent) async throws -> [Memo] {
-        if let error = getMemosForSentTransactionThrowableError {
-            throw error
-        }
-        getMemosForSentTransactionCallsCount += 1
-        getMemosForSentTransactionReceivedSentTransaction = sentTransaction
-        if let closure = getMemosForSentTransactionClosure {
-            return try await closure(sentTransaction)
-        } else {
-            return getMemosForSentTransactionReturnValue
-        }
-    }
-
     // MARK: - getRecipients
 
     var getRecipientsForClearedTransactionCallsCount = 0
@@ -361,47 +293,69 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - getRecipients
+    // MARK: - getTransactionOutputs
 
-    var getRecipientsForSentTransactionCallsCount = 0
-    var getRecipientsForSentTransactionCalled: Bool {
-        return getRecipientsForSentTransactionCallsCount > 0
+    var getTransactionOutputsForTransactionCallsCount = 0
+    var getTransactionOutputsForTransactionCalled: Bool {
+        return getTransactionOutputsForTransactionCallsCount > 0
     }
-    var getRecipientsForSentTransactionReceivedTransaction: ZcashTransaction.Sent?
-    var getRecipientsForSentTransactionReturnValue: [TransactionRecipient]!
-    var getRecipientsForSentTransactionClosure: ((ZcashTransaction.Sent) async -> [TransactionRecipient])?
+    var getTransactionOutputsForTransactionReceivedTransaction: ZcashTransaction.Overview?
+    var getTransactionOutputsForTransactionReturnValue: [ZcashTransaction.Output]!
+    var getTransactionOutputsForTransactionClosure: ((ZcashTransaction.Overview) async -> [ZcashTransaction.Output])?
 
-    func getRecipients(for transaction: ZcashTransaction.Sent) async -> [TransactionRecipient] {
-        getRecipientsForSentTransactionCallsCount += 1
-        getRecipientsForSentTransactionReceivedTransaction = transaction
-        if let closure = getRecipientsForSentTransactionClosure {
+    func getTransactionOutputs(for transaction: ZcashTransaction.Overview) async -> [ZcashTransaction.Output] {
+        getTransactionOutputsForTransactionCallsCount += 1
+        getTransactionOutputsForTransactionReceivedTransaction = transaction
+        if let closure = getTransactionOutputsForTransactionClosure {
             return await closure(transaction)
         } else {
-            return getRecipientsForSentTransactionReturnValue
+            return getTransactionOutputsForTransactionReturnValue
         }
     }
 
-    // MARK: - allConfirmedTransactions
+    // MARK: - allTransactions
 
-    var allConfirmedTransactionsFromLimitThrowableError: Error?
-    var allConfirmedTransactionsFromLimitCallsCount = 0
-    var allConfirmedTransactionsFromLimitCalled: Bool {
-        return allConfirmedTransactionsFromLimitCallsCount > 0
+    var allTransactionsFromLimitThrowableError: Error?
+    var allTransactionsFromLimitCallsCount = 0
+    var allTransactionsFromLimitCalled: Bool {
+        return allTransactionsFromLimitCallsCount > 0
     }
-    var allConfirmedTransactionsFromLimitReceivedArguments: (transaction: ZcashTransaction.Overview, limit: Int)?
-    var allConfirmedTransactionsFromLimitReturnValue: [ZcashTransaction.Overview]!
-    var allConfirmedTransactionsFromLimitClosure: ((ZcashTransaction.Overview, Int) async throws -> [ZcashTransaction.Overview])?
+    var allTransactionsFromLimitReceivedArguments: (transaction: ZcashTransaction.Overview, limit: Int)?
+    var allTransactionsFromLimitReturnValue: [ZcashTransaction.Overview]!
+    var allTransactionsFromLimitClosure: ((ZcashTransaction.Overview, Int) async throws -> [ZcashTransaction.Overview])?
 
-    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview] {
-        if let error = allConfirmedTransactionsFromLimitThrowableError {
+    func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview] {
+        if let error = allTransactionsFromLimitThrowableError {
             throw error
         }
-        allConfirmedTransactionsFromLimitCallsCount += 1
-        allConfirmedTransactionsFromLimitReceivedArguments = (transaction: transaction, limit: limit)
-        if let closure = allConfirmedTransactionsFromLimitClosure {
+        allTransactionsFromLimitCallsCount += 1
+        allTransactionsFromLimitReceivedArguments = (transaction: transaction, limit: limit)
+        if let closure = allTransactionsFromLimitClosure {
             return try await closure(transaction, limit)
         } else {
-            return allConfirmedTransactionsFromLimitReturnValue
+            return allTransactionsFromLimitReturnValue
+        }
+    }
+
+    // MARK: - allPendingTransactions
+
+    var allPendingTransactionsThrowableError: Error?
+    var allPendingTransactionsCallsCount = 0
+    var allPendingTransactionsCalled: Bool {
+        return allPendingTransactionsCallsCount > 0
+    }
+    var allPendingTransactionsReturnValue: [ZcashTransaction.Overview]!
+    var allPendingTransactionsClosure: (() async throws -> [ZcashTransaction.Overview])?
+
+    func allPendingTransactions() async throws -> [ZcashTransaction.Overview] {
+        if let error = allPendingTransactionsThrowableError {
+            throw error
+        }
+        allPendingTransactionsCallsCount += 1
+        if let closure = allPendingTransactionsClosure {
+            return try await closure()
+        } else {
+            return allPendingTransactionsReturnValue
         }
     }
 

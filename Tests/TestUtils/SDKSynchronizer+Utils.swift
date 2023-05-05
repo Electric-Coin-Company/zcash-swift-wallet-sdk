@@ -18,7 +18,7 @@ extension SDKSynchronizer {
         self.init(
             status: .unprepared,
             initializer: initializer,
-            transactionManager: OutboundTransactionManagerBuilder.build(initializer: initializer),
+            transactionEncoder: WalletTransactionEncoder(initializer: initializer),
             transactionRepository: initializer.transactionRepository,
             utxoRepository: UTXORepositoryBuilder.build(initializer: initializer),
             blockProcessor: CompactBlockProcessor(

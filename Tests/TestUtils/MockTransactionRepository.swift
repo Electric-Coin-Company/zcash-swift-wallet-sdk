@@ -26,8 +26,8 @@ class MockTransactionRepository {
     var network: ZcashNetwork
 
     var transactions: [ZcashTransaction.Overview] = []
-    var receivedTransactions: [ZcashTransaction.Received] = []
-    var sentTransactions: [ZcashTransaction.Sent] = []
+    var receivedTransactions: [ZcashTransaction.Overview] = []
+    var sentTransactions: [ZcashTransaction.Overview] = []
 
     var allCount: Int {
         receivedCount + sentCount
@@ -73,6 +73,14 @@ extension MockTransactionRepository.Kind: Equatable {}
 
 // MARK: - TransactionRepository
 extension MockTransactionRepository: TransactionRepository {
+    func getTransactionOutputs(for id: Int) async throws -> [ZcashLightClientKit.ZcashTransaction.Output] {
+        []
+    }
+
+    func findPendingTransactions(latestHeight: ZcashLightClientKit.BlockHeight, offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
+        []
+    }
+
     func getRecipients(for id: Int) -> [TransactionRecipient] {
         []
     }
@@ -203,23 +211,15 @@ extension MockTransactionRepository: TransactionRepository {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findReceived(offset: Int, limit: Int) throws -> [ZcashTransaction.Received] {
+    func findReceived(offset: Int, limit: Int) throws -> [ZcashTransaction.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
-    func findSent(offset: Int, limit: Int) throws -> [ZcashTransaction.Sent] {
+    func findSent(offset: Int, limit: Int) throws -> [ZcashTransaction.Overview] {
         throw MockTransactionRepositoryError.notImplemented
     }
 
     func findMemos(for transaction: ZcashLightClientKit.ZcashTransaction.Overview) throws -> [ZcashLightClientKit.Memo] {
-        throw MockTransactionRepositoryError.notImplemented
-    }
-
-    func findMemos(for receivedTransaction: ZcashLightClientKit.ZcashTransaction.Received) throws -> [ZcashLightClientKit.Memo] {
-        throw MockTransactionRepositoryError.notImplemented
-    }
-
-    func findMemos(for sentTransaction: ZcashLightClientKit.ZcashTransaction.Sent) throws -> [ZcashLightClientKit.Memo] {
         throw MockTransactionRepositoryError.notImplemented
     }
 }

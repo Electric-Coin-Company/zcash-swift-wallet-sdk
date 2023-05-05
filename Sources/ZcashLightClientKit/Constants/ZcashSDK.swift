@@ -128,9 +128,6 @@ public enum ZcashSDK {
     /// Default Name for Compact Block caches db
     public static let defaultCacheDbName = "caches.db"
 
-    /// Default name for pending transactions db
-    public static let defaultPendingDbName = "pending.db"
-
     /// The Url that is used by default in zcashd.
     /// We'll want to make this externally configurable, rather than baking it into the SDK but
     /// this will do for now, since we're using a cloudfront URL that already redirects.
@@ -160,9 +157,6 @@ public protocol NetworkConstants {
     /// Default Name for Compact Block caches db
     @available(*, deprecated, message: "use this name to clean up the sqlite compact block database")
     static var defaultCacheDbName: String { get }
-
-    /// Default name for pending transactions db
-    static var defaultPendingDbName: String { get }
 
     /// Default prefix for db filenames
     static var defaultDbNamePrefix: String { get }
@@ -195,9 +189,6 @@ public enum ZcashSDKMainnetConstants: NetworkConstants {
 
     /// Default Name for Compact Block caches db
     public static let defaultCacheDbName = "caches.db"
-
-    /// Default name for pending transactions db
-    public static let defaultPendingDbName = "pending.db"
     
     public static let defaultDbNamePrefix = "ZcashSdk_mainnet_"
     
@@ -216,9 +207,6 @@ public enum ZcashSDKTestnetConstants: NetworkConstants {
     public static let defaultCacheDbName = "caches.db"
 
     public static let defaultFsBlockDbRootName = "fs_cache"
-
-    /// Default name for pending transactions db
-    public static let defaultPendingDbName = "pending.db"
     
     public static let defaultDbNamePrefix = "ZcashSdk_testnet_"
 

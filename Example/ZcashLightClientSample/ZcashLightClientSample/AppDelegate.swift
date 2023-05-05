@@ -47,7 +47,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 cacheDbURL: nil,
                 fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
-                pendingDbURL: try! pendingDbURLHelper(),
                 endpoint: DemoAppConfig.endpoint,
                 network: kZcashNetwork,
                 spendParamsURL: try! spendParamsURLHelper(),
@@ -74,7 +73,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             .store(in: &cancellables)
     }
     
-    func txMined(_ transaction: PendingTransactionEntity) {
+    func txMined(_ transaction: ZcashTransaction.Overview) {
         NotificationBubble.display(
             in: window!.rootViewController!.view,
             options: NotificationBubble.sucessOptions(
@@ -187,11 +186,6 @@ func dataDbURLHelper() throws -> URL {
             kZcashNetwork.constants.defaultDbNamePrefix + ZcashSDK.defaultDataDbName,
             isDirectory: false
         )
-}
-
-func pendingDbURLHelper() throws -> URL {
-    try documentsDirectoryHelper()
-        .appendingPathComponent(kZcashNetwork.constants.defaultDbNamePrefix + ZcashSDK.defaultPendingDbName)
 }
 
 func spendParamsURLHelper() throws -> URL {

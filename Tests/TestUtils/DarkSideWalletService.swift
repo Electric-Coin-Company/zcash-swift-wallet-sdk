@@ -195,10 +195,6 @@ enum DarksideWalletDConstants: NetworkConstants {
         ZcashSDKMainnetConstants.defaultCacheDbName
     }
 
-    static var defaultPendingDbName: String {
-        ZcashSDKMainnetConstants.defaultPendingDbName
-    }
-
     static var defaultDbNamePrefix: String {
         ZcashSDKMainnetConstants.defaultDbNamePrefix
     }

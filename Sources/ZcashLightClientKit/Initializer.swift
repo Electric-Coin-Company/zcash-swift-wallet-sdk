@@ -89,7 +89,6 @@ public class Initializer {
     struct URLs {
         let fsBlockDbRoot: URL
         let dataDbURL: URL
-        let pendingDbURL: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
     }
@@ -112,7 +111,6 @@ public class Initializer {
     let endpoint: LightWalletEndpoint
     let fsBlockDbRoot: URL
     let dataDbURL: URL
-    let pendingDbURL: URL
     let spendParamsURL: URL
     let outputParamsURL: URL
     let saplingParamsSourceURL: SaplingParamsSourceURL
@@ -143,7 +141,6 @@ public class Initializer {
     ///                just pass `nil` here.
     ///  - fsBlockDbRoot: location of the compact blocks cache
     ///  - dataDbURL: Location of the data db
-    ///  - pendingDbURL: location of the pending transactions database
     ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
     ///  - spendParamsURL: location of the spend parameters
     ///  - outputParamsURL: location of the output parameters
@@ -151,7 +148,6 @@ public class Initializer {
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
         dataDbURL: URL,
-        pendingDbURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
         spendParamsURL: URL,
@@ -163,7 +159,6 @@ public class Initializer {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
-            pendingDbURL: pendingDbURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL
         )
@@ -244,7 +239,6 @@ public class Initializer {
         self.rustBackend = rustBackend
         self.fsBlockDbRoot = urls.fsBlockDbRoot
         self.dataDbURL = urls.dataDbURL
-        self.pendingDbURL = urls.pendingDbURL
         self.endpoint = endpoint
         self.spendParamsURL = urls.spendParamsURL
         self.outputParamsURL = urls.outputParamsURL
@@ -261,7 +255,7 @@ public class Initializer {
         self.logger = logger
     }
 
-    private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
+    static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {
         return LightWalletServiceFactory(endpoint: endpoint)
     }
 
@@ -273,7 +267,7 @@ public class Initializer {
     /// - /some/path/to/directory -> /some/path/to/c_anotherInstance_directory
     ///
     /// If any of the URLs can't be parsed then returned error isn't nil.
-    private static func tryToUpdateURLs(
+    static func tryToUpdateURLs(
         with alias: ZcashSynchronizerAlias,
         urls: URLs
     ) -> (URLs, ZcashError?) {
@@ -307,10 +301,6 @@ public class Initializer {
             return .failure(.initializerCantUpdateURLWithAlias(urls.dataDbURL))
         }
 
-        guard let updatedPendingDbURL = urls.pendingDbURL.updateLastPathComponent(with: alias) else {
-            return .failure(.initializerCantUpdateURLWithAlias(urls.pendingDbURL))
-        }
-
         guard let updatedSpendParamsURL = urls.spendParamsURL.updateLastPathComponent(with: alias) else {
             return .failure(.initializerCantUpdateURLWithAlias(urls.spendParamsURL))
         }
@@ -323,7 +313,6 @@ public class Initializer {
             URLs(
                 fsBlockDbRoot: updatedFsBlockDbRoot,
                 dataDbURL: updatedDataDbURL,
-                pendingDbURL: updatedPendingDbURL,
                 spendParamsURL: updatedSpendParamsURL,
                 outputParamsURL: updateOutputParamsURL
             )
@@ -373,14 +362,6 @@ public class Initializer {
         } catch {
             throw error
         }
-
-        let migrationManager = MigrationManager(
-            pendingDbConnection: SimpleConnectionProvider(path: pendingDbURL.path),
-            networkType: self.network.networkType,
-            logger: logger
-        )
-
-        try migrationManager.performMigration()
 
         return .success
     }

@@ -51,7 +51,6 @@ final class SynchronizerTests: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
 
     func handleReorg(event: CompactBlockProcessor.Event) {
@@ -92,7 +91,7 @@ final class SynchronizerTests: XCTestCase {
         )
 
         try await Task.sleep(nanoseconds: 5_000_000_000)
-        await self.coordinator.synchronizer.stop()
+        self.coordinator.synchronizer.stop()
 
         await fulfillment(of: [syncStoppedExpectation], timeout: 6)
 
@@ -221,7 +220,7 @@ final class SynchronizerTests: XCTestCase {
         let storage = await self.coordinator.synchronizer.blockProcessor.storage as! FSCompactBlockRepository
         let fm = FileManager.default
         print(coordinator.synchronizer.initializer.dataDbURL.path)
-        XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.pendingDbURL.path), "Pending DB should be deleted")
+        
         XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.dataDbURL.path), "Data DB should be deleted.")
         XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
         XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [], "FS Cache directory should be empty")
@@ -262,7 +261,7 @@ final class SynchronizerTests: XCTestCase {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
 
-        try coordinator.applyStaged(blockheight: defaultLatestHeight)
+        try coordinator.applyStaged(blockheight: 663200)
         let initialVerifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         sleep(1)
@@ -280,6 +279,12 @@ final class SynchronizerTests: XCTestCase {
         }
 
         await fulfillment(of: [firstSyncExpectation], timeout: 12)
+
+        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
+        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+        // 2 check that there are no unconfirmed funds
+        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertEqual(verifiedBalance, totalBalance)
 
         // Add more blocks to the chain so the long sync can start.
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName, length: 10000)
@@ -305,19 +310,12 @@ final class SynchronizerTests: XCTestCase {
 
         await fulfillment(of: [waitExpectation], timeout: 1)
 
-        let verifiedBalance: Zatoshi = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-        let totalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
-        // 2 check that there are no unconfirmed funds
-        XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
-        XCTAssertEqual(verifiedBalance, totalBalance)
-
         let rewindExpectation = XCTestExpectation(description: "RewindExpectation")
 
         // rewind to birthday
         coordinator.synchronizer.rewind(.birthday)
             .sink(
                 receiveCompletion: { result in
-                    rewindExpectation.fulfill()
                     switch result {
                     case .finished:
                         break
@@ -326,7 +324,7 @@ final class SynchronizerTests: XCTestCase {
                     }
                     rewindExpectation.fulfill()
                 },
-                receiveValue: { _ in }
+                receiveValue: { _ in  rewindExpectation.fulfill() }
             )
             .store(in: &cancellables)
 

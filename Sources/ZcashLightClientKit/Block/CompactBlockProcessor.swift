@@ -676,10 +676,6 @@ actor CompactBlockProcessor {
                 try fileManager.removeItem(at: config.dataDb)
             }
 
-            if fileManager.fileExists(atPath: context.pendingDbURL.path) {
-                try fileManager.removeItem(at: context.pendingDbURL)
-            }
-
             await context.completion(nil)
         } catch {
             await context.completion(error)

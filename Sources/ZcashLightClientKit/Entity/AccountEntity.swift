@@ -13,7 +13,7 @@ protocol AccountEntity {
     var ufvk: String { get }
 }
 
-struct Account: AccountEntity, Encodable, Decodable {
+struct DbAccount: AccountEntity, Encodable, Decodable {
     enum CodingKeys: String, CodingKey {
         case account
         case ufvk
@@ -23,7 +23,7 @@ struct Account: AccountEntity, Encodable, Decodable {
     let ufvk: String
 }
 
-extension Account: Hashable {
+extension DbAccount: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(account)
         hasher.combine(ufvk)
@@ -68,7 +68,7 @@ class AccountSQDAO: AccountRepository {
         do {
             return try dbProvider.connection()
                 .prepare(table)
-                .map { row -> Account in
+                .map { row -> DbAccount in
                     do {
                         return try row.decode()
                     } catch {
@@ -94,7 +94,7 @@ class AccountSQDAO: AccountRepository {
                 .prepare(query)
                 .map {
                     do {
-                        return try $0.decode() as Account
+                        return try $0.decode() as DbAccount
                     } catch {
                         throw ZcashError.accountDAOFindByCantDecode(error)
                     }
@@ -113,7 +113,7 @@ class AccountSQDAO: AccountRepository {
     ///     - `accountDAOUpdate` if sqlite query updating account failed.
     ///     - `accountDAOUpdatedZeroRows` if sqlite query updating account pass but it affects 0 rows.
     func update(_ account: AccountEntity) throws {
-        guard let acc = account as? Account else {
+        guard let acc = account as? DbAccount else {
             throw ZcashError.accountDAOUpdateInvalidAccount
         }
 

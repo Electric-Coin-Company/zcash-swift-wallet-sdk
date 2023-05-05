@@ -37,7 +37,6 @@ class PendingTransactionUpdatesTest: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
     
     func testPendingTransactionMinedHeightUpdated() async throws {
@@ -72,7 +71,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         sleep(1)
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        var pendingEntity: PendingTransactionEntity?
+        var pendingEntity: ZcashTransaction.Overview?
         
         /*
         2. send transaction to recipient address
@@ -99,12 +98,12 @@ class PendingTransactionUpdatesTest: XCTestCase {
             return
         }
         
-        XCTAssertFalse(
-            pendingUnconfirmedTx.isConfirmed(currentHeight: 663188),
+        XCTAssertTrue(
+            pendingUnconfirmedTx.isPending(currentHeight: 633188),
             "pending transaction evaluated as confirmed when it shouldn't"
         )
-        XCTAssertFalse(
-            pendingUnconfirmedTx.isMined,
+        XCTAssertNil(
+            pendingUnconfirmedTx.minedHeight,
             "pending transaction evaluated as mined when it shouldn't"
         )
         
@@ -171,7 +170,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         */
         LoggerProxy.info("6a. verify that there's a pending transaction with a mined height of \(sentTxHeight)")
         XCTAssertEqual(afterStagePendingTx.minedHeight, sentTxHeight)
-        XCTAssertTrue(afterStagePendingTx.isMined, "pending transaction shown as unmined when it has been mined")
+        XCTAssertNotNil(afterStagePendingTx.minedHeight, "pending transaction shown as unmined when it has been mined")
         XCTAssertTrue(afterStagePendingTx.isPending(currentHeight: sentTxHeight))
         
         /*
@@ -207,11 +206,11 @@ class PendingTransactionUpdatesTest: XCTestCase {
         let supposedlyPendingUnexistingTransaction = try await coordinator.synchronizer.allPendingTransactions().first
 
         let clearedTransactions = await coordinator.synchronizer
-            .clearedTransactions
+            .transactions
 
-        let clearedTransaction = clearedTransactions.first(where: { $0.rawID == afterStagePendingTx.rawTransactionId })
+        let clearedTransaction = clearedTransactions.first(where: { $0.rawID == afterStagePendingTx.rawID } )
         
-        XCTAssertEqual(clearedTransaction!.value.amount + clearedTransaction!.fee!.amount, -afterStagePendingTx.value.amount)
+        XCTAssertEqual(clearedTransaction!.value.amount, afterStagePendingTx.value.amount)
         XCTAssertNil(supposedlyPendingUnexistingTransaction)
     }
     

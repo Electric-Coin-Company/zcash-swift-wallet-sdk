@@ -44,7 +44,6 @@ class WalletTests: XCTestCase {
             cacheDbURL: nil,
             fsBlockDbRoot: testTempDirectory,
             dataDbURL: try __dataDbURL(),
-            pendingDbURL: try TestDbBuilder.pendingTransactionsDbURL(),
             endpoint: LightWalletEndpointBuilder.default,
             network: network,
             spendParamsURL: try __spendParamsURL(),

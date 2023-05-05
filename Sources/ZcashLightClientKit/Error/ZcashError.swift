@@ -44,18 +44,6 @@ public enum ZcashError: Equatable, Error {
     /// LightWalletService.blockStream failed.
     /// ZSRVC0000
     case serviceBlockStreamFailed(_ error: LightWalletServiceError)
-    /// Migration of the pending DB failed because of unspecific reason.
-    /// ZDBMG0001
-    case dbMigrationGenericFailure(_ error: Error)
-    /// Migration of the pending DB failed because unknown version of the existing database.
-    /// ZDBMG00002
-    case dbMigrationInvalidVersion
-    /// Migration of the pending DB to version 1 failed.
-    /// ZDBMG00003
-    case dbMigrationV1(_ dbError: Error)
-    /// Migration of the pending DB to version 2 failed.
-    /// ZDBMG00004
-    case dbMigrationV2(_ dbError: Error)
     /// SimpleConnectionProvider init of Connection failed.
     /// ZSCPC0001
     case simpleConnectionProvider(_ error: Error)
@@ -76,30 +64,6 @@ public enum ZcashError: Equatable, Error {
     /// - `destination` is filesystem URL pointing to location where downloaded file should be moved.
     /// ZSAPP0004
     case saplingParamsCantMoveDownloadedFile(_ error: Error, _ downloadURL: URL, _ destination: URL)
-    /// SQLite query failed when fetching received notes count from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZNDAO0001
-    case notesDAOReceivedCount(_ sqliteError: Error)
-    /// SQLite query failed when fetching received notes from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZNDAO0002
-    case notesDAOReceivedNote(_ sqliteError: Error)
-    /// Fetched note from the SQLite but can't decode that.
-    /// - `error` is decoding error.
-    /// ZNDAO0003
-    case notesDAOReceivedCantDecode(_ error: Error)
-    /// SQLite query failed when fetching sent notes count from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZNDAO0004
-    case notesDAOSentCount(_ sqliteError: Error)
-    /// SQLite query failed when fetching sent notes from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZNDAO0005
-    case notesDAOSentNote(_ sqliteError: Error)
-    /// Fetched note from the SQLite but can't decode that.
-    /// - `error` is decoding error.
-    /// ZNDAO0006
-    case notesDAOSentCantDecode(_ error: Error)
     /// SQLite query failed when fetching block information from database.
     /// - `sqliteError` is error produced by SQLite library.
     /// ZBDAO0001
@@ -361,6 +325,12 @@ public enum ZcashError: Equatable, Error {
     /// Initialization of `ZcashTransaction.Sent` failed.
     /// ZTEZT0003
     case zcashTransactionSentInit(_ error: Error)
+    /// Initialization of `ZcashTransaction.Output` failed.
+    /// ZTEZT0004
+    case zcashTransactionOutputInit(_ error: Error)
+    /// Initialization of `ZcashTransaction.Output` failed because there an inconsistency in the output recipient.
+    /// ZTEZT0005
+    case zcashTransactionOutputInconsistentRecipient
     /// Entity not found in the database, result of `createEntity` execution.
     /// ZTREE0001
     case transactionRepositoryEntityNotFound
@@ -403,55 +373,6 @@ public enum ZcashError: Equatable, Error {
     /// Failed to decode `Checkpoint` object.
     /// ZCHKP0002
     case checkpointDecode(_ error: Error)
-    /// Decoding of `PendingTransaction` failed because of specific invalid data.
-    /// - `field` is list of fields names that contain invalid data.
-    /// ZPETR0001
-    case pendingTransactionDecodeInvalidData(_ fields: [String])
-    /// Can't decode `PendingTransaction`.
-    /// - `error` is error which described why decoding failed.
-    /// ZPETR0002
-    case pendingTransactionCantDecode(_ error: Error)
-    /// Can't encode `PendingTransaction`.
-    /// - `error` is error which described why encoding failed.
-    /// ZPETR0003
-    case pendingTransactionCantEncode(_ error: Error)
-    /// SQLite query failed when creating pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZPETR0004
-    case pendingTransactionDAOCreate(_ sqliteError: Error)
-    /// Pending transaction which should be updated is missing ID.
-    /// ZPETR0005
-    case pendingTransactionDAOUpdateMissingID
-    /// SQLite query failed when updating pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZPETR0006
-    case pendingTransactionDAOUpdate(_ sqliteError: Error)
-    /// Pending transaction which should be deleted is missing ID.
-    /// ZPETR0007
-    case pendingTransactionDAODeleteMissingID
-    /// SQLite query failed when deleting pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZPETR0008
-    case pendingTransactionDAODelete(_ sqliteError: Error)
-    /// Pending transaction which should be canceled is missing ID.
-    /// ZPETR0009
-    case pendingTransactionDAOCancelMissingID
-    /// SQLite query failed when canceling pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZPETR0010
-    case pendingTransactionDAOCancel(_ sqliteError: Error)
-    /// SQLite query failed when seaching for pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZPETR0011
-    case pendingTransactionDAOFind(_ sqliteError: Error)
-    /// SQLite query failed when getting pending transactions.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZPETR0012
-    case pendingTransactionDAOGetAll(_ sqliteError: Error)
-    /// SQLite query failed when applying mined height.
-    /// - `sqliteError` is error produced by SQLite library.
-    /// ZPETR0013
-    case pendingTransactionDAOApplyMinedHeight(_ sqliteError: Error)
     /// Invalid account when trying to derive spending key
     /// ZDRVT0001
     case derivationToolSpendingKeyInvalidAccount
@@ -506,33 +427,6 @@ public enum ZcashError: Equatable, Error {
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
     /// ZWLTE0002
     case walletTransEncoderShieldFundsMissingSaplingParams
-    /// PersistentTransactionsManager cant create transaction.
-    /// ZPTRM0001
-    case persistentTransManagerCantCreateTransaction(_ recipient: PendingTransactionRecipient, _ account: Int, _ zatoshi: Zatoshi)
-    /// PersistentTransactionsManager cant get to address from pending transaction.
-    /// ZPTRM0002
-    case persistentTransManagerEncodeUknownToAddress(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id.
-    /// ZPTRM0003
-    case persistentTransManagerSubmitTransactionIDMissing(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored.
-    /// ZPTRM0004
-    case persistentTransManagerSubmitTransactionNotFound(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is canceled.
-    /// ZPTRM0005
-    case persistentTransManagerSubmitTransactionCanceled(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data.
-    /// ZPTRM0006
-    case persistentTransManagerSubmitTransactionRawDataMissing(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but submit API call failed.
-    /// ZPTRM0007
-    case persistentTransManagerSubmitFailed(_ entity: PendingTransactionEntity, _ serviceErrorCode: Int)
-    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored.
-    /// ZPTRM0008
-    case persistentTransManagerApplyMinedHeightTransactionIDMissing(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
-    /// ZPTRM0009
-    case persistentTransManagerApplyMinedHeightTransactionNotFound(_ entity: PendingTransactionEntity)
     /// Initiatilzation fo `Zatoshi` from a decoder failed.
     /// ZTSHO0001
     case zatoshiDecode(_ error: Error)
@@ -622,21 +516,11 @@ public enum ZcashError: Equatable, Error {
         case .serviceFetchTransactionFailed: return "LightWalletService.fetchTransaction failed."
         case .serviceFetchUTXOsFailed: return "LightWalletService.fetchUTXOs failed."
         case .serviceBlockStreamFailed: return "LightWalletService.blockStream failed."
-        case .dbMigrationGenericFailure: return "Migration of the pending DB failed because of unspecific reason."
-        case .dbMigrationInvalidVersion: return "Migration of the pending DB failed because unknown version of the existing database."
-        case .dbMigrationV1: return "Migration of the pending DB to version 1 failed."
-        case .dbMigrationV2: return "Migration of the pending DB to version 2 failed."
         case .simpleConnectionProvider: return "SimpleConnectionProvider init of Connection failed."
         case .saplingParamsInvalidSpendParams: return "Downloaded file with sapling spending parameters isn't valid."
         case .saplingParamsInvalidOutputParams: return "Downloaded file with sapling output parameters isn't valid."
         case .saplingParamsDownload: return "Failed to download sapling parameters file"
         case .saplingParamsCantMoveDownloadedFile: return "Failed to move sapling parameters file to final destination after download."
-        case .notesDAOReceivedCount: return "SQLite query failed when fetching received notes count from the database."
-        case .notesDAOReceivedNote: return "SQLite query failed when fetching received notes from the database."
-        case .notesDAOReceivedCantDecode: return "Fetched note from the SQLite but can't decode that."
-        case .notesDAOSentCount: return "SQLite query failed when fetching sent notes count from the database."
-        case .notesDAOSentNote: return "SQLite query failed when fetching sent notes from the database."
-        case .notesDAOSentCantDecode: return "Fetched note from the SQLite but can't decode that."
         case .blockDAOBlock: return "SQLite query failed when fetching block information from database."
         case .blockDAOCantDecode: return "Fetched block information from DB but can't decode them."
         case .blockDAOLatestBlockHeight: return "SQLite query failed when fetching height of the latest block from the database."
@@ -709,6 +593,8 @@ public enum ZcashError: Equatable, Error {
         case .zcashTransactionOverviewInit: return "Initialization of `ZcashTransaction.Overview` failed."
         case .zcashTransactionReceivedInit: return "Initialization of `ZcashTransaction.Received` failed."
         case .zcashTransactionSentInit: return "Initialization of `ZcashTransaction.Sent` failed."
+        case .zcashTransactionOutputInit: return "Initialization of `ZcashTransaction.Output` failed."
+        case .zcashTransactionOutputInconsistentRecipient: return "Initialization of `ZcashTransaction.Output` failed because there an inconsistency in the output recipient."
         case .transactionRepositoryEntityNotFound: return "Entity not found in the database, result of `createEntity` execution."
         case .transactionRepositoryTransactionMissingRequiredFields: return "`Find` call is missing fields, required fields are transaction `index` and `blockTime`."
         case .transactionRepositoryCountAll: return "Counting all transactions failed."
@@ -723,19 +609,6 @@ public enum ZcashError: Equatable, Error {
         case .memoBytesInvalidUTF8: return "Invalid UTF-8 Bytes where detected when attempting to convert MemoBytes to Memo."
         case .checkpointCantLoadFromDisk: return "Failed to load JSON with checkpoint from disk."
         case .checkpointDecode: return "Failed to decode `Checkpoint` object."
-        case .pendingTransactionDecodeInvalidData: return "Decoding of `PendingTransaction` failed because of specific invalid data."
-        case .pendingTransactionCantDecode: return "Can't decode `PendingTransaction`."
-        case .pendingTransactionCantEncode: return "Can't encode `PendingTransaction`."
-        case .pendingTransactionDAOCreate: return "SQLite query failed when creating pending transaction."
-        case .pendingTransactionDAOUpdateMissingID: return "Pending transaction which should be updated is missing ID."
-        case .pendingTransactionDAOUpdate: return "SQLite query failed when updating pending transaction."
-        case .pendingTransactionDAODeleteMissingID: return "Pending transaction which should be deleted is missing ID."
-        case .pendingTransactionDAODelete: return "SQLite query failed when deleting pending transaction."
-        case .pendingTransactionDAOCancelMissingID: return "Pending transaction which should be canceled is missing ID."
-        case .pendingTransactionDAOCancel: return "SQLite query failed when canceling pending transaction."
-        case .pendingTransactionDAOFind: return "SQLite query failed when seaching for pending transaction."
-        case .pendingTransactionDAOGetAll: return "SQLite query failed when getting pending transactions."
-        case .pendingTransactionDAOApplyMinedHeight: return "SQLite query failed when applying mined height."
         case .derivationToolSpendingKeyInvalidAccount: return "Invalid account when trying to derive spending key"
         case .unspentTransactionOutputDAOCreateTable: return "Creation of the table for unspent transaction output failed."
         case .unspentTransactionOutputDAOStore: return "SQLite query failed when storing unspent transaction output."
@@ -752,15 +625,6 @@ public enum ZcashError: Equatable, Error {
         case .recipientInvalidInput: return "Can't create `Recipient` because input is invalid."
         case .walletTransEncoderCreateTransactionMissingSaplingParams: return "WalletTransactionEncoder wants to create transaction but files with sapling parameters are not present on disk."
         case .walletTransEncoderShieldFundsMissingSaplingParams: return "WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk."
-        case .persistentTransManagerCantCreateTransaction: return "PersistentTransactionsManager cant create transaction."
-        case .persistentTransManagerEncodeUknownToAddress: return "PersistentTransactionsManager cant get to address from pending transaction."
-        case .persistentTransManagerSubmitTransactionIDMissing: return "PersistentTransactionsManager wants to submit pending transaction but transaction is missing id."
-        case .persistentTransManagerSubmitTransactionNotFound: return "PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored."
-        case .persistentTransManagerSubmitTransactionCanceled: return "PersistentTransactionsManager wants to submit pending transaction but transaction is canceled."
-        case .persistentTransManagerSubmitTransactionRawDataMissing: return "PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data."
-        case .persistentTransManagerSubmitFailed: return "PersistentTransactionsManager wants to submit pending transaction but submit API call failed."
-        case .persistentTransManagerApplyMinedHeightTransactionIDMissing: return "PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored."
-        case .persistentTransManagerApplyMinedHeightTransactionNotFound: return "PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored."
         case .zatoshiDecode: return "Initiatilzation fo `Zatoshi` from a decoder failed."
         case .zatoshiEncode: return "Encode of `Zatoshi` failed."
         case .unspentTransactionFetcherStream: return "Awaiting transactions from the stream failed."
@@ -802,21 +666,11 @@ public enum ZcashError: Equatable, Error {
         case .serviceFetchTransactionFailed: return .serviceFetchTransactionFailed
         case .serviceFetchUTXOsFailed: return .serviceFetchUTXOsFailed
         case .serviceBlockStreamFailed: return .serviceBlockStreamFailed
-        case .dbMigrationGenericFailure: return .dbMigrationGenericFailure
-        case .dbMigrationInvalidVersion: return .dbMigrationInvalidVersion
-        case .dbMigrationV1: return .dbMigrationV1
-        case .dbMigrationV2: return .dbMigrationV2
         case .simpleConnectionProvider: return .simpleConnectionProvider
         case .saplingParamsInvalidSpendParams: return .saplingParamsInvalidSpendParams
         case .saplingParamsInvalidOutputParams: return .saplingParamsInvalidOutputParams
         case .saplingParamsDownload: return .saplingParamsDownload
         case .saplingParamsCantMoveDownloadedFile: return .saplingParamsCantMoveDownloadedFile
-        case .notesDAOReceivedCount: return .notesDAOReceivedCount
-        case .notesDAOReceivedNote: return .notesDAOReceivedNote
-        case .notesDAOReceivedCantDecode: return .notesDAOReceivedCantDecode
-        case .notesDAOSentCount: return .notesDAOSentCount
-        case .notesDAOSentNote: return .notesDAOSentNote
-        case .notesDAOSentCantDecode: return .notesDAOSentCantDecode
         case .blockDAOBlock: return .blockDAOBlock
         case .blockDAOCantDecode: return .blockDAOCantDecode
         case .blockDAOLatestBlockHeight: return .blockDAOLatestBlockHeight
@@ -889,6 +743,8 @@ public enum ZcashError: Equatable, Error {
         case .zcashTransactionOverviewInit: return .zcashTransactionOverviewInit
         case .zcashTransactionReceivedInit: return .zcashTransactionReceivedInit
         case .zcashTransactionSentInit: return .zcashTransactionSentInit
+        case .zcashTransactionOutputInit: return .zcashTransactionOutputInit
+        case .zcashTransactionOutputInconsistentRecipient: return .zcashTransactionOutputInconsistentRecipient
         case .transactionRepositoryEntityNotFound: return .transactionRepositoryEntityNotFound
         case .transactionRepositoryTransactionMissingRequiredFields: return .transactionRepositoryTransactionMissingRequiredFields
         case .transactionRepositoryCountAll: return .transactionRepositoryCountAll
@@ -903,19 +759,6 @@ public enum ZcashError: Equatable, Error {
         case .memoBytesInvalidUTF8: return .memoBytesInvalidUTF8
         case .checkpointCantLoadFromDisk: return .checkpointCantLoadFromDisk
         case .checkpointDecode: return .checkpointDecode
-        case .pendingTransactionDecodeInvalidData: return .pendingTransactionDecodeInvalidData
-        case .pendingTransactionCantDecode: return .pendingTransactionCantDecode
-        case .pendingTransactionCantEncode: return .pendingTransactionCantEncode
-        case .pendingTransactionDAOCreate: return .pendingTransactionDAOCreate
-        case .pendingTransactionDAOUpdateMissingID: return .pendingTransactionDAOUpdateMissingID
-        case .pendingTransactionDAOUpdate: return .pendingTransactionDAOUpdate
-        case .pendingTransactionDAODeleteMissingID: return .pendingTransactionDAODeleteMissingID
-        case .pendingTransactionDAODelete: return .pendingTransactionDAODelete
-        case .pendingTransactionDAOCancelMissingID: return .pendingTransactionDAOCancelMissingID
-        case .pendingTransactionDAOCancel: return .pendingTransactionDAOCancel
-        case .pendingTransactionDAOFind: return .pendingTransactionDAOFind
-        case .pendingTransactionDAOGetAll: return .pendingTransactionDAOGetAll
-        case .pendingTransactionDAOApplyMinedHeight: return .pendingTransactionDAOApplyMinedHeight
         case .derivationToolSpendingKeyInvalidAccount: return .derivationToolSpendingKeyInvalidAccount
         case .unspentTransactionOutputDAOCreateTable: return .unspentTransactionOutputDAOCreateTable
         case .unspentTransactionOutputDAOStore: return .unspentTransactionOutputDAOStore
@@ -932,15 +775,6 @@ public enum ZcashError: Equatable, Error {
         case .recipientInvalidInput: return .recipientInvalidInput
         case .walletTransEncoderCreateTransactionMissingSaplingParams: return .walletTransEncoderCreateTransactionMissingSaplingParams
         case .walletTransEncoderShieldFundsMissingSaplingParams: return .walletTransEncoderShieldFundsMissingSaplingParams
-        case .persistentTransManagerCantCreateTransaction: return .persistentTransManagerCantCreateTransaction
-        case .persistentTransManagerEncodeUknownToAddress: return .persistentTransManagerEncodeUknownToAddress
-        case .persistentTransManagerSubmitTransactionIDMissing: return .persistentTransManagerSubmitTransactionIDMissing
-        case .persistentTransManagerSubmitTransactionNotFound: return .persistentTransManagerSubmitTransactionNotFound
-        case .persistentTransManagerSubmitTransactionCanceled: return .persistentTransManagerSubmitTransactionCanceled
-        case .persistentTransManagerSubmitTransactionRawDataMissing: return .persistentTransManagerSubmitTransactionRawDataMissing
-        case .persistentTransManagerSubmitFailed: return .persistentTransManagerSubmitFailed
-        case .persistentTransManagerApplyMinedHeightTransactionIDMissing: return .persistentTransManagerApplyMinedHeightTransactionIDMissing
-        case .persistentTransManagerApplyMinedHeightTransactionNotFound: return .persistentTransManagerApplyMinedHeightTransactionNotFound
         case .zatoshiDecode: return .zatoshiDecode
         case .zatoshiEncode: return .zatoshiEncode
         case .unspentTransactionFetcherStream: return .unspentTransactionFetcherStream

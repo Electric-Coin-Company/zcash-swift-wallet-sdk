@@ -42,10 +42,6 @@ enum TestDbBuilder {
         case generalError
     }
     
-    static func pendingTransactionsDbURL() throws -> URL {
-        try __documentsDirectory().appendingPathComponent("pending.db")
-    }
-    
     static func prePopulatedDataDbURL() -> URL? {
         Bundle.module.url(forResource: "test_data", withExtension: "db")
     }
@@ -68,7 +64,7 @@ enum TestDbBuilder {
         switch initResult {
         case .success: return provider
         case .seedRequired:
-            throw ZcashError.dbMigrationGenericFailure("Seed value required to initialize the wallet database")
+            throw ZcashError.compactBlockProcessorDataDbInitFailed("Seed value required to initialize the wallet database")
         }
     }
     
@@ -82,16 +78,6 @@ enum TestDbBuilder {
         guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
 
         return TransactionSQLDAO(dbProvider: provider, traceClosure: closure)
-    }
-    
-    static func sentNotesRepository(rustBackend: ZcashRustBackendWelding) async throws -> SentNotesRepository? {
-        guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
-        return SentNotesSQLDAO(dbProvider: provider)
-    }
-    
-    static func receivedNotesRepository(rustBackend: ZcashRustBackendWelding) async throws -> ReceivedNoteRepository? {
-        guard let provider = try await prepopulatedDataDbProvider(rustBackend: rustBackend) else { return nil }
-        return ReceivedNotesSQLDAO(dbProvider: provider)
     }
         
     static func seed(db: CompactBlockRepository, with blockRange: CompactBlockRange) async throws {

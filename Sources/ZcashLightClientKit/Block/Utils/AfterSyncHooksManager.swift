@@ -9,7 +9,6 @@ import Foundation
 
 class AfterSyncHooksManager {
     struct WipeContext {
-        let pendingDbURL: URL
         let prewipe: () -> Void
         let completion: (Error?) async -> Void
     }
@@ -52,7 +51,6 @@ class AfterSyncHooksManager {
         static var emptyWipe: Hook {
             return .wipe(
                 WipeContext(
-                    pendingDbURL: URL(fileURLWithPath: "/"),
                     prewipe: { },
                     completion: { _ in }
                 )

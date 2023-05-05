@@ -329,7 +329,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value.recipient, self.data.pendingTransactionEntity.recipient)
+                    XCTAssertEqual(value.value, self.data.pendingTransactionEntity.value)
                 }
             )
             .store(in: &cancellables)
@@ -393,7 +393,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
                     }
                 },
                 receiveValue: { value in
-                    XCTAssertEqual(value.recipient, self.data.pendingTransactionEntity.recipient)
+                    XCTAssertEqual(value.id, self.data.pendingTransactionEntity.id)
                 }
             )
             .store(in: &cancellables)
@@ -431,33 +431,6 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testCancelSpendSucceed() {
-        synchronizerMock.cancelSpendTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.recipient, self.data.pendingTransactionEntity.recipient)
-            return true
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.cancelSpend(transaction: data.pendingTransactionEntity)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertTrue(value)
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
     func testPendingTransactionsSucceed() {
         synchronizerMock.underlyingPendingTransactions = [data.pendingTransactionEntity]
 
@@ -483,11 +456,11 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testClearedTransactionsSucceed() {
-        synchronizerMock.underlyingClearedTransactions = [data.clearedTransaction]
+        synchronizerMock.underlyingTransactions = [data.clearedTransaction]
 
         let expectation = XCTestExpectation()
 
-        synchronizer.clearedTransactions
+        synchronizer.allTransactions
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -609,118 +582,8 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testGetMemosForReceivedTransactionSucceed() throws {
-        let memo: Memo = .text(try MemoText("Some message"))
-
-        synchronizerMock.getMemosForReceivedTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.id, self.data.receivedTransaction.id)
-            return [memo]
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.getMemos(for: data.receivedTransaction)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertEqual(value, [memo])
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testGetMemosForReceivedTransactionThrowsError() {
-        synchronizerMock.getMemosForReceivedTransactionClosure = { _ in
-            throw "Some error"
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.getMemos(for: data.receivedTransaction)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        XCTFail("Error should be thrown.")
-                    case .failure:
-                        expectation.fulfill()
-                    }
-                },
-                receiveValue: { _ in
-                    XCTFail("No value is expected")
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testGetMemosForSentTransactionSucceed() throws {
-        let memo: Memo = .text(try MemoText("Some message"))
-
-        synchronizerMock.getMemosForSentTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.id, self.data.sentTransaction.id)
-            return [memo]
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.getMemos(for: data.sentTransaction)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertEqual(value, [memo])
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testGetMemosForSentTransactionThrowsError() {
-        synchronizerMock.getMemosForSentTransactionClosure = { _ in
-            throw "Some error"
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.getMemos(for: data.sentTransaction)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        XCTFail("Error should be thrown.")
-                    case .failure:
-                        expectation.fulfill()
-                    }
-                },
-                receiveValue: { _ in
-                    XCTFail("No value is expected")
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
     func testGetRecipientsForClearedTransaction() {
-        let expectedRecipient: TransactionRecipient = .address(.transparent(data.transparentAddress))
+        let expectedRecipient: TransactionRecipient = TransactionRecipient.address(.transparent(self.data.transparentAddress))
 
         synchronizerMock.getRecipientsForClearedTransactionClosure = { receivedTransaction in
             XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
@@ -748,37 +611,8 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testGetRecipientsForSentTransaction() {
-        let expectedRecipient: TransactionRecipient = .address(.transparent(data.transparentAddress))
-
-        synchronizerMock.getRecipientsForSentTransactionClosure = { receivedTransaction in
-            XCTAssertEqual(receivedTransaction.id, self.data.sentTransaction.id)
-            return [expectedRecipient]
-        }
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.getRecipients(for: data.sentTransaction)
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertEqual(value, [expectedRecipient])
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
     func testAllConfirmedTransactionsSucceed() throws {
-        synchronizerMock.allConfirmedTransactionsFromLimitClosure = { receivedTransaction, limit in
+        synchronizerMock.allTransactionsFromLimitClosure = { receivedTransaction, limit in
             XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)
             XCTAssertEqual(limit, 3)
             return [self.data.clearedTransaction]
@@ -786,7 +620,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
 
         let expectation = XCTestExpectation()
 
-        synchronizer.allConfirmedTransactions(from: data.clearedTransaction, limit: 3)
+        synchronizer.allTransactions(from: data.clearedTransaction, limit: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {
@@ -806,13 +640,13 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testAllConfirmedTransactionsThrowsError() throws {
-        synchronizerMock.allConfirmedTransactionsFromLimitClosure = { _, _ in
+        synchronizerMock.allTransactionsFromLimitClosure = { _, _ in
             throw "Some error"
         }
 
         let expectation = XCTestExpectation()
 
-        synchronizer.allConfirmedTransactions(from: data.clearedTransaction, limit: 3)
+        synchronizer.allTransactions(from: data.clearedTransaction, limit: 3)
             .sink(
                 receiveCompletion: { result in
                     switch result {

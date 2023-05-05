@@ -165,7 +165,8 @@ public extension MemoBytes {
     func intoMemo() throws -> Memo {
         switch self.bytes[0] {
         case 0x00 ... 0xF4:
-            guard let validatedUTF8String = String(validatingUTF8: self.unpaddedRawBytes()) else {
+            let unpadded = self.unpaddedRawBytes()
+            guard let validatedUTF8String = String(validatingUTF8: unpadded) else {
                 throw ZcashError.memoBytesInvalidUTF8
             }
 

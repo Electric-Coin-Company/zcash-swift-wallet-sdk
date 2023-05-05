@@ -14,9 +14,6 @@ public enum ResourceProviderError: Error {
 public protocol ResourceProvider {
     var dataDbURL: URL { get }
     var fsCacheURL: URL { get }
-
-    @available(*, deprecated, message: "you should use this to delete the existing cache.db sqlite.")
-    var cacheDbURL: URL { get }
 }
 /**
 Convenience provider for a data db and cache db resources.
@@ -41,16 +38,6 @@ public struct DefaultResourceProvider: ResourceProvider {
             return path.appendingPathComponent(constants.defaultFsBlockDbRootName)
         } catch {
             return URL(fileURLWithPath: "file://\(constants.defaultFsBlockDbRootName)")
-        }
-    }
-    
-    public var cacheDbURL: URL {
-        let constants = network.constants
-        do {
-            let path = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            return path.appendingPathComponent(constants.defaultCacheDbName)
-        } catch {
-            return URL(fileURLWithPath: "file://\(constants.defaultCacheDbName)")
         }
     }
 

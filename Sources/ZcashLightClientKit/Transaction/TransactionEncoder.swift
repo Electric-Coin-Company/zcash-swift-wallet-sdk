@@ -9,6 +9,15 @@ import Foundation
 
 typealias TransactionEncoderResultBlock = (_ result: Result<EncodedTransaction, Error>) -> Void
 
+public enum TransactionEncoderError: Error {
+    case notFound(transactionId: Int)
+    case notEncoded(transactionId: Int)
+    case missingParams
+    case spendingKeyWrongNetwork
+    case couldNotExpand(txId: Data)
+    case submitError(code: Int, message: String)
+}
+
 protocol TransactionEncoder {
     /// Creates a transaction, throwing an exception whenever things are missing. When the provided wallet implementation
     /// doesn't throw an exception, we wrap the issue into a descriptive exception ourselves (rather than using
@@ -48,4 +57,10 @@ protocol TransactionEncoder {
         memoBytes: MemoBytes?,
         from accountIndex: Int
     ) async throws -> ZcashTransaction.Overview
+
+    /// submits a transaction to the Zcash peer-to-peer network.
+    /// - Parameter transaction: a transaction overview
+    func submit(transaction: EncodedTransaction) async throws
+
+    func closeDBConnection()
 }

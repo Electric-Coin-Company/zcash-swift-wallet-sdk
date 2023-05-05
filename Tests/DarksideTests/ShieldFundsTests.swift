@@ -38,7 +38,6 @@ class ShieldFundsTests: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
 
     /// Tests shielding funds from a UTXO
@@ -206,7 +205,7 @@ class ShieldFundsTests: XCTestCase {
 
         shouldContinue = false
 
-        var shieldingPendingTx: PendingTransactionEntity?
+        var shieldingPendingTx: ZcashTransaction.Overview?
 
         // shield the funds
         do {
@@ -216,7 +215,7 @@ class ShieldFundsTests: XCTestCase {
                 shieldingThreshold: Zatoshi(10000)
             )
             shouldContinue = true
-            XCTAssertEqual(pendingTx.value, Zatoshi(10000))
+            XCTAssertEqual(pendingTx.value, Zatoshi(10000) - pendingTx.fee!)
             shieldingPendingTx = pendingTx
             shieldFundsExpectation.fulfill()
         } catch {
@@ -320,8 +319,8 @@ class ShieldFundsTests: XCTestCase {
         guard shouldContinue else { return }
 
         // verify that there's a confirmed transaction that's the shielding transaction
-        let clearedTransaction = await coordinator.synchronizer.clearedTransactions.first(
-            where: { $0.rawID == shieldingPendingTx?.rawTransactionId }
+        let clearedTransaction = await coordinator.synchronizer.transactions.first(
+            where: { $0.rawID == shieldingPendingTx?.rawID }
         )
 
         XCTAssertNotNil(clearedTransaction)

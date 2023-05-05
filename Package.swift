@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.14.0"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
-        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", from: "0.3.0")
+        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", from: "0.3.1")
     ],
     targets: [
         .target(
@@ -42,14 +42,13 @@ let package = Package(
             exclude: [
                 "proto/darkside.proto",
                 "Sourcery/AutoMockable.stencil",
-                "Sourcery/generateMocks"
+                "Sourcery/generateMocks.sh"
             ],
             resources: [
                 .copy("Resources/test_data.db"),
                 .copy("Resources/cache.db"),
                 .copy("Resources/darkside_caches.db"),
                 .copy("Resources/darkside_data.db"),
-                .copy("Resources/darkside_pending.db"),
                 .copy("Resources/sandblasted_mainnet_block.json"),
                 .copy("Resources/txBase64String.txt"),
                 .copy("Resources/txFromAndroidSDK.txt"),

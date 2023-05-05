@@ -11,9 +11,9 @@ import ZcashLightClientKit
 
 final class TransactionDetailModel {
     enum Transaction {
-        case sent(ZcashTransaction.Sent)
-        case received(ZcashTransaction.Received)
-        case pending(PendingTransactionEntity)
+        case sent(ZcashTransaction.Overview)
+        case received(ZcashTransaction.Overview)
+        case pending(ZcashTransaction.Overview)
         case cleared(ZcashTransaction.Overview)
     }
 
@@ -25,7 +25,7 @@ final class TransactionDetailModel {
     var zatoshi: Zatoshi
     var memo: Memo?
     
-    init(sendTransaction transaction: ZcashTransaction.Sent, memos: [Memo]) {
+    init(sendTransaction transaction: ZcashTransaction.Overview, memos: [Memo]) {
         self.transaction = .sent(transaction)
         self.id = transaction.rawID
         self.minedHeight = transaction.minedHeight
@@ -41,22 +41,22 @@ final class TransactionDetailModel {
         }
     }
 
-    init(receivedTransaction transaction: ZcashTransaction.Received, memos: [Memo]) {
+    init(receivedTransaction transaction: ZcashTransaction.Overview, memos: [Memo]) {
         self.transaction = .received(transaction)
         self.id = transaction.rawID
         self.minedHeight = transaction.minedHeight
         self.expiryHeight = transaction.expiryHeight
         self.zatoshi = transaction.value
         self.memo = memos.first
-        self.created = Date(timeIntervalSince1970: transaction.blockTime)
+        self.created = Date(timeIntervalSince1970: transaction.blockTime ?? Date().timeIntervalSince1970)
     }
     
-    init(pendingTransaction transaction: PendingTransactionEntity, memos: [Memo]) {
+    init(pendingTransaction transaction: ZcashTransaction.Overview, memos: [Memo]) {
         self.transaction = .pending(transaction)
-        self.id = transaction.rawTransactionId
+        self.id = transaction.rawID
         self.minedHeight = transaction.minedHeight
         self.expiryHeight = transaction.expiryHeight
-        self.created = Date(timeIntervalSince1970: transaction.createTime)
+        self.created = Date(timeIntervalSince1970: transaction.blockTime ?? Date().timeIntervalSince1970)
         self.zatoshi = transaction.value
         self.memo = memos.first
     }

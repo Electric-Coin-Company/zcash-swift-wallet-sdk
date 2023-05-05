@@ -105,7 +105,6 @@ class SyncBlocksListViewController: UIViewController {
             cacheDbURL: nil,
             fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
             dataDbURL: try! dataDbURLHelper(),
-            pendingDbURL: try! pendingDbURLHelper(),
             endpoint: DemoAppConfig.endpoint,
             network: kZcashNetwork,
             spendParamsURL: try! spendParamsURLHelper(),

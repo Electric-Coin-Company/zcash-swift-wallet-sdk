@@ -41,31 +41,23 @@ public protocol ClosureSynchronizer {
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?,
-        completion: @escaping (Result<PendingTransactionEntity, Error>) -> Void
+        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
     )
 
     func shieldFunds(
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi,
-        completion: @escaping (Result<PendingTransactionEntity, Error>) -> Void
+        completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
     )
 
-    func cancelSpend(transaction: PendingTransactionEntity, completion: @escaping (Bool) -> Void)
-
-    func pendingTransactions(completion: @escaping ([PendingTransactionEntity]) -> Void)
+    func pendingTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
-    func sentTranscations(completion: @escaping ([ZcashTransaction.Sent]) -> Void)
-    func receivedTransactions(completion: @escaping ([ZcashTransaction.Received]) -> Void)
-
+    func sentTranscations(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
+    func receivedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func paginatedTransactions(of kind: TransactionKind) -> PaginatedTransactionRepository
-
     func getMemos(for transaction: ZcashTransaction.Overview, completion: @escaping (Result<[Memo], Error>) -> Void)
-    func getMemos(for receivedTransaction: ZcashTransaction.Received, completion: @escaping (Result<[Memo], Error>) -> Void)
-    func getMemos(for sentTransaction: ZcashTransaction.Sent, completion: @escaping (Result<[Memo], Error>) -> Void)
-
     func getRecipients(for transaction: ZcashTransaction.Overview, completion: @escaping ([TransactionRecipient]) -> Void)
-    func getRecipients(for transaction: ZcashTransaction.Sent, completion: @escaping ([TransactionRecipient]) -> Void)
 
     func allConfirmedTransactions(
         from transaction: ZcashTransaction.Overview,

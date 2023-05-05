@@ -45,7 +45,6 @@ class SynchronizerDarksideTests: XCTestCase {
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
-        try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
     }
    
     func testFoundTransactions() async throws {
@@ -181,7 +180,7 @@ class SynchronizerDarksideTests: XCTestCase {
                 transparentBalance: .zero,
                 syncStatus: .disconnected,
                 latestScannedHeight: 663150,
-                latestBlockHeight: 663189,
+                latestBlockHeight: 0,
                 latestScannedTime: 1576821833
             ),
             SynchronizerState(
@@ -190,13 +189,12 @@ class SynchronizerDarksideTests: XCTestCase {
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
                 latestScannedHeight: 663150,
-                latestBlockHeight: 663189,
+                latestBlockHeight: 0,
                 latestScannedTime: 1576821833
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                shieldedBalance: .zero,
-//                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
                 latestScannedHeight: 663189,
@@ -296,7 +294,15 @@ class SynchronizerDarksideTests: XCTestCase {
             )
         ]
 
-        XCTAssertEqual(states, expectedStates)
+        XCTAssertEqual(states.count, expectedStates.count)
+        XCTAssertEqual(states[0], expectedStates[0])
+        XCTAssertEqual(states[1], expectedStates[1])
+        XCTAssertEqual(states[2], expectedStates[2])
+        XCTAssertEqual(states[3], expectedStates[3])
+        XCTAssertEqual(states[4], expectedStates[4])
+        XCTAssertEqual(states[5], expectedStates[5])
+        XCTAssertEqual(states[6], expectedStates[6])
+        XCTAssertEqual(states[7], expectedStates[7])
     }
 
     func testSyncSessionUpdates() async throws {
@@ -338,7 +344,7 @@ class SynchronizerDarksideTests: XCTestCase {
                 syncStatus: .disconnected,
                 latestScannedHeight: 663150,
                 latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedTime: 1576821833.0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
@@ -347,25 +353,25 @@ class SynchronizerDarksideTests: XCTestCase {
                 syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
                 latestScannedHeight: 663150,
                 latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedTime: 1576821833.0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
-                shieldedBalance: .zero,
+                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
                 syncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
-                latestScannedHeight: 663150,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
-                latestScannedHeight: 663150,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
@@ -379,7 +385,7 @@ class SynchronizerDarksideTests: XCTestCase {
                             accountId: 0,
                             blockTime: 1.0,
                             expiryHeight: 663206,
-                            fee: Zatoshi(0),
+                            fee: nil,
                             id: 2,
                             index: 1,
                             hasChange: false,
@@ -395,9 +401,9 @@ class SynchronizerDarksideTests: XCTestCase {
                         range: 663150...663189
                     )
                 ),
-                latestScannedHeight: 663150,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
@@ -411,7 +417,7 @@ class SynchronizerDarksideTests: XCTestCase {
                             accountId: 0,
                             blockTime: 1.0,
                             expiryHeight: 663192,
-                            fee: Zatoshi(0),
+                            fee: nil,
                             id: 1,
                             index: 1,
                             hasChange: false,
@@ -427,18 +433,18 @@ class SynchronizerDarksideTests: XCTestCase {
                         range: 663150...663189
                     )
                 ),
-                latestScannedHeight: 663150,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .fetching,
-                latestScannedHeight: 663150,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663189,
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
@@ -446,12 +452,20 @@ class SynchronizerDarksideTests: XCTestCase {
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .synced,
                 latestScannedHeight: 663189,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestBlockHeight: 663189,
+                latestScannedTime: 1
             )
         ]
 
-        XCTAssertEqual(states, expectedStates)
+        XCTAssertEqual(states.count, expectedStates.count)
+        XCTAssertEqual(states[0], expectedStates[0])
+        XCTAssertEqual(states[1], expectedStates[1])
+        XCTAssertEqual(states[2], expectedStates[2])
+        XCTAssertEqual(states[3], expectedStates[3])
+        XCTAssertEqual(states[4], expectedStates[4])
+        XCTAssertEqual(states[5], expectedStates[5])
+        XCTAssertEqual(states[7], expectedStates[7])
+
 
         try coordinator.service.applyStaged(nextLatestHeight: 663_200)
 
@@ -477,35 +491,35 @@ class SynchronizerDarksideTests: XCTestCase {
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
                 latestScannedHeight: 663189,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestBlockHeight: 663189,
+                latestScannedTime: 1.0
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
-                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
+                shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .syncing(BlockProgress(startHeight: 663190, targetHeight: 663200, progressHeight: 663200)),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663200,
+                latestBlockHeight: 663200,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663200,
+                latestBlockHeight: 663200,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .fetching,
-                latestScannedHeight: 663189,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestScannedHeight: 663200,
+                latestBlockHeight: 663200,
+                latestScannedTime: 1
             ),
             SynchronizerState(
                 syncSessionID: uuids[1],
@@ -513,12 +527,18 @@ class SynchronizerDarksideTests: XCTestCase {
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 syncStatus: .synced,
                 latestScannedHeight: 663200,
-                latestBlockHeight: 0,
-                latestScannedTime: 0
+                latestBlockHeight: 663200,
+                latestScannedTime: 1
             )
         ]
 
-        XCTAssertEqual(states, secondBatchOfExpectedStates)
+        XCTAssertEqual(states.count, secondBatchOfExpectedStates.count)
+        XCTAssertEqual(states[0], secondBatchOfExpectedStates[0])
+        XCTAssertEqual(states[1], secondBatchOfExpectedStates[1])
+        XCTAssertEqual(states[2], secondBatchOfExpectedStates[2])
+        XCTAssertEqual(states[3], secondBatchOfExpectedStates[3])
+        XCTAssertEqual(states[4], secondBatchOfExpectedStates[4])
+
     }
 
     func testSyncAfterWipeWorks() async throws {

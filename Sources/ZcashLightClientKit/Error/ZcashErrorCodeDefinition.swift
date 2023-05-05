@@ -63,21 +63,6 @@ enum ZcashErrorDefinition {
     // sourcery: code="ZSRVC0000"
     case serviceBlockStreamFailed(_ error: LightWalletServiceError)
 
-    // MARK: - DB Migration
-
-    /// Migration of the pending DB failed because of unspecific reason.
-    // sourcery: code="ZDBMG0001"
-    case dbMigrationGenericFailure(_ error: Error)
-    /// Migration of the pending DB failed because unknown version of the existing database.
-    // sourcery: code="ZDBMG00002"
-    case dbMigrationInvalidVersion
-    /// Migration of the pending DB to version 1 failed.
-    // sourcery: code="ZDBMG00003"
-    case dbMigrationV1(_ dbError: Error)
-    /// Migration of the pending DB to version 2 failed.
-    // sourcery: code="ZDBMG00004"
-    case dbMigrationV2(_ dbError: Error)
-
     // MARK: SQLite connection
 
     /// SimpleConnectionProvider init of Connection failed.
@@ -103,33 +88,6 @@ enum ZcashErrorDefinition {
     /// - `destination` is filesystem URL pointing to location where downloaded file should be moved.
     // sourcery: code="ZSAPP0004"
     case saplingParamsCantMoveDownloadedFile(_ error: Error, _ downloadURL: URL, _ destination: URL)
-
-    // MARK: - NotesDAO
-
-    /// SQLite query failed when fetching received notes count from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZNDAO0001"
-    case notesDAOReceivedCount(_ sqliteError: Error)
-    /// SQLite query failed when fetching received notes from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZNDAO0002"
-    case notesDAOReceivedNote(_ sqliteError: Error)
-    /// Fetched note from the SQLite but can't decode that.
-    /// - `error` is decoding error.
-    // sourcery: code="ZNDAO0003"
-    case notesDAOReceivedCantDecode(_ error: Error)
-    /// SQLite query failed when fetching sent notes count from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZNDAO0004"
-    case notesDAOSentCount(_ sqliteError: Error)
-    /// SQLite query failed when fetching sent notes from the database.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZNDAO0005"
-    case notesDAOSentNote(_ sqliteError: Error)
-    /// Fetched note from the SQLite but can't decode that.
-    /// - `error` is decoding error.
-    // sourcery: code="ZNDAO0006"
-    case notesDAOSentCantDecode(_ error: Error)
 
     // MARK: - BlockDAO
 
@@ -412,6 +370,13 @@ enum ZcashErrorDefinition {
     /// Initialization of `ZcashTransaction.Sent` failed.
     // sourcery: code="ZTEZT0003"
     case zcashTransactionSentInit(_ error: Error)
+    /// Initialization of `ZcashTransaction.Output` failed.
+    // sourcery: code="ZTEZT0004"
+    case zcashTransactionOutputInit(_ error: Error)
+
+    /// Initialization of `ZcashTransaction.Output` failed because there an inconsistency in the output recipient.
+    // sourcery: code="ZTEZT0005"
+    case zcashTransactionOutputInconsistentRecipient
 
     // MARK: - Transaction Repository
     
@@ -466,58 +431,6 @@ enum ZcashErrorDefinition {
     /// Failed to decode `Checkpoint` object.
     // sourcery: code="ZCHKP0002"
     case checkpointDecode(_ error: Error)
-
-    // MARK: - PendingTransactionDAO
-
-    /// Decoding of `PendingTransaction` failed because of specific invalid data.
-    /// - `field` is list of fields names that contain invalid data.
-    // sourcery: code="ZPETR0001"
-    case pendingTransactionDecodeInvalidData(_ fields: [String])
-    /// Can't decode `PendingTransaction`.
-    /// - `error` is error which described why decoding failed.
-    // sourcery: code="ZPETR0002"
-    case pendingTransactionCantDecode(_ error: Error)
-    /// Can't encode `PendingTransaction`.
-    /// - `error` is error which described why encoding failed.
-    // sourcery: code="ZPETR0003"
-    case pendingTransactionCantEncode(_ error: Error)
-    /// SQLite query failed when creating pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZPETR0004"
-    case pendingTransactionDAOCreate(_ sqliteError: Error)
-    /// Pending transaction which should be updated is missing ID.
-    // sourcery: code="ZPETR0005"
-    case pendingTransactionDAOUpdateMissingID
-    /// SQLite query failed when updating pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZPETR0006"
-    case pendingTransactionDAOUpdate(_ sqliteError: Error)
-    /// Pending transaction which should be deleted is missing ID.
-    // sourcery: code="ZPETR0007"
-    case pendingTransactionDAODeleteMissingID
-    /// SQLite query failed when deleting pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZPETR0008"
-    case pendingTransactionDAODelete(_ sqliteError: Error)
-    /// Pending transaction which should be canceled is missing ID.
-    // sourcery: code="ZPETR0009"
-    case pendingTransactionDAOCancelMissingID
-    /// SQLite query failed when canceling pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZPETR0010"
-    case pendingTransactionDAOCancel(_ sqliteError: Error)
-    /// SQLite query failed when seaching for pending transaction.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZPETR0011"
-    case pendingTransactionDAOFind(_ sqliteError: Error)
-    /// SQLite query failed when getting pending transactions.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZPETR0012"
-    case pendingTransactionDAOGetAll(_ sqliteError: Error)
-    /// SQLite query failed when applying mined height.
-    /// - `sqliteError` is error produced by SQLite library.
-    // sourcery: code="ZPETR0013"
-    case pendingTransactionDAOApplyMinedHeight(_ sqliteError: Error)
 
     // MARK: - DerivationTool
 
@@ -584,36 +497,6 @@ enum ZcashErrorDefinition {
     /// WalletTransactionEncoder wants to shield funds but files with sapling parameters are not present on disk.
     // sourcery: code="ZWLTE0002"
     case walletTransEncoderShieldFundsMissingSaplingParams
-
-    // MARK: - PersistentTransactionManager
-
-    /// PersistentTransactionsManager cant create transaction.
-    // sourcery: code="ZPTRM0001"
-    case persistentTransManagerCantCreateTransaction(_ recipient: PendingTransactionRecipient, _ account: Int, _ zatoshi: Zatoshi)
-    /// PersistentTransactionsManager cant get to address from pending transaction.
-    // sourcery: code="ZPTRM0002"
-    case persistentTransManagerEncodeUknownToAddress(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id.
-    // sourcery: code="ZPTRM0003"
-    case persistentTransManagerSubmitTransactionIDMissing(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing id. Transaction is probably not stored.
-    // sourcery: code="ZPTRM0004"
-    case persistentTransManagerSubmitTransactionNotFound(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is canceled.
-    // sourcery: code="ZPTRM0005"
-    case persistentTransManagerSubmitTransactionCanceled(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but transaction is missing raw data.
-    // sourcery: code="ZPTRM0006"
-    case persistentTransManagerSubmitTransactionRawDataMissing(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to submit pending transaction but submit API call failed.
-    // sourcery: code="ZPTRM0007"
-    case persistentTransManagerSubmitFailed(_ entity: PendingTransactionEntity, _ serviceErrorCode: Int)
-    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is missing id. Transaction is probably not stored.
-    // sourcery: code="ZPTRM0008"
-    case persistentTransManagerApplyMinedHeightTransactionIDMissing(_ entity: PendingTransactionEntity)
-    /// PersistentTransactionsManager wants to apply mined height to transaction but transaction is not found in storage. Transaction is probably not stored.
-    // sourcery: code="ZPTRM0009"
-    case persistentTransManagerApplyMinedHeightTransactionNotFound(_ entity: PendingTransactionEntity)
     
     // MARK: - Zatoshi
     

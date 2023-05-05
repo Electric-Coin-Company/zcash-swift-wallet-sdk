@@ -1,3 +1,11 @@
+# Migrating from previous versions to _Unreleased_
+PendingDb is no longer used. Wallet developers should take care about deleting
+the database file since the SDK will no longer require it or any of the
+information stored. 
+
+Failed transactions will be treated as "Expired-Unmined" instead. The SDK won't 
+track failures on its own. Wallet developers would have to account for those.
+
 # Migrating from previous versions to 0.20.0-beta
 The `SDKSynchronizer` no longer uses `NotificationCenter` to send notifications.
 Notifications are replaced with `Combine` publishers.

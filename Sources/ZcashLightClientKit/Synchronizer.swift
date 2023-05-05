@@ -64,7 +64,7 @@ public struct SynchronizerState: Equatable {
 
 public enum SynchronizerEvent {
     // Sent when the synchronizer finds a pendingTransaction that hast been newly mined.
-    case minedTransaction(PendingTransactionEntity)
+    case minedTransaction(ZcashTransaction.Overview)
     // Sent when the synchronizer finds a mined transaction
     case foundTransactions(_ transactions: [ZcashTransaction.Overview], _ inRange: CompactBlockRange)
     // Sent when the synchronizer fetched utxos from lightwalletd attempted to store them.
@@ -163,7 +163,7 @@ public protocol Synchronizer: AnyObject {
         zatoshi: Zatoshi,
         toAddress: Recipient,
         memo: Memo?
-    ) async throws -> PendingTransactionEntity
+    ) async throws -> ZcashTransaction.Overview
 
     /// Shields transparent funds from the given private key into the best shielded pool of the account associated to the given `UnifiedSpendingKey`.
     /// - Parameter spendingKey: the `UnifiedSpendingKey` that allows to spend transparent funds
@@ -175,25 +175,19 @@ public protocol Synchronizer: AnyObject {
         spendingKey: UnifiedSpendingKey,
         memo: Memo,
         shieldingThreshold: Zatoshi
-    ) async throws -> PendingTransactionEntity
-
-    /// Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only
-    /// an option if the transaction has not yet been submitted to the server.
-    /// - Parameter transaction: the transaction to cancel.
-    /// - Returns: true when the cancellation request was successful. False when it is too late.
-    func cancelSpend(transaction: PendingTransactionEntity) async -> Bool
+    ) async throws -> ZcashTransaction.Overview
 
     /// all outbound pending transactions that have been sent but are awaiting confirmations
-    var pendingTransactions: [PendingTransactionEntity] { get async }
+    var pendingTransactions: [ZcashTransaction.Overview] { get async }
 
     /// all the transactions that are on the blockchain
-    var clearedTransactions: [ZcashTransaction.Overview] { get async }
+    var transactions: [ZcashTransaction.Overview] { get async }
 
     /// All transactions that are related to sending funds
-    var sentTransactions: [ZcashTransaction.Sent] { get async }
+    var sentTransactions: [ZcashTransaction.Overview] { get async }
 
     /// all transactions related to receiving funds
-    var receivedTransactions: [ZcashTransaction.Received] { get async }
+    var receivedTransactions: [ZcashTransaction.Overview] { get async }
     
     /// A repository serving transactions in a paginated manner
     /// - Parameter kind: Transaction Kind expected from this PaginatedTransactionRepository
@@ -204,16 +198,6 @@ public protocol Synchronizer: AnyObject {
     // sourcery: mockedName="getMemosForClearedTransaction"
     func getMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo]
 
-    /// Get all memos for `receivedTransaction`.
-    ///
-    // sourcery: mockedName="getMemosForReceivedTransaction"
-    func getMemos(for receivedTransaction: ZcashTransaction.Received) async throws -> [Memo]
-
-    /// Get all memos for `sentTransaction`.
-    ///
-    // sourcery: mockedName="getMemosForSentTransaction"
-    func getMemos(for sentTransaction: ZcashTransaction.Sent) async throws -> [Memo]
-
     /// Attempt to get recipients from a Transaction Overview.
     /// - parameter transaction: A transaction overview
     /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
@@ -221,21 +205,24 @@ public protocol Synchronizer: AnyObject {
     ///
     // sourcery: mockedName="getRecipientsForClearedTransaction"
     func getRecipients(for transaction: ZcashTransaction.Overview) async -> [TransactionRecipient]
-    
-    /// Get the recipients for the given a sent transaction
+
+    /// Attempt to get outputs involved in a given Transaction.
     /// - parameter transaction: A transaction overview
-    /// - returns the recipients or an empty array if no recipients are found on this transaction because it's not an outgoing
-    /// transaction
+    /// - returns the array of outputs involved in this transaction. Transparent outputs might not be tracked 
     ///
-    // sourcery: mockedName="getRecipientsForSentTransaction"
-    func getRecipients(for transaction: ZcashTransaction.Sent) async -> [TransactionRecipient]
+    // sourcery: mockedName="getTransactionOutputsForTransaction"
+    func getTransactionOutputs(for transaction: ZcashTransaction.Overview) async -> [ZcashTransaction.Output]
 
     /// Returns a list of confirmed transactions that preceed the given transaction with a limit count.
     /// - Parameters:
     ///     - from: the confirmed transaction from which the query should start from or nil to retrieve from the most recent transaction
     ///     - limit: the maximum amount of items this should return if available
-    ///     - Returns: an array with the given Transactions or nil
-    func allConfirmedTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview]
+    /// - Returns: an array with the given Transactions or an empty array
+    func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview]
+
+    /// Fetch all pending transactions
+    /// - Returns: an array of transactions which are considered pending confirmation. can be empty
+    func allPendingTransactions() async throws -> [ZcashTransaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight() async throws -> BlockHeight
