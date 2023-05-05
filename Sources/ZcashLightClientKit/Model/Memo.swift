@@ -165,8 +165,8 @@ public extension MemoBytes {
     func intoMemo() throws -> Memo {
         switch self.bytes[0] {
         case 0x00 ... 0xF4:
-            let unpadded = self.unpaddedRawBytes()
-            guard let validatedUTF8String = String(validatingUTF8: unpadded) else {
+            let unpaddedBytes = self.unpaddedRawBytes()
+            guard let validatedUTF8String = String(bytes: unpaddedBytes, encoding: .utf8) else {
                 throw ZcashError.memoBytesInvalidUTF8
             }
 
@@ -215,19 +215,6 @@ extension Array where Element == UInt8 {
         }
 
         return [UInt8](self[0 ..< lastNullByte])
-    }
-}
-
-extension String {
-    public init?(validatingUTF8 cString: UnsafePointer<UInt8>) {
-        guard let (str, _) = String.decodeCString(
-            cString,
-            as: UTF8.self,
-            repairingInvalidCodeUnits: false
-        ) else {
-            return nil
-        }
-        self = str
     }
 }
 

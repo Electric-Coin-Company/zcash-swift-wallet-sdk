@@ -1,5 +1,11 @@
 # Unreleased
 
+### [#1019] Memo has trailing garbled text
+    
+Changes the way unpadded bytes are turned into a UTF-8 Swift String
+without using cString assuming APIs that would overflow memory and
+add garbled trailing bytes.
+
 ### Changed
 - `WalletTransactionEncoder` now uses a `LightWalletService` to submit the
 encoded transactions.
