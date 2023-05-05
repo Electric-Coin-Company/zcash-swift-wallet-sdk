@@ -1,5 +1,8 @@
 #!/bin/zsh
 
+scriptDir=${0:a:h}
+cd "${scriptDir}"
+
 sourcery_version=2.0.2
 
 if which sourcery >/dev/null; then

@@ -13,7 +13,12 @@ struct BlockScannerConfig {
 }
 
 protocol BlockScanner {
-    func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: @escaping (BlockHeight) async -> Void) async throws
+    @discardableResult
+    func scanBlocks(
+        at range: CompactBlockRange,
+        totalProgressRange: CompactBlockRange,
+        didScan: @escaping (BlockHeight) async -> Void
+    ) async throws -> BlockHeight
 }
 
 struct BlockScannerImpl {
@@ -26,7 +31,13 @@ struct BlockScannerImpl {
 }
 
 extension BlockScannerImpl: BlockScanner {
-    func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: @escaping (BlockHeight) async -> Void) async throws {
+    @discardableResult
+    func scanBlocks(
+        at range: CompactBlockRange,
+        totalProgressRange: CompactBlockRange,
+        didScan: @escaping (BlockHeight) async -> Void
+    ) async throws -> BlockHeight {
+        logger.debug("Going to scan blocks in range: \(range)")
         try Task.checkCancellation()
 
         let scanStartHeight = try await transactionRepository.lastScannedHeight()
@@ -84,6 +95,8 @@ extension BlockScannerImpl: BlockScanner {
 
             await Task.yield()
         } while !Task.isCancelled && scannedNewBlocks && lastScannedHeight < targetScanHeight
+
+        return lastScannedHeight
     }
 
     private func scanBatchSize(startScanHeight height: BlockHeight, network: NetworkType) -> UInt32 {

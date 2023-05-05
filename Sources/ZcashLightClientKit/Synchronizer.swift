@@ -131,7 +131,9 @@ public protocol Synchronizer: AnyObject {
     func start(retry: Bool) async throws
 
     /// Stop this synchronizer. Implementations should ensure that calling this method cancels all jobs that were created by this instance.
-    func stop() async
+    /// It make some time before the SDK stops any activity. It doesn't have to be stopped when this function finishes.
+    /// Observe `stateStream` or `latestState` to recognize that the SDK stopped any activity.
+    func stop()
 
     /// Gets the sapling shielded address for the given account.
     /// - Parameter accountIndex: the optional accountId whose address is of interest. By default, the first account is used.

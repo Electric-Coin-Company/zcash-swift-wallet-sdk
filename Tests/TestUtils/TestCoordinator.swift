@@ -114,9 +114,9 @@ class TestCoordinator {
     }
     
     func stop() async throws {
-        await synchronizer.stop()
-        self.completionHandler = nil
-        self.errorHandler = nil
+        await synchronizer.blockProcessor.stop()
+        completionHandler = nil
+        errorHandler = nil
     }
     
     func setDarksideWalletState(_ state: DarksideData) throws {
@@ -176,12 +176,6 @@ class TestCoordinator {
     }
 }
 
-extension CompactBlockProcessor {
-    public func setConfig(_ config: Configuration) {
-        self.config = config
-    }
-}
-
 extension TestCoordinator {
     func resetBlocks(dataset: DarksideData) throws {
         switch dataset {
@@ -235,7 +229,7 @@ extension TestCoordinator {
                 network: config.network
             )
 
-            await self.synchronizer.blockProcessor.setConfig(newConfig)
+            await self.synchronizer.blockProcessor.update(config: newConfig)
         }
 
         try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)

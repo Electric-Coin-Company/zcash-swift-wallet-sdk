@@ -47,10 +47,8 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
         }
     }
 
-    public func stop() -> CompletablePublisher<Never> {
-        AsyncToCombineGateway.executeAction() {
-            await self.synchronizer.stop()
-        }
+    public func stop() {
+        synchronizer.stop()
     }
 
     public func getSaplingAddress(accountIndex: Int) -> SinglePublisher<SaplingAddress, Error> {

@@ -32,6 +32,8 @@ class CompactBlockProcessorTests: XCTestCase {
         logger = OSLogger(logLevel: .debug)
         testTempDirectory = Environment.uniqueTestTempDirectory
 
+        try? FileManager.default.removeItem(at: testTempDirectory)
+
         try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
 
         let pathProvider = DefaultResourceProvider(network: network)
@@ -46,11 +48,7 @@ class CompactBlockProcessorTests: XCTestCase {
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
 
-        await InternalSyncProgress(
-            alias: .default,
-            storage: UserDefaults.standard,
-            logger: logger
-        ).rewind(to: 0)
+        await InternalSyncProgress(alias: .default, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
@@ -132,7 +130,7 @@ class CompactBlockProcessorTests: XCTestCase {
 
     override func tearDown() async throws {
         try await super.tearDown()
-        await self.processor.stop()
+        await processor.stop()
         try FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         cancellables = []

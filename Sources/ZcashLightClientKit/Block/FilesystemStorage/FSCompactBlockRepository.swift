@@ -52,7 +52,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
             do {
                 try fileManager.createDirectory(at: blocksDirectory, withIntermediateDirectories: true)
             } catch {
-                throw ZcashError.blockRepositoryCreateBlocksCacheDirectory(blocksDirectory)
+                throw ZcashError.blockRepositoryCreateBlocksCacheDirectory(blocksDirectory, error)
             }
         }
 
@@ -81,7 +81,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
                     do {
                         try self.fileManager.removeItem(at: blockURL)
                     } catch {
-                        throw ZcashError.blockRepositoryRemoveExistingBlock(error)
+                        throw ZcashError.blockRepositoryRemoveExistingBlock(blockURL, error)
                     }
                 }
 
@@ -90,7 +90,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
                     try self.fileWriter.writeToURL(block.data, blockURL)
                 } catch {
                     logger.error("Failed to write block: \(block.height) to path: \(blockURL.path) with error: \(error)")
-                    throw ZcashError.blockRepositoryWriteBlock(block)
+                    throw ZcashError.blockRepositoryWriteBlock(block, error)
                 }
 
                 savedBlocks.append(block)
@@ -104,7 +104,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
             // if there are any remaining blocks on the cache store them
             try await self.metadataStore.saveBlocksMeta(savedBlocks)
         } catch {
-            logger.error("failed to Block save to cache error: \(error.localizedDescription)")
+            logger.error("failed to Block save to cache error: \(error)")
             throw error
         }
     }
@@ -127,7 +127,19 @@ extension FSCompactBlockRepository: CompactBlockRepository {
             do {
                 try self.fileManager.removeItem(at: item)
             } catch {
-                throw ZcashError.blockRepositoryRemoveBlockAfterRewind(item)
+                throw ZcashError.blockRepositoryRemoveBlockAfterRewind(item, error)
+            }
+        }
+    }
+
+    func clear(upTo height: BlockHeight) async throws {
+        let files = try filesWithHeight(upTo: height)
+        logger.debug("Clearing up to height \(height). Clearing \(files.count) blocks from cache.")
+        for url in files {
+            do {
+                try self.fileManager.removeItem(at: url)
+            } catch {
+                throw ZcashError.blockRepositoryRemoveBlockClearingCache(url, error)
             }
         }
     }
@@ -137,7 +149,7 @@ extension FSCompactBlockRepository: CompactBlockRepository {
             do {
                 try self.fileManager.removeItem(at: self.fsBlockDbRoot)
             } catch {
-                throw ZcashError.blockRepositoryRemoveBlocksCacheDirectory(fsBlockDbRoot)
+                throw ZcashError.blockRepositoryRemoveBlocksCacheDirectory(fsBlockDbRoot, error)
             }
         }
         try await create()
@@ -212,6 +224,15 @@ extension FSCompactBlockRepository {
         self.fileManager.fileExists(
             atPath: urlForBlock(block).path
         )
+    }
+
+    func filesWithHeight(upTo height: BlockHeight) throws -> [URL] {
+        let sortedCachedContents = try contentProvider.listContents(of: blocksDirectory)
+
+        return try sortedCachedContents.filter { url in
+            guard let filename = try url.resourceValues(forKeys: [.nameKey]).name else { throw ZcashError.blockRepositoryGetFilename(url) }
+            return try filename.filterLowerThanOrEqual(height, with: blockDescriptor)
+        }
     }
 }
 // MARK: Associated and Helper types
@@ -304,18 +325,15 @@ enum DirectoryListingProviders {
 class SortedDirectoryContentProvider: SortedDirectoryListing {
     let fileManager: FileManager
     let sorting: (URL, URL) throws -> Bool
-    let recursive: Bool
 
     /// inits the `SortedDirectoryContentProvider`
     /// - Parameter fileManager: an instance of `FileManager`
     /// - Parameter sorting: A predicate that returns `true` if its
     ///   first argument should be ordered before its second argument;
     ///   otherwise, `false`.
-    /// - Parameter recursive: make this list subdirectories. Default
-    init(fileManager: FileManager, sorting: @escaping (URL, URL) throws -> Bool, recursive: Bool = false) {
+    init(fileManager: FileManager, sorting: @escaping (URL, URL) throws -> Bool) {
         self.fileManager = fileManager
         self.sorting = sorting
-        self.recursive = recursive
     }
 
     /// lists the contents of the given directory on `url` using the
@@ -328,11 +346,11 @@ class SortedDirectoryContentProvider: SortedDirectoryListing {
             return try fileManager.contentsOfDirectory(
                 at: url,
                 includingPropertiesForKeys: [.nameKey, .isDirectoryKey],
-                options: recursive ? [] : .skipsSubdirectoryDescendants
+                options: [.skipsHiddenFiles]
             )
             .sorted(by: sorting)
         } catch {
-            throw ZcashError.blockRepositoryReadDirectoryContent(url)
+            throw ZcashError.blockRepositoryReadDirectoryContent(url, error)
         }
     }
 }
@@ -370,7 +388,7 @@ extension FileManager: SortedDirectoryListing {
                 options: .skipsSubdirectoryDescendants
             )
         } catch {
-            throw ZcashError.blockRepositoryReadDirectoryContent(url)
+            throw ZcashError.blockRepositoryReadDirectoryContent(url, error)
         }
     }
 }
@@ -389,5 +407,13 @@ extension String {
         }
 
         return blockHeight > height
+    }
+
+    func filterLowerThanOrEqual(_ height: BlockHeight, with descriptor: ZcashCompactBlockDescriptor) throws -> Bool {
+        guard let blockHeight = descriptor.height(self) else {
+            throw ZcashError.blockRepositoryParseHeightFromFilename(self)
+        }
+
+        return blockHeight <= height
     }
 }

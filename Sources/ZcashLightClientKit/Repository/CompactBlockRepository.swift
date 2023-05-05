@@ -35,6 +35,9 @@ protocol CompactBlockRepository {
     */
     func rewind(to height: BlockHeight) async throws
 
+    /// Clear only blocks with height lower or equal than `height` from the repository.
+    func clear(upTo height: BlockHeight) async throws
+
     /// Clears the repository
     func clear() async throws
 }

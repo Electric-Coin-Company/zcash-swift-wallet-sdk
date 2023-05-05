@@ -66,10 +66,10 @@ class ReOrgTests: XCTestCase {
         self.coordinator = nil
         cancellables = []
 
+        try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
         try? FileManager.default.removeItem(at: coordinator.databases.dataDB)
         try? FileManager.default.removeItem(at: coordinator.databases.pendingDB)
-        try await coordinator.stop()
     }
 
     func handleReOrgNotification(event: CompactBlockProcessor.Event) {

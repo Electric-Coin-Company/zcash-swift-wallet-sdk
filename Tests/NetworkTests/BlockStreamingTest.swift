@@ -14,12 +14,13 @@ class BlockStreamingTest: XCTestCase {
     var rustBackend: ZcashRustBackendWelding!
     var testTempDirectory: URL!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
+        logger = OSLogger(logLevel: .debug)
         testTempDirectory = Environment.uniqueTestTempDirectory
+
         try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
-        logger = OSLogger(logLevel: .debug)
     }
 
     override func tearDownWithError() throws {
@@ -102,24 +103,17 @@ class BlockStreamingTest: XCTestCase {
         
         let cancelableTask = Task {
             do {
-                let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
-                    startHeight: startHeight,
-                    targetHeight: latestBlockHeight
-                )
-
-                try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
-                    using: downloadStream,
-                    at: startHeight...latestBlockHeight,
-                    maxBlockBufferSize: 10,
-                    totalProgressRange: startHeight...latestBlockHeight
-                )
+                let blockDownloader = await compactBlockProcessor.blockDownloader
+                await blockDownloader.setDownloadLimit(latestBlockHeight)
+                await blockDownloader.startDownload(maxBlockBufferSize: 10, syncRange: startHeight...latestBlockHeight)
+                try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
             } catch {
                 XCTAssertTrue(Task.isCancelled)
             }
         }
-        
-        try await Task.sleep(nanoseconds: 3_000_000_000)
+
         cancelableTask.cancel()
+        await compactBlockProcessor.stop()
     }
     
     func testStreamTimeout() async throws {
@@ -168,17 +162,10 @@ class BlockStreamingTest: XCTestCase {
         let date = Date()
         
         do {
-            let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
-                startHeight: startHeight,
-                targetHeight: latestBlockHeight
-            )
-
-            try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
-                using: downloadStream,
-                at: startHeight...latestBlockHeight,
-                maxBlockBufferSize: 10,
-                totalProgressRange: startHeight...latestBlockHeight
-            )
+            let blockDownloader = await compactBlockProcessor.blockDownloader
+            await blockDownloader.setDownloadLimit(latestBlockHeight)
+            await blockDownloader.startDownload(maxBlockBufferSize: 10, syncRange: startHeight...latestBlockHeight)
+            try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
         } catch {
             if let lwdError = error as? ZcashError {
                 switch lwdError {
@@ -196,5 +183,7 @@ class BlockStreamingTest: XCTestCase {
         
         let elapsed = now.timeIntervalSince(date)
         print("took \(elapsed) seconds")
+
+        await compactBlockProcessor.stop()
     }
 }

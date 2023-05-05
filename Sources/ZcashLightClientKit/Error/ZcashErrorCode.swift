@@ -193,6 +193,10 @@ public enum ZcashErrorCode: String {
     case blockRepositoryRemoveBlockAfterRewind = "ZBLRP0008"
     /// Failed to remove blocks cache directory while clearing storage.
     case blockRepositoryRemoveBlocksCacheDirectory = "ZBLRP0009"
+    /// Failed to remove block from cache when clearing cache up to some height.
+    case blockRepositoryRemoveBlockClearingCache = "ZBLRP0010"
+    /// Trying to download blocks before sync range is set in `BlockDownloaderImpl`. This means that download stream is not created and download cant' start.
+    case blockDownloadSyncRangeNotSet = "ZBDWN0001"
     /// Stream downloading the given block range failed.
     case blockDownloaderServiceDownloadBlockRange = "ZBDSEO0001"
     /// Initialization of `ZcashTransaction.Overview` failed.

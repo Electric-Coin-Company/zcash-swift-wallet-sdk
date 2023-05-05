@@ -69,7 +69,7 @@ class SyncBlocksViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         cancellables.forEach { $0.cancel() }
-        closureSynchronizer.stop() { }
+        closureSynchronizer.stop()
     }
 
     private func synchronizerStateUpdated(_ state: SynchronizerState) {
@@ -86,9 +86,9 @@ class SyncBlocksViewController: UIViewController {
             progressLabel.text = "\(floor(progress.progress * 1000) / 10)%"
             let syncedDate = dateFormatter.string(from: Date(timeIntervalSince1970: state.latestScannedTime))
             let progressText = """
-            synced date \(syncedDate)
-            synced block \(state.latestScannedHeight)
-            target block \(state.latestBlockHeight)
+            synced date         \(syncedDate)
+            synced block        \(state.latestScannedHeight)
+            latest block height \(state.latestBlockHeight)
             """
             progressDataLabel.text = progressText
 
@@ -163,7 +163,7 @@ class SyncBlocksViewController: UIViewController {
     func doStartStop() async {
         let syncStatus = synchronizer.latestState.syncStatus
         switch syncStatus {
-        case .stopped, .unprepared:
+        case .stopped, .unprepared, .error:
             do {
                 if syncStatus == .unprepared {
                     // swiftlint:disable:next force_try
@@ -182,7 +182,7 @@ class SyncBlocksViewController: UIViewController {
                 updateUI()
             }
         default:
-            await synchronizer.stop()
+            synchronizer.stop()
             synchronizer.metrics.disableMetrics()
             updateUI()
         }

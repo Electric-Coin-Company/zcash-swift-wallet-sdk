@@ -34,9 +34,9 @@ class BlockScanTests: XCTestCase {
 
     let testFileManager = FileManager()
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
+        logger = OSLogger(logLevel: .debug)
         dataDbURL = try! __dataDbURL()
         spendParamsURL = try! __spendParamsURL()
         outputParamsURL = try! __outputParamsURL()
@@ -70,8 +70,6 @@ class BlockScanTests: XCTestCase {
     }
     
     func testSingleDownloadAndScan() async throws {
-        logger = OSLogger(logLevel: .debug)
-
         _ = try await rustBackend.initDataDb(seed: nil)
 
         let endpoint = LightWalletEndpoint(address: "lightwalletd.testnet.electriccoin.co", port: 9067)
@@ -123,6 +121,8 @@ class BlockScanTests: XCTestCase {
 
         latestScannedheight = repository.lastScannedBlockHeight()
         XCTAssertEqual(latestScannedheight, range.upperBound)
+
+        await compactBlockProcessor.stop()
     }
 
     func observeBenchmark(_ metrics: SDKMetrics) {
@@ -135,8 +135,6 @@ class BlockScanTests: XCTestCase {
 
     func testScanValidateDownload() async throws {
         let seed = "testreferencealicetestreferencealice"
-
-        logger = OSLogger(logLevel: .debug)
 
         let metrics = SDKMetrics()
         metrics.enableMetrics()
@@ -217,17 +215,11 @@ class BlockScanTests: XCTestCase {
         )
         
         do {
-            let downloadStream = try await compactBlockProcessor.blockDownloader.compactBlocksDownloadStream(
-                startHeight: range.lowerBound,
-                targetHeight: range.upperBound
-            )
+            let blockDownloader = await compactBlockProcessor.blockDownloader
+            await blockDownloader.setDownloadLimit(range.upperBound)
+            await blockDownloader.startDownload(maxBlockBufferSize: 10, syncRange: range)
+            try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: range)
 
-            try await compactBlockProcessor.blockDownloader.downloadAndStoreBlocks(
-                using: downloadStream,
-                at: range,
-                maxBlockBufferSize: 10,
-                totalProgressRange: range
-            )
             XCTAssertFalse(Task.isCancelled)
             
             try await compactBlockProcessor.blockValidator.validate()
@@ -247,7 +239,8 @@ class BlockScanTests: XCTestCase {
                 XCTFail("Error should have been a timeLimit reached Error - \(error)")
             }
         }
-        
+
+        await compactBlockProcessor.stop()
         metrics.disableMetrics()
     }
 }

@@ -16,9 +16,12 @@ class DownloadTests: XCTestCase {
     var network = ZcashNetworkBuilder.network(for: .testnet)
     var testTempDirectory: URL!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         testTempDirectory = Environment.uniqueTestTempDirectory
+        try? FileManager.default.removeItem(at: testTempDirectory)
+        await InternalSyncProgress(alias: .default, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
+
         try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
     }
 
@@ -73,5 +76,7 @@ class DownloadTests: XCTestCase {
 
         let latestHeight = await storage.latestHeight()
         XCTAssertEqual(latestHeight, range.upperBound)
+
+        await compactBlockProcessor.stop()
     }
 }
