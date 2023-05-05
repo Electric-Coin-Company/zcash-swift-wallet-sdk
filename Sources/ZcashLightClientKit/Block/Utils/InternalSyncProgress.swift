@@ -23,6 +23,18 @@ struct SyncRanges: Equatable {
     let latestScannedHeight: BlockHeight?
 
     let latestDownloadedBlockHeight: BlockHeight?
+
+    static var empty: SyncRanges {
+        SyncRanges(
+            latestBlockHeight: 0,
+            downloadedButUnscannedRange: nil,
+            downloadAndScanRange: nil,
+            enhanceRange: nil,
+            fetchUTXORange: nil,
+            latestScannedHeight: nil,
+            latestDownloadedBlockHeight: nil
+        )
+    }
 }
 
 protocol InternalSyncProgressStorage {
