@@ -213,7 +213,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
-                internalSyncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)),
+                internalSyncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
                 latestScannedTime: 1
@@ -243,7 +243,8 @@ class SynchronizerDarksideTests: ZcashTestCase {
                             value: Zatoshi(100000),
                             isExpiredUmined: false
                         ),
-                        range: 663150...663189
+                        range: 663150...663189,
+                        newlyMined: true
                     )
                 ),
                 latestScannedHeight: 663189,
@@ -275,7 +276,8 @@ class SynchronizerDarksideTests: ZcashTestCase {
                             value: Zatoshi(100000),
                             isExpiredUmined: false
                         ),
-                        range: 663150...663189
+                        range: 663150...663189,
+                        newlyMined: true
                     )
                 ),
                 latestScannedHeight: 663189,
@@ -374,7 +376,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 internalSyncStatus: .enhancing(
-                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)
+                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)
                 ),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
@@ -405,7 +407,8 @@ class SynchronizerDarksideTests: ZcashTestCase {
                             value: Zatoshi(100000),
                             isExpiredUmined: false
                         ),
-                        range: 663150...663189
+                        range: 663150...663189,
+                        newlyMined: true
                     )
                 ),
                 latestScannedHeight: 663189,
@@ -437,7 +440,8 @@ class SynchronizerDarksideTests: ZcashTestCase {
                             value: Zatoshi(100000),
                             isExpiredUmined: false
                         ),
-                        range: 663150...663189
+                        range: 663150...663189,
+                        newlyMined: true
                     )
                 ),
                 latestScannedHeight: 663189,
@@ -512,7 +516,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
                 internalSyncStatus: .enhancing(
-                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)
+                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: true)
                 ),
                 latestScannedHeight: 663200,
                 latestBlockHeight: 663200,
@@ -612,12 +616,6 @@ class SynchronizerDarksideTests: ZcashTestCase {
             return
         }
         XCTFail("Failed with error: \(testError)")
-    }
-}
-
-extension Zatoshi: CustomDebugStringConvertible {
-    public var debugDescription: String {
-        "Zatoshi(\(self.amount))"
     }
 }
 

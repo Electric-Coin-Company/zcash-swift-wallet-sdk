@@ -58,16 +58,30 @@ public enum CompactBlockProgress {
 }
 
 public struct EnhancementProgress: Equatable {
+    /// total transactions that were detected in the `range`
     public let totalTransactions: Int
+    /// enhanced transactions so far
     public let enhancedTransactions: Int
+    /// last found transaction
     public let lastFoundTransaction: ZcashTransaction.Overview?
+    /// block range that's being enhanced
     public let range: CompactBlockRange
+    /// whether this transaction can be considered `newly mined` and not part of the
+    /// wallet catching up to stale and uneventful blocks.
+    public let newlyMined: Bool
 
-    public init(totalTransactions: Int, enhancedTransactions: Int, lastFoundTransaction: ZcashTransaction.Overview?, range: CompactBlockRange) {
+    public init(
+        totalTransactions: Int,
+        enhancedTransactions: Int,
+        lastFoundTransaction: ZcashTransaction.Overview?,
+        range: CompactBlockRange,
+        newlyMined: Bool
+    ) {
         self.totalTransactions = totalTransactions
         self.enhancedTransactions = enhancedTransactions
         self.lastFoundTransaction = lastFoundTransaction
         self.range = range
+        self.newlyMined = newlyMined
     }
     
     public var progress: Float {
@@ -75,7 +89,7 @@ public struct EnhancementProgress: Equatable {
     }
 
     public static var zero: EnhancementProgress {
-        EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)
+        EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)
     }
 
     public static func == (lhs: EnhancementProgress, rhs: EnhancementProgress) -> Bool {
@@ -98,6 +112,9 @@ actor CompactBlockProcessor {
 
         /// Event sent when the CompactBlockProcessor has finished syncing the blockchain to latest height
         case finished (_ lastScannedHeight: BlockHeight, _ foundBlocks: Bool)
+
+        /// Event sent when the CompactBlockProcessor found a newly mined transaction
+        case minedTransaction(ZcashTransaction.Overview)
 
         /// Event sent when the CompactBlockProcessor enhanced a bunch of transactions in some range.
         case foundTransactions ([ZcashTransaction.Overview], CompactBlockRange)
@@ -672,10 +689,19 @@ actor CompactBlockProcessor {
                     anyActionExecuted = true
                     logger.debug("Enhancing with range: \(range.lowerBound)...\(range.upperBound)")
                     await updateState(.enhancing)
-                    let transactions = try await blockEnhancer.enhance(at: range) { [weak self] progress in
-                        await self?.notifyProgress(.enhance(progress))
+                    if let transactions = try await blockEnhancer.enhance(
+                        at: range,
+                        didEnhance:  { [weak self] progress in
+                            await self?.notifyProgress(.enhance(progress))
+                            if
+                                let foundTx = progress.lastFoundTransaction,
+                                progress.newlyMined {
+                                await self?.notifyMinedTransaction(foundTx)
+                            }
+                        }
+                    ) {
+                        await notifyTransactions(transactions, in: range)
                     }
-                    await notifyTransactions(transactions, in: range)
                 }
 
                 if let range = ranges.fetchUTXORange {
@@ -832,6 +858,11 @@ actor CompactBlockProcessor {
         let upperBound = syncRanges.downloadAndScanRange?.upperBound ?? syncRanges.downloadedButUnscannedRange?.upperBound ?? 0
 
         return lowerBound...upperBound
+    }
+
+    func notifyMinedTransaction(_ tx: ZcashTransaction.Overview) async {
+        logger.debug("notify mined transaction: \(tx)")
+        await send(event: .minedTransaction(tx))
     }
 
     func notifyProgress(_ progress: CompactBlockProgress) async {

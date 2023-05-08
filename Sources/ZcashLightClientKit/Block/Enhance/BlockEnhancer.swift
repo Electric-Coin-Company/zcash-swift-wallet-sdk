@@ -8,7 +8,7 @@
 import Foundation
 
 protocol BlockEnhancer {
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]
+    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?
 }
 
 struct BlockEnhancerImpl {
@@ -38,7 +38,7 @@ struct BlockEnhancerImpl {
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview] {
+    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
         try Task.checkCancellation()
         
         logger.debug("Started Enhancing range: \(range)")
@@ -54,9 +54,16 @@ extension BlockEnhancerImpl: BlockEnhancer {
             guard !transactions.isEmpty else {
                 await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
                 logger.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
-                return []
+                return nil
             }
-            
+
+            let chainTipHeight = try await blockDownloaderService.latestBlockHeight()
+
+            let newlyMinedLowerBound = chainTipHeight - ZcashSDK.expiryOffset
+
+            let newlyMinedRange = newlyMinedLowerBound...chainTipHeight
+
+
             for index in 0 ..< transactions.count {
                 let transaction = transactions[index]
                 var retry = true
@@ -66,12 +73,15 @@ extension BlockEnhancerImpl: BlockEnhancer {
                     do {
                         let confirmedTx = try await enhance(transaction: transaction)
                         retry = false
+                        
                         let progress = EnhancementProgress(
                             totalTransactions: transactions.count,
                             enhancedTransactions: index + 1,
                             lastFoundTransaction: confirmedTx,
-                            range: range
+                            range: range,
+                            newlyMined: confirmedTx.isSentTransaction && newlyMinedRange.contains(confirmedTx.minedHeight ?? 0)
                         )
+
                         await didEnhance(progress)
 
                         if let minedHeight = confirmedTx.minedHeight {
@@ -109,6 +119,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
             logger.debug("Warning: compactBlockEnhancement on range \(range) cancelled")
         }
 
-        return (try? await transactionRepository.find(in: range, limit: Int.max, kind: .all)) ?? []
+        return (try? await transactionRepository.find(in: range, limit: Int.max, kind: .all))
     }
 }

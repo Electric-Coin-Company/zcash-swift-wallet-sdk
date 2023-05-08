@@ -230,6 +230,9 @@ public class SDKSynchronizer: Synchronizer {
 
             case .stopped:
                 await self?.updateStatus(.stopped)
+
+            case .minedTransaction(let transaction):
+                self?.notifyMinedTransaction(transaction)
             }
         }
 
