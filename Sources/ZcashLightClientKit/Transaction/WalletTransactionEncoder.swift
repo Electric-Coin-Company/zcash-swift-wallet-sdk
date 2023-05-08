@@ -137,11 +137,10 @@ class WalletTransactionEncoder: TransactionEncoder {
         let response = try await self.lightWalletService.submit(spendTransaction: transaction.raw)
 
         guard response.errorCode >= 0 else {
-            throw TransactionEncoderError.submitError(code: Int(response.errorCode) , message: response.errorMessage)
+            throw TransactionEncoderError.submitError(code: Int(response.errorCode), message: response.errorMessage)
         }
     }
 
-    
     func ensureParams(spend: URL, output: URL) -> Bool {
         let readableSpend = FileManager.default.isReadableFile(atPath: spend.path)
         let readableOutput = FileManager.default.isReadableFile(atPath: output.path)

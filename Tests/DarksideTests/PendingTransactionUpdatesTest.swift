@@ -208,7 +208,7 @@ class PendingTransactionUpdatesTest: XCTestCase {
         let clearedTransactions = await coordinator.synchronizer
             .transactions
 
-        let clearedTransaction = clearedTransactions.first(where: { $0.rawID == afterStagePendingTx.rawID } )
+        let clearedTransaction = clearedTransactions.first(where: { $0.rawID == afterStagePendingTx.rawID })
         
         XCTAssertEqual(clearedTransaction!.value.amount, afterStagePendingTx.value.amount)
         XCTAssertNil(supposedlyPendingUnexistingTransaction)

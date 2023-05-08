@@ -830,7 +830,7 @@ actor CompactBlockProcessor {
 
             do {
                 await blockDownloader.setDownloadLimit(processingRange.upperBound + (2 * batchSize))
-                await blockDownloader.startDownload(maxBlockBufferSize: config.downloadBufferSize, syncRange: range)
+                await blockDownloader.startDownload(maxBlockBufferSize: config.downloadBufferSize)
 
                 try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: processingRange)
             } catch {

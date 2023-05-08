@@ -43,8 +43,7 @@ protocol BlockDownloader {
     ///
     /// - Parameters:
     ///   - maxBlockBufferSize: Number of blocks that is held in memory before blocks are written to disk.
-    ///   - syncRange: Whole range in which blocks should be downloaded. This should be sync range.
-    func startDownload(maxBlockBufferSize: Int, syncRange: CompactBlockRange) async
+    func startDownload(maxBlockBufferSize: Int) async
 
     /// Stop download. This method cancels Task used for downloading. And then it is waiting until internal `isDownloading` flag is set to `false`
     func stopDownload() async
@@ -64,6 +63,7 @@ actor BlockDownloaderImpl {
     let logger: Logger
 
     private var downloadStream: BlockDownloaderStream?
+    private var syncRange: CompactBlockRange?
 
     private var downloadToHeight: BlockHeight = 0
     private var isDownloading = false
@@ -86,10 +86,10 @@ actor BlockDownloaderImpl {
         self.logger = logger
     }
 
-    private func doDownload(maxBlockBufferSize: Int, syncRange: CompactBlockRange) async {
+    private func doDownload(maxBlockBufferSize: Int) async {
         lastError = nil
         do {
-            guard let downloadStream = self.downloadStream else {
+            guard let downloadStream = self.downloadStream, let syncRange = self.syncRange else {
                 logger.error("Dont have downloadStream. Trying to download blocks before sync range is not set.")
                 throw ZcashError.blockDownloadSyncRangeNotSet
             }
@@ -132,7 +132,7 @@ actor BlockDownloaderImpl {
                 range upper bound:      \(range.upperBound)
                 new downloadToHeight:   \(downloadToHeight)
                 """)
-                await startDownload(maxBlockBufferSize: maxBlockBufferSize, syncRange: syncRange)
+                await startDownload(maxBlockBufferSize: maxBlockBufferSize)
                 logger.debug("finishing after start download")
             } else {
                 logger.debug("Finished downloading with range: \(range.lowerBound)...\(range.upperBound)")
@@ -225,9 +225,10 @@ extension BlockDownloaderImpl: BlockDownloader {
 
     func setSyncRange(_ range: CompactBlockRange) async throws {
         downloadStream = try await compactBlocksDownloadStream(startHeight: range.lowerBound, targetHeight: range.upperBound)
+        syncRange = range
     }
 
-    func startDownload(maxBlockBufferSize: Int, syncRange: CompactBlockRange) async {
+    func startDownload(maxBlockBufferSize: Int) async {
         guard task == nil else {
             logger.debug("Download already in progress.")
             return
@@ -235,7 +236,7 @@ extension BlockDownloaderImpl: BlockDownloader {
         isDownloading = true
         task = Task.detached() { [weak self] in
             // Solve when self is nil, task should be niled.
-            await self?.doDownload(maxBlockBufferSize: maxBlockBufferSize, syncRange: syncRange)
+            await self?.doDownload(maxBlockBufferSize: maxBlockBufferSize)
         }
     }
 

@@ -105,7 +105,8 @@ class BlockStreamingTest: XCTestCase {
             do {
                 let blockDownloader = await compactBlockProcessor.blockDownloader
                 await blockDownloader.setDownloadLimit(latestBlockHeight)
-                await blockDownloader.startDownload(maxBlockBufferSize: 10, syncRange: startHeight...latestBlockHeight)
+                try await blockDownloader.setSyncRange(startHeight...latestBlockHeight)
+                await blockDownloader.startDownload(maxBlockBufferSize: 10)
                 try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
             } catch {
                 XCTAssertTrue(Task.isCancelled)
@@ -164,7 +165,8 @@ class BlockStreamingTest: XCTestCase {
         do {
             let blockDownloader = await compactBlockProcessor.blockDownloader
             await blockDownloader.setDownloadLimit(latestBlockHeight)
-            await blockDownloader.startDownload(maxBlockBufferSize: 10, syncRange: startHeight...latestBlockHeight)
+            try await blockDownloader.setSyncRange(startHeight...latestBlockHeight)
+            await blockDownloader.startDownload(maxBlockBufferSize: 10)
             try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
         } catch {
             if let lwdError = error as? ZcashError {

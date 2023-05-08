@@ -217,7 +217,8 @@ class BlockScanTests: XCTestCase {
         do {
             let blockDownloader = await compactBlockProcessor.blockDownloader
             await blockDownloader.setDownloadLimit(range.upperBound)
-            await blockDownloader.startDownload(maxBlockBufferSize: 10, syncRange: range)
+            try await blockDownloader.setSyncRange(range)
+            await blockDownloader.startDownload(maxBlockBufferSize: 10)
             try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: range)
 
             XCTAssertFalse(Task.isCancelled)
