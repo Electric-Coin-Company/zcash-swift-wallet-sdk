@@ -164,18 +164,15 @@ extension LightWalletGRPCService: LightWalletService {
     
     func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
         let stream = compactTxStreamer.getBlockRange(range.blockRange())
-
-        return AsyncThrowingStream { continuation in
-            Task {
-                do {
-                    for try await block in stream {
-                        continuation.yield(ZcashCompactBlock(compactBlock: block))
-                    }
-                    continuation.finish()
-                } catch {
-                    let serviceError = error.mapToServiceError()
-                    continuation.finish(throwing: ZcashError.serviceBlockRangeFailed(serviceError))
-                }
+        var iterator = stream.makeAsyncIterator()
+        
+        return AsyncThrowingStream() {
+            do {
+                guard let block = try await iterator.next() else { return nil }
+                return ZcashCompactBlock(compactBlock: block)
+            } catch {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceBlockRangeFailed(serviceError)
             }
         }
     }
@@ -220,29 +217,24 @@ extension LightWalletGRPCService: LightWalletService {
             utxoArgs.startHeight = UInt64(height)
         }
         let stream = compactTxStreamer.getAddressUtxosStream(args)
-        
-        return AsyncThrowingStream { continuation in
-            Task {
-                do {
-                    for try await reply in stream {
-                        continuation.yield(
-                            UTXO(
-                                id: nil,
-                                address: reply.address,
-                                prevoutTxId: reply.txid,
-                                prevoutIndex: Int(reply.index),
-                                script: reply.script,
-                                valueZat: Int(reply.valueZat),
-                                height: Int(reply.height),
-                                spentInTx: nil
-                            )
-                        )
-                    }
-                    continuation.finish()
-                } catch {
-                    let serviceError = error.mapToServiceError()
-                    continuation.finish(throwing: ZcashError.serviceFetchUTXOsFailed(serviceError))
-                }
+        var iterator = stream.makeAsyncIterator()
+
+        return AsyncThrowingStream() {
+            do {
+                guard let reply = try await iterator.next() else { return nil }
+                return UTXO(
+                    id: nil,
+                    address: reply.address,
+                    prevoutTxId: reply.txid,
+                    prevoutIndex: Int(reply.index),
+                    script: reply.script,
+                    valueZat: Int(reply.valueZat),
+                    height: Int(reply.height),
+                    spentInTx: nil
+                )
+            } catch {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceFetchUTXOsFailed(serviceError)
             }
         }
     }
@@ -258,18 +250,15 @@ extension LightWalletGRPCService: LightWalletService {
             ),
             callOptions: Self.callOptions(timeLimit: self.streamingCallTimeout)
         )
+        var iterator = stream.makeAsyncIterator()
 
-        return AsyncThrowingStream { continuation in
-            Task {
-                do {
-                    for try await compactBlock in stream {
-                        continuation.yield(ZcashCompactBlock(compactBlock: compactBlock))
-                    }
-                    continuation.finish()
-                } catch {
-                    let serviceError = error.mapToServiceError()
-                    continuation.finish(throwing: ZcashError.serviceBlockStreamFailed(serviceError))
-                }
+        return AsyncThrowingStream() {
+            do {
+                guard let compactBlock = try await iterator.next() else { return nil }
+                return ZcashCompactBlock(compactBlock: compactBlock)
+            } catch {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceBlockStreamFailed(serviceError)
             }
         }
     }
