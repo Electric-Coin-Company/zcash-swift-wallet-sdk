@@ -10,7 +10,7 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-class DarksideSanityCheckTests: XCTestCase {
+class DarksideSanityCheckTests: ZcashTestCase {
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
@@ -27,7 +27,11 @@ class DarksideSanityCheckTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday,
+            network: network
+        )
 
         try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
         try self.coordinator.resetBlocks(dataset: .default)

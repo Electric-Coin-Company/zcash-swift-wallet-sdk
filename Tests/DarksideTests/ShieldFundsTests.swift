@@ -11,7 +11,7 @@ import XCTest
 @testable import ZcashLightClientKit
 
 // FIXME: [#587] disabled until https://github.com/zcash/ZcashLightClientKit/issues/587 fixed
-class ShieldFundsTests: XCTestCase {
+class ShieldFundsTests: ZcashTestCase {
     let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 1631000
     var coordinator: TestCoordinator!
@@ -25,7 +25,11 @@ class ShieldFundsTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday,
+            network: network
+        )
         try coordinator.reset(saplingActivation: birthday, branchID: self.branchID, chainName: self.chainName)
         try coordinator.service.clearAddedUTXOs()
     }

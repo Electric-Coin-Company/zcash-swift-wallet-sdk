@@ -9,7 +9,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class BlockStreamingTest: XCTestCase {
+class BlockStreamingTest: ZcashTestCase {
     let testFileManager = FileManager()
     var rustBackend: ZcashRustBackendWelding!
     var testTempDirectory: URL!
@@ -20,6 +20,24 @@ class BlockStreamingTest: XCTestCase {
         try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
         logger = OSLogger(logLevel: .debug)
+
+        Dependencies.setup(
+            in: mockContainer,
+            urls: Initializer.URLs(
+                fsBlockDbRoot: testTempDirectory,
+                dataDbURL: try! __dataDbURL(),
+                pendingDbURL: URL(fileURLWithPath: "/"),
+                spendParamsURL: try! __spendParamsURL(),
+                outputParamsURL: try! __outputParamsURL()
+            ),
+            alias: .default,
+            networkType: .testnet,
+            endpoint: LightWalletEndpointBuilder.default,
+            logLevel: .debug
+        )
+        
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in LatestBlocksDataProviderMock() }
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackend }
     }
 
     override func tearDownWithError() throws {
@@ -69,20 +87,6 @@ class BlockStreamingTest: XCTestCase {
         )
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
-        let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: rustBackend,
-                logger: logger
-            ),
-            blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted,
-            logger: logger
-        )
-
-        try await storage.create()
-
         let latestBlockHeight = try await service.latestBlockHeight()
         let startHeight = latestBlockHeight - 100_000
         let processorConfig = CompactBlockProcessor.Configuration.standard(
@@ -90,15 +94,12 @@ class BlockStreamingTest: XCTestCase {
             walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
         )
 
-        let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: rustBackend,
-            config: processorConfig,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
-        )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletServiceFactory(endpoint: endpoint).make()
+        }
+        try await mockContainer.resolve(CompactBlockRepository.self).create()
+        
+        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
         
         let cancelableTask = Task {
             do {
@@ -132,20 +133,6 @@ class BlockStreamingTest: XCTestCase {
         )
         let service = LightWalletServiceFactory(endpoint: endpoint).make()
 
-        let storage = FSCompactBlockRepository(
-            fsBlockDbRoot: testTempDirectory,
-            metadataStore: FSMetadataStore.live(
-                fsBlockDbRoot: testTempDirectory,
-                rustBackend: rustBackend,
-                logger: logger
-            ),
-            blockDescriptor: .live,
-            contentProvider: DirectoryListingProviders.defaultSorted,
-            logger: logger
-        )
-
-        try await storage.create()
-
         let latestBlockHeight = try await service.latestBlockHeight()
 
         let startHeight = latestBlockHeight - 100_000
@@ -155,15 +142,12 @@ class BlockStreamingTest: XCTestCase {
             walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
         )
 
-        let compactBlockProcessor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: rustBackend,
-            config: processorConfig,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
-        )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
+            LightWalletServiceFactory(endpoint: endpoint).make()
+        }
+        try await mockContainer.resolve(CompactBlockRepository.self).create()
+
+        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
         
         let date = Date()
         

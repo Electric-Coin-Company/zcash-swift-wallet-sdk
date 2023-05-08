@@ -22,7 +22,7 @@ basic reorg test.  Scan, get a reorg and then reach latest height.
 * observe that the prev hash of that block does not match the hash that we have for 663250
 * rewind 10 blocks and request blocks 663241 to 663251
 */
-class ReOrgTests: XCTestCase {
+class ReOrgTests: ZcashTestCase {
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let network = DarksideWalletDNetwork()
@@ -44,7 +44,11 @@ class ReOrgTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
-        self.coordinator = try await TestCoordinator(walletBirthday: self.birthday, network: self.network)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: self.birthday,
+            network: self.network
+        )
 
         try self.coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
 

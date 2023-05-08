@@ -10,7 +10,7 @@ import Combine
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class SynchronizerDarksideTests: XCTestCase {
+class SynchronizerDarksideTests: ZcashTestCase {
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let branchID = "2bb40e60"
@@ -31,7 +31,13 @@ class SynchronizerDarksideTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         idGenerator = MockSyncSessionIDGenerator(ids: [.deadbeef])
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network, syncSessionIDGenerator: idGenerator)
+//        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network, syncSessionIDGenerator: idGenerator)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday,
+            network: network
+        )
+        
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
 

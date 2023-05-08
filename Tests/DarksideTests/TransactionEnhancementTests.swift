@@ -10,7 +10,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class TransactionEnhancementTests: XCTestCase {
+class TransactionEnhancementTests: ZcashTestCase {
     var cancellables: [AnyCancellable] = []
     var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
     let mockLatestHeight = BlockHeight(663250)
@@ -134,14 +134,30 @@ class TransactionEnhancementTests: XCTestCase {
         )
         
         downloader = BlockDownloaderServiceImpl(service: service, storage: storage)
+        
+        Dependencies.setup(
+            in: mockContainer,
+            urls: Initializer.URLs(
+                fsBlockDbRoot: testTempDirectory,
+                dataDbURL: pathProvider.dataDbURL,
+                pendingDbURL: URL(fileURLWithPath: "/"),
+                spendParamsURL: pathProvider.spendParamsURL,
+                outputParamsURL: pathProvider.outputParamsURL
+            ),
+            alias: .default,
+            networkType: .testnet,
+            endpoint: LightWalletEndpointBuilder.default,
+            logLevel: .debug
+        )
+        
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in
+            LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        }
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackend }
+        
         processor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: rustBackend,
-            config: processorConfig,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+            container: mockContainer,
+            config: processorConfig
         )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in

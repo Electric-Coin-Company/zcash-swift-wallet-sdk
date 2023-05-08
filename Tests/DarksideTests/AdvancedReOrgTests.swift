@@ -10,7 +10,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class AdvancedReOrgTests: XCTestCase {
+class AdvancedReOrgTests: ZcashTestCase {
     let sendAmount = Zatoshi(1000)
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
@@ -28,7 +28,11 @@ class AdvancedReOrgTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
         // don't use an exact birthday, users never do.
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday + 50, network: network)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday + 50,
+            network: network
+        )
         try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
 

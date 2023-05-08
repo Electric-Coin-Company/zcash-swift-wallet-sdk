@@ -25,7 +25,7 @@ import XCTest
  5. Run this test.
  6. When you are done use `kill_and_clean_servers.zsh` script to shutdown servers and clean all the data (pidfile, rundirs, logs).
  */
-class SDKSynchronizerAliasDarksideTests: XCTestCase {
+class SDKSynchronizerAliasDarksideTests: ZcashTestCase {
     // Test creates instance of the `SDKSynchronizer` for each of these aliases.
     let aliases: [ZcashSynchronizerAlias] = [.default, .custom("custom-1"), .custom("custom-2"), .custom("custom-3"), .custom("custom-4")]
     // First instance of the `SDKSynchronizer` uses this port. Second one uses startPort + 1, thirs one uses startPort + 2 and so on.
@@ -52,6 +52,7 @@ class SDKSynchronizerAliasDarksideTests: XCTestCase {
 
             let coordinator = try await TestCoordinator(
                 alias: alias,
+                container: mockContainer,
                 walletBirthday: birthday,
                 network: network,
                 callPrepareInConstructor: true,

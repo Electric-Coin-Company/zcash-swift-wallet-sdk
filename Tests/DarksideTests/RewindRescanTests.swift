@@ -11,7 +11,7 @@ import XCTest
 @testable import ZcashLightClientKit
 
 // FIXME: [#586] disabled until this is resolved https://github.com/zcash/ZcashLightClientKit/issues/586
-class RewindRescanTests: XCTestCase {
+class RewindRescanTests: ZcashTestCase {
     let sendAmount: Int64 = 1000
     let defaultLatestHeight: BlockHeight = 663175
     let branchID = "2bb40e60"
@@ -30,7 +30,11 @@ class RewindRescanTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday,
+            network: network
+        )
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
 
