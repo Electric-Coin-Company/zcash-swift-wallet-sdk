@@ -211,7 +211,6 @@ private extension View {
                 ZcashTransaction.Overview.Column.minedHeight > (latestHeight - ZcashSDK.defaultStaleTolerance)
             )
         )
-
     }
 }
 

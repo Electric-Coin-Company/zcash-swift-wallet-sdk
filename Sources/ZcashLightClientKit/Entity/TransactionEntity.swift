@@ -12,7 +12,7 @@ public enum ZcashTransaction {
     public struct Overview {
         /// Represents the transaction state based on current height of the chain,
         /// mined height and expiry height of a transaction.
-       public enum State {
+        public enum State {
             /// transaction has a `minedHeight` that's greater or equal than
             /// `ZcashSDK.defaultStaleTolerance` confirmations.
             case confirmed
@@ -22,9 +22,10 @@ public enum ZcashTransaction {
             /// transaction has no
             case expired
 
-            init(currentHeight: BlockHeight,
-                 minedHeight: BlockHeight?,
-                 expiredUnmined: Bool
+            init(
+                currentHeight: BlockHeight,
+                minedHeight: BlockHeight?,
+                expiredUnmined: Bool
             ) {
                 guard !expiredUnmined else {
                     self = .expired
@@ -225,7 +226,6 @@ public extension ZcashTransaction.Overview {
         getState(for: currentHeight) == .pending
     }
 }
-
 
 /**
 Capabilities of an entity that can be uniquely identified by a raw transaction id

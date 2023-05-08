@@ -1065,8 +1065,9 @@ class BalanceTests: XCTestCase {
         */
         XCTAssertEqual(expectedBalance, previousTotalBalance)
 
-        let transactionRepo = TransactionSQLDAO(dbProvider: SimpleConnectionProvider(
-            path: coordinator.synchronizer.initializer.dataDbURL.absoluteString
+        let transactionRepo = TransactionSQLDAO(
+            dbProvider: SimpleConnectionProvider(
+                path: coordinator.synchronizer.initializer.dataDbURL.absoluteString
             )
         )
 

@@ -583,7 +583,7 @@ class CombineSynchronizerOfflineTests: XCTestCase {
     }
 
     func testGetRecipientsForClearedTransaction() {
-        let expectedRecipient: TransactionRecipient = TransactionRecipient.address(.transparent(self.data.transparentAddress))
+        let expectedRecipient = TransactionRecipient.address(.transparent(self.data.transparentAddress))
 
         synchronizerMock.getRecipientsForClearedTransactionClosure = { receivedTransaction in
             XCTAssertEqual(receivedTransaction.id, self.data.clearedTransaction.id)

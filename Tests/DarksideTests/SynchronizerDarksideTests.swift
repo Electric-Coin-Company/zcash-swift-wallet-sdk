@@ -466,7 +466,6 @@ class SynchronizerDarksideTests: XCTestCase {
         XCTAssertEqual(states[5], expectedStates[5])
         XCTAssertEqual(states[7], expectedStates[7])
 
-
         try coordinator.service.applyStaged(nextLatestHeight: 663_200)
 
         sleep(2)
@@ -538,7 +537,6 @@ class SynchronizerDarksideTests: XCTestCase {
         XCTAssertEqual(states[2], secondBatchOfExpectedStates[2])
         XCTAssertEqual(states[3], secondBatchOfExpectedStates[3])
         XCTAssertEqual(states[4], secondBatchOfExpectedStates[4])
-
     }
 
     func testSyncAfterWipeWorks() async throws {
