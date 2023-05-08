@@ -9,13 +9,28 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class CompactBlockProcessorOfflineTests: XCTestCase {
+class CompactBlockProcessorOfflineTests: ZcashTestCase {
     let testFileManager = FileManager()
     var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         testTempDirectory = Environment.uniqueTestTempDirectory
+
+        Dependencies.setup(
+            in: mockContainer,
+            urls: Initializer.URLs(
+                fsBlockDbRoot: testTempDirectory,
+                dataDbURL: try! __dataDbURL(),
+                spendParamsURL: try! __spendParamsURL(),
+                outputParamsURL: try! __outputParamsURL()
+            ),
+            alias: .default,
+            networkType: .testnet,
+            endpoint: LightWalletEndpointBuilder.default,
+            loggingPolicy: .default(.debug)
+        )
+
         try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
     }
 
@@ -37,6 +52,7 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             latestBlockHeight: 690000,
             service: LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         )
+        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in service }
 
         let storage = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
@@ -49,15 +65,12 @@ class CompactBlockProcessorOfflineTests: XCTestCase {
             contentProvider: DirectoryListingProviders.defaultSorted,
             logger: logger
         )
+        mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in storage }
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in LatestBlocksDataProviderMock() }
         
         let processor = CompactBlockProcessor(
-            service: service,
-            storage: storage,
-            rustBackend: rustBackend,
-            config: processorConfig,
-            metrics: SDKMetrics(),
-            logger: logger,
-            latestBlocksDataProvider: LatestBlocksDataProviderMock()
+            container: mockContainer,
+            config: processorConfig
         )
 
         let fullRange = 0...1000

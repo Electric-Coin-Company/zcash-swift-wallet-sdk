@@ -149,6 +149,7 @@ identifier_name:
     - nf
     - tx
     - as
+    - di
 
 indentation_width:
   indentation_width: 4

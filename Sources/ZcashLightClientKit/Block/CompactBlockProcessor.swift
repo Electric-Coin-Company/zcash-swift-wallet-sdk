@@ -330,41 +330,22 @@ actor CompactBlockProcessor {
     ///  - backend: a class that complies to `ZcashRustBackendWelding`
     ///  - config: `Configuration` struct for this processor
     init(
-        service: LightWalletService,
-        storage: CompactBlockRepository,
-        rustBackend: ZcashRustBackendWelding,
-        config: Configuration,
-        metrics: SDKMetrics,
-        logger: Logger,
-        latestBlocksDataProvider: LatestBlocksDataProvider
+        container: DIContainer,
+        config: Configuration
     ) {
         self.init(
-            service: service,
-            storage: storage,
-            rustBackend: rustBackend,
+            container: container,
             config: config,
-            repository: TransactionRepositoryBuilder.build(dataDbURL: config.dataDb),
-            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: logger),
-            metrics: metrics,
-            logger: logger,
-            latestBlocksDataProvider: latestBlocksDataProvider
+            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: container.resolve(Logger.self))
         )
     }
 
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    init(
-        initializer: Initializer,
-        metrics: SDKMetrics,
-        logger: Logger,
-        latestBlocksDataProvider: LatestBlocksDataProvider,
-        walletBirthdayProvider: @escaping () -> BlockHeight
-    ) {
+    init(initializer: Initializer, walletBirthdayProvider: @escaping () -> BlockHeight) {
         self.init(
-            service: initializer.lightWalletService,
-            storage: initializer.storage,
-            rustBackend: initializer.rustBackend,
+            container: initializer.container,
             config: Configuration(
                 alias: initializer.alias,
                 fsBlockCacheRoot: initializer.fsBlockDbRoot,
@@ -375,97 +356,37 @@ actor CompactBlockProcessor {
                 walletBirthdayProvider: walletBirthdayProvider,
                 network: initializer.network
             ),
-            repository: initializer.transactionRepository,
-            accountRepository: initializer.accountRepository,
-            metrics: metrics,
-            logger: logger,
-            latestBlocksDataProvider: latestBlocksDataProvider
+            accountRepository: initializer.accountRepository
         )
     }
     
     internal init(
-        service: LightWalletService,
-        storage: CompactBlockRepository,
-        rustBackend: ZcashRustBackendWelding,
+        container: DIContainer,
         config: Configuration,
-        repository: TransactionRepository,
-        accountRepository: AccountRepository,
-        metrics: SDKMetrics,
-        logger: Logger,
-        latestBlocksDataProvider: LatestBlocksDataProvider
+        accountRepository: AccountRepository
     ) {
-        self.metrics = metrics
-        self.logger = logger
-        self.latestBlocksDataProvider = latestBlocksDataProvider
-        let internalSyncProgress = InternalSyncProgress(alias: config.alias, storage: UserDefaults.standard, logger: logger)
-        self.internalSyncProgress = internalSyncProgress
-        let blockDownloaderService = BlockDownloaderServiceImpl(service: service, storage: storage)
-        self.blockDownloader = BlockDownloaderImpl(
-            service: service,
-            downloaderService: blockDownloaderService,
-            storage: storage,
-            internalSyncProgress: internalSyncProgress,
-            metrics: metrics,
-            logger: logger
+        Dependencies.setupCompactBlockProcessor(
+            in: container,
+            config: config,
+            accountRepository: accountRepository
         )
 
-        self.blockDownloaderService = blockDownloaderService
-
-        self.blockValidator = BlockValidatorImpl(
-            rustBackend: rustBackend,
-            metrics: metrics,
-            logger: logger
-        )
-
-        let blockScannerConfig = BlockScannerConfig(
-            networkType: config.network.networkType,
-            scanningBatchSize: config.scanningBatchSize
-        )
-        self.blockScanner = BlockScannerImpl(
-            config: blockScannerConfig,
-            rustBackend: rustBackend,
-            transactionRepository: repository,
-            metrics: metrics,
-            logger: logger,
-            latestBlocksDataProvider: latestBlocksDataProvider
-        )
-
-        self.blockEnhancer = BlockEnhancerImpl(
-            blockDownloaderService: blockDownloaderService,
-            internalSyncProgress: internalSyncProgress,
-            rustBackend: rustBackend,
-            transactionRepository: repository,
-            metrics: metrics,
-            logger: logger
-        )
-
-        let utxoFetcherConfig = UTXOFetcherConfig(walletBirthdayProvider: config.walletBirthdayProvider)
-        self.utxoFetcher = UTXOFetcherImpl(
-            accountRepository: accountRepository,
-            blockDownloaderService: blockDownloaderService,
-            config: utxoFetcherConfig,
-            internalSyncProgress: internalSyncProgress,
-            rustBackend: rustBackend,
-            metrics: metrics,
-            logger: logger
-        )
-
-        let saplingParametersHandlerConfig = SaplingParametersHandlerConfig(
-            outputParamsURL: config.outputParamsURL,
-            spendParamsURL: config.spendParamsURL,
-            saplingParamsSourceURL: config.saplingParamsSourceURL
-        )
-        self.saplingParametersHandler = SaplingParametersHandlerImpl(
-            config: saplingParametersHandlerConfig,
-            rustBackend: rustBackend,
-            logger: logger
-        )
-
-        self.service = service
-        self.rustBackend = rustBackend
-        self.storage = storage
+        self.metrics = container.resolve(SDKMetrics.self)
+        self.logger = container.resolve(Logger.self)
+        self.latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
+        self.internalSyncProgress = container.resolve(InternalSyncProgress.self)
+        self.blockDownloaderService = container.resolve(BlockDownloaderService.self)
+        self.blockDownloader = container.resolve(BlockDownloader.self)
+        self.blockValidator = container.resolve(BlockValidator.self)
+        self.blockScanner = container.resolve(BlockScanner.self)
+        self.blockEnhancer = container.resolve(BlockEnhancer.self)
+        self.utxoFetcher = container.resolve(UTXOFetcher.self)
+        self.saplingParametersHandler = container.resolve(SaplingParametersHandler.self)
+        self.service = container.resolve(LightWalletService.self)
+        self.rustBackend = container.resolve(ZcashRustBackendWelding.self)
+        self.storage = container.resolve(CompactBlockRepository.self)
         self.config = config
-        self.transactionRepository = repository
+        self.transactionRepository = container.resolve(TransactionRepository.self)
         self.accountRepository = accountRepository
     }
     

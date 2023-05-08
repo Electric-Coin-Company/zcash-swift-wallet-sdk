@@ -9,7 +9,7 @@ import XCTest
 @testable import TestUtils
 @testable import ZcashLightClientKit
 
-class PendingTransactionUpdatesTest: XCTestCase {
+class PendingTransactionUpdatesTest: ZcashTestCase {
     let sendAmount: Int64 = 1000
     var birthday: BlockHeight = 663150
     let defaultLatestHeight: BlockHeight = 663175
@@ -25,7 +25,11 @@ class PendingTransactionUpdatesTest: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
-        self.coordinator = try await TestCoordinator(walletBirthday: birthday, network: network)
+        self.coordinator = try await TestCoordinator(
+            container: mockContainer,
+            walletBirthday: birthday,
+            network: network
+        )
         try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
 
