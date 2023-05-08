@@ -139,10 +139,10 @@ actor BlockDownloaderImpl {
                 isDownloading = false
             }
         } catch {
-            lastError = error
             if Task.isCancelled {
                 logger.debug("Blocks downloading canceled.")
             } else {
+                lastError = error
                 logger.error("Blocks downloading failed: \(error)")
             }
             isDownloading = false
