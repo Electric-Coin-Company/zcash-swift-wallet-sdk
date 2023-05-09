@@ -9,6 +9,8 @@ error originates. And it can help with debugging.
 */
 
 public enum ZcashErrorCode: String {
+    /// Some error happened that is not handled as `ZcashError`.
+    case unknown = "ZUNKWN0001"
     /// Updating of paths in `Initilizer` according to alias failed.
     case initializerCantUpdateURLWithAlias = "ZINIT0001"
     /// Alias used to create this instance of the `SDKSynchronizer` is already used by other instance.
