@@ -15,19 +15,19 @@ public typealias RefreshedUTXOs = (inserted: [UnspentTransactionOutputEntity], s
 public enum CompactBlockProgress {
     case syncing(_ progress: BlockProgress)
     case enhance(_ progress: EnhancementProgress)
-    case fetch
-    
+    case fetch(_ progress: Float)
+
     public var progress: Float {
         switch self {
         case .syncing(let blockProgress):
             return blockProgress.progress
         case .enhance(let enhancementProgress):
             return enhancementProgress.progress
-        default:
-            return 0
+        case .fetch(let fetchingProgress):
+            return fetchingProgress
         }
     }
-    
+
     public var progressHeight: BlockHeight? {
         switch self {
         case .syncing(let blockProgress):
@@ -38,15 +38,15 @@ public enum CompactBlockProgress {
             return 0
         }
     }
-    
+
     public var blockDate: Date? {
         if case .enhance(let enhancementProgress) = self, let time = enhancementProgress.lastFoundTransaction?.blockTime {
             return Date(timeIntervalSince1970: time)
         }
-        
+
         return nil
     }
-    
+
     public var targetHeight: BlockHeight? {
         switch self {
         case .syncing(let blockProgress):
@@ -682,7 +682,9 @@ actor CompactBlockProcessor {
                     anyActionExecuted = true
                     logger.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
                     await updateState(.fetching)
-                    let result = try await utxoFetcher.fetch(at: range)
+                    let result = try await utxoFetcher.fetch(at: range) { [weak self] progress in
+                        await self?.notifyProgress(.fetch(progress))
+                    }
                     await send(event: .storedUTXOs(result))
                 }
 

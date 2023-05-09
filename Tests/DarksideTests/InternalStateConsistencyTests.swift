@@ -22,7 +22,7 @@ final class InternalStateConsistencyTests: ZcashTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
     let network = DarksideWalletDNetwork()
-    var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
+    var sdkSynchronizerInternalSyncStatusHandler: SDKSynchronizerInternalSyncStatusHandler! = SDKSynchronizerInternalSyncStatusHandler()
 
     override func setUp() async throws {
         try await super.setUp()
@@ -41,7 +41,7 @@ final class InternalStateConsistencyTests: ZcashTestCase {
         try await super.tearDown()
         let coordinator = self.coordinator!
         self.coordinator = nil
-        sdkSynchronizerSyncStatusHandler = nil
+        sdkSynchronizerInternalSyncStatusHandler = nil
 
         try await coordinator.stop()
         try? FileManager.default.removeItem(at: coordinator.databases.fsCacheDbRoot)
@@ -49,7 +49,7 @@ final class InternalStateConsistencyTests: ZcashTestCase {
     }
 
     func testInternalStateIsConsistentWhenMigrating() async throws {
-        sdkSynchronizerSyncStatusHandler.subscribe(
+        sdkSynchronizerInternalSyncStatusHandler.subscribe(
             to: coordinator.synchronizer.stateStream,
             expectations: [.stopped: firstSyncExpectation]
         )

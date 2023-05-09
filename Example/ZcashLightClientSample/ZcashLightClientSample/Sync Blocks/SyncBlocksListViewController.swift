@@ -64,7 +64,7 @@ class SyncBlocksListViewController: UIViewController {
             loggerProxy.debug("Processing synchronizer with alias \(synchronizer.alias.description) \(index)")
 
             switch syncStatus {
-            case .stopped, .unprepared, .synced, .disconnected, .error:
+            case .unprepared, .upToDate, .error(ZcashError.synchronizerDisconnected), .error:
                 do {
                     if syncStatus == .unprepared {
                         let derivationTool = DerivationTool(networkType: kZcashNetwork.networkType)
@@ -82,7 +82,7 @@ class SyncBlocksListViewController: UIViewController {
                 } catch {
                     loggerProxy.error("Can't start synchronizer: \(error)")
                 }
-            case .syncing, .enhancing, .fetching:
+            case .syncing:
                 synchronizer.stop()
             }
         }
@@ -147,9 +147,9 @@ extension SyncBlocksListViewController: UITableViewDataSource {
 
         let image: UIImage?
         switch synchronizerStatus {
-        case .unprepared, .synced, .stopped, .disconnected, .error:
+        case .unprepared, .upToDate, .error(ZcashError.synchronizerDisconnected), .error:
             image = UIImage(systemName: "play.circle")
-        case .syncing, .enhancing, .fetching:
+        case .syncing:
             image = UIImage(systemName: "stop.circle")
         }
 
@@ -173,21 +173,15 @@ extension SyncStatus {
     var text: String {
         switch self {
         case let .syncing(progress):
-            return "Syncing 🤖 \(floor(progress.progress * 1000) / 10)%"
-        case let .error(error):
-            return "error 💔 \(error)"
-        case .stopped:
-            return "Stopped 🚫"
-        case .synced:
-            return "Synced 😎"
-        case let .enhancing(progress):
-            return "Enhancing 🤖 \(floor(progress.progress * 1000) / 10)%"
-        case .fetching:
-            return "Fetching UTXOs"
+            return "Syncing 🤖 \(floor(progress * 1000) / 10)%"
+        case .upToDate:
+            return "Up to Date 😎"
         case .unprepared:
             return "Unprepared"
-        case .disconnected:
+        case .error(ZcashError.synchronizerDisconnected):
             return "Disconnected"
+        case let .error(error):
+            return "error 💔 \(error.localizedDescription)"
         }
     }
 }

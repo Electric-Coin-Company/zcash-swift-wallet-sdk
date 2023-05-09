@@ -23,7 +23,7 @@ protocol LatestBlocksDataProvider {
 actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
     let service: LightWalletService
     let transactionRepository: TransactionRepository
-
+    
     // Valid values are stored here after Synchronizer's `prepare` is called.
     private(set) var latestScannedHeight: BlockHeight = .zero
     private(set) var latestScannedTime: TimeInterval = 0.0

@@ -82,8 +82,8 @@ class SyncBlocksViewController: UIViewController {
         case let .syncing(progress):
             enhancingStarted = false
 
-            progressBar.progress = progress.progress
-            progressLabel.text = "\(floor(progress.progress * 1000) / 10)%"
+            progressBar.progress = progress
+            progressLabel.text = "\(floor(progress * 1000) / 10)%"
             let syncedDate = dateFormatter.string(from: Date(timeIntervalSince1970: state.latestScannedTime))
             let progressText = """
             synced date         \(syncedDate)
@@ -97,27 +97,11 @@ class SyncBlocksViewController: UIViewController {
                 metricLabel.text = currentMetricName + report.debugDescription
             }
 
-        case .enhancing:
-            guard !enhancingStarted else { return }
-            enhancingStarted = true
-
-            accumulateMetrics()
-            summaryLabel.text = "scan: \(accumulatedMetrics.debugDescription)"
-            accumulatedMetrics = .initial
-            currentMetric = .enhancement
-
-        case .fetching:
-            break
-
-        case .synced:
+        case .upToDate:
             accumulateMetrics()
             summaryLabel.text = "enhancement: \(accumulatedMetrics.debugDescription)"
             overallSummary()
 
-        case .stopped:
-            break
-        case .disconnected:
-            break
         case .error:
             break
         }
@@ -163,7 +147,7 @@ class SyncBlocksViewController: UIViewController {
     func doStartStop() async {
         let syncStatus = synchronizer.latestState.syncStatus
         switch syncStatus {
-        case .stopped, .unprepared, .error:
+        case .unprepared, .error:
             do {
                 if syncStatus == .unprepared {
                     // swiftlint:disable:next force_try
@@ -212,7 +196,7 @@ class SyncBlocksViewController: UIViewController {
 
         statusLabel.text = textFor(state: syncStatus)
         startPause.setTitle(buttonText(for: syncStatus), for: .normal)
-        if case SyncStatus.synced = syncStatus {
+        if case SyncStatus.upToDate = syncStatus {
             startPause.isEnabled = false
         } else {
             startPause.isEnabled = true
@@ -223,16 +207,12 @@ class SyncBlocksViewController: UIViewController {
         switch state {
         case .syncing:
             return "Pause"
-        case .stopped, .unprepared:
+        case .unprepared:
             return "Start"
-        case .error, .disconnected:
-            return "Retry"
-        case .synced:
+        case .upToDate:
             return "Chill!"
-        case .enhancing:
-            return "Enhance"
-        case .fetching:
-            return "fetch"
+        case .error:
+            return "Retry"
         }
     }
 
@@ -240,20 +220,14 @@ class SyncBlocksViewController: UIViewController {
         switch state {
         case .syncing:
             return "Syncing 🤖"
-        case .error:
-            return "error 💔"
-        case .stopped:
-            return "Stopped 🚫"
-        case .synced:
-            return "Synced 😎"
-        case .enhancing:
-            return "Enhancing 🤖"
-        case .fetching:
-            return "Fetching UTXOs"
+        case .upToDate:
+            return "Up to Date 😎"
         case .unprepared:
             return "Unprepared"
-        case .disconnected:
+        case .error(ZcashError.synchronizerDisconnected):
             return "Disconnected"
+        case .error:
+            return "error 💔"
         }
     }
 }

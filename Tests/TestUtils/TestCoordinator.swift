@@ -147,7 +147,7 @@ class TestCoordinator {
         synchronizer.stateStream
             .sink(
                 receiveValue: { [weak self] state in
-                    switch state.syncStatus {
+                    switch state.internalSyncStatus {
                     case let .error(error):
                         self?.synchronizerFailed(error: error)
                     case .synced:
@@ -167,7 +167,7 @@ class TestCoordinator {
     }
     
     func synchronizerSynced() throws {
-        if case .stopped = self.synchronizer.latestState.syncStatus {
+        if case .stopped = self.synchronizer.latestState.internalSyncStatus {
             LoggerProxy.debug("WARNING: notification received after synchronizer was stopped")
             return
         }

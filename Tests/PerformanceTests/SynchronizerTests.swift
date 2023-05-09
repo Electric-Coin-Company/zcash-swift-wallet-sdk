@@ -25,7 +25,7 @@ class SynchronizerTests: XCTestCase {
 
     var coordinator: TestCoordinator!
     var cancellables: [AnyCancellable] = []
-    var sdkSynchronizerSyncStatusHandler: SDKSynchronizerSyncStatusHandler! = SDKSynchronizerSyncStatusHandler()
+    var sdkSynchronizerInternalSyncStatusHandler: SDKSynchronizerInternalSyncStatusHandler! = SDKSynchronizerInternalSyncStatusHandler()
     var rustBackend: ZcashRustBackendWelding!
     var testTempDirectory: URL!
 
@@ -45,7 +45,7 @@ class SynchronizerTests: XCTestCase {
         super.tearDown()
         coordinator = nil
         cancellables = []
-        sdkSynchronizerSyncStatusHandler = nil
+        sdkSynchronizerInternalSyncStatusHandler = nil
         rustBackend = nil
         testTempDirectory = nil
     }
@@ -92,7 +92,7 @@ class SynchronizerTests: XCTestCase {
             _ = try await synchronizer.prepare(with: seedBytes, viewingKeys: [ufvk], walletBirthday: birthday)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
-            sdkSynchronizerSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
+            sdkSynchronizerInternalSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
             
             let internalSyncProgress = InternalSyncProgress(
                 alias: .default,

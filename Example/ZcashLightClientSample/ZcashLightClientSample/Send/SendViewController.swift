@@ -123,7 +123,7 @@ class SendViewController: UIViewController {
     
     func isFormValid() async -> Bool {
         switch synchronizer.latestState.syncStatus {
-        case .synced:
+        case .upToDate:
             let isBalanceValid = await self.isBalanceValid()
             let isAmountValid = await self.isAmountValid()
             return isBalanceValid && isAmountValid && isRecipientValid()
@@ -301,25 +301,16 @@ extension SDKSynchronizer {
     static func textFor(state: SyncStatus) -> String {
         switch state {
         case .syncing(let progress):
-            return "Syncing \(progress.progressHeight)/\(progress.targetHeight)"
+            return "Syncing \(progress)"
 
-        case .enhancing(let enhanceProgress):
-            return "Enhancing tx \(enhanceProgress.enhancedTransactions) of \(enhanceProgress.totalTransactions)"
-
-        case .fetching:
-            return "fetching UTXOs"
-
-        case .disconnected:
-            return "disconnected 💔"
-
-        case .stopped:
-            return "Stopped 🚫"
-
-        case .synced:
-            return "Synced 😎"
+        case .upToDate:
+            return "Up to Date 😎"
 
         case .unprepared:
             return "Unprepared 😅"
+
+        case .error(ZcashError.synchronizerDisconnected):
+            return "disconnected 💔"
 
         case .error(let error):
             return "Error: \(error)"
