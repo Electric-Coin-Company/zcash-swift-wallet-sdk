@@ -77,6 +77,12 @@ class MemoTests: XCTestCase {
         let memo: Memo = .arbitrary(Self.validMemoDataExpectedString.data(using: .utf8)!.bytes)
         XCTAssertNil(memo.toString())
     }
+
+    func testEmptyTextMemo() throws {
+        let emptyMemoBytes = try MemoBytes(bytes: [])
+
+        XCTAssertNoThrow(try emptyMemoBytes.intoMemo())
+    }
     
     /**
     *******
