@@ -18,12 +18,114 @@ class CompactBlockProcessorNG {
     private let actions: [CBPState: Action]
     private var context: ActionContext
 
-    let logger: Logger
+    private let logger: Logger
 
-    init(container: DIContainer) {
+    private(set) var config: Configuration
+
+    /// Compact Block Processor configuration
+    ///
+    /// - parameter fsBlockCacheRoot: absolute root path where the filesystem block cache will be stored.
+    /// - parameter dataDb: absolute file path of the DB where all information derived from the cache DB is stored.
+    /// - parameter spendParamsURL: absolute file path of the sapling-spend.params file
+    /// - parameter outputParamsURL: absolute file path of the sapling-output.params file
+    struct Configuration {
+        let alias: ZcashSynchronizerAlias
+        let saplingParamsSourceURL: SaplingParamsSourceURL
+        let fsBlockCacheRoot: URL
+        let dataDb: URL
+        let spendParamsURL: URL
+        let outputParamsURL: URL
+        let downloadBatchSize: Int
+        let scanningBatchSize: Int
+        let retries: Int
+        let maxBackoffInterval: TimeInterval
+        let maxReorgSize = ZcashSDK.maxReorgSize
+        let rewindDistance: Int
+        let walletBirthdayProvider: () -> BlockHeight
+        var walletBirthday: BlockHeight { walletBirthdayProvider() }
+        let downloadBufferSize: Int = 10
+        let network: ZcashNetwork
+        let saplingActivation: BlockHeight
+        let cacheDbURL: URL?
+        var blockPollInterval: TimeInterval {
+            TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
+        }
+
+        init(
+            alias: ZcashSynchronizerAlias,
+            cacheDbURL: URL? = nil,
+            fsBlockCacheRoot: URL,
+            dataDb: URL,
+            spendParamsURL: URL,
+            outputParamsURL: URL,
+            saplingParamsSourceURL: SaplingParamsSourceURL,
+            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            retries: Int = ZcashSDK.defaultRetries,
+            maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
+            rewindDistance: Int = ZcashSDK.defaultRewindDistance,
+            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
+            walletBirthdayProvider: @escaping () -> BlockHeight,
+            saplingActivation: BlockHeight,
+            network: ZcashNetwork
+        ) {
+            self.alias = alias
+            self.fsBlockCacheRoot = fsBlockCacheRoot
+            self.dataDb = dataDb
+            self.spendParamsURL = spendParamsURL
+            self.outputParamsURL = outputParamsURL
+            self.saplingParamsSourceURL = saplingParamsSourceURL
+            self.network = network
+            self.downloadBatchSize = downloadBatchSize
+            self.retries = retries
+            self.maxBackoffInterval = maxBackoffInterval
+            self.rewindDistance = rewindDistance
+            self.scanningBatchSize = scanningBatchSize
+            self.walletBirthdayProvider = walletBirthdayProvider
+            self.saplingActivation = saplingActivation
+            self.cacheDbURL = cacheDbURL
+            assert(downloadBatchSize >= scanningBatchSize)
+        }
+
+        init(
+            alias: ZcashSynchronizerAlias,
+            fsBlockCacheRoot: URL,
+            dataDb: URL,
+            spendParamsURL: URL,
+            outputParamsURL: URL,
+            saplingParamsSourceURL: SaplingParamsSourceURL,
+            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            retries: Int = ZcashSDK.defaultRetries,
+            maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
+            rewindDistance: Int = ZcashSDK.defaultRewindDistance,
+            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
+            walletBirthdayProvider: @escaping () -> BlockHeight,
+            network: ZcashNetwork
+        ) {
+            self.alias = alias
+            self.fsBlockCacheRoot = fsBlockCacheRoot
+            self.dataDb = dataDb
+            self.spendParamsURL = spendParamsURL
+            self.outputParamsURL = outputParamsURL
+            self.saplingParamsSourceURL = saplingParamsSourceURL
+            self.walletBirthdayProvider = walletBirthdayProvider
+            self.saplingActivation = network.constants.saplingActivationHeight
+            self.network = network
+            self.cacheDbURL = nil
+            self.downloadBatchSize = downloadBatchSize
+            self.retries = retries
+            self.maxBackoffInterval = maxBackoffInterval
+            self.rewindDistance = rewindDistance
+            self.scanningBatchSize = scanningBatchSize
+
+            assert(downloadBatchSize >= scanningBatchSize)
+        }
+    }
+
+    init(container: DIContainer, config: Configuration) {
         context = ActionContext(state: .validateServer)
         actions = Self.makeActions(container: container)
         self.logger = container.resolve(Logger.self)
+        self.config = config
     }
 
     // swiftlint:disable:next cyclomatic_complexity
