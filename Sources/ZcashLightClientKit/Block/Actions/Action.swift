@@ -39,6 +39,8 @@ enum CBPState: CaseIterable {
     case stopped
 }
 
+
+// this is replacement for CompactBlockProgress
 enum ActionProgress {
     case scan
 }
@@ -56,4 +58,7 @@ protocol Action {
     // different conditions. And action is the thing that knows these conditions.
 
     func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext
+
+    // Should be called on each existing action when processor wants to stop. Some actions may do it's own background work.
+    func stop()
 }
