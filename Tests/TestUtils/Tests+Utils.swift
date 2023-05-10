@@ -151,3 +151,10 @@ extension ZcashRustBackend {
         )
     }
 }
+
+
+extension Zatoshi: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        "Zatoshi(\(self.amount))"
+    }
+}

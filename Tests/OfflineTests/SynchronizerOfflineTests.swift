@@ -476,7 +476,8 @@ class SynchronizerOfflineTests: ZcashTestCase {
                         totalTransactions: 100,
                         enhancedTransactions: 0,
                         lastFoundTransaction: nil,
-                        range: CompactBlockRange(uncheckedBounds: (0, 100))
+                        range: CompactBlockRange(uncheckedBounds: (0, 100)),
+                        newlyMined: false
                     )
                 )
         )
@@ -494,7 +495,8 @@ class SynchronizerOfflineTests: ZcashTestCase {
                         totalTransactions: 100,
                         enhancedTransactions: 50,
                         lastFoundTransaction: nil,
-                        range: CompactBlockRange(uncheckedBounds: (0, 100))
+                        range: CompactBlockRange(uncheckedBounds: (0, 100)),
+                        newlyMined: false
                     )
                 )
         )
@@ -512,7 +514,8 @@ class SynchronizerOfflineTests: ZcashTestCase {
                         totalTransactions: 100,
                         enhancedTransactions: 100,
                         lastFoundTransaction: nil,
-                        range: CompactBlockRange(uncheckedBounds: (0, 100))
+                        range: CompactBlockRange(uncheckedBounds: (0, 100)),
+                        newlyMined: false
                     )
                 )
         )
