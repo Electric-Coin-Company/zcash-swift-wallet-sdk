@@ -60,5 +60,5 @@ protocol Action {
     func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext
 
     // Should be called on each existing action when processor wants to stop. Some actions may do it's own background work.
-    func stop()
+    func stop() async
 }
