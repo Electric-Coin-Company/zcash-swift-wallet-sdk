@@ -20,7 +20,5 @@ extension ValidateAction: Action {
         return context
     }
 
-    func stop() {
-
-    }
+    func stop() async { }
 }

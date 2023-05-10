@@ -19,7 +19,5 @@ extension FetchUTXOsAction: Action {
         return context
     }
 
-    func stop() {
-
-    }
+    func stop() async { }
 }
