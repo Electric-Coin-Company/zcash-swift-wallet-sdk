@@ -211,7 +211,7 @@ extension Array where Element == UInt8 {
             .reversed()
             .first(where: { $0.1 != 0 })
             .map({ $0.0 + 1 }) else {
-                return [UInt8](self[0 ..< 1])
+                return []
         }
 
         return [UInt8](self[0 ..< lastNullByte])
