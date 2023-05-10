@@ -31,7 +31,5 @@ extension DownloadAction: Action {
         return context
     }
 
-    func stop() {
-
-    }
+    func stop() async { }
 }
