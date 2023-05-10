@@ -20,41 +20,41 @@ class CompactBlockProcessorNG {
 
     let logger: Logger
 
-    init(logger: Logger) {
+    init(container: DIContainer) {
         context = ActionContext(state: .validateServer)
-        actions = Self.makeActions()
-        self.logger = logger
+        actions = Self.makeActions(container: container)
+        self.logger = container.resolve(Logger.self)
     }
 
     // swiftlint:disable:next cyclomatic_complexity
-    static func makeActions() -> [CBPState: Action] {
+    static func makeActions(container: DIContainer) -> [CBPState: Action] {
         let actionsDefinition = CBPState.allCases.compactMap { state -> (CBPState, Action)? in
             let action: Action
             switch state {
             case .validateServer:
-                action = ValidateServerAction()
+                action = ValidateServerAction(container: container)
             case .computeSyncRanges:
-                action = ComputeSyncRangesAction()
+                action = ComputeSyncRangesAction(container: container)
             case .checksBeforeSync:
-                action = ChecksBeforeSyncAction()
+                action = ChecksBeforeSyncAction(container: container)
             case .scanDownloaded:
-                action = ScandownloadedButUnscannedAction()
+                action = ScanDownloadedButUnscannedAction(container: container)
             case .download:
-                action = DownloadAction()
+                action = DownloadAction(container: container)
             case .validate:
-                action = ValidateAction()
+                action = ValidateAction(container: container)
             case .scan:
-                action = ScanAction()
+                action = ScanAction(container: container)
             case .clearAlreadyScannedBlocks:
-                action = ClearAlreadyScannedBlocksAction()
+                action = ClearAlreadyScannedBlocksAction(container: container)
             case .enhance:
-                action = EnhanceAction()
+                action = EnhanceAction(container: container)
             case .fetchUTXO:
-                action = FetchUTXOsAction()
+                action = FetchUTXOsAction(container: container)
             case .handleSaplingParams:
-                action = SaplingParamsAction()
+                action = SaplingParamsAction(container: container)
             case .clearCache:
-                action = ClearCacheAction()
+                action = ClearCacheAction(container: container)
             case .finished, .failed, .stopped:
                 return nil
             }
