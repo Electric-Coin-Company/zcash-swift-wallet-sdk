@@ -8,14 +8,15 @@
 import Foundation
 
 class ValidateAction {
-    init(container: DIContainer) { }
+    let validator: BlockValidator
+    init(container: DIContainer) {
+        validator = container.resolve(BlockValidator.self)
+    }
 }
 
 extension ValidateAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
-
-        // Wait until all blocks in range latestScannedHeight...latestScannedHeight+batchSize are downloaded and then run validation.
-
+        try await validator.validate()
         await context.update(state: .scan)
         return context
     }
