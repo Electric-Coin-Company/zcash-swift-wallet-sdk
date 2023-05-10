@@ -126,7 +126,7 @@ class CompactBlockProcessorNG {
             let action: Action
             switch state {
             case .validateServer:
-                action = ValidateServerAction(container: container)
+                action = ValidateServerAction(container: container, config: config)
             case .computeSyncRanges:
                 action = ComputeSyncRangesAction(container: container)
             case .checksBeforeSync:
