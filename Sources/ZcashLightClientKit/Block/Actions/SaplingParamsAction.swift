@@ -8,7 +8,7 @@
 import Foundation
 
 class SaplingParamsAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension SaplingParamsAction: Action {
@@ -16,7 +16,11 @@ extension SaplingParamsAction: Action {
 
         // Download files with sapling params.
 
-        await context.update(state: .clearCache)
+        await context.update(state: .scanDownloaded)
         return context
+    }
+
+    func stop() {
+
     }
 }

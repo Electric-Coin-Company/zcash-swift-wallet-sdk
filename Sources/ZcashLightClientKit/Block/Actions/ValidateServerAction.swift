@@ -8,7 +8,7 @@
 import Foundation
 
 class ValidateServerAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension ValidateServerAction: Action {
@@ -40,5 +40,9 @@ extension ValidateServerAction: Action {
 
         await context.update(state: .computeSyncRanges)
         return context
+    }
+
+    func stop() {
+
     }
 }

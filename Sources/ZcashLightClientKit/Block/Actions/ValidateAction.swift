@@ -8,7 +8,7 @@
 import Foundation
 
 class ValidateAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension ValidateAction: Action {
@@ -18,5 +18,9 @@ extension ValidateAction: Action {
 
         await context.update(state: .scan)
         return context
+    }
+
+    func stop() {
+
     }
 }
