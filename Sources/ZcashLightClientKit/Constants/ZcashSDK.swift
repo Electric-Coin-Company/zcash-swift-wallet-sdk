@@ -100,6 +100,10 @@ public enum ZcashSDK {
     /// Default batch size for scanning blocks for the compact block processor
     public static let DefaultScanningBatch = 100
 
+    /// Default batch size for downloading and scanning blocks for the compact block processor. Be careful with this number. This amount of blocks
+    /// times three is held in memory at some point of the sync process.
+    public static let DefaultSyncBatch = 100
+
     /// Default amount of time, in in seconds, to poll for new blocks. Typically, this should be about half the average
     /// block time.
     public static let defaultPollInterval: TimeInterval = 20

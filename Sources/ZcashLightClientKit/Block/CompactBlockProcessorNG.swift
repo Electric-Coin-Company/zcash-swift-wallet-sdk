@@ -35,8 +35,7 @@ class CompactBlockProcessorNG {
         let dataDb: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
-        let downloadBatchSize: Int
-        let scanningBatchSize: Int
+        let batchSize: Int
         let retries: Int
         let maxBackoffInterval: TimeInterval
         let maxReorgSize = ZcashSDK.maxReorgSize
@@ -59,11 +58,10 @@ class CompactBlockProcessorNG {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
-            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            batchSize: Int = ZcashSDK.DefaultSyncBatch,
             retries: Int = ZcashSDK.defaultRetries,
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
-            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             saplingActivation: BlockHeight,
             network: ZcashNetwork
@@ -75,15 +73,13 @@ class CompactBlockProcessorNG {
             self.outputParamsURL = outputParamsURL
             self.saplingParamsSourceURL = saplingParamsSourceURL
             self.network = network
-            self.downloadBatchSize = downloadBatchSize
+            self.batchSize = batchSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
-            self.scanningBatchSize = scanningBatchSize
             self.walletBirthdayProvider = walletBirthdayProvider
             self.saplingActivation = saplingActivation
             self.cacheDbURL = cacheDbURL
-            assert(downloadBatchSize >= scanningBatchSize)
         }
 
         init(
@@ -93,11 +89,10 @@ class CompactBlockProcessorNG {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
-            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            batchSize: Int = ZcashSDK.DefaultSyncBatch,
             retries: Int = ZcashSDK.defaultRetries,
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
-            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             network: ZcashNetwork
         ) {
@@ -111,25 +106,22 @@ class CompactBlockProcessorNG {
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
             self.cacheDbURL = nil
-            self.downloadBatchSize = downloadBatchSize
+            self.batchSize = batchSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
-            self.scanningBatchSize = scanningBatchSize
-
-            assert(downloadBatchSize >= scanningBatchSize)
         }
     }
 
     init(container: DIContainer, config: Configuration) {
         context = ActionContext(state: .validateServer)
-        actions = Self.makeActions(container: container)
+        actions = Self.makeActions(container: container, config: config)
         self.logger = container.resolve(Logger.self)
         self.config = config
     }
 
     // swiftlint:disable:next cyclomatic_complexity
-    static func makeActions(container: DIContainer) -> [CBPState: Action] {
+    static func makeActions(container: DIContainer, config: Configuration) -> [CBPState: Action] {
         let actionsDefinition = CBPState.allCases.compactMap { state -> (CBPState, Action)? in
             let action: Action
             switch state {
@@ -142,7 +134,7 @@ class CompactBlockProcessorNG {
             case .scanDownloaded:
                 action = ScanDownloadedButUnscannedAction(container: container)
             case .download:
-                action = DownloadAction(container: container)
+                action = DownloadAction(container: container, config: config)
             case .validate:
                 action = ValidateAction(container: container)
             case .scan:

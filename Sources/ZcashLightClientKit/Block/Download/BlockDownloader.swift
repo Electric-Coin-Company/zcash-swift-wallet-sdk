@@ -250,6 +250,7 @@ extension BlockDownloaderImpl: BlockDownloader {
     }
 
     func setSyncRange(_ range: CompactBlockRange, batchSize: Int) async throws {
+        guard range != syncRange else { return }
         downloadStream = nil
         self.batchSize = batchSize
         syncRange = range
