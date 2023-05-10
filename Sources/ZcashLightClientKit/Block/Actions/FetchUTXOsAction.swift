@@ -8,7 +8,7 @@
 import Foundation
 
 class FetchUTXOsAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension FetchUTXOsAction: Action {
@@ -17,5 +17,9 @@ extension FetchUTXOsAction: Action {
         
         await context.update(state: .handleSaplingParams)
         return context
+    }
+
+    func stop() {
+
     }
 }

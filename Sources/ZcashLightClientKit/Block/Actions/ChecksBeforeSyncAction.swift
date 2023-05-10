@@ -8,7 +8,7 @@
 import Foundation
 
 class ChecksBeforeSyncAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension ChecksBeforeSyncAction: Action {
@@ -24,7 +24,11 @@ extension ChecksBeforeSyncAction: Action {
 //            try await storage.create()
 //        }
 
-        await context.update(state: .scan)
+        await context.update(state: .fetchUTXO)
         return context
+    }
+
+    func stop() {
+
     }
 }

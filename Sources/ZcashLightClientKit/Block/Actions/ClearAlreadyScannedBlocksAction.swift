@@ -8,18 +8,18 @@
 import Foundation
 
 class ClearAlreadyScannedBlocksAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension ClearAlreadyScannedBlocksAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
         // clear storage but delete only blocks that were already scanned, when doing parallel download all blocks can't be deleted
 
-        // if latestScannedHeight == context.scanRanges.downloadAndScanRange?.upperBound then set state `enhance`. Everything is scanned.
-        // If latestScannedHeight < context.scanRanges.downloadAndScanRange?.upperBound thne set state to `download` because there are blocks to
-        // download and scan.
-
         await context.update(state: .enhance)
         return context
+    }
+
+    func stop() {
+
     }
 }

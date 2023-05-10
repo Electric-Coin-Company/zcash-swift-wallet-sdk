@@ -8,7 +8,7 @@
 import Foundation
 
 class ScanAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension ScanAction: Action {
@@ -18,4 +18,9 @@ extension ScanAction: Action {
         await context.update(state: .clearAlreadyScannedBlocks)
         return context
     }
+
+    func stop() {
+
+    }
 }
+

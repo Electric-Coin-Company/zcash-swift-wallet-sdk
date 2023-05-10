@@ -8,7 +8,7 @@
 import Foundation
 
 class ClearCacheAction {
-    init() { }
+    init(container: DIContainer) { }
 }
 
 extension ClearCacheAction: Action {
@@ -16,5 +16,9 @@ extension ClearCacheAction: Action {
         // clear storage
         await context.update(state: .finished)
         return context
+    }
+
+    func stop() {
+
     }
 }
