@@ -169,7 +169,7 @@ class CompactBlockProcessorNG {
 
         context = ActionContext(state: .validateServer)
         actions = Self.makeActions(container: container, config: config)
-        
+
         self.metrics = container.resolve(SDKMetrics.self)
         self.logger = container.resolve(Logger.self)
         self.latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
@@ -188,6 +188,8 @@ class CompactBlockProcessorNG {
         let actionsDefinition = CBPState.allCases.compactMap { state -> (CBPState, Action)? in
             let action: Action
             switch state {
+            case .migrateLegacyCacheDB:
+                action = MigrateLegacyCacheDBAction(container: container, config: config)
             case .validateServer:
                 action = ValidateServerAction(container: container, config: config)
             case .computeSyncRanges:
@@ -227,45 +229,37 @@ class CompactBlockProcessorNG {
 
 extension CompactBlockProcessorNG {
     func start(retry: Bool = false) async {
-//        if retry {
-//            self.retryAttempts = 0
-//            self.processingError = nil
-//            self.backoffTimer?.invalidate()
-//            self.backoffTimer = nil
-//        }
-
-        guard await canStartSync() else {
-            //            switch self.state {
-            //            case .error(let error):
-            //                // max attempts have been reached
-            //                logger.info("max retry attempts reached with error: \(error)")
-            //                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
-            //                await updateState(.stopped)
-            //            case .stopped:
-            //                // max attempts have been reached
-            //                logger.info("max retry attempts reached")
-            //                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
-            //            case .synced:
-            //                // max attempts have been reached
-            //                logger.warn("max retry attempts reached on synced state, this indicates malfunction")
-            //                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
-            //            case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
-            //                logger.debug("Warning: compact block processor was started while busy!!!!")
-            //                afterSyncHooksManager.insert(hook: .anotherSync)
-            //            }
-            //            return
-            return
+        if retry {
+            self.retryAttempts = 0
+            self.backoffTimer?.invalidate()
+            self.backoffTimer = nil
         }
 
-        //
-        //        do {
-        //            if let legacyCacheDbURL = self.config.cacheDbURL {
-        //                try await self.migrateCacheDb(legacyCacheDbURL)
-        //            }
-        //        } catch {
-        //            await self.fail(error)
-        //        }
-
+        guard await canStartSync() else {
+            switch await context.state {
+            case .migrateLegacyCacheDB:
+                // max attempts have been reached
+                logger.warn("max retry attempts reached on \(CBPState.initialState) state")
+                await send(event: .failed(ZcashError.compactBlockProcessorMaxAttemptsReached(config.retries)))
+            case .finished:
+                // max attempts have been reached
+                logger.warn("max retry attempts reached on synced state, this indicates malfunction")
+                await send(event: .failed(ZcashError.compactBlockProcessorMaxAttemptsReached(config.retries)))
+            case .failed:
+                // max attempts have been reached
+                logger.info("max retry attempts reached with failed state")
+                await send(event: .failed(ZcashError.compactBlockProcessorMaxAttemptsReached(config.retries)))
+            case .stopped:
+                // max attempts have been reached
+                logger.info("max retry attempts reached")
+                await send(event: .failed(ZcashError.compactBlockProcessorMaxAttemptsReached(config.retries)))
+            case .computeSyncRanges, .checksBeforeSync, .scanDownloaded, .download, .validate, .scan, .clearAlreadyScannedBlocks, .enhance,
+                 .fetchUTXO, .handleSaplingParams, .clearCache, .validateServer:
+                logger.debug("Warning: compact block processor was started while busy!!!!")
+//                afterSyncHooksManager.insert(hook: .anotherSync)
+            }
+            return
+        }
 
         syncTask = Task(priority: .userInitiated) {
             await run()
@@ -342,7 +336,7 @@ extension CompactBlockProcessorNG {
     // of sync process without any side effects.
     func run() async {
         // Prepare for sync and set everything to default values.
-        await context.update(state: .validateServer)
+        await context.update(state: CBPState.initialState)
         await syncStarted()
 
         // Try to find action for state.
@@ -369,7 +363,7 @@ extension CompactBlockProcessorNG {
                         do {
                             try await validationFailed(at: BlockHeight(height))
                             // Start sync all over again
-                            await context.update(state: .validateServer)
+                            await context.update(state: CBPState.initialState)
                         } catch {
                             await failure(error)
                             break
@@ -390,6 +384,7 @@ extension CompactBlockProcessorNG {
     }
 
     func syncFinished() async {
+        syncTask = nil
         // handle finish of the sync
         //        await send(event: .finished(<#T##lastScannedHeight: BlockHeight##BlockHeight#>, <#T##foundBlocks: Bool##Bool#>))
     }
@@ -399,6 +394,7 @@ extension CompactBlockProcessorNG {
     }
 
     func syncStopped() async {
+        syncTask = nil
         await context.update(state: .stopped)
         await send(event: .stopped)
         // await handleAfterSyncHooks()
@@ -431,6 +427,7 @@ extension CompactBlockProcessorNG {
 
         logger.error("Fail with error: \(error)")
         syncTask?.cancel()
+        syncTask = nil
         backoffTimer?.invalidate()
         backoffTimer = nil
 //        await blockDownloader.stopDownload()
@@ -449,10 +446,10 @@ extension CompactBlockProcessorNG {
 extension CompactBlockProcessorNG {
     func canStartSync() async -> Bool {
         switch await context.state {
-        case .stopped, .failed, .finished, .validateServer:
-            return true
+        case .stopped, .failed, .finished, .migrateLegacyCacheDB:
+            return hasRetryAttempt()
         case .computeSyncRanges, .checksBeforeSync, .download, .validate, .scan, .enhance, .fetchUTXO, .handleSaplingParams, .clearCache,
-                .scanDownloaded, .clearAlreadyScannedBlocks:
+                .scanDownloaded, .clearAlreadyScannedBlocks, .validateServer:
             return false
         }
     }
