@@ -269,7 +269,7 @@ extension CompactBlockProcessorNG {
 
     func stop() async {
         await rawStop()
-        self.retryAttempts = 0
+        retryAttempts = 0
     }
 }
 
@@ -445,7 +445,7 @@ extension CompactBlockProcessorNG {
         self.afterSyncHooksManager = AfterSyncHooksManager()
 
         if let wipeContext = afterSyncHooksManager.shouldExecuteWipeHook() {
-//            await doWipe(context: wipeContext)
+            await doWipe(context: wipeContext)
             return false
         } else if let rewindContext = afterSyncHooksManager.shouldExecuteRewindHook() {
 //            await doRewind(context: rewindContext)
@@ -456,6 +456,51 @@ extension CompactBlockProcessorNG {
         } else {
             return false
         }
+    }
+}
+
+// MARK: - Wipe
+
+extension CompactBlockProcessorNG {
+    func wipe(context: AfterSyncHooksManager.WipeContext) async {
+        logger.debug("Starting wipe")
+        switch await self.context.state {
+        case .stopped, .failed, .finished, .migrateLegacyCacheDB:
+            logger.debug("Sync doesn't run. Executing wipe.")
+            await doWipe(context: context)
+        case .computeSyncRanges, .checksBeforeSync, .download, .validate, .scan, .enhance, .fetchUTXO, .handleSaplingParams, .clearCache,
+                .scanDownloaded, .clearAlreadyScannedBlocks, .validateServer:
+            logger.debug("Stopping sync because of wipe")
+            afterSyncHooksManager.insert(hook: .wipe(context))
+            await stop()
+        }
+    }
+
+    private func doWipe(context: AfterSyncHooksManager.WipeContext) async {
+        logger.debug("Executing wipe.")
+        context.prewipe()
+
+        do {
+            try await self.storage.clear()
+            await internalSyncProgress.rewind(to: 0)
+
+            wipeLegacyCacheDbIfNeeded()
+
+            let fileManager = FileManager.default
+            if fileManager.fileExists(atPath: config.dataDb.path) {
+                try fileManager.removeItem(at: config.dataDb)
+            }
+
+            await context.completion(nil)
+        } catch {
+            await context.completion(error)
+        }
+    }
+
+    private func wipeLegacyCacheDbIfNeeded() {
+        guard let cacheDbURL = config.cacheDbURL else { return }
+        guard FileManager.default.isDeletableFile(atPath: cacheDbURL.pathExtension) else { return }
+        try? FileManager.default.removeItem(at: cacheDbURL)
     }
 }
 
