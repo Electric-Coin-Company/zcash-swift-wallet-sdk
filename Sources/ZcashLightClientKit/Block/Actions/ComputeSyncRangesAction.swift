@@ -20,7 +20,5 @@ extension ComputeSyncRangesAction: Action {
         return context
     }
 
-    func stop() {
-
-    }
+    func stop() async { }
 }

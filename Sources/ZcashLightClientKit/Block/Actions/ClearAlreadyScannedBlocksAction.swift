@@ -19,7 +19,5 @@ extension ClearAlreadyScannedBlocksAction: Action {
         return context
     }
 
-    func stop() {
-
-    }
+    func stop() async { }
 }

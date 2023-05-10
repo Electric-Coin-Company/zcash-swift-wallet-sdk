@@ -18,7 +18,5 @@ extension ClearCacheAction: Action {
         return context
     }
 
-    func stop() {
-
-    }
+    func stop() async { }
 }
