@@ -133,7 +133,7 @@ actor CompactBlockProcessorNG {
     ///  - storage: concrete implementation of `CompactBlockRepository` protocol
     ///  - backend: a class that complies to `ZcashRustBackendWelding`
     ///  - config: `Configuration` struct for this processor
-    convenience init(container: DIContainer, config: Configuration) {
+    init(container: DIContainer, config: Configuration) {
         self.init(
             container: container,
             config: config,
@@ -144,7 +144,7 @@ actor CompactBlockProcessorNG {
     /// Initializes a CompactBlockProcessor instance from an Initialized object
     /// - Parameters:
     ///     - initializer: an instance that complies to CompactBlockDownloading protocol
-    convenience init(initializer: Initializer, walletBirthdayProvider: @escaping () -> BlockHeight) {
+    init(initializer: Initializer, walletBirthdayProvider: @escaping () -> BlockHeight) {
         self.init(
             container: initializer.container,
             config: Configuration(
@@ -448,7 +448,7 @@ extension CompactBlockProcessorNG {
             await doWipe(context: wipeContext)
             return false
         } else if let rewindContext = afterSyncHooksManager.shouldExecuteRewindHook() {
-//            await doRewind(context: rewindContext)
+            await doRewind(context: rewindContext)
             return false
         } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
             logger.debug("Starting new sync.")
@@ -456,6 +456,63 @@ extension CompactBlockProcessorNG {
         } else {
             return false
         }
+    }
+}
+
+// MARK: - Rewind
+extension CompactBlockProcessorNG {
+    /// Rewinds to provided height.
+    /// - Parameter height: height to rewind to. If nil is provided, it will rescan to nearest height (quick rescan)
+    ///
+    /// - Note: If this is called while sync is in progress then the sync process is stopped first and then rewind is executed.
+    func rewind(context: AfterSyncHooksManager.RewindContext) async {
+        logger.debug("Starting rewind")
+        switch await self.context.state {
+        case .stopped, .failed, .finished, .migrateLegacyCacheDB:
+            logger.debug("Sync doesn't run. Executing rewind.")
+            await doRewind(context: context)
+        case .computeSyncRanges, .checksBeforeSync, .download, .validate, .scan, .enhance, .fetchUTXO, .handleSaplingParams, .clearCache,
+                .scanDownloaded, .clearAlreadyScannedBlocks, .validateServer:
+            logger.debug("Stopping sync because of rewind")
+            afterSyncHooksManager.insert(hook: .rewind(context))
+            await stop()
+        }
+    }
+
+    private func doRewind(context: AfterSyncHooksManager.RewindContext) async {
+        logger.debug("Executing rewind.")
+        let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
+        let height = Int32(context.height ?? lastDownloaded)
+
+        let nearestHeight: Int32
+        do {
+            nearestHeight = try await rustBackend.getNearestRewindHeight(height: height)
+        } catch {
+            await failure(error)
+            return await context.completion(.failure(error))
+        }
+
+        // FIXME: [#719] this should be done on the rust layer, https://github.com/zcash/ZcashLightClientKit/issues/719
+        let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
+
+        do {
+            try await rustBackend.rewindToHeight(height: rewindHeight)
+        } catch {
+            await failure(error)
+            return await context.completion(.failure(error))
+        }
+
+        // clear cache
+        let rewindBlockHeight = BlockHeight(rewindHeight)
+        do {
+            try await blockDownloaderService.rewind(to: rewindBlockHeight)
+        } catch {
+            return await context.completion(.failure(error))
+        }
+
+        await internalSyncProgress.rewind(to: rewindBlockHeight)
+
+        await context.completion(.success(rewindBlockHeight))
     }
 }
 
