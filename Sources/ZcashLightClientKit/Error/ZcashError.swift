@@ -11,6 +11,10 @@ error originates. And it can help with debugging.
 import Foundation
 
 public enum ZcashError: Equatable, Error {
+    /// Some error happened that is not handled as `ZcashError`.
+    /// Use case is to map `any Error`(in the apps for example) to this one so it can be assured only `ZcashError` is floating through apps.
+    /// ZUNKWN0001
+    case unknown(_ error: Error)
     /// Updating of paths in `Initilizer` according to alias failed.
     /// ZINIT0001
     case initializerCantUpdateURLWithAlias(_ url: URL)
@@ -508,6 +512,7 @@ public enum ZcashError: Equatable, Error {
 
     public var message: String {
         switch self {
+        case .unknown: return "Some error happened that is not handled as `ZcashError`."
         case .initializerCantUpdateURLWithAlias: return "Updating of paths in `Initilizer` according to alias failed."
         case .initializerAliasAlreadyInUse: return "Alias used to create this instance of the `SDKSynchronizer` is already used by other instance."
         case .serviceUnknownError: return "Unknown GRPC Service error"
@@ -659,6 +664,7 @@ public enum ZcashError: Equatable, Error {
 
     public var code: ZcashErrorCode {
         switch self {
+        case .unknown: return .unknown
         case .initializerCantUpdateURLWithAlias: return .initializerCantUpdateURLWithAlias
         case .initializerAliasAlreadyInUse: return .initializerAliasAlreadyInUse
         case .serviceUnknownError: return .serviceUnknownError

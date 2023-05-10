@@ -24,6 +24,12 @@ import Foundation
 */
 
 enum ZcashErrorDefinition {
+    /// Some error happened that is not handled as `ZcashError`. All errors in the SDK are (should be) `ZcashError`.
+    /// This case is ideally not contructed directly or thrown by any SDK function, rather it's a wrapper for case clients expect ZcashErrot and want to pass it to a function/enum.
+    /// If this is the case, use `toZcashError()` extension of Error. This helper avoids to end up with Optional handling.
+    // sourcery: code="ZUNKWN0001"
+    case unknown(_ error: Error)
+    
     // MARK: - Initializer
 
     /// Updating of paths in `Initilizer` according to alias failed.
