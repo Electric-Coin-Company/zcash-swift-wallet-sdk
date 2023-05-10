@@ -123,18 +123,18 @@ class CompactBlockProcessorNG {
 
     init(container: DIContainer, config: Configuration) {
         context = ActionContext(state: .validateServer)
-        actions = Self.makeActions(container: container)
+        actions = Self.makeActions(container: container, config: config)
         self.logger = container.resolve(Logger.self)
         self.config = config
     }
 
     // swiftlint:disable:next cyclomatic_complexity
-    static func makeActions(container: DIContainer) -> [CBPState: Action] {
+    static func makeActions(container: DIContainer, config: Configuration) -> [CBPState: Action] {
         let actionsDefinition = CBPState.allCases.compactMap { state -> (CBPState, Action)? in
             let action: Action
             switch state {
             case .validateServer:
-                action = ValidateServerAction(container: container)
+                action = ValidateServerAction(container: container, config: config)
             case .computeSyncRanges:
                 action = ComputeSyncRangesAction(container: container)
             case .checksBeforeSync:
