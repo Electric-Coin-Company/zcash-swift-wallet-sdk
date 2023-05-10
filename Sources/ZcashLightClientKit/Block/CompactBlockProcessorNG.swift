@@ -18,7 +18,16 @@ class CompactBlockProcessorNG {
     private let actions: [CBPState: Action]
     private var context: ActionContext
 
+    private let metrics: SDKMetrics
+    private let blockDownloaderService: BlockDownloaderService
+    private let latestBlocksDataProvider: LatestBlocksDataProvider
+    private let service: LightWalletService
+    private let storage: CompactBlockRepository
+    private let transactionRepository: TransactionRepository
+    private let accountRepository: AccountRepository
+    private let rustBackend: ZcashRustBackendWelding
     private let logger: Logger
+    private let internalSyncProgress: InternalSyncProgress
 
     private(set) var config: Configuration
 
@@ -113,11 +122,61 @@ class CompactBlockProcessorNG {
         }
     }
 
-    init(container: DIContainer, config: Configuration) {
+    /// Initializes a CompactBlockProcessor instance
+    /// - Parameters:
+    ///  - service: concrete implementation of `LightWalletService` protocol
+    ///  - storage: concrete implementation of `CompactBlockRepository` protocol
+    ///  - backend: a class that complies to `ZcashRustBackendWelding`
+    ///  - config: `Configuration` struct for this processor
+    convenience init(container: DIContainer, config: Configuration) {
+        self.init(
+            container: container,
+            config: config,
+            accountRepository: AccountRepositoryBuilder.build(dataDbURL: config.dataDb, readOnly: true, logger: container.resolve(Logger.self))
+        )
+    }
+
+    /// Initializes a CompactBlockProcessor instance from an Initialized object
+    /// - Parameters:
+    ///     - initializer: an instance that complies to CompactBlockDownloading protocol
+    convenience init(initializer: Initializer, walletBirthdayProvider: @escaping () -> BlockHeight) {
+        self.init(
+            container: initializer.container,
+            config: Configuration(
+                alias: initializer.alias,
+                fsBlockCacheRoot: initializer.fsBlockDbRoot,
+                dataDb: initializer.dataDbURL,
+                spendParamsURL: initializer.spendParamsURL,
+                outputParamsURL: initializer.outputParamsURL,
+                saplingParamsSourceURL: initializer.saplingParamsSourceURL,
+                walletBirthdayProvider: walletBirthdayProvider,
+                network: initializer.network
+            ),
+            accountRepository: initializer.accountRepository
+        )
+    }
+
+    internal init(container: DIContainer, config: Configuration, accountRepository: AccountRepository) {
+//        Dependencies.setupCompactBlockProcessor(
+//            in: container,
+//            config: config,
+//            accountRepository: accountRepository
+//        )
+
         context = ActionContext(state: .validateServer)
         actions = Self.makeActions(container: container, config: config)
+        
+        self.metrics = container.resolve(SDKMetrics.self)
         self.logger = container.resolve(Logger.self)
+        self.latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
+        self.internalSyncProgress = container.resolve(InternalSyncProgress.self)
+        self.blockDownloaderService = container.resolve(BlockDownloaderService.self)
+        self.service = container.resolve(LightWalletService.self)
+        self.rustBackend = container.resolve(ZcashRustBackendWelding.self)
+        self.storage = container.resolve(CompactBlockRepository.self)
         self.config = config
+        self.transactionRepository = container.resolve(TransactionRepository.self)
+        self.accountRepository = accountRepository
     }
 
     // swiftlint:disable:next cyclomatic_complexity
