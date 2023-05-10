@@ -11,7 +11,13 @@ note as Lines
 end note
 
 
-[*] -> validateServer
+[*] -> migrateLegacyCacheDB
+
+
+migrateLegacyCacheDB : MigrateLegacyCacheDBAction
+migrateLegacyCacheDB -[#green,bold]-> validateServer
+migrateLegacyCacheDB -[#red]-> failed : Error occured.
+migrateLegacyCacheDB -[#blue]-> stopped : Sync was stopped.
 
 validateServer : ValidateServerAction
 validateServer -[#green,bold]-> computeSyncRanges
