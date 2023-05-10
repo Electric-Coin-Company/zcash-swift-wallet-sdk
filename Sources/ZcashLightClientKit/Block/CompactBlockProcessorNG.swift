@@ -31,8 +31,6 @@ actor CompactBlockProcessorNG {
     private let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
 
-    private(set) var config: Configuration
-
     private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
     private var consecutiveChainValidationErrors: Int = 0
@@ -268,14 +266,9 @@ extension CompactBlockProcessorNG {
         }
     }
 
-    func stop() {
-        syncTask?.cancel()
-//        self.backoffTimer?.invalidate()
-//        self.backoffTimer = nil
-//
-//        cancelableTask?.cancel()
-//
-//        self.retryAttempts = 0
+    func stop() async {
+        await rawStop()
+        self.retryAttempts = 0
     }
 
 }
@@ -408,8 +401,7 @@ extension CompactBlockProcessorNG {
 
     func validationFailed(at height: BlockHeight) async throws {
         // cancel all Tasks
-        syncTask?.cancel()
-//        await blockDownloader.stopDownload()
+        await rawStop()
 
         // rewind
         let rewindHeight = determineLowerBound(
@@ -432,11 +424,8 @@ extension CompactBlockProcessorNG {
         await context.update(state: .failed)
 
         logger.error("Fail with error: \(error)")
-        syncTask?.cancel()
-        syncTask = nil
-        backoffTimer?.invalidate()
-        backoffTimer = nil
-//        await blockDownloader.stopDownload()
+        await rawStop()
+
         self.retryAttempts += 1
         await send(event: .failed(error))
 
@@ -459,7 +448,7 @@ extension CompactBlockProcessorNG {
             block: { [weak self] _ in
                 Task { [weak self] in
                     guard let self else { return }
-                    switch await context.state {
+                    switch await self.context.state {
                     case .stopped, .failed, .finished, .validateServer:
                         if await self.canStartSync() {
                             self.logger.debug(
@@ -475,7 +464,7 @@ extension CompactBlockProcessorNG {
                             await self.failure(ZcashError.compactBlockProcessorMaxAttemptsReached(self.config.retries))
                         }
                     case .computeSyncRanges, .checksBeforeSync, .download, .validate, .scan, .enhance, .fetchUTXO, .handleSaplingParams, .clearCache,
-                            .scanDownloaded, .clearAlreadyScannedBlocks:
+                            .scanDownloaded, .clearAlreadyScannedBlocks, .migrateLegacyCacheDB:
                         await self.latestBlocksDataProvider.updateBlockData()
                     }
                 }
@@ -486,7 +475,7 @@ extension CompactBlockProcessorNG {
         self.backoffTimer = timer
     }
 
-    func canStartSync() async -> Bool {
+    private func canStartSync() async -> Bool {
         switch await context.state {
         case .stopped, .failed, .finished, .migrateLegacyCacheDB:
             return hasRetryAttempt()
@@ -496,12 +485,25 @@ extension CompactBlockProcessorNG {
         }
     }
 
-    func hasRetryAttempt() -> Bool {
+    private func hasRetryAttempt() -> Bool {
         retryAttempts < config.retries
     }
 
-    func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
+    private func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
         let offset = min(ZcashSDK.maxReorgSize, ZcashSDK.defaultRewindDistance * (consecutiveErrors + 1))
         return max(errorHeight - offset, walletBirthday - ZcashSDK.maxReorgSize)
+    }
+
+    private func rawStop() async {
+        syncTask?.cancel()
+        self.backoffTimer?.invalidate()
+        self.backoffTimer = nil
+        await stopAllActions()
+    }
+
+    private func stopAllActions() async {
+        for action in actions.values {
+            await action.stop()
+        }
     }
 }
