@@ -19,6 +19,7 @@ actor CompactBlockProcessorNG {
     private var context: ActionContext
 
     private(set) var config: Configuration
+    private var afterSyncHooksManager = AfterSyncHooksManager()
 
     private let accountRepository: AccountRepository
     private let blockDownloaderService: BlockDownloaderService
@@ -256,7 +257,7 @@ extension CompactBlockProcessorNG {
             case .computeSyncRanges, .checksBeforeSync, .scanDownloaded, .download, .validate, .scan, .clearAlreadyScannedBlocks, .enhance,
                  .fetchUTXO, .handleSaplingParams, .clearCache, .validateServer:
                 logger.debug("Warning: compact block processor was started while busy!!!!")
-//                afterSyncHooksManager.insert(hook: .anotherSync)
+                afterSyncHooksManager.insert(hook: .anotherSync)
             }
             return
         }
@@ -270,7 +271,6 @@ extension CompactBlockProcessorNG {
         await rawStop()
         self.retryAttempts = 0
     }
-
 }
 
 // MARK: - Events
@@ -355,7 +355,12 @@ extension CompactBlockProcessorNG {
                 if Task.isCancelled {
                     logger.info("Sync cancelled.")
                     await syncStopped()
-                    break
+                    if await handleAfterSyncHooks() {
+                        // Start sync all over again
+                        await context.update(state: CBPState.initialState)
+                    } else {
+                        break
+                    }
                 } else {
                     if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
                         logger.error("Sync failed because of validation error: \(error)")
@@ -432,6 +437,24 @@ extension CompactBlockProcessorNG {
         // don't set a new timer if there are no more attempts.
         if hasRetryAttempt() {
             await self.setTimer()
+        }
+    }
+
+    private func handleAfterSyncHooks() async -> Bool {
+        let afterSyncHooksManager = self.afterSyncHooksManager
+        self.afterSyncHooksManager = AfterSyncHooksManager()
+
+        if let wipeContext = afterSyncHooksManager.shouldExecuteWipeHook() {
+//            await doWipe(context: wipeContext)
+            return false
+        } else if let rewindContext = afterSyncHooksManager.shouldExecuteRewindHook() {
+//            await doRewind(context: rewindContext)
+            return false
+        } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
+            logger.debug("Starting new sync.")
+            return true
+        } else {
+            return false
         }
     }
 }
