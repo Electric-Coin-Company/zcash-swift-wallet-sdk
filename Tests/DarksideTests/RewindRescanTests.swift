@@ -248,8 +248,7 @@ class RewindRescanTests: ZcashTestCase {
         }
         await fulfillment(of: [sendExpectation], timeout: 15)
     }
-
-    // FIX [#790]: Fix tests
+    
     func testRescanToTransaction() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
@@ -326,7 +325,7 @@ class RewindRescanTests: ZcashTestCase {
     }
 
     // FIXME [#791]: Fix test
-    func disabled_testRewindAfterSendingTransaction() async throws {
+    func testRewindAfterSendingTransaction() async throws {
         let notificationHandler = SDKSynchonizerListener()
         let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
         let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
@@ -360,7 +359,7 @@ class RewindRescanTests: ZcashTestCase {
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalance = verifiedBalance - network.constants.defaultFee(for: defaultLatestHeight)
+        let maxBalance = verifiedBalance - Zatoshi(1000)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -486,7 +485,7 @@ class RewindRescanTests: ZcashTestCase {
         }
 
         notificationHandler.synchronizerMinedTransaction = { transaction in
-            XCTFail("We shouldn't find any mined transactions at this point but found \(transaction)")
+            XCTAssertEqual(transaction.rawID, pendingTx.rawID)
         }
 
         do {

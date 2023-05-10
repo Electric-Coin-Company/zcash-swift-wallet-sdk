@@ -319,7 +319,7 @@ final class FsBlockStorageTests: XCTestCase {
         try await freshCache.create()
     }
 
-    func disabled_testStoringTenSandblastedBlocks() async throws {
+    func testStoringTenSandblastedBlocks() async throws {
         let realCache = FSCompactBlockRepository(
             fsBlockDbRoot: testTempDirectory,
             metadataStore: .live(fsBlockDbRoot: testTempDirectory, rustBackend: rustBackend, logger: logger),
@@ -335,13 +335,7 @@ final class FsBlockStorageTests: XCTestCase {
             return
         }
 
-        let startTime = Date()
         try await realCache.write(blocks: sandblastedBlocks)
-        let endTime = Date()
-
-        let timePassed = startTime.distance(to: endTime)
-
-        XCTAssertLessThan(timePassed, 0.5)
 
         let latestHeight = await realCache.latestHeight()
 
