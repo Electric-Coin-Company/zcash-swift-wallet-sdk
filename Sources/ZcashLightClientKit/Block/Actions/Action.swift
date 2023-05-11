@@ -10,15 +10,16 @@ import Foundation
 actor ActionContext {
     var state: CBPState
     var syncRanges: SyncRanges
+    var totalProgressRange: CompactBlockRange = 0...0
 
     init(state: CBPState) {
         self.state = state
         syncRanges = SyncRanges.empty
     }
 
-    func update(state: CBPState) async {
-        self.state = state
-    }
+    func update(state: CBPState) async { self.state = state }
+    func update(syncRanges: SyncRanges) async { self.syncRanges = syncRanges }
+    func update(totalProgressRange: CompactBlockRange) async { self.totalProgressRange = totalProgressRange }
 }
 
 enum CBPState: CaseIterable {
