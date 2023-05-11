@@ -32,8 +32,11 @@ extension DownloadAction: Action {
         }
 
         let lastScannedHeight = try await transactionRepository.lastScannedHeight()
-        let downloadLimit = lastScannedHeight + (2 * config.batchSize)
-        let batchRange = lastScannedHeight...lastScannedHeight + config.batchSize
+        // This action is executed for each batch (batch size is 100 blocks by default) until all the blocks in whole `downloadRange` are downloaded.
+        // So the right range for this batch must be computed.
+        let batchRangeStart = max(downloadRange.lowerBound, lastScannedHeight)
+        let batchRange = batchRangeStart...batchRangeStart + config.batchSize
+        let downloadLimit = batchRange.upperBound + (2 * config.batchSize)
 
         try await downloader.setSyncRange(downloadRange)
         await downloader.setDownloadLimit(downloadLimit)
