@@ -13,7 +13,6 @@ class SaplingParamsAction {
 
 extension SaplingParamsAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
-
         // Download files with sapling params.
 
         await context.update(state: .scanDownloaded)
