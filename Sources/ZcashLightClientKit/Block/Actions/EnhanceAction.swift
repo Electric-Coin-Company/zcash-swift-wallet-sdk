@@ -12,7 +12,7 @@ class EnhanceAction {
 }
 
 extension EnhanceAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         // Use `BlockEnhancer` to enhance blocks.
         // This action is executed on each downloaded and scanned batch (typically each 100 blocks). But we want to run enhancement each 1000 blocks.
         // This action can use `InternalSyncProgress` and last scanned height to compute when it should do work.

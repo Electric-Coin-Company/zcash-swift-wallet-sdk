@@ -20,7 +20,7 @@ class ValidateServerAction {
 }
 
 extension ValidateServerAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         let info = try await service.getInfo()
         let localNetwork = config.network
         let saplingActivation = config.saplingActivation
