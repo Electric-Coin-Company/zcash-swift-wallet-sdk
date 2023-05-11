@@ -15,11 +15,14 @@ class FetchUTXOsAction {
 }
 
 extension FetchUTXOsAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         if let range = await context.syncRanges.fetchUTXORange {
             let result = try await utxoFetcher.fetch(at: range)
             await didUpdate(.storedUTXOs(result))
         }
+        
         await context.update(state: .handleSaplingParams)
         return context
     }

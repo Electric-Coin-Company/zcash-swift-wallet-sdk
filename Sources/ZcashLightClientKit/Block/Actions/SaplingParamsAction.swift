@@ -12,6 +12,8 @@ class SaplingParamsAction {
 }
 
 extension SaplingParamsAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         // Download files with sapling params.
 

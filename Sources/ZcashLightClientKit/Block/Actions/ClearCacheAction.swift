@@ -12,6 +12,8 @@ class ClearCacheAction {
 }
 
 extension ClearCacheAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         // clear storage
         await context.update(state: .finished)
