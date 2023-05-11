@@ -12,7 +12,7 @@ class FetchUTXOsAction {
 }
 
 extension FetchUTXOsAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
         // Use `UTXOFetcher` to fetch UTXOs.
         
         await context.update(state: .handleSaplingParams)
