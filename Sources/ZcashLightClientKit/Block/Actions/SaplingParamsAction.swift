@@ -9,8 +9,11 @@ import Foundation
 
 class SaplingParamsAction {
     let saplingParametersHandler: SaplingParametersHandler
+    let logger: Logger
+
     init(container: DIContainer) {
         saplingParametersHandler = container.resolve(SaplingParametersHandler.self)
+        logger = container.resolve(Logger.self)
     }
 }
 
@@ -18,6 +21,7 @@ extension SaplingParamsAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+        logger.debug("Fetching sapling parameters")
         try await saplingParametersHandler.handleIfNeeded()
         await context.update(state: .scanDownloaded)
         return context
