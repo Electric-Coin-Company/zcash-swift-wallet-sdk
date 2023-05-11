@@ -27,6 +27,8 @@ class MigrateLegacyCacheDBAction {
 }
 
 extension MigrateLegacyCacheDBAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         guard let legacyCacheDbURL = config.cacheDbURL else {
             return await updateState(context)

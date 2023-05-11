@@ -43,6 +43,9 @@ enum CBPState: CaseIterable {
 }
 
 protocol Action {
+    /// If this is true and action fails with error then blocks cache is cleared.
+    var removeBlocksCacheWhenFailed: Bool { get }
+
     // When any action is created it can get `DIContainer` and resolve any depedencies it requires.
 
     // Every action uses `context` to get some informartion like download range.

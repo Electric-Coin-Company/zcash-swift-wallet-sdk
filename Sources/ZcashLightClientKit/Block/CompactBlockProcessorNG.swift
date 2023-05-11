@@ -327,18 +327,18 @@ extension CompactBlockProcessorNG {
                 }
             }
 
+            // Try to find action for state.
+            guard let action = actions[await context.state] else {
+                if await syncFinished() {
+                    resetContext()
+                    continue
+                } else {
+                    break
+                }
+            }
+
             do {
                 try Task.checkCancellation()
-
-                // Try to find action for state.
-                guard let action = actions[await context.state] else {
-                    if try await syncFinished() {
-                        resetContext()
-                        continue
-                    } else {
-                        break
-                    }
-                }
 
                 // Execute action.
                 context = try await action.run(with: context) { [weak self] event in
@@ -348,32 +348,53 @@ extension CompactBlockProcessorNG {
                 await didFinishAction()
             } catch {
                 if Task.isCancelled {
-                    logger.info("Sync cancelled.")
-                    await syncStopped()
-                    if await handleAfterSyncHooks() {
+                    if await syncTaskWasCancelled() {
                         // Start sync all over again
                         resetContext()
                     } else {
+                        // end the sync loop
                         break
                     }
                 } else {
-                    if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
-                        logger.error("Sync failed because of validation error: \(error)")
-                        do {
-                            try await validationFailed(at: BlockHeight(height))
-                            // Start sync all over again
-                            resetContext()
-                        } catch {
-                            await failure(error)
-                            break
-                        }
+                    if await handleSyncFailure(action: action, error: error) {
+                        // Start sync all over again
+                        resetContext()
                     } else {
-                        logger.error("Sync failed with error: \(error)")
-                        await failure(error)
+                        // end the sync loop
                         break
                     }
                 }
             }
+        }
+    }
+
+    private func syncTaskWasCancelled() async -> Bool {
+        logger.info("Sync cancelled.")
+        syncTask = nil
+        await context.update(state: .stopped)
+        await send(event: .stopped)
+        return await handleAfterSyncHooks()
+    }
+
+    private func handleSyncFailure(action: Action, error: Error) async -> Bool {
+        if action.removeBlocksCacheWhenFailed {
+            await ifTaskIsNotCanceledClearCompactBlockCache()
+        }
+
+        if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
+            logger.error("Sync failed because of validation error: \(error)")
+            do {
+                try await validationFailed(at: BlockHeight(height))
+                // Start sync all over again
+                return true
+            } catch {
+                await failure(error)
+                return false
+            }
+        } else {
+            logger.error("Sync failed with error: \(error)")
+            await failure(error)
+            return false
         }
     }
 
@@ -427,13 +448,13 @@ extension CompactBlockProcessorNG {
         await send(event: .startedSyncing)
     }
 
-    private func syncFinished() async throws -> Bool {
+    private func syncFinished() async -> Bool {
         let newerBlocksWereMinedDuringSync = await context.syncRanges.latestBlockHeight < latestBlocksDataProvider.latestBlockHeight
 
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
 
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
         await send(event: .finished(lastScannedHeight))
         await context.update(state: .finished)
 
@@ -448,12 +469,6 @@ extension CompactBlockProcessorNG {
 
     private func update(progress: CompactBlockProgress) async {
         await send(event: .progressUpdated(progress))
-    }
-
-    private func syncStopped() async {
-        syncTask = nil
-        await context.update(state: .stopped)
-        await send(event: .stopped)
     }
 
     private func validationFailed(at height: BlockHeight) async throws {
@@ -691,5 +706,33 @@ extension CompactBlockProcessorNG {
         for action in actions.values {
             await action.stop()
         }
+    }
+
+    private func ifTaskIsNotCanceledClearCompactBlockCache() async {
+        guard !Task.isCancelled else { return }
+        let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
+        do {
+            // Blocks download work in parallel with scanning. So imagine this scenario:
+            //
+            // Scanning is done until height 10300. Blocks are downloaded until height 10400.
+            // And now validation fails and this method is called. And `.latestDownloadedBlockHeight` in `internalSyncProgress` is set to 10400. And
+            // all the downloaded blocks are removed here.
+            //
+            // If this line doesn't happen then when sync starts next time it thinks that all the blocks are downloaded until 10400. But all were
+            // removed. So blocks between 10300 and 10400 wouldn't ever be scanned.
+            //
+            // Scanning is done until 10300 so the SDK can be sure that blocks with height below 10300 are not required. So it makes sense to set
+            // `.latestDownloadedBlockHeight` to `lastScannedHeight`. And sync will work fine in next run.
+            await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
+            try await clearCompactBlockCache()
+        } catch {
+            logger.error("`clearCompactBlockCache` failed after error: \(error)")
+        }
+    }
+
+    private func clearCompactBlockCache() async throws {
+        await stopAllActions()
+        try await storage.clear()
+        logger.info("Cache removed")
     }
 }
