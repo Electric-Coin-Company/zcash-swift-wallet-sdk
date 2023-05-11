@@ -12,6 +12,8 @@ class ChecksBeforeSyncAction {
 }
 
 extension ChecksBeforeSyncAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         // clear any present cached state if needed.
         // this checks if there was a sync in progress that was

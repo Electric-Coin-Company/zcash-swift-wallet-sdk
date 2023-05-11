@@ -12,6 +12,8 @@ class ScanDownloadedButUnscannedAction {
 }
 
 extension ScanDownloadedButUnscannedAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
 //        if let range = ranges.downloadedButUnscannedRange {
 //            logger.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
