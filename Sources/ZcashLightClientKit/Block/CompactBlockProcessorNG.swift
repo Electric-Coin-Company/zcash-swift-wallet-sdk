@@ -26,7 +26,6 @@ actor CompactBlockProcessorNG {
     private let internalSyncProgress: InternalSyncProgress
     private let latestBlocksDataProvider: LatestBlocksDataProvider
     private let logger: Logger
-    private let metrics: SDKMetrics
     private let rustBackend: ZcashRustBackendWelding
     private let service: LightWalletService
     private let storage: CompactBlockRepository
@@ -171,7 +170,6 @@ actor CompactBlockProcessorNG {
         context = ActionContext(state: .validateServer)
         actions = Self.makeActions(container: container, config: config)
 
-        self.metrics = container.resolve(SDKMetrics.self)
         self.logger = container.resolve(Logger.self)
         self.latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
         self.internalSyncProgress = container.resolve(InternalSyncProgress.self)
@@ -184,6 +182,10 @@ actor CompactBlockProcessorNG {
         self.accountRepository = accountRepository
     }
 
+    deinit {
+        syncTask?.cancel()
+    }
+
     // swiftlint:disable:next cyclomatic_complexity
     private static func makeActions(container: DIContainer, config: Configuration) -> [CBPState: Action] {
         let actionsDefinition = CBPState.allCases.compactMap { state -> (CBPState, Action)? in
@@ -194,7 +196,7 @@ actor CompactBlockProcessorNG {
             case .validateServer:
                 action = ValidateServerAction(container: container, config: config)
             case .computeSyncRanges:
-                action = ComputeSyncRangesAction(container: container)
+                action = ComputeSyncRangesAction(container: container, config: config)
             case .checksBeforeSync:
                 action = ChecksBeforeSyncAction(container: container)
             case .scanDownloaded:
@@ -255,6 +257,74 @@ extension CompactBlockProcessorNG {
     func stop() async {
         await rawStop()
         retryAttempts = 0
+    }
+
+    func getUnifiedAddress(accountIndex: Int) async throws -> UnifiedAddress {
+        try await rustBackend.getCurrentAddress(account: Int32(accountIndex))
+    }
+
+    func getSaplingAddress(accountIndex: Int) async throws -> SaplingAddress {
+        try await getUnifiedAddress(accountIndex: accountIndex).saplingReceiver()
+    }
+
+    func getTransparentAddress(accountIndex: Int) async throws -> TransparentAddress {
+        try await getUnifiedAddress(accountIndex: accountIndex).transparentReceiver()
+    }
+
+    func getTransparentBalance(accountIndex: Int) async throws -> WalletBalance {
+        guard accountIndex >= 0 else {
+            throw ZcashError.compactBlockProcessorInvalidAccount
+        }
+
+        return WalletBalance(
+            verified: Zatoshi(
+                try await rustBackend.getVerifiedTransparentBalance(account: Int32(accountIndex))
+            ),
+            total: Zatoshi(
+                try await rustBackend.getTransparentBalance(account: Int32(accountIndex))
+            )
+        )
+    }
+
+    func refreshUTXOs(tAddress: TransparentAddress, startHeight: BlockHeight) async throws -> RefreshedUTXOs {
+        let dataDb = self.config.dataDb
+
+        let stream: AsyncThrowingStream<UnspentTransactionOutputEntity, Error> = blockDownloaderService.fetchUnspentTransactionOutputs(
+            tAddress: tAddress.stringEncoded,
+            startHeight: startHeight
+        )
+        var utxos: [UnspentTransactionOutputEntity] = []
+
+        do {
+            for try await utxo in stream {
+                utxos.append(utxo)
+            }
+            return await storeUTXOs(utxos, in: dataDb)
+        } catch {
+            throw error
+        }
+    }
+
+    private func storeUTXOs(_ utxos: [UnspentTransactionOutputEntity], in dataDb: URL) async -> RefreshedUTXOs {
+        var refreshed: [UnspentTransactionOutputEntity] = []
+        var skipped: [UnspentTransactionOutputEntity] = []
+        for utxo in utxos {
+            do {
+                try await rustBackend.putUnspentTransparentOutput(
+                    txid: utxo.txid.bytes,
+                    index: utxo.index,
+                    script: utxo.script.bytes,
+                    value: Int64(utxo.valueZat),
+                    height: utxo.height
+                )
+
+                refreshed.append(utxo)
+            } catch {
+                logger.info("failed to put utxo - error: \(error)")
+                skipped.append(utxo)
+            }
+        }
+        return (inserted: refreshed, skipped: skipped)
     }
 }
 
