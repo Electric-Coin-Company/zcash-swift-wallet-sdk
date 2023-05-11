@@ -47,8 +47,7 @@ class BalanceTests: ZcashTestCase {
     /**
     verify that when sending the maximum amount, the transactions are broadcasted properly
     */
-    // FIXME [#783]: Fix test
-    func disabled_testMaxAmountSend() async throws {
+    func testMaxAmountSendBroadcast() async throws {
         let notificationHandler = SDKSynchonizerListener()
         let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
         let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
@@ -82,7 +81,7 @@ class BalanceTests: ZcashTestCase {
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalance = verifiedBalance - network.constants.defaultFee(for: defaultLatestHeight)
+        let maxBalance = verifiedBalance - Zatoshi(1000)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -195,7 +194,7 @@ class BalanceTests: ZcashTestCase {
     }
 
     /**
-    verify that when sending the maximum amount minus one zatoshi, the transactions are broadcasted properly
+    verify that when sending the maximum amount of zatoshi, the transactions are broadcasted properly
     */
     func testMaxAmountSend() async throws {
         let notificationHandler = SDKSynchonizerListener()
@@ -347,7 +346,6 @@ class BalanceTests: ZcashTestCase {
     /**
     verify that when sending the maximum amount minus one zatoshi, the transactions are broadcasted properly
     */
-    // FIXME [#781]: Fix test
     func testMaxAmountMinusOneSendFails() async throws {
         // 1 sync and get spendable funds
         try FakeChainBuilder.buildChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
@@ -407,8 +405,7 @@ class BalanceTests: ZcashTestCase {
     /**
     verify that when sending the a no change transaction, the transactions are broadcasted properly
     */
-    // FIXME [#785]: Fix test
-    func disabled_testSingleNoteNoChangeTransaction() async throws {
+    func testSingleNoteNoChangeTransaction() async throws {
         let notificationHandler = SDKSynchonizerListener()
         let foundTransactionsExpectation = XCTestExpectation(description: "found transactions expectation")
         let transactionMinedExpectation = XCTestExpectation(description: "transaction mined expectation")
@@ -442,7 +439,7 @@ class BalanceTests: ZcashTestCase {
         XCTAssertTrue(verifiedBalance > network.constants.defaultFee(for: defaultLatestHeight))
         XCTAssertEqual(verifiedBalance, totalBalance)
         
-        let maxBalanceMinusOne = Zatoshi(100000) - network.constants.defaultFee(for: defaultLatestHeight)
+        let maxBalanceMinusFee = Zatoshi(100000) - Zatoshi(1000)
         
         // 3 create a transaction for the max amount possible
         // 4 send the transaction
@@ -451,7 +448,7 @@ class BalanceTests: ZcashTestCase {
         do {
             let transaction = try await coordinator.synchronizer.sendToAddress(
                 spendingKey: spendingKey,
-                zatoshi: maxBalanceMinusOne,
+                zatoshi: maxBalanceMinusFee,
                 toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
                 memo: try Memo(string: "test send \(self.description) \(Date().description)")
             )
@@ -603,21 +600,14 @@ class BalanceTests: ZcashTestCase {
         
         var pendingTx: ZcashTransaction.Overview?
 
-        do {
-            let transaction = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: spendingKey,
-                zatoshi: sendAmount,
-                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
-                memo: try Memo(string: "this is a test")
-            )
-            pendingTx = transaction
-            self.sentTransactionExpectation.fulfill()
-        } catch {
-            // balance should be the same as before sending if transaction failed
-            let expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
-            XCTAssertEqual(expectedVerifiedBalance, presendVerifiedBalance)
-            XCTFail("sendToAddress failed: \(error)")
-        }
+        let transaction = try await coordinator.synchronizer.sendToAddress(
+            spendingKey: spendingKey,
+            zatoshi: sendAmount,
+            toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
+            memo: try Memo(string: "this is a test")
+        )
+        pendingTx = transaction
+        self.sentTransactionExpectation.fulfill()
 
         var expectedVerifiedBalance = try await coordinator.synchronizer.getShieldedVerifiedBalance()
         XCTAssertTrue(expectedVerifiedBalance > .zero)
@@ -692,11 +682,15 @@ class BalanceTests: ZcashTestCase {
             return
         }
 
+        guard let fee = transaction.fee else {
+            XCTFail("sent transaction has no fee")
+            return
+        }
         //  (previous available funds - spent note + change) equals to (previous available funds - sent amount)
         self.verifiedBalanceValidation(
             previousBalance: presendVerifiedBalance,
-            spentNoteValue: sentOutput.value,
-            changeValue: changeOutput.value,
+            spentValue: sentOutput.value,
+            fee: fee,
             sentAmount: self.sendAmount,
             currentVerifiedBalance: try await coordinator.synchronizer.getShieldedVerifiedBalance()
         )
@@ -875,14 +869,12 @@ class BalanceTests: ZcashTestCase {
     There’s a change note of value (previous note value - sent amount)
 
     */
-    // FIXME [#786]: Fix test
-    func disabled_testVerifyChangeTransaction() async throws {
+    func testVerifyChangeTransaction() async throws {
         try FakeChainBuilder.buildSingleNoteChain(darksideWallet: coordinator.service, branchID: branchID, chainName: chainName)
         
         try coordinator.applyStaged(blockheight: defaultLatestHeight)
         sleep(1)
         let sendExpectation = XCTestExpectation(description: "send expectation")
-        let createToAddressExpectation = XCTestExpectation(description: "create to address")
         
         try coordinator.setLatestHeight(height: defaultLatestHeight)
 
@@ -913,19 +905,17 @@ class BalanceTests: ZcashTestCase {
         let memo = try Memo(string: "shielding is fun!")
         var pendingTx: ZcashTransaction.Overview?
 
-        do {
-            let transaction = try await coordinator.synchronizer.sendToAddress(
-                spendingKey: spendingKey,
-                zatoshi: sendAmount,
-                toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
-                memo: memo
-            )
-            pendingTx = transaction
-            sendExpectation.fulfill()
-        } catch {
-            XCTFail("error sending \(error)")
-        }
-        await fulfillment(of: [createToAddressExpectation], timeout: 30)
+
+        let transaction = try await coordinator.synchronizer.sendToAddress(
+            spendingKey: spendingKey,
+            zatoshi: sendAmount,
+            toAddress: try Recipient(Environment.testRecipientAddress, network: self.network.networkType),
+            memo: memo
+        )
+        pendingTx = transaction
+        sendExpectation.fulfill()
+
+        await fulfillment(of: [sendExpectation], timeout: 30)
         
         let syncToMinedheightExpectation = XCTestExpectation(description: "sync to mined height + 1")
         
@@ -963,10 +953,14 @@ class BalanceTests: ZcashTestCase {
                     /*
                     There’s a sent transaction matching the amount sent to the given zAddr
                     */
-                    XCTAssertEqual(confirmedTx.value, self.sendAmount)
+                    XCTAssertEqual(
+                        -confirmedTx.value.amount,
+                        (self.sendAmount + (confirmedTx.fee ?? Zatoshi(0))).amount
+                    )
                     // TODO [#683]: Add API to SDK to fetch memos.
-                    //                    let confirmedMemo = try confirmedTx.memo?.intoMemoBytes()?.intoMemo()
-                    //                    XCTAssertEqual(confirmedMemo, memo)
+                    let confirmedMemo = try await self.coordinator.synchronizer.getMemos(for: confirmedTx).first
+
+                    XCTAssertEqual(confirmedMemo, memo)
 
                     /*
                     Find out what note was used
@@ -993,17 +987,21 @@ class BalanceTests: ZcashTestCase {
                     There’s a change note of value (previous note value - sent amount)
                     */
                     XCTAssertEqual(
-                        previousVerifiedBalance - self.sendAmount - self.network.constants.defaultFee(for: self.defaultLatestHeight),
+                        previousVerifiedBalance - self.sendAmount - Zatoshi(1000),
                         changeOutput.value
                     )
 
+                    guard let fee = transaction.fee else {
+                        XCTFail("sent transaction has no fee")
+                        return
+                    }
                     /*
                     Balance meets verified Balance and total balance criteria
                     */
                     self.verifiedBalanceValidation(
                         previousBalance: previousVerifiedBalance,
-                        spentNoteValue: sentOutput.value,
-                        changeValue: changeOutput.value,
+                        spentValue: sentOutput.value,
+                        fee: fee,
                         sentAmount: self.sendAmount,
                         currentVerifiedBalance: try await synchronizer.getShieldedVerifiedBalance()
                     )
@@ -1161,12 +1159,12 @@ class BalanceTests: ZcashTestCase {
     */
     func verifiedBalanceValidation(
         previousBalance: Zatoshi,
-        spentNoteValue: Zatoshi,
-        changeValue: Zatoshi,
+        spentValue: Zatoshi,
+        fee: Zatoshi,
         sentAmount: Zatoshi,
         currentVerifiedBalance: Zatoshi
     ) {
-        XCTAssertEqual(previousBalance - spentNoteValue + changeValue, currentVerifiedBalance - sentAmount)
+        XCTAssertEqual(previousBalance - spentValue - fee, currentVerifiedBalance)
     }
     
     func totalBalanceValidation(
@@ -1174,7 +1172,7 @@ class BalanceTests: ZcashTestCase {
         previousTotalbalance: Zatoshi,
         sentAmount: Zatoshi
     ) {
-        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - network.constants.defaultFee(for: defaultLatestHeight))
+        XCTAssertEqual(totalBalance, previousTotalbalance - sentAmount - Zatoshi(1000))
     }
 }
 
