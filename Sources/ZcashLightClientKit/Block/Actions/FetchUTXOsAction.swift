@@ -9,8 +9,11 @@ import Foundation
 
 class FetchUTXOsAction {
     let utxoFetcher: UTXOFetcher
+    let logger: Logger
+
     init(container: DIContainer) {
         utxoFetcher = container.resolve(UTXOFetcher.self)
+        logger = container.resolve(Logger.self)
     }
 }
 
@@ -19,6 +22,7 @@ extension FetchUTXOsAction: Action {
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         if let range = await context.syncRanges.fetchUTXORange {
+            logger.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
             let result = try await utxoFetcher.fetch(at: range)
             await didUpdate(.storedUTXOs(result))
         }

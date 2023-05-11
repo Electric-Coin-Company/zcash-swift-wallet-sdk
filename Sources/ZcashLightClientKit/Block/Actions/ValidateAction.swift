@@ -9,6 +9,7 @@ import Foundation
 
 class ValidateAction {
     let validator: BlockValidator
+    
     init(container: DIContainer) {
         validator = container.resolve(BlockValidator.self)
     }
