@@ -7,6 +7,36 @@
 
 import Foundation
 
+public struct EnhancementProgress: Equatable {
+    public let totalTransactions: Int
+    public let enhancedTransactions: Int
+    public let lastFoundTransaction: ZcashTransaction.Overview?
+    public let range: CompactBlockRange
+
+    public init(totalTransactions: Int, enhancedTransactions: Int, lastFoundTransaction: ZcashTransaction.Overview?, range: CompactBlockRange) {
+        self.totalTransactions = totalTransactions
+        self.enhancedTransactions = enhancedTransactions
+        self.lastFoundTransaction = lastFoundTransaction
+        self.range = range
+    }
+
+    public var progress: Float {
+        totalTransactions > 0 ? Float(enhancedTransactions) / Float(totalTransactions) : 0
+    }
+
+    public static var zero: EnhancementProgress {
+        EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0)
+    }
+
+    public static func == (lhs: EnhancementProgress, rhs: EnhancementProgress) -> Bool {
+        return
+            lhs.totalTransactions == rhs.totalTransactions &&
+            lhs.enhancedTransactions == rhs.enhancedTransactions &&
+            lhs.lastFoundTransaction?.id == rhs.lastFoundTransaction?.id &&
+            lhs.range == rhs.range
+    }
+}
+
 protocol BlockEnhancer {
     func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]
 }

@@ -41,11 +41,6 @@ enum CBPState: CaseIterable {
     case stopped
 }
 
-// this is replacement for CompactBlockProgress
-enum ActionProgress {
-    case scan
-}
-
 protocol Action {
     // When any action is created it can get `DIContainer` and resolve any depedencies it requires.
 
@@ -58,7 +53,7 @@ protocol Action {
     // Each action updates context accordingly. It should at least set new state. Reason for this is that action can return different states for
     // different conditions. And action is the thing that knows these conditions.
 
-    func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext
 
     // Should be called on each existing action when processor wants to stop. Some actions may do it's own background work.
     func stop() async

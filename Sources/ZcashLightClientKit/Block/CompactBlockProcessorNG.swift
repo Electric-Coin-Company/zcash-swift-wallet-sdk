@@ -446,8 +446,8 @@ extension CompactBlockProcessorNG {
         }
     }
 
-    private func update(progress: ActionProgress) async {
-        // handle update of the progree
+    private func update(progress: CompactBlockProgress) async {
+        await send(event: .progressUpdated(progress))
     }
 
     private func syncStopped() async {
