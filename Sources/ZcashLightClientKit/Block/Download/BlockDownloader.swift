@@ -224,6 +224,7 @@ extension BlockDownloaderImpl: BlockDownloader {
     }
 
     func setSyncRange(_ range: CompactBlockRange) async throws {
+        guard range != syncRange else { return }
         downloadStream = try await compactBlocksDownloadStream(startHeight: range.lowerBound, targetHeight: range.upperBound)
         syncRange = range
     }

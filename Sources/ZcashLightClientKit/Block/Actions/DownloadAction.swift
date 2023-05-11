@@ -8,28 +8,41 @@
 import Foundation
 
 class DownloadAction {
-    init(container: DIContainer) { }
+    let config: CompactBlockProcessorNG.Configuration
+    let downloader: BlockDownloader
+    let transactionRepository: TransactionRepository
+    init(container: DIContainer, config: CompactBlockProcessorNG.Configuration) {
+        self.config = config
+        downloader = container.resolve(BlockDownloader.self)
+        transactionRepository = container.resolve(TransactionRepository.self)
+    }
+
+    private func update(context: ActionContext) async -> ActionContext {
+        await context.update(state: .validate)
+        return context
+    }
 }
 
 extension DownloadAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
-        // Use `BlockDownloader` to set download limit to latestScannedHeight + (2*batchSize) (after parallel is merged).
-        // And start download.
-        // Compute batch sync range (range used by one loop in `downloadAndScanBlocks` method) and wait until blocks in this range are downloaded.
+        guard let downloadRange = await context.syncRanges.downloadAndScanRange else {
+            return await update(context: context)
+        }
 
-//        do {
-//            await blockDownloader.setDownloadLimit(processingRange.upperBound + (2 * batchSize))
-//            await blockDownloader.startDownload(maxBlockBufferSize: config.downloadBufferSize)
-//
-//            try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: processingRange)
-//        } catch {
-//            await ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: lastScannedHeight)
-//            throw error
-//        }
+        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        let downloadLimit = lastScannedHeight + (2 * config.batchSize)
+        let batchRange = lastScannedHeight...lastScannedHeight + config.batchSize
+
+        try await downloader.setSyncRange(downloadRange)
+        await downloader.setDownloadLimit(downloadLimit)
+
+        try await downloader.waitUntilRequestedBlocksAreDownloaded(in: batchRange)
 
         await context.update(state: .validate)
         return context
     }
 
-    func stop() async { }
+    func stop() async {
+        await downloader.stopDownload()
+    }
 }
