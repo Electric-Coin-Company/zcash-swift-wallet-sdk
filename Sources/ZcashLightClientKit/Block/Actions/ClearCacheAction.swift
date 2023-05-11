@@ -12,7 +12,7 @@ class ClearCacheAction {
 }
 
 extension ClearCacheAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
         // clear storage
         await context.update(state: .finished)
         return context

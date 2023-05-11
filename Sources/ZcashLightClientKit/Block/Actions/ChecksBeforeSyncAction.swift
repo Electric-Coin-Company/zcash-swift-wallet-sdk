@@ -12,7 +12,7 @@ class ChecksBeforeSyncAction {
 }
 
 extension ChecksBeforeSyncAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
         // clear any present cached state if needed.
         // this checks if there was a sync in progress that was
         // interrupted abruptly and cache was not able to be cleared
