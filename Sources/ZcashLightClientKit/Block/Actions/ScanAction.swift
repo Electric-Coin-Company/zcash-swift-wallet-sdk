@@ -12,6 +12,8 @@ class ScanAction {
 }
 
 extension ScanAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { true }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         // Scan in range latestScannedHeight...latestScannedHeight+batchSize.
 
