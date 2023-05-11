@@ -20,6 +20,8 @@ class ValidateServerAction {
 }
 
 extension ValidateServerAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         let info = try await service.getInfo()
         let localNetwork = config.network

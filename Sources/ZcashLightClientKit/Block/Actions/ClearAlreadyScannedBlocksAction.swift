@@ -12,6 +12,8 @@ class ClearAlreadyScannedBlocksAction {
 }
 
 extension ClearAlreadyScannedBlocksAction: Action {
+    var removeBlocksCacheWhenFailed: Bool { false }
+
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         // clear storage but delete only blocks that were already scanned, when doing parallel download all blocks can't be deleted
 
