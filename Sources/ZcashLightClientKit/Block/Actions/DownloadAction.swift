@@ -24,7 +24,7 @@ class DownloadAction {
 }
 
 extension DownloadAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         guard let downloadRange = await context.syncRanges.downloadAndScanRange else {
             return await update(context: context)
         }

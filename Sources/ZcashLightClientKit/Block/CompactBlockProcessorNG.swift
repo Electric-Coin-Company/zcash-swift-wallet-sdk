@@ -341,8 +341,8 @@ extension CompactBlockProcessorNG {
                 }
 
                 // Execute action.
-                context = try await action.run(with: context) { [weak self] progress in
-                    await self?.update(progress: progress)
+                context = try await action.run(with: context) { [weak self] event in
+                    await self?.send(event: event)
                 }
 
                 await didFinishAction()
