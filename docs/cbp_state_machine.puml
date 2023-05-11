@@ -55,9 +55,13 @@ validate -[#blue]-> stopped : Sync was stopped.
 
 scan : ScanAction
 scan -[#green,bold]-> clearAlreadyScannedBlocks
+scan -[#red]-> failed : Error occured.
+scan -[#blue]-> stopped : Sync was stopped.
 
 clearAlreadyScannedBlocks : ClearAlreadyScannedBlocksAction
 clearAlreadyScannedBlocks -[#green,bold]-> enhance
+clearAlreadyScannedBlocks -[#red]-> failed : Error occured.
+clearAlreadyScannedBlocks -[#blue]-> stopped : Sync was stopped.
 
 enhance : EnhanceAction
 enhance -[#green,bold]-> download : Not all blocks in the\nsync range are downloaded\nand scanned yet.
