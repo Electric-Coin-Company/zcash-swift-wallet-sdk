@@ -21,4 +21,3 @@ extension ScanAction: Action {
 
     func stop() async { }
 }
-

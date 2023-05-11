@@ -8,7 +8,6 @@
 import Foundation
 
 enum Dependencies {
-    // swiftlint:disable:next function_parameter_count
     static func setup(
         in container: DIContainer,
         urls: Initializer.URLs,

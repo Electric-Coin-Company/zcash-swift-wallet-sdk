@@ -22,6 +22,7 @@ actor ActionContext {
 }
 
 enum CBPState: CaseIterable {
+    case idle
     case migrateLegacyCacheDB
     case validateServer
     case computeSyncRanges
@@ -38,10 +39,7 @@ enum CBPState: CaseIterable {
     case finished
     case failed
     case stopped
-
-    static let initialState: CBPState = .migrateLegacyCacheDB
 }
-
 
 // this is replacement for CompactBlockProgress
 enum ActionProgress {
