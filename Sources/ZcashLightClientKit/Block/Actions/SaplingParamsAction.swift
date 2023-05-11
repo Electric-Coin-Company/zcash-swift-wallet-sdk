@@ -8,15 +8,17 @@
 import Foundation
 
 class SaplingParamsAction {
-    init(container: DIContainer) { }
+    let saplingParametersHandler: SaplingParametersHandler
+    init(container: DIContainer) {
+        saplingParametersHandler = container.resolve(SaplingParametersHandler.self)
+    }
 }
 
 extension SaplingParamsAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
-        // Download files with sapling params.
-
+        try await saplingParametersHandler.handleIfNeeded()
         await context.update(state: .scanDownloaded)
         return context
     }
