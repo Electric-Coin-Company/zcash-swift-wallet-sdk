@@ -22,6 +22,7 @@ actor ActionContext {
 }
 
 enum CBPState: CaseIterable {
+    case migrateLegacyCacheDB
     case validateServer
     case computeSyncRanges
     case checksBeforeSync
@@ -37,6 +38,8 @@ enum CBPState: CaseIterable {
     case finished
     case failed
     case stopped
+
+    static let initialState: CBPState = .migrateLegacyCacheDB
 }
 
 
