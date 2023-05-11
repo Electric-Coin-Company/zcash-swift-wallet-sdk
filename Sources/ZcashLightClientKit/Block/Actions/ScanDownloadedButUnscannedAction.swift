@@ -12,7 +12,7 @@ class ScanDownloadedButUnscannedAction {
 }
 
 extension ScanDownloadedButUnscannedAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
 //        if let range = ranges.downloadedButUnscannedRange {
 //            logger.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
 //            try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in

@@ -15,7 +15,7 @@ class ValidateAction {
 }
 
 extension ValidateAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
         try await validator.validate()
         await context.update(state: .scan)
         return context
