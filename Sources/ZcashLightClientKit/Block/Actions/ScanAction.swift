@@ -12,7 +12,7 @@ class ScanAction {
 }
 
 extension ScanAction: Action {
-    func run(with context: ActionContext, didUpdate: @escaping (ActionProgress) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProgress) async -> Void) async throws -> ActionContext {
         // Scan in range latestScannedHeight...latestScannedHeight+batchSize.
 
         await context.update(state: .clearAlreadyScannedBlocks)
