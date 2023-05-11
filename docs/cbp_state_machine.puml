@@ -11,8 +11,9 @@ note as Lines
 end note
 
 
-[*] -> migrateLegacyCacheDB
+[*] -> idle
 
+idle -[#green,bold]-> migrateLegacyCacheDB
 
 migrateLegacyCacheDB : MigrateLegacyCacheDBAction
 migrateLegacyCacheDB -[#green,bold]-> validateServer
