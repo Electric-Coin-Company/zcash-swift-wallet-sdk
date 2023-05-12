@@ -49,6 +49,7 @@ actor CompactBlockProcessorNG {
         let dataDb: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
+        let enhanceBatchSize: Int
         let batchSize: Int
         let retries: Int
         let maxBackoffInterval: TimeInterval
@@ -72,6 +73,7 @@ actor CompactBlockProcessorNG {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
+            enhanceBatchSize: Int = ZcashSDK.DefaultEnhanceBatch,
             batchSize: Int = ZcashSDK.DefaultSyncBatch,
             retries: Int = ZcashSDK.defaultRetries,
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
@@ -87,6 +89,7 @@ actor CompactBlockProcessorNG {
             self.outputParamsURL = outputParamsURL
             self.saplingParamsSourceURL = saplingParamsSourceURL
             self.network = network
+            self.enhanceBatchSize = enhanceBatchSize
             self.batchSize = batchSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
@@ -103,6 +106,7 @@ actor CompactBlockProcessorNG {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
+            enhanceBatchSize: Int = ZcashSDK.DefaultEnhanceBatch,
             batchSize: Int = ZcashSDK.DefaultSyncBatch,
             retries: Int = ZcashSDK.defaultRetries,
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
@@ -120,6 +124,7 @@ actor CompactBlockProcessorNG {
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
             self.cacheDbURL = nil
+            self.enhanceBatchSize = enhanceBatchSize
             self.batchSize = batchSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
@@ -208,7 +213,7 @@ actor CompactBlockProcessorNG {
             case .clearAlreadyScannedBlocks:
                 action = ClearAlreadyScannedBlocksAction(container: container)
             case .enhance:
-                action = EnhanceAction(container: container)
+                action = EnhanceAction(container: container, config: config)
             case .fetchUTXO:
                 action = FetchUTXOsAction(container: container)
             case .handleSaplingParams:
