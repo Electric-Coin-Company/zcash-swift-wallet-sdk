@@ -194,7 +194,7 @@ actor CompactBlockProcessorNG {
             case .validateServer:
                 action = ValidateServerAction(container: container, config: config)
             case .computeSyncRanges:
-                action = ComputeSyncRangesAction(container: container)
+                action = ComputeSyncRangesAction(container: container, config: config)
             case .checksBeforeSync:
                 action = ChecksBeforeSyncAction(container: container)
             case .scanDownloaded:
@@ -204,7 +204,7 @@ actor CompactBlockProcessorNG {
             case .validate:
                 action = ValidateAction(container: container)
             case .scan:
-                action = ScanAction(container: container)
+                action = ScanAction(container: container, config: config)
             case .clearAlreadyScannedBlocks:
                 action = ClearAlreadyScannedBlocksAction(container: container)
             case .enhance:
