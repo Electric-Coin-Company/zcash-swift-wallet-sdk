@@ -13,6 +13,7 @@ class ComputeSyncRangesAction {
     let internalSyncProgress: InternalSyncProgress
     let latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
+    
     init(container: DIContainer, config: CompactBlockProcessorNG.Configuration) {
         self.config = config
         downloaderService = container.resolve(BlockDownloaderService.self)
