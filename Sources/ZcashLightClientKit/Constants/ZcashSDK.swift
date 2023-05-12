@@ -104,6 +104,9 @@ public enum ZcashSDK {
     /// times three is held in memory at some point of the sync process.
     public static let DefaultSyncBatch = 100
 
+    /// Default batch size for enhancing transactions for the compact block processor
+    public static let DefaultEnhanceBatch = 1000
+
     /// Default amount of time, in in seconds, to poll for new blocks. Typically, this should be about half the average
     /// block time.
     public static let defaultPollInterval: TimeInterval = 20
