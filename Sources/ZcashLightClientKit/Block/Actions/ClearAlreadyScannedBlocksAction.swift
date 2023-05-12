@@ -8,14 +8,20 @@
 import Foundation
 
 class ClearAlreadyScannedBlocksAction {
-    init(container: DIContainer) { }
+    let storage: CompactBlockRepository
+    let transactionRepository: TransactionRepository
+    init(container: DIContainer) {
+        storage = container.resolve(CompactBlockRepository.self)
+        transactionRepository = container.resolve(TransactionRepository.self)
+    }
 }
 
 extension ClearAlreadyScannedBlocksAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
-        // clear storage but delete only blocks that were already scanned, when doing parallel download all blocks can't be deleted
+        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        try await storage.clear(upTo: lastScannedHeight)
 
         await context.update(state: .enhance)
         return context
