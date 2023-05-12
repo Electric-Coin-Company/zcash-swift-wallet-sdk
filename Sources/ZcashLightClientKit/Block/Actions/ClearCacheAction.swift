@@ -8,14 +8,17 @@
 import Foundation
 
 class ClearCacheAction {
-    init(container: DIContainer) { }
+    let storage: CompactBlockRepository
+    init(container: DIContainer) {
+        storage = container.resolve(CompactBlockRepository.self)
+    }
 }
 
 extension ClearCacheAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
-        // clear storage
+        try await storage.clear()
         await context.update(state: .finished)
         return context
     }
