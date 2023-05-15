@@ -160,14 +160,14 @@ public class SDKSynchronizer: Synchronizer {
         case .unprepared:
             throw ZcashError.synchronizerNotPrepared
 
-        case .syncing, .enhancing, .fetching:
+        case .syncing:
             logger.warn("warning: Synchronizer started when already running. Next sync process will be started when the current one stops.")
             /// This may look strange but `CompactBlockProcessor` has mechanisms which can handle this situation. So we are fine with calling
             /// it's start here.
             await blockProcessor.start(retry: retry)
 
         case .stopped, .synced, .disconnected, .error:
-            await updateStatus(.syncing(.nullProgress))
+            await updateStatus(.syncing(0))
             syncStartDate = Date()
             await blockProcessor.start(retry: retry)
         }
@@ -200,7 +200,6 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Handle CompactBlockProcessor.Flow
 
-    // swiftlint:disable:next cyclomatic_complexity
     private func subscribeToProcessorEvents(_ processor: CompactBlockProcessor) async {
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {
@@ -220,17 +219,14 @@ public class SDKSynchronizer: Synchronizer {
             case let .progressUpdated(progress):
                 await self?.progressUpdated(progress: progress)
 
+            case .progressPartialUpdate:
+                break
+                
             case let .storedUTXOs(utxos):
                 self?.storedUTXOs(utxos: utxos)
 
-            case .startedEnhancing:
-                await self?.updateStatus(.enhancing(.zero))
-
-            case .startedFetching:
-                await self?.updateStatus(.fetching(0))
-
-            case .startedSyncing:
-                await self?.updateStatus(.syncing(.nullProgress))
+            case .startedEnhancing, .startedFetching, .startedSyncing:
+                break
 
             case .stopped:
                 await self?.updateStatus(.stopped)
@@ -266,7 +262,7 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    private func progressUpdated(progress: CompactBlockProgress) async {
+    private func progressUpdated(progress: Float) async {
         let newStatus = InternalSyncStatus(progress)
         await updateStatus(newStatus)
     }
@@ -640,8 +636,6 @@ extension InternalSyncStatus {
         switch (self, otherStatus) {
         case (.unprepared, .unprepared): return false
         case (.syncing, .syncing): return false
-        case (.enhancing, .enhancing): return false
-        case (.fetching, .fetching): return false
         case (.synced, .synced): return false
         case (.stopped, .stopped): return false
         case (.disconnected, .disconnected): return false

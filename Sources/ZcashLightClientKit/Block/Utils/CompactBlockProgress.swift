@@ -7,47 +7,58 @@
 
 import Foundation
 
-public enum CompactBlockProgress {
+final actor CompactBlockProgress {
+    static let zero = CompactBlockProgress()
+    
+    enum Action: Equatable {
+        case enhance
+        case fetch
+        case scan
+        
+        func weight() -> Float {
+            switch self {
+            case .enhance: return 0.08
+            case .fetch: return 0.02
+            case .scan: return 0.9
+            }
+        }
+    }
+    
+    var actionProgresses: [Action: Float] = [:]
+
+    var progress: Float {
+        var overallProgress = Float(0)
+        actionProgresses.forEach { key, value in
+            overallProgress += value * key.weight()
+        }
+        
+        return overallProgress
+    }
+    
+    func event(_ event: CompactBlockProcessor.Event) -> Bool {
+        guard case .progressPartialUpdate(let update) = event else {
+            return false
+        }
+        
+        switch update {
+        case .syncing(let progress):
+            actionProgresses[.scan] = progress.progress
+        case .enhance(let progress):
+            actionProgresses[.enhance] = progress.progress
+        case .fetch(let progress):
+            actionProgresses[.fetch] = progress
+        }
+        
+        return true
+    }
+    
+    func reset() {
+        actionProgresses.removeAll()
+    }
+}
+
+enum CompactBlockProgressUpdate: Equatable {
     case syncing(_ progress: BlockProgress)
     case enhance(_ progress: EnhancementProgress)
     case fetch(_ progress: Float)
-
-    public var progress: Float {
-        switch self {
-        case .syncing(let blockProgress):
-            return blockProgress.progress
-        case .enhance(let enhancementProgress):
-            return enhancementProgress.progress
-        case .fetch(let fetchingProgress):
-            return fetchingProgress
-        }
-    }
-
-    public var progressHeight: BlockHeight? {
-        switch self {
-        case .syncing(let blockProgress):
-            return blockProgress.progressHeight
-        case .enhance(let enhancementProgress):
-            return enhancementProgress.lastFoundTransaction?.minedHeight
-        default:
-            return 0
-        }
-    }
-
-    public var blockDate: Date? {
-        if case .enhance(let enhancementProgress) = self, let time = enhancementProgress.lastFoundTransaction?.blockTime {
-            return Date(timeIntervalSince1970: time)
-        }
-
-        return nil
-    }
-
-    public var targetHeight: BlockHeight? {
-        switch self {
-        case .syncing(let blockProgress):
-            return blockProgress.targetHeight
-        default:
-            return nil
-        }
-    }
 }

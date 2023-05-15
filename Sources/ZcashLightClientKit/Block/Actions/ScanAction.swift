@@ -55,7 +55,7 @@ extension ScanAction: Action {
                 progressHeight: lastScannedHeight
             )
             self?.logger.debug("progress: \(progress)")
-            await didUpdate(.progressUpdated(.syncing(progress)))
+            await didUpdate(.progressPartialUpdate(.syncing(progress)))
         }
 
         return await update(context: context)

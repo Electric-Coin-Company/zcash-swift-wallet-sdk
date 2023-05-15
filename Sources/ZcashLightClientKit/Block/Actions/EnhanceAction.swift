@@ -64,7 +64,6 @@ extension EnhanceAction: Action {
             let transactions = try await blockEnhancer.enhance(
                 at: enhanceRange,
                 didEnhance: { progress in
-                    await didUpdate(.progressUpdated(.enhance(progress)))
                     if let foundTx = progress.lastFoundTransaction, progress.newlyMined {
                         await didUpdate(.minedTransaction(foundTx))
                     }
