@@ -41,7 +41,9 @@ actor CompactBlockProcessor {
     private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
     private var consecutiveChainValidationErrors: Int = 0
-
+    
+    private var compactBlockProgress: CompactBlockProgress = .zero
+    
     /// Compact Block Processor configuration
     ///
     /// - parameter fsBlockCacheRoot: absolute root path where the filesystem block cache will be stored.
@@ -400,8 +402,11 @@ extension CompactBlockProcessor {
         /// `rewindHeight` is the height that the processor backed to in order to solve the Reorg.
         case handledReorg(_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
 
+        /// Event sent when progress of some specific action happened.
+        case progressPartialUpdate(CompactBlockProgressUpdate)
+
         /// Event sent when progress of the sync process changes.
-        case progressUpdated(CompactBlockProgress)
+        case progressUpdated(Float)
 
         /// Event sent when the CompactBlockProcessor fetched utxos from lightwalletd attempted to store them.
         case storedUTXOs((inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))
@@ -438,7 +443,7 @@ extension CompactBlockProcessor {
     // of sync process without any side effects.
     private func run() async {
         logger.debug("Starting run")
-        resetContext()
+        await resetContext()
 
         while true {
             // Sync is starting when the state is `idle`.
@@ -457,7 +462,7 @@ extension CompactBlockProcessor {
             // Try to find action for state.
             guard let action = actions[state] else {
                 if await syncFinished() {
-                    resetContext()
+                    await resetContext()
                     continue
                 } else {
                     break
@@ -470,6 +475,11 @@ extension CompactBlockProcessor {
                 // Execute action.
                 context = try await action.run(with: context) { [weak self] event in
                     await self?.send(event: event)
+                    if let progressChanged = await self?.compactBlockProgress.event(event), progressChanged {
+                        if let progress = await self?.compactBlockProgress.progress {
+                            await self?.send(event: .progressUpdated(progress))
+                        }
+                    }
                 }
 
                 await didFinishAction()
@@ -477,7 +487,7 @@ extension CompactBlockProcessor {
                 if Task.isCancelled {
                     if await syncTaskWasCancelled() {
                         // Start sync all over again
-                        resetContext()
+                        await resetContext()
                     } else {
                         // end the sync loop
                         break
@@ -485,7 +495,7 @@ extension CompactBlockProcessor {
                 } else {
                     if await handleSyncFailure(action: action, error: error) {
                         // Start sync all over again
-                        resetContext()
+                        await resetContext()
                     } else {
                         // end the sync loop
                         break
@@ -568,8 +578,9 @@ extension CompactBlockProcessor {
         }
     }
 
-    private func resetContext() {
+    private func resetContext() async {
         context = ActionContext(state: .idle)
+        await compactBlockProgress.reset()
     }
 
     private func syncStarted() async {

@@ -24,7 +24,7 @@ extension FetchUTXOsAction: Action {
         if let range = await context.syncRanges.fetchUTXORange {
             logger.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
             let result = try await utxoFetcher.fetch(at: range) { fetchProgress in
-                await didUpdate(.progressUpdated(.fetch(fetchProgress)))
+                await didUpdate(.progressPartialUpdate(.fetch(fetchProgress)))
             }
             await didUpdate(.storedUTXOs(result))
         }

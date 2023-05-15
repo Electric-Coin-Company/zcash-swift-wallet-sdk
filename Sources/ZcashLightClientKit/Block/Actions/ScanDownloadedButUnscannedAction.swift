@@ -24,14 +24,7 @@ extension ScanDownloadedButUnscannedAction: Action {
         if let range = await context.syncRanges.downloadedButUnscannedRange {
             logger.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
             let totalProgressRange = await context.totalProgressRange
-            try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { lastScannedHeight in
-                let progress = BlockProgress(
-                    startHeight: totalProgressRange.lowerBound,
-                    targetHeight: totalProgressRange.upperBound,
-                    progressHeight: lastScannedHeight
-                )
-                await didUpdate(.progressUpdated(.syncing(progress)))
-            }
+            try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { _ in }
         }
         await context.update(state: .download)
         return context
