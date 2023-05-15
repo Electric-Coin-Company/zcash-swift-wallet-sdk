@@ -88,22 +88,8 @@ public enum ZcashSDK {
     // MARK: Defaults
 
     /// Default size of batches of blocks to request from the compact block service. Which was used both for scanning and downloading.
-    /// consider basing your code assumptions on `DefaultDownloadBatch` and `DefaultScanningBatch` instead.
-    @available(*, deprecated, message: "this value is being deprecated in favor of `DefaultDownloadBatch` and `DefaultScanningBatch`")
     public static let DefaultBatchSize = 100
-
-    /// Default batch size for downloading blocks for the compact block processor. Be careful with this number. This amount of blocks is held in
-    /// memory at some point of the sync process.
-    /// This values can't be smaller than `DefaultScanningBatch`. Otherwise bad things will happen.
-    public static let DefaultDownloadBatch = 100
-
-    /// Default batch size for scanning blocks for the compact block processor
-    public static let DefaultScanningBatch = 100
-
-    /// Default batch size for downloading and scanning blocks for the compact block processor. Be careful with this number. This amount of blocks
-    /// times three is held in memory at some point of the sync process.
-    public static let DefaultSyncBatch = 100
-
+    
     /// Default batch size for enhancing transactions for the compact block processor
     public static let DefaultEnhanceBatch = 1000
 

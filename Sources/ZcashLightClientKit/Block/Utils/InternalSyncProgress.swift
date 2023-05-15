@@ -37,6 +37,12 @@ struct SyncRanges: Equatable {
     }
 }
 
+enum NextState: Equatable {
+    case finishProcessing(height: BlockHeight)
+    case processNewBlocks(ranges: SyncRanges)
+    case wait(latestHeight: BlockHeight, latestDownloadHeight: BlockHeight)
+}
+
 protocol InternalSyncProgressStorage {
     func bool(forKey defaultName: String) -> Bool
     func integer(forKey defaultName: String) -> Int
@@ -127,7 +133,7 @@ actor InternalSyncProgress {
         latestBlockHeight: BlockHeight,
         latestScannedHeight: BlockHeight,
         walletBirthday: BlockHeight
-    ) -> CompactBlockProcessor.NextState {
+    ) -> NextState {
         logger.debug("""
             Init numbers:
             latestBlockHeight:       \(latestBlockHeight)

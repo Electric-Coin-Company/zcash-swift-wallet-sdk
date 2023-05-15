@@ -5,7 +5,6 @@
 //  Created by Francisco Gindre on 18/09/2019.
 //  Copyright © 2019 Electric Coin Company. All rights reserved.
 //
-// swiftlint:disable file_length type_body_length
 
 import Foundation
 import Combine
@@ -15,44 +14,33 @@ public typealias RefreshedUTXOs = (inserted: [UnspentTransactionOutputEntity], s
 /// The compact block processor is in charge of orchestrating the download and caching of compact blocks from a LightWalletEndpoint
 /// when started the processor downloads does a download - validate - scan cycle until it reaches latest height on the blockchain.
 actor CompactBlockProcessor {
-    typealias EventClosure = (Event) async -> Void
+    // It would be better to use Combine here but Combine doesn't work great with async. When this runs regularly only one closure is stored here
+    // and that is one provided by `SDKSynchronizer`. But while running tests more "subscribers" is required here. Therefore it's required to handle
+    // more closures here.
+    private var eventClosures: [String: EventClosure] = [:]
 
-    enum Event {
-        /// Event sent when the CompactBlockProcessor presented an error.
-        case failed (Error)
+    private var syncTask: Task<Void, Error>?
 
-        /// Event sent when the CompactBlockProcessor has finished syncing the blockchain to latest height
-        case finished (_ lastScannedHeight: BlockHeight, _ foundBlocks: Bool)
+    private let actions: [CBPState: Action]
+    private var context: ActionContext
 
-        /// Event sent when the CompactBlockProcessor found a newly mined transaction
-        case minedTransaction(ZcashTransaction.Overview)
+    private(set) var config: Configuration
+    private var afterSyncHooksManager = AfterSyncHooksManager()
 
-        /// Event sent when the CompactBlockProcessor enhanced a bunch of transactions in some range.
-        case foundTransactions ([ZcashTransaction.Overview], CompactBlockRange)
+    private let accountRepository: AccountRepository
+    private let blockDownloaderService: BlockDownloaderService
+    private let internalSyncProgress: InternalSyncProgress
+    private let latestBlocksDataProvider: LatestBlocksDataProvider
+    private let logger: Logger
+    private let metrics: SDKMetrics
+    private let rustBackend: ZcashRustBackendWelding
+    private let service: LightWalletService
+    private let storage: CompactBlockRepository
+    private let transactionRepository: TransactionRepository
 
-        /// Event sent when the CompactBlockProcessor handled a ReOrg.
-        /// `reorgHeight` is the height on which the reorg was detected.
-        /// `rewindHeight` is the height that the processor backed to in order to solve the Reorg.
-        case handledReorg (_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
-
-        /// Event sent when progress of the sync process changes.
-        case progressUpdated (CompactBlockProgress)
-
-        /// Event sent when the CompactBlockProcessor fetched utxos from lightwalletd attempted to store them.
-        case storedUTXOs ((inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))
-
-        /// Event sent when the CompactBlockProcessor starts enhancing of the transactions.
-        case startedEnhancing
-
-        /// Event sent when the CompactBlockProcessor starts fetching of the UTXOs.
-        case startedFetching
-
-        /// Event sent when the CompactBlockProcessor starts syncing.
-        case startedSyncing
-
-        /// Event sent when the CompactBlockProcessor stops syncing.
-        case stopped
-    }
+    private var retryAttempts: Int = 0
+    private var backoffTimer: Timer?
+    private var consecutiveChainValidationErrors: Int = 0
 
     /// Compact Block Processor configuration
     ///
@@ -67,8 +55,8 @@ actor CompactBlockProcessor {
         let dataDb: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
-        let downloadBatchSize: Int
-        let scanningBatchSize: Int
+        let enhanceBatchSize: Int
+        let batchSize: Int
         let retries: Int
         let maxBackoffInterval: TimeInterval
         let maxReorgSize = ZcashSDK.maxReorgSize
@@ -82,7 +70,7 @@ actor CompactBlockProcessor {
         var blockPollInterval: TimeInterval {
             TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
         }
-        
+
         init(
             alias: ZcashSynchronizerAlias,
             cacheDbURL: URL? = nil,
@@ -91,11 +79,11 @@ actor CompactBlockProcessor {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
-            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            enhanceBatchSize: Int = ZcashSDK.DefaultEnhanceBatch,
+            batchSize: Int = ZcashSDK.DefaultBatchSize,
             retries: Int = ZcashSDK.defaultRetries,
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
-            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             saplingActivation: BlockHeight,
             network: ZcashNetwork
@@ -107,17 +95,16 @@ actor CompactBlockProcessor {
             self.outputParamsURL = outputParamsURL
             self.saplingParamsSourceURL = saplingParamsSourceURL
             self.network = network
-            self.downloadBatchSize = downloadBatchSize
+            self.enhanceBatchSize = enhanceBatchSize
+            self.batchSize = batchSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
-            self.scanningBatchSize = scanningBatchSize
             self.walletBirthdayProvider = walletBirthdayProvider
             self.saplingActivation = saplingActivation
             self.cacheDbURL = cacheDbURL
-            assert(downloadBatchSize >= scanningBatchSize)
         }
-        
+
         init(
             alias: ZcashSynchronizerAlias,
             fsBlockCacheRoot: URL,
@@ -125,11 +112,11 @@ actor CompactBlockProcessor {
             spendParamsURL: URL,
             outputParamsURL: URL,
             saplingParamsSourceURL: SaplingParamsSourceURL,
-            downloadBatchSize: Int = ZcashSDK.DefaultDownloadBatch,
+            enhanceBatchSize: Int = ZcashSDK.DefaultEnhanceBatch,
+            batchSize: Int = ZcashSDK.DefaultBatchSize,
             retries: Int = ZcashSDK.defaultRetries,
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
-            scanningBatchSize: Int = ZcashSDK.DefaultScanningBatch,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             network: ZcashNetwork
         ) {
@@ -143,113 +130,13 @@ actor CompactBlockProcessor {
             self.saplingActivation = network.constants.saplingActivationHeight
             self.network = network
             self.cacheDbURL = nil
-            self.downloadBatchSize = downloadBatchSize
+            self.enhanceBatchSize = enhanceBatchSize
+            self.batchSize = batchSize
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
-            self.scanningBatchSize = scanningBatchSize
-
-            assert(downloadBatchSize >= scanningBatchSize)
         }
     }
-
-    /**
-    Represents the possible states of a CompactBlockProcessor
-    */
-    enum State {
-        /**
-        connected and downloading blocks
-        */
-        case syncing
-
-        /**
-        was doing something but was paused
-        */
-        case stopped
-
-        /**
-        Processor is Enhancing transactions
-        */
-        case enhancing
-        
-        /**
-        fetching utxos
-        */
-        case fetching
-
-        /**
-        was processing but erred
-        */
-        case error(_ error: Error)
-
-        /// Download sapling param files if needed.
-        case handlingSaplingFiles
-
-        /**
-        Processor is up to date with the blockchain and you can now make transactions.
-        */
-        case synced
-    }
-
-    private var afterSyncHooksManager = AfterSyncHooksManager()
-
-    let metrics: SDKMetrics
-    let logger: Logger
-    
-    /// Don't update this variable directly. Use `updateState()` method.
-    var state: State = .stopped
-
-    private(set) var config: Configuration
-
-    var maxAttemptsReached: Bool {
-        self.retryAttempts >= self.config.retries
-    }
-
-    var shouldStart: Bool {
-        switch self.state {
-        case .stopped, .synced, .error:
-            return !maxAttemptsReached
-        default:
-            return false
-        }
-    }
-
-    // It would be better to use Combine here but Combine doesn't work great with async. When this runs regularly only one closure is stored here
-    // and that is one provided by `SDKSynchronizer`. But while running tests more "subscribers" is required here. Therefore it's required to handle
-    // more closures here.
-    var eventClosures: [String: EventClosure] = [:]
-
-    let blockDownloaderService: BlockDownloaderService
-    let blockDownloader: BlockDownloader
-    let blockValidator: BlockValidator
-    let blockScanner: BlockScanner
-    let blockEnhancer: BlockEnhancer
-    let utxoFetcher: UTXOFetcher
-    let saplingParametersHandler: SaplingParametersHandler
-    private let latestBlocksDataProvider: LatestBlocksDataProvider
-
-    let service: LightWalletService
-    let storage: CompactBlockRepository
-    let transactionRepository: TransactionRepository
-    let accountRepository: AccountRepository
-    let rustBackend: ZcashRustBackendWelding
-    private var retryAttempts: Int = 0
-    private var backoffTimer: Timer?
-    private var lastChainValidationFailure: BlockHeight?
-    private var consecutiveChainValidationErrors: Int = 0
-    var processingError: Error?
-    private var foundBlocks = false
-    private var maxAttempts: Int {
-        config.retries
-    }
-    
-    var batchSize: BlockHeight {
-        BlockHeight(self.config.downloadBatchSize)
-    }
-
-    private var cancelableTask: Task<Void, Error>?
-
-    private let internalSyncProgress: InternalSyncProgress
 
     /// Initializes a CompactBlockProcessor instance
     /// - Parameters:
@@ -257,10 +144,7 @@ actor CompactBlockProcessor {
     ///  - storage: concrete implementation of `CompactBlockRepository` protocol
     ///  - backend: a class that complies to `ZcashRustBackendWelding`
     ///  - config: `Configuration` struct for this processor
-    init(
-        container: DIContainer,
-        config: Configuration
-    ) {
+    init(container: DIContainer, config: Configuration) {
         self.init(
             container: container,
             config: config,
@@ -287,29 +171,22 @@ actor CompactBlockProcessor {
             accountRepository: initializer.accountRepository
         )
     }
-    
-    internal init(
-        container: DIContainer,
-        config: Configuration,
-        accountRepository: AccountRepository
-    ) {
+
+    init(container: DIContainer, config: Configuration, accountRepository: AccountRepository) {
         Dependencies.setupCompactBlockProcessor(
             in: container,
             config: config,
             accountRepository: accountRepository
         )
 
+        context = ActionContext(state: .idle)
+        actions = Self.makeActions(container: container, config: config)
+
         self.metrics = container.resolve(SDKMetrics.self)
         self.logger = container.resolve(Logger.self)
         self.latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
         self.internalSyncProgress = container.resolve(InternalSyncProgress.self)
         self.blockDownloaderService = container.resolve(BlockDownloaderService.self)
-        self.blockDownloader = container.resolve(BlockDownloader.self)
-        self.blockValidator = container.resolve(BlockValidator.self)
-        self.blockScanner = container.resolve(BlockScanner.self)
-        self.blockEnhancer = container.resolve(BlockEnhancer.self)
-        self.utxoFetcher = container.resolve(UTXOFetcher.self)
-        self.saplingParametersHandler = container.resolve(SaplingParametersHandler.self)
         self.service = container.resolve(LightWalletService.self)
         self.rustBackend = container.resolve(ZcashRustBackendWelding.self)
         self.storage = container.resolve(CompactBlockRepository.self)
@@ -317,141 +194,106 @@ actor CompactBlockProcessor {
         self.transactionRepository = container.resolve(TransactionRepository.self)
         self.accountRepository = accountRepository
     }
-    
+
     deinit {
-        cancelableTask?.cancel()
+        syncTask?.cancel()
+        syncTask = nil
     }
 
-    func update(config: Configuration) async {
-        self.config = config
-        await stop()
+    // swiftlint:disable:next cyclomatic_complexity
+    private static func makeActions(container: DIContainer, config: Configuration) -> [CBPState: Action] {
+        let actionsDefinition = CBPState.allCases.compactMap { state -> (CBPState, Action)? in
+            let action: Action
+            switch state {
+            case .migrateLegacyCacheDB:
+                action = MigrateLegacyCacheDBAction(container: container, config: config)
+            case .validateServer:
+                action = ValidateServerAction(container: container, config: config)
+            case .computeSyncRanges:
+                action = ComputeSyncRangesAction(container: container, config: config)
+            case .checksBeforeSync:
+                action = ChecksBeforeSyncAction(container: container)
+            case .scanDownloaded:
+                action = ScanDownloadedButUnscannedAction(container: container)
+            case .download:
+                action = DownloadAction(container: container, config: config)
+            case .validate:
+                action = ValidateAction(container: container)
+            case .scan:
+                action = ScanAction(container: container, config: config)
+            case .clearAlreadyScannedBlocks:
+                action = ClearAlreadyScannedBlocksAction(container: container)
+            case .enhance:
+                action = EnhanceAction(container: container, config: config)
+            case .fetchUTXO:
+                action = FetchUTXOsAction(container: container)
+            case .handleSaplingParams:
+                action = SaplingParamsAction(container: container)
+            case .clearCache:
+                action = ClearCacheAction(container: container)
+            case .finished, .failed, .stopped, .idle:
+                return nil
+            }
+
+            return (state, action)
+        }
+
+        return Dictionary(uniqueKeysWithValues: actionsDefinition)
     }
+}
 
-    func updateState(_ newState: State) async -> Void {
-        let oldState = state
-        state = newState
-        await transitionState(from: oldState, to: newState)
-    }
+// MARK: - "Public" API
 
-    func updateEventClosure(identifier: String, closure: @escaping (Event) async -> Void) async {
-        eventClosures[identifier] = closure
-    }
-
-    func send(event: Event) async {
-        for item in eventClosures {
-            await item.value(event)
-        }
-    }
-
-    static func validateServerInfo(
-        _ info: LightWalletdInfo,
-        saplingActivation: BlockHeight,
-        localNetwork: ZcashNetwork,
-        rustBackend: ZcashRustBackendWelding
-    ) async throws {
-        // check network types
-        guard let remoteNetworkType = NetworkType.forChainName(info.chainName) else {
-            throw ZcashError.compactBlockProcessorChainName(info.chainName)
-        }
-
-        guard remoteNetworkType == localNetwork.networkType else {
-            throw ZcashError.compactBlockProcessorNetworkMismatch(localNetwork.networkType, remoteNetworkType)
-        }
-
-        guard saplingActivation == info.saplingActivationHeight else {
-            throw ZcashError.compactBlockProcessorSaplingActivationMismatch(saplingActivation, BlockHeight(info.saplingActivationHeight))
-        }
-
-        // check branch id
-        let localBranch = try rustBackend.consensusBranchIdFor(height: Int32(info.blockHeight))
-
-        guard let remoteBranchID = ConsensusBranchID.fromString(info.consensusBranchID) else {
-            throw ZcashError.compactBlockProcessorConsensusBranchID
-        }
-
-        guard remoteBranchID == localBranch else {
-            throw ZcashError.compactBlockProcessorWrongConsensusBranchId(localBranch, remoteBranchID)
-        }
-    }
-
-    /// Starts the CompactBlockProcessor instance and starts downloading and processing blocks
-    ///
-    /// triggers the blockProcessorStartedDownloading notification
-    ///
-    /// - Important: subscribe to the notifications before calling this method
+extension CompactBlockProcessor {
     func start(retry: Bool = false) async {
         if retry {
             self.retryAttempts = 0
-            self.processingError = nil
             self.backoffTimer?.invalidate()
             self.backoffTimer = nil
         }
 
-        guard shouldStart else {
-            switch self.state {
-            case .error(let error):
-                // max attempts have been reached
-                logger.info("max retry attempts reached with error: \(error)")
-                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
-                await updateState(.stopped)
-            case .stopped:
-                // max attempts have been reached
-                logger.info("max retry attempts reached")
-                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
-            case .synced:
-                // max attempts have been reached
-                logger.warn("max retry attempts reached on synced state, this indicates malfunction")
-                await notifyError(ZcashError.compactBlockProcessorMaxAttemptsReached(self.maxAttempts))
-            case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
+        guard await canStartSync() else {
+            if await isIdle() {
+                logger.warn("max retry attempts reached on \(await context.state) state")
+                await send(event: .failed(ZcashError.compactBlockProcessorMaxAttemptsReached(config.retries)))
+            } else {
                 logger.debug("Warning: compact block processor was started while busy!!!!")
                 afterSyncHooksManager.insert(hook: .anotherSync)
             }
             return
         }
 
-        do {
-            if let legacyCacheDbURL = self.config.cacheDbURL {
-                try await self.migrateCacheDb(legacyCacheDbURL)
-            }
-        } catch {
-            await self.fail(error)
+        syncTask = Task(priority: .userInitiated) {
+            await run()
         }
-
-        await self.nextBatch()
     }
 
-    /**
-    Stops the CompactBlockProcessor
-
-    Note: retry count is reset
-    */
     func stop() async {
-        self.backoffTimer?.invalidate()
-        self.backoffTimer = nil
-
-        cancelableTask?.cancel()
-        await blockDownloader.stopDownload()
-
-        self.retryAttempts = 0
+        await rawStop()
+        retryAttempts = 0
     }
 
-    // MARK: Rewind
+    func latestHeight() async throws -> BlockHeight {
+        try await blockDownloaderService.latestBlockHeight()
+    }
+}
 
+// MARK: - Rewind
+
+extension CompactBlockProcessor {
     /// Rewinds to provided height.
     /// - Parameter height: height to rewind to. If nil is provided, it will rescan to nearest height (quick rescan)
     ///
     /// - Note: If this is called while sync is in progress then the sync process is stopped first and then rewind is executed.
     func rewind(context: AfterSyncHooksManager.RewindContext) async {
         logger.debug("Starting rewind")
-        switch self.state {
-        case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
+        if await isIdle() {
+            logger.debug("Sync doesn't run. Executing rewind.")
+            await doRewind(context: context)
+        } else {
             logger.debug("Stopping sync because of rewind")
             afterSyncHooksManager.insert(hook: .rewind(context))
             await stop()
-
-        case .stopped, .error, .synced:
-            logger.debug("Sync doesn't run. Executing rewind.")
-            await doRewind(context: context)
         }
     }
 
@@ -464,7 +306,7 @@ actor CompactBlockProcessor {
         do {
             nearestHeight = try await rustBackend.getNearestRewindHeight(height: height)
         } catch {
-            await fail(error)
+            await failure(error)
             return await context.completion(.failure(error))
         }
 
@@ -474,7 +316,7 @@ actor CompactBlockProcessor {
         do {
             try await rustBackend.rewindToHeight(height: rewindHeight)
         } catch {
-            await fail(error)
+            await failure(error)
             return await context.completion(.failure(error))
         }
 
@@ -488,31 +330,28 @@ actor CompactBlockProcessor {
 
         await internalSyncProgress.rewind(to: rewindBlockHeight)
 
-        self.lastChainValidationFailure = nil
         await context.completion(.success(rewindBlockHeight))
     }
+}
 
-    // MARK: Wipe
+// MARK: - Wipe
 
+extension CompactBlockProcessor {
     func wipe(context: AfterSyncHooksManager.WipeContext) async {
         logger.debug("Starting wipe")
-        switch self.state {
-        case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
+        if await isIdle() {
+            logger.debug("Sync doesn't run. Executing wipe.")
+            await doWipe(context: context)
+        } else {
             logger.debug("Stopping sync because of wipe")
             afterSyncHooksManager.insert(hook: .wipe(context))
             await stop()
-
-        case .stopped, .error, .synced:
-            logger.debug("Sync doesn't run. Executing wipe.")
-            await doWipe(context: context)
         }
     }
 
     private func doWipe(context: AfterSyncHooksManager.WipeContext) async {
         logger.debug("Executing wipe.")
         context.prewipe()
-
-        await updateState(.stopped)
 
         do {
             try await self.storage.clear()
@@ -531,399 +370,370 @@ actor CompactBlockProcessor {
         }
     }
 
-    // MARK: Sync
+    private func wipeLegacyCacheDbIfNeeded() {
+        guard let cacheDbURL = config.cacheDbURL else { return }
+        guard FileManager.default.isDeletableFile(atPath: cacheDbURL.pathExtension) else { return }
+        try? FileManager.default.removeItem(at: cacheDbURL)
+    }
+}
 
-    func validateServer() async {
-        do {
-            let info = try await self.service.getInfo()
-            try await Self.validateServerInfo(
-                info,
-                saplingActivation: self.config.saplingActivation,
-                localNetwork: self.config.network,
-                rustBackend: self.rustBackend
-            )
-        } catch {
-            await self.severeFailure(error)
+// MARK: - Events
+
+extension CompactBlockProcessor {
+    typealias EventClosure = (Event) async -> Void
+
+    enum Event {
+        /// Event sent when the CompactBlockProcessor presented an error.
+        case failed(Error)
+
+        /// Event sent when the CompactBlockProcessor has finished syncing the blockchain to latest height
+        case finished(_ lastScannedHeight: BlockHeight)
+
+        /// Event sent when the CompactBlockProcessor found a newly mined transaction
+        case minedTransaction(ZcashTransaction.Overview)
+
+        /// Event sent when the CompactBlockProcessor enhanced a bunch of transactions in some range.
+        case foundTransactions([ZcashTransaction.Overview], CompactBlockRange)
+
+        /// Event sent when the CompactBlockProcessor handled a ReOrg.
+        /// `reorgHeight` is the height on which the reorg was detected.
+        /// `rewindHeight` is the height that the processor backed to in order to solve the Reorg.
+        case handledReorg(_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
+
+        /// Event sent when progress of the sync process changes.
+        case progressUpdated(CompactBlockProgress)
+
+        /// Event sent when the CompactBlockProcessor fetched utxos from lightwalletd attempted to store them.
+        case storedUTXOs((inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))
+
+        /// Event sent when the CompactBlockProcessor starts enhancing of the transactions.
+        case startedEnhancing
+
+        /// Event sent when the CompactBlockProcessor starts fetching of the UTXOs.
+        case startedFetching
+
+        /// Event sent when the CompactBlockProcessor starts syncing.
+        case startedSyncing
+
+        /// Event sent when the CompactBlockProcessor stops syncing.
+        case stopped
+    }
+
+    func updateEventClosure(identifier: String, closure: @escaping (Event) async -> Void) async {
+        eventClosures[identifier] = closure
+    }
+
+    private func send(event: Event) async {
+        for item in eventClosures {
+            await item.value(event)
         }
     }
-    
-    /// Processes new blocks on the given range based on the configuration set for this instance
-    func processNewBlocks(ranges: SyncRanges) async {
-        self.foundBlocks = true
-        
-        cancelableTask = Task(priority: .userInitiated) {
-            do {
-                let totalProgressRange = computeTotalProgressRange(from: ranges)
+}
 
-                logger.debug("""
-                Syncing with ranges:
-                downloaded but not scanned: \
-                \(ranges.downloadedButUnscannedRange?.lowerBound ?? -1)...\(ranges.downloadedButUnscannedRange?.upperBound ?? -1)
-                download and scan:          \(ranges.downloadAndScanRange?.lowerBound ?? -1)...\(ranges.downloadAndScanRange?.upperBound ?? -1)
-                enhance range:              \(ranges.enhanceRange?.lowerBound ?? -1)...\(ranges.enhanceRange?.upperBound ?? -1)
-                fetchUTXO range:            \(ranges.fetchUTXORange?.lowerBound ?? -1)...\(ranges.fetchUTXORange?.upperBound ?? -1)
-                total progress range:       \(totalProgressRange.lowerBound)...\(totalProgressRange.upperBound)
-                """)
+// MARK: - Main loop
 
-                var anyActionExecuted = false
+extension CompactBlockProcessor {
+    // This is main loop of the sync process. It simply takes state and try to find action which handles it. If action is found it executes the
+    // action. If action is not found then loop finishes. Thanks to this it's super easy to identify start point of sync process and end points
+    // of sync process without any side effects.
+    private func run() async {
+        logger.debug("Starting run")
+        resetContext()
 
-                // clear any present cached state if needed.
-                // this checks if there was a sync in progress that was
-                // interrupted abruptly and cache was not able to be cleared
-                // properly and internal state set to the appropriate value
-                if let newLatestDownloadedHeight = ranges.shouldClearBlockCacheAndUpdateInternalState() {
-                    try await storage.clear()
-                    await internalSyncProgress.set(newLatestDownloadedHeight, .latestDownloadedBlockHeight)
+        while true {
+            // Sync is starting when the state is `idle`.
+            if await context.state == .idle {
+                // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
+                await stopAllActions()
+                await context.update(state: .migrateLegacyCacheDB)
+                await syncStarted()
+
+                if backoffTimer == nil {
+                    await setTimer()
+                }
+            }
+
+            let state = await context.state
+            logger.debug("Handling state: \(state)")
+
+            // Try to find action for state.
+            guard let action = actions[state] else {
+                // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
+                await stopAllActions()
+                if await syncFinished() {
+                    resetContext()
+                    continue
                 } else {
-                    try await storage.create()
+                    break
+                }
+            }
+
+            do {
+                try Task.checkCancellation()
+
+                // Execute action.
+                context = try await action.run(with: context) { [weak self] event in
+                    await self?.send(event: event)
                 }
 
-                if let range = ranges.downloadedButUnscannedRange {
-                    logger.debug("Starting scan with downloaded but not scanned blocks with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await blockScanner.scanBlocks(at: range, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
-                        let progress = BlockProgress(
-                            startHeight: totalProgressRange.lowerBound,
-                            targetHeight: totalProgressRange.upperBound,
-                            progressHeight: lastScannedHeight
-                        )
-                        await self?.notifyProgress(.syncing(progress))
-                    }
-                }
-
-                if let range = ranges.downloadAndScanRange {
-                    logger.debug("Starting sync with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await blockDownloader.setSyncRange(range, batchSize: batchSize)
-                    try await downloadAndScanBlocks(at: range, totalProgressRange: totalProgressRange)
-                    // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
-                    await blockDownloader.stopDownload()
-                }
-
-                if let range = ranges.enhanceRange {
-                    anyActionExecuted = true
-                    logger.debug("Enhancing with range: \(range.lowerBound)...\(range.upperBound)")
-                    await updateState(.enhancing)
-                    if let transactions = try await blockEnhancer.enhance(
-                        at: range,
-                        didEnhance: { [weak self] progress in
-                            await self?.notifyProgress(.enhance(progress))
-                            if
-                                let foundTx = progress.lastFoundTransaction,
-                                progress.newlyMined {
-                                await self?.notifyMinedTransaction(foundTx)
-                            }
-                        }
-                    ) {
-                        await notifyTransactions(transactions, in: range)
-                    }
-                }
-
-                if let range = ranges.fetchUTXORange {
-                    anyActionExecuted = true
-                    logger.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
-                    await updateState(.fetching)
-                    let result = try await utxoFetcher.fetch(at: range) { [weak self] progress in
-                        await self?.notifyProgress(.fetch(progress))
-                    }
-                    await send(event: .storedUTXOs(result))
-                }
-
-                logger.debug("Fetching sapling parameters")
-                await updateState(.handlingSaplingFiles)
-                try await saplingParametersHandler.handleIfNeeded()
-
-                logger.debug("Clearing cache")
-                try await clearCompactBlockCache()
-
-                if !Task.isCancelled {
-                    let newBlocksMined = await ranges.latestBlockHeight < latestBlocksDataProvider.latestBlockHeight
-                    await processBatchFinished(height: (anyActionExecuted && !newBlocksMined) ? ranges.latestBlockHeight : nil)
-                }
+                await didFinishAction()
             } catch {
                 // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
-                await blockDownloader.stopDownload()
+                await stopAllActions()
                 logger.error("Sync failed with error: \(error)")
 
                 if Task.isCancelled {
-                    logger.info("Processing cancelled.")
-                    await updateState(.stopped)
-                    await handleAfterSyncHooks()
-                } else {
-                    if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
-                        await validationFailed(at: BlockHeight(height))
+                    if await syncTaskWasCancelled() {
+                        // Start sync all over again
+                        resetContext()
                     } else {
-                        logger.error("processing failed with error: \(error)")
-                        await fail(error)
+                        // end the sync loop
+                        break
+                    }
+                } else {
+                    if await handleSyncFailure(action: action, error: error) {
+                        // Start sync all over again
+                        resetContext()
+                    } else {
+                        // end the sync loop
+                        break
                     }
                 }
             }
         }
+
+        logger.debug("Run ended")
+        syncTask = nil
     }
 
-    private func handleAfterSyncHooks() async {
+    private func syncTaskWasCancelled() async -> Bool {
+        logger.info("Sync cancelled.")
+        await context.update(state: .stopped)
+        await send(event: .stopped)
+        return await handleAfterSyncHooks()
+    }
+
+    private func handleSyncFailure(action: Action, error: Error) async -> Bool {
+        if action.removeBlocksCacheWhenFailed {
+            await ifTaskIsNotCanceledClearCompactBlockCache()
+        }
+
+        if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
+            logger.error("Sync failed because of validation error: \(error)")
+            do {
+                try await validationFailed(at: BlockHeight(height))
+                // Start sync all over again
+                return true
+            } catch {
+                await failure(error)
+                return false
+            }
+        } else {
+            logger.error("Sync failed with error: \(error)")
+            await failure(error)
+            return false
+        }
+    }
+
+    // swiftlint:disable:next cyclomatic_complexity
+    private func didFinishAction() async {
+        // This is evalution of the state setup by previous action.
+        switch await context.state {
+        case .idle:
+            break
+        case .migrateLegacyCacheDB:
+            break
+        case .validateServer:
+            break
+        case .computeSyncRanges:
+            break
+        case .checksBeforeSync:
+            break
+        case .scanDownloaded:
+            break
+        case .download:
+            break
+        case .validate:
+            break
+        case .scan:
+            break
+        case .clearAlreadyScannedBlocks:
+            break
+        case .enhance:
+            await send(event: .startedEnhancing)
+        case .fetchUTXO:
+            await send(event: .startedFetching)
+        case .handleSaplingParams:
+            break
+        case .clearCache:
+            break
+        case .finished:
+            break
+        case .failed:
+            break
+        case .stopped:
+            break
+        }
+    }
+
+    private func resetContext() {
+        context = ActionContext(state: .idle)
+    }
+
+    private func syncStarted() async {
+        logger.debug("Sync started")
+        // handle start of the sync process
+        await send(event: .startedSyncing)
+    }
+
+    private func syncFinished() async -> Bool {
+        logger.debug("Sync finished")
+        let latestBlockHeightWhenSyncing = await context.syncRanges.latestBlockHeight
+        let latestBlockHeight = await latestBlocksDataProvider.latestBlockHeight
+        // If `latestBlockHeightWhenSyncing` is 0 then it means that there was nothing to sync in last sync process.
+        let newerBlocksWereMinedDuringSync =
+            latestBlockHeightWhenSyncing > 0 && latestBlockHeightWhenSyncing < latestBlockHeight
+
+        retryAttempts = 0
+        consecutiveChainValidationErrors = 0
+
+        let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
+        await send(event: .finished(lastScannedHeight))
+        await context.update(state: .finished)
+
+        // If new blocks were mined during previous sync run the sync process again
+        if newerBlocksWereMinedDuringSync {
+            return true
+        } else {
+            await setTimer()
+            return false
+        }
+    }
+
+    private func validationFailed(at height: BlockHeight) async throws {
+        // cancel all Tasks
+        await rawStop()
+
+        // rewind
+        let rewindHeight = determineLowerBound(
+            errorHeight: height,
+            consecutiveErrors: consecutiveChainValidationErrors,
+            walletBirthday: config.walletBirthday
+        )
+
+        consecutiveChainValidationErrors += 1
+
+        try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
+
+        try await blockDownloaderService.rewind(to: rewindHeight)
+        await internalSyncProgress.rewind(to: rewindHeight)
+
+        await send(event: .handledReorg(height, rewindHeight))
+    }
+
+    private func failure(_ error: Error) async {
+        await context.update(state: .failed)
+
+        logger.error("Fail with error: \(error)")
+        await rawStop()
+
+        self.retryAttempts += 1
+        await send(event: .failed(error))
+
+        // don't set a new timer if there are no more attempts.
+        if hasRetryAttempt() {
+            await self.setTimer()
+        }
+    }
+
+    private func handleAfterSyncHooks() async -> Bool {
         let afterSyncHooksManager = self.afterSyncHooksManager
         self.afterSyncHooksManager = AfterSyncHooksManager()
 
         if let wipeContext = afterSyncHooksManager.shouldExecuteWipeHook() {
             await doWipe(context: wipeContext)
+            return false
         } else if let rewindContext = afterSyncHooksManager.shouldExecuteRewindHook() {
             await doRewind(context: rewindContext)
+            return false
         } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
             logger.debug("Starting new sync.")
-            await nextBatch()
+            return true
+        } else {
+            return false
         }
     }
+}
 
-    private func downloadAndScanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange) async throws {
-        // Divide `range` by `batchSize` and compute how many time do we need to run to download and scan all the blocks.
-        // +1 must be done here becase `range` is closed range. So even if upperBound and lowerBound are same there is one block to sync.
-        let blocksCountToSync = (range.upperBound - range.lowerBound) + 1
-        var loopsCount = blocksCountToSync / batchSize
-        if blocksCountToSync % batchSize != 0 {
-            loopsCount += 1
-        }
+// MARK: - Utils
 
-        var lastScannedHeight: BlockHeight = .zero
-        for i in 0..<loopsCount {
-            let processingRange = computeSingleLoopDownloadRange(fullRange: range, loopCounter: i, batchSize: batchSize)
-
-            logger.debug("Sync loop #\(i + 1) range: \(processingRange.lowerBound)...\(processingRange.upperBound)")
-
-            // This is important. We must be sure that no new download is executed when this Task is canceled. Without this line `stop()` doesn't
-            // work.
-            try Task.checkCancellation()
-
-            do {
-                await blockDownloader.setDownloadLimit(processingRange.upperBound + (2 * batchSize))
-                await blockDownloader.startDownload(maxBlockBufferSize: config.downloadBufferSize)
-
-                try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: processingRange)
-            } catch {
-                await ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: lastScannedHeight)
-                throw error
-            }
-
-            do {
-                try await blockValidator.validate()
-            } catch {
-                await ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: lastScannedHeight)
-                logger.error("Block validation failed with error: \(error)")
-                throw error
-            }
-
-            // Without this `stop()` would work. But this line improves support for Task cancelation.
-            try Task.checkCancellation()
-
-            do {
-                lastScannedHeight = try await blockScanner.scanBlocks(
-                    at: processingRange,
-                    totalProgressRange: totalProgressRange
-                ) { [weak self] lastScannedHeight in
-                    let progress = BlockProgress(
-                        startHeight: totalProgressRange.lowerBound,
-                        targetHeight: totalProgressRange.upperBound,
-                        progressHeight: lastScannedHeight
-                    )
-                    await self?.notifyProgress(.syncing(progress))
+extension CompactBlockProcessor {
+    private func setTimer() async {
+        let interval = config.blockPollInterval
+        self.backoffTimer?.invalidate()
+        let timer = Timer(
+            timeInterval: interval,
+            repeats: true,
+            block: { [weak self] _ in
+                Task { [weak self] in
+                    guard let self else { return }
+                    if await self.isIdle() {
+                        if await self.canStartSync() {
+                            self.logger.debug(
+                                """
+                                Timer triggered: Starting compact Block processor!.
+                                Processor State: \(await self.context.state)
+                                latestHeight: \(try await self.transactionRepository.lastScannedHeight())
+                                attempts: \(await self.retryAttempts)
+                                """
+                            )
+                            await self.start()
+                        } else if await hasRetryAttempt() {
+                            await self.failure(ZcashError.compactBlockProcessorMaxAttemptsReached(self.config.retries))
+                        }
+                    } else {
+                        await self.latestBlocksDataProvider.updateBlockData()
+                    }
                 }
-            } catch {
-                logger.error("Scanning failed with error: \(error)")
-                await ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: lastScannedHeight)
-                throw error
             }
-
-            try await clearCompactBlockCache(upTo: lastScannedHeight)
-
-            let progress = BlockProgress(
-                startHeight: totalProgressRange.lowerBound,
-                targetHeight: totalProgressRange.upperBound,
-                progressHeight: processingRange.upperBound
-            )
-            await notifyProgress(.syncing(progress))
-        }
+        )
+        RunLoop.main.add(timer, forMode: .default)
+        self.backoffTimer = timer
     }
 
-    /*
-    Here range for one batch is computed. For example if we want to sync blocks 0...1000 with batchSize 100 we want to generage blocks like
-    this:
-    0...99
-    100...199
-    200...299
-    300...399
-    ...
-    900...999
-    1000...1000
-    */
-    func computeSingleLoopDownloadRange(fullRange: CompactBlockRange, loopCounter: Int, batchSize: BlockHeight) -> CompactBlockRange {
-        let lowerBound = fullRange.lowerBound + (loopCounter * batchSize)
-        let upperBound = min(fullRange.lowerBound + ((loopCounter + 1) * batchSize) - 1, fullRange.upperBound)
-        return lowerBound...upperBound
+    private func isIdle() async -> Bool {
+        return syncTask == nil
     }
 
-    /// It may happen that sync process start with syncing blocks that were downloaded but not synced in previous run of the sync process. This
-    /// methods analyses what must be done and computes range that should be used to compute reported progress.
-    private func computeTotalProgressRange(from syncRanges: SyncRanges) -> CompactBlockRange {
-        guard syncRanges.downloadedButUnscannedRange != nil || syncRanges.downloadAndScanRange != nil else {
-            // In this case we are sure that no downloading or scanning happens so this returned range won't be even used. And it's easier to return
-            // this "fake" range than to handle nil.
-            return 0...0
-        }
-
-        // Thanks to guard above we can be sure that one of these two ranges is not nil.
-        let lowerBound = syncRanges.downloadedButUnscannedRange?.lowerBound ?? syncRanges.downloadAndScanRange?.lowerBound ?? 0
-        let upperBound = syncRanges.downloadAndScanRange?.upperBound ?? syncRanges.downloadedButUnscannedRange?.upperBound ?? 0
-
-        return lowerBound...upperBound
+    private func canStartSync() async -> Bool {
+        return await isIdle() && hasRetryAttempt()
     }
 
-    func notifyMinedTransaction(_ tx: ZcashTransaction.Overview) async {
-        logger.debug("notify mined transaction: \(tx)")
-        await send(event: .minedTransaction(tx))
+    private func hasRetryAttempt() -> Bool {
+        retryAttempts < config.retries
     }
 
-    func notifyProgress(_ progress: CompactBlockProgress) async {
-        logger.debug("progress: \(progress)")
-        await send(event: .progressUpdated(progress))
-    }
-    
-    func notifyTransactions(_ txs: [ZcashTransaction.Overview], in range: CompactBlockRange) async {
-        await send(event: .foundTransactions(txs, range))
-    }
-
-    func determineLowerBound(
-        errorHeight: Int,
-        consecutiveErrors: Int,
-        walletBirthday: BlockHeight
-    ) -> BlockHeight {
+    private func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
         let offset = min(ZcashSDK.maxReorgSize, ZcashSDK.defaultRewindDistance * (consecutiveErrors + 1))
         return max(errorHeight - offset, walletBirthday - ZcashSDK.maxReorgSize)
     }
 
-    func severeFailure(_ error: Error) async {
-        cancelableTask?.cancel()
-        await blockDownloader.stopDownload()
-        logger.error("show stopper failure: \(error)")
+    private func rawStop() async {
+        syncTask?.cancel()
         self.backoffTimer?.invalidate()
-        self.retryAttempts = config.retries
-        self.processingError = error
-        await updateState(.error(error))
-        await self.notifyError(error)
+        self.backoffTimer = nil
+        await stopAllActions()
     }
 
-    func fail(_ error: Error) async {
-        // TODO: [#713] specify: failure. https://github.com/zcash/ZcashLightClientKit/issues/713
-        logger.error("\(error)")
-        cancelableTask?.cancel()
-        await blockDownloader.stopDownload()
-        self.retryAttempts += 1
-        self.processingError = error
-        switch self.state {
-        case .error:
-            await notifyError(error)
-        default:
-            break
-        }
-        await updateState(.error(error))
-        guard self.maxAttemptsReached else { return }
-        // don't set a new timer if there are no more attempts.
-        await self.setTimer()
-    }
-
-    private func validateConfiguration() throws {
-        guard FileManager.default.isReadableFile(atPath: config.fsBlockCacheRoot.absoluteString) else {
-            throw ZcashError.compactBlockProcessorMissingDbPath(config.fsBlockCacheRoot.absoluteString)
-        }
-
-        guard FileManager.default.isReadableFile(atPath: config.dataDb.absoluteString) else {
-            throw ZcashError.compactBlockProcessorMissingDbPath(config.dataDb.absoluteString)
+    private func stopAllActions() async {
+        for action in actions.values {
+            await action.stop()
         }
     }
 
-    private func nextBatch() async {
-        await updateState(.syncing)
-        if backoffTimer == nil { await setTimer() }
-        do {
-            let nextState = try await NextStateHelper.nextState(
-                service: self.service,
-                downloaderService: blockDownloaderService,
-                latestBlocksDataProvider: latestBlocksDataProvider,
-                config: self.config,
-                rustBackend: self.rustBackend,
-                internalSyncProgress: internalSyncProgress
-            )
-            switch nextState {
-            case .finishProcessing(let height):
-                await self.processingFinished(height: height)
-            case .processNewBlocks(let ranges):
-                await self.processNewBlocks(ranges: ranges)
-            case let .wait(latestHeight, latestDownloadHeight):
-                // Lightwalletd might be syncing
-                logger.info(
-                    "Lightwalletd might be syncing: latest downloaded block height is: \(latestDownloadHeight) " +
-                    "while latest blockheight is reported at: \(latestHeight)"
-                )
-                await self.processingFinished(height: latestDownloadHeight)
-            }
-        } catch {
-            await self.severeFailure(error)
-        }
-    }
-
-    internal func validationFailed(at height: BlockHeight) async {
-        // cancel all Tasks
-        cancelableTask?.cancel()
-        await blockDownloader.stopDownload()
-
-        // register latest failure
-        self.lastChainValidationFailure = height
-        
-        // rewind
-        let rewindHeight = determineLowerBound(
-            errorHeight: height,
-            consecutiveErrors: consecutiveChainValidationErrors,
-            walletBirthday: self.config.walletBirthday
-        )
-
-        self.consecutiveChainValidationErrors += 1
-
-        do {
-            try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
-        } catch {
-            await fail(error)
-            return
-        }
-        
-        do {
-            try await blockDownloaderService.rewind(to: rewindHeight)
-            await internalSyncProgress.rewind(to: rewindHeight)
-
-            await send(event: .handledReorg(height, rewindHeight))
-
-            // process next batch
-            await self.nextBatch()
-        } catch {
-            await self.fail(error)
-        }
-    }
-
-    internal func processBatchFinished(height: BlockHeight?) async {
-        retryAttempts = 0
-        consecutiveChainValidationErrors = 0
-
-        if let height {
-            await processingFinished(height: height)
-        } else {
-            await nextBatch()
-        }
-    }
-    
-    private func processingFinished(height: BlockHeight) async {
-        await send(event: .finished(height, foundBlocks))
-        await updateState(.synced)
-        await setTimer()
-    }
-
-    private func ifTaskIsNotCanceledClearCompactBlockCache(lastScannedHeight: BlockHeight) async {
+    private func ifTaskIsNotCanceledClearCompactBlockCache() async {
         guard !Task.isCancelled else { return }
+        let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
         do {
             // Blocks download work in parallel with scanning. So imagine this scenario:
             //
@@ -943,97 +753,10 @@ actor CompactBlockProcessor {
         }
     }
 
-    private func clearCompactBlockCache(upTo height: BlockHeight) async throws {
-        try await storage.clear(upTo: height)
-        logger.info("Cache removed upTo \(height)")
-    }
-
     private func clearCompactBlockCache() async throws {
-        await blockDownloader.stopDownload()
+        await stopAllActions()
         try await storage.clear()
         logger.info("Cache removed")
-    }
-    
-    private func setTimer() async {
-        let interval = self.config.blockPollInterval
-        self.backoffTimer?.invalidate()
-        let timer = Timer(
-            timeInterval: interval,
-            repeats: true,
-            block: { [weak self] _ in
-                Task { [weak self] in
-                    guard let self else { return }
-                    switch await self.state {
-                    case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
-                        await self.latestBlocksDataProvider.updateBlockData()
-                    case .stopped, .error, .synced:
-                        if await self.shouldStart {
-                            self.logger.debug(
-                                """
-                                Timer triggered: Starting compact Block processor!.
-                                Processor State: \(await self.state)
-                                latestHeight: \(try await self.transactionRepository.lastScannedHeight())
-                                attempts: \(await self.retryAttempts)
-                                """
-                            )
-                            await self.start()
-                        } else if await self.maxAttemptsReached {
-                            await self.fail(ZcashError.compactBlockProcessorMaxAttemptsReached(self.config.retries))
-                        }
-                    }
-                }
-            }
-        )
-        RunLoop.main.add(timer, forMode: .default)
-        
-        self.backoffTimer = timer
-    }
-    
-    private func transitionState(from oldValue: State, to newValue: State) async {
-        guard oldValue != newValue else {
-            return
-        }
-
-        switch newValue {
-        case .error(let err):
-            await notifyError(err)
-        case .stopped:
-            await send(event: .stopped)
-        case .enhancing:
-            await send(event: .startedEnhancing)
-        case .fetching:
-            await send(event: .startedFetching)
-        case .handlingSaplingFiles:
-            // We don't report this to outside world as separate phase for now.
-            break
-        case .synced:
-            // transition to this state is handled by `processingFinished(height: BlockHeight)`
-            break
-        case .syncing:
-            await send(event: .startedSyncing)
-        }
-    }
-
-    private func notifyError(_ err: Error) async {
-        await send(event: .failed(err))
-    }
-    // TODO: [#713] encapsulate service errors better, https://github.com/zcash/ZcashLightClientKit/issues/713
-}
-
-extension CompactBlockProcessor.State: Equatable {
-    public static func == (lhs: CompactBlockProcessor.State, rhs: CompactBlockProcessor.State) -> Bool {
-        switch  (lhs, rhs) {
-        case
-            (.syncing, .syncing),
-            (.stopped, .stopped),
-            (.error, .error),
-            (.synced, .synced),
-            (.enhancing, .enhancing),
-            (.fetching, .fetching):
-            return true
-        default:
-            return false
-        }
     }
 }
 
@@ -1106,171 +829,5 @@ extension CompactBlockProcessor {
             }
         }
         return (inserted: refreshed, skipped: skipped)
-    }
-}
-
-extension CompactBlockProcessor {
-    enum NextState: Equatable {
-        case finishProcessing(height: BlockHeight)
-        case processNewBlocks(ranges: SyncRanges)
-        case wait(latestHeight: BlockHeight, latestDownloadHeight: BlockHeight)
-    }
-
-    @discardableResult
-    func figureNextBatch(
-        downloaderService: BlockDownloaderService
-    ) async throws -> NextState {
-        try Task.checkCancellation()
-
-        do {
-            return try await CompactBlockProcessor.NextStateHelper.nextState(
-                service: service,
-                downloaderService: downloaderService,
-                latestBlocksDataProvider: latestBlocksDataProvider,
-                config: config,
-                rustBackend: rustBackend,
-                internalSyncProgress: internalSyncProgress
-            )
-        } catch {
-            throw error
-        }
-    }
-}
-
-extension CompactBlockProcessor {
-    enum NextStateHelper {
-        // swiftlint:disable:next function_parameter_count
-        static func nextState(
-            service: LightWalletService,
-            downloaderService: BlockDownloaderService,
-            latestBlocksDataProvider: LatestBlocksDataProvider,
-            config: Configuration,
-            rustBackend: ZcashRustBackendWelding,
-            internalSyncProgress: InternalSyncProgress
-        ) async throws -> CompactBlockProcessor.NextState {
-            // It should be ok to not create new Task here because this method is already async. But for some reason something not good happens
-            // when Task is not created here. For example tests start failing. Reason is unknown at this time.
-            let task = Task(priority: .userInitiated) {
-                let info = try await service.getInfo()
-
-                try await CompactBlockProcessor.validateServerInfo(
-                    info,
-                    saplingActivation: config.saplingActivation,
-                    localNetwork: config.network,
-                    rustBackend: rustBackend
-                )
-
-                let latestDownloadHeight = try await downloaderService.lastDownloadedBlockHeight()
-
-                await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight)
-
-                await latestBlocksDataProvider.updateScannedData()
-                await latestBlocksDataProvider.updateBlockData()
-
-                return await internalSyncProgress.computeNextState(
-                    latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
-                    latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
-                    walletBirthday: config.walletBirthday
-                )
-            }
-
-            return try await task.value
-        }
-    }
-}
-
-/// This extension contains asociated types and functions needed to clean up the
-/// `cacheDb` in favor of `FsBlockDb`. Once this cleanup functionality is deprecated,
-/// delete the whole extension and reference to it in other parts of the code including tests.
-extension CompactBlockProcessor {
-    public enum CacheDbMigrationError: Error {
-        case fsCacheMigrationFailedSameURL
-        case failedToDeleteLegacyDb(Error)
-        case failedToInitFsBlockDb(Error)
-        case failedToSetDownloadHeight(Error)
-    }
-
-    /// Deletes the SQLite cacheDb and attempts to initialize the fsBlockDbRoot
-    /// - parameter legacyCacheDbURL: the URL where the cache Db used to be stored.
-    /// - Throws: `InitializerError.fsCacheInitFailedSameURL` when the given URL
-    /// is the same URL than the one provided as `self.fsBlockDbRoot` assuming that's a
-    /// programming error being the `legacyCacheDbURL` a sqlite database file and not a
-    /// directory. Also throws errors from initializing the fsBlockDbRoot.
-    ///
-    /// - Note: Errors from deleting the `legacyCacheDbURL` won't be throwns.
-    func migrateCacheDb(_ legacyCacheDbURL: URL) async throws {
-        guard legacyCacheDbURL != config.fsBlockCacheRoot else {
-            throw ZcashError.compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL
-        }
-
-        // Instance with alias `default` is same as instance before the Alias was introduced. So it makes sense that only this instance handles
-        // legacy cache DB. Any instance with different than `default` alias was created after the Alias was introduced and at this point legacy
-        // cache DB is't anymore. So there is nothing to migrate for instances with not default Alias.
-        guard config.alias == .default else {
-            return
-        }
-
-        // if the URL provided is not readable, it means that the client has a reference
-        // to the cacheDb file but it has been deleted in a prior sync cycle. there's
-        // nothing to do here.
-        guard FileManager.default.isReadableFile(atPath: legacyCacheDbURL.path) else {
-            return
-        }
-
-        do {
-            // if there's a readable file at the provided URL, delete it.
-            try FileManager.default.removeItem(at: legacyCacheDbURL)
-        } catch {
-            throw ZcashError.compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb(error)
-        }
-
-        // create the storage
-        try await self.storage.create()
-
-        // The database has been deleted, so we have adjust the internal state of the
-        // `CompactBlockProcessor` so that it doesn't rely on download heights set
-        // by a previous processing cycle.
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
-        
-        await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
-    }
-
-    func wipeLegacyCacheDbIfNeeded() {
-        guard let cacheDbURL = config.cacheDbURL else {
-            return
-        }
-
-        guard FileManager.default.isDeletableFile(atPath: cacheDbURL.pathExtension) else {
-            return
-        }
-
-        try? FileManager.default.removeItem(at: cacheDbURL)
-    }
-}
-
-extension SyncRanges {
-    /// Tells whether the state represented by these sync ranges evidence some sort of
-    /// outdated state on the cache or the internal state of the compact block processor.
-    ///
-    /// - Note: this can mean that the processor has synced over the height that the internal
-    /// state knows of because the sync process was interrupted before it could reflect
-    /// it in the internal state storage. This could happen because of many factors, the
-    /// most feasible being OS shutting down a background process or the user abruptly
-    /// exiting the app.
-    /// - Returns: an ``Optional<BlockHeight>`` where Some represents what's the
-    /// new state the internal state should reflect and indicating that the cache should be cleared
-    /// as well. c`None` means that no action is required.
-    func shouldClearBlockCacheAndUpdateInternalState() -> BlockHeight? {
-        guard self.downloadedButUnscannedRange != nil else {
-            return nil
-        }
-
-        guard
-            let latestScannedHeight = self.latestScannedHeight,
-            let latestDownloadedHeight = self.latestDownloadedBlockHeight,
-            latestScannedHeight > latestDownloadedHeight
-        else { return nil }
-
-        return latestScannedHeight
     }
 }

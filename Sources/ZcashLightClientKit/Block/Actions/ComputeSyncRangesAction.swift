@@ -8,13 +8,13 @@
 import Foundation
 
 class ComputeSyncRangesAction {
-    let config: CompactBlockProcessorNG.Configuration
+    let config: CompactBlockProcessor.Configuration
     let downloaderService: BlockDownloaderService
     let internalSyncProgress: InternalSyncProgress
     let latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
     
-    init(container: DIContainer, config: CompactBlockProcessorNG.Configuration) {
+    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
         self.config = config
         downloaderService = container.resolve(BlockDownloaderService.self)
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
@@ -42,7 +42,7 @@ class ComputeSyncRangesAction {
 extension ComputeSyncRangesAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         // call internalSyncProgress and compute sync ranges and store them in context
         // if there is nothing sync just switch to finished state
 
