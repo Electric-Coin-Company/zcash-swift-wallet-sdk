@@ -8,12 +8,12 @@
 import Foundation
 
 class DownloadAction {
-    let config: CompactBlockProcessorNG.Configuration
+    let config: CompactBlockProcessor.Configuration
     let downloader: BlockDownloader
     let transactionRepository: TransactionRepository
     let logger: Logger
 
-    init(container: DIContainer, config: CompactBlockProcessorNG.Configuration) {
+    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
         self.config = config
         downloader = container.resolve(BlockDownloader.self)
         transactionRepository = container.resolve(TransactionRepository.self)
@@ -29,7 +29,7 @@ class DownloadAction {
 extension DownloadAction: Action {
     var removeBlocksCacheWhenFailed: Bool { true }
 
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         guard let downloadRange = await context.syncRanges.downloadAndScanRange else {
             return await update(context: context)
         }
@@ -38,17 +38,23 @@ extension DownloadAction: Action {
         // This action is executed for each batch (batch size is 100 blocks by default) until all the blocks in whole `downloadRange` are downloaded.
         // So the right range for this batch must be computed.
         let batchRangeStart = max(downloadRange.lowerBound, lastScannedHeight)
-        let batchRange = batchRangeStart...batchRangeStart + config.batchSize
+        let batchRangeEnd = min(downloadRange.upperBound, batchRangeStart + config.batchSize)
+
+        guard batchRangeStart <= batchRangeEnd else {
+            return await update(context: context)
+        }
+
+        let batchRange = batchRangeStart...batchRangeEnd
         let downloadLimit = batchRange.upperBound + (2 * config.batchSize)
 
         logger.debug("Starting download with range: \(batchRange.lowerBound)...\(batchRange.upperBound)")
         try await downloader.setSyncRange(downloadRange)
         await downloader.setDownloadLimit(downloadLimit)
+        await downloader.startDownload(maxBlockBufferSize: config.downloadBufferSize)
 
         try await downloader.waitUntilRequestedBlocksAreDownloaded(in: batchRange)
 
-        await context.update(state: .validate)
-        return context
+        return await update(context: context)
     }
 
     func stop() async {

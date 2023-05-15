@@ -197,14 +197,15 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Handle CompactBlockProcessor.Flow
 
+    // swiftlint:disable:next cyclomatic_complexity
     private func subscribeToProcessorEvents(_ processor: CompactBlockProcessor) async {
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {
             case let .failed(error):
                 await self?.failed(error: error)
 
-            case let .finished(height, foundBlocks):
-                await self?.finished(lastScannedHeight: height, foundBlocks: foundBlocks)
+            case let .finished(height):
+                await self?.finished(lastScannedHeight: height)
 
             case let .foundTransactions(transactions, range):
                 self?.foundTransactions(transactions: transactions, in: range)
@@ -243,7 +244,7 @@ public class SDKSynchronizer: Synchronizer {
         await updateStatus(.error(error))
     }
 
-    private func finished(lastScannedHeight: BlockHeight, foundBlocks: Bool) async {
+    private func finished(lastScannedHeight: BlockHeight) async {
         await latestBlocksDataProvider.updateScannedData()
 
         await updateStatus(.synced)
@@ -403,7 +404,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func latestHeight() async throws -> BlockHeight {
-        try await blockProcessor.blockDownloaderService.latestBlockHeight()
+        try await blockProcessor.latestHeight()
     }
 
     public func latestUTXOs(address: String) async throws -> [UnspentTransactionOutputEntity] {

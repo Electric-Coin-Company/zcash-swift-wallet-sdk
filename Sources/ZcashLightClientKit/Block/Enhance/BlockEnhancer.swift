@@ -107,7 +107,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
 
             let newlyMinedRange = newlyMinedLowerBound...chainTipHeight
 
-
             for index in 0 ..< transactions.count {
                 let transaction = transactions[index]
                 var retry = true

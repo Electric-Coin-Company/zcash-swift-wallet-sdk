@@ -20,10 +20,12 @@ class FetchUTXOsAction {
 extension FetchUTXOsAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         if let range = await context.syncRanges.fetchUTXORange {
             logger.debug("Fetching UTXO with range: \(range.lowerBound)...\(range.upperBound)")
-            let result = try await utxoFetcher.fetch(at: range)
+            let result = try await utxoFetcher.fetch(at: range) { fetchProgress in
+                await didUpdate(.progressUpdated(.fetch(fetchProgress)))
+            }
             await didUpdate(.storedUTXOs(result))
         }
         

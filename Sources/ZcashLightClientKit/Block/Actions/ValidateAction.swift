@@ -18,7 +18,7 @@ class ValidateAction {
 extension ValidateAction: Action {
     var removeBlocksCacheWhenFailed: Bool { true }
 
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         try await validator.validate()
         await context.update(state: .scan)
         return context

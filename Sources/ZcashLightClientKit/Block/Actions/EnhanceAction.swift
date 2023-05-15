@@ -9,11 +9,11 @@ import Foundation
 
 class EnhanceAction {
     let blockEnhancer: BlockEnhancer
-    let config: CompactBlockProcessorNG.Configuration
+    let config: CompactBlockProcessor.Configuration
     let internalSyncProgress: InternalSyncProgress
     let logger: Logger
     let transactionRepository: TransactionRepository
-    init(container: DIContainer, config: CompactBlockProcessorNG.Configuration) {
+    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
         blockEnhancer = container.resolve(BlockEnhancer.self)
         self.config = config
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
@@ -40,7 +40,7 @@ class EnhanceAction {
 extension EnhanceAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         // Use `BlockEnhancer` to enhance blocks.
         // This action is executed on each downloaded and scanned batch (typically each 100 blocks). But we want to run enhancement each 1000 blocks.
         // This action can use `InternalSyncProgress` and last scanned height to compute when it should do work.
@@ -59,12 +59,21 @@ extension EnhanceAction: Action {
         let enhanceRangeStart = max(range.lowerBound, lastEnhancedHeight)
         let enhanceRangeEnd = min(range.upperBound, lastScannedHeight)
 
-        if enhanceRangeStart <= enhanceRangeEnd && lastEnhancedHeight - lastScannedHeight >= config.enhanceBatchSize {
+        if enhanceRangeStart <= enhanceRangeEnd && lastScannedHeight - lastEnhancedHeight >= config.enhanceBatchSize {
             let enhanceRange = enhanceRangeStart...enhanceRangeEnd
-            let transactions = try await blockEnhancer.enhance(at: enhanceRange) { progress in
-                await didUpdate(.progressUpdated(.enhance(progress)))
+            let transactions = try await blockEnhancer.enhance(
+                at: enhanceRange,
+                didEnhance: { progress in
+                    await didUpdate(.progressUpdated(.enhance(progress)))
+                    if let foundTx = progress.lastFoundTransaction, progress.newlyMined {
+                        await didUpdate(.minedTransaction(foundTx))
+                    }
+                }
+            )
+
+            if let transactions {
+                await didUpdate(.foundTransactions(transactions, enhanceRange))
             }
-            await didUpdate(.foundTransactions(transactions, enhanceRange))
         }
 
         return await decideWhatToDoNext(context: context, lastScannedHeight: lastScannedHeight)

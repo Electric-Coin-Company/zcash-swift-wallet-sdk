@@ -137,7 +137,7 @@ enum Dependencies {
 
             let blockScannerConfig = BlockScannerConfig(
                 networkType: config.network.networkType,
-                scanningBatchSize: config.scanningBatchSize
+                scanningBatchSize: config.batchSize
             )
 
             return BlockScannerImpl(

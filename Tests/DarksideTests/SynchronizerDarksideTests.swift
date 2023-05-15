@@ -213,7 +213,9 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
-                internalSyncStatus: .enhancing(EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)),
+                internalSyncStatus: .enhancing(
+                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)
+                ),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
                 latestScannedTime: 1
