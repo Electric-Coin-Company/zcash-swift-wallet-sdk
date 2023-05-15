@@ -695,6 +695,24 @@ extension CompactBlockProcessor {
 
     private func isIdle() async -> Bool {
         return syncTask == nil
+//        switch await context.state {
+//        case .stopped, .failed, .finished, .idle:
+//            return true
+//        case .computeSyncRanges,
+//            .checksBeforeSync,
+//                .download,
+//                .validate,
+//                .scan,
+//                .enhance,
+//                .fetchUTXO,
+//                .handleSaplingParams,
+//                .clearCache,
+//                .scanDownloaded,
+//                .clearAlreadyScannedBlocks,
+//                .validateServer,
+//                .migrateLegacyCacheDB:
+//            return false
+//        }
     }
 
     private func canStartSync() async -> Bool {
