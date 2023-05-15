@@ -62,7 +62,7 @@ actor BlockDownloaderImpl {
     let metrics: SDKMetrics
     let logger: Logger
 
-    private var downloadStream: BlockDownloaderStream?
+//    private var downloadStream: BlockDownloaderStream?
     private var syncRange: CompactBlockRange?
 
     private var downloadToHeight: BlockHeight = 0
@@ -89,7 +89,7 @@ actor BlockDownloaderImpl {
     private func doDownload(maxBlockBufferSize: Int) async {
         lastError = nil
         do {
-            guard let downloadStream = self.downloadStream, let syncRange = self.syncRange else {
+            guard /*let downloadStream = self.downloadStream,*/ let syncRange = self.syncRange else {
                 logger.error("Dont have downloadStream. Trying to download blocks before sync range is not set.")
                 throw ZcashError.blockDownloadSyncRangeNotSet
             }
@@ -109,6 +109,8 @@ actor BlockDownloaderImpl {
             }
 
             let range = downloadFrom...downloadTo
+
+            let downloadStream = try await compactBlocksDownloadStream(startHeight: range.lowerBound, targetHeight: range.upperBound)
 
             logger.debug("""
             Starting downloading blocks.
@@ -224,7 +226,7 @@ extension BlockDownloaderImpl: BlockDownloader {
     }
 
     func setSyncRange(_ range: CompactBlockRange) async throws {
-        downloadStream = try await compactBlocksDownloadStream(startHeight: range.lowerBound, targetHeight: range.upperBound)
+//        downloadStream = try await compactBlocksDownloadStream(startHeight: range.lowerBound, targetHeight: range.upperBound)
         syncRange = range
     }
 

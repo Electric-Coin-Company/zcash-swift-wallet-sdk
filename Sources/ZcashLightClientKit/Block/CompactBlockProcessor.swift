@@ -681,7 +681,6 @@ actor CompactBlockProcessor {
 
                 if let range = ranges.downloadAndScanRange {
                     logger.debug("Starting sync with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await blockDownloader.setSyncRange(range)
                     try await downloadAndScanBlocks(at: range, totalProgressRange: totalProgressRange)
                 }
 
@@ -778,6 +777,7 @@ actor CompactBlockProcessor {
             try Task.checkCancellation()
 
             do {
+                try await blockDownloader.setSyncRange(range)
                 await blockDownloader.setDownloadLimit(processingRange.upperBound + (2 * batchSize))
                 await blockDownloader.startDownload(maxBlockBufferSize: config.downloadBufferSize)
 
