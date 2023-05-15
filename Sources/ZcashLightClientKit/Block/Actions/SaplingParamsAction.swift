@@ -20,7 +20,7 @@ class SaplingParamsAction {
 extension SaplingParamsAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         logger.debug("Fetching sapling parameters")
         try await saplingParametersHandler.handleIfNeeded()
         await context.update(state: .scanDownloaded)

@@ -8,12 +8,12 @@
 import Foundation
 
 class MigrateLegacyCacheDBAction {
-    private let config: CompactBlockProcessorNG.Configuration
+    private let config: CompactBlockProcessor.Configuration
     private let internalSyncProgress: InternalSyncProgress
     private let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
 
-    init(container: DIContainer, config: CompactBlockProcessorNG.Configuration) {
+    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
         self.config = config
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
         storage = container.resolve(CompactBlockRepository.self)
@@ -29,7 +29,7 @@ class MigrateLegacyCacheDBAction {
 extension MigrateLegacyCacheDBAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
-    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessorNG.Event) async -> Void) async throws -> ActionContext {
+    func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         guard let legacyCacheDbURL = config.cacheDbURL else {
             return await updateState(context)
         }
@@ -67,7 +67,7 @@ extension MigrateLegacyCacheDBAction: Action {
         // by a previous processing cycle.
         let lastScannedHeight = try await transactionRepository.lastScannedHeight()
 
-        await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
+        try await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
 
         return await updateState(context)
     }
