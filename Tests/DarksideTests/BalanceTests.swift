@@ -905,7 +905,6 @@ class BalanceTests: ZcashTestCase {
         let memo = try Memo(string: "shielding is fun!")
         var pendingTx: ZcashTransaction.Overview?
 
-
         let transaction = try await coordinator.synchronizer.sendToAddress(
             spendingKey: spendingKey,
             zatoshi: sendAmount,

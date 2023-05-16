@@ -197,6 +197,7 @@ public class SDKSynchronizer: Synchronizer {
 
     // MARK: Handle CompactBlockProcessor.Flow
 
+    // swiftlint:disable:next cyclomatic_complexity
     private func subscribeToProcessorEvents(_ processor: CompactBlockProcessor) async {
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {

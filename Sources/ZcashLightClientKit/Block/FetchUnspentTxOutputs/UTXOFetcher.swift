@@ -17,7 +17,10 @@ struct UTXOFetcherConfig {
 }
 
 protocol UTXOFetcher {
-    func fetch(at range: CompactBlockRange, didFetch: (Float) async -> ()) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
+    func fetch(
+        at range: CompactBlockRange,
+        didFetch: (Float) async -> Void
+    ) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 }
 
 struct UTXOFetcherImpl {
@@ -31,7 +34,10 @@ struct UTXOFetcherImpl {
 }
 
 extension UTXOFetcherImpl: UTXOFetcher {
-    func fetch(at range: CompactBlockRange, didFetch: (Float) async -> ()) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
+    func fetch(
+        at range: CompactBlockRange,
+        didFetch: (Float) async -> Void
+    ) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
         try Task.checkCancellation()
 
         let accounts = try accountRepository.getAll()
