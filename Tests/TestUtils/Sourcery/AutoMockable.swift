@@ -14,5 +14,7 @@
 
 extension ZcashRustBackendWelding { }
 extension Synchronizer { }
+extension LightWalletService { }
+extension LightWalletdInfo { }
 
 // sourcery:end:

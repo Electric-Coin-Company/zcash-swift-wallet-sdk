@@ -180,6 +180,7 @@ protocol LightWalletService: AnyObject {
     func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched
 
     /// - Throws: `serviceFetchUTXOsFailed` when GRPC call fails.
+    // sourcery: mockedName="fetchUTXOsSingle"
     func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>
 
     /// - Throws: `serviceFetchUTXOsFailed` when GRPC call fails.
