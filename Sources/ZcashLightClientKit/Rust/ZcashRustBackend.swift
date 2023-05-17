@@ -483,7 +483,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     func validateCombinedChain(limit: UInt32 = 0) async throws {
-        let result = zcashlc_validate_combined_chain(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, networkType.networkId, limit)
+        let result = zcashlc_validate_combined_chain(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, limit, networkType.networkId)
 
         switch result {
         case -1:

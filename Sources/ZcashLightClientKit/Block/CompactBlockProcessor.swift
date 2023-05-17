@@ -681,8 +681,10 @@ actor CompactBlockProcessor {
 
                 if let range = ranges.downloadAndScanRange {
                     logger.debug("Starting sync with range: \(range.lowerBound)...\(range.upperBound)")
-                    try await blockDownloader.setSyncRange(range)
+                    try await blockDownloader.setSyncRange(range, batchSize: batchSize)
                     try await downloadAndScanBlocks(at: range, totalProgressRange: totalProgressRange)
+                    // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
+                    await blockDownloader.stopDownload()
                 }
 
                 if let range = ranges.enhanceRange {
@@ -691,7 +693,7 @@ actor CompactBlockProcessor {
                     await updateState(.enhancing)
                     if let transactions = try await blockEnhancer.enhance(
                         at: range,
-                        didEnhance:  { [weak self] progress in
+                        didEnhance: { [weak self] progress in
                             await self?.notifyProgress(.enhance(progress))
                             if
                                 let foundTx = progress.lastFoundTransaction,
@@ -726,6 +728,8 @@ actor CompactBlockProcessor {
                     await processBatchFinished(height: (anyActionExecuted && !newBlocksMined) ? ranges.latestBlockHeight : nil)
                 }
             } catch {
+                // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
+                await blockDownloader.stopDownload()
                 logger.error("Sync failed with error: \(error)")
 
                 if Task.isCancelled {

@@ -31,7 +31,7 @@ protocol BlockDownloader {
     /// Set the range for the whole sync process. This method creates stream that is used to download blocks.
     /// This method must be called before `startDownload()` is called. And it can't be called while download is in progress otherwise bad things
     /// happen.
-    func setSyncRange(_ range: CompactBlockRange) async throws
+    func setSyncRange(_ range: CompactBlockRange, batchSize: Int) async throws
 
     /// Start downloading blocks.
     ///
@@ -55,6 +55,10 @@ protocol BlockDownloader {
 }
 
 actor BlockDownloaderImpl {
+    private enum Constants {
+        static let rebuildStreamAfterBatchesCount = 3
+    }
+
     let service: LightWalletService
     let downloaderService: BlockDownloaderService
     let storage: CompactBlockRepository
@@ -62,8 +66,10 @@ actor BlockDownloaderImpl {
     let metrics: SDKMetrics
     let logger: Logger
 
+    private var downloadStreamCreatedAtRange: CompactBlockRange = 0...0
     private var downloadStream: BlockDownloaderStream?
     private var syncRange: CompactBlockRange?
+    private var batchSize: Int?
 
     private var downloadToHeight: BlockHeight = 0
     private var isDownloading = false
@@ -89,7 +95,7 @@ actor BlockDownloaderImpl {
     private func doDownload(maxBlockBufferSize: Int) async {
         lastError = nil
         do {
-            guard let downloadStream = self.downloadStream, let syncRange = self.syncRange else {
+            guard let batchSize = self.batchSize, let syncRange = self.syncRange else {
                 logger.error("Dont have downloadStream. Trying to download blocks before sync range is not set.")
                 throw ZcashError.blockDownloadSyncRangeNotSet
             }
@@ -109,6 +115,26 @@ actor BlockDownloaderImpl {
             }
 
             let range = downloadFrom...downloadTo
+            let maxAmountBlocksDownloadedByStream = Constants.rebuildStreamAfterBatchesCount * batchSize
+            let createNewStream =
+                self.downloadStream == nil ||
+                range.lowerBound - downloadStreamCreatedAtRange.lowerBound >= maxAmountBlocksDownloadedByStream ||
+                downloadTo >= downloadStreamCreatedAtRange.upperBound
+
+            let downloadStream: BlockDownloaderStream
+            if let stream = self.downloadStream, !createNewStream {
+                downloadStream = stream
+            } else {
+                // In case that limit is larger than Constants.rebuildStreamAfterBatchesCount * batchSize we need to set upper bound of the range like
+                // this. This is not normal operational mode but something can request to download whole sync range at one go for example.
+                let streamRange = range.lowerBound...max(downloadToHeight, range.lowerBound + maxAmountBlocksDownloadedByStream)
+                logger.debug("Creating new stream for range \(streamRange.lowerBound)...\(streamRange.upperBound)")
+
+                downloadStreamCreatedAtRange = streamRange
+                let stream = service.blockStream(startHeight: streamRange.lowerBound, endHeight: streamRange.upperBound)
+                downloadStream = BlockDownloaderStream(stream: stream)
+                self.downloadStream = downloadStream
+            }
 
             logger.debug("""
             Starting downloading blocks.
@@ -223,8 +249,9 @@ extension BlockDownloaderImpl: BlockDownloader {
         downloadToHeight = limit
     }
 
-    func setSyncRange(_ range: CompactBlockRange) async throws {
-        downloadStream = try await compactBlocksDownloadStream(startHeight: range.lowerBound, targetHeight: range.upperBound)
+    func setSyncRange(_ range: CompactBlockRange, batchSize: Int) async throws {
+        downloadStream = nil
+        self.batchSize = batchSize
         syncRange = range
     }
 
@@ -250,6 +277,7 @@ extension BlockDownloaderImpl: BlockDownloader {
                 break
             }
         }
+        downloadStream = nil
     }
 
     func waitUntilRequestedBlocksAreDownloaded(in range: CompactBlockRange) async throws {

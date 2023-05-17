@@ -106,7 +106,7 @@ class BlockStreamingTest: ZcashTestCase {
             do {
                 let blockDownloader = await compactBlockProcessor.blockDownloader
                 await blockDownloader.setDownloadLimit(latestBlockHeight)
-                try await blockDownloader.setSyncRange(startHeight...latestBlockHeight)
+                try await blockDownloader.setSyncRange(startHeight...latestBlockHeight, batchSize: 100)
                 await blockDownloader.startDownload(maxBlockBufferSize: 10)
                 try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
             } catch {
@@ -149,7 +149,7 @@ class BlockStreamingTest: ZcashTestCase {
         do {
             let blockDownloader = await compactBlockProcessor.blockDownloader
             await blockDownloader.setDownloadLimit(latestBlockHeight)
-            try await blockDownloader.setSyncRange(startHeight...latestBlockHeight)
+            try await blockDownloader.setSyncRange(startHeight...latestBlockHeight, batchSize: 100)
             await blockDownloader.startDownload(maxBlockBufferSize: 10)
             try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
         } catch {

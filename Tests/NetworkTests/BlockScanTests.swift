@@ -197,7 +197,7 @@ class BlockScanTests: ZcashTestCase {
         do {
             let blockDownloader = await compactBlockProcessor.blockDownloader
             await blockDownloader.setDownloadLimit(range.upperBound)
-            try await blockDownloader.setSyncRange(range)
+            try await blockDownloader.setSyncRange(range, batchSize: 100)
             await blockDownloader.startDownload(maxBlockBufferSize: 10)
             try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: range)
             
