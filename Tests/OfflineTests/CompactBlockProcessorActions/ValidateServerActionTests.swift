@@ -35,7 +35,7 @@ final class ValidateServerActionTests: ZcashTestCase {
                 "nextContext after .validateServer is expected to be .computeSyncRanges but received \(nextState)"
             )
         } catch {
-            XCTFail("testValidateServerActionNextAction is not expected to fail. \(error)")
+            XCTFail("testValidateServerAction_NextAction is not expected to fail. \(error)")
         }
     }
     
@@ -50,7 +50,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         } catch ZcashError.compactBlockProcessorChainName(let chainName) {
             XCTAssertEqual(chainName, "invalid")
         } catch {
-            XCTFail("testValidateServerActionNextAction is expected to fail but error \(error) doesn't match ZcashError.compactBlockProcessorChainName")
+            XCTFail("testValidateServerAction_ChainNameError is expected to fail but error \(error) doesn't match ZcashError.compactBlockProcessorChainName")
         }
     }
     

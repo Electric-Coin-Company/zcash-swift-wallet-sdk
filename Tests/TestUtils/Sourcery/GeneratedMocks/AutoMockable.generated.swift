@@ -7,6 +7,31 @@ import Foundation
 
 
 // MARK: - AutoMockable protocols
+class BlockValidatorMock: BlockValidator {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - validate
+
+    var validateThrowableError: Error?
+    var validateCallsCount = 0
+    var validateCalled: Bool {
+        return validateCallsCount > 0
+    }
+    var validateClosure: (() async throws -> Void)?
+
+    func validate() async throws {
+        if let error = validateThrowableError {
+            throw error
+        }
+        validateCallsCount += 1
+        try await validateClosure?()
+    }
+
+}
 class LightWalletServiceMock: LightWalletService {
 
 
