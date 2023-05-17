@@ -225,7 +225,6 @@ extension TestCoordinator {
                 spendParamsURL: config.spendParamsURL,
                 outputParamsURL: config.outputParamsURL,
                 saplingParamsSourceURL: config.saplingParamsSourceURL,
-                downloadBatchSize: config.downloadBatchSize,
                 retries: config.retries,
                 maxBackoffInterval: config.maxBackoffInterval,
                 rewindDistance: config.rewindDistance,
@@ -234,7 +233,7 @@ extension TestCoordinator {
                 network: config.network
             )
 
-            await self.synchronizer.blockProcessor.update(config: newConfig)
+//            await self.synchronizer.blockProcessor.update(config: newConfig)
         }
 
         try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)
