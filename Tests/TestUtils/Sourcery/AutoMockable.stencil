@@ -1,5 +1,6 @@
 import Combine
 @testable import ZcashLightClientKit
+import Foundation
 
 {% macro methodName method%}{%if method|annotated:"mockedName" %}{{ method.annotations.mockedName }}{% else %}{% call swiftifyMethodName method.selectorName %}{% endif %}{% endmacro %}
 {% macro swiftifyMethodName name %}{{ name | replace:"(","_" | replace:")","" | replace:":","_" | replace:"`","" | snakeToCamelCase | lowerFirstWord }}{% endmacro %}
