@@ -33,7 +33,7 @@ extension BlockValidatorImpl: BlockValidator {
             pushProgressReport(startTime: startTime, finishTime: Date())
             logger.debug("validateChainFinished")
         } catch {
-            logger.debug("Validate chaing failed with \(error)")
+            logger.debug("Validate chain failed with \(error)")
             pushProgressReport(startTime: startTime, finishTime: Date())
             throw error
         }
