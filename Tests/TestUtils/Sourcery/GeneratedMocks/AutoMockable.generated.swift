@@ -60,7 +60,7 @@ class BlockValidatorMock: BlockValidator {
             throw error
         }
         validateCallsCount += 1
-        try await validateClosure?()
+        try await validateClosure!()
     }
 
 }
@@ -276,7 +276,7 @@ class LightWalletServiceMock: LightWalletService {
 
     func closeConnection() {
         closeConnectionCallsCount += 1
-        closeConnectionClosure?()
+        closeConnectionClosure!()
     }
 
 }
@@ -363,7 +363,7 @@ class LoggerMock: Logger {
     func debug(_ message: String, file: StaticString, function: StaticString, line: Int) {
         debugFileFunctionLineCallsCount += 1
         debugFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
-        debugFileFunctionLineClosure?(message, file, function, line)
+        debugFileFunctionLineClosure!(message, file, function, line)
     }
 
     // MARK: - info
@@ -378,7 +378,7 @@ class LoggerMock: Logger {
     func info(_ message: String, file: StaticString, function: StaticString, line: Int) {
         infoFileFunctionLineCallsCount += 1
         infoFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
-        infoFileFunctionLineClosure?(message, file, function, line)
+        infoFileFunctionLineClosure!(message, file, function, line)
     }
 
     // MARK: - event
@@ -393,7 +393,7 @@ class LoggerMock: Logger {
     func event(_ message: String, file: StaticString, function: StaticString, line: Int) {
         eventFileFunctionLineCallsCount += 1
         eventFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
-        eventFileFunctionLineClosure?(message, file, function, line)
+        eventFileFunctionLineClosure!(message, file, function, line)
     }
 
     // MARK: - warn
@@ -408,7 +408,7 @@ class LoggerMock: Logger {
     func warn(_ message: String, file: StaticString, function: StaticString, line: Int) {
         warnFileFunctionLineCallsCount += 1
         warnFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
-        warnFileFunctionLineClosure?(message, file, function, line)
+        warnFileFunctionLineClosure!(message, file, function, line)
     }
 
     // MARK: - error
@@ -423,7 +423,7 @@ class LoggerMock: Logger {
     func error(_ message: String, file: StaticString, function: StaticString, line: Int) {
         errorFileFunctionLineCallsCount += 1
         errorFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
-        errorFileFunctionLineClosure?(message, file, function, line)
+        errorFileFunctionLineClosure!(message, file, function, line)
     }
 
 }
@@ -514,7 +514,7 @@ class SynchronizerMock: Synchronizer {
         }
         startRetryCallsCount += 1
         startRetryReceivedRetry = retry
-        try await startRetryClosure?(retry)
+        try await startRetryClosure!(retry)
     }
 
     // MARK: - stop
@@ -527,7 +527,7 @@ class SynchronizerMock: Synchronizer {
 
     func stop() {
         stopCallsCount += 1
-        stopClosure?()
+        stopClosure!()
     }
 
     // MARK: - getSaplingAddress
@@ -954,7 +954,7 @@ class TransactionRepositoryMock: TransactionRepository {
 
     func closeDBConnection() {
         closeDBConnectionCallsCount += 1
-        closeDBConnectionClosure?()
+        closeDBConnectionClosure!()
     }
 
     // MARK: - countAll
@@ -1454,7 +1454,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         decryptAndStoreTransactionTxBytesMinedHeightCallsCount += 1
         decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments = (txBytes: txBytes, minedHeight: minedHeight)
-        try await decryptAndStoreTransactionTxBytesMinedHeightClosure?(txBytes, minedHeight)
+        try await decryptAndStoreTransactionTxBytesMinedHeightClosure!(txBytes, minedHeight)
     }
 
     // MARK: - getBalance
@@ -1696,7 +1696,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         initAccountsTableUfvksCallsCount += 1
         initAccountsTableUfvksReceivedUfvks = ufvks
-        try await initAccountsTableUfvksClosure?(ufvks)
+        try await initAccountsTableUfvksClosure!(ufvks)
     }
 
     // MARK: - initDataDb
@@ -1754,7 +1754,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         initBlocksTableHeightHashTimeSaplingTreeCallsCount += 1
         initBlocksTableHeightHashTimeSaplingTreeReceivedArguments = (height: height, hash: hash, time: time, saplingTree: saplingTree)
-        try await initBlocksTableHeightHashTimeSaplingTreeClosure?(height, hash, time, saplingTree)
+        try await initBlocksTableHeightHashTimeSaplingTreeClosure!(height, hash, time, saplingTree)
     }
 
     // MARK: - listTransparentReceivers
@@ -1878,7 +1878,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         validateCombinedChainLimitCallsCount += 1
         validateCombinedChainLimitReceivedLimit = limit
-        try await validateCombinedChainLimitClosure?(limit)
+        try await validateCombinedChainLimitClosure!(limit)
     }
 
     // MARK: - rewindToHeight
@@ -1903,7 +1903,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         rewindToHeightHeightCallsCount += 1
         rewindToHeightHeightReceivedHeight = height
-        try await rewindToHeightHeightClosure?(height)
+        try await rewindToHeightHeightClosure!(height)
     }
 
     // MARK: - rewindCacheToHeight
@@ -1928,7 +1928,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         rewindCacheToHeightHeightCallsCount += 1
         rewindCacheToHeightHeightReceivedHeight = height
-        try await rewindCacheToHeightHeightClosure?(height)
+        try await rewindCacheToHeightHeightClosure!(height)
     }
 
     // MARK: - scanBlocks
@@ -1953,7 +1953,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         scanBlocksLimitCallsCount += 1
         scanBlocksLimitReceivedLimit = limit
-        try await scanBlocksLimitClosure?(limit)
+        try await scanBlocksLimitClosure!(limit)
     }
 
     // MARK: - putUnspentTransparentOutput
@@ -1978,7 +1978,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         putUnspentTransparentOutputTxidIndexScriptValueHeightCallsCount += 1
         putUnspentTransparentOutputTxidIndexScriptValueHeightReceivedArguments = (txid: txid, index: index, script: script, value: value, height: height)
-        try await putUnspentTransparentOutputTxidIndexScriptValueHeightClosure?(txid, index, script, value, height)
+        try await putUnspentTransparentOutputTxidIndexScriptValueHeightClosure!(txid, index, script, value, height)
     }
 
     // MARK: - shieldFunds
@@ -2041,7 +2041,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             throw error
         }
         initBlockMetadataDbCallsCount += 1
-        try await initBlockMetadataDbClosure?()
+        try await initBlockMetadataDbClosure!()
     }
 
     // MARK: - writeBlocksMetadata
@@ -2066,7 +2066,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         writeBlocksMetadataBlocksCallsCount += 1
         writeBlocksMetadataBlocksReceivedBlocks = blocks
-        try await writeBlocksMetadataBlocksClosure?(blocks)
+        try await writeBlocksMetadataBlocksClosure!(blocks)
     }
 
     // MARK: - latestCachedBlockHeight
