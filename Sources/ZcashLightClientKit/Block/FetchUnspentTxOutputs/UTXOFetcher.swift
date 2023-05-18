@@ -19,7 +19,7 @@ struct UTXOFetcherConfig {
 protocol UTXOFetcher {
     func fetch(
         at range: CompactBlockRange,
-        didFetch: (Float) async -> Void
+        didFetch: @escaping (Float) async -> Void
     ) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])
 }
 
@@ -36,7 +36,7 @@ struct UTXOFetcherImpl {
 extension UTXOFetcherImpl: UTXOFetcher {
     func fetch(
         at range: CompactBlockRange,
-        didFetch: (Float) async -> Void
+        didFetch: @escaping (Float) async -> Void
     ) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
         try Task.checkCancellation()
 
