@@ -73,6 +73,14 @@ extension MockTransactionRepository.Kind: Equatable {}
 
 // MARK: - TransactionRepository
 extension MockTransactionRepository: TransactionRepository {
+    func firstUnenhancedTransaction() async throws -> ZcashLightClientKit.ZcashTransaction.Output? {
+        nil
+    }
+
+    func unenhancedTransactions() async throws -> [ZcashLightClientKit.ZcashTransaction.Output] {
+        []
+    }
+
     func getTransactionOutputs(for id: Int) async throws -> [ZcashLightClientKit.ZcashTransaction.Output] {
         []
     }
@@ -114,11 +122,6 @@ extension MockTransactionRepository: TransactionRepository {
     func lastScannedBlock() throws -> Block? {
         nil
     }
-
-    func isInitialized() throws -> Bool {
-        true
-    }
-
     func generate() {
         var txArray: [ZcashTransaction.Overview] = []
         reference = referenceArray()

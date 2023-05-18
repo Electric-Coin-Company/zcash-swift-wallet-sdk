@@ -48,10 +48,6 @@ class TransactionSQLDAO: TransactionRepository {
     func lastScannedBlock() async throws -> Block? {
         try blockDao.latestBlock()
     }
-
-    func isInitialized() async throws -> Bool {
-        true
-    }
     
     func countAll() async throws -> Int {
         do {
@@ -172,6 +168,35 @@ class TransactionSQLDAO: TransactionRepository {
 
     func getRecipients(for id: Int) async throws -> [TransactionRecipient] {
         try await getTransactionOutputs(for: id).map { $0.recipient }
+    }
+
+    func firstUnenhancedTransaction() async throws -> ZcashTransaction.Output? {
+        let query = transactionsView
+            .filter(
+                ZcashTransaction.Overview.Column.raw == nil &&
+                ZcashTransaction.Overview.Column.minedHeight != nil
+            )
+            .order((ZcashTransaction.Overview.Column.minedHeight ?? BlockHeight.max).asc)
+            .limit(1)
+
+        do {
+            return try execute(query) { try ZcashTransaction.Output(row: $0) }.first
+        } catch ZcashError.transactionRepositoryEntityNotFound {
+            return nil
+        } catch {
+            throw error
+        }
+    }
+
+    func unenhancedTransactions() async throws -> [ZcashTransaction.Output] {
+        let query = transactionsView
+            .select(ZcashTransaction.Overview.Column.minedHeight.max)
+            .filter(
+                ZcashTransaction.Overview.Column.raw == nil &&
+                ZcashTransaction.Overview.Column.minedHeight != nil
+            )
+
+        return try execute(query) { try ZcashTransaction.Output(row: $0) }
     }
 
     private func execute<Entity>(_ query: View, createEntity: (Row) throws -> Entity) throws -> Entity {
