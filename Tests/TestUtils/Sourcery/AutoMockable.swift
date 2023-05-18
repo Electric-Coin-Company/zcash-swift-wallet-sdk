@@ -17,6 +17,7 @@ extension BlockValidator { }
 extension LightWalletdInfo { }
 extension LightWalletService { }
 extension Logger { }
+extension SaplingParametersHandler { }
 extension Synchronizer { }
 extension TransactionRepository { }
 extension UTXOFetcher { }

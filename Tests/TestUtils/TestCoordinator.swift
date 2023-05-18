@@ -216,22 +216,23 @@ extension TestCoordinator {
     func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {
         Task {
             await self.synchronizer.blockProcessor.stop()
-            let config = await self.synchronizer.blockProcessor.config
-
-            let newConfig = CompactBlockProcessor.Configuration(
-                alias: config.alias,
-                fsBlockCacheRoot: config.fsBlockCacheRoot,
-                dataDb: config.dataDb,
-                spendParamsURL: config.spendParamsURL,
-                outputParamsURL: config.outputParamsURL,
-                saplingParamsSourceURL: config.saplingParamsSourceURL,
-                retries: config.retries,
-                maxBackoffInterval: config.maxBackoffInterval,
-                rewindDistance: config.rewindDistance,
-                walletBirthdayProvider: config.walletBirthdayProvider,
-                saplingActivation: saplingActivation,
-                network: config.network
-            )
+            // TODO: [1102] review and potentially fix/remove commented code https://github.com/zcash/ZcashLightClientKit/issues/1102
+//            let config = await self.synchronizer.blockProcessor.config
+//
+//            let newConfig = CompactBlockProcessor.Configuration(
+//                alias: config.alias,
+//                fsBlockCacheRoot: config.fsBlockCacheRoot,
+//                dataDb: config.dataDb,
+//                spendParamsURL: config.spendParamsURL,
+//                outputParamsURL: config.outputParamsURL,
+//                saplingParamsSourceURL: config.saplingParamsSourceURL,
+//                retries: config.retries,
+//                maxBackoffInterval: config.maxBackoffInterval,
+//                rewindDistance: config.rewindDistance,
+//                walletBirthdayProvider: config.walletBirthdayProvider,
+//                saplingActivation: saplingActivation,
+//                network: config.network
+//            )
 
 //            await self.synchronizer.blockProcessor.update(config: newConfig)
         }
