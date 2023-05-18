@@ -11,6 +11,8 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
+// TODO: [1098] review tests, after progress reporting some of them may not have a sense anymore
+// https://github.com/zcash/ZcashLightClientKit/issues/1098
 class SynchronizerOfflineTests: ZcashTestCase {
     let data = TestsData(networkType: .testnet)
     var network: ZcashNetwork!
@@ -366,7 +368,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
     }
 
     func testIsNewSessionOnUnpreparedToValidTransition() {
-        XCTAssertTrue(SessionTicker.live.isNewSyncSession(.unprepared, .syncing(.nullProgress)))
+        XCTAssertTrue(SessionTicker.live.isNewSyncSession(.unprepared, .syncing(0)))
     }
 
     func testIsNotNewSessionOnUnpreparedToStateThatWontSync() {
@@ -376,18 +378,16 @@ class SynchronizerOfflineTests: ZcashTestCase {
 
     func testIsNotNewSessionOnUnpreparedToInvalidOrUnexpectedTransitions() {
         XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .synced))
-        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .fetching(0)))
-        XCTAssertFalse(SessionTicker.live.isNewSyncSession(.unprepared, .enhancing(.zero)))
     }
 
     func testIsNotNewSyncSessionOnSameSession() {
         XCTAssertFalse(
             SessionTicker.live.isNewSyncSession(
                 .syncing(
-                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 3)
+                    0.5
                 ),
                 .syncing(
-                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                    0.6
                 )
             )
         )
@@ -398,7 +398,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
             SessionTicker.live.isNewSyncSession(
                 .synced,
                 .syncing(
-                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                    0.6
                 )
             )
         )
@@ -409,7 +409,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
             SessionTicker.live.isNewSyncSession(
                 .disconnected,
                 .syncing(
-                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                    0.6
                 )
             )
         )
@@ -420,7 +420,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
             SessionTicker.live.isNewSyncSession(
                 .stopped,
                 .syncing(
-                    BlockProgress(startHeight: 1, targetHeight: 10, progressHeight: 4)
+                    0.6
                 )
             )
         )
@@ -428,17 +428,16 @@ class SynchronizerOfflineTests: ZcashTestCase {
 
     func testInternalSyncStatusesDontDifferWhenOuterStatusIsTheSame() {
         XCTAssertFalse(InternalSyncStatus.disconnected.isDifferent(from: .disconnected))
-        XCTAssertFalse(InternalSyncStatus.fetching(0).isDifferent(from: .fetching(0)))
+        XCTAssertFalse(InternalSyncStatus.syncing(0).isDifferent(from: .syncing(0)))
         XCTAssertFalse(InternalSyncStatus.stopped.isDifferent(from: .stopped))
         XCTAssertFalse(InternalSyncStatus.synced.isDifferent(from: .synced))
-        XCTAssertFalse(InternalSyncStatus.syncing(.nullProgress).isDifferent(from: .syncing(.nullProgress)))
         XCTAssertFalse(InternalSyncStatus.unprepared.isDifferent(from: .unprepared))
     }
     
     func testInternalSyncStatusMap_SyncingLowerBound() {
         let synchronizerState = synchronizerState(
             for:
-                InternalSyncStatus.syncing(BlockProgress(startHeight: 0, targetHeight: 100, progressHeight: 0))
+                InternalSyncStatus.syncing(0)
         )
 
         if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.0, data) {
@@ -449,7 +448,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
     func testInternalSyncStatusMap_SyncingInTheMiddle() {
         let synchronizerState = synchronizerState(
             for:
-                InternalSyncStatus.syncing(BlockProgress(startHeight: 0, targetHeight: 100, progressHeight: 50))
+                InternalSyncStatus.syncing(0.45)
         )
 
         if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.45, data) {
@@ -460,89 +459,16 @@ class SynchronizerOfflineTests: ZcashTestCase {
     func testInternalSyncStatusMap_SyncingUpperBound() {
         let synchronizerState = synchronizerState(
             for:
-                InternalSyncStatus.syncing(BlockProgress(startHeight: 0, targetHeight: 100, progressHeight: 100))
+                InternalSyncStatus.syncing(0.9)
         )
 
         if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.9, data) {
             XCTFail("Syncing is expected to be 90% (0.9) but received \(data).")
-        }
-    }
-
-    func testInternalSyncStatusMap_EnhancingLowerBound() {
-        let synchronizerState = synchronizerState(
-            for:
-                InternalSyncStatus.enhancing(
-                    EnhancementProgress(
-                        totalTransactions: 100,
-                        enhancedTransactions: 0,
-                        lastFoundTransaction: nil,
-                        range: CompactBlockRange(uncheckedBounds: (0, 100)),
-                        newlyMined: false
-                    )
-                )
-        )
-
-        if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.9, data) {
-            XCTFail("Syncing is expected to be 90% (0.9) but received \(data).")
-        }
-    }
-    
-    func testInternalSyncStatusMap_EnhancingInTheMiddle() {
-        let synchronizerState = synchronizerState(
-            for:
-                InternalSyncStatus.enhancing(
-                    EnhancementProgress(
-                        totalTransactions: 100,
-                        enhancedTransactions: 50,
-                        lastFoundTransaction: nil,
-                        range: CompactBlockRange(uncheckedBounds: (0, 100)),
-                        newlyMined: false
-                    )
-                )
-        )
-
-        if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.94, data) {
-            XCTFail("Syncing is expected to be 94% (0.94) but received \(data).")
-        }
-    }
-    
-    func testInternalSyncStatusMap_EnhancingUpperBound() {
-        let synchronizerState = synchronizerState(
-            for:
-                InternalSyncStatus.enhancing(
-                    EnhancementProgress(
-                        totalTransactions: 100,
-                        enhancedTransactions: 100,
-                        lastFoundTransaction: nil,
-                        range: CompactBlockRange(uncheckedBounds: (0, 100)),
-                        newlyMined: false
-                    )
-                )
-        )
-
-        if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.98, data) {
-            XCTFail("Syncing is expected to be 98% (0.98) but received \(data).")
-        }
-    }
-    
-    func testInternalSyncStatusMap_FetchingLowerBound() {
-        let synchronizerState = synchronizerState(for: InternalSyncStatus.fetching(0))
-
-        if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.98, data) {
-            XCTFail("Syncing is expected to be 98% (0.98) but received \(data).")
-        }
-    }
-
-    func testInternalSyncStatusMap_FetchingInTheMiddle() {
-        let synchronizerState = synchronizerState(for: InternalSyncStatus.fetching(0.5))
-
-        if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(0.99, data) {
-            XCTFail("Syncing is expected to be 99% (0.99) but received \(data).")
         }
     }
     
     func testInternalSyncStatusMap_FetchingUpperBound() {
-        let synchronizerState = synchronizerState(for: InternalSyncStatus.fetching(1))
+        let synchronizerState = synchronizerState(for: InternalSyncStatus.syncing(1))
 
         if case let .syncing(data) = synchronizerState.syncStatus, data != nextafter(1.0, data) {
             XCTFail("Syncing is expected to be 100% (1.0) but received \(data).")
