@@ -25,10 +25,10 @@ final class ValidateServerActionTests: ZcashTestCase {
     }
     
     func testValidateServerAction_NextAction() async throws {
-        let validateAction = setupAction()
+        let validateServerAction = setupAction()
         
         do {
-            let nextContext = try await validateAction.run(with: .init(state: .validateServer)) { _ in }
+            let nextContext = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .computeSyncRanges,
@@ -42,10 +42,10 @@ final class ValidateServerActionTests: ZcashTestCase {
     func testValidateServerAction_ChainNameError() async throws {
         underlyingChainName = "invalid"
         
-        let validateAction = setupAction()
+        let validateServerAction = setupAction()
         
         do {
-            _ = try await validateAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
             XCTFail("testValidateServerAction_ChainNameError is expected to fail.")
         } catch ZcashError.compactBlockProcessorChainName(let chainName) {
             XCTAssertEqual(chainName, "invalid")
@@ -57,10 +57,10 @@ final class ValidateServerActionTests: ZcashTestCase {
     func testValidateServerAction_NetworkMatchError() async throws {
         underlyingNetworkType = .mainnet
 
-        let validateAction = setupAction()
+        let validateServerAction = setupAction()
         
         do {
-            _ = try await validateAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
             XCTFail("testValidateServerAction_NetworkMatchError is expected to fail.")
         } catch let ZcashError.compactBlockProcessorNetworkMismatch(expected, found) {
             XCTAssertEqual(expected, .mainnet)
@@ -73,10 +73,10 @@ final class ValidateServerActionTests: ZcashTestCase {
     func testValidateServerAction_SaplingActivationError() async throws {
         underlyingSaplingActivationHeight = 1
 
-        let validateAction = setupAction()
+        let validateServerAction = setupAction()
         
         do {
-            _ = try await validateAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
             XCTFail("testValidateServerAction_SaplingActivationError is expected to fail.")
         } catch let ZcashError.compactBlockProcessorSaplingActivationMismatch(expected, found) {
             XCTAssertEqual(expected, 280_000)
@@ -89,10 +89,10 @@ final class ValidateServerActionTests: ZcashTestCase {
     func testValidateServerAction_ConsensusBranchIDError_InvalidRemoteBranch() async throws {
         underlyingConsensusBranchID = "1 1"
 
-        let validateAction = setupAction()
+        let validateServerAction = setupAction()
 
         do {
-            _ = try await validateAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
             XCTFail("testValidateServerAction_ConsensusBranchIDError_InvalidRemoteBranch is expected to fail.")
         } catch ZcashError.compactBlockProcessorConsensusBranchID {
         } catch {
@@ -103,10 +103,10 @@ final class ValidateServerActionTests: ZcashTestCase {
     func testValidateServerAction_ConsensusBranchIDError_ValidRemoteBranch() async throws {
         underlyingConsensusBranchID = "1"
 
-        let validateAction = setupAction()
+        let validateServerAction = setupAction()
 
         do {
-            _ = try await validateAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
             XCTFail("testValidateServerAction_ConsensusBranchIDError_ValidRemoteBranch is expected to fail.")
         } catch let ZcashError.compactBlockProcessorWrongConsensusBranchId(expected, found) {
             XCTAssertEqual(expected, -1026109260)
