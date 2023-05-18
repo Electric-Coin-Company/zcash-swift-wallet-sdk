@@ -14,22 +14,27 @@ final class ScanActionTests: ZcashTestCase {
         let blockScannerMock = BlockScannerMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         let loggerMock = LoggerMock()
+        
+        transactionRepositoryMock.lastScannedHeightReturnValue = 1500
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        blockScannerMock.scanBlocksAtTotalProgressRangeDidScanClosure = { _, _, _ in 2 }
 
-        mockContainer.mock(type: BlockScanner.self, isSingleton: true) { _ in blockScannerMock }
-        mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }
-        mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
-
-        let config: CompactBlockProcessor.Configuration = .standard(
-            for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: 0
-        )
-
-        let scanAction = ScanAction(
-            container: mockContainer,
-            config: config
-        )
+        let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
+        let syncContext = await setupActionContext()
         
         do {
-            let nextContext = try await scanAction.run(with: .init(state: .scan)) { _ in }
+            let nextContext = try await scanAction.run(with: syncContext) { event in
+                guard case .progressPartialUpdate(.syncing(let progress)) = event else {
+                    XCTFail("event is expected to be .progressPartialUpdate(.syncing()) but received \(event)")
+                    return
+                }
+                XCTAssertEqual(progress.startHeight, BlockHeight(1000))
+                XCTAssertEqual(progress.targetHeight, BlockHeight(2000))
+                XCTAssertEqual(progress.progressHeight, BlockHeight(1500))
+            }
+            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
+            XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
+            XCTAssertTrue(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .clearAlreadyScannedBlocks,
@@ -38,5 +43,81 @@ final class ScanActionTests: ZcashTestCase {
         } catch {
             XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
         }
+    }
+    
+    func testScanAction_EarlyOutForNoDownloadAndScanRangeSet() async throws {
+        let blockScannerMock = BlockScannerMock()
+        let transactionRepositoryMock = TransactionRepositoryMock()
+        let loggerMock = LoggerMock()
+                
+        let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
+        let syncContext: ActionContext = .init(state: .scan)
+        
+        do {
+            let _ = try await scanAction.run(with: syncContext) { _ in }
+            XCTAssertFalse(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
+            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
+            XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
+        } catch {
+            XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
+        }
+    }
+    
+    func testScanAction_StartRangeHigherThanEndRange() async throws {
+        let blockScannerMock = BlockScannerMock()
+        let transactionRepositoryMock = TransactionRepositoryMock()
+        let loggerMock = LoggerMock()
+                
+        transactionRepositoryMock.lastScannedHeightReturnValue = 2001
+
+        let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
+        let syncContext = await setupActionContext()
+        
+        do {
+            let _ = try await scanAction.run(with: syncContext) { _ in }
+            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
+            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
+            XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
+        } catch {
+            XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
+        }
+    }
+    
+    func setupAction(
+        _ blockScannerMock: BlockScannerMock,
+        _ transactionRepositoryMock: TransactionRepositoryMock,
+        _ loggerMock: LoggerMock
+    ) -> ScanAction {
+        mockContainer.mock(type: BlockScanner.self, isSingleton: true) { _ in blockScannerMock }
+        mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }
+        mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
+        
+        let config: CompactBlockProcessor.Configuration = .standard(
+            for: ZcashNetworkBuilder.network(for: .testnet), walletBirthday: 0
+        )
+        
+        return ScanAction(
+            container: mockContainer,
+            config: config
+        )
+    }
+    
+    func setupActionContext() async -> ActionContext {
+        let syncContext: ActionContext = .init(state: .scan)
+        
+        let syncRanges = SyncRanges(
+            latestBlockHeight: 0,
+            downloadedButUnscannedRange: nil,
+            downloadAndScanRange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
+            enhanceRange: nil,
+            fetchUTXORange: nil,
+            latestScannedHeight: nil,
+            latestDownloadedBlockHeight: nil
+        )
+        
+        await syncContext.update(syncRanges: syncRanges)
+        await syncContext.update(totalProgressRange: CompactBlockRange(uncheckedBounds: (1000, 2000)))
+
+        return syncContext
     }
 }

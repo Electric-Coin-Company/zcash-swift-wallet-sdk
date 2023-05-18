@@ -13,6 +13,8 @@ final class ValidateActionTests: ZcashTestCase {
     func testValidateAction_NextAction() async throws {
         let blockValidatorMock = BlockValidatorMock()
         
+        blockValidatorMock.validateClosure = { }
+        
         mockContainer.mock(type: BlockValidator.self, isSingleton: true) { _ in blockValidatorMock }
 
         let validateAction = ValidateAction(
@@ -21,6 +23,7 @@ final class ValidateActionTests: ZcashTestCase {
         
         do {
             let nextContext = try await validateAction.run(with: .init(state: .validate)) { _ in }
+            XCTAssertTrue(blockValidatorMock.validateCalled, "validator.validate() is expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .scan,
