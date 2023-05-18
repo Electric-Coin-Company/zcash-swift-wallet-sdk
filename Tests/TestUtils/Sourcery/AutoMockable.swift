@@ -12,10 +12,13 @@
 
 @testable import ZcashLightClientKit
 
-extension ZcashRustBackendWelding { }
-extension Synchronizer { }
-extension LightWalletService { }
-extension LightWalletdInfo { }
+extension BlockScanner { }
 extension BlockValidator { }
+extension LightWalletdInfo { }
+extension LightWalletService { }
+extension Logger { }
+extension Synchronizer { }
+extension TransactionRepository { }
+extension ZcashRustBackendWelding { }
 
 // sourcery:end:
