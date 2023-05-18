@@ -448,32 +448,7 @@ class SaplingParametersHandlerMock: SaplingParametersHandler {
             throw error
         }
         handleIfNeededCallsCount += 1
-        try await handleIfNeededClosure?()
-    }
-
-}
-class SaplingParametersHandlerMock: SaplingParametersHandler {
-
-
-    init(
-    ) {
-    }
-
-    // MARK: - handleIfNeeded
-
-    var handleIfNeededThrowableError: Error?
-    var handleIfNeededCallsCount = 0
-    var handleIfNeededCalled: Bool {
-        return handleIfNeededCallsCount > 0
-    }
-    var handleIfNeededClosure: (() async throws -> Void)?
-
-    func handleIfNeeded() async throws {
-        if let error = handleIfNeededThrowableError {
-            throw error
-        }
-        handleIfNeededCallsCount += 1
-        try await handleIfNeededClosure?()
+        try await handleIfNeededClosure!()
     }
 
 }

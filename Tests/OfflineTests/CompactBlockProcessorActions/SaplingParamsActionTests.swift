@@ -14,6 +14,9 @@ final class SaplingParamsActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
         let saplingParametersHandlerMock = SaplingParametersHandlerMock()
 
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        saplingParametersHandlerMock.handleIfNeededClosure = { }
+
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
         mockContainer.mock(type: SaplingParametersHandler.self, isSingleton: true) { _ in saplingParametersHandlerMock }
 
@@ -21,6 +24,8 @@ final class SaplingParamsActionTests: ZcashTestCase {
         
         do {
             let nextContext = try await saplingParamsActionAction.run(with: .init(state: .handleSaplingParams)) { _ in }
+            XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
+            XCTAssertTrue(saplingParametersHandlerMock.handleIfNeededCalled, "saplingParametersHandler.handleIfNeeded() is expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .scanDownloaded,
