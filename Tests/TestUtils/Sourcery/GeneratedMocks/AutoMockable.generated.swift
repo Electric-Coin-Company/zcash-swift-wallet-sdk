@@ -1356,6 +1356,38 @@ class TransactionRepositoryMock: TransactionRepository {
     }
 
 }
+class UTXOFetcherMock: UTXOFetcher {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - fetch
+
+    var fetchAtDidFetchThrowableError: Error?
+    var fetchAtDidFetchCallsCount = 0
+    var fetchAtDidFetchCalled: Bool {
+        return fetchAtDidFetchCallsCount > 0
+    }
+    var fetchAtDidFetchReceivedArguments: (range: CompactBlockRange, didFetch: (Float) async -> Void)?
+    var fetchAtDidFetchReturnValue: (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])!
+    var fetchAtDidFetchClosure: ((CompactBlockRange, @escaping (Float) async -> Void) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))?
+
+    func fetch(at range: CompactBlockRange, didFetch: @escaping (Float) async -> Void) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
+        if let error = fetchAtDidFetchThrowableError {
+            throw error
+        }
+        fetchAtDidFetchCallsCount += 1
+        fetchAtDidFetchReceivedArguments = (range: range, didFetch: didFetch)
+        if let closure = fetchAtDidFetchClosure {
+            return try await closure(range, didFetch)
+        } else {
+            return fetchAtDidFetchReturnValue
+        }
+    }
+
+}
 actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     nonisolated let consensusBranchIdForHeightClosure: ((Int32) throws -> Int32)?
