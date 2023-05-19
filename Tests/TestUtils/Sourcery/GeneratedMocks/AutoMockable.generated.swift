@@ -7,6 +7,38 @@ import Foundation
 
 
 // MARK: - AutoMockable protocols
+class BlockEnhancerMock: BlockEnhancer {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - enhance
+
+    var enhanceAtDidEnhanceThrowableError: Error?
+    var enhanceAtDidEnhanceCallsCount = 0
+    var enhanceAtDidEnhanceCalled: Bool {
+        return enhanceAtDidEnhanceCallsCount > 0
+    }
+    var enhanceAtDidEnhanceReceivedArguments: (range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void)?
+    var enhanceAtDidEnhanceReturnValue: [ZcashTransaction.Overview]?
+    var enhanceAtDidEnhanceClosure: ((CompactBlockRange, @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?)?
+
+    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
+        if let error = enhanceAtDidEnhanceThrowableError {
+            throw error
+        }
+        enhanceAtDidEnhanceCallsCount += 1
+        enhanceAtDidEnhanceReceivedArguments = (range: range, didEnhance: didEnhance)
+        if let closure = enhanceAtDidEnhanceClosure {
+            return try await closure(range, didEnhance)
+        } else {
+            return enhanceAtDidEnhanceReturnValue
+        }
+    }
+
+}
 class BlockScannerMock: BlockScanner {
 
 
@@ -61,6 +93,102 @@ class BlockValidatorMock: BlockValidator {
         }
         validateCallsCount += 1
         try await validateClosure!()
+    }
+
+}
+class InternalSyncProgressStorageMock: InternalSyncProgressStorage {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - bool
+
+    var boolForKeyCallsCount = 0
+    var boolForKeyCalled: Bool {
+        return boolForKeyCallsCount > 0
+    }
+    var boolForKeyReceivedDefaultName: String?
+    var boolForKeyReturnValue: Bool!
+    var boolForKeyClosure: ((String) -> Bool)?
+
+    func bool(forKey defaultName: String) -> Bool {
+        boolForKeyCallsCount += 1
+        boolForKeyReceivedDefaultName = defaultName
+        if let closure = boolForKeyClosure {
+            return closure(defaultName)
+        } else {
+            return boolForKeyReturnValue
+        }
+    }
+
+    // MARK: - integer
+
+    var integerForKeyCallsCount = 0
+    var integerForKeyCalled: Bool {
+        return integerForKeyCallsCount > 0
+    }
+    var integerForKeyReceivedDefaultName: String?
+    var integerForKeyReturnValue: Int!
+    var integerForKeyClosure: ((String) -> Int)?
+
+    func integer(forKey defaultName: String) -> Int {
+        integerForKeyCallsCount += 1
+        integerForKeyReceivedDefaultName = defaultName
+        if let closure = integerForKeyClosure {
+            return closure(defaultName)
+        } else {
+            return integerForKeyReturnValue
+        }
+    }
+
+    // MARK: - set
+
+    var setForKeyCallsCount = 0
+    var setForKeyCalled: Bool {
+        return setForKeyCallsCount > 0
+    }
+    var setForKeyReceivedArguments: (value: Int, defaultName: String)?
+    var setForKeyClosure: ((Int, String) -> Void)?
+
+    func set(_ value: Int, forKey defaultName: String) {
+        setForKeyCallsCount += 1
+        setForKeyReceivedArguments = (value: value, defaultName: defaultName)
+        setForKeyClosure!(value, defaultName)
+    }
+
+    // MARK: - set
+
+    var setBoolCallsCount = 0
+    var setBoolCalled: Bool {
+        return setBoolCallsCount > 0
+    }
+    var setBoolReceivedArguments: (value: Bool, defaultName: String)?
+    var setBoolClosure: ((Bool, String) -> Void)?
+
+    func set(_ value: Bool, forKey defaultName: String) {
+        setBoolCallsCount += 1
+        setBoolReceivedArguments = (value: value, defaultName: defaultName)
+        setBoolClosure!(value, defaultName)
+    }
+
+    // MARK: - synchronize
+
+    var synchronizeCallsCount = 0
+    var synchronizeCalled: Bool {
+        return synchronizeCallsCount > 0
+    }
+    var synchronizeReturnValue: Bool!
+    var synchronizeClosure: (() -> Bool)?
+
+    func synchronize() -> Bool {
+        synchronizeCallsCount += 1
+        if let closure = synchronizeClosure {
+            return closure()
+        } else {
+            return synchronizeReturnValue
+        }
     }
 
 }
