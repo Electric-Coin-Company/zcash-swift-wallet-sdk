@@ -7,6 +7,38 @@ import Foundation
 
 
 // MARK: - AutoMockable protocols
+class BlockEnhancerMock: BlockEnhancer {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - enhance
+
+    var enhanceAtDidEnhanceThrowableError: Error?
+    var enhanceAtDidEnhanceCallsCount = 0
+    var enhanceAtDidEnhanceCalled: Bool {
+        return enhanceAtDidEnhanceCallsCount > 0
+    }
+    var enhanceAtDidEnhanceReceivedArguments: (range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void)?
+    var enhanceAtDidEnhanceReturnValue: [ZcashTransaction.Overview]?
+    var enhanceAtDidEnhanceClosure: ((CompactBlockRange, @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?)?
+
+    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
+        if let error = enhanceAtDidEnhanceThrowableError {
+            throw error
+        }
+        enhanceAtDidEnhanceCallsCount += 1
+        enhanceAtDidEnhanceReceivedArguments = (range: range, didEnhance: didEnhance)
+        if let closure = enhanceAtDidEnhanceClosure {
+            return try await closure(range, didEnhance)
+        } else {
+            return enhanceAtDidEnhanceReturnValue
+        }
+    }
+
+}
 class BlockScannerMock: BlockScanner {
 
 
@@ -61,6 +93,117 @@ class BlockValidatorMock: BlockValidator {
         }
         validateCallsCount += 1
         try await validateClosure!()
+    }
+
+}
+class InternalSyncProgressStorageMock: InternalSyncProgressStorage {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - initialize
+
+    var initializeThrowableError: Error?
+    var initializeCallsCount = 0
+    var initializeCalled: Bool {
+        return initializeCallsCount > 0
+    }
+    var initializeClosure: (() async throws -> Void)?
+
+    func initialize() async throws {
+        if let error = initializeThrowableError {
+            throw error
+        }
+        initializeCallsCount += 1
+        try await initializeClosure!()
+    }
+
+    // MARK: - bool
+
+    var boolForThrowableError: Error?
+    var boolForCallsCount = 0
+    var boolForCalled: Bool {
+        return boolForCallsCount > 0
+    }
+    var boolForReceivedKey: String?
+    var boolForReturnValue: Bool!
+    var boolForClosure: ((String) async throws -> Bool)?
+
+    func bool(for key: String) async throws -> Bool {
+        if let error = boolForThrowableError {
+            throw error
+        }
+        boolForCallsCount += 1
+        boolForReceivedKey = key
+        if let closure = boolForClosure {
+            return try await closure(key)
+        } else {
+            return boolForReturnValue
+        }
+    }
+
+    // MARK: - integer
+
+    var integerForThrowableError: Error?
+    var integerForCallsCount = 0
+    var integerForCalled: Bool {
+        return integerForCallsCount > 0
+    }
+    var integerForReceivedKey: String?
+    var integerForReturnValue: Int!
+    var integerForClosure: ((String) async throws -> Int)?
+
+    func integer(for key: String) async throws -> Int {
+        if let error = integerForThrowableError {
+            throw error
+        }
+        integerForCallsCount += 1
+        integerForReceivedKey = key
+        if let closure = integerForClosure {
+            return try await closure(key)
+        } else {
+            return integerForReturnValue
+        }
+    }
+
+    // MARK: - set
+
+    var setForThrowableError: Error?
+    var setForCallsCount = 0
+    var setForCalled: Bool {
+        return setForCallsCount > 0
+    }
+    var setForReceivedArguments: (value: Int, key: String)?
+    var setForClosure: ((Int, String) async throws -> Void)?
+
+    func set(_ value: Int, for key: String) async throws {
+        if let error = setForThrowableError {
+            throw error
+        }
+        setForCallsCount += 1
+        setForReceivedArguments = (value: value, key: key)
+        try await setForClosure!(value, key)
+    }
+
+    // MARK: - set
+
+    var setBoolThrowableError: Error?
+    var setBoolCallsCount = 0
+    var setBoolCalled: Bool {
+        return setBoolCallsCount > 0
+    }
+    var setBoolReceivedArguments: (value: Bool, key: String)?
+    var setBoolClosure: ((Bool, String) async throws -> Void)?
+
+    func set(_ value: Bool, for key: String) async throws {
+        if let error = setBoolThrowableError {
+            throw error
+        }
+        setBoolCallsCount += 1
+        setBoolReceivedArguments = (value: value, key: key)
+        try await setBoolClosure!(value, key)
     }
 
 }

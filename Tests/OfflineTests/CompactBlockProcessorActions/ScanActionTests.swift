@@ -55,9 +55,9 @@ final class ScanActionTests: ZcashTestCase {
         
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
-            XCTAssertFalse(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
-            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
-            XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
+            XCTAssertFalse(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is not expected to be called.")
+            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
+            XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is not expected to be called.")
         } catch {
             XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
         }
@@ -76,8 +76,8 @@ final class ScanActionTests: ZcashTestCase {
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
-            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
-            XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
+            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
+            XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is not expected to be called.")
         } catch {
             XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
         }

@@ -48,6 +48,7 @@ protocol InternalSyncProgressStorage {
     func bool(for key: String) async throws -> Bool
     func integer(for key: String) async throws -> Int
     func set(_ value: Int, for key: String) async throws
+    // sourcery: mockedName="setBool"
     func set(_ value: Bool, for key: String) async throws
 }
 
