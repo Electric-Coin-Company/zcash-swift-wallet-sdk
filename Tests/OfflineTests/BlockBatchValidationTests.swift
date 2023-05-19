@@ -45,7 +45,7 @@ class BlockBatchValidationTests: ZcashTestCase {
         testTempDirectory = nil
     }
 
-    // TODO: [1094] review the tests and potentially fix it https://github.com/zcash/ZcashLightClientKit/issues/1094
+    // TODO: [#1094] review the tests and potentially fix it https://github.com/zcash/ZcashLightClientKit/issues/1094
 //    func testBranchIdFailure() async throws {
 //        let network = ZcashNetworkBuilder.network(for: .mainnet)
 //        let service = MockLightWalletService(

@@ -39,7 +39,7 @@ class CompactBlockProcessorOfflineTests: ZcashTestCase {
         try FileManager.default.removeItem(at: testTempDirectory)
     }
 
-    // TODO: [1095] review this test https://github.com/zcash/ZcashLightClientKit/issues/1095
+    // TODO: [#1095] review this test https://github.com/zcash/ZcashLightClientKit/issues/1095
 //    func testComputeProcessingRangeForSingleLoop() async throws {
 //        let network = ZcashNetworkBuilder.network(for: .testnet)
 //        let rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
