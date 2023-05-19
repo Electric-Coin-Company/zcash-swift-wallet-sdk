@@ -441,6 +441,7 @@ extension CompactBlockProcessor {
     // This is main loop of the sync process. It simply takes state and try to find action which handles it. If action is found it executes the
     // action. If action is not found then loop finishes. Thanks to this it's super easy to identify start point of sync process and end points
     // of sync process without any side effects.
+    // swiftlint:disable:next cyclomatic_complexity
     private func run() async {
         logger.debug("Starting run")
         await resetContext()

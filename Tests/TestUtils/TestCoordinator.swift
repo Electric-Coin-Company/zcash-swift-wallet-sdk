@@ -216,7 +216,7 @@ extension TestCoordinator {
     func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {
         Task {
             await self.synchronizer.blockProcessor.stop()
-            // TODO: [1102] review and potentially fix/remove commented code https://github.com/zcash/ZcashLightClientKit/issues/1102
+            // TODO: [#1102] review and potentially fix/remove commented code https://github.com/zcash/ZcashLightClientKit/issues/1102
 //            let config = await self.synchronizer.blockProcessor.config
 //
 //            let newConfig = CompactBlockProcessor.Configuration(

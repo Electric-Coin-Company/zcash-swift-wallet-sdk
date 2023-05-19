@@ -50,7 +50,10 @@ final class ValidateServerActionTests: ZcashTestCase {
         } catch ZcashError.compactBlockProcessorChainName(let chainName) {
             XCTAssertEqual(chainName, "invalid")
         } catch {
-            XCTFail("testValidateServerAction_ChainNameError is expected to fail but error \(error) doesn't match ZcashError.compactBlockProcessorChainName")
+            XCTFail("""
+            testValidateServerAction_ChainNameError is expected to fail but error \(error) doesn't match \
+            ZcashError.compactBlockProcessorChainName
+            """)
         }
     }
     
@@ -66,7 +69,10 @@ final class ValidateServerActionTests: ZcashTestCase {
             XCTAssertEqual(expected, .mainnet)
             XCTAssertEqual(found, .testnet)
         } catch {
-            XCTFail("testValidateServerAction_NetworkMatchError is expected to fail but error \(error) doesn't match ZcashError.compactBlockProcessorNetworkMismatch")
+            XCTFail("""
+            testValidateServerAction_NetworkMatchError is expected to fail but error \(error) doesn't match \
+            ZcashError.compactBlockProcessorNetworkMismatch
+            """)
         }
     }
     
@@ -82,7 +88,10 @@ final class ValidateServerActionTests: ZcashTestCase {
             XCTAssertEqual(expected, 280_000)
             XCTAssertEqual(found, 1)
         } catch {
-            XCTFail("testValidateServerAction_SaplingActivationError is expected to fail but error \(error) doesn't match ZcashError.compactBlockProcessorSaplingActivationMismatch")
+            XCTFail("""
+            testValidateServerAction_SaplingActivationError is expected to fail but error \(error) doesn't match \
+            ZcashError.compactBlockProcessorSaplingActivationMismatch
+            """)
         }
     }
     
@@ -96,7 +105,10 @@ final class ValidateServerActionTests: ZcashTestCase {
             XCTFail("testValidateServerAction_ConsensusBranchIDError_InvalidRemoteBranch is expected to fail.")
         } catch ZcashError.compactBlockProcessorConsensusBranchID {
         } catch {
-            XCTFail("testValidateServerAction_ConsensusBranchIDError_InvalidRemoteBranch is expected to fail but error \(error) doesn't match ZcashError.compactBlockProcessorConsensusBranchID")
+            XCTFail("""
+            testValidateServerAction_ConsensusBranchIDError_InvalidRemoteBranch is expected to fail but error \(error) doesn't match \
+            ZcashError.compactBlockProcessorConsensusBranchID
+            """)
         }
     }
     
@@ -112,7 +124,10 @@ final class ValidateServerActionTests: ZcashTestCase {
             XCTAssertEqual(expected, -1026109260)
             XCTAssertEqual(found, 1)
         } catch {
-            XCTFail("testValidateServerAction_ConsensusBranchIDError_ValidRemoteBranch is expected to fail but error \(error) doesn't match ZcashError.compactBlockProcessorWrongConsensusBranchId")
+            XCTFail("""
+            testValidateServerAction_ConsensusBranchIDError_ValidRemoteBranch is expected to fail but error \(error) doesn't match \
+            ZcashError.compactBlockProcessorWrongConsensusBranchId
+            """)
         }
     }
     
