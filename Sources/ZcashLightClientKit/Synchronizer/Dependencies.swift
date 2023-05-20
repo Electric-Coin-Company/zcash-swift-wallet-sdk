@@ -14,7 +14,8 @@ enum Dependencies {
         alias: ZcashSynchronizerAlias,
         networkType: NetworkType,
         endpoint: LightWalletEndpoint,
-        loggingPolicy: Initializer.LoggingPolicy = .default(.debug)
+        loggingPolicy: Initializer.LoggingPolicy = .default(.debug),
+        enableBackendTracing: Bool = false
     ) {
         container.register(type: Logger.self, isSingleton: true) { _ in
             let logger: Logger
@@ -36,7 +37,8 @@ enum Dependencies {
                 fsBlockDbRoot: urls.fsBlockDbRoot,
                 spendParamsPath: urls.spendParamsURL,
                 outputParamsPath: urls.outputParamsURL,
-                networkType: networkType
+                networkType: networkType,
+                enableTracing: enableBackendTracing
             )
         }
 

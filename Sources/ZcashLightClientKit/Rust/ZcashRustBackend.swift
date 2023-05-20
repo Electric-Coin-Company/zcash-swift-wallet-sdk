@@ -21,6 +21,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
     nonisolated let networkType: NetworkType
 
+    static var tracingEnabled = false
     /// Creates instance of `ZcashRustBackend`.
     /// - Parameters:
     ///   - dbData: `URL` pointing to file where data database will be.
@@ -30,13 +31,20 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     ///   - spendParamsPath: `URL` pointing to spend parameters file.
     ///   - outputParamsPath: `URL` pointing to output parameters file.
     ///   - networkType: Network type to use.
-    init(dbData: URL, fsBlockDbRoot: URL, spendParamsPath: URL, outputParamsPath: URL, networkType: NetworkType) {
+    ///   - enableTracing: this sets up whether the tracing system will dump logs onto the OSLogger system or not.
+    ///   **Important note:** this will enable the tracing **for all instances** of ZcashRustBackend, not only for this one.
+    init(dbData: URL, fsBlockDbRoot: URL, spendParamsPath: URL, outputParamsPath: URL, networkType: NetworkType, enableTracing: Bool = false) {
         self.dbData = dbData.osStr()
         self.fsBlockDbRoot = fsBlockDbRoot.osPathStr()
         self.spendParamsPath = spendParamsPath.osPathStr()
         self.outputParamsPath = outputParamsPath.osPathStr()
         self.networkType = networkType
         self.keyDeriving = ZcashKeyDerivationBackend(networkType: networkType)
+
+        if enableTracing && !Self.tracingEnabled {
+            Self.tracingEnabled = true
+            Self.enableTracing()
+        }
     }
 
     func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey {
@@ -559,6 +567,12 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         return branchId
+    }
+}
+
+private extension ZcashRustBackend {
+    static func enableTracing() {
+        zcashlc_init_on_load()
     }
 }
 
