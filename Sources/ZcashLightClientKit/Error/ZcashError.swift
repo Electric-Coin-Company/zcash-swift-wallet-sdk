@@ -11,8 +11,9 @@ error originates. And it can help with debugging.
 import Foundation
 
 public enum ZcashError: Equatable, Error {
-    /// Some error happened that is not handled as `ZcashError`.
-    /// Use case is to map `any Error`(in the apps for example) to this one so it can be assured only `ZcashError` is floating through apps.
+    /// Some error happened that is not handled as `ZcashError`. All errors in the SDK are (should be) `ZcashError`.
+    /// This case is ideally not contructed directly or thrown by any SDK function, rather it's a wrapper for case clients expect ZcashErrot and want to pass it to a function/enum.
+    /// If this is the case, use `toZcashError()` extension of Error. This helper avoids to end up with Optional handling.
     /// ZUNKWN0001
     case unknown(_ error: Error)
     /// Updating of paths in `Initilizer` according to alias failed.
@@ -21,6 +22,15 @@ public enum ZcashError: Equatable, Error {
     /// Alias used to create this instance of the `SDKSynchronizer` is already used by other instance.
     /// ZINIT0002
     case initializerAliasAlreadyInUse(_ alias: ZcashSynchronizerAlias)
+    /// Object on disk at `generalStorageURL` path exists. But it file not directory.
+    /// ZINIT0003
+    case initializerGeneralStorageExistsButIsFile(_ generalStorageURL: URL)
+    /// Can't create directory at `generalStorageURL` path.
+    /// ZINIT0004
+    case initializerGeneralStorageCantCreate(_ generalStorageURL: URL, _ error: Error)
+    /// Can't set `isExcludedFromBackup` flag to `generalStorageURL`.
+    /// ZINIT0005
+    case initializerCantSetNoBackupFlagToGeneralStorageURL(_ generalStorageURL: URL, _ error: Error)
     /// Unknown GRPC Service error
     /// ZSRVC0001
     case serviceUnknownError(_ error: Error)
@@ -509,12 +519,21 @@ public enum ZcashError: Equatable, Error {
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     /// ZSYNCO0006
     case synchronizerDisconnected
+    /// `InternalSyncProgressDiskStorage` can't read data from specific file.
+    /// ZISPDS0001
+    case ispStorageCantLoad(_ fileURL: URL, _ error: Error)
+    /// `InternalSyncProgressDiskStorage` can't write data from specific file.
+    /// ZISPDS0002
+    case ispStorageCantWrite(_ fileURL: URL, _ error: Error)
 
     public var message: String {
         switch self {
-        case .unknown: return "Some error happened that is not handled as `ZcashError`."
+        case .unknown: return "Some error happened that is not handled as `ZcashError`. All errors in the SDK are (should be) `ZcashError`."
         case .initializerCantUpdateURLWithAlias: return "Updating of paths in `Initilizer` according to alias failed."
         case .initializerAliasAlreadyInUse: return "Alias used to create this instance of the `SDKSynchronizer` is already used by other instance."
+        case .initializerGeneralStorageExistsButIsFile: return "Object on disk at `generalStorageURL` path exists. But it file not directory."
+        case .initializerGeneralStorageCantCreate: return "Can't create directory at `generalStorageURL` path."
+        case .initializerCantSetNoBackupFlagToGeneralStorageURL: return "Can't set `isExcludedFromBackup` flag to `generalStorageURL`."
         case .serviceUnknownError: return "Unknown GRPC Service error"
         case .serviceGetInfoFailed: return "LightWalletService.getInfo failed."
         case .serviceLatestBlockFailed: return "LightWalletService.latestBlock failed."
@@ -659,6 +678,8 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerLatestUTXOsInvalidTAddress: return "LatestUTXOs for the address failed, invalid t-address."
         case .synchronizerRewindUnknownArchorHeight: return "Rewind failed, unknown archor height"
         case .synchronizerDisconnected: return "Indicates that this Synchronizer is disconnected from its lightwalletd server."
+        case .ispStorageCantLoad: return "`InternalSyncProgressDiskStorage` can't read data from specific file."
+        case .ispStorageCantWrite: return "`InternalSyncProgressDiskStorage` can't write data from specific file."
         }
     }
 
@@ -667,6 +688,9 @@ public enum ZcashError: Equatable, Error {
         case .unknown: return .unknown
         case .initializerCantUpdateURLWithAlias: return .initializerCantUpdateURLWithAlias
         case .initializerAliasAlreadyInUse: return .initializerAliasAlreadyInUse
+        case .initializerGeneralStorageExistsButIsFile: return .initializerGeneralStorageExistsButIsFile
+        case .initializerGeneralStorageCantCreate: return .initializerGeneralStorageCantCreate
+        case .initializerCantSetNoBackupFlagToGeneralStorageURL: return .initializerCantSetNoBackupFlagToGeneralStorageURL
         case .serviceUnknownError: return .serviceUnknownError
         case .serviceGetInfoFailed: return .serviceGetInfoFailed
         case .serviceLatestBlockFailed: return .serviceLatestBlockFailed
@@ -811,6 +835,8 @@ public enum ZcashError: Equatable, Error {
         case .synchronizerLatestUTXOsInvalidTAddress: return .synchronizerLatestUTXOsInvalidTAddress
         case .synchronizerRewindUnknownArchorHeight: return .synchronizerRewindUnknownArchorHeight
         case .synchronizerDisconnected: return .synchronizerDisconnected
+        case .ispStorageCantLoad: return .ispStorageCantLoad
+        case .ispStorageCantWrite: return .ispStorageCantWrite
         }
     }
 

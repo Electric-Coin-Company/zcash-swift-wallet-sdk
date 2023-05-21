@@ -288,6 +288,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         let initializer = Initializer(
             cacheDbURL: nil,
             fsBlockDbRoot: validDirectoryURL,
+            generalStorageURL: validDirectoryURL,
             dataDbURL: invalidPathURL,
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: .testnet),
@@ -328,6 +329,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
         let initializer = Initializer(
             cacheDbURL: nil,
             fsBlockDbRoot: validDirectoryURL,
+            generalStorageURL: validDirectoryURL,
             dataDbURL: invalidPathURL,
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: .testnet),

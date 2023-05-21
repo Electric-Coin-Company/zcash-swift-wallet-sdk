@@ -11,17 +11,16 @@ import XCTest
 
 class CompactBlockProcessorOfflineTests: ZcashTestCase {
     let testFileManager = FileManager()
-    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        testTempDirectory = Environment.uniqueTestTempDirectory
 
         Dependencies.setup(
             in: mockContainer,
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: try! __dataDbURL(),
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: try! __spendParamsURL(),
                 outputParamsURL: try! __outputParamsURL()
             ),
@@ -30,13 +29,10 @@ class CompactBlockProcessorOfflineTests: ZcashTestCase {
             endpoint: LightWalletEndpointBuilder.default,
             loggingPolicy: .default(.debug)
         )
-
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try FileManager.default.removeItem(at: testTempDirectory)
     }
 
     func testComputeProcessingRangeForSingleLoop() async throws {

@@ -11,6 +11,10 @@ import XCTest
 
 class ZcashTestCase: XCTestCase {
     var mockContainer: DIContainer!
+    var testTempDirectory: URL!
+    var testGeneralStorageDirectory: URL!
+
+    // MARK: - DI
 
     private func createMockContainer() {
         guard mockContainer == nil else { return }
@@ -22,33 +26,84 @@ class ZcashTestCase: XCTestCase {
         mockContainer = nil
     }
 
+    // MARK: - Paths
+
+    private func create(path: URL!) throws {
+        try FileManager.default.createDirectory(at: path, withIntermediateDirectories: true)
+    }
+
+    private func delete(path: URL!) throws {
+        if path != nil && FileManager.default.fileExists(atPath: path.path) {
+            try FileManager.default.removeItem(at: path)
+        }
+    }
+
+    private func createPaths() throws {
+        if testTempDirectory == nil {
+            testTempDirectory = Environment.uniqueTestTempDirectory
+            try delete(path: testTempDirectory)
+            try create(path: testTempDirectory)
+        }
+
+        if testGeneralStorageDirectory == nil {
+            testGeneralStorageDirectory = Environment.uniqueGeneralStorageDirectory
+            try delete(path: testGeneralStorageDirectory)
+            try create(path: testGeneralStorageDirectory)
+        }
+    }
+
+    private func deletePaths() throws {
+        try delete(path: testTempDirectory)
+        testTempDirectory = nil
+        try delete(path: testGeneralStorageDirectory)
+        testGeneralStorageDirectory = nil
+    }
+
+    // MARK: - InternalSyncProgress
+
+    func resetDefaultInternalSyncProgress(to height: BlockHeight = 0) async throws {
+        let storage = InternalSyncProgressDiskStorage(storageURL: testGeneralStorageDirectory, logger: logger)
+        let internalSyncProgress = InternalSyncProgress(alias: .default, storage: storage, logger: logger)
+        try await internalSyncProgress.initialize()
+        try await internalSyncProgress.rewind(to: 0)
+    }
+
+    // MARK: - XCTestCase
+
     override func setUp() async throws {
         try await super.setUp()
         createMockContainer()
+        try createPaths()
+        try await resetDefaultInternalSyncProgress()
     }
 
     override func setUp() {
         super.setUp()
         createMockContainer()
+        try? createPaths()
     }
 
     override func setUpWithError() throws {
         try super.setUpWithError()
         createMockContainer()
-    }
-
-    override func tearDown() {
-        super.tearDown()
-        destroyMockContainer()
+        try createPaths()
     }
 
     override func tearDown() async throws {
         try await super.tearDown()
         destroyMockContainer()
+        try deletePaths()
+    }
+
+    override func tearDown() {
+        super.tearDown()
+        destroyMockContainer()
+        try? deletePaths()
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
         destroyMockContainer()
+        try deletePaths()
     }
 }

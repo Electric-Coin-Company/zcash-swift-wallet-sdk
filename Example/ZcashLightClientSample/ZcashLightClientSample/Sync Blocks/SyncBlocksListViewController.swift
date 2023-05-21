@@ -104,6 +104,7 @@ class SyncBlocksListViewController: UIViewController {
         let initializer = Initializer(
             cacheDbURL: nil,
             fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
+            generalStorageURL: try! generalStorageURLHelper(),
             dataDbURL: try! dataDbURLHelper(),
             endpoint: DemoAppConfig.endpoint,
             network: kZcashNetwork,

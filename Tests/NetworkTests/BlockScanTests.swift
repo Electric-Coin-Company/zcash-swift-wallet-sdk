@@ -30,7 +30,6 @@ class BlockScanTests: ZcashTestCase {
     
     var network = ZcashNetworkBuilder.network(for: .testnet)
     var blockRepository: BlockRepository!
-    var testTempDirectory: URL!
 
     let testFileManager = FileManager()
 
@@ -40,9 +39,6 @@ class BlockScanTests: ZcashTestCase {
         dataDbURL = try! __dataDbURL()
         spendParamsURL = try! __spendParamsURL()
         outputParamsURL = try! __outputParamsURL()
-        testTempDirectory = Environment.uniqueTestTempDirectory
-
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
 
         rustBackend = ZcashRustBackend.makeForTests(
             dbData: dataDbURL,
@@ -57,6 +53,7 @@ class BlockScanTests: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: dataDbURL,
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: spendParamsURL,
                 outputParamsURL: outputParamsURL
             ),
@@ -80,7 +77,6 @@ class BlockScanTests: ZcashTestCase {
         try? testFileManager.removeItem(at: dataDbURL)
         try? testFileManager.removeItem(at: spendParamsURL)
         try? testFileManager.removeItem(at: outputParamsURL)
-        try? testFileManager.removeItem(at: testTempDirectory)
         cancelables = []
         blockRepository = nil
         testTempDirectory = nil

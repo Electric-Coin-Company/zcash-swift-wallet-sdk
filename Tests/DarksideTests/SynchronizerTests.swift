@@ -160,7 +160,7 @@ final class SynchronizerTests: ZcashTestCase {
         /*
          Check that wipe cleared everything that is expected
          */
-        await checkThatWipeWorked()
+        try await checkThatWipeWorked()
     }
 
     func testWipeCalledWhileSyncRuns() async throws {
@@ -217,10 +217,10 @@ final class SynchronizerTests: ZcashTestCase {
         /*
          Check that wipe cleared everything that is expected
          */
-        await checkThatWipeWorked()
+        try await checkThatWipeWorked()
     }
 
-    private func checkThatWipeWorked() async {
+    private func checkThatWipeWorked() async throws {
         let storage = await self.coordinator.synchronizer.blockProcessor.storage as! FSCompactBlockRepository
         let fm = FileManager.default
         print(coordinator.synchronizer.initializer.dataDbURL.path)
@@ -229,15 +229,11 @@ final class SynchronizerTests: ZcashTestCase {
         XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
         XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [], "FS Cache directory should be empty")
 
-        let internalSyncProgress = InternalSyncProgress(
-            alias: .default,
-            storage: UserDefaults.standard,
-            logger: logger
-        )
+        let internalSyncProgress = coordinator.synchronizer.internalSyncProgress
 
-        let latestDownloadedBlockHeight = await internalSyncProgress.load(.latestDownloadedBlockHeight)
-        let latestEnhancedHeight = await internalSyncProgress.load(.latestEnhancedHeight)
-        let latestUTXOFetchedHeight = await internalSyncProgress.load(.latestUTXOFetchedHeight)
+        let latestDownloadedBlockHeight = try await internalSyncProgress.load(.latestDownloadedBlockHeight)
+        let latestEnhancedHeight = try await internalSyncProgress.load(.latestEnhancedHeight)
+        let latestUTXOFetchedHeight = try await internalSyncProgress.load(.latestUTXOFetchedHeight)
 
         XCTAssertEqual(latestDownloadedBlockHeight, 0, "internalSyncProgress latestDownloadedBlockHeight should be 0")
         XCTAssertEqual(latestEnhancedHeight, 0, "internalSyncProgress latestEnhancedHeight should be 0")

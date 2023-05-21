@@ -26,16 +26,10 @@ class CompactBlockReorgTests: ZcashTestCase {
     var reorgNotificationExpectation: XCTestExpectation!
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
-    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
-        testTempDirectory = Environment.uniqueTestTempDirectory
-
         logger = OSLogger(logLevel: .debug)
-        try? FileManager.default.removeItem(at: testTempDirectory)
-
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
 
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
@@ -48,8 +42,6 @@ class CompactBlockReorgTests: ZcashTestCase {
             walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
-
-        await InternalSyncProgress(alias: .default, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
@@ -115,6 +107,7 @@ class CompactBlockReorgTests: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: processorConfig.dataDb,
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: processorConfig.spendParamsURL,
                 outputParamsURL: processorConfig.outputParamsURL
             ),
@@ -153,7 +146,6 @@ class CompactBlockReorgTests: ZcashTestCase {
     override func tearDown() async throws {
         try await super.tearDown()
         await processor.stop()
-        try! FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         cancellables = []
         processorEventHandler = nil

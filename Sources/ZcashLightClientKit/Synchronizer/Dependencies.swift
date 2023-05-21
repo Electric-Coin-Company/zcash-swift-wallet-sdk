@@ -89,7 +89,8 @@ enum Dependencies {
 
         container.register(type: InternalSyncProgress.self, isSingleton: true) { di in
             let logger = di.resolve(Logger.self)
-            return InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger)
+            let storage = InternalSyncProgressDiskStorage(storageURL: urls.generalStorageURL, logger: logger)
+            return InternalSyncProgress(alias: alias, storage: storage, logger: logger)
         }
     }
     

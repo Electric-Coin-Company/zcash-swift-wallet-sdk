@@ -12,14 +12,11 @@ import XCTest
 class BlockStreamingTest: ZcashTestCase {
     let testFileManager = FileManager()
     var rustBackend: ZcashRustBackendWelding!
-    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
-        testTempDirectory = Environment.uniqueTestTempDirectory
 
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
         logger = OSLogger(logLevel: .debug)
 
@@ -28,6 +25,7 @@ class BlockStreamingTest: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: try! __dataDbURL(),
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: try! __spendParamsURL(),
                 outputParamsURL: try! __outputParamsURL()
             ),
@@ -45,7 +43,6 @@ class BlockStreamingTest: ZcashTestCase {
         try super.tearDownWithError()
         rustBackend = nil
         try? FileManager.default.removeItem(at: __dataDbURL())
-        try? testFileManager.removeItem(at: testTempDirectory)
         testTempDirectory = nil
     }
 

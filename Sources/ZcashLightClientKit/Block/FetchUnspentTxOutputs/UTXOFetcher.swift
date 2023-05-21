@@ -82,7 +82,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
 
                 counter += 1
                 await didFetch(counter / all)
-                await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
+                try await internalSyncProgress.set(utxo.height, .latestUTXOFetchedHeight)
             } catch {
                 logger.error("failed to put utxo - error: \(error)")
                 skipped.append(utxo)
@@ -103,7 +103,7 @@ extension UTXOFetcherImpl: UTXOFetcher {
 
         let result = (inserted: refreshed, skipped: skipped)
 
-        await internalSyncProgress.set(range.upperBound, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(range.upperBound, .latestUTXOFetchedHeight)
 
         if Task.isCancelled {
             logger.debug("Warning: fetchUnspentTxOutputs on range \(range) cancelled")

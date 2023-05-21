@@ -14,21 +14,16 @@ import SQLite
 class DownloadTests: ZcashTestCase {
     let testFileManager = FileManager()
     var network = ZcashNetworkBuilder.network(for: .testnet)
-    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
-        testTempDirectory = Environment.uniqueTestTempDirectory
-        try? FileManager.default.removeItem(at: testTempDirectory)
-        await InternalSyncProgress(alias: .default, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
-        
         Dependencies.setup(
             in: mockContainer,
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: try! __dataDbURL(),
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: try! __spendParamsURL(),
                 outputParamsURL: try! __outputParamsURL()
             ),
@@ -43,8 +38,6 @@ class DownloadTests: ZcashTestCase {
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: testTempDirectory)
-        testTempDirectory = nil
     }
 
     func testSingleDownload() async throws {

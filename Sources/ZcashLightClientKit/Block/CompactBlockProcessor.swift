@@ -530,7 +530,7 @@ actor CompactBlockProcessor {
     /// - Parameter height: height to rewind to. If nil is provided, it will rescan to nearest height (quick rescan)
     ///
     /// - Note: If this is called while sync is in progress then the sync process is stopped first and then rewind is executed.
-    func rewind(context: AfterSyncHooksManager.RewindContext) async {
+    func rewind(context: AfterSyncHooksManager.RewindContext) async throws {
         logger.debug("Starting rewind")
         switch self.state {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
@@ -540,13 +540,13 @@ actor CompactBlockProcessor {
 
         case .stopped, .error, .synced:
             logger.debug("Sync doesn't run. Executing rewind.")
-            await doRewind(context: context)
+            try await doRewind(context: context)
         }
     }
 
-    private func doRewind(context: AfterSyncHooksManager.RewindContext) async {
+    private func doRewind(context: AfterSyncHooksManager.RewindContext) async throws {
         logger.debug("Executing rewind.")
-        let lastDownloaded = await internalSyncProgress.latestDownloadedBlockHeight
+        let lastDownloaded = try await internalSyncProgress.latestDownloadedBlockHeight
         let height = Int32(context.height ?? lastDownloaded)
 
         let nearestHeight: Int32
@@ -575,7 +575,7 @@ actor CompactBlockProcessor {
             return await context.completion(.failure(error))
         }
 
-        await internalSyncProgress.rewind(to: rewindBlockHeight)
+        try await internalSyncProgress.rewind(to: rewindBlockHeight)
 
         self.lastChainValidationFailure = nil
         await context.completion(.success(rewindBlockHeight))
@@ -583,7 +583,7 @@ actor CompactBlockProcessor {
 
     // MARK: Wipe
 
-    func wipe(context: AfterSyncHooksManager.WipeContext) async {
+    func wipe(context: AfterSyncHooksManager.WipeContext) async throws {
         logger.debug("Starting wipe")
         switch self.state {
         case .syncing, .enhancing, .fetching, .handlingSaplingFiles:
@@ -593,11 +593,11 @@ actor CompactBlockProcessor {
 
         case .stopped, .error, .synced:
             logger.debug("Sync doesn't run. Executing wipe.")
-            await doWipe(context: context)
+            try await doWipe(context: context)
         }
     }
 
-    private func doWipe(context: AfterSyncHooksManager.WipeContext) async {
+    private func doWipe(context: AfterSyncHooksManager.WipeContext) async throws {
         logger.debug("Executing wipe.")
         context.prewipe()
 
@@ -605,7 +605,7 @@ actor CompactBlockProcessor {
 
         do {
             try await self.storage.clear()
-            await internalSyncProgress.rewind(to: 0)
+            try await internalSyncProgress.rewind(to: 0)
 
             wipeLegacyCacheDbIfNeeded()
 
@@ -637,6 +637,7 @@ actor CompactBlockProcessor {
     }
     
     /// Processes new blocks on the given range based on the configuration set for this instance
+    // swiftlint:disable:next cyclomatic_complexity
     func processNewBlocks(ranges: SyncRanges) async {
         self.foundBlocks = true
         
@@ -662,7 +663,7 @@ actor CompactBlockProcessor {
                 // properly and internal state set to the appropriate value
                 if let newLatestDownloadedHeight = ranges.shouldClearBlockCacheAndUpdateInternalState() {
                     try await storage.clear()
-                    await internalSyncProgress.set(newLatestDownloadedHeight, .latestDownloadedBlockHeight)
+                    try await internalSyncProgress.set(newLatestDownloadedHeight, .latestDownloadedBlockHeight)
                 } else {
                     try await storage.create()
                 }
@@ -735,7 +736,11 @@ actor CompactBlockProcessor {
                 if Task.isCancelled {
                     logger.info("Processing cancelled.")
                     await updateState(.stopped)
-                    await handleAfterSyncHooks()
+                    do {
+                        try await handleAfterSyncHooks()
+                    } catch {
+                        await fail(error)
+                    }
                 } else {
                     if case let ZcashError.rustValidateCombinedChainInvalidChain(height) = error {
                         await validationFailed(at: BlockHeight(height))
@@ -748,14 +753,14 @@ actor CompactBlockProcessor {
         }
     }
 
-    private func handleAfterSyncHooks() async {
+    private func handleAfterSyncHooks() async throws {
         let afterSyncHooksManager = self.afterSyncHooksManager
         self.afterSyncHooksManager = AfterSyncHooksManager()
 
         if let wipeContext = afterSyncHooksManager.shouldExecuteWipeHook() {
-            await doWipe(context: wipeContext)
+            try await doWipe(context: wipeContext)
         } else if let rewindContext = afterSyncHooksManager.shouldExecuteRewindHook() {
-            await doRewind(context: rewindContext)
+            try await doRewind(context: rewindContext)
         } else if afterSyncHooksManager.shouldExecuteAnotherSyncHook() {
             logger.debug("Starting new sync.")
             await nextBatch()
@@ -937,7 +942,8 @@ actor CompactBlockProcessor {
                 latestBlocksDataProvider: latestBlocksDataProvider,
                 config: self.config,
                 rustBackend: self.rustBackend,
-                internalSyncProgress: internalSyncProgress
+                internalSyncProgress: internalSyncProgress,
+                alias: config.alias
             )
             switch nextState {
             case .finishProcessing(let height):
@@ -983,7 +989,7 @@ actor CompactBlockProcessor {
         
         do {
             try await blockDownloaderService.rewind(to: rewindHeight)
-            await internalSyncProgress.rewind(to: rewindHeight)
+            try await internalSyncProgress.rewind(to: rewindHeight)
 
             await send(event: .handledReorg(height, rewindHeight))
 
@@ -1025,7 +1031,7 @@ actor CompactBlockProcessor {
             //
             // Scanning is done until 10300 so the SDK can be sure that blocks with height below 10300 are not required. So it makes sense to set
             // `.latestDownloadedBlockHeight` to `lastScannedHeight`. And sync will work fine in next run.
-            await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
+            try await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
             try await clearCompactBlockCache()
         } catch {
             logger.error("`clearCompactBlockCache` failed after error: \(error)")
@@ -1218,7 +1224,8 @@ extension CompactBlockProcessor {
                 latestBlocksDataProvider: latestBlocksDataProvider,
                 config: config,
                 rustBackend: rustBackend,
-                internalSyncProgress: internalSyncProgress
+                internalSyncProgress: internalSyncProgress,
+                alias: config.alias
             )
         } catch {
             throw error
@@ -1235,7 +1242,8 @@ extension CompactBlockProcessor {
             latestBlocksDataProvider: LatestBlocksDataProvider,
             config: Configuration,
             rustBackend: ZcashRustBackendWelding,
-            internalSyncProgress: InternalSyncProgress
+            internalSyncProgress: InternalSyncProgress,
+            alias: ZcashSynchronizerAlias
         ) async throws -> CompactBlockProcessor.NextState {
             // It should be ok to not create new Task here because this method is already async. But for some reason something not good happens
             // when Task is not created here. For example tests start failing. Reason is unknown at this time.
@@ -1251,12 +1259,12 @@ extension CompactBlockProcessor {
 
                 let latestDownloadHeight = try await downloaderService.lastDownloadedBlockHeight()
 
-                await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight)
+                try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight, alias: alias)
 
                 await latestBlocksDataProvider.updateScannedData()
                 await latestBlocksDataProvider.updateBlockData()
 
-                return await internalSyncProgress.computeNextState(
+                return try await internalSyncProgress.computeNextState(
                     latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
                     latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
                     walletBirthday: config.walletBirthday
@@ -1321,7 +1329,7 @@ extension CompactBlockProcessor {
         // by a previous processing cycle.
         let lastScannedHeight = try await transactionRepository.lastScannedHeight()
         
-        await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
+        try await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
     }
 
     func wipeLegacyCacheDbIfNeeded() {

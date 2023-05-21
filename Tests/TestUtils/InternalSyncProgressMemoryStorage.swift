@@ -12,20 +12,22 @@ class InternalSyncProgressMemoryStorage: InternalSyncProgressStorage {
     private var boolStorage: [String: Bool] = [:]
     private var storage: [String: Int] = [:]
 
-    func bool(forKey defaultName: String) -> Bool {
-        return boolStorage[defaultName, default: false]
+    func initialize() async throws { }
+
+    func bool(for key: String) async throws -> Bool {
+        return boolStorage[key, default: false]
     }
 
-    func integer(forKey defaultName: String) -> Int {
-        return storage[defaultName, default: 0]
+    func integer(for key: String) async throws -> Int {
+        return storage[key, default: 0]
     }
 
-    func set(_ value: Int, forKey defaultName: String) {
-        storage[defaultName] = value
+    func set(_ value: Int, for key: String) async throws {
+        storage[key] = value
     }
 
-    func set(_ value: Bool, forKey defaultName: String) {
-        boolStorage[defaultName] = value
+    func set(_ value: Bool, for key: String) async throws {
+        boolStorage[key] = value
     }
 
     func synchronize() -> Bool { true }

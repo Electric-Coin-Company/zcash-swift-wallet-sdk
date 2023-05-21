@@ -85,13 +85,9 @@ final class InternalStateConsistencyTests: ZcashTestCase {
         XCTAssertFalse(isSyncing, "SDKSynchronizer shouldn't be syncing")
         XCTAssertEqual(status, .stopped)
 
-        let internalSyncState = InternalSyncProgress(
-            alias: .default,
-            storage: UserDefaults.standard,
-            logger: logger
-        )
+        let internalSyncState = coordinator.synchronizer.internalSyncProgress
 
-        let latestDownloadHeight = await internalSyncState.latestDownloadedBlockHeight
+        let latestDownloadHeight = try await internalSyncState.latestDownloadedBlockHeight
         let latestScanHeight = try await coordinator.synchronizer.initializer.transactionRepository.lastScannedHeight()
         let dbHandle = TestDbHandle(originalDb: TestDbBuilder.prePopulatedDarksideCacheDb()!)
         try dbHandle.setUp()
@@ -99,14 +95,14 @@ final class InternalStateConsistencyTests: ZcashTestCase {
         if latestDownloadHeight > latestScanHeight {
             try await coordinator.synchronizer.blockProcessor.migrateCacheDb(dbHandle.readWriteDb)
 
-            let afterMigrationDownloadedHeight = await internalSyncState.latestDownloadedBlockHeight
+            let afterMigrationDownloadedHeight = try await internalSyncState.latestDownloadedBlockHeight
 
             XCTAssertNotEqual(latestDownloadHeight, afterMigrationDownloadedHeight)
             XCTAssertEqual(latestScanHeight, afterMigrationDownloadedHeight)
         } else {
             try await coordinator.synchronizer.blockProcessor.migrateCacheDb(dbHandle.readWriteDb)
 
-            let afterMigrationDownloadedHeight = await internalSyncState.latestDownloadedBlockHeight
+            let afterMigrationDownloadedHeight = try await internalSyncState.latestDownloadedBlockHeight
 
             XCTAssertEqual(latestDownloadHeight, afterMigrationDownloadedHeight)
             XCTAssertEqual(latestScanHeight, afterMigrationDownloadedHeight)

@@ -12,17 +12,15 @@ import XCTest
 class BlockBatchValidationTests: ZcashTestCase {
     let testFileManager = FileManager()
     var rustBackend: ZcashRustBackendWelding!
-    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        testTempDirectory = Environment.uniqueTestTempDirectory
-
         Dependencies.setup(
             in: mockContainer,
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: try! __dataDbURL(),
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: try! __spendParamsURL(),
                 outputParamsURL: try! __outputParamsURL()
             ),
@@ -34,13 +32,11 @@ class BlockBatchValidationTests: ZcashTestCase {
 
         mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in LatestBlocksDataProviderMock() }
 
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: testTempDirectory)
         rustBackend = nil
         testTempDirectory = nil
     }
@@ -405,7 +401,8 @@ class BlockBatchValidationTests: ZcashTestCase {
                     alias: .default,
                     storage: InternalSyncProgressMemoryStorage(),
                     logger: logger
-                )
+                ),
+                alias: .default
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -496,7 +493,8 @@ class BlockBatchValidationTests: ZcashTestCase {
                     alias: .default,
                     storage: InternalSyncProgressMemoryStorage(),
                     logger: logger
-                )
+                ),
+                alias: .default
             )
             XCTAssertFalse(Task.isCancelled)
         } catch {
@@ -554,8 +552,8 @@ class BlockBatchValidationTests: ZcashTestCase {
             storage: InternalSyncProgressMemoryStorage(),
             logger: logger
         )
-        await internalSyncProgress.set(expectedStoredLatestHeight, .latestEnhancedHeight)
-        await internalSyncProgress.set(expectedStoredLatestHeight, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(expectedStoredLatestHeight, .latestEnhancedHeight)
+        try await internalSyncProgress.set(expectedStoredLatestHeight, .latestUTXOFetchedHeight)
 
         var info = LightdInfo()
         info.blockHeight = UInt64(expectedLatestHeight)
@@ -580,7 +578,8 @@ class BlockBatchValidationTests: ZcashTestCase {
                 ),
                 config: config,
                 rustBackend: mockBackend.rustBackendMock,
-                internalSyncProgress: internalSyncProgress
+                internalSyncProgress: internalSyncProgress,
+                alias: .default
             )
 
             XCTAssertFalse(Task.isCancelled)

@@ -52,7 +52,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
             let transactions = try await transactionRepository.find(in: range, limit: Int.max, kind: .all)
 
             guard !transactions.isEmpty else {
-                await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
+                try await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
                 logger.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
                 return nil
             }
@@ -84,7 +84,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
                         await didEnhance(progress)
 
                         if let minedHeight = confirmedTx.minedHeight {
-                            await internalSyncProgress.set(minedHeight, .latestEnhancedHeight)
+                            try await internalSyncProgress.set(minedHeight, .latestEnhancedHeight)
                         }
                     } catch {
                         retries += 1
@@ -112,7 +112,7 @@ extension BlockEnhancerImpl: BlockEnhancer {
             throw error
         }
 
-        await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
+        try await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
         
         if Task.isCancelled {
             logger.debug("Warning: compactBlockEnhancement on range \(range) cancelled")

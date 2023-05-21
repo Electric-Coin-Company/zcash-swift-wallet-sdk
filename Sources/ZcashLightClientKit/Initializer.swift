@@ -90,6 +90,7 @@ public class Initializer {
     struct URLs {
         let fsBlockDbRoot: URL
         let dataDbURL: URL
+        let generalStorageURL: URL
         let spendParamsURL: URL
         let outputParamsURL: URL
     }
@@ -112,6 +113,7 @@ public class Initializer {
     let alias: ZcashSynchronizerAlias
     let endpoint: LightWalletEndpoint
     let fsBlockDbRoot: URL
+    let generalStorageURL: URL
     let dataDbURL: URL
     let spendParamsURL: URL
     let outputParamsURL: URL
@@ -142,6 +144,10 @@ public class Initializer {
     ///  - cacheDbURL: previous location of the cacheDb. If you don't know what a cacheDb is and you are adopting this SDK for the first time then
     ///                just pass `nil` here.
     ///  - fsBlockDbRoot: location of the compact blocks cache
+    ///  - generalStorageURL: Location of the directory where the SDK can store any information it needs. A directory doesn't have to exist. But the
+    ///                       SDK must be able to write to this location after it creates this directory. It is suggested that this directory is
+    ///                       a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the system itself won't
+    ///                       remove these data.
     ///  - dataDbURL: Location of the data db
     ///  - endpoint: the endpoint representing the lightwalletd instance you want to point to
     ///  - spendParamsURL: location of the spend parameters
@@ -149,6 +155,7 @@ public class Initializer {
     convenience public init(
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
+        generalStorageURL: URL,
         dataDbURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
@@ -166,6 +173,7 @@ public class Initializer {
             container: container,
             cacheDbURL: cacheDbURL,
             fsBlockDbRoot: fsBlockDbRoot,
+            generalStorageURL: generalStorageURL,
             dataDbURL: dataDbURL,
             endpoint: endpoint,
             network: network,
@@ -194,6 +202,7 @@ public class Initializer {
         container: DIContainer,
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
+        generalStorageURL: URL,
         dataDbURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
@@ -209,6 +218,7 @@ public class Initializer {
             container: container,
             cacheDbURL: cacheDbURL,
             fsBlockDbRoot: fsBlockDbRoot,
+            generalStorageURL: generalStorageURL,
             dataDbURL: dataDbURL,
             endpoint: endpoint,
             network: network,
@@ -247,6 +257,7 @@ public class Initializer {
         self.cacheDbURL = cacheDbURL
         self.rustBackend = container.resolve(ZcashRustBackendWelding.self)
         self.fsBlockDbRoot = urls.fsBlockDbRoot
+        self.generalStorageURL = urls.generalStorageURL
         self.dataDbURL = urls.dataDbURL
         self.endpoint = endpoint
         self.spendParamsURL = urls.spendParamsURL
@@ -278,6 +289,7 @@ public class Initializer {
         container: DIContainer,
         cacheDbURL: URL?,
         fsBlockDbRoot: URL,
+        generalStorageURL: URL,
         dataDbURL: URL,
         endpoint: LightWalletEndpoint,
         network: ZcashNetwork,
@@ -290,6 +302,7 @@ public class Initializer {
         let urls = URLs(
             fsBlockDbRoot: fsBlockDbRoot,
             dataDbURL: dataDbURL,
+            generalStorageURL: generalStorageURL,
             spendParamsURL: spendParamsURL,
             outputParamsURL: outputParamsURL
         )
@@ -360,10 +373,15 @@ public class Initializer {
             return .failure(.initializerCantUpdateURLWithAlias(urls.outputParamsURL))
         }
 
+        guard let updatedGeneralStorageURL = urls.generalStorageURL.updateLastPathComponent(with: alias) else {
+            return .failure(.initializerCantUpdateURLWithAlias(urls.generalStorageURL))
+        }
+
         return .success(
             URLs(
                 fsBlockDbRoot: updatedFsBlockDbRoot,
                 dataDbURL: updatedDataDbURL,
+                generalStorageURL: updatedGeneralStorageURL,
                 spendParamsURL: updatedSpendParamsURL,
                 outputParamsURL: updateOutputParamsURL
             )

@@ -15,6 +15,7 @@ class TestsData {
         Initializer(
             cacheDbURL: nil,
             fsBlockDbRoot: URL(fileURLWithPath: "/"),
+            generalStorageURL: URL(fileURLWithPath: "/"),
             dataDbURL: URL(fileURLWithPath: "/"),
             endpoint: LightWalletEndpointBuilder.default,
             network: ZcashNetworkBuilder.network(for: networkType),
