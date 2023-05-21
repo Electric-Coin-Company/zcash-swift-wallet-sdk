@@ -52,7 +52,7 @@ public struct EnhancementProgress: Equatable {
 }
 
 protocol BlockEnhancer {
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?
+    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?
 }
 
 struct BlockEnhancerImpl {
@@ -82,7 +82,7 @@ struct BlockEnhancerImpl {
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
+    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
         try Task.checkCancellation()
         
         logger.debug("Started Enhancing range: \(range)")

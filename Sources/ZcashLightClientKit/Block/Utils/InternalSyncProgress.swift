@@ -47,6 +47,7 @@ protocol InternalSyncProgressStorage {
     func bool(forKey defaultName: String) -> Bool
     func integer(forKey defaultName: String) -> Int
     func set(_ value: Int, forKey defaultName: String)
+    // sourcery: mockedName="setBool"
     func set(_ value: Bool, forKey defaultName: String)
     @discardableResult
     func synchronize() -> Bool
