@@ -7,6 +7,95 @@ import Foundation
 
 
 // MARK: - AutoMockable protocols
+class BlockDownloaderMock: BlockDownloader {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - setDownloadLimit
+
+    var setDownloadLimitCallsCount = 0
+    var setDownloadLimitCalled: Bool {
+        return setDownloadLimitCallsCount > 0
+    }
+    var setDownloadLimitReceivedLimit: BlockHeight?
+    var setDownloadLimitClosure: ((BlockHeight) async -> Void)?
+
+    func setDownloadLimit(_ limit: BlockHeight) async {
+        setDownloadLimitCallsCount += 1
+        setDownloadLimitReceivedLimit = limit
+        await setDownloadLimitClosure!(limit)
+    }
+
+    // MARK: - setSyncRange
+
+    var setSyncRangeBatchSizeThrowableError: Error?
+    var setSyncRangeBatchSizeCallsCount = 0
+    var setSyncRangeBatchSizeCalled: Bool {
+        return setSyncRangeBatchSizeCallsCount > 0
+    }
+    var setSyncRangeBatchSizeReceivedArguments: (range: CompactBlockRange, batchSize: Int)?
+    var setSyncRangeBatchSizeClosure: ((CompactBlockRange, Int) async throws -> Void)?
+
+    func setSyncRange(_ range: CompactBlockRange, batchSize: Int) async throws {
+        if let error = setSyncRangeBatchSizeThrowableError {
+            throw error
+        }
+        setSyncRangeBatchSizeCallsCount += 1
+        setSyncRangeBatchSizeReceivedArguments = (range: range, batchSize: batchSize)
+        try await setSyncRangeBatchSizeClosure!(range, batchSize)
+    }
+
+    // MARK: - startDownload
+
+    var startDownloadMaxBlockBufferSizeCallsCount = 0
+    var startDownloadMaxBlockBufferSizeCalled: Bool {
+        return startDownloadMaxBlockBufferSizeCallsCount > 0
+    }
+    var startDownloadMaxBlockBufferSizeReceivedMaxBlockBufferSize: Int?
+    var startDownloadMaxBlockBufferSizeClosure: ((Int) async -> Void)?
+
+    func startDownload(maxBlockBufferSize: Int) async {
+        startDownloadMaxBlockBufferSizeCallsCount += 1
+        startDownloadMaxBlockBufferSizeReceivedMaxBlockBufferSize = maxBlockBufferSize
+        await startDownloadMaxBlockBufferSizeClosure!(maxBlockBufferSize)
+    }
+
+    // MARK: - stopDownload
+
+    var stopDownloadCallsCount = 0
+    var stopDownloadCalled: Bool {
+        return stopDownloadCallsCount > 0
+    }
+    var stopDownloadClosure: (() async -> Void)?
+
+    func stopDownload() async {
+        stopDownloadCallsCount += 1
+        await stopDownloadClosure!()
+    }
+
+    // MARK: - waitUntilRequestedBlocksAreDownloaded
+
+    var waitUntilRequestedBlocksAreDownloadedInThrowableError: Error?
+    var waitUntilRequestedBlocksAreDownloadedInCallsCount = 0
+    var waitUntilRequestedBlocksAreDownloadedInCalled: Bool {
+        return waitUntilRequestedBlocksAreDownloadedInCallsCount > 0
+    }
+    var waitUntilRequestedBlocksAreDownloadedInReceivedRange: CompactBlockRange?
+    var waitUntilRequestedBlocksAreDownloadedInClosure: ((CompactBlockRange) async throws -> Void)?
+
+    func waitUntilRequestedBlocksAreDownloaded(in range: CompactBlockRange) async throws {
+        if let error = waitUntilRequestedBlocksAreDownloadedInThrowableError {
+            throw error
+        }
+        waitUntilRequestedBlocksAreDownloadedInCallsCount += 1
+        waitUntilRequestedBlocksAreDownloadedInReceivedRange = range
+        try await waitUntilRequestedBlocksAreDownloadedInClosure!(range)
+    }
+
+}
 class BlockEnhancerMock: BlockEnhancer {
 
 
