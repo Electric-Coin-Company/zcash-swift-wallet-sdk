@@ -1,11 +1,62 @@
-# Unreleased
+# 0.22.0-beta
 
-### [#1019] Memo has trailing garbled text
-    
+## Checkpoints
+
+Mainnet
+
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2057500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2060000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2062500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2065000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2067500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2070000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2072500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2075000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2077500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2080000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2082500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2085000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2087500.json
+Sources/ZcashLightClientKit/Resources/checkpoints/mainnet/2090000.json
+````
+
+
+Testnet
+
+````
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2320000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2330000.json
+Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2340000.json
+````
+
+
+## Fixes
+- [#1037] Empty string memo throws `ZcashError.memoTextInputEndsWithNullBytes` 
+- [#1016] Rebuild download stream periodically while downloading
+This fixes a memory consumption issue coming from GRPC-Swift.
+- [#1019] Memo has trailing garbled text
+ 
 Changes the way unpadded bytes are turned into a UTF-8 Swift String
 without using cString assuming APIs that would overflow memory and
 add garbled trailing bytes.
 
+- [#781] This fixes test `testMaxAmountMinusOneSend` 
+by creating two separate 
+tests: 
+- testMaxAmountMinusOneSendFails 
+- testMaxAmountSend 
+
+Also includes new functionality that tracks sent transactions so 
+that users can be notified specifically when they are mined and uses "idea B" of 
+issue #1033. 
+
+closes #1033 
+closes #781 
+
+
+## [#1001] Remove PendingDb in favor of `v_transactions` and `v_tx_output` Views
 ### Changed
 - `WalletTransactionEncoder` now uses a `LightWalletService` to submit the
 encoded transactions.
@@ -31,7 +82,6 @@ of the chain that is passed to the function `getState(for currentHeight: BlockHe
 
 State should be a transient value and it's not adviced to store it unless
 transactions have stale values such as `confirmed` or `expired`.
-
 
 #### Synchronizer
 
@@ -91,6 +141,14 @@ process doesn't have to wait for blocks to be downloaded. This makes the whole s
 
 `Synchronizer.stop()` method is not async anymore.
 
+### [#361] Redesign errors inside the SDK
+
+Now the SDK uses only one error type - `ZcashError`. Each method that throws now throws only `ZcashError`. 
+Each publisher (or stream) that can emit error now emitts only `ZcashError`.
+
+Each symbol in `ZcashError` enum represents one error. Each error is used only in one place
+inside the SDK. Each error has assigned unique error code (`ZcashErrorCode`) which can be used in logs.
+
 # 0.21.0-beta
 
 New checkpoints
@@ -119,14 +177,6 @@ This change drops the file-system cache whenever an error occurs when storing bl
 so that there is not a discontinuity in the cached block range that could cause a 
 discontinuity error on libzcashlc when calling `scan_blocks`. This will have a setback of
 at most 100 blocks that would have to be re-downloaded when resuming sync.
-
-### [#361] Redesign errors inside the SDK
-
-Now the SDK uses only one error type - `ZcashError`. Each method that throws now throws only `ZcashError`. 
-Each publisher (or stream) that can emit error now emitts only `ZcashError`.
-
-Each symbol in `ZcashError` enum represents one error. Each error is used only in one place
-inside the SDK. Each error has assigned unique error code (`ZcashErrorCode`) which can be used in logs.
 
 ### [#959] and [#914] Value of outbound transactions does not match user intended tx input 
 
