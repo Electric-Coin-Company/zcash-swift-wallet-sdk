@@ -189,8 +189,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
         
         var expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
-            downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight...latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight...latestBlockchainHeight,
+            scanRange: latestDownloadedHeight...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,
@@ -222,8 +222,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
 
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
-            downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            scanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,
@@ -256,8 +256,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
 
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
-            downloadedButUnscannedRange: 1...latestDownloadedHeight,
-            downloadAndScanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            scanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,
@@ -295,8 +295,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
 
         let range = SyncRanges(
             latestBlockHeight: 2255953,
-            downloadedButUnscannedRange: -1 ... -1,
-            downloadAndScanRange: 1493120...2255953,
+            downloadRange: 1493120...2255953,
+            scanRange: 1493120...2255953,
             enhanceRange: 1410000...2255953,
             fetchUTXORange: 1410000...2255953,
             latestScannedHeight: 1493119,
@@ -317,8 +317,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
 
         let range = SyncRanges(
             latestBlockHeight: 2255953,
-            downloadedButUnscannedRange: -1 ... -1,
-            downloadAndScanRange: 1493120...2255953,
+            downloadRange: 1493120...2255953,
+            scanRange: 1493120...2255953,
             enhanceRange: 1410000...2255953,
             fetchUTXORange: 1410000...2255953,
             latestScannedHeight: 1493129,
@@ -339,8 +339,8 @@ class CompactBlockProcessorTests: ZcashTestCase {
 
         let range = SyncRanges(
             latestBlockHeight: 2255953,
-            downloadedButUnscannedRange: 1493120...1494120,
-            downloadAndScanRange: 1494121...2255953,
+            downloadRange: 1493120...2255953,
+            scanRange: 1493120...2255953,
             enhanceRange: 1410000...2255953,
             fetchUTXORange: 1410000...2255953,
             latestScannedHeight: 1493119,

@@ -28,7 +28,6 @@ enum CBPState: CaseIterable {
     case validateServer
     case computeSyncRanges
     case checksBeforeSync
-    case scanDownloaded
     case download
     case validate
     case scan
