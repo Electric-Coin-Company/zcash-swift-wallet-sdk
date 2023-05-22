@@ -15,6 +15,7 @@
 extension BlockEnhancer { }
 extension BlockScanner { }
 extension BlockValidator { }
+extension CompactBlockRepository { }
 extension InternalSyncProgressStorage { }
 extension LightWalletdInfo { }
 extension LightWalletService { }

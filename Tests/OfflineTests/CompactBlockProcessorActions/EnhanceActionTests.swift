@@ -77,7 +77,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { _ in }
+            _ = try await enhanceAction.run(with: syncContext) { _ in }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
             XCTAssertFalse(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is not expected to be called.")
@@ -105,7 +105,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { _ in }
+            _ = try await enhanceAction.run(with: syncContext) { _ in }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertTrue(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is expected to be called.")
             XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
@@ -156,7 +156,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { event in
+            _ = try await enhanceAction.run(with: syncContext) { event in
                 guard case let .foundTransactions(transactions, _) = event else {
                     XCTFail("Event is expected to be .foundTransactions but received \(event)")
                     return
@@ -225,7 +225,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { event in
+            _ = try await enhanceAction.run(with: syncContext) { event in
                 guard case .minedTransaction(let minedTransaction) = event else {
                     XCTFail("Event is expected to be .minedTransaction but received \(event)")
                     return
@@ -240,7 +240,7 @@ final class EnhanceActionTests: ZcashTestCase {
         }
     }
     
-    func setupActionContext() async -> ActionContext {
+    private func setupActionContext() async -> ActionContext {
         let syncContext: ActionContext = .init(state: .enhance)
         
         let syncRanges = SyncRanges(
@@ -259,7 +259,7 @@ final class EnhanceActionTests: ZcashTestCase {
         return syncContext
     }
     
-    func setupAction(
+    private func setupAction(
         _ blockEnhancerMock: BlockEnhancerMock = BlockEnhancerMock(),
         _ transactionRepositoryMock: TransactionRepositoryMock = TransactionRepositoryMock(),
         _ internalSyncProgressStorageMock: InternalSyncProgressStorageMock = InternalSyncProgressStorageMock(),

@@ -96,6 +96,123 @@ class BlockValidatorMock: BlockValidator {
     }
 
 }
+class CompactBlockRepositoryMock: CompactBlockRepository {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - create
+
+    var createThrowableError: Error?
+    var createCallsCount = 0
+    var createCalled: Bool {
+        return createCallsCount > 0
+    }
+    var createClosure: (() async throws -> Void)?
+
+    func create() async throws {
+        if let error = createThrowableError {
+            throw error
+        }
+        createCallsCount += 1
+        try await createClosure!()
+    }
+
+    // MARK: - latestHeight
+
+    var latestHeightCallsCount = 0
+    var latestHeightCalled: Bool {
+        return latestHeightCallsCount > 0
+    }
+    var latestHeightReturnValue: BlockHeight!
+    var latestHeightClosure: (() async -> BlockHeight)?
+
+    func latestHeight() async -> BlockHeight {
+        latestHeightCallsCount += 1
+        if let closure = latestHeightClosure {
+            return await closure()
+        } else {
+            return latestHeightReturnValue
+        }
+    }
+
+    // MARK: - write
+
+    var writeBlocksThrowableError: Error?
+    var writeBlocksCallsCount = 0
+    var writeBlocksCalled: Bool {
+        return writeBlocksCallsCount > 0
+    }
+    var writeBlocksReceivedBlocks: [ZcashCompactBlock]?
+    var writeBlocksClosure: (([ZcashCompactBlock]) async throws -> Void)?
+
+    func write(blocks: [ZcashCompactBlock]) async throws {
+        if let error = writeBlocksThrowableError {
+            throw error
+        }
+        writeBlocksCallsCount += 1
+        writeBlocksReceivedBlocks = blocks
+        try await writeBlocksClosure!(blocks)
+    }
+
+    // MARK: - rewind
+
+    var rewindToThrowableError: Error?
+    var rewindToCallsCount = 0
+    var rewindToCalled: Bool {
+        return rewindToCallsCount > 0
+    }
+    var rewindToReceivedHeight: BlockHeight?
+    var rewindToClosure: ((BlockHeight) async throws -> Void)?
+
+    func rewind(to height: BlockHeight) async throws {
+        if let error = rewindToThrowableError {
+            throw error
+        }
+        rewindToCallsCount += 1
+        rewindToReceivedHeight = height
+        try await rewindToClosure!(height)
+    }
+
+    // MARK: - clear
+
+    var clearUpToThrowableError: Error?
+    var clearUpToCallsCount = 0
+    var clearUpToCalled: Bool {
+        return clearUpToCallsCount > 0
+    }
+    var clearUpToReceivedHeight: BlockHeight?
+    var clearUpToClosure: ((BlockHeight) async throws -> Void)?
+
+    func clear(upTo height: BlockHeight) async throws {
+        if let error = clearUpToThrowableError {
+            throw error
+        }
+        clearUpToCallsCount += 1
+        clearUpToReceivedHeight = height
+        try await clearUpToClosure!(height)
+    }
+
+    // MARK: - clear
+
+    var clearThrowableError: Error?
+    var clearCallsCount = 0
+    var clearCalled: Bool {
+        return clearCallsCount > 0
+    }
+    var clearClosure: (() async throws -> Void)?
+
+    func clear() async throws {
+        if let error = clearThrowableError {
+            throw error
+        }
+        clearCallsCount += 1
+        try await clearClosure!()
+    }
+
+}
 class InternalSyncProgressStorageMock: InternalSyncProgressStorage {
 
 
