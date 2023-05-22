@@ -131,7 +131,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         }
     }
     
-    func setupAction() -> ValidateServerAction {
+    private func setupAction() -> ValidateServerAction {
         let config: CompactBlockProcessor.Configuration = .standard(
             for: ZcashNetworkBuilder.network(for: underlyingNetworkType), walletBirthday: 0
         )
