@@ -28,7 +28,7 @@ actor CompactBlockProcessor {
     private var afterSyncHooksManager = AfterSyncHooksManager()
 
     private let accountRepository: AccountRepository
-    private let blockDownloaderService: BlockDownloaderService
+    let blockDownloaderService: BlockDownloaderService
     private let internalSyncProgress: InternalSyncProgress
     private let latestBlocksDataProvider: LatestBlocksDataProvider
     private let logger: Logger
@@ -727,7 +727,7 @@ extension CompactBlockProcessor {
         retryAttempts < config.retries
     }
 
-    private func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
+    func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
         let offset = min(ZcashSDK.maxReorgSize, ZcashSDK.defaultRewindDistance * (consecutiveErrors + 1))
         return max(errorHeight - offset, walletBirthday - ZcashSDK.maxReorgSize)
     }

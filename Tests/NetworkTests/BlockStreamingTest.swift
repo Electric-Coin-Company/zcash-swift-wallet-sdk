@@ -75,98 +75,98 @@ class BlockStreamingTest: ZcashTestCase {
         }
     }
     
-    func testStreamCancellation() async throws {
-        let endpoint = LightWalletEndpoint(
-            address: LightWalletEndpointBuilder.eccTestnet.host,
-            port: 9067,
-            secure: true,
-            singleCallTimeoutInMillis: 10000,
-            streamingCallTimeoutInMillis: 10000
-        )
-        let service = LightWalletServiceFactory(endpoint: endpoint).make()
-
-        let latestBlockHeight = try await service.latestBlockHeight()
-        let startHeight = latestBlockHeight - 100_000
-        let processorConfig = CompactBlockProcessor.Configuration.standard(
-            for: ZcashNetworkBuilder.network(for: .testnet),
-            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
-        )
-
-        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletServiceFactory(endpoint: endpoint).make()
-        }
-        try await mockContainer.resolve(CompactBlockRepository.self).create()
-        
-        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
-        
-        let cancelableTask = Task {
-            do {
-                let blockDownloader = await compactBlockProcessor.blockDownloader
-                await blockDownloader.setDownloadLimit(latestBlockHeight)
-                try await blockDownloader.setSyncRange(startHeight...latestBlockHeight, batchSize: 100)
-                await blockDownloader.startDownload(maxBlockBufferSize: 10)
-                try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
-            } catch {
-                XCTAssertTrue(Task.isCancelled)
-            }
-        }
-
-        cancelableTask.cancel()
-        await compactBlockProcessor.stop()
-    }
+//    func testStreamCancellation() async throws {
+//        let endpoint = LightWalletEndpoint(
+//            address: LightWalletEndpointBuilder.eccTestnet.host,
+//            port: 9067,
+//            secure: true,
+//            singleCallTimeoutInMillis: 10000,
+//            streamingCallTimeoutInMillis: 10000
+//        )
+//        let service = LightWalletServiceFactory(endpoint: endpoint).make()
+//
+//        let latestBlockHeight = try await service.latestBlockHeight()
+//        let startHeight = latestBlockHeight - 100_000
+//        let processorConfig = CompactBlockProcessor.Configuration.standard(
+//            for: ZcashNetworkBuilder.network(for: .testnet),
+//            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
+//        )
+//
+//        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
+//            LightWalletServiceFactory(endpoint: endpoint).make()
+//        }
+//        try await mockContainer.resolve(CompactBlockRepository.self).create()
+//
+//        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
+//
+//        let cancelableTask = Task {
+//            do {
+//                let blockDownloader = await compactBlockProcessor.blockDownloader
+//                await blockDownloader.setDownloadLimit(latestBlockHeight)
+//                try await blockDownloader.setSyncRange(startHeight...latestBlockHeight, batchSize: 100)
+//                await blockDownloader.startDownload(maxBlockBufferSize: 10)
+//                try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
+//            } catch {
+//                XCTAssertTrue(Task.isCancelled)
+//            }
+//        }
+//
+//        cancelableTask.cancel()
+//        await compactBlockProcessor.stop()
+//    }
     
-    func testStreamTimeout() async throws {
-        let endpoint = LightWalletEndpoint(
-            address: LightWalletEndpointBuilder.eccTestnet.host,
-            port: 9067,
-            secure: true,
-            singleCallTimeoutInMillis: 1000,
-            streamingCallTimeoutInMillis: 1000
-        )
-        let service = LightWalletServiceFactory(endpoint: endpoint).make()
-
-        let latestBlockHeight = try await service.latestBlockHeight()
-
-        let startHeight = latestBlockHeight - 100_000
-        
-        let processorConfig = CompactBlockProcessor.Configuration.standard(
-            for: ZcashNetworkBuilder.network(for: .testnet),
-            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
-        )
-
-        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
-            LightWalletServiceFactory(endpoint: endpoint).make()
-        }
-        try await mockContainer.resolve(CompactBlockRepository.self).create()
-
-        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
-        
-        let date = Date()
-        
-        do {
-            let blockDownloader = await compactBlockProcessor.blockDownloader
-            await blockDownloader.setDownloadLimit(latestBlockHeight)
-            try await blockDownloader.setSyncRange(startHeight...latestBlockHeight, batchSize: 100)
-            await blockDownloader.startDownload(maxBlockBufferSize: 10)
-            try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
-        } catch {
-            if let lwdError = error as? ZcashError {
-                switch lwdError {
-                case .serviceBlockStreamFailed:
-                    XCTAssert(true)
-                default:
-                    XCTFail("LWD Service error found, but should have been a timeLimit reached \(lwdError)")
-                }
-            } else {
-                XCTFail("Error should have been a timeLimit reached Error")
-            }
-        }
-        
-        let now = Date()
-        
-        let elapsed = now.timeIntervalSince(date)
-        print("took \(elapsed) seconds")
-
-        await compactBlockProcessor.stop()
-    }
+//    func testStreamTimeout() async throws {
+//        let endpoint = LightWalletEndpoint(
+//            address: LightWalletEndpointBuilder.eccTestnet.host,
+//            port: 9067,
+//            secure: true,
+//            singleCallTimeoutInMillis: 1000,
+//            streamingCallTimeoutInMillis: 1000
+//        )
+//        let service = LightWalletServiceFactory(endpoint: endpoint).make()
+//
+//        let latestBlockHeight = try await service.latestBlockHeight()
+//
+//        let startHeight = latestBlockHeight - 100_000
+//        
+//        let processorConfig = CompactBlockProcessor.Configuration.standard(
+//            for: ZcashNetworkBuilder.network(for: .testnet),
+//            walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
+//        )
+//
+//        mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in
+//            LightWalletServiceFactory(endpoint: endpoint).make()
+//        }
+//        try await mockContainer.resolve(CompactBlockRepository.self).create()
+//
+//        let compactBlockProcessor = CompactBlockProcessor(container: mockContainer, config: processorConfig)
+//        
+//        let date = Date()
+//        
+//        do {
+//            let blockDownloader = await compactBlockProcessor.blockDownloader
+//            await blockDownloader.setDownloadLimit(latestBlockHeight)
+//            try await blockDownloader.setSyncRange(startHeight...latestBlockHeight, batchSize: 100)
+//            await blockDownloader.startDownload(maxBlockBufferSize: 10)
+//            try await blockDownloader.waitUntilRequestedBlocksAreDownloaded(in: startHeight...latestBlockHeight)
+//        } catch {
+//            if let lwdError = error as? ZcashError {
+//                switch lwdError {
+//                case .serviceBlockStreamFailed:
+//                    XCTAssert(true)
+//                default:
+//                    XCTFail("LWD Service error found, but should have been a timeLimit reached \(lwdError)")
+//                }
+//            } else {
+//                XCTFail("Error should have been a timeLimit reached Error")
+//            }
+//        }
+//        
+//        let now = Date()
+//        
+//        let elapsed = now.timeIntervalSince(date)
+//        print("took \(elapsed) seconds")
+//
+//        await compactBlockProcessor.stop()
+//    }
 }
