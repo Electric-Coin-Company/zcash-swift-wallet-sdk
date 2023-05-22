@@ -25,11 +25,9 @@ class ChecksBeforeSyncAction {
     /// exiting the app.
     /// - Returns: an ``Optional<BlockHeight>`` where Some represents what's the
     /// new state the internal state should reflect and indicating that the cache should be cleared
-    /// as well. c`None` means that no action is required.
+    /// as well. `nil` means that no action is required.
     func shouldClearBlockCacheAndUpdateInternalState(syncRange: SyncRanges) -> BlockHeight? {
-        guard syncRange.downloadedButUnscannedRange != nil else {
-            return nil
-        }
+        guard syncRange.downloadRange != nil, syncRange.scanRange != nil else { return nil }
 
         guard
             let latestScannedHeight = syncRange.latestScannedHeight,

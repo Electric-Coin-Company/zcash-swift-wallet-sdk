@@ -55,7 +55,10 @@ final class ScanActionTests: ZcashTestCase {
         
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
-            XCTAssertFalse(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is not expected to be called.")
+            XCTAssertFalse(
+                transactionRepositoryMock.lastScannedHeightCalled,
+                "transactionRepository.lastScannedHeight() is not expected to be called."
+            )
             XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
             XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is not expected to be called.")
         } catch {
@@ -107,8 +110,8 @@ final class ScanActionTests: ZcashTestCase {
         
         let syncRanges = SyncRanges(
             latestBlockHeight: 0,
-            downloadedButUnscannedRange: nil,
-            downloadAndScanRange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
+            downloadRange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
+            scanRange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
             enhanceRange: nil,
             fetchUTXORange: nil,
             latestScannedHeight: nil,
