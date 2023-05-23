@@ -41,14 +41,9 @@ fetchUTXO -[#red]-> failed : Error occured.
 fetchUTXO -[#blue]-> stopped : Sync was stopped.
 
 handleSaplingParams : SaplingParamsAction
-handleSaplingParams -[#green,bold]-> scanDownloaded
+handleSaplingParams -[#green,bold]-> download
 handleSaplingParams -[#red]-> failed : Error occured.
 handleSaplingParams -[#blue]-> stopped : Sync was stopped.
-
-scanDownloaded : ScanDownloadedButUnscannedAction
-scanDownloaded -[#green,bold]-> download
-scanDownloaded -[#red]-> failed : Error occured.
-scanDownloaded -[#blue]-> stopped : Sync was stopped.
 
 download : DownloadAction
 download -[#green,bold]-> validate

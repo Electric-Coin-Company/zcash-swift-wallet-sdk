@@ -215,8 +215,6 @@ actor CompactBlockProcessor {
                 action = ComputeSyncRangesAction(container: container, config: config)
             case .checksBeforeSync:
                 action = ChecksBeforeSyncAction(container: container)
-            case .scanDownloaded:
-                action = ScanDownloadedButUnscannedAction(container: container)
             case .download:
                 action = DownloadAction(container: container, config: config)
             case .validate:
@@ -559,8 +557,6 @@ extension CompactBlockProcessor {
         case .computeSyncRanges:
             break
         case .checksBeforeSync:
-            break
-        case .scanDownloaded:
             break
         case .download:
             break

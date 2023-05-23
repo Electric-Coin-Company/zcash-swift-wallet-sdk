@@ -77,7 +77,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { _ in }
+            _ = try await enhanceAction.run(with: syncContext) { _ in }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
             XCTAssertFalse(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is not expected to be called.")
@@ -105,7 +105,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { _ in }
+            _ = try await enhanceAction.run(with: syncContext) { _ in }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertTrue(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is expected to be called.")
             XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
@@ -156,7 +156,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { event in
+            _ = try await enhanceAction.run(with: syncContext) { event in
                 guard case let .foundTransactions(transactions, _) = event else {
                     XCTFail("Event is expected to be .foundTransactions but received \(event)")
                     return
@@ -204,12 +204,14 @@ final class EnhanceActionTests: ZcashTestCase {
         )
         
         blockEnhancerMock.enhanceAtDidEnhanceClosure = { _, didEnhance in
-            await didEnhance(EnhancementProgress(
-                totalTransactions: 0,
-                enhancedTransactions: 0,
-                lastFoundTransaction: transaction,
-                range: 0...0,
-                newlyMined: true)
+            await didEnhance(
+                EnhancementProgress(
+                    totalTransactions: 0,
+                    enhancedTransactions: 0,
+                    lastFoundTransaction: transaction,
+                    range: 0...0,
+                    newlyMined: true
+                )
             )
             return nil
         }
@@ -225,7 +227,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let syncContext = await setupActionContext()
 
         do {
-            let _ = try await enhanceAction.run(with: syncContext) { event in
+            _ = try await enhanceAction.run(with: syncContext) { event in
                 guard case .minedTransaction(let minedTransaction) = event else {
                     XCTFail("Event is expected to be .minedTransaction but received \(event)")
                     return
@@ -245,8 +247,8 @@ final class EnhanceActionTests: ZcashTestCase {
         
         let syncRanges = SyncRanges(
             latestBlockHeight: 0,
-            downloadedButUnscannedRange: nil,
-            downloadAndScanRange: underlyingDownloadAndScanRange,
+            downloadRange: underlyingDownloadAndScanRange,
+            scanRange: underlyingDownloadAndScanRange,
             enhanceRange: underlyingEnhanceRange,
             fetchUTXORange: nil,
             latestScannedHeight: nil,
@@ -265,7 +267,7 @@ final class EnhanceActionTests: ZcashTestCase {
         _ internalSyncProgressStorageMock: InternalSyncProgressStorageMock = InternalSyncProgressStorageMock(),
         _ loggerMock: LoggerMock = LoggerMock()
     ) -> EnhanceAction {
-        mockContainer.register(type: InternalSyncProgress.self, isSingleton: true) { di in
+        mockContainer.register(type: InternalSyncProgress.self, isSingleton: true) { _ in
             InternalSyncProgress(alias: .default, storage: internalSyncProgressStorageMock, logger: loggerMock)
         }
         

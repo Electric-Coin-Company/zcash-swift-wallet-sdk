@@ -22,12 +22,12 @@ class EnhanceAction {
     }
 
     func decideWhatToDoNext(context: ActionContext, lastScannedHeight: BlockHeight) async -> ActionContext {
-        guard let downloadAndScanRange = await context.syncRanges.downloadAndScanRange else {
+        guard let scanRange = await context.syncRanges.scanRange else {
             await context.update(state: .clearCache)
             return context
         }
 
-        if lastScannedHeight >= downloadAndScanRange.upperBound {
+        if lastScannedHeight >= scanRange.upperBound {
             await context.update(state: .clearCache)
         } else {
             await context.update(state: .download)

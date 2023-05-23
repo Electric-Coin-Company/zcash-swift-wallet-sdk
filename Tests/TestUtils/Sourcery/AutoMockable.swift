@@ -24,4 +24,5 @@ extension Synchronizer { }
 extension TransactionRepository { }
 extension UTXOFetcher { }
 extension ZcashRustBackendWelding { }
+
 // sourcery:end:

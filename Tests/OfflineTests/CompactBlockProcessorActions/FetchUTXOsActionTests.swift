@@ -28,8 +28,8 @@ final class FetchUTXOsActionTests: ZcashTestCase {
         
         let syncRanges = SyncRanges(
             latestBlockHeight: 0,
-            downloadedButUnscannedRange: nil,
-            downloadAndScanRange: nil,
+            downloadRange: nil,
+            scanRange: nil,
             enhanceRange: nil,
             fetchUTXORange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
             latestScannedHeight: nil,

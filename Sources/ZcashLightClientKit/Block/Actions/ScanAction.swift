@@ -30,7 +30,7 @@ extension ScanAction: Action {
     var removeBlocksCacheWhenFailed: Bool { true }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
-        guard let scanRange = await context.syncRanges.downloadAndScanRange else {
+        guard let scanRange = await context.syncRanges.scanRange else {
             return await update(context: context)
         }
         
