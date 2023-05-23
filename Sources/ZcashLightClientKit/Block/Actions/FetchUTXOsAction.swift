@@ -7,7 +7,7 @@
 
 import Foundation
 
-class FetchUTXOsAction {
+final class FetchUTXOsAction {
     let utxoFetcher: UTXOFetcher
     let logger: Logger
 

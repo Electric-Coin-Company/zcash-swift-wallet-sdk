@@ -61,8 +61,8 @@ class InternalSyncProgressTests: XCTestCase {
 
         switch nextState {
         case let .processNewBlocks(ranges):
-            XCTAssertEqual(ranges.downloadedButUnscannedRange, 620001...630000)
-            XCTAssertEqual(ranges.downloadAndScanRange, 630001...640000)
+            XCTAssertEqual(ranges.downloadRange, 630001...640000)
+            XCTAssertEqual(ranges.scanRange, 620001...640000)
             XCTAssertEqual(ranges.enhanceRange, 630001...640000)
             XCTAssertEqual(ranges.fetchUTXORange, 630001...640000)
 

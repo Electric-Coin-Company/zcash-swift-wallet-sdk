@@ -7,7 +7,7 @@
 
 import Foundation
 
-class SaplingParamsAction {
+final class SaplingParamsAction {
     let saplingParametersHandler: SaplingParametersHandler
     let logger: Logger
 

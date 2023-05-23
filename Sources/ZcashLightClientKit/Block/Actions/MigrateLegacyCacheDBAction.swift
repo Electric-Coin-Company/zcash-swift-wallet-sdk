@@ -7,7 +7,7 @@
 
 import Foundation
 
-class MigrateLegacyCacheDBAction {
+final class MigrateLegacyCacheDBAction {
     private let config: CompactBlockProcessor.Configuration
     private let internalSyncProgress: InternalSyncProgress
     private let storage: CompactBlockRepository

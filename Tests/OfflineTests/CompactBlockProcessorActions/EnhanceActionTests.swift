@@ -10,13 +10,15 @@ import XCTest
 @testable import ZcashLightClientKit
 
 final class EnhanceActionTests: ZcashTestCase {
-    var underlyingDownloadAndScanRange: CompactBlockRange?
+    var underlyingDownloadRange: CompactBlockRange?
+    var underlyingScanRange: CompactBlockRange?
     var underlyingEnhanceRange: CompactBlockRange?
 
     override func setUp() {
         super.setUp()
         
-        underlyingDownloadAndScanRange = nil
+        underlyingDownloadRange = nil
+        underlyingScanRange = nil
         underlyingEnhanceRange = nil
     }
     
@@ -35,8 +37,9 @@ final class EnhanceActionTests: ZcashTestCase {
     
     func testEnhanceAction_decideWhatToDoNext_NothingToDownloadAndScanLeft() async throws {
         let enhanceAction = setupAction()
-        underlyingDownloadAndScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-        
+        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+
         let syncContext = await setupActionContext()
         let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 2000)
         let nextState = await nextContext.state
@@ -49,8 +52,9 @@ final class EnhanceActionTests: ZcashTestCase {
 
     func testEnhanceAction_decideWhatToDoNext_DownloadExpected() async throws {
         let enhanceAction = setupAction()
-        underlyingDownloadAndScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-        
+        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+
         let syncContext = await setupActionContext()
         let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 1500)
         let nextState = await nextContext.state
@@ -247,8 +251,8 @@ final class EnhanceActionTests: ZcashTestCase {
         
         let syncRanges = SyncRanges(
             latestBlockHeight: 0,
-            downloadRange: underlyingDownloadAndScanRange,
-            scanRange: underlyingDownloadAndScanRange,
+            downloadRange: underlyingDownloadRange,
+            scanRange: underlyingScanRange,
             enhanceRange: underlyingEnhanceRange,
             fetchUTXORange: nil,
             latestScannedHeight: nil,

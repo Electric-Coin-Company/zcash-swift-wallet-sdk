@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ValidateAction {
+final class ValidateAction {
     let validator: BlockValidator
     
     init(container: DIContainer) {

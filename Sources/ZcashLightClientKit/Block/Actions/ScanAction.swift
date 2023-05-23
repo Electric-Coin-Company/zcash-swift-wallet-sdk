@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ScanAction {
+final class ScanAction {
     let config: CompactBlockProcessor.Configuration
     let blockScanner: BlockScanner
     let logger: Logger
