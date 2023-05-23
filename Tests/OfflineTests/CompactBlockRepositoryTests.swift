@@ -11,24 +11,19 @@ import Foundation
 @testable import ZcashLightClientKit
 import XCTest
 
-class CompactBlockRepositoryTests: XCTestCase {
+class CompactBlockRepositoryTests: ZcashTestCase {
     let network = ZcashNetworkBuilder.network(for: .testnet)
     let testFileManager = FileManager()
     var rustBackend: ZcashRustBackendWelding!
-    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        testTempDirectory = Environment.uniqueTestTempDirectory
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
     }
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: testTempDirectory)
         rustBackend = nil
-        testTempDirectory = nil
     }
 
     func testEmptyStorage() async throws {

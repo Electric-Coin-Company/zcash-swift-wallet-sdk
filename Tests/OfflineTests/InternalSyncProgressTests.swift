@@ -9,14 +9,19 @@
 import XCTest
 @testable import ZcashLightClientKit
 
-class InternalSyncProgressTests: XCTestCase {
-    var storage: InternalSyncProgressMemoryStorage!
+class InternalSyncProgressTests: ZcashTestCase {
+    var storage: InternalSyncProgressDiskStorage!
     var internalSyncProgress: InternalSyncProgress!
 
-    override func setUp() {
-        super.setUp()
-        storage = InternalSyncProgressMemoryStorage()
+    override func setUp() async throws {
+        try await super.setUp()
+        for key in InternalSyncProgress.Key.allCases {
+            UserDefaults.standard.removeObject(forKey: key.with(.default))
+        }
+
+        storage = InternalSyncProgressDiskStorage(storageURL: testGeneralStorageDirectory, logger: logger)
         internalSyncProgress = InternalSyncProgress(alias: .default, storage: storage, logger: logger)
+        try await internalSyncProgress.initialize()
     }
 
     override func tearDownWithError() throws {
@@ -27,11 +32,11 @@ class InternalSyncProgressTests: XCTestCase {
 
     func test__trackedValuesAreHigherThanLatestHeight__nextStateIsWait() async throws {
         let latestHeight = 623000
-        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 630000)
-        await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
-        await internalSyncProgress.set(630000, .latestEnhancedHeight)
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 630000, alias: .default)
+        try await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        let nextState = await internalSyncProgress.computeNextState(
+        let nextState = try await internalSyncProgress.computeNextState(
             latestBlockHeight: latestHeight,
             latestScannedHeight: 630000,
             walletBirthday: 600000
@@ -49,11 +54,11 @@ class InternalSyncProgressTests: XCTestCase {
 
     func test__trackedValuesAreLowerThanLatestHeight__nextStateIsProcessNewBlocks() async throws {
         let latestHeight = 640000
-        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 630000)
-        await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
-        await internalSyncProgress.set(630000, .latestEnhancedHeight)
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 630000, alias: .default)
+        try await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        let nextState = await internalSyncProgress.computeNextState(
+        let nextState = try await internalSyncProgress.computeNextState(
             latestBlockHeight: latestHeight,
             latestScannedHeight: 620000,
             walletBirthday: 600000
@@ -73,11 +78,11 @@ class InternalSyncProgressTests: XCTestCase {
 
     func test__trackedValuesAreSameAsLatestHeight__nextStateIsFinishProcessing() async throws {
         let latestHeight = 630000
-        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 630000)
-        await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
-        await internalSyncProgress.set(630000, .latestEnhancedHeight)
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 630000, alias: .default)
+        try await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        let nextState = await internalSyncProgress.computeNextState(
+        let nextState = try await internalSyncProgress.computeNextState(
             latestBlockHeight: latestHeight,
             latestScannedHeight: 630000,
             walletBirthday: 600000
@@ -93,76 +98,128 @@ class InternalSyncProgressTests: XCTestCase {
     }
 
     func test__rewindToHeightThatIsHigherThanTrackedHeight__rewindsToTrackedHeight() async throws {
-        await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
-        await internalSyncProgress.set(630000, .latestEnhancedHeight)
+        try await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        await internalSyncProgress.rewind(to: 640000)
+        try await internalSyncProgress.rewind(to: 640000)
 
-        XCTAssertEqual(storage.integer(forKey: "latestEnhancedHeight"), 630000)
-        XCTAssertEqual(storage.integer(forKey: "latestUTXOFetchedHeight"), 630000)
+        let latestEnhancedHeight = try await storage.integer(for: "latestEnhancedHeight")
+        let latestUTXOFetchedHeight = try await storage.integer(for: "latestUTXOFetchedHeight")
+        XCTAssertEqual(latestEnhancedHeight, 630000)
+        XCTAssertEqual(latestUTXOFetchedHeight, 630000)
     }
 
     func test__rewindToHeightThatIsLowerThanTrackedHeight__rewindsToRewindHeight() async throws {
-        await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
-        await internalSyncProgress.set(630000, .latestEnhancedHeight)
+        try await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        await internalSyncProgress.rewind(to: 620000)
+        try await internalSyncProgress.rewind(to: 620000)
 
-        XCTAssertEqual(storage.integer(forKey: "latestEnhancedHeight"), 620000)
-        XCTAssertEqual(storage.integer(forKey: "latestUTXOFetchedHeight"), 620000)
+        let latestEnhancedHeight = try await storage.integer(for: "latestEnhancedHeight")
+        let latestUTXOFetchedHeight = try await storage.integer(for: "latestUTXOFetchedHeight")
+        XCTAssertEqual(latestEnhancedHeight, 620000)
+        XCTAssertEqual(latestUTXOFetchedHeight, 620000)
     }
 
     func test__get__returnsStoredValue() async throws {
-        storage.set(621000, forKey: "latestEnhancedHeight")
-        let latestEnhancedHeight = await internalSyncProgress.latestEnhancedHeight
+        try await storage.set(621000, for: "latestEnhancedHeight")
+        let latestEnhancedHeight = try await internalSyncProgress.latestEnhancedHeight
         XCTAssertEqual(latestEnhancedHeight, 621000)
 
-        storage.set(619000, forKey: "latestUTXOFetchedHeight")
-        let latestUTXOFetchedHeight = await internalSyncProgress.latestUTXOFetchedHeight
+        try await storage.set(619000, for: "latestUTXOFetchedHeight")
+        let latestUTXOFetchedHeight = try await internalSyncProgress.latestUTXOFetchedHeight
         XCTAssertEqual(latestUTXOFetchedHeight, 619000)
     }
 
     func test__set__storeValue() async throws {
-        await internalSyncProgress.set(521000, .latestEnhancedHeight)
-        XCTAssertEqual(storage.integer(forKey: "latestEnhancedHeight"), 521000)
+        try await internalSyncProgress.set(521000, .latestEnhancedHeight)
+        let latestEnhancedHeight = try await storage.integer(for: "latestEnhancedHeight")
+        XCTAssertEqual(latestEnhancedHeight, 521000)
 
-        await internalSyncProgress.set(519000, .latestUTXOFetchedHeight)
-        XCTAssertEqual(storage.integer(forKey: "latestUTXOFetchedHeight"), 519000)
+        try await internalSyncProgress.set(519000, .latestUTXOFetchedHeight)
+        let latestUTXOFetchedHeight = try await storage.integer(for: "latestUTXOFetchedHeight")
+        XCTAssertEqual(latestUTXOFetchedHeight, 519000)
     }
 
-    func test__whenUsingDefaultAliasKeysAreBackwardsCompatible() async {
-        await internalSyncProgress.set(630000, .latestDownloadedBlockHeight)
-        await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
-        await internalSyncProgress.set(630000, .latestEnhancedHeight)
+    func test__whenUsingDefaultAliasKeysAreBackwardsCompatible() async throws {
+        try await internalSyncProgress.set(630000, .latestDownloadedBlockHeight)
+        try await internalSyncProgress.set(630000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress.set(630000, .latestEnhancedHeight)
 
-        XCTAssertEqual(storage.integer(forKey: InternalSyncProgress.Key.latestDownloadedBlockHeight.rawValue), 630000)
-        XCTAssertEqual(storage.integer(forKey: InternalSyncProgress.Key.latestUTXOFetchedHeight.rawValue), 630000)
-        XCTAssertEqual(storage.integer(forKey: InternalSyncProgress.Key.latestEnhancedHeight.rawValue), 630000)
+        let latestDownloadedBlockHeight = try await storage.integer(for: InternalSyncProgress.Key.latestDownloadedBlockHeight.rawValue)
+        let latestUTXOFetchedHeight = try await storage.integer(for: InternalSyncProgress.Key.latestUTXOFetchedHeight.rawValue)
+        let latestEnhancedHeight = try await storage.integer(for: InternalSyncProgress.Key.latestEnhancedHeight.rawValue)
+        XCTAssertEqual(latestDownloadedBlockHeight, 630000)
+        XCTAssertEqual(latestUTXOFetchedHeight, 630000)
+        XCTAssertEqual(latestEnhancedHeight, 630000)
     }
 
-    func test__usingDifferentAliasesStoreValuesIndependently() async {
+    func test__usingDifferentAliasesStoreValuesIndependently() async throws {
         let internalSyncProgress1 = InternalSyncProgress(alias: .custom("alias1"), storage: storage, logger: logger)
-        await internalSyncProgress1.set(121000, .latestDownloadedBlockHeight)
-        await internalSyncProgress1.set(121000, .latestUTXOFetchedHeight)
-        await internalSyncProgress1.set(121000, .latestEnhancedHeight)
+        try await internalSyncProgress1.set(121000, .latestDownloadedBlockHeight)
+        try await internalSyncProgress1.set(121000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress1.set(121000, .latestEnhancedHeight)
 
         let internalSyncProgress2 = InternalSyncProgress(alias: .custom("alias2"), storage: storage, logger: logger)
-        await internalSyncProgress2.set(630000, .latestDownloadedBlockHeight)
-        await internalSyncProgress2.set(630000, .latestUTXOFetchedHeight)
-        await internalSyncProgress2.set(630000, .latestEnhancedHeight)
+        try await internalSyncProgress2.set(630000, .latestDownloadedBlockHeight)
+        try await internalSyncProgress2.set(630000, .latestUTXOFetchedHeight)
+        try await internalSyncProgress2.set(630000, .latestEnhancedHeight)
 
-        let latestDownloadedBlockHeight1 = await internalSyncProgress1.load(.latestDownloadedBlockHeight)
-        let latestUTXOFetchedHeigh1 = await internalSyncProgress1.load(.latestUTXOFetchedHeight)
-        let latestEnhancedHeight1 = await internalSyncProgress1.load(.latestEnhancedHeight)
+        let latestDownloadedBlockHeight1 = try await internalSyncProgress1.load(.latestDownloadedBlockHeight)
+        let latestUTXOFetchedHeigh1 = try await internalSyncProgress1.load(.latestUTXOFetchedHeight)
+        let latestEnhancedHeight1 = try await internalSyncProgress1.load(.latestEnhancedHeight)
         XCTAssertEqual(latestDownloadedBlockHeight1, 121000)
         XCTAssertEqual(latestUTXOFetchedHeigh1, 121000)
         XCTAssertEqual(latestEnhancedHeight1, 121000)
 
-        let latestDownloadedBlockHeight2 = await internalSyncProgress2.load(.latestDownloadedBlockHeight)
-        let latestUTXOFetchedHeigh2 = await internalSyncProgress2.load(.latestUTXOFetchedHeight)
-        let latestEnhancedHeight2 = await internalSyncProgress2.load(.latestEnhancedHeight)
+        let latestDownloadedBlockHeight2 = try await internalSyncProgress2.load(.latestDownloadedBlockHeight)
+        let latestUTXOFetchedHeigh2 = try await internalSyncProgress2.load(.latestUTXOFetchedHeight)
+        let latestEnhancedHeight2 = try await internalSyncProgress2.load(.latestEnhancedHeight)
         XCTAssertEqual(latestDownloadedBlockHeight2, 630000)
         XCTAssertEqual(latestUTXOFetchedHeigh2, 630000)
         XCTAssertEqual(latestEnhancedHeight2, 630000)
+    }
+
+    func test__migrateFromUserDefaults__withDefaultAlias() async throws {
+        let userDefaults = UserDefaults.standard
+        userDefaults.set(113000, forKey: InternalSyncProgress.Key.latestDownloadedBlockHeight.with(.default))
+        userDefaults.set(114000, forKey: InternalSyncProgress.Key.latestEnhancedHeight.with(.default))
+        userDefaults.set(115000, forKey: InternalSyncProgress.Key.latestUTXOFetchedHeight.with(.default))
+
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 150000, alias: .default)
+
+        let latestDownloadedBlockHeight = try await internalSyncProgress.load(.latestDownloadedBlockHeight)
+        let latestUTXOFetchedHeigh = try await internalSyncProgress.load(.latestEnhancedHeight)
+        let latestEnhancedHeight = try await internalSyncProgress.load(.latestUTXOFetchedHeight)
+        XCTAssertEqual(latestDownloadedBlockHeight, 113000)
+        XCTAssertEqual(latestUTXOFetchedHeigh, 114000)
+        XCTAssertEqual(latestEnhancedHeight, 115000)
+
+        XCTAssertEqual(userDefaults.integer(forKey: InternalSyncProgress.Key.latestDownloadedBlockHeight.with(.default)), 0)
+        XCTAssertEqual(userDefaults.integer(forKey: InternalSyncProgress.Key.latestEnhancedHeight.with(.default)), 0)
+        XCTAssertEqual(userDefaults.integer(forKey: InternalSyncProgress.Key.latestUTXOFetchedHeight.with(.default)), 0)
+    }
+
+    func test__migrateFromUserDefaults__withAlias() async throws {
+        let userDefaults = UserDefaults.standard
+        let alias: ZcashSynchronizerAlias = .custom("something")
+        internalSyncProgress = InternalSyncProgress(alias: alias, storage: storage, logger: logger)
+
+        userDefaults.set(113000, forKey: InternalSyncProgress.Key.latestDownloadedBlockHeight.with(alias))
+        userDefaults.set(114000, forKey: InternalSyncProgress.Key.latestEnhancedHeight.with(alias))
+        userDefaults.set(115000, forKey: InternalSyncProgress.Key.latestUTXOFetchedHeight.with(alias))
+
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: 150000, alias: alias)
+
+        let latestDownloadedBlockHeight = try await internalSyncProgress.load(.latestDownloadedBlockHeight)
+        let latestUTXOFetchedHeigh = try await internalSyncProgress.load(.latestEnhancedHeight)
+        let latestEnhancedHeight = try await internalSyncProgress.load(.latestUTXOFetchedHeight)
+        XCTAssertEqual(latestDownloadedBlockHeight, 113000)
+        XCTAssertEqual(latestUTXOFetchedHeigh, 114000)
+        XCTAssertEqual(latestEnhancedHeight, 115000)
+
+        XCTAssertEqual(userDefaults.integer(forKey: InternalSyncProgress.Key.latestDownloadedBlockHeight.with(alias)), 0)
+        XCTAssertEqual(userDefaults.integer(forKey: InternalSyncProgress.Key.latestEnhancedHeight.with(alias)), 0)
+        XCTAssertEqual(userDefaults.integer(forKey: InternalSyncProgress.Key.latestUTXOFetchedHeight.with(alias)), 0)
     }
 }

@@ -25,16 +25,10 @@ class CompactBlockProcessorTests: ZcashTestCase {
     let mockLatestHeight = ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight + 2000
 
     let testFileManager = FileManager()
-    var testTempDirectory: URL!
 
     override func setUp() async throws {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
-        testTempDirectory = Environment.uniqueTestTempDirectory
-
-        try? FileManager.default.removeItem(at: testTempDirectory)
-
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
 
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
@@ -47,8 +41,6 @@ class CompactBlockProcessorTests: ZcashTestCase {
             walletBirthdayProvider: { ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight },
             network: ZcashNetworkBuilder.network(for: .testnet)
         )
-
-        await InternalSyncProgress(alias: .default, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
 
         let liveService = LightWalletServiceFactory(endpoint: LightWalletEndpointBuilder.eccTestnet).make()
         let service = MockLightWalletService(
@@ -87,6 +79,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: processorConfig.dataDb,
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: processorConfig.spendParamsURL,
                 outputParamsURL: processorConfig.outputParamsURL
             ),
@@ -130,7 +123,6 @@ class CompactBlockProcessorTests: ZcashTestCase {
     override func tearDown() async throws {
         try await super.tearDown()
         await processor.stop()
-        try FileManager.default.removeItem(at: processorConfig.fsBlockCacheRoot)
         try? FileManager.default.removeItem(at: processorConfig.dataDb)
         cancellables = []
         processor = nil
@@ -190,7 +182,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
         (abs(currentHeight - targetHeight) / batchSize)
     }
     
-    func testNextBatchBlockRange() async {
+    func testNextBatchBlockRange() async throws {
         // test first range
         var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
         var latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
@@ -210,9 +202,9 @@ class CompactBlockProcessorTests: ZcashTestCase {
             storage: InternalSyncProgressMemoryStorage(),
             logger: logger
         )
-        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight, alias: .default)
 
-        var syncRanges = await internalSyncProgress.computeSyncRanges(
+        var syncRanges = try await internalSyncProgress.computeSyncRanges(
             birthday: processorConfig.walletBirthday,
             latestBlockHeight: latestBlockchainHeight,
             latestScannedHeight: 0
@@ -243,9 +235,9 @@ class CompactBlockProcessorTests: ZcashTestCase {
             storage: InternalSyncProgressMemoryStorage(),
             logger: logger
         )
-        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight, alias: .default)
 
-        syncRanges = await internalSyncProgress.computeSyncRanges(
+        syncRanges = try await internalSyncProgress.computeSyncRanges(
             birthday: processorConfig.walletBirthday,
             latestBlockHeight: latestBlockchainHeight,
             latestScannedHeight: 0
@@ -277,9 +269,9 @@ class CompactBlockProcessorTests: ZcashTestCase {
             storage: InternalSyncProgressMemoryStorage(),
             logger: logger
         )
-        await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight)
+        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight, alias: .default)
 
-        syncRanges = await internalSyncProgress.computeSyncRanges(
+        syncRanges = try await internalSyncProgress.computeSyncRanges(
             birthday: processorConfig.walletBirthday,
             latestBlockHeight: latestBlockchainHeight,
             latestScannedHeight: 0

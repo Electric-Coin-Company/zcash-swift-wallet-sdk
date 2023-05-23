@@ -26,15 +26,12 @@ struct SyncRanges: Equatable {
 }
 
 protocol InternalSyncProgressStorage {
-    func bool(forKey defaultName: String) -> Bool
-    func integer(forKey defaultName: String) -> Int
-    func set(_ value: Int, forKey defaultName: String)
-    func set(_ value: Bool, forKey defaultName: String)
-    @discardableResult
-    func synchronize() -> Bool
+    func initialize() async throws
+    func bool(for key: String) async throws -> Bool
+    func integer(for key: String) async throws -> Int
+    func set(_ value: Int, for key: String) async throws
+    func set(_ value: Bool, for key: String) async throws
 }
-
-extension UserDefaults: InternalSyncProgressStorage { }
 
 actor InternalSyncProgress {
     enum Key: String, CaseIterable {
@@ -56,9 +53,15 @@ actor InternalSyncProgress {
     private let storage: InternalSyncProgressStorage
     let logger: Logger
 
-    var latestDownloadedBlockHeight: BlockHeight { load(.latestDownloadedBlockHeight) }
-    var latestEnhancedHeight: BlockHeight { load(.latestEnhancedHeight) }
-    var latestUTXOFetchedHeight: BlockHeight { load(.latestUTXOFetchedHeight) }
+    var latestDownloadedBlockHeight: BlockHeight {
+        get async throws { try await load(.latestDownloadedBlockHeight) }
+    }
+    var latestEnhancedHeight: BlockHeight {
+        get async throws { try await load(.latestEnhancedHeight) }
+    }
+    var latestUTXOFetchedHeight: BlockHeight {
+        get async throws { try await load(.latestUTXOFetchedHeight) }
+    }
 
     init(alias: ZcashSynchronizerAlias, storage: InternalSyncProgressStorage, logger: Logger) {
         self.alias = alias
@@ -66,19 +69,22 @@ actor InternalSyncProgress {
         self.logger = logger
     }
 
-    func load(_ key: Key) -> BlockHeight {
-        storage.integer(forKey: key.with(alias))
+    func initialize() async throws {
+        try await storage.initialize()
     }
 
-    func set(_ value: BlockHeight, _ key: Key) {
-        storage.set(value, forKey: key.with(alias))
-        storage.synchronize()
+    func load(_ key: Key) async throws -> BlockHeight {
+        return try await storage.integer(for: key.with(alias))
     }
 
-    func rewind(to: BlockHeight) {
-        Key.allCases.forEach { key in
-            let finalRewindHeight = min(load(key), to)
-            self.set(finalRewindHeight, key)
+    func set(_ value: BlockHeight, _ key: Key) async throws {
+        try await storage.set(value, for: key.with(alias))
+    }
+
+    func rewind(to: BlockHeight) async throws {
+        for key in Key.allCases {
+            let finalRewindHeight = min(try await load(key), to)
+            try await self.set(finalRewindHeight, key)
         }
     }
 
@@ -86,13 +92,24 @@ actor InternalSyncProgress {
     /// track this. Because of this we have to migrate height of latest downloaded block from cache DB to here.
     ///
     /// - Parameter latestDownloadedBlockHeight: Height of latest downloaded block from cache DB.
-    func migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB latestDownloadedBlockHeight: BlockHeight) {
-        let key = "InternalSyncProgressMigrated"
-        if !storage.bool(forKey: key) {
-            set(latestDownloadedBlockHeight, .latestDownloadedBlockHeight)
+    func migrateIfNeeded(
+        latestDownloadedBlockHeightFromCacheDB latestDownloadedBlockHeight: BlockHeight,
+        alias: ZcashSynchronizerAlias
+    ) async throws {
+        // If no latest downloaded height is stored in storage store there latest downloaded height from blocks storage. If there are no blocks
+        // downloaded then it will be 0 anyway. If there are blocks downloaded real height is stored.
+        if try await storage.integer(for: Key.latestDownloadedBlockHeight.with(alias)) == 0 {
+            try await set(latestDownloadedBlockHeight, .latestDownloadedBlockHeight)
         }
-        storage.set(true, forKey: key)
-        storage.synchronize()
+
+        for key in Key.allCases {
+            let finalKey = key.with(alias)
+            let value = UserDefaults.standard.integer(forKey: finalKey)
+            if value > 0 {
+                try await storage.set(value, for: finalKey)
+            }
+            UserDefaults.standard.set(0, forKey: finalKey)
+        }
     }
 
     /// Computes the next state for the sync process. Thanks to this it's possible to interrupt the sync process at any phase and then it can be safely
@@ -115,7 +132,10 @@ actor InternalSyncProgress {
         latestBlockHeight: BlockHeight,
         latestScannedHeight: BlockHeight,
         walletBirthday: BlockHeight
-    ) -> CompactBlockProcessor.NextState {
+    ) async throws -> CompactBlockProcessor.NextState {
+        let latestDownloadedBlockHeight = try await self.latestDownloadedBlockHeight
+        let latestEnhancedHeight = try await self.latestEnhancedHeight
+        let latestUTXOFetchedHeight = try await self.latestUTXOFetchedHeight
         logger.debug("""
             Init numbers:
             latestBlockHeight:       \(latestBlockHeight)
@@ -134,7 +154,7 @@ actor InternalSyncProgress {
             latestScannedHeight < latestBlockHeight ||
             latestEnhancedHeight < latestEnhancedHeight ||
             latestUTXOFetchedHeight < latestBlockHeight {
-            let ranges = computeSyncRanges(
+            let ranges = try await computeSyncRanges(
                 birthday: walletBirthday,
                 latestBlockHeight: latestBlockHeight,
                 latestScannedHeight: latestScannedHeight
@@ -149,7 +169,11 @@ actor InternalSyncProgress {
         birthday: BlockHeight,
         latestBlockHeight: BlockHeight,
         latestScannedHeight: BlockHeight
-    ) -> SyncRanges {
+    ) async throws -> SyncRanges {
+        let latestDownloadedBlockHeight = try await self.latestDownloadedBlockHeight
+        let latestEnhancedHeight = try await self.latestEnhancedHeight
+        let latestUTXOFetchedHeight = try await self.latestUTXOFetchedHeight
+
         // If there is more downloaded then scanned blocks we have to range for these blocks. The sync process will then start with scanning these
         // blocks instead of downloading new ones.
         let downloadedButUnscannedRange: CompactBlockRange?

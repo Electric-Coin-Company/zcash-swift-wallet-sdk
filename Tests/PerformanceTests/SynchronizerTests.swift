@@ -10,7 +10,7 @@ import XCTest
 @testable import ZcashLightClientKit
 @testable import TestUtils
 
-class SynchronizerTests: XCTestCase {
+class SynchronizerTests: ZcashTestCase {
     class MockLatestBlockHeightProvider: LatestBlockHeightProvider {
         let birthday: BlockHeight
         
@@ -27,7 +27,6 @@ class SynchronizerTests: XCTestCase {
     var cancellables: [AnyCancellable] = []
     var sdkSynchronizerInternalSyncStatusHandler: SDKSynchronizerInternalSyncStatusHandler! = SDKSynchronizerInternalSyncStatusHandler()
     var rustBackend: ZcashRustBackendWelding!
-    var testTempDirectory: URL!
 
     let seedPhrase = """
     wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame
@@ -37,7 +36,6 @@ class SynchronizerTests: XCTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        testTempDirectory = Environment.uniqueTestTempDirectory
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .mainnet)
     }
 
@@ -47,7 +45,6 @@ class SynchronizerTests: XCTestCase {
         cancellables = []
         sdkSynchronizerInternalSyncStatusHandler = nil
         rustBackend = nil
-        testTempDirectory = nil
     }
 
     func testHundredBlocksSync() async throws {
@@ -71,6 +68,7 @@ class SynchronizerTests: XCTestCase {
             let initializer = Initializer(
                 cacheDbURL: nil,
                 fsBlockDbRoot: databases.fsCacheDbRoot,
+                generalStorageURL: testGeneralStorageDirectory,
                 dataDbURL: databases.dataDB,
                 endpoint: endpoint,
                 network: network,
@@ -94,12 +92,7 @@ class SynchronizerTests: XCTestCase {
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             sdkSynchronizerInternalSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
             
-            let internalSyncProgress = InternalSyncProgress(
-                alias: .default,
-                storage: UserDefaults.standard,
-                logger: logger
-            )
-            await internalSyncProgress.rewind(to: birthday)
+            try await resetDefaultInternalSyncProgress(to: birthday)
             await (synchronizer.blockProcessor.service as? LightWalletGRPCService)?.latestBlockHeightProvider = MockLatestBlockHeightProvider(
                 birthday: self.birthday + 99
             )

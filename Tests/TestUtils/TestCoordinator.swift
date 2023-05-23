@@ -63,15 +63,19 @@ class TestCoordinator {
         syncSessionIDGenerator: SyncSessionIDGenerator = UniqueSyncSessionIDGenerator(),
         dbTracingClosure: ((String) -> Void)? = nil
     ) async throws {
-        await InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger).rewind(to: 0)
-        
         let databases = TemporaryDbBuilder.build()
         self.databases = databases
-        
+
+        let storage = InternalSyncProgressDiskStorage(storageURL: databases.generalStorageURL, logger: logger)
+        let internalSyncProgress = InternalSyncProgress(alias: alias, storage: storage, logger: logger)
+        try await internalSyncProgress.initialize()
+        try await internalSyncProgress.rewind(to: 0)
+
         let initializer = Initializer(
             container: container,
             cacheDbURL: nil,
             fsBlockDbRoot: databases.fsCacheDbRoot,
+            generalStorageURL: databases.generalStorageURL,
             dataDbURL: databases.dataDB,
             endpoint: endpoint,
             network: network,
@@ -81,7 +85,7 @@ class TestCoordinator {
             alias: alias,
             loggingPolicy: .default(.debug)
         )
-        
+
         let derivationTool = DerivationTool(networkType: network.networkType)
         
         self.spendingKey = try derivationTool.deriveUnifiedSpendingKey(
@@ -243,6 +247,7 @@ extension TestCoordinator {
 
 struct TemporaryTestDatabases {
     var fsCacheDbRoot: URL
+    let generalStorageURL: URL
     var dataDB: URL
 }
 
@@ -253,6 +258,7 @@ enum TemporaryDbBuilder {
         
         return TemporaryTestDatabases(
             fsCacheDbRoot: tempUrl.appendingPathComponent("fs_cache_\(timestamp)"),
+            generalStorageURL: tempUrl.appendingPathComponent("general_storage_\(timestamp)"),
             dataDB: tempUrl.appendingPathComponent("data_db_\(timestamp).db")
         )
     }

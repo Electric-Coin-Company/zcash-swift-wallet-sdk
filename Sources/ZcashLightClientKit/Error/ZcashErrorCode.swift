@@ -9,12 +9,18 @@ error originates. And it can help with debugging.
 */
 
 public enum ZcashErrorCode: String {
-    /// Some error happened that is not handled as `ZcashError`.
+    /// Some error happened that is not handled as `ZcashError`. All errors in the SDK are (should be) `ZcashError`.
     case unknown = "ZUNKWN0001"
     /// Updating of paths in `Initilizer` according to alias failed.
     case initializerCantUpdateURLWithAlias = "ZINIT0001"
     /// Alias used to create this instance of the `SDKSynchronizer` is already used by other instance.
     case initializerAliasAlreadyInUse = "ZINIT0002"
+    /// Object on disk at `generalStorageURL` path exists. But it file not directory.
+    case initializerGeneralStorageExistsButIsFile = "ZINIT0003"
+    /// Can't create directory at `generalStorageURL` path.
+    case initializerGeneralStorageCantCreate = "ZINIT0004"
+    /// Can't set `isExcludedFromBackup` flag to `generalStorageURL`.
+    case initializerCantSetNoBackupFlagToGeneralStorageURL = "ZINIT0005"
     /// Unknown GRPC Service error
     case serviceUnknownError = "ZSRVC0001"
     /// LightWalletService.getInfo failed.
@@ -303,4 +309,8 @@ public enum ZcashErrorCode: String {
     case synchronizerRewindUnknownArchorHeight = "ZSYNCO0005"
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     case synchronizerDisconnected = "ZSYNCO0006"
+    /// `InternalSyncProgressDiskStorage` can't read data from specific file.
+    case ispStorageCantLoad = "ZISPDS0001"
+    /// `InternalSyncProgressDiskStorage` can't write data from specific file.
+    case ispStorageCantWrite = "ZISPDS0002"
 }

@@ -38,6 +38,15 @@ enum ZcashErrorDefinition {
     /// Alias used to create this instance of the `SDKSynchronizer` is already used by other instance.
     // sourcery: code="ZINIT0002"
     case initializerAliasAlreadyInUse(_ alias: ZcashSynchronizerAlias)
+    /// Object on disk at `generalStorageURL` path exists. But it file not directory.
+    // sourcery: code="ZINIT0003"
+    case initializerGeneralStorageExistsButIsFile(_ generalStorageURL: URL)
+    /// Can't create directory at `generalStorageURL` path.
+    // sourcery: code="ZINIT0004"
+    case initializerGeneralStorageCantCreate(_ generalStorageURL: URL, _ error: Error)
+    /// Can't set `isExcludedFromBackup` flag to `generalStorageURL`.
+    // sourcery: code="ZINIT0005"
+    case initializerCantSetNoBackupFlagToGeneralStorageURL(_ generalStorageURL: URL, _ error: Error)
 
     // MARK: - LightWalletService
 
@@ -593,4 +602,13 @@ enum ZcashErrorDefinition {
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     // sourcery: code="ZSYNCO0006"
     case synchronizerDisconnected
+
+    // MARK: - InternalSyncProgressDiskStorage
+
+    /// `InternalSyncProgressDiskStorage` can't read data from specific file.
+    // sourcery: code="ZISPDS0001"
+    case ispStorageCantLoad(_ fileURL: URL, _ error: Error)
+    /// `InternalSyncProgressDiskStorage` can't write data from specific file.
+    // sourcery: code="ZISPDS0002"
+    case ispStorageCantWrite(_ fileURL: URL, _ error: Error)
 }

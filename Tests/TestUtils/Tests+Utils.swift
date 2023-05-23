@@ -33,6 +33,11 @@ enum Environment {
         URL(fileURLWithPath: NSString(string: NSTemporaryDirectory())
             .appendingPathComponent("tmp-\(Int.random(in: 0 ... .max))"))
     }
+
+    static var uniqueGeneralStorageDirectory: URL {
+        URL(fileURLWithPath: NSString(string: NSTemporaryDirectory())
+            .appendingPathComponent("gens-\(Int.random(in: 0 ... .max))"))
+    }
 }
 
 public enum Constants {

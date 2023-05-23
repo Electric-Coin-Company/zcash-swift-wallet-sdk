@@ -46,6 +46,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             let wallet = Initializer(
                 cacheDbURL: nil,
                 fsBlockDbRoot: try! fsBlockDbRootURLHelper(),
+                generalStorageURL: try! generalStorageURLHelper(),
                 dataDbURL: try! dataDbURLHelper(),
                 endpoint: DemoAppConfig.endpoint,
                 network: kZcashNetwork,
@@ -169,6 +170,15 @@ func fsBlockDbRootURLHelper() throws -> URL {
         .appendingPathComponent(kZcashNetwork.networkType.chainName)
         .appendingPathComponent(
             ZcashSDK.defaultFsCacheName,
+            isDirectory: true
+        )
+}
+
+func generalStorageURLHelper() throws -> URL {
+    try documentsDirectoryHelper()
+        .appendingPathComponent(kZcashNetwork.networkType.chainName)
+        .appendingPathComponent(
+            "general_storage",
             isDirectory: true
         )
 }

@@ -20,7 +20,6 @@ class TransactionEnhancementTests: ZcashTestCase {
     let branchID = "2bb40e60"
     let chainName = "main"
 
-    var testTempDirectory: URL!
     let testFileManager = FileManager()
 
     var initializer: Initializer!
@@ -40,15 +39,7 @@ class TransactionEnhancementTests: ZcashTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
-        testTempDirectory = Environment.uniqueTestTempDirectory
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
-
-        await InternalSyncProgress(
-            alias: .default,
-            storage: UserDefaults.standard,
-            logger: logger
-        ).rewind(to: 0)
-
+        
         logger = OSLogger(logLevel: .debug)
         
         syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
@@ -140,6 +131,7 @@ class TransactionEnhancementTests: ZcashTestCase {
             urls: Initializer.URLs(
                 fsBlockDbRoot: testTempDirectory,
                 dataDbURL: pathProvider.dataDbURL,
+                generalStorageURL: testGeneralStorageDirectory,
                 spendParamsURL: pathProvider.spendParamsURL,
                 outputParamsURL: pathProvider.outputParamsURL
             ),

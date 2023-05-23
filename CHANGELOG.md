@@ -1,3 +1,13 @@
+# Unreleased
+
+### [#1111] Change how the sync progress is stored inside the SDK
+
+`Initializer` has now a new parameter called `generalStorageURL`. This URL is the location of the directory 
+where the SDK can store any information it needs. A directory doesn't have to exist. But the SDK must 
+be able to write to this location after it creates this directory. It is suggested that this directory is
+a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the
+system itself won't remove these data.
+
 # 0.22.0-beta
 
 ## Checkpoints
@@ -38,6 +48,16 @@ Sources/ZcashLightClientKit/Resources/checkpoints/testnet/2340000.json
 This fixes a memory consumption issue coming from GRPC-Swift.
 - [#1019] Memo has trailing garbled text
  
+### [#1111] Change how the sync progress is stored inside the SDK
+
+`Initializer` has now a new parameter called `generalStorageURL`. This URL is the location of the directory 
+where the SDK can store any information it needs. A directory doesn't have to exist. But the SDK must 
+be able to write to this location after it creates this directory. It is suggested that this directory is
+a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the
+system itself won't remove these data.
+
+### [#1019] Memo has trailing garbled text
+    
 Changes the way unpadded bytes are turned into a UTF-8 Swift String
 without using cString assuming APIs that would overflow memory and
 add garbled trailing bytes.

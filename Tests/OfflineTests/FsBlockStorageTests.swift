@@ -10,18 +10,15 @@ import XCTest
 
 var logger = OSLogger(logLevel: .debug)
 
-final class FsBlockStorageTests: XCTestCase {
+final class FsBlockStorageTests: ZcashTestCase {
     let testFileManager = FileManager()
     var fsBlockDb: URL!
     var rustBackend: ZcashRustBackendWelding!
-    var testTempDirectory: URL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        testTempDirectory = Environment.uniqueTestTempDirectory
         // Put setup code here. This method is called before the invocation of each test method in the class.
         self.fsBlockDb = testTempDirectory.appendingPathComponent("FsBlockDb-\(Int.random(in: 0 ... .max))")
-        try self.testFileManager.createDirectory(at: testTempDirectory, withIntermediateDirectories: false)
         try self.testFileManager.createDirectory(at: self.fsBlockDb, withIntermediateDirectories: false)
 
         rustBackend = ZcashRustBackend.makeForTests(fsBlockDbRoot: testTempDirectory, networkType: .testnet)
@@ -29,9 +26,7 @@ final class FsBlockStorageTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try super.tearDownWithError()
-        try? testFileManager.removeItem(at: testTempDirectory)
         rustBackend = nil
-        testTempDirectory = nil
     }
 
     func testLatestHeightEmptyCache() async throws {

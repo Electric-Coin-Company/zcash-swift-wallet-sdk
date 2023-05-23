@@ -100,7 +100,7 @@ actor BlockDownloaderImpl {
                 throw ZcashError.blockDownloadSyncRangeNotSet
             }
 
-            let latestDownloadedBlockHeight = await internalSyncProgress.load(.latestDownloadedBlockHeight)
+            let latestDownloadedBlockHeight = try await internalSyncProgress.latestDownloadedBlockHeight
 
             let downloadFrom = max(syncRange.lowerBound, latestDownloadedBlockHeight + 1)
             let downloadTo = min(downloadToHeight, syncRange.upperBound)
@@ -220,7 +220,7 @@ actor BlockDownloaderImpl {
             if buffer.count >= maxBlockBufferSize {
                 let finishTime = Date()
                 try await storage.write(blocks: buffer)
-                await blocksBufferWritten(buffer)
+                try await blocksBufferWritten(buffer)
                 buffer.removeAll(keepingCapacity: true)
 
                 pushMetrics(block.height, startTime, finishTime)
@@ -235,12 +235,12 @@ actor BlockDownloaderImpl {
         }
 
         try await storage.write(blocks: buffer)
-        await blocksBufferWritten(buffer)
+        try await blocksBufferWritten(buffer)
     }
 
-    private func blocksBufferWritten(_ buffer: [ZcashCompactBlock]) async {
+    private func blocksBufferWritten(_ buffer: [ZcashCompactBlock]) async throws {
         guard let lastBlock = buffer.last else { return }
-        await internalSyncProgress.set(lastBlock.height, .latestDownloadedBlockHeight)
+        try await internalSyncProgress.set(lastBlock.height, .latestDownloadedBlockHeight)
     }
 }
 
@@ -282,13 +282,13 @@ extension BlockDownloaderImpl: BlockDownloader {
 
     func waitUntilRequestedBlocksAreDownloaded(in range: CompactBlockRange) async throws {
         logger.debug("Waiting until requested blocks are downloaded at \(range)")
-        var latestDownloadedBlock = await internalSyncProgress.load(.latestDownloadedBlockHeight)
+        var latestDownloadedBlock = try await internalSyncProgress.latestDownloadedBlockHeight
         while latestDownloadedBlock < range.upperBound {
             if let error = lastError {
                 throw error
             }
             try await Task.sleep(milliseconds: 10)
-            latestDownloadedBlock = await internalSyncProgress.load(.latestDownloadedBlockHeight)
+            latestDownloadedBlock = try await internalSyncProgress.latestDownloadedBlockHeight
         }
         logger.debug("Waiting done. Blocks are downloaded at \(range)")
     }
