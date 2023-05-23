@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ValidateServerAction {
+final class ValidateServerAction {
     let config: CompactBlockProcessor.Configuration
     let rustBackend: ZcashRustBackendWelding
     let service: LightWalletService

@@ -7,7 +7,7 @@
 
 import Foundation
 
-class DownloadAction {
+final class DownloadAction {
     let config: CompactBlockProcessor.Configuration
     let downloader: BlockDownloader
     let transactionRepository: TransactionRepository
