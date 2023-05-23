@@ -10,7 +10,7 @@ import XCTest
 @testable import ZcashLightClientKit
 
 final class ClearCacheActionTests: ZcashTestCase {
-    func testClearCacheActionTests_NextAction() async throws {
+    func testClearCacheAction_NextAction() async throws {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
 
         compactBlockRepositoryMock.clearClosure = { }
