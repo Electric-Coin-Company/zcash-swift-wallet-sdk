@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/grpc/grpc-swift.git", from: "1.14.0"),
         .package(url: "https://github.com/stephencelis/SQLite.swift.git", from: "0.14.1"),
-        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", from: "0.3.1")
+        .package(url: "https://github.com/zcash-hackworks/zcash-light-client-ffi", revision: "cdbc06f10b2d7cbe0d6362b30f68167825942e86")
     ],
     targets: [
         .target(

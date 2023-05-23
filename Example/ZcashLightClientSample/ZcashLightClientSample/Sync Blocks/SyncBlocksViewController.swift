@@ -151,11 +151,16 @@ class SyncBlocksViewController: UIViewController {
             do {
                 if syncStatus == .unprepared {
                     // swiftlint:disable:next force_try
-                    _ = try! await synchronizer.prepare(
-                        with: DemoAppConfig.defaultSeed,
-                        viewingKeys: [AppDelegate.shared.sharedViewingKey],
-                        walletBirthday: DemoAppConfig.defaultBirthdayHeight
-                    )
+                    do {
+                        _ = try await synchronizer.prepare(
+                            with: DemoAppConfig.defaultSeed,
+                            viewingKeys: [AppDelegate.shared.sharedViewingKey],
+                            walletBirthday: DemoAppConfig.defaultBirthdayHeight
+                        )
+                    } catch {
+                        loggerProxy.error(error.toZcashError().message)
+                        fatalError(error.toZcashError().message)
+                    }
                 }
 
                 synchronizer.metrics.enableMetrics()

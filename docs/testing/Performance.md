@@ -1,4 +1,6 @@
 # Performance Testing
+
+## Using `SDKMetrics`
 ### Intro
 Benchmarking the SDK is one of the key focuses of `SDKMetrics` API. The most important operation of the SDK is the ability to synchronize blocks in order to see transactions, right balances and to send & receive funds. In short, be in sync with the mainnet blockchain. Synchronization consists of several sub-operations like downloading the blocks, validating & scanning, etc.
 
@@ -114,3 +116,26 @@ totalSyncTimes: min: 7.222689986228943 max: 10.718868017196655 avg: 8.9970629364
 
 ### Performance tests
 We encourage you to visit `Tests/PerformanceTests/` folder and check `SynchronizerTests` where we do exactly what is mentioned in this doc. We run synchronization for specific range of 100 blocks 5 times, measure every run separately and merge results together in the end. The `SDKMetrics` and `SynchronizerTests` lay down foundations for the future automatization of performance testing.
+
+## Fine-grained tunning with `os_signpost` from `zcashlc`
+
+Besides `SDKMetrics`, developers can also check specific `os_signpost` calls enabled inside the 
+rust backend. 
+
+**Note:** This might degrade overall app performance a bit but will bring up exact numbers on what's going on
+while scanning blocks under the hood. 
+
+### Enabling tracing
+To achieve this the SDK must initialized passing `true` to Initializer's `enableBackendTracing` parameter.
+
+### Disabling tracing
+At the moment tracing can't be disabled in runtime. It's either ON or OFF. Synchronizer must be started with the tracing 
+argument defined as `false`.
+
+### viewing metrics
+
+Tracing leverages `OSSignpost` APIs and `OSLogger`. Those can be viewed on Instruments by using the
+"os_signpost" instrument.
+
+We added a profiling templates into the `Tools/` folder called `Zcash-SyncTime-Profiler` for our
+convenience, but you are free to use whatever you choose. 
