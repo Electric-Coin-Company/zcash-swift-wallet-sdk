@@ -10,19 +10,21 @@ import XCTest
 @testable import ZcashLightClientKit
 
 final class ChecksBeforeSyncActionTests: ZcashTestCase {
-    var underlyingDownloadedButUnscannedRange: CompactBlockRange?
+    var underlyingDownloadRange: CompactBlockRange?
+    var underlyingScanRange: CompactBlockRange?
     var underlyingLatestScannedHeight: BlockHeight?
     var underlyingLatestDownloadedBlockHeight: BlockHeight?
 
     override func setUp() {
         super.setUp()
         
-        underlyingDownloadedButUnscannedRange = nil
+        underlyingDownloadRange = nil
+        underlyingScanRange = nil
         underlyingLatestScannedHeight = nil
         underlyingLatestDownloadedBlockHeight = nil
     }
     
-    func testChecksBeforeSyncAction_shouldClearBlockCacheAndUpdateInternalState_noDownloadedButUnscannedRange() async throws {
+    func testChecksBeforeSyncAction_shouldClearBlockCacheAndUpdateInternalState_noDownloadNoScanRange() async throws {
         let checksBeforeSyncAction = setupAction()
 
         let syncRanges = setupSyncRanges()
@@ -34,7 +36,8 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
     func testChecksBeforeSyncAction_shouldClearBlockCacheAndUpdateInternalState_nothingToClear() async throws {
         let checksBeforeSyncAction = setupAction()
 
-        underlyingDownloadedButUnscannedRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingLatestScannedHeight = BlockHeight(2000)
         underlyingLatestDownloadedBlockHeight = BlockHeight(2000)
         
@@ -47,7 +50,8 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
     func testChecksBeforeSyncAction_shouldClearBlockCacheAndUpdateInternalState_somethingToClear() async throws {
         let checksBeforeSyncAction = setupAction()
 
-        underlyingDownloadedButUnscannedRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingLatestScannedHeight = BlockHeight(2000)
         underlyingLatestDownloadedBlockHeight = BlockHeight(1000)
         
@@ -70,7 +74,8 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
             internalSyncProgressStorageMock
         )
 
-        underlyingDownloadedButUnscannedRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingLatestScannedHeight = BlockHeight(2000)
         underlyingLatestDownloadedBlockHeight = BlockHeight(1000)
         
@@ -133,8 +138,8 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
     private func setupSyncRanges() -> SyncRanges {
         SyncRanges(
             latestBlockHeight: 0,
-            downloadedButUnscannedRange: underlyingDownloadedButUnscannedRange,
-            downloadAndScanRange: nil,
+            downloadRange: underlyingDownloadRange,
+            scanRange: underlyingScanRange,
             enhanceRange: nil,
             fetchUTXORange: nil,
             latestScannedHeight: underlyingLatestScannedHeight,

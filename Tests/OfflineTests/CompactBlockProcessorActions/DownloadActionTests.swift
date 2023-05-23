@@ -10,8 +10,9 @@ import XCTest
 @testable import ZcashLightClientKit
 
 final class DownloadActionTests: ZcashTestCase {
-    var underlyingDownloadAndScanRange: CompactBlockRange?
-    
+    var underlyingDownloadRange: CompactBlockRange?
+    var underlyingScanRange: CompactBlockRange?
+
     func testDownloadAction_NextAction() async throws {
         let blockDownloaderMock = BlockDownloaderMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
@@ -27,8 +28,9 @@ final class DownloadActionTests: ZcashTestCase {
             transactionRepositoryMock
         )
         
-        underlyingDownloadAndScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-        
+        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+
         let syncContext = await setupActionContext()
 
         do {
@@ -97,7 +99,8 @@ final class DownloadActionTests: ZcashTestCase {
             transactionRepositoryMock
         )
         
-        underlyingDownloadAndScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
+        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 
         let syncContext = await setupActionContext()
 
@@ -139,11 +142,11 @@ final class DownloadActionTests: ZcashTestCase {
 
     private func setupActionContext() async -> ActionContext {
         let syncContext: ActionContext = .init(state: .download)
-        
+
         let syncRanges = SyncRanges(
             latestBlockHeight: 0,
-            downloadedButUnscannedRange: nil,
-            downloadAndScanRange: underlyingDownloadAndScanRange,
+            downloadRange: underlyingDownloadRange,
+            scanRange: underlyingScanRange,
             enhanceRange: nil,
             fetchUTXORange: nil,
             latestScannedHeight: nil,

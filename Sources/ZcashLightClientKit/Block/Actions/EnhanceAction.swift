@@ -7,7 +7,7 @@
 
 import Foundation
 
-class EnhanceAction {
+final class EnhanceAction {
     let blockEnhancer: BlockEnhancer
     let config: CompactBlockProcessor.Configuration
     let internalSyncProgress: InternalSyncProgress

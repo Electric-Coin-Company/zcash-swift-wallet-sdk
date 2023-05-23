@@ -13,11 +13,13 @@
 @testable import ZcashLightClientKit
 
 extension BlockDownloader { }
+extension BlockDownloaderService { }
 extension BlockEnhancer { }
 extension BlockScanner { }
 extension BlockValidator { }
 extension CompactBlockRepository { }
 extension InternalSyncProgressStorage { }
+extension LatestBlocksDataProvider { }
 extension LightWalletdInfo { }
 extension LightWalletService { }
 extension Logger { }

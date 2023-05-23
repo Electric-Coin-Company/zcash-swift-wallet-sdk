@@ -7,7 +7,7 @@
 
 import Foundation
 
-class ClearCacheAction {
+final class ClearCacheAction {
     let storage: CompactBlockRepository
     init(container: DIContainer) {
         storage = container.resolve(CompactBlockRepository.self)
