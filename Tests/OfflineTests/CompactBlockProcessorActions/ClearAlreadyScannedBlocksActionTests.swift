@@ -10,7 +10,7 @@ import XCTest
 @testable import ZcashLightClientKit
 
 final class ClearAlreadyScannedBlocksActionTests: ZcashTestCase {
-    func testClearAlreadyScannedBlocksActionTests_NextAction() async throws {
+    func testClearAlreadyScannedBlocksAction_NextAction() async throws {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
 
