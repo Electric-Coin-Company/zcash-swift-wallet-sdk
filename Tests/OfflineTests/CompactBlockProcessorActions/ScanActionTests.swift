@@ -86,7 +86,7 @@ final class ScanActionTests: ZcashTestCase {
         }
     }
     
-    func setupAction(
+    private func setupAction(
         _ blockScannerMock: BlockScannerMock,
         _ transactionRepositoryMock: TransactionRepositoryMock,
         _ loggerMock: LoggerMock
@@ -105,7 +105,7 @@ final class ScanActionTests: ZcashTestCase {
         )
     }
     
-    func setupActionContext() async -> ActionContext {
+    private func setupActionContext() async -> ActionContext {
         let syncContext: ActionContext = .init(state: .scan)
         
         let syncRanges = SyncRanges(

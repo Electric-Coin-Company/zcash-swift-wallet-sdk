@@ -242,7 +242,7 @@ final class EnhanceActionTests: ZcashTestCase {
         }
     }
     
-    func setupActionContext() async -> ActionContext {
+    private func setupActionContext() async -> ActionContext {
         let syncContext: ActionContext = .init(state: .enhance)
         
         let syncRanges = SyncRanges(
@@ -261,7 +261,7 @@ final class EnhanceActionTests: ZcashTestCase {
         return syncContext
     }
     
-    func setupAction(
+    private func setupAction(
         _ blockEnhancerMock: BlockEnhancerMock = BlockEnhancerMock(),
         _ transactionRepositoryMock: TransactionRepositoryMock = TransactionRepositoryMock(),
         _ internalSyncProgressStorageMock: InternalSyncProgressStorageMock = InternalSyncProgressStorageMock(),
