@@ -25,6 +25,7 @@ actor CompactBlockProcessor {
     private var context: ActionContext
 
     private(set) var config: Configuration
+    private let configProvider: ConfigProvider
     private var afterSyncHooksManager = AfterSyncHooksManager()
 
     private let accountRepository: AccountRepository
@@ -34,7 +35,7 @@ actor CompactBlockProcessor {
     private let logger: Logger
     private let metrics: SDKMetrics
     private let rustBackend: ZcashRustBackendWelding
-    private let service: LightWalletService
+    let service: LightWalletService
     private let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
     private let fileManager: ZcashFileManager
@@ -182,8 +183,9 @@ actor CompactBlockProcessor {
             accountRepository: accountRepository
         )
 
+        let configProvider = ConfigProvider(config: config)
         context = ActionContext(state: .idle)
-        actions = Self.makeActions(container: container, config: config)
+        actions = Self.makeActions(container: container, configProvider: configProvider)
 
         self.metrics = container.resolve(SDKMetrics.self)
         self.logger = container.resolve(Logger.self)
@@ -197,6 +199,7 @@ actor CompactBlockProcessor {
         self.transactionRepository = container.resolve(TransactionRepository.self)
         self.accountRepository = accountRepository
         self.fileManager = container.resolve(ZcashFileManager.self)
+        self.configProvider = configProvider
     }
 
     deinit {
@@ -205,28 +208,28 @@ actor CompactBlockProcessor {
     }
 
     // swiftlint:disable:next cyclomatic_complexity
-    private static func makeActions(container: DIContainer, config: Configuration) -> [CBPState: Action] {
+    private static func makeActions(container: DIContainer, configProvider: ConfigProvider) -> [CBPState: Action] {
         let actionsDefinition = CBPState.allCases.compactMap { state -> (CBPState, Action)? in
             let action: Action
             switch state {
             case .migrateLegacyCacheDB:
-                action = MigrateLegacyCacheDBAction(container: container, config: config)
+                action = MigrateLegacyCacheDBAction(container: container, configProvider: configProvider)
             case .validateServer:
-                action = ValidateServerAction(container: container, config: config)
+                action = ValidateServerAction(container: container, configProvider: configProvider)
             case .computeSyncRanges:
-                action = ComputeSyncRangesAction(container: container, config: config)
+                action = ComputeSyncRangesAction(container: container, configProvider: configProvider)
             case .checksBeforeSync:
                 action = ChecksBeforeSyncAction(container: container)
             case .download:
-                action = DownloadAction(container: container, config: config)
+                action = DownloadAction(container: container, configProvider: configProvider)
             case .validate:
                 action = ValidateAction(container: container)
             case .scan:
-                action = ScanAction(container: container, config: config)
+                action = ScanAction(container: container, configProvider: configProvider)
             case .clearAlreadyScannedBlocks:
                 action = ClearAlreadyScannedBlocksAction(container: container)
             case .enhance:
-                action = EnhanceAction(container: container, config: config)
+                action = EnhanceAction(container: container, configProvider: configProvider)
             case .fetchUTXO:
                 action = FetchUTXOsAction(container: container)
             case .handleSaplingParams:
@@ -241,6 +244,12 @@ actor CompactBlockProcessor {
         }
 
         return Dictionary(uniqueKeysWithValues: actionsDefinition)
+    }
+
+    // This is currently used only in tests. And it should be used only in tests.
+    func update(config: Configuration) async {
+        self.config = config
+        await configProvider.update(config: config)
     }
 }
 
@@ -271,7 +280,10 @@ extension CompactBlockProcessor {
     }
 
     func stop() async {
-        await rawStop()
+        syncTask?.cancel()
+        self.backoffTimer?.invalidate()
+        self.backoffTimer = nil
+        await stopAllActions()
         retryAttempts = 0
     }
 
@@ -621,9 +633,6 @@ extension CompactBlockProcessor {
     }
 
     private func validationFailed(at height: BlockHeight) async throws {
-        // cancel all Tasks
-        await rawStop()
-
         // rewind
         let rewindHeight = determineLowerBound(
             errorHeight: height,
@@ -645,7 +654,6 @@ extension CompactBlockProcessor {
         await context.update(state: .failed)
 
         logger.error("Fail with error: \(error)")
-        await rawStop()
 
         self.retryAttempts += 1
         await send(event: .failed(error))
@@ -726,13 +734,6 @@ extension CompactBlockProcessor {
     func determineLowerBound(errorHeight: Int, consecutiveErrors: Int, walletBirthday: BlockHeight) -> BlockHeight {
         let offset = min(ZcashSDK.maxReorgSize, ZcashSDK.defaultRewindDistance * (consecutiveErrors + 1))
         return max(errorHeight - offset, walletBirthday - ZcashSDK.maxReorgSize)
-    }
-
-    private func rawStop() async {
-        syncTask?.cancel()
-        self.backoffTimer?.invalidate()
-        self.backoffTimer = nil
-        await stopAllActions()
     }
 
     private func stopAllActions() async {
@@ -839,5 +840,20 @@ extension CompactBlockProcessor {
             }
         }
         return (inserted: refreshed, skipped: skipped)
+    }
+}
+
+// MARK: - Config provider
+
+extension CompactBlockProcessor {
+    actor ConfigProvider {
+        var config: Configuration
+        init(config: Configuration) {
+            self.config = config
+        }
+
+        func update(config: Configuration) async {
+            self.config = config
+        }
     }
 }

@@ -212,7 +212,7 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         
         return ComputeSyncRangesAction(
             container: mockContainer,
-            config: config
+            configProvider: CompactBlockProcessor.ConfigProvider(config: config)
         )
     }
     

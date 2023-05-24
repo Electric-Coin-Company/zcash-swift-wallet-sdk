@@ -209,29 +209,26 @@ extension TestCoordinator {
         try await service.latestBlockHeight()
     }
     
-    func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) throws {
-        Task {
-            await self.synchronizer.blockProcessor.stop()
-            // TODO: [#1102] review and potentially fix/remove commented code https://github.com/zcash/ZcashLightClientKit/issues/1102
-//            let config = await self.synchronizer.blockProcessor.config
-//
-//            let newConfig = CompactBlockProcessor.Configuration(
-//                alias: config.alias,
-//                fsBlockCacheRoot: config.fsBlockCacheRoot,
-//                dataDb: config.dataDb,
-//                spendParamsURL: config.spendParamsURL,
-//                outputParamsURL: config.outputParamsURL,
-//                saplingParamsSourceURL: config.saplingParamsSourceURL,
-//                retries: config.retries,
-//                maxBackoffInterval: config.maxBackoffInterval,
-//                rewindDistance: config.rewindDistance,
-//                walletBirthdayProvider: config.walletBirthdayProvider,
-//                saplingActivation: saplingActivation,
-//                network: config.network
-//            )
+    func reset(saplingActivation: BlockHeight, branchID: String, chainName: String) async throws {
+        await self.synchronizer.blockProcessor.stop()
 
-//            await self.synchronizer.blockProcessor.update(config: newConfig)
-        }
+        let config = await self.synchronizer.blockProcessor.config
+        let newConfig = CompactBlockProcessor.Configuration(
+            alias: config.alias,
+            fsBlockCacheRoot: config.fsBlockCacheRoot,
+            dataDb: config.dataDb,
+            spendParamsURL: config.spendParamsURL,
+            outputParamsURL: config.outputParamsURL,
+            saplingParamsSourceURL: config.saplingParamsSourceURL,
+            retries: config.retries,
+            maxBackoffInterval: config.maxBackoffInterval,
+            rewindDistance: config.rewindDistance,
+            walletBirthdayProvider: config.walletBirthdayProvider,
+            saplingActivation: saplingActivation,
+            network: config.network
+        )
+
+        await self.synchronizer.blockProcessor.update(config: newConfig)
 
         try service.reset(saplingActivation: saplingActivation, branchID: branchID, chainName: chainName)
     }

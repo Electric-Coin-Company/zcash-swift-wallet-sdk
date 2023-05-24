@@ -30,7 +30,7 @@ class BalanceTests: ZcashTestCase {
             walletBirthday: birthday,
             network: network
         )
-        try coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        try await coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
 
     override func tearDown() async throws {
@@ -672,7 +672,7 @@ class BalanceTests: ZcashTestCase {
             return
         }
 
-        guard let changeOutput = outputs.first(where: { $0.isChange }) else {
+        guard outputs.first(where: { $0.isChange }) != nil else {
             XCTFail("Sent transaction has no change")
             return
         }

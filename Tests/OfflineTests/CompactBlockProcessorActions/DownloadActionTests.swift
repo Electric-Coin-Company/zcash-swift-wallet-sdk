@@ -178,7 +178,7 @@ final class DownloadActionTests: ZcashTestCase {
         
         return DownloadAction(
             container: mockContainer,
-            config: config
+            configProvider: CompactBlockProcessor.ConfigProvider(config: config)
         )
     }
 }

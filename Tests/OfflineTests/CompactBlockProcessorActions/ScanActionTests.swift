@@ -101,7 +101,7 @@ final class ScanActionTests: ZcashTestCase {
         
         return ScanAction(
             container: mockContainer,
-            config: config
+            configProvider: CompactBlockProcessor.ConfigProvider(config: config)
         )
     }
     

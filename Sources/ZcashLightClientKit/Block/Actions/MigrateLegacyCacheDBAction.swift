@@ -8,14 +8,14 @@
 import Foundation
 
 final class MigrateLegacyCacheDBAction {
-    private let config: CompactBlockProcessor.Configuration
+    private let configProvider: CompactBlockProcessor.ConfigProvider
     private let internalSyncProgress: InternalSyncProgress
     private let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
     private let fileManager: ZcashFileManager
 
-    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
-        self.config = config
+    init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
+        self.configProvider = configProvider
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
         storage = container.resolve(CompactBlockRepository.self)
         transactionRepository = container.resolve(TransactionRepository.self)
@@ -32,6 +32,7 @@ extension MigrateLegacyCacheDBAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
+        let config = await configProvider.config
         guard let legacyCacheDbURL = config.cacheDbURL else {
             return await updateState(context)
         }
