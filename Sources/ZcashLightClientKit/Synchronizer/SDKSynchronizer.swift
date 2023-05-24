@@ -104,9 +104,9 @@ public class SDKSynchronizer: Synchronizer {
         }
     }
 
-    func updateStatus(_ newValue: InternalSyncStatus) async {
+    func updateStatus(_ newValue: InternalSyncStatus, updateExternalStatus: Bool = true) async {
         let oldValue = await underlyingStatus.update(newValue)
-        await notify(oldStatus: oldValue, newStatus: newValue)
+        await notify(oldStatus: oldValue, newStatus: newValue, updateExternalStatus: updateExternalStatus)
     }
 
     func throwIfUnprepared() throws {
@@ -148,7 +148,7 @@ public class SDKSynchronizer: Synchronizer {
         await latestBlocksDataProvider.updateWalletBirthday(initializer.walletBirthday)
         await latestBlocksDataProvider.updateScannedData()
         
-        await updateStatus(.disconnected)
+        await updateStatus(.disconnected, updateExternalStatus: false)
 
         return .success
     }
@@ -567,7 +567,7 @@ public class SDKSynchronizer: Synchronizer {
         )
     }
 
-    private func notify(oldStatus: InternalSyncStatus, newStatus: InternalSyncStatus) async {
+    private func notify(oldStatus: InternalSyncStatus, newStatus: InternalSyncStatus, updateExternalStatus: Bool = true) async {
         guard oldStatus != newStatus else { return }
 
         let newState: SynchronizerState
@@ -590,7 +590,10 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         latestState = newState
-        updateStateStream(with: latestState)
+
+        if updateExternalStatus {
+            updateStateStream(with: latestState)
+        }
     }
 
     private func updateStateStream(with newState: SynchronizerState) {

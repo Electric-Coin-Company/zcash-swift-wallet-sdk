@@ -186,10 +186,10 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: .nullID,
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
-                internalSyncStatus: .disconnected,
-                latestScannedHeight: 663150,
+                internalSyncStatus: .unprepared,
+                latestScannedHeight: 0,
                 latestBlockHeight: 0,
-                latestScannedTime: 1576821833
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
@@ -350,10 +350,10 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: .nullID,
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
-                internalSyncStatus: .disconnected,
-                latestScannedHeight: 663150,
+                internalSyncStatus: .unprepared,
+                latestScannedHeight: 0,
                 latestBlockHeight: 0,
-                latestScannedTime: 1576821833.0
+                latestScannedTime: 0
             ),
             SynchronizerState(
                 syncSessionID: uuids[0],
