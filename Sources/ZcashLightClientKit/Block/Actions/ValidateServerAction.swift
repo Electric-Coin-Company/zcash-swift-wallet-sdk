@@ -8,12 +8,12 @@
 import Foundation
 
 final class ValidateServerAction {
-    let config: CompactBlockProcessor.Configuration
+    let configProvider: CompactBlockProcessor.ConfigProvider
     let rustBackend: ZcashRustBackendWelding
     let service: LightWalletService
 
-    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
-        self.config = config
+    init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
+        self.configProvider = configProvider
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
         service = container.resolve(LightWalletService.self)
     }
@@ -23,6 +23,7 @@ extension ValidateServerAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
+        let config = await configProvider.config
         let info = try await service.getInfo()
         let localNetwork = config.network
         let saplingActivation = config.saplingActivation

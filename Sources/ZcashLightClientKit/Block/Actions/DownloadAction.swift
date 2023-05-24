@@ -8,13 +8,13 @@
 import Foundation
 
 final class DownloadAction {
-    let config: CompactBlockProcessor.Configuration
+    let configProvider: CompactBlockProcessor.ConfigProvider
     let downloader: BlockDownloader
     let transactionRepository: TransactionRepository
     let logger: Logger
 
-    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
-        self.config = config
+    init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
+        self.configProvider = configProvider
         downloader = container.resolve(BlockDownloader.self)
         transactionRepository = container.resolve(TransactionRepository.self)
         logger = container.resolve(Logger.self)
@@ -34,6 +34,7 @@ extension DownloadAction: Action {
             return await update(context: context)
         }
 
+        let config = await configProvider.config
         let lastScannedHeight = try await transactionRepository.lastScannedHeight()
         // This action is executed for each batch (batch size is 100 blocks by default) until all the blocks in whole `downloadRange` are downloaded.
         // So the right range for this batch must be computed.

@@ -9,13 +9,13 @@ import Foundation
 
 final class EnhanceAction {
     let blockEnhancer: BlockEnhancer
-    let config: CompactBlockProcessor.Configuration
+    let configProvider: CompactBlockProcessor.ConfigProvider
     let internalSyncProgress: InternalSyncProgress
     let logger: Logger
     let transactionRepository: TransactionRepository
-    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
+    init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         blockEnhancer = container.resolve(BlockEnhancer.self)
-        self.config = config
+        self.configProvider = configProvider
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
         logger = container.resolve(Logger.self)
         transactionRepository = container.resolve(TransactionRepository.self)
@@ -49,6 +49,7 @@ extension EnhanceAction: Action {
         // If latestScannedHeight < context.scanRanges.downloadAndScanRange?.upperBound then set state to `download` because there are blocks to
         // download and scan.
 
+        let config = await configProvider.config
         let lastScannedHeight = try await transactionRepository.lastScannedHeight()
 
         guard let range = await context.syncRanges.enhanceRange else {
@@ -59,7 +60,14 @@ extension EnhanceAction: Action {
         let enhanceRangeStart = max(range.lowerBound, lastEnhancedHeight)
         let enhanceRangeEnd = min(range.upperBound, lastScannedHeight)
 
-        if enhanceRangeStart <= enhanceRangeEnd && lastScannedHeight - lastEnhancedHeight >= config.enhanceBatchSize {
+        // This may happen:
+        // For example whole enhance range is 0...2100 Without this force enhance is done for ranges: 0...1000, 1001...2000. And that's it.
+        // Last 100 blocks isn't enhanced.
+        //
+        // This force makes sure that all the blocks are enhanced even when last enhance happened < 1000 blocks ago.
+        let forceEnhance = enhanceRangeEnd == range.upperBound && enhanceRangeEnd - enhanceRangeStart <= config.enhanceBatchSize
+
+        if forceEnhance || (enhanceRangeStart <= enhanceRangeEnd && lastScannedHeight - lastEnhancedHeight >= config.enhanceBatchSize) {
             let enhanceRange = enhanceRangeStart...enhanceRangeEnd
             let transactions = try await blockEnhancer.enhance(
                 at: enhanceRange,

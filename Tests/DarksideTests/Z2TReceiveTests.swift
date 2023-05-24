@@ -33,7 +33,7 @@ class Z2TReceiveTests: ZcashTestCase {
             walletBirthday: birthday,
             network: network
         )
-        try coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
+        try await coordinator.reset(saplingActivation: 663150, branchID: self.branchID, chainName: self.chainName)
     }
 
     override func tearDown() async throws {

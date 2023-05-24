@@ -8,14 +8,14 @@
 import Foundation
 
 final class ComputeSyncRangesAction {
-    let config: CompactBlockProcessor.Configuration
+    let configProvider: CompactBlockProcessor.ConfigProvider
     let downloaderService: BlockDownloaderService
     let internalSyncProgress: InternalSyncProgress
     let latestBlocksDataProvider: LatestBlocksDataProvider
     let logger: Logger
     
-    init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
-        self.config = config
+    init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
+        self.configProvider = configProvider
         downloaderService = container.resolve(BlockDownloaderService.self)
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
         latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
@@ -46,6 +46,7 @@ extension ComputeSyncRangesAction: Action {
         // call internalSyncProgress and compute sync ranges and store them in context
         // if there is nothing sync just switch to finished state
 
+        let config = await configProvider.config
         let latestDownloadHeight = try await downloaderService.lastDownloadedBlockHeight()
 
         try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadHeight, alias: config.alias)

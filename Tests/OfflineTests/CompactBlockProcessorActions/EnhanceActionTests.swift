@@ -245,6 +245,71 @@ final class EnhanceActionTests: ZcashTestCase {
             XCTFail("testEnhanceAction_EnhancementOfBlocksCalled_minedTransaction is not expected to fail. \(error)")
         }
     }
+
+    func testEnhanceAction_EnhancementOfBlocksCalled_usingSmallRange_minedTransaction() async throws {
+        let blockEnhancerMock = BlockEnhancerMock()
+        let transactionRepositoryMock = TransactionRepositoryMock()
+        let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
+
+        transactionRepositoryMock.lastScannedHeightReturnValue = 200
+        internalSyncProgressStorageMock.integerForKeyReturnValue = 1
+
+        let transaction = ZcashTransaction.Overview(
+            accountId: 0,
+            blockTime: 1.0,
+            expiryHeight: 663206,
+            fee: Zatoshi(0),
+            id: 2,
+            index: 1,
+            hasChange: false,
+            memoCount: 1,
+            minedHeight: 663188,
+            raw: Data(),
+            rawID: Data(),
+            receivedNoteCount: 1,
+            sentNoteCount: 0,
+            value: Zatoshi(100000),
+            isExpiredUmined: false
+        )
+
+        blockEnhancerMock.enhanceAtDidEnhanceClosure = { _, didEnhance in
+            await didEnhance(
+                EnhancementProgress(
+                    totalTransactions: 0,
+                    enhancedTransactions: 0,
+                    lastFoundTransaction: transaction,
+                    range: 0...0,
+                    newlyMined: true
+                )
+            )
+            return nil
+        }
+
+        let enhanceAction = setupAction(
+            blockEnhancerMock,
+            transactionRepositoryMock,
+            internalSyncProgressStorageMock
+        )
+
+        underlyingEnhanceRange = CompactBlockRange(uncheckedBounds: (100, 200))
+
+        let syncContext = await setupActionContext()
+
+        do {
+            _ = try await enhanceAction.run(with: syncContext) { event in
+                guard case .minedTransaction(let minedTransaction) = event else {
+                    XCTFail("Event is expected to be .minedTransaction but received \(event)")
+                    return
+                }
+                XCTAssertEqual(minedTransaction.expiryHeight, transaction.expiryHeight, "MinedTransaction differs from mocked one.")
+            }
+            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
+            XCTAssertTrue(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is expected to be called.")
+            XCTAssertTrue(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is expected to be called.")
+        } catch {
+            XCTFail("testEnhanceAction_EnhancementOfBlocksCalled_minedTransaction is not expected to fail. \(error)")
+        }
+    }
     
     private func setupActionContext() async -> ActionContext {
         let syncContext: ActionContext = .init(state: .enhance)
@@ -285,7 +350,7 @@ final class EnhanceActionTests: ZcashTestCase {
         
         return EnhanceAction(
             container: mockContainer,
-            config: config
+            configProvider: CompactBlockProcessor.ConfigProvider(config: config)
         )
     }
 }

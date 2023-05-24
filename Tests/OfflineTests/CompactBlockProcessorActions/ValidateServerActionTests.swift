@@ -157,7 +157,7 @@ final class ValidateServerActionTests: ZcashTestCase {
 
         return ValidateServerAction(
             container: mockContainer,
-            config: config
+            configProvider: CompactBlockProcessor.ConfigProvider(config: config)
         )
     }
 }
