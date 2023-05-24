@@ -94,6 +94,10 @@ enum Dependencies {
             let storage = InternalSyncProgressDiskStorage(storageURL: urls.generalStorageURL, logger: logger)
             return InternalSyncProgress(alias: alias, storage: storage, logger: logger)
         }
+        
+        container.register(type: ZcashFileManager.self, isSingleton: true) { _ in
+            FileManager.default
+        }
     }
     
     static func setupCompactBlockProcessor(

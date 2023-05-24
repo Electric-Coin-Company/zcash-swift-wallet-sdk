@@ -12,12 +12,14 @@ final class MigrateLegacyCacheDBAction {
     private let internalSyncProgress: InternalSyncProgress
     private let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
+    private let fileManager: ZcashFileManager
 
     init(container: DIContainer, config: CompactBlockProcessor.Configuration) {
         self.config = config
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
         storage = container.resolve(CompactBlockRepository.self)
         transactionRepository = container.resolve(TransactionRepository.self)
+        fileManager = container.resolve(ZcashFileManager.self)
     }
 
     private func updateState(_ context: ActionContext) async -> ActionContext {
@@ -48,13 +50,13 @@ extension MigrateLegacyCacheDBAction: Action {
         // if the URL provided is not readable, it means that the client has a reference
         // to the cacheDb file but it has been deleted in a prior sync cycle. there's
         // nothing to do here.
-        guard FileManager.default.isReadableFile(atPath: legacyCacheDbURL.path) else {
+        guard fileManager.isReadableFile(atPath: legacyCacheDbURL.path) else {
             return await updateState(context)
         }
 
         do {
             // if there's a readable file at the provided URL, delete it.
-            try FileManager.default.removeItem(at: legacyCacheDbURL)
+            try fileManager.removeItem(at: legacyCacheDbURL)
         } catch {
             throw ZcashError.compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb(error)
         }

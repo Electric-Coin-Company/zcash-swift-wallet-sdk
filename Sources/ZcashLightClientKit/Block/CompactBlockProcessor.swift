@@ -37,6 +37,7 @@ actor CompactBlockProcessor {
     private let service: LightWalletService
     private let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
+    private let fileManager: ZcashFileManager
 
     private var retryAttempts: Int = 0
     private var backoffTimer: Timer?
@@ -195,6 +196,7 @@ actor CompactBlockProcessor {
         self.config = config
         self.transactionRepository = container.resolve(TransactionRepository.self)
         self.accountRepository = accountRepository
+        self.fileManager = container.resolve(ZcashFileManager.self)
     }
 
     deinit {
@@ -372,8 +374,8 @@ extension CompactBlockProcessor {
 
     private func wipeLegacyCacheDbIfNeeded() {
         guard let cacheDbURL = config.cacheDbURL else { return }
-        guard FileManager.default.isDeletableFile(atPath: cacheDbURL.pathExtension) else { return }
-        try? FileManager.default.removeItem(at: cacheDbURL)
+        guard fileManager.isDeletableFile(atPath: cacheDbURL.pathExtension) else { return }
+        try? fileManager.removeItem(at: cacheDbURL)
     }
 }
 
