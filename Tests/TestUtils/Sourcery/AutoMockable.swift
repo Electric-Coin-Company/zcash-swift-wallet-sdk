@@ -27,6 +27,7 @@ extension SaplingParametersHandler { }
 extension Synchronizer { }
 extension TransactionRepository { }
 extension UTXOFetcher { }
+extension ZcashFileManager { }
 extension ZcashRustBackendWelding { }
 
 // sourcery:end:
