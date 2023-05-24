@@ -2013,6 +2013,73 @@ class UTXOFetcherMock: UTXOFetcher {
     }
 
 }
+class ZcashFileManagerMock: ZcashFileManager {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - isReadableFile
+
+    var isReadableFileAtPathCallsCount = 0
+    var isReadableFileAtPathCalled: Bool {
+        return isReadableFileAtPathCallsCount > 0
+    }
+    var isReadableFileAtPathReceivedPath: String?
+    var isReadableFileAtPathReturnValue: Bool!
+    var isReadableFileAtPathClosure: ((String) -> Bool)?
+
+    func isReadableFile(atPath path: String) -> Bool {
+        isReadableFileAtPathCallsCount += 1
+        isReadableFileAtPathReceivedPath = path
+        if let closure = isReadableFileAtPathClosure {
+            return closure(path)
+        } else {
+            return isReadableFileAtPathReturnValue
+        }
+    }
+
+    // MARK: - removeItem
+
+    var removeItemAtThrowableError: Error?
+    var removeItemAtCallsCount = 0
+    var removeItemAtCalled: Bool {
+        return removeItemAtCallsCount > 0
+    }
+    var removeItemAtReceivedURL: URL?
+    var removeItemAtClosure: ((URL) throws -> Void)?
+
+    func removeItem(at URL: URL) throws {
+        if let error = removeItemAtThrowableError {
+            throw error
+        }
+        removeItemAtCallsCount += 1
+        removeItemAtReceivedURL = URL
+        try removeItemAtClosure!(URL)
+    }
+
+    // MARK: - isDeletableFile
+
+    var isDeletableFileAtPathCallsCount = 0
+    var isDeletableFileAtPathCalled: Bool {
+        return isDeletableFileAtPathCallsCount > 0
+    }
+    var isDeletableFileAtPathReceivedPath: String?
+    var isDeletableFileAtPathReturnValue: Bool!
+    var isDeletableFileAtPathClosure: ((String) -> Bool)?
+
+    func isDeletableFile(atPath path: String) -> Bool {
+        isDeletableFileAtPathCallsCount += 1
+        isDeletableFileAtPathReceivedPath = path
+        if let closure = isDeletableFileAtPathClosure {
+            return closure(path)
+        } else {
+            return isDeletableFileAtPathReturnValue
+        }
+    }
+
+}
 actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     nonisolated let consensusBranchIdForHeightClosure: ((Int32) throws -> Int32)?

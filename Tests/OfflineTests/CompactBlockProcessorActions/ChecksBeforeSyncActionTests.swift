@@ -124,7 +124,7 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
         _ internalSyncProgressStorageMock: InternalSyncProgressStorageMock = InternalSyncProgressStorageMock(),
         _ loggerMock: LoggerMock = LoggerMock()
     ) -> ChecksBeforeSyncAction {
-        mockContainer.register(type: InternalSyncProgress.self, isSingleton: true) { di in
+        mockContainer.register(type: InternalSyncProgress.self, isSingleton: true) { _ in
             InternalSyncProgress(alias: .default, storage: internalSyncProgressStorageMock, logger: loggerMock)
         }
 

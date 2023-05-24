@@ -91,6 +91,10 @@ enum Dependencies {
             let logger = di.resolve(Logger.self)
             return InternalSyncProgress(alias: alias, storage: UserDefaults.standard, logger: logger)
         }
+        
+        container.register(type: ZcashFileManager.self, isSingleton: true) { _ in
+            FileManager.default
+        }
     }
     
     static func setupCompactBlockProcessor(

@@ -20,7 +20,7 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         underlyingScanRange = nil
     }
     
-    func testComputeSyncRangesActionTests_computeTotalProgressRange_noDownloadNoScanRange() async throws {
+    func testComputeSyncRangesAction_computeTotalProgressRange_noDownloadNoScanRange() async throws {
         let computeSyncRangesAction = setupAction()
         
         let syncRanges = setupSyncRanges()
@@ -29,11 +29,11 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
 
         XCTAssertTrue(
             totalProgressRange == 0...0,
-            "testComputeSyncRangesActionTests_computeTotalProgressRange_A is expected to be 0...0 but received \(totalProgressRange)"
+            "testComputeSyncRangesAction_computeTotalProgressRange_noDownloadNoScanRange is expected to be 0...0 but received \(totalProgressRange)"
         )
     }
 
-    func testComputeSyncRangesActionTests_computeTotalProgressRange_ValidRange() async throws {
+    func testComputeSyncRangesAction_computeTotalProgressRange_ValidRange() async throws {
         let computeSyncRangesAction = setupAction()
 
         underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
@@ -45,11 +45,11 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         
         XCTAssertTrue(
             totalProgressRange == expectedRange,
-            "testComputeSyncRangesActionTests_computeTotalProgressRange_ValidRange is expected to be \(expectedRange) but received \(totalProgressRange)"
+            "testComputeSyncRangesAction_computeTotalProgressRange_ValidRange is expected to be \(expectedRange) but received \(totalProgressRange)"
         )
     }
     
-    func testComputeSyncRangesActionTests_finishProcessingCase() async throws {
+    func testComputeSyncRangesAction_finishProcessingCase() async throws {
         let blockDownloaderServiceMock = BlockDownloaderServiceMock()
         let latestBlocksDataProviderMock = LatestBlocksDataProviderMock()
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
@@ -67,8 +67,14 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         do {
             let nextContext = try await computeSyncRangesAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(blockDownloaderServiceMock.lastDownloadedBlockHeightCalled, "downloaderService.lastDownloadedBlockHeight() is expected to be called.")
-            XCTAssertTrue(latestBlocksDataProviderMock.updateScannedDataCalled, "latestBlocksDataProvider.updateScannedData() is expected to be called.")
+            XCTAssertTrue(
+                blockDownloaderServiceMock.lastDownloadedBlockHeightCalled,
+                "downloaderService.lastDownloadedBlockHeight() is expected to be called."
+            )
+            XCTAssertTrue(
+                latestBlocksDataProviderMock.updateScannedDataCalled,
+                "latestBlocksDataProvider.updateScannedData() is expected to be called."
+            )
             XCTAssertTrue(latestBlocksDataProviderMock.updateBlockDataCalled, "latestBlocksDataProvider.updateBlockData() is expected to be called.")
             XCTAssertFalse(loggerMock.infoFileFunctionLineCalled, "logger.info() is not expected to be called.")
 
@@ -78,11 +84,11 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
                 "nextContext after .computeSyncRanges is expected to be .finished but received \(nextState)"
             )
         } catch {
-            XCTFail("testComputeSyncRangesActionTests_FinishProcessing is not expected to fail. \(error)")
+            XCTFail("testComputeSyncRangesAction_finishProcessingCase is not expected to fail. \(error)")
         }
     }
     
-    func testComputeSyncRangesActionTests_checksBeforeSyncCase() async throws {
+    func testComputeSyncRangesAction_checksBeforeSyncCase() async throws {
         let blockDownloaderServiceMock = BlockDownloaderServiceMock()
         let latestBlocksDataProviderMock = LatestBlocksDataProviderMock()
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
@@ -101,8 +107,14 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         do {
             let nextContext = try await computeSyncRangesAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(blockDownloaderServiceMock.lastDownloadedBlockHeightCalled, "downloaderService.lastDownloadedBlockHeight() is expected to be called.")
-            XCTAssertTrue(latestBlocksDataProviderMock.updateScannedDataCalled, "latestBlocksDataProvider.updateScannedData() is expected to be called.")
+            XCTAssertTrue(
+                blockDownloaderServiceMock.lastDownloadedBlockHeightCalled,
+                "downloaderService.lastDownloadedBlockHeight() is expected to be called."
+            )
+            XCTAssertTrue(
+                latestBlocksDataProviderMock.updateScannedDataCalled,
+                "latestBlocksDataProvider.updateScannedData() is expected to be called."
+            )
             XCTAssertTrue(latestBlocksDataProviderMock.updateBlockDataCalled, "latestBlocksDataProvider.updateBlockData() is expected to be called.")
             XCTAssertFalse(loggerMock.infoFileFunctionLineCalled, "logger.info() is not expected to be called.")
 
@@ -112,11 +124,11 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
                 "nextContext after .computeSyncRanges is expected to be .checksBeforeSync but received \(nextState)"
             )
         } catch {
-            XCTFail("testComputeSyncRangesActionTests_checksBeforeSyncCase is not expected to fail. \(error)")
+            XCTFail("testComputeSyncRangesAction_checksBeforeSyncCase is not expected to fail. \(error)")
         }
     }
     
-    func testComputeSyncRangesActionTests_waitCase() async throws {
+    func testComputeSyncRangesAction_waitCase() async throws {
         let blockDownloaderServiceMock = BlockDownloaderServiceMock()
         let latestBlocksDataProviderMock = LatestBlocksDataProviderMock()
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
@@ -138,8 +150,14 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         do {
             let nextContext = try await computeSyncRangesAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(blockDownloaderServiceMock.lastDownloadedBlockHeightCalled, "downloaderService.lastDownloadedBlockHeight() is expected to be called.")
-            XCTAssertTrue(latestBlocksDataProviderMock.updateScannedDataCalled, "latestBlocksDataProvider.updateScannedData() is expected to be called.")
+            XCTAssertTrue(
+                blockDownloaderServiceMock.lastDownloadedBlockHeightCalled,
+                "downloaderService.lastDownloadedBlockHeight() is expected to be called."
+            )
+            XCTAssertTrue(
+                latestBlocksDataProviderMock.updateScannedDataCalled,
+                "latestBlocksDataProvider.updateScannedData() is expected to be called."
+            )
             XCTAssertTrue(latestBlocksDataProviderMock.updateBlockDataCalled, "latestBlocksDataProvider.updateBlockData() is expected to be called.")
             XCTAssertTrue(loggerMock.infoFileFunctionLineCalled, "logger.info() is expected to be called.")
 
@@ -149,7 +167,7 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
                 "nextContext after .computeSyncRanges is expected to be .finished but received \(nextState)"
             )
         } catch {
-            XCTFail("testComputeSyncRangesActionTests_waitCase is not expected to fail. \(error)")
+            XCTFail("testComputeSyncRangesAction_waitCase is not expected to fail. \(error)")
         }
     }
 
@@ -180,7 +198,7 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         _ internalSyncProgressStorageMock: InternalSyncProgressStorageMock = InternalSyncProgressStorageMock(),
         _ loggerMock: LoggerMock = LoggerMock()
     ) -> ComputeSyncRangesAction {
-        mockContainer.register(type: InternalSyncProgress.self, isSingleton: true) { di in
+        mockContainer.register(type: InternalSyncProgress.self, isSingleton: true) { _ in
             InternalSyncProgress(alias: .default, storage: internalSyncProgressStorageMock, logger: loggerMock)
         }
 
