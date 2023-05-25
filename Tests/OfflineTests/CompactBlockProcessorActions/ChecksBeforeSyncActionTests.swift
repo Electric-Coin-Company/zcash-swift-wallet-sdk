@@ -66,8 +66,7 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
         
         compactBlockRepository.clearClosure = { }
-        internalSyncProgressStorageMock.setForKeyClosure = { _, _ in }
-        internalSyncProgressStorageMock.synchronizeClosure = { true }
+        internalSyncProgressStorageMock.setForClosure = { _, _ in }
 
         let checksBeforeSyncAction = setupAction(
             compactBlockRepository,
@@ -84,7 +83,7 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
         do {
             let nextContext = try await checksBeforeSyncAction.run(with: syncContext) { _ in }
             XCTAssertTrue(compactBlockRepository.clearCalled, "storage.clear() is expected to be called.")
-            XCTAssertTrue(internalSyncProgressStorageMock.setForKeyCalled, "internalSyncProgress.set() is expected to be called.")
+            XCTAssertTrue(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .fetchUTXO,
@@ -108,7 +107,7 @@ final class ChecksBeforeSyncActionTests: ZcashTestCase {
         do {
             let nextContext = try await checksBeforeSyncAction.run(with: syncContext) { _ in }
             XCTAssertTrue(compactBlockRepository.createCalled, "storage.create() is expected to be called.")
-            XCTAssertFalse(internalSyncProgressStorageMock.setForKeyCalled, "internalSyncProgress.set() is not expected to be called.")
+            XCTAssertFalse(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is not expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .fetchUTXO,

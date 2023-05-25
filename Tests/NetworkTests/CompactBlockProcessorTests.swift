@@ -30,6 +30,10 @@ class CompactBlockProcessorTests: ZcashTestCase {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
 
+        for key in InternalSyncProgress.Key.allCases {
+            UserDefaults.standard.set(0, forKey: key.with(.default))
+        }
+
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
             alias: .default,
@@ -223,7 +227,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
             downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
-            scanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,
@@ -257,7 +261,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
         expectedSyncRanges = SyncRanges(
             latestBlockHeight: latestBlockchainHeight,
             downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
-            scanRange: latestDownloadedHeight + 1...latestBlockchainHeight,
+            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
             enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
             fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
             latestScannedHeight: 0,

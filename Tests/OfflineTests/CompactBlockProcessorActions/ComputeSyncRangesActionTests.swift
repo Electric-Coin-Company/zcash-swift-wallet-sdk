@@ -142,7 +142,7 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         )
         blockDownloaderServiceMock.lastDownloadedBlockHeightReturnValue = 10
         latestBlocksDataProviderMock.underlyingLatestScannedHeight = 10
-        internalSyncProgressStorageMock.integerForKeyReturnValue = 10
+        internalSyncProgressStorageMock.integerForReturnValue = 10
         loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
 
         let syncContext = await setupActionContext()
@@ -227,10 +227,9 @@ final class ComputeSyncRangesActionTests: ZcashTestCase {
         latestBlocksDataProviderMock.underlyingLatestScannedHeight = 1
         latestBlocksDataProviderMock.updateScannedDataClosure = { }
         latestBlocksDataProviderMock.updateBlockDataClosure = { }
-        internalSyncProgressStorageMock.integerForKeyReturnValue = 1
-        internalSyncProgressStorageMock.boolForKeyReturnValue = true
+        internalSyncProgressStorageMock.integerForReturnValue = 1
+        internalSyncProgressStorageMock.boolForReturnValue = true
         internalSyncProgressStorageMock.setBoolClosure = { _, _ in }
-        internalSyncProgressStorageMock.synchronizeClosure = { true }
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         
         return setupAction(

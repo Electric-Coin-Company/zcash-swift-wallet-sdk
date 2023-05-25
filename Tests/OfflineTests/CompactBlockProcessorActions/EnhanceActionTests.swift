@@ -84,7 +84,7 @@ final class EnhanceActionTests: ZcashTestCase {
             _ = try await enhanceAction.run(with: syncContext) { _ in }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
-            XCTAssertFalse(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is not expected to be called.")
+            XCTAssertFalse(internalSyncProgressStorageMock.integerForCalled, "internalSyncProgress.load() is not expected to be called.")
         } catch {
             XCTFail("testEnhanceAction_NoEnhanceRange is not expected to fail. \(error)")
         }
@@ -96,7 +96,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
         
         transactionRepositoryMock.lastScannedHeightReturnValue = 1
-        internalSyncProgressStorageMock.integerForKeyReturnValue = 1
+        internalSyncProgressStorageMock.integerForReturnValue = 1
         
         let enhanceAction = setupAction(
             blockEnhancerMock,
@@ -111,7 +111,7 @@ final class EnhanceActionTests: ZcashTestCase {
         do {
             _ = try await enhanceAction.run(with: syncContext) { _ in }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
-            XCTAssertTrue(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is expected to be called.")
+            XCTAssertTrue(internalSyncProgressStorageMock.integerForCalled, "internalSyncProgress.load() is expected to be called.")
             XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
         } catch {
             XCTFail("testEnhanceAction_1000BlocksConditionNotFulfilled is not expected to fail. \(error)")
@@ -124,7 +124,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
         
         transactionRepositoryMock.lastScannedHeightReturnValue = 1500
-        internalSyncProgressStorageMock.integerForKeyReturnValue = 1
+        internalSyncProgressStorageMock.integerForReturnValue = 1
         
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
@@ -174,7 +174,7 @@ final class EnhanceActionTests: ZcashTestCase {
                 XCTAssertEqual(receivedTransaction.expiryHeight, transaction.expiryHeight, "ReceivedTransaction differs from mocked one.")
             }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
-            XCTAssertTrue(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is expected to be called.")
+            XCTAssertTrue(internalSyncProgressStorageMock.integerForCalled, "internalSyncProgress.load() is expected to be called.")
             XCTAssertTrue(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is expected to be called.")
         } catch {
             XCTFail("testEnhanceAction_EnhancementOfBlocksCalled_FoundTransactions is not expected to fail. \(error)")
@@ -187,7 +187,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
         
         transactionRepositoryMock.lastScannedHeightReturnValue = 1500
-        internalSyncProgressStorageMock.integerForKeyReturnValue = 1
+        internalSyncProgressStorageMock.integerForReturnValue = 1
         
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
@@ -239,7 +239,7 @@ final class EnhanceActionTests: ZcashTestCase {
                 XCTAssertEqual(minedTransaction.expiryHeight, transaction.expiryHeight, "MinedTransaction differs from mocked one.")
             }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
-            XCTAssertTrue(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is expected to be called.")
+            XCTAssertTrue(internalSyncProgressStorageMock.integerForCalled, "internalSyncProgress.load() is expected to be called.")
             XCTAssertTrue(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is expected to be called.")
         } catch {
             XCTFail("testEnhanceAction_EnhancementOfBlocksCalled_minedTransaction is not expected to fail. \(error)")
@@ -252,7 +252,7 @@ final class EnhanceActionTests: ZcashTestCase {
         let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
 
         transactionRepositoryMock.lastScannedHeightReturnValue = 200
-        internalSyncProgressStorageMock.integerForKeyReturnValue = 1
+        internalSyncProgressStorageMock.integerForReturnValue = 1
 
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
@@ -304,7 +304,7 @@ final class EnhanceActionTests: ZcashTestCase {
                 XCTAssertEqual(minedTransaction.expiryHeight, transaction.expiryHeight, "MinedTransaction differs from mocked one.")
             }
             XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
-            XCTAssertTrue(internalSyncProgressStorageMock.integerForKeyCalled, "internalSyncProgress.load() is expected to be called.")
+            XCTAssertTrue(internalSyncProgressStorageMock.integerForCalled, "internalSyncProgress.load() is expected to be called.")
             XCTAssertTrue(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is expected to be called.")
         } catch {
             XCTFail("testEnhanceAction_EnhancementOfBlocksCalled_minedTransaction is not expected to fail. \(error)")
