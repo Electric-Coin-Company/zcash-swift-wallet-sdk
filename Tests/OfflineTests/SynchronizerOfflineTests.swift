@@ -11,8 +11,6 @@ import Foundation
 import XCTest
 @testable import ZcashLightClientKit
 
-// TODO: [#1098] review tests, after progress reporting some of them may not have a sense anymore
-// https://github.com/zcash/ZcashLightClientKit/issues/1098
 class SynchronizerOfflineTests: ZcashTestCase {
     let data = TestsData(networkType: .testnet)
     var network: ZcashNetwork!
