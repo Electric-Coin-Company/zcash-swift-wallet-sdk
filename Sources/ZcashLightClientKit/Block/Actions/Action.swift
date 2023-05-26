@@ -46,7 +46,6 @@ protocol Action {
     var removeBlocksCacheWhenFailed: Bool { get }
 
     // When any action is created it can get `DIContainer` and resolve any depedencies it requires.
-
     // Every action uses `context` to get some informartion like download range.
     //
     // `didUpdate` is closure that action use to tell CBP that some part of the work is done. For example if download action would like to
@@ -55,7 +54,6 @@ protocol Action {
     //
     // Each action updates context accordingly. It should at least set new state. Reason for this is that action can return different states for
     // different conditions. And action is the thing that knows these conditions.
-
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext
 
     // Should be called on each existing action when processor wants to stop. Some actions may do it's own background work.

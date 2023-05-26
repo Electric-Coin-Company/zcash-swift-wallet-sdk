@@ -45,8 +45,8 @@ extension EnhanceAction: Action {
         // This action is executed on each downloaded and scanned batch (typically each 100 blocks). But we want to run enhancement each 1000 blocks.
         // This action can use `InternalSyncProgress` and last scanned height to compute when it should do work.
 
-        // if latestScannedHeight == context.scanRanges.downloadAndScanRange?.upperBound then set state `clearCache`. Everything is scanned.
-        // If latestScannedHeight < context.scanRanges.downloadAndScanRange?.upperBound then set state to `download` because there are blocks to
+        // if latestScannedHeight >= context.scanRanges.scanRange.upperBound then everything is processed and sync process should continue to end.
+        // If latestScannedHeight < context.scanRanges.scanRange.upperBound then set state to `download` because there are blocks to
         // download and scan.
 
         let config = await configProvider.config

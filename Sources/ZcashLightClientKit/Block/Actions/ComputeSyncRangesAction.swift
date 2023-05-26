@@ -22,8 +22,7 @@ final class ComputeSyncRangesAction {
         logger = container.resolve(Logger.self)
     }
 
-    /// It may happen that sync process start with syncing blocks that were downloaded but not synced in previous run of the sync process. This
-    /// methods analyses what must be done and computes range that should be used to compute reported progress.
+    /// This method analyses what must be done and computes range that should be used to compute reported progress.
     func computeTotalProgressRange(from syncRanges: SyncRanges) -> CompactBlockRange {
         guard syncRanges.downloadRange != nil || syncRanges.scanRange != nil else {
             // In this case we are sure that no downloading or scanning happens so this returned range won't be even used. And it's easier to return

@@ -226,7 +226,6 @@ final class SynchronizerTests: ZcashTestCase {
     private func checkThatWipeWorked() async throws {
         let storage = await self.coordinator.synchronizer.blockProcessor.storage as! FSCompactBlockRepository
         let fm = FileManager.default
-        print(coordinator.synchronizer.initializer.dataDbURL.path)
 
         XCTAssertFalse(fm.fileExists(atPath: coordinator.synchronizer.initializer.dataDbURL.path), "Data DB should be deleted.")
         XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
