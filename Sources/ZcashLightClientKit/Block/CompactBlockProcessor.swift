@@ -36,7 +36,7 @@ actor CompactBlockProcessor {
     private let metrics: SDKMetrics
     private let rustBackend: ZcashRustBackendWelding
     let service: LightWalletService
-    private let storage: CompactBlockRepository
+    let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
     private let fileManager: ZcashFileManager
 
