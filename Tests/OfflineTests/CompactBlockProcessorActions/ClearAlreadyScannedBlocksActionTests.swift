@@ -34,7 +34,7 @@ final class ClearAlreadyScannedBlocksActionTests: ZcashTestCase {
                 "nextContext after .clearAlreadyScannedBlocks is expected to be .enhance but received \(nextState)"
             )
         } catch {
-            XCTFail("testClearAlreadyScannedBlocksActionTests_NextAction is not expected to fail. \(error)")
+            XCTFail("testClearAlreadyScannedBlocksAction_NextAction is not expected to fail. \(error)")
         }
     }
 }

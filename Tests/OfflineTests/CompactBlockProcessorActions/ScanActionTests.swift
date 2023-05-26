@@ -62,7 +62,7 @@ final class ScanActionTests: ZcashTestCase {
             XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
             XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is not expected to be called.")
         } catch {
-            XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
+            XCTFail("testScanAction_EarlyOutForNoDownloadAndScanRangeSet is not expected to fail. \(error)")
         }
     }
     
@@ -82,7 +82,7 @@ final class ScanActionTests: ZcashTestCase {
             XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
             XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is not expected to be called.")
         } catch {
-            XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
+            XCTFail("testScanAction_StartRangeHigherThanEndRange is not expected to fail. \(error)")
         }
     }
     

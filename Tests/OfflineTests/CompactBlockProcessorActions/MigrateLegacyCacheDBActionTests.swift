@@ -230,7 +230,7 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
                 "nextContext after .migrateLegacyCacheDB is expected to be .validateServer but received \(nextState)"
             )
         } catch {
-            XCTFail("testMigrateLegacyCacheDBAction_aliasDoesntMatchDefault is not expected to fail. \(error)")
+            XCTFail("testMigrateLegacyCacheDBAction_nextAction is not expected to fail. \(error)")
         }
     }
 

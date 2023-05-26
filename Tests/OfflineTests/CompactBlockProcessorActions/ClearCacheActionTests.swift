@@ -30,7 +30,7 @@ final class ClearCacheActionTests: ZcashTestCase {
                 "nextContext after .clearCache is expected to be .finished but received \(nextState)"
             )
         } catch {
-            XCTFail("testClearCacheActionTests_NextAction is not expected to fail. \(error)")
+            XCTFail("testClearCacheAction_NextAction is not expected to fail. \(error)")
         }
     }
 }
