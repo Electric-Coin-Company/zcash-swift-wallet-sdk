@@ -125,7 +125,7 @@ final class DownloadActionTests: ZcashTestCase {
                 "nextContext after .download is expected to be .validate but received \(nextState)"
             )
         } catch {
-            XCTFail("testDownloadAction_NoDownloadAndScanRange is not expected to fail. \(error)")
+            XCTFail("testDownloadAction_NothingMoreToDownload is not expected to fail. \(error)")
         }
     }
     
