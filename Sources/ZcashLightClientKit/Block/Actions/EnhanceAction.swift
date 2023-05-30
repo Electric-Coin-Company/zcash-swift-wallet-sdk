@@ -74,6 +74,7 @@ extension EnhanceAction: Action {
                 didEnhance: { progress in
                     if let foundTx = progress.lastFoundTransaction, progress.newlyMined {
                         await didUpdate(.minedTransaction(foundTx))
+                        await didUpdate(.progressPartialUpdate(.enhance(progress)))
                     }
                 }
             )

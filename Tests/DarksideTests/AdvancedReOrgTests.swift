@@ -1332,7 +1332,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         XCTAssertEqual(expectedBalance, initialTotalBalance)
     }
     
-    func asdastestLongSync() async throws {
+    func testLongSync() async throws {
         await hookToReOrgNotification()
         
         /*

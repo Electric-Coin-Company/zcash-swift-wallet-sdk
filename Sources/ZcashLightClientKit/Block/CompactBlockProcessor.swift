@@ -631,6 +631,9 @@ extension CompactBlockProcessor {
         consecutiveChainValidationErrors = 0
 
         let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
+        // Some actions may not run. For example there are no transactions to enhance and therefore there is no enhance progress. And in
+        // cases like this computation of final progress won't work properly. So let's fake 100% progress at the end of the sync process.
+        await send(event: .progressUpdated(1))
         await send(event: .finished(lastScannedHeight))
         await context.update(state: .finished)
 
