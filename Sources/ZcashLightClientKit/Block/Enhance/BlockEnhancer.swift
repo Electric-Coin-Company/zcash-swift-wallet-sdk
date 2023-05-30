@@ -7,8 +7,52 @@
 
 import Foundation
 
+public struct EnhancementProgress: Equatable {
+    /// total transactions that were detected in the `range`
+    public let totalTransactions: Int
+    /// enhanced transactions so far
+    public let enhancedTransactions: Int
+    /// last found transaction
+    public let lastFoundTransaction: ZcashTransaction.Overview?
+    /// block range that's being enhanced
+    public let range: CompactBlockRange
+    /// whether this transaction can be considered `newly mined` and not part of the
+    /// wallet catching up to stale and uneventful blocks.
+    public let newlyMined: Bool
+
+    public init(
+        totalTransactions: Int,
+        enhancedTransactions: Int,
+        lastFoundTransaction: ZcashTransaction.Overview?,
+        range: CompactBlockRange,
+        newlyMined: Bool
+    ) {
+        self.totalTransactions = totalTransactions
+        self.enhancedTransactions = enhancedTransactions
+        self.lastFoundTransaction = lastFoundTransaction
+        self.range = range
+        self.newlyMined = newlyMined
+    }
+
+    public var progress: Float {
+        totalTransactions > 0 ? Float(enhancedTransactions) / Float(totalTransactions) : 0
+    }
+
+    public static var zero: EnhancementProgress {
+        EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)
+    }
+
+    public static func == (lhs: EnhancementProgress, rhs: EnhancementProgress) -> Bool {
+        return
+            lhs.totalTransactions == rhs.totalTransactions &&
+            lhs.enhancedTransactions == rhs.enhancedTransactions &&
+            lhs.lastFoundTransaction?.id == rhs.lastFoundTransaction?.id &&
+            lhs.range == rhs.range
+    }
+}
+
 protocol BlockEnhancer {
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?
+    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?
 }
 
 struct BlockEnhancerImpl {
@@ -38,7 +82,7 @@ struct BlockEnhancerImpl {
 }
 
 extension BlockEnhancerImpl: BlockEnhancer {
-    func enhance(at range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
+    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
         try Task.checkCancellation()
         
         logger.debug("Started Enhancing range: \(range)")

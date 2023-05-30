@@ -2,10 +2,1071 @@
 // DO NOT EDIT
 import Combine
 @testable import ZcashLightClientKit
+import Foundation
 
 
 
 // MARK: - AutoMockable protocols
+class BlockDownloaderMock: BlockDownloader {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - setDownloadLimit
+
+    var setDownloadLimitCallsCount = 0
+    var setDownloadLimitCalled: Bool {
+        return setDownloadLimitCallsCount > 0
+    }
+    var setDownloadLimitReceivedLimit: BlockHeight?
+    var setDownloadLimitClosure: ((BlockHeight) async -> Void)?
+
+    func setDownloadLimit(_ limit: BlockHeight) async {
+        setDownloadLimitCallsCount += 1
+        setDownloadLimitReceivedLimit = limit
+        await setDownloadLimitClosure!(limit)
+    }
+
+    // MARK: - setSyncRange
+
+    var setSyncRangeBatchSizeThrowableError: Error?
+    var setSyncRangeBatchSizeCallsCount = 0
+    var setSyncRangeBatchSizeCalled: Bool {
+        return setSyncRangeBatchSizeCallsCount > 0
+    }
+    var setSyncRangeBatchSizeReceivedArguments: (range: CompactBlockRange, batchSize: Int)?
+    var setSyncRangeBatchSizeClosure: ((CompactBlockRange, Int) async throws -> Void)?
+
+    func setSyncRange(_ range: CompactBlockRange, batchSize: Int) async throws {
+        if let error = setSyncRangeBatchSizeThrowableError {
+            throw error
+        }
+        setSyncRangeBatchSizeCallsCount += 1
+        setSyncRangeBatchSizeReceivedArguments = (range: range, batchSize: batchSize)
+        try await setSyncRangeBatchSizeClosure!(range, batchSize)
+    }
+
+    // MARK: - startDownload
+
+    var startDownloadMaxBlockBufferSizeCallsCount = 0
+    var startDownloadMaxBlockBufferSizeCalled: Bool {
+        return startDownloadMaxBlockBufferSizeCallsCount > 0
+    }
+    var startDownloadMaxBlockBufferSizeReceivedMaxBlockBufferSize: Int?
+    var startDownloadMaxBlockBufferSizeClosure: ((Int) async -> Void)?
+
+    func startDownload(maxBlockBufferSize: Int) async {
+        startDownloadMaxBlockBufferSizeCallsCount += 1
+        startDownloadMaxBlockBufferSizeReceivedMaxBlockBufferSize = maxBlockBufferSize
+        await startDownloadMaxBlockBufferSizeClosure!(maxBlockBufferSize)
+    }
+
+    // MARK: - stopDownload
+
+    var stopDownloadCallsCount = 0
+    var stopDownloadCalled: Bool {
+        return stopDownloadCallsCount > 0
+    }
+    var stopDownloadClosure: (() async -> Void)?
+
+    func stopDownload() async {
+        stopDownloadCallsCount += 1
+        await stopDownloadClosure!()
+    }
+
+    // MARK: - waitUntilRequestedBlocksAreDownloaded
+
+    var waitUntilRequestedBlocksAreDownloadedInThrowableError: Error?
+    var waitUntilRequestedBlocksAreDownloadedInCallsCount = 0
+    var waitUntilRequestedBlocksAreDownloadedInCalled: Bool {
+        return waitUntilRequestedBlocksAreDownloadedInCallsCount > 0
+    }
+    var waitUntilRequestedBlocksAreDownloadedInReceivedRange: CompactBlockRange?
+    var waitUntilRequestedBlocksAreDownloadedInClosure: ((CompactBlockRange) async throws -> Void)?
+
+    func waitUntilRequestedBlocksAreDownloaded(in range: CompactBlockRange) async throws {
+        if let error = waitUntilRequestedBlocksAreDownloadedInThrowableError {
+            throw error
+        }
+        waitUntilRequestedBlocksAreDownloadedInCallsCount += 1
+        waitUntilRequestedBlocksAreDownloadedInReceivedRange = range
+        try await waitUntilRequestedBlocksAreDownloadedInClosure!(range)
+    }
+
+}
+class BlockDownloaderServiceMock: BlockDownloaderService {
+
+
+    init(
+    ) {
+    }
+    var storage: CompactBlockRepository {
+        get { return underlyingStorage }
+    }
+    var underlyingStorage: CompactBlockRepository!
+
+    // MARK: - downloadBlockRange
+
+    var downloadBlockRangeThrowableError: Error?
+    var downloadBlockRangeCallsCount = 0
+    var downloadBlockRangeCalled: Bool {
+        return downloadBlockRangeCallsCount > 0
+    }
+    var downloadBlockRangeReceivedHeightRange: CompactBlockRange?
+    var downloadBlockRangeClosure: ((CompactBlockRange) async throws -> Void)?
+
+    func downloadBlockRange(_ heightRange: CompactBlockRange) async throws {
+        if let error = downloadBlockRangeThrowableError {
+            throw error
+        }
+        downloadBlockRangeCallsCount += 1
+        downloadBlockRangeReceivedHeightRange = heightRange
+        try await downloadBlockRangeClosure!(heightRange)
+    }
+
+    // MARK: - rewind
+
+    var rewindToThrowableError: Error?
+    var rewindToCallsCount = 0
+    var rewindToCalled: Bool {
+        return rewindToCallsCount > 0
+    }
+    var rewindToReceivedHeight: BlockHeight?
+    var rewindToClosure: ((BlockHeight) async throws -> Void)?
+
+    func rewind(to height: BlockHeight) async throws {
+        if let error = rewindToThrowableError {
+            throw error
+        }
+        rewindToCallsCount += 1
+        rewindToReceivedHeight = height
+        try await rewindToClosure!(height)
+    }
+
+    // MARK: - lastDownloadedBlockHeight
+
+    var lastDownloadedBlockHeightThrowableError: Error?
+    var lastDownloadedBlockHeightCallsCount = 0
+    var lastDownloadedBlockHeightCalled: Bool {
+        return lastDownloadedBlockHeightCallsCount > 0
+    }
+    var lastDownloadedBlockHeightReturnValue: BlockHeight!
+    var lastDownloadedBlockHeightClosure: (() async throws -> BlockHeight)?
+
+    func lastDownloadedBlockHeight() async throws -> BlockHeight {
+        if let error = lastDownloadedBlockHeightThrowableError {
+            throw error
+        }
+        lastDownloadedBlockHeightCallsCount += 1
+        if let closure = lastDownloadedBlockHeightClosure {
+            return try await closure()
+        } else {
+            return lastDownloadedBlockHeightReturnValue
+        }
+    }
+
+    // MARK: - latestBlockHeight
+
+    var latestBlockHeightThrowableError: Error?
+    var latestBlockHeightCallsCount = 0
+    var latestBlockHeightCalled: Bool {
+        return latestBlockHeightCallsCount > 0
+    }
+    var latestBlockHeightReturnValue: BlockHeight!
+    var latestBlockHeightClosure: (() async throws -> BlockHeight)?
+
+    func latestBlockHeight() async throws -> BlockHeight {
+        if let error = latestBlockHeightThrowableError {
+            throw error
+        }
+        latestBlockHeightCallsCount += 1
+        if let closure = latestBlockHeightClosure {
+            return try await closure()
+        } else {
+            return latestBlockHeightReturnValue
+        }
+    }
+
+    // MARK: - fetchTransaction
+
+    var fetchTransactionTxIdThrowableError: Error?
+    var fetchTransactionTxIdCallsCount = 0
+    var fetchTransactionTxIdCalled: Bool {
+        return fetchTransactionTxIdCallsCount > 0
+    }
+    var fetchTransactionTxIdReceivedTxId: Data?
+    var fetchTransactionTxIdReturnValue: ZcashTransaction.Fetched!
+    var fetchTransactionTxIdClosure: ((Data) async throws -> ZcashTransaction.Fetched)?
+
+    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+        if let error = fetchTransactionTxIdThrowableError {
+            throw error
+        }
+        fetchTransactionTxIdCallsCount += 1
+        fetchTransactionTxIdReceivedTxId = txId
+        if let closure = fetchTransactionTxIdClosure {
+            return try await closure(txId)
+        } else {
+            return fetchTransactionTxIdReturnValue
+        }
+    }
+
+    // MARK: - fetchUnspentTransactionOutputs
+
+    var fetchUnspentTransactionOutputsTAddressStartHeightCallsCount = 0
+    var fetchUnspentTransactionOutputsTAddressStartHeightCalled: Bool {
+        return fetchUnspentTransactionOutputsTAddressStartHeightCallsCount > 0
+    }
+    var fetchUnspentTransactionOutputsTAddressStartHeightReceivedArguments: (tAddress: String, startHeight: BlockHeight)?
+    var fetchUnspentTransactionOutputsTAddressStartHeightReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
+    var fetchUnspentTransactionOutputsTAddressStartHeightClosure: ((String, BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+
+    func fetchUnspentTransactionOutputs(tAddress: String, startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        fetchUnspentTransactionOutputsTAddressStartHeightCallsCount += 1
+        fetchUnspentTransactionOutputsTAddressStartHeightReceivedArguments = (tAddress: tAddress, startHeight: startHeight)
+        if let closure = fetchUnspentTransactionOutputsTAddressStartHeightClosure {
+            return closure(tAddress, startHeight)
+        } else {
+            return fetchUnspentTransactionOutputsTAddressStartHeightReturnValue
+        }
+    }
+
+    // MARK: - fetchUnspentTransactionOutputs
+
+    var fetchUnspentTransactionOutputsTAddressesStartHeightCallsCount = 0
+    var fetchUnspentTransactionOutputsTAddressesStartHeightCalled: Bool {
+        return fetchUnspentTransactionOutputsTAddressesStartHeightCallsCount > 0
+    }
+    var fetchUnspentTransactionOutputsTAddressesStartHeightReceivedArguments: (tAddresses: [String], startHeight: BlockHeight)?
+    var fetchUnspentTransactionOutputsTAddressesStartHeightReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
+    var fetchUnspentTransactionOutputsTAddressesStartHeightClosure: (([String], BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+
+    func fetchUnspentTransactionOutputs(tAddresses: [String], startHeight: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        fetchUnspentTransactionOutputsTAddressesStartHeightCallsCount += 1
+        fetchUnspentTransactionOutputsTAddressesStartHeightReceivedArguments = (tAddresses: tAddresses, startHeight: startHeight)
+        if let closure = fetchUnspentTransactionOutputsTAddressesStartHeightClosure {
+            return closure(tAddresses, startHeight)
+        } else {
+            return fetchUnspentTransactionOutputsTAddressesStartHeightReturnValue
+        }
+    }
+
+    // MARK: - closeConnection
+
+    var closeConnectionCallsCount = 0
+    var closeConnectionCalled: Bool {
+        return closeConnectionCallsCount > 0
+    }
+    var closeConnectionClosure: (() -> Void)?
+
+    func closeConnection() {
+        closeConnectionCallsCount += 1
+        closeConnectionClosure!()
+    }
+
+}
+class BlockEnhancerMock: BlockEnhancer {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - enhance
+
+    var enhanceAtDidEnhanceThrowableError: Error?
+    var enhanceAtDidEnhanceCallsCount = 0
+    var enhanceAtDidEnhanceCalled: Bool {
+        return enhanceAtDidEnhanceCallsCount > 0
+    }
+    var enhanceAtDidEnhanceReceivedArguments: (range: CompactBlockRange, didEnhance: (EnhancementProgress) async -> Void)?
+    var enhanceAtDidEnhanceReturnValue: [ZcashTransaction.Overview]?
+    var enhanceAtDidEnhanceClosure: ((CompactBlockRange, @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]?)?
+
+    func enhance(at range: CompactBlockRange, didEnhance: @escaping (EnhancementProgress) async -> Void) async throws -> [ZcashTransaction.Overview]? {
+        if let error = enhanceAtDidEnhanceThrowableError {
+            throw error
+        }
+        enhanceAtDidEnhanceCallsCount += 1
+        enhanceAtDidEnhanceReceivedArguments = (range: range, didEnhance: didEnhance)
+        if let closure = enhanceAtDidEnhanceClosure {
+            return try await closure(range, didEnhance)
+        } else {
+            return enhanceAtDidEnhanceReturnValue
+        }
+    }
+
+}
+class BlockScannerMock: BlockScanner {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - scanBlocks
+
+    var scanBlocksAtTotalProgressRangeDidScanThrowableError: Error?
+    var scanBlocksAtTotalProgressRangeDidScanCallsCount = 0
+    var scanBlocksAtTotalProgressRangeDidScanCalled: Bool {
+        return scanBlocksAtTotalProgressRangeDidScanCallsCount > 0
+    }
+    var scanBlocksAtTotalProgressRangeDidScanReceivedArguments: (range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: (BlockHeight) async -> Void)?
+    var scanBlocksAtTotalProgressRangeDidScanReturnValue: BlockHeight!
+    var scanBlocksAtTotalProgressRangeDidScanClosure: ((CompactBlockRange, CompactBlockRange, @escaping (BlockHeight) async -> Void) async throws -> BlockHeight)?
+
+    func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: @escaping (BlockHeight) async -> Void) async throws -> BlockHeight {
+        if let error = scanBlocksAtTotalProgressRangeDidScanThrowableError {
+            throw error
+        }
+        scanBlocksAtTotalProgressRangeDidScanCallsCount += 1
+        scanBlocksAtTotalProgressRangeDidScanReceivedArguments = (range: range, totalProgressRange: totalProgressRange, didScan: didScan)
+        if let closure = scanBlocksAtTotalProgressRangeDidScanClosure {
+            return try await closure(range, totalProgressRange, didScan)
+        } else {
+            return scanBlocksAtTotalProgressRangeDidScanReturnValue
+        }
+    }
+
+}
+class BlockValidatorMock: BlockValidator {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - validate
+
+    var validateThrowableError: Error?
+    var validateCallsCount = 0
+    var validateCalled: Bool {
+        return validateCallsCount > 0
+    }
+    var validateClosure: (() async throws -> Void)?
+
+    func validate() async throws {
+        if let error = validateThrowableError {
+            throw error
+        }
+        validateCallsCount += 1
+        try await validateClosure!()
+    }
+
+}
+class CompactBlockRepositoryMock: CompactBlockRepository {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - create
+
+    var createThrowableError: Error?
+    var createCallsCount = 0
+    var createCalled: Bool {
+        return createCallsCount > 0
+    }
+    var createClosure: (() async throws -> Void)?
+
+    func create() async throws {
+        if let error = createThrowableError {
+            throw error
+        }
+        createCallsCount += 1
+        try await createClosure!()
+    }
+
+    // MARK: - latestHeight
+
+    var latestHeightCallsCount = 0
+    var latestHeightCalled: Bool {
+        return latestHeightCallsCount > 0
+    }
+    var latestHeightReturnValue: BlockHeight!
+    var latestHeightClosure: (() async -> BlockHeight)?
+
+    func latestHeight() async -> BlockHeight {
+        latestHeightCallsCount += 1
+        if let closure = latestHeightClosure {
+            return await closure()
+        } else {
+            return latestHeightReturnValue
+        }
+    }
+
+    // MARK: - write
+
+    var writeBlocksThrowableError: Error?
+    var writeBlocksCallsCount = 0
+    var writeBlocksCalled: Bool {
+        return writeBlocksCallsCount > 0
+    }
+    var writeBlocksReceivedBlocks: [ZcashCompactBlock]?
+    var writeBlocksClosure: (([ZcashCompactBlock]) async throws -> Void)?
+
+    func write(blocks: [ZcashCompactBlock]) async throws {
+        if let error = writeBlocksThrowableError {
+            throw error
+        }
+        writeBlocksCallsCount += 1
+        writeBlocksReceivedBlocks = blocks
+        try await writeBlocksClosure!(blocks)
+    }
+
+    // MARK: - rewind
+
+    var rewindToThrowableError: Error?
+    var rewindToCallsCount = 0
+    var rewindToCalled: Bool {
+        return rewindToCallsCount > 0
+    }
+    var rewindToReceivedHeight: BlockHeight?
+    var rewindToClosure: ((BlockHeight) async throws -> Void)?
+
+    func rewind(to height: BlockHeight) async throws {
+        if let error = rewindToThrowableError {
+            throw error
+        }
+        rewindToCallsCount += 1
+        rewindToReceivedHeight = height
+        try await rewindToClosure!(height)
+    }
+
+    // MARK: - clear
+
+    var clearUpToThrowableError: Error?
+    var clearUpToCallsCount = 0
+    var clearUpToCalled: Bool {
+        return clearUpToCallsCount > 0
+    }
+    var clearUpToReceivedHeight: BlockHeight?
+    var clearUpToClosure: ((BlockHeight) async throws -> Void)?
+
+    func clear(upTo height: BlockHeight) async throws {
+        if let error = clearUpToThrowableError {
+            throw error
+        }
+        clearUpToCallsCount += 1
+        clearUpToReceivedHeight = height
+        try await clearUpToClosure!(height)
+    }
+
+    // MARK: - clear
+
+    var clearThrowableError: Error?
+    var clearCallsCount = 0
+    var clearCalled: Bool {
+        return clearCallsCount > 0
+    }
+    var clearClosure: (() async throws -> Void)?
+
+    func clear() async throws {
+        if let error = clearThrowableError {
+            throw error
+        }
+        clearCallsCount += 1
+        try await clearClosure!()
+    }
+
+}
+class InternalSyncProgressStorageMock: InternalSyncProgressStorage {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - initialize
+
+    var initializeThrowableError: Error?
+    var initializeCallsCount = 0
+    var initializeCalled: Bool {
+        return initializeCallsCount > 0
+    }
+    var initializeClosure: (() async throws -> Void)?
+
+    func initialize() async throws {
+        if let error = initializeThrowableError {
+            throw error
+        }
+        initializeCallsCount += 1
+        try await initializeClosure!()
+    }
+
+    // MARK: - bool
+
+    var boolForThrowableError: Error?
+    var boolForCallsCount = 0
+    var boolForCalled: Bool {
+        return boolForCallsCount > 0
+    }
+    var boolForReceivedKey: String?
+    var boolForReturnValue: Bool!
+    var boolForClosure: ((String) async throws -> Bool)?
+
+    func bool(for key: String) async throws -> Bool {
+        if let error = boolForThrowableError {
+            throw error
+        }
+        boolForCallsCount += 1
+        boolForReceivedKey = key
+        if let closure = boolForClosure {
+            return try await closure(key)
+        } else {
+            return boolForReturnValue
+        }
+    }
+
+    // MARK: - integer
+
+    var integerForThrowableError: Error?
+    var integerForCallsCount = 0
+    var integerForCalled: Bool {
+        return integerForCallsCount > 0
+    }
+    var integerForReceivedKey: String?
+    var integerForReturnValue: Int!
+    var integerForClosure: ((String) async throws -> Int)?
+
+    func integer(for key: String) async throws -> Int {
+        if let error = integerForThrowableError {
+            throw error
+        }
+        integerForCallsCount += 1
+        integerForReceivedKey = key
+        if let closure = integerForClosure {
+            return try await closure(key)
+        } else {
+            return integerForReturnValue
+        }
+    }
+
+    // MARK: - set
+
+    var setForThrowableError: Error?
+    var setForCallsCount = 0
+    var setForCalled: Bool {
+        return setForCallsCount > 0
+    }
+    var setForReceivedArguments: (value: Int, key: String)?
+    var setForClosure: ((Int, String) async throws -> Void)?
+
+    func set(_ value: Int, for key: String) async throws {
+        if let error = setForThrowableError {
+            throw error
+        }
+        setForCallsCount += 1
+        setForReceivedArguments = (value: value, key: key)
+        try await setForClosure!(value, key)
+    }
+
+    // MARK: - set
+
+    var setBoolThrowableError: Error?
+    var setBoolCallsCount = 0
+    var setBoolCalled: Bool {
+        return setBoolCallsCount > 0
+    }
+    var setBoolReceivedArguments: (value: Bool, key: String)?
+    var setBoolClosure: ((Bool, String) async throws -> Void)?
+
+    func set(_ value: Bool, for key: String) async throws {
+        if let error = setBoolThrowableError {
+            throw error
+        }
+        setBoolCallsCount += 1
+        setBoolReceivedArguments = (value: value, key: key)
+        try await setBoolClosure!(value, key)
+    }
+
+}
+class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
+
+
+    init(
+    ) {
+    }
+    var latestScannedHeight: BlockHeight {
+        get { return underlyingLatestScannedHeight }
+    }
+    var underlyingLatestScannedHeight: BlockHeight!
+    var latestScannedTime: TimeInterval {
+        get { return underlyingLatestScannedTime }
+    }
+    var underlyingLatestScannedTime: TimeInterval!
+    var latestBlockHeight: BlockHeight {
+        get { return underlyingLatestBlockHeight }
+    }
+    var underlyingLatestBlockHeight: BlockHeight!
+    var walletBirthday: BlockHeight {
+        get { return underlyingWalletBirthday }
+    }
+    var underlyingWalletBirthday: BlockHeight!
+
+    // MARK: - updateScannedData
+
+    var updateScannedDataCallsCount = 0
+    var updateScannedDataCalled: Bool {
+        return updateScannedDataCallsCount > 0
+    }
+    var updateScannedDataClosure: (() async -> Void)?
+
+    func updateScannedData() async {
+        updateScannedDataCallsCount += 1
+        await updateScannedDataClosure!()
+    }
+
+    // MARK: - updateBlockData
+
+    var updateBlockDataCallsCount = 0
+    var updateBlockDataCalled: Bool {
+        return updateBlockDataCallsCount > 0
+    }
+    var updateBlockDataClosure: (() async -> Void)?
+
+    func updateBlockData() async {
+        updateBlockDataCallsCount += 1
+        await updateBlockDataClosure!()
+    }
+
+    // MARK: - updateWalletBirthday
+
+    var updateWalletBirthdayCallsCount = 0
+    var updateWalletBirthdayCalled: Bool {
+        return updateWalletBirthdayCallsCount > 0
+    }
+    var updateWalletBirthdayReceivedWalletBirthday: BlockHeight?
+    var updateWalletBirthdayClosure: ((BlockHeight) async -> Void)?
+
+    func updateWalletBirthday(_ walletBirthday: BlockHeight) async {
+        updateWalletBirthdayCallsCount += 1
+        updateWalletBirthdayReceivedWalletBirthday = walletBirthday
+        await updateWalletBirthdayClosure!(walletBirthday)
+    }
+
+    // MARK: - updateLatestScannedHeight
+
+    var updateLatestScannedHeightCallsCount = 0
+    var updateLatestScannedHeightCalled: Bool {
+        return updateLatestScannedHeightCallsCount > 0
+    }
+    var updateLatestScannedHeightReceivedLatestScannedHeight: BlockHeight?
+    var updateLatestScannedHeightClosure: ((BlockHeight) async -> Void)?
+
+    func updateLatestScannedHeight(_ latestScannedHeight: BlockHeight) async {
+        updateLatestScannedHeightCallsCount += 1
+        updateLatestScannedHeightReceivedLatestScannedHeight = latestScannedHeight
+        await updateLatestScannedHeightClosure!(latestScannedHeight)
+    }
+
+    // MARK: - updateLatestScannedTime
+
+    var updateLatestScannedTimeCallsCount = 0
+    var updateLatestScannedTimeCalled: Bool {
+        return updateLatestScannedTimeCallsCount > 0
+    }
+    var updateLatestScannedTimeReceivedLatestScannedTime: TimeInterval?
+    var updateLatestScannedTimeClosure: ((TimeInterval) async -> Void)?
+
+    func updateLatestScannedTime(_ latestScannedTime: TimeInterval) async {
+        updateLatestScannedTimeCallsCount += 1
+        updateLatestScannedTimeReceivedLatestScannedTime = latestScannedTime
+        await updateLatestScannedTimeClosure!(latestScannedTime)
+    }
+
+}
+class LightWalletServiceMock: LightWalletService {
+
+
+    init(
+    ) {
+    }
+    var connectionStateChange: ((_ from: ConnectionState, _ to: ConnectionState) -> Void)?
+
+    // MARK: - getInfo
+
+    var getInfoThrowableError: Error?
+    var getInfoCallsCount = 0
+    var getInfoCalled: Bool {
+        return getInfoCallsCount > 0
+    }
+    var getInfoReturnValue: LightWalletdInfo!
+    var getInfoClosure: (() async throws -> LightWalletdInfo)?
+
+    func getInfo() async throws -> LightWalletdInfo {
+        if let error = getInfoThrowableError {
+            throw error
+        }
+        getInfoCallsCount += 1
+        if let closure = getInfoClosure {
+            return try await closure()
+        } else {
+            return getInfoReturnValue
+        }
+    }
+
+    // MARK: - latestBlock
+
+    var latestBlockThrowableError: Error?
+    var latestBlockCallsCount = 0
+    var latestBlockCalled: Bool {
+        return latestBlockCallsCount > 0
+    }
+    var latestBlockReturnValue: BlockID!
+    var latestBlockClosure: (() async throws -> BlockID)?
+
+    func latestBlock() async throws -> BlockID {
+        if let error = latestBlockThrowableError {
+            throw error
+        }
+        latestBlockCallsCount += 1
+        if let closure = latestBlockClosure {
+            return try await closure()
+        } else {
+            return latestBlockReturnValue
+        }
+    }
+
+    // MARK: - latestBlockHeight
+
+    var latestBlockHeightThrowableError: Error?
+    var latestBlockHeightCallsCount = 0
+    var latestBlockHeightCalled: Bool {
+        return latestBlockHeightCallsCount > 0
+    }
+    var latestBlockHeightReturnValue: BlockHeight!
+    var latestBlockHeightClosure: (() async throws -> BlockHeight)?
+
+    func latestBlockHeight() async throws -> BlockHeight {
+        if let error = latestBlockHeightThrowableError {
+            throw error
+        }
+        latestBlockHeightCallsCount += 1
+        if let closure = latestBlockHeightClosure {
+            return try await closure()
+        } else {
+            return latestBlockHeightReturnValue
+        }
+    }
+
+    // MARK: - blockRange
+
+    var blockRangeCallsCount = 0
+    var blockRangeCalled: Bool {
+        return blockRangeCallsCount > 0
+    }
+    var blockRangeReceivedRange: CompactBlockRange?
+    var blockRangeReturnValue: AsyncThrowingStream<ZcashCompactBlock, Error>!
+    var blockRangeClosure: ((CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
+
+    func blockRange(_ range: CompactBlockRange) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        blockRangeCallsCount += 1
+        blockRangeReceivedRange = range
+        if let closure = blockRangeClosure {
+            return closure(range)
+        } else {
+            return blockRangeReturnValue
+        }
+    }
+
+    // MARK: - submit
+
+    var submitSpendTransactionThrowableError: Error?
+    var submitSpendTransactionCallsCount = 0
+    var submitSpendTransactionCalled: Bool {
+        return submitSpendTransactionCallsCount > 0
+    }
+    var submitSpendTransactionReceivedSpendTransaction: Data?
+    var submitSpendTransactionReturnValue: LightWalletServiceResponse!
+    var submitSpendTransactionClosure: ((Data) async throws -> LightWalletServiceResponse)?
+
+    func submit(spendTransaction: Data) async throws -> LightWalletServiceResponse {
+        if let error = submitSpendTransactionThrowableError {
+            throw error
+        }
+        submitSpendTransactionCallsCount += 1
+        submitSpendTransactionReceivedSpendTransaction = spendTransaction
+        if let closure = submitSpendTransactionClosure {
+            return try await closure(spendTransaction)
+        } else {
+            return submitSpendTransactionReturnValue
+        }
+    }
+
+    // MARK: - fetchTransaction
+
+    var fetchTransactionTxIdThrowableError: Error?
+    var fetchTransactionTxIdCallsCount = 0
+    var fetchTransactionTxIdCalled: Bool {
+        return fetchTransactionTxIdCallsCount > 0
+    }
+    var fetchTransactionTxIdReceivedTxId: Data?
+    var fetchTransactionTxIdReturnValue: ZcashTransaction.Fetched!
+    var fetchTransactionTxIdClosure: ((Data) async throws -> ZcashTransaction.Fetched)?
+
+    func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {
+        if let error = fetchTransactionTxIdThrowableError {
+            throw error
+        }
+        fetchTransactionTxIdCallsCount += 1
+        fetchTransactionTxIdReceivedTxId = txId
+        if let closure = fetchTransactionTxIdClosure {
+            return try await closure(txId)
+        } else {
+            return fetchTransactionTxIdReturnValue
+        }
+    }
+
+    // MARK: - fetchUTXOs
+
+    var fetchUTXOsSingleCallsCount = 0
+    var fetchUTXOsSingleCalled: Bool {
+        return fetchUTXOsSingleCallsCount > 0
+    }
+    var fetchUTXOsSingleReceivedArguments: (tAddress: String, height: BlockHeight)?
+    var fetchUTXOsSingleReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
+    var fetchUTXOsSingleClosure: ((String, BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+
+    func fetchUTXOs(for tAddress: String, height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        fetchUTXOsSingleCallsCount += 1
+        fetchUTXOsSingleReceivedArguments = (tAddress: tAddress, height: height)
+        if let closure = fetchUTXOsSingleClosure {
+            return closure(tAddress, height)
+        } else {
+            return fetchUTXOsSingleReturnValue
+        }
+    }
+
+    // MARK: - fetchUTXOs
+
+    var fetchUTXOsForHeightCallsCount = 0
+    var fetchUTXOsForHeightCalled: Bool {
+        return fetchUTXOsForHeightCallsCount > 0
+    }
+    var fetchUTXOsForHeightReceivedArguments: (tAddresses: [String], height: BlockHeight)?
+    var fetchUTXOsForHeightReturnValue: AsyncThrowingStream<UnspentTransactionOutputEntity, Error>!
+    var fetchUTXOsForHeightClosure: (([String], BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error>)?
+
+    func fetchUTXOs(for tAddresses: [String], height: BlockHeight) -> AsyncThrowingStream<UnspentTransactionOutputEntity, Error> {
+        fetchUTXOsForHeightCallsCount += 1
+        fetchUTXOsForHeightReceivedArguments = (tAddresses: tAddresses, height: height)
+        if let closure = fetchUTXOsForHeightClosure {
+            return closure(tAddresses, height)
+        } else {
+            return fetchUTXOsForHeightReturnValue
+        }
+    }
+
+    // MARK: - blockStream
+
+    var blockStreamStartHeightEndHeightCallsCount = 0
+    var blockStreamStartHeightEndHeightCalled: Bool {
+        return blockStreamStartHeightEndHeightCallsCount > 0
+    }
+    var blockStreamStartHeightEndHeightReceivedArguments: (startHeight: BlockHeight, endHeight: BlockHeight)?
+    var blockStreamStartHeightEndHeightReturnValue: AsyncThrowingStream<ZcashCompactBlock, Error>!
+    var blockStreamStartHeightEndHeightClosure: ((BlockHeight, BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error>)?
+
+    func blockStream(startHeight: BlockHeight, endHeight: BlockHeight) -> AsyncThrowingStream<ZcashCompactBlock, Error> {
+        blockStreamStartHeightEndHeightCallsCount += 1
+        blockStreamStartHeightEndHeightReceivedArguments = (startHeight: startHeight, endHeight: endHeight)
+        if let closure = blockStreamStartHeightEndHeightClosure {
+            return closure(startHeight, endHeight)
+        } else {
+            return blockStreamStartHeightEndHeightReturnValue
+        }
+    }
+
+    // MARK: - closeConnection
+
+    var closeConnectionCallsCount = 0
+    var closeConnectionCalled: Bool {
+        return closeConnectionCallsCount > 0
+    }
+    var closeConnectionClosure: (() -> Void)?
+
+    func closeConnection() {
+        closeConnectionCallsCount += 1
+        closeConnectionClosure!()
+    }
+
+}
+class LightWalletdInfoMock: LightWalletdInfo {
+
+
+    init(
+    ) {
+    }
+    var version: String {
+        get { return underlyingVersion }
+    }
+    var underlyingVersion: String!
+    var vendor: String {
+        get { return underlyingVendor }
+    }
+    var underlyingVendor: String!
+    var taddrSupport: Bool {
+        get { return underlyingTaddrSupport }
+    }
+    var underlyingTaddrSupport: Bool!
+    var chainName: String {
+        get { return underlyingChainName }
+    }
+    var underlyingChainName: String!
+    var saplingActivationHeight: UInt64 {
+        get { return underlyingSaplingActivationHeight }
+    }
+    var underlyingSaplingActivationHeight: UInt64!
+    var consensusBranchID: String {
+        get { return underlyingConsensusBranchID }
+    }
+    var underlyingConsensusBranchID: String!
+    var blockHeight: UInt64 {
+        get { return underlyingBlockHeight }
+    }
+    var underlyingBlockHeight: UInt64!
+    var gitCommit: String {
+        get { return underlyingGitCommit }
+    }
+    var underlyingGitCommit: String!
+    var branch: String {
+        get { return underlyingBranch }
+    }
+    var underlyingBranch: String!
+    var buildDate: String {
+        get { return underlyingBuildDate }
+    }
+    var underlyingBuildDate: String!
+    var buildUser: String {
+        get { return underlyingBuildUser }
+    }
+    var underlyingBuildUser: String!
+    var estimatedHeight: UInt64 {
+        get { return underlyingEstimatedHeight }
+    }
+    var underlyingEstimatedHeight: UInt64!
+    var zcashdBuild: String {
+        get { return underlyingZcashdBuild }
+    }
+    var underlyingZcashdBuild: String!
+    var zcashdSubversion: String {
+        get { return underlyingZcashdSubversion }
+    }
+    var underlyingZcashdSubversion: String!
+
+}
+class LoggerMock: Logger {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - debug
+
+    var debugFileFunctionLineCallsCount = 0
+    var debugFileFunctionLineCalled: Bool {
+        return debugFileFunctionLineCallsCount > 0
+    }
+    var debugFileFunctionLineReceivedArguments: (message: String, file: StaticString, function: StaticString, line: Int)?
+    var debugFileFunctionLineClosure: ((String, StaticString, StaticString, Int) -> Void)?
+
+    func debug(_ message: String, file: StaticString, function: StaticString, line: Int) {
+        debugFileFunctionLineCallsCount += 1
+        debugFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
+        debugFileFunctionLineClosure!(message, file, function, line)
+    }
+
+    // MARK: - info
+
+    var infoFileFunctionLineCallsCount = 0
+    var infoFileFunctionLineCalled: Bool {
+        return infoFileFunctionLineCallsCount > 0
+    }
+    var infoFileFunctionLineReceivedArguments: (message: String, file: StaticString, function: StaticString, line: Int)?
+    var infoFileFunctionLineClosure: ((String, StaticString, StaticString, Int) -> Void)?
+
+    func info(_ message: String, file: StaticString, function: StaticString, line: Int) {
+        infoFileFunctionLineCallsCount += 1
+        infoFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
+        infoFileFunctionLineClosure!(message, file, function, line)
+    }
+
+    // MARK: - event
+
+    var eventFileFunctionLineCallsCount = 0
+    var eventFileFunctionLineCalled: Bool {
+        return eventFileFunctionLineCallsCount > 0
+    }
+    var eventFileFunctionLineReceivedArguments: (message: String, file: StaticString, function: StaticString, line: Int)?
+    var eventFileFunctionLineClosure: ((String, StaticString, StaticString, Int) -> Void)?
+
+    func event(_ message: String, file: StaticString, function: StaticString, line: Int) {
+        eventFileFunctionLineCallsCount += 1
+        eventFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
+        eventFileFunctionLineClosure!(message, file, function, line)
+    }
+
+    // MARK: - warn
+
+    var warnFileFunctionLineCallsCount = 0
+    var warnFileFunctionLineCalled: Bool {
+        return warnFileFunctionLineCallsCount > 0
+    }
+    var warnFileFunctionLineReceivedArguments: (message: String, file: StaticString, function: StaticString, line: Int)?
+    var warnFileFunctionLineClosure: ((String, StaticString, StaticString, Int) -> Void)?
+
+    func warn(_ message: String, file: StaticString, function: StaticString, line: Int) {
+        warnFileFunctionLineCallsCount += 1
+        warnFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
+        warnFileFunctionLineClosure!(message, file, function, line)
+    }
+
+    // MARK: - error
+
+    var errorFileFunctionLineCallsCount = 0
+    var errorFileFunctionLineCalled: Bool {
+        return errorFileFunctionLineCallsCount > 0
+    }
+    var errorFileFunctionLineReceivedArguments: (message: String, file: StaticString, function: StaticString, line: Int)?
+    var errorFileFunctionLineClosure: ((String, StaticString, StaticString, Int) -> Void)?
+
+    func error(_ message: String, file: StaticString, function: StaticString, line: Int) {
+        errorFileFunctionLineCallsCount += 1
+        errorFileFunctionLineReceivedArguments = (message: message, file: file, function: function, line: line)
+        errorFileFunctionLineClosure!(message, file, function, line)
+    }
+
+}
+class SaplingParametersHandlerMock: SaplingParametersHandler {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - handleIfNeeded
+
+    var handleIfNeededThrowableError: Error?
+    var handleIfNeededCallsCount = 0
+    var handleIfNeededCalled: Bool {
+        return handleIfNeededCallsCount > 0
+    }
+    var handleIfNeededClosure: (() async throws -> Void)?
+
+    func handleIfNeeded() async throws {
+        if let error = handleIfNeededThrowableError {
+            throw error
+        }
+        handleIfNeededCallsCount += 1
+        try await handleIfNeededClosure!()
+    }
+
+}
 class SynchronizerMock: Synchronizer {
 
 
@@ -93,7 +1154,7 @@ class SynchronizerMock: Synchronizer {
         }
         startRetryCallsCount += 1
         startRetryReceivedRetry = retry
-        try await startRetryClosure?(retry)
+        try await startRetryClosure!(retry)
     }
 
     // MARK: - stop
@@ -106,7 +1167,7 @@ class SynchronizerMock: Synchronizer {
 
     func stop() {
         stopCallsCount += 1
-        stopClosure?()
+        stopClosure!()
     }
 
     // MARK: - getSaplingAddress
@@ -516,6 +1577,524 @@ class SynchronizerMock: Synchronizer {
     }
 
 }
+class TransactionRepositoryMock: TransactionRepository {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - closeDBConnection
+
+    var closeDBConnectionCallsCount = 0
+    var closeDBConnectionCalled: Bool {
+        return closeDBConnectionCallsCount > 0
+    }
+    var closeDBConnectionClosure: (() -> Void)?
+
+    func closeDBConnection() {
+        closeDBConnectionCallsCount += 1
+        closeDBConnectionClosure!()
+    }
+
+    // MARK: - countAll
+
+    var countAllThrowableError: Error?
+    var countAllCallsCount = 0
+    var countAllCalled: Bool {
+        return countAllCallsCount > 0
+    }
+    var countAllReturnValue: Int!
+    var countAllClosure: (() async throws -> Int)?
+
+    func countAll() async throws -> Int {
+        if let error = countAllThrowableError {
+            throw error
+        }
+        countAllCallsCount += 1
+        if let closure = countAllClosure {
+            return try await closure()
+        } else {
+            return countAllReturnValue
+        }
+    }
+
+    // MARK: - countUnmined
+
+    var countUnminedThrowableError: Error?
+    var countUnminedCallsCount = 0
+    var countUnminedCalled: Bool {
+        return countUnminedCallsCount > 0
+    }
+    var countUnminedReturnValue: Int!
+    var countUnminedClosure: (() async throws -> Int)?
+
+    func countUnmined() async throws -> Int {
+        if let error = countUnminedThrowableError {
+            throw error
+        }
+        countUnminedCallsCount += 1
+        if let closure = countUnminedClosure {
+            return try await closure()
+        } else {
+            return countUnminedReturnValue
+        }
+    }
+
+    // MARK: - blockForHeight
+
+    var blockForHeightThrowableError: Error?
+    var blockForHeightCallsCount = 0
+    var blockForHeightCalled: Bool {
+        return blockForHeightCallsCount > 0
+    }
+    var blockForHeightReceivedHeight: BlockHeight?
+    var blockForHeightReturnValue: Block?
+    var blockForHeightClosure: ((BlockHeight) async throws -> Block?)?
+
+    func blockForHeight(_ height: BlockHeight) async throws -> Block? {
+        if let error = blockForHeightThrowableError {
+            throw error
+        }
+        blockForHeightCallsCount += 1
+        blockForHeightReceivedHeight = height
+        if let closure = blockForHeightClosure {
+            return try await closure(height)
+        } else {
+            return blockForHeightReturnValue
+        }
+    }
+
+    // MARK: - lastScannedHeight
+
+    var lastScannedHeightThrowableError: Error?
+    var lastScannedHeightCallsCount = 0
+    var lastScannedHeightCalled: Bool {
+        return lastScannedHeightCallsCount > 0
+    }
+    var lastScannedHeightReturnValue: BlockHeight!
+    var lastScannedHeightClosure: (() async throws -> BlockHeight)?
+
+    func lastScannedHeight() async throws -> BlockHeight {
+        if let error = lastScannedHeightThrowableError {
+            throw error
+        }
+        lastScannedHeightCallsCount += 1
+        if let closure = lastScannedHeightClosure {
+            return try await closure()
+        } else {
+            return lastScannedHeightReturnValue
+        }
+    }
+
+    // MARK: - lastScannedBlock
+
+    var lastScannedBlockThrowableError: Error?
+    var lastScannedBlockCallsCount = 0
+    var lastScannedBlockCalled: Bool {
+        return lastScannedBlockCallsCount > 0
+    }
+    var lastScannedBlockReturnValue: Block?
+    var lastScannedBlockClosure: (() async throws -> Block?)?
+
+    func lastScannedBlock() async throws -> Block? {
+        if let error = lastScannedBlockThrowableError {
+            throw error
+        }
+        lastScannedBlockCallsCount += 1
+        if let closure = lastScannedBlockClosure {
+            return try await closure()
+        } else {
+            return lastScannedBlockReturnValue
+        }
+    }
+
+    // MARK: - isInitialized
+
+    var isInitializedThrowableError: Error?
+    var isInitializedCallsCount = 0
+    var isInitializedCalled: Bool {
+        return isInitializedCallsCount > 0
+    }
+    var isInitializedReturnValue: Bool!
+    var isInitializedClosure: (() async throws -> Bool)?
+
+    func isInitialized() async throws -> Bool {
+        if let error = isInitializedThrowableError {
+            throw error
+        }
+        isInitializedCallsCount += 1
+        if let closure = isInitializedClosure {
+            return try await closure()
+        } else {
+            return isInitializedReturnValue
+        }
+    }
+
+    // MARK: - find
+
+    var findIdThrowableError: Error?
+    var findIdCallsCount = 0
+    var findIdCalled: Bool {
+        return findIdCallsCount > 0
+    }
+    var findIdReceivedId: Int?
+    var findIdReturnValue: ZcashTransaction.Overview!
+    var findIdClosure: ((Int) async throws -> ZcashTransaction.Overview)?
+
+    func find(id: Int) async throws -> ZcashTransaction.Overview {
+        if let error = findIdThrowableError {
+            throw error
+        }
+        findIdCallsCount += 1
+        findIdReceivedId = id
+        if let closure = findIdClosure {
+            return try await closure(id)
+        } else {
+            return findIdReturnValue
+        }
+    }
+
+    // MARK: - find
+
+    var findRawIDThrowableError: Error?
+    var findRawIDCallsCount = 0
+    var findRawIDCalled: Bool {
+        return findRawIDCallsCount > 0
+    }
+    var findRawIDReceivedRawID: Data?
+    var findRawIDReturnValue: ZcashTransaction.Overview!
+    var findRawIDClosure: ((Data) async throws -> ZcashTransaction.Overview)?
+
+    func find(rawID: Data) async throws -> ZcashTransaction.Overview {
+        if let error = findRawIDThrowableError {
+            throw error
+        }
+        findRawIDCallsCount += 1
+        findRawIDReceivedRawID = rawID
+        if let closure = findRawIDClosure {
+            return try await closure(rawID)
+        } else {
+            return findRawIDReturnValue
+        }
+    }
+
+    // MARK: - find
+
+    var findOffsetLimitKindThrowableError: Error?
+    var findOffsetLimitKindCallsCount = 0
+    var findOffsetLimitKindCalled: Bool {
+        return findOffsetLimitKindCallsCount > 0
+    }
+    var findOffsetLimitKindReceivedArguments: (offset: Int, limit: Int, kind: TransactionKind)?
+    var findOffsetLimitKindReturnValue: [ZcashTransaction.Overview]!
+    var findOffsetLimitKindClosure: ((Int, Int, TransactionKind) async throws -> [ZcashTransaction.Overview])?
+
+    func find(offset: Int, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
+        if let error = findOffsetLimitKindThrowableError {
+            throw error
+        }
+        findOffsetLimitKindCallsCount += 1
+        findOffsetLimitKindReceivedArguments = (offset: offset, limit: limit, kind: kind)
+        if let closure = findOffsetLimitKindClosure {
+            return try await closure(offset, limit, kind)
+        } else {
+            return findOffsetLimitKindReturnValue
+        }
+    }
+
+    // MARK: - find
+
+    var findInLimitKindThrowableError: Error?
+    var findInLimitKindCallsCount = 0
+    var findInLimitKindCalled: Bool {
+        return findInLimitKindCallsCount > 0
+    }
+    var findInLimitKindReceivedArguments: (range: CompactBlockRange, limit: Int, kind: TransactionKind)?
+    var findInLimitKindReturnValue: [ZcashTransaction.Overview]!
+    var findInLimitKindClosure: ((CompactBlockRange, Int, TransactionKind) async throws -> [ZcashTransaction.Overview])?
+
+    func find(in range: CompactBlockRange, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
+        if let error = findInLimitKindThrowableError {
+            throw error
+        }
+        findInLimitKindCallsCount += 1
+        findInLimitKindReceivedArguments = (range: range, limit: limit, kind: kind)
+        if let closure = findInLimitKindClosure {
+            return try await closure(range, limit, kind)
+        } else {
+            return findInLimitKindReturnValue
+        }
+    }
+
+    // MARK: - find
+
+    var findFromLimitKindThrowableError: Error?
+    var findFromLimitKindCallsCount = 0
+    var findFromLimitKindCalled: Bool {
+        return findFromLimitKindCallsCount > 0
+    }
+    var findFromLimitKindReceivedArguments: (from: ZcashTransaction.Overview, limit: Int, kind: TransactionKind)?
+    var findFromLimitKindReturnValue: [ZcashTransaction.Overview]!
+    var findFromLimitKindClosure: ((ZcashTransaction.Overview, Int, TransactionKind) async throws -> [ZcashTransaction.Overview])?
+
+    func find(from: ZcashTransaction.Overview, limit: Int, kind: TransactionKind) async throws -> [ZcashTransaction.Overview] {
+        if let error = findFromLimitKindThrowableError {
+            throw error
+        }
+        findFromLimitKindCallsCount += 1
+        findFromLimitKindReceivedArguments = (from: from, limit: limit, kind: kind)
+        if let closure = findFromLimitKindClosure {
+            return try await closure(from, limit, kind)
+        } else {
+            return findFromLimitKindReturnValue
+        }
+    }
+
+    // MARK: - findPendingTransactions
+
+    var findPendingTransactionsLatestHeightOffsetLimitThrowableError: Error?
+    var findPendingTransactionsLatestHeightOffsetLimitCallsCount = 0
+    var findPendingTransactionsLatestHeightOffsetLimitCalled: Bool {
+        return findPendingTransactionsLatestHeightOffsetLimitCallsCount > 0
+    }
+    var findPendingTransactionsLatestHeightOffsetLimitReceivedArguments: (latestHeight: BlockHeight, offset: Int, limit: Int)?
+    var findPendingTransactionsLatestHeightOffsetLimitReturnValue: [ZcashTransaction.Overview]!
+    var findPendingTransactionsLatestHeightOffsetLimitClosure: ((BlockHeight, Int, Int) async throws -> [ZcashTransaction.Overview])?
+
+    func findPendingTransactions(latestHeight: BlockHeight, offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
+        if let error = findPendingTransactionsLatestHeightOffsetLimitThrowableError {
+            throw error
+        }
+        findPendingTransactionsLatestHeightOffsetLimitCallsCount += 1
+        findPendingTransactionsLatestHeightOffsetLimitReceivedArguments = (latestHeight: latestHeight, offset: offset, limit: limit)
+        if let closure = findPendingTransactionsLatestHeightOffsetLimitClosure {
+            return try await closure(latestHeight, offset, limit)
+        } else {
+            return findPendingTransactionsLatestHeightOffsetLimitReturnValue
+        }
+    }
+
+    // MARK: - findReceived
+
+    var findReceivedOffsetLimitThrowableError: Error?
+    var findReceivedOffsetLimitCallsCount = 0
+    var findReceivedOffsetLimitCalled: Bool {
+        return findReceivedOffsetLimitCallsCount > 0
+    }
+    var findReceivedOffsetLimitReceivedArguments: (offset: Int, limit: Int)?
+    var findReceivedOffsetLimitReturnValue: [ZcashTransaction.Overview]!
+    var findReceivedOffsetLimitClosure: ((Int, Int) async throws -> [ZcashTransaction.Overview])?
+
+    func findReceived(offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
+        if let error = findReceivedOffsetLimitThrowableError {
+            throw error
+        }
+        findReceivedOffsetLimitCallsCount += 1
+        findReceivedOffsetLimitReceivedArguments = (offset: offset, limit: limit)
+        if let closure = findReceivedOffsetLimitClosure {
+            return try await closure(offset, limit)
+        } else {
+            return findReceivedOffsetLimitReturnValue
+        }
+    }
+
+    // MARK: - findSent
+
+    var findSentOffsetLimitThrowableError: Error?
+    var findSentOffsetLimitCallsCount = 0
+    var findSentOffsetLimitCalled: Bool {
+        return findSentOffsetLimitCallsCount > 0
+    }
+    var findSentOffsetLimitReceivedArguments: (offset: Int, limit: Int)?
+    var findSentOffsetLimitReturnValue: [ZcashTransaction.Overview]!
+    var findSentOffsetLimitClosure: ((Int, Int) async throws -> [ZcashTransaction.Overview])?
+
+    func findSent(offset: Int, limit: Int) async throws -> [ZcashTransaction.Overview] {
+        if let error = findSentOffsetLimitThrowableError {
+            throw error
+        }
+        findSentOffsetLimitCallsCount += 1
+        findSentOffsetLimitReceivedArguments = (offset: offset, limit: limit)
+        if let closure = findSentOffsetLimitClosure {
+            return try await closure(offset, limit)
+        } else {
+            return findSentOffsetLimitReturnValue
+        }
+    }
+
+    // MARK: - findMemos
+
+    var findMemosForThrowableError: Error?
+    var findMemosForCallsCount = 0
+    var findMemosForCalled: Bool {
+        return findMemosForCallsCount > 0
+    }
+    var findMemosForReceivedTransaction: ZcashTransaction.Overview?
+    var findMemosForReturnValue: [Memo]!
+    var findMemosForClosure: ((ZcashTransaction.Overview) async throws -> [Memo])?
+
+    func findMemos(for transaction: ZcashTransaction.Overview) async throws -> [Memo] {
+        if let error = findMemosForThrowableError {
+            throw error
+        }
+        findMemosForCallsCount += 1
+        findMemosForReceivedTransaction = transaction
+        if let closure = findMemosForClosure {
+            return try await closure(transaction)
+        } else {
+            return findMemosForReturnValue
+        }
+    }
+
+    // MARK: - getRecipients
+
+    var getRecipientsForThrowableError: Error?
+    var getRecipientsForCallsCount = 0
+    var getRecipientsForCalled: Bool {
+        return getRecipientsForCallsCount > 0
+    }
+    var getRecipientsForReceivedId: Int?
+    var getRecipientsForReturnValue: [TransactionRecipient]!
+    var getRecipientsForClosure: ((Int) async throws -> [TransactionRecipient])?
+
+    func getRecipients(for id: Int) async throws -> [TransactionRecipient] {
+        if let error = getRecipientsForThrowableError {
+            throw error
+        }
+        getRecipientsForCallsCount += 1
+        getRecipientsForReceivedId = id
+        if let closure = getRecipientsForClosure {
+            return try await closure(id)
+        } else {
+            return getRecipientsForReturnValue
+        }
+    }
+
+    // MARK: - getTransactionOutputs
+
+    var getTransactionOutputsForThrowableError: Error?
+    var getTransactionOutputsForCallsCount = 0
+    var getTransactionOutputsForCalled: Bool {
+        return getTransactionOutputsForCallsCount > 0
+    }
+    var getTransactionOutputsForReceivedId: Int?
+    var getTransactionOutputsForReturnValue: [ZcashTransaction.Output]!
+    var getTransactionOutputsForClosure: ((Int) async throws -> [ZcashTransaction.Output])?
+
+    func getTransactionOutputs(for id: Int) async throws -> [ZcashTransaction.Output] {
+        if let error = getTransactionOutputsForThrowableError {
+            throw error
+        }
+        getTransactionOutputsForCallsCount += 1
+        getTransactionOutputsForReceivedId = id
+        if let closure = getTransactionOutputsForClosure {
+            return try await closure(id)
+        } else {
+            return getTransactionOutputsForReturnValue
+        }
+    }
+
+}
+class UTXOFetcherMock: UTXOFetcher {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - fetch
+
+    var fetchAtDidFetchThrowableError: Error?
+    var fetchAtDidFetchCallsCount = 0
+    var fetchAtDidFetchCalled: Bool {
+        return fetchAtDidFetchCallsCount > 0
+    }
+    var fetchAtDidFetchReceivedArguments: (range: CompactBlockRange, didFetch: (Float) async -> Void)?
+    var fetchAtDidFetchReturnValue: (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity])!
+    var fetchAtDidFetchClosure: ((CompactBlockRange, @escaping (Float) async -> Void) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]))?
+
+    func fetch(at range: CompactBlockRange, didFetch: @escaping (Float) async -> Void) async throws -> (inserted: [UnspentTransactionOutputEntity], skipped: [UnspentTransactionOutputEntity]) {
+        if let error = fetchAtDidFetchThrowableError {
+            throw error
+        }
+        fetchAtDidFetchCallsCount += 1
+        fetchAtDidFetchReceivedArguments = (range: range, didFetch: didFetch)
+        if let closure = fetchAtDidFetchClosure {
+            return try await closure(range, didFetch)
+        } else {
+            return fetchAtDidFetchReturnValue
+        }
+    }
+
+}
+class ZcashFileManagerMock: ZcashFileManager {
+
+
+    init(
+    ) {
+    }
+
+    // MARK: - isReadableFile
+
+    var isReadableFileAtPathCallsCount = 0
+    var isReadableFileAtPathCalled: Bool {
+        return isReadableFileAtPathCallsCount > 0
+    }
+    var isReadableFileAtPathReceivedPath: String?
+    var isReadableFileAtPathReturnValue: Bool!
+    var isReadableFileAtPathClosure: ((String) -> Bool)?
+
+    func isReadableFile(atPath path: String) -> Bool {
+        isReadableFileAtPathCallsCount += 1
+        isReadableFileAtPathReceivedPath = path
+        if let closure = isReadableFileAtPathClosure {
+            return closure(path)
+        } else {
+            return isReadableFileAtPathReturnValue
+        }
+    }
+
+    // MARK: - removeItem
+
+    var removeItemAtThrowableError: Error?
+    var removeItemAtCallsCount = 0
+    var removeItemAtCalled: Bool {
+        return removeItemAtCallsCount > 0
+    }
+    var removeItemAtReceivedURL: URL?
+    var removeItemAtClosure: ((URL) throws -> Void)?
+
+    func removeItem(at URL: URL) throws {
+        if let error = removeItemAtThrowableError {
+            throw error
+        }
+        removeItemAtCallsCount += 1
+        removeItemAtReceivedURL = URL
+        try removeItemAtClosure!(URL)
+    }
+
+    // MARK: - isDeletableFile
+
+    var isDeletableFileAtPathCallsCount = 0
+    var isDeletableFileAtPathCalled: Bool {
+        return isDeletableFileAtPathCallsCount > 0
+    }
+    var isDeletableFileAtPathReceivedPath: String?
+    var isDeletableFileAtPathReturnValue: Bool!
+    var isDeletableFileAtPathClosure: ((String) -> Bool)?
+
+    func isDeletableFile(atPath path: String) -> Bool {
+        isDeletableFileAtPathCallsCount += 1
+        isDeletableFileAtPathReceivedPath = path
+        if let closure = isDeletableFileAtPathClosure {
+            return closure(path)
+        } else {
+            return isDeletableFileAtPathReturnValue
+        }
+    }
+
+}
 actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     nonisolated let consensusBranchIdForHeightClosure: ((Int32) throws -> Int32)?
@@ -614,7 +2193,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         decryptAndStoreTransactionTxBytesMinedHeightCallsCount += 1
         decryptAndStoreTransactionTxBytesMinedHeightReceivedArguments = (txBytes: txBytes, minedHeight: minedHeight)
-        try await decryptAndStoreTransactionTxBytesMinedHeightClosure?(txBytes, minedHeight)
+        try await decryptAndStoreTransactionTxBytesMinedHeightClosure!(txBytes, minedHeight)
     }
 
     // MARK: - getBalance
@@ -856,7 +2435,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         initAccountsTableUfvksCallsCount += 1
         initAccountsTableUfvksReceivedUfvks = ufvks
-        try await initAccountsTableUfvksClosure?(ufvks)
+        try await initAccountsTableUfvksClosure!(ufvks)
     }
 
     // MARK: - initDataDb
@@ -914,7 +2493,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         initBlocksTableHeightHashTimeSaplingTreeCallsCount += 1
         initBlocksTableHeightHashTimeSaplingTreeReceivedArguments = (height: height, hash: hash, time: time, saplingTree: saplingTree)
-        try await initBlocksTableHeightHashTimeSaplingTreeClosure?(height, hash, time, saplingTree)
+        try await initBlocksTableHeightHashTimeSaplingTreeClosure!(height, hash, time, saplingTree)
     }
 
     // MARK: - listTransparentReceivers
@@ -1038,7 +2617,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         validateCombinedChainLimitCallsCount += 1
         validateCombinedChainLimitReceivedLimit = limit
-        try await validateCombinedChainLimitClosure?(limit)
+        try await validateCombinedChainLimitClosure!(limit)
     }
 
     // MARK: - rewindToHeight
@@ -1063,7 +2642,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         rewindToHeightHeightCallsCount += 1
         rewindToHeightHeightReceivedHeight = height
-        try await rewindToHeightHeightClosure?(height)
+        try await rewindToHeightHeightClosure!(height)
     }
 
     // MARK: - rewindCacheToHeight
@@ -1088,7 +2667,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         rewindCacheToHeightHeightCallsCount += 1
         rewindCacheToHeightHeightReceivedHeight = height
-        try await rewindCacheToHeightHeightClosure?(height)
+        try await rewindCacheToHeightHeightClosure!(height)
     }
 
     // MARK: - scanBlocks
@@ -1113,7 +2692,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         scanBlocksLimitCallsCount += 1
         scanBlocksLimitReceivedLimit = limit
-        try await scanBlocksLimitClosure?(limit)
+        try await scanBlocksLimitClosure!(limit)
     }
 
     // MARK: - putUnspentTransparentOutput
@@ -1138,7 +2717,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         putUnspentTransparentOutputTxidIndexScriptValueHeightCallsCount += 1
         putUnspentTransparentOutputTxidIndexScriptValueHeightReceivedArguments = (txid: txid, index: index, script: script, value: value, height: height)
-        try await putUnspentTransparentOutputTxidIndexScriptValueHeightClosure?(txid, index, script, value, height)
+        try await putUnspentTransparentOutputTxidIndexScriptValueHeightClosure!(txid, index, script, value, height)
     }
 
     // MARK: - shieldFunds
@@ -1201,7 +2780,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
             throw error
         }
         initBlockMetadataDbCallsCount += 1
-        try await initBlockMetadataDbClosure?()
+        try await initBlockMetadataDbClosure!()
     }
 
     // MARK: - writeBlocksMetadata
@@ -1226,7 +2805,7 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
         writeBlocksMetadataBlocksCallsCount += 1
         writeBlocksMetadataBlocksReceivedBlocks = blocks
-        try await writeBlocksMetadataBlocksClosure?(blocks)
+        try await writeBlocksMetadataBlocksClosure!(blocks)
     }
 
     // MARK: - latestCachedBlockHeight

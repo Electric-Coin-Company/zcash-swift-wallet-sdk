@@ -40,7 +40,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
             network: network
         )
         
-        try self.coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        try await coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
     }
 
     override func tearDown() async throws {
@@ -195,7 +195,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[0],
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
-                internalSyncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
+                internalSyncStatus: .syncing(0),
                 latestScannedHeight: 663150,
                 latestBlockHeight: 0,
                 latestScannedTime: 1576821833
@@ -204,7 +204,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
-                internalSyncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
+                internalSyncStatus: .syncing(0.9),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
                 latestScannedTime: 1
@@ -213,84 +213,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
-                internalSyncStatus: .enhancing(
-                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)
-                ),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 663189,
-                latestScannedTime: 1
-            ),
-            SynchronizerState(
-                syncSessionID: uuids[0],
-                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: .zero,
-                internalSyncStatus: .enhancing(
-                    EnhancementProgress(
-                        totalTransactions: 2,
-                        enhancedTransactions: 1,
-                        lastFoundTransaction: ZcashTransaction.Overview(
-                            accountId: 0,
-                            blockTime: 1.0,
-                            expiryHeight: 663206,
-                            fee: Zatoshi(0),
-                            id: 2,
-                            index: 1,
-                            hasChange: false,
-                            memoCount: 1,
-                            minedHeight: 663188,
-                            raw: Data(),
-                            rawID: Data(),
-                            receivedNoteCount: 1,
-                            sentNoteCount: 0,
-                            value: Zatoshi(100000),
-                            isExpiredUmined: false
-                        ),
-                        range: 663150...663189,
-                        newlyMined: true
-                    )
-                ),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 663189,
-                latestScannedTime: 1
-            ),
-            SynchronizerState(
-                syncSessionID: uuids[0],
-                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: .zero,
-                internalSyncStatus: .enhancing(
-                    EnhancementProgress(
-                        totalTransactions: 2,
-                        enhancedTransactions: 2,
-                        lastFoundTransaction: ZcashTransaction.Overview(
-                            accountId: 0,
-                            blockTime: 1.0,
-                            expiryHeight: 663192,
-                            fee: Zatoshi(0),
-                            id: 1,
-                            index: 1,
-                            hasChange: false,
-                            memoCount: 1,
-                            minedHeight: 663174,
-                            raw: Data(),
-                            rawID: Data(),
-                            receivedNoteCount: 1,
-                            sentNoteCount: 0,
-                            value: Zatoshi(100000),
-                            isExpiredUmined: false
-                        ),
-                        range: 663150...663189,
-                        newlyMined: true
-                    )
-                ),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 663189,
-                latestScannedTime: 1
-            ),
-            SynchronizerState(
-                syncSessionID: uuids[0],
-                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: .zero,
-                internalSyncStatus: .fetching(0),
+                internalSyncStatus: .syncing(1.0),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
                 latestScannedTime: 1
@@ -359,7 +282,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[0],
                 shieldedBalance: .zero,
                 transparentBalance: .zero,
-                internalSyncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
+                internalSyncStatus: .syncing(0),
                 latestScannedHeight: 663150,
                 latestBlockHeight: 0,
                 latestScannedTime: 1576821833.0
@@ -368,7 +291,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: .zero,
-                internalSyncStatus: .syncing(BlockProgress(startHeight: 663150, targetHeight: 663189, progressHeight: 663189)),
+                internalSyncStatus: .syncing(0.9),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
                 latestScannedTime: 1
@@ -376,85 +299,8 @@ class SynchronizerDarksideTests: ZcashTestCase {
             SynchronizerState(
                 syncSessionID: uuids[0],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .enhancing(
-                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: false)
-                ),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 663189,
-                latestScannedTime: 1
-            ),
-            SynchronizerState(
-                syncSessionID: uuids[0],
-                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .enhancing(
-                    EnhancementProgress(
-                        totalTransactions: 2,
-                        enhancedTransactions: 1,
-                        lastFoundTransaction: ZcashTransaction.Overview(
-                            accountId: 0,
-                            blockTime: 1.0,
-                            expiryHeight: 663206,
-                            fee: nil,
-                            id: 2,
-                            index: 1,
-                            hasChange: false,
-                            memoCount: 1,
-                            minedHeight: 663188,
-                            raw: Data(),
-                            rawID: Data(),
-                            receivedNoteCount: 1,
-                            sentNoteCount: 0,
-                            value: Zatoshi(100000),
-                            isExpiredUmined: false
-                        ),
-                        range: 663150...663189,
-                        newlyMined: true
-                    )
-                ),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 663189,
-                latestScannedTime: 1
-            ),
-            SynchronizerState(
-                syncSessionID: uuids[0],
-                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .enhancing(
-                    EnhancementProgress(
-                        totalTransactions: 2,
-                        enhancedTransactions: 2,
-                        lastFoundTransaction: ZcashTransaction.Overview(
-                            accountId: 0,
-                            blockTime: 1.0,
-                            expiryHeight: 663192,
-                            fee: nil,
-                            id: 1,
-                            index: 1,
-                            hasChange: false,
-                            memoCount: 1,
-                            minedHeight: 663174,
-                            raw: Data(),
-                            rawID: Data(),
-                            receivedNoteCount: 1,
-                            sentNoteCount: 0,
-                            value: Zatoshi(100000),
-                            isExpiredUmined: false
-                        ),
-                        range: 663150...663189,
-                        newlyMined: true
-                    )
-                ),
-                latestScannedHeight: 663189,
-                latestBlockHeight: 663189,
-                latestScannedTime: 1
-            ),
-            SynchronizerState(
-                syncSessionID: uuids[0],
-                shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .fetching(0),
+                transparentBalance: .zero,
+                internalSyncStatus: .syncing(1.0),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
                 latestScannedTime: 1
@@ -499,7 +345,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(100000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .syncing(BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)),
+                internalSyncStatus: .syncing(0),
                 latestScannedHeight: 663189,
                 latestBlockHeight: 663189,
                 latestScannedTime: 1.0
@@ -508,7 +354,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .syncing(BlockProgress(startHeight: 663190, targetHeight: 663200, progressHeight: 663200)),
+                internalSyncStatus: .syncing(0.9),
                 latestScannedHeight: 663200,
                 latestBlockHeight: 663200,
                 latestScannedTime: 1
@@ -517,18 +363,7 @@ class SynchronizerDarksideTests: ZcashTestCase {
                 syncSessionID: uuids[1],
                 shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
                 transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .enhancing(
-                    EnhancementProgress(totalTransactions: 0, enhancedTransactions: 0, lastFoundTransaction: nil, range: 0...0, newlyMined: true)
-                ),
-                latestScannedHeight: 663200,
-                latestBlockHeight: 663200,
-                latestScannedTime: 1
-            ),
-            SynchronizerState(
-                syncSessionID: uuids[1],
-                shieldedBalance: WalletBalance(verified: Zatoshi(200000), total: Zatoshi(200000)),
-                transparentBalance: WalletBalance(verified: Zatoshi(0), total: Zatoshi(0)),
-                internalSyncStatus: .fetching(0),
+                internalSyncStatus: .syncing(1.0),
                 latestScannedHeight: 663200,
                 latestBlockHeight: 663200,
                 latestScannedTime: 1
