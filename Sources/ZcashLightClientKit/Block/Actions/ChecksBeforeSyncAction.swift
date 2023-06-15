@@ -10,6 +10,7 @@ import Foundation
 final class ChecksBeforeSyncAction {
     let internalSyncProgress: InternalSyncProgress
     let storage: CompactBlockRepository
+    
     init(container: DIContainer) {
         internalSyncProgress = container.resolve(InternalSyncProgress.self)
         storage = container.resolve(CompactBlockRepository.self)

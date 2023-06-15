@@ -34,14 +34,73 @@ struct Block: Codable {
     let hash: Data
     let time: Int
     let saplingTree: Data
-    
+
     static let table = Table("blocks")
+}
+
+struct VTransaction: Codable {
+    enum CodingKeys: String, CodingKey {
+        case accountId = "account_id"
+        case idTx = "id_tx"
+        case minedHeight = "mined_height"
+        case txIndex = "tx_index"
+        case txId = "txid"
+        case expiryHeight = "expiry_height"
+        case raw = "raw"
+        case accountBalanceDelta = "account_balance_delta"
+        case feePaid = "fee_paid"
+        case expiredUnmined = "expired_unmined"
+        case hasChange = "has_change"
+        case sentNoteCount = "sent_note_count"
+        case recievedNoteCount = "received_note_count"
+        case memoCount = "memo_count"
+        case blockTime = "block_time"
+    }
+
+    enum TableStructure {
+        static let accountId = Expression<Int>(VTransaction.CodingKeys.accountId.rawValue)
+        static let idTx = Expression<Int>(VTransaction.CodingKeys.idTx.rawValue)
+        static let minedHeight = Expression<Int>(VTransaction.CodingKeys.minedHeight.rawValue)
+        static let txIndex = Expression<Int>(VTransaction.CodingKeys.txIndex.rawValue)
+        static let txId = Expression<Data>(VTransaction.CodingKeys.txId.rawValue)
+        static let expiryHeight = Expression<Int?>(VTransaction.CodingKeys.expiryHeight.rawValue)
+        static let raw = Expression<Data?>(VTransaction.CodingKeys.raw.rawValue)
+        static let accountBalanceDelta = Expression<Int>(VTransaction.CodingKeys.accountBalanceDelta.rawValue)
+        static let feePaid = Expression<Int?>(VTransaction.CodingKeys.feePaid.rawValue)
+        static let expiredUnmined = Expression<Int>(VTransaction.CodingKeys.expiredUnmined.rawValue)
+        static let hasChange = Expression<Bool>(VTransaction.CodingKeys.hasChange.rawValue)
+        static let sentNoteCount = Expression<Int>(VTransaction.CodingKeys.sentNoteCount.rawValue)
+        static let recievedNoteCount = Expression<Int>(VTransaction.CodingKeys.recievedNoteCount.rawValue)
+        static let memoCount = Expression<Int>(VTransaction.CodingKeys.memoCount.rawValue)
+        static let blockTime = Expression<Int>(VTransaction.CodingKeys.blockTime.rawValue)
+    }
+
+    let accountId: Int
+    let idTx: Int
+    let minedHeight: Int
+    let txIndex: Int
+    let txId: Data
+    let expiryHeight: Int?
+    let raw: Data?
+    let accountBalanceDelta: Int
+    let feePaid: Int?
+    let expiredUnmined: Int
+    let hasChange: Bool
+    let sentNoteCount: Int
+    let recievedNoteCount: Int
+    let memoCount: Int
+    let blockTime: Int
+
+    static let table = Table("v_transactions")
 }
 
 class BlockSQLDAO: BlockDao {
     let dbProvider: ConnectionProvider
     let table: Table
     let height = Expression<Int>("height")
+
+    let minedHeight = Expression<Int>("mined_height")
+    let raw = Expression<Data?>("raw")
 
     init(dbProvider: ConnectionProvider) {
         self.dbProvider = dbProvider
@@ -101,6 +160,30 @@ class BlockSQLDAO: BlockDao {
             } else {
                 throw ZcashError.blockDAOLatestBlock(error)
             }
+        }
+    }
+    
+    func firstUnenhancedHeight(in range: CompactBlockRange? = nil) throws -> BlockHeight? {
+        do {
+            return try dbProvider
+                .connection()
+                .prepare(
+                    VTransaction.table
+                        .order(minedHeight.asc)
+                        .filter(raw == nil)
+                        .limit(1)
+                )
+                .map {
+                    do {
+                        let vTransaction: VTransaction = try $0.decode()
+                        return vTransaction.minedHeight
+                    } catch {
+                        throw ZcashError.blockDAOFirstUnenhancedCantDecode(error)
+                    }
+                }
+                .first
+        } catch {
+            throw ZcashError.blockDAOFirstUnenhancedHeight(error)
         }
     }
 }

@@ -122,10 +122,18 @@ enum ZcashErrorDefinition {
     /// - `sqliteError` is error produced by SQLite library.
     // sourcery: code="ZBDAO0004"
     case blockDAOLatestBlock(_ sqliteError: Error)
-    /// Fetched latesxt block information from DB but can't decode them.
+    /// Fetched latest block information from DB but can't decode them.
     /// - `error` is decoding error.
     // sourcery: code="ZBDAO0005"
     case blockDAOLatestBlockCantDecode(_ error: Error)
+    /// SQLite query failed when fetching the first unenhanced block from the database.
+    /// - `sqliteError` is error produced by SQLite library.
+    // sourcery: code="ZBDAO0006"
+    case blockDAOFirstUnenhancedHeight(_ sqliteError: Error)
+    /// Fetched unenhanced block information from DB but can't decode them.
+    /// - `error` is decoding error.
+    // sourcery: code="ZBDAO0007"
+    case blockDAOFirstUnenhancedCantDecode(_ error: Error)
 
     // MARK: - Rust
 

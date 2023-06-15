@@ -1709,6 +1709,28 @@ class TransactionRepositoryMock: TransactionRepository {
         }
     }
 
+    // MARK: - firstUnenhancedHeight
+
+    var firstUnenhancedHeightThrowableError: Error?
+    var firstUnenhancedHeightCallsCount = 0
+    var firstUnenhancedHeightCalled: Bool {
+        return firstUnenhancedHeightCallsCount > 0
+    }
+    var firstUnenhancedHeightReturnValue: BlockHeight?
+    var firstUnenhancedHeightClosure: (() throws -> BlockHeight?)?
+
+    func firstUnenhancedHeight() throws -> BlockHeight? {
+        if let error = firstUnenhancedHeightThrowableError {
+            throw error
+        }
+        firstUnenhancedHeightCallsCount += 1
+        if let closure = firstUnenhancedHeightClosure {
+            return try closure()
+        } else {
+            return firstUnenhancedHeightReturnValue
+        }
+    }
+
     // MARK: - isInitialized
 
     var isInitializedThrowableError: Error?
