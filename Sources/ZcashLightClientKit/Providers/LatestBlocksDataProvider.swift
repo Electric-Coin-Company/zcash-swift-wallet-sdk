@@ -12,6 +12,7 @@ protocol LatestBlocksDataProvider {
     var latestScannedTime: TimeInterval { get async }
     var latestBlockHeight: BlockHeight { get async }
     var walletBirthday: BlockHeight { get async }
+    var firstUnenhancedHeight: BlockHeight? { get async }
 
     func updateScannedData() async
     func updateBlockData() async
@@ -27,6 +28,7 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
     // Valid values are stored here after Synchronizer's `prepare` is called.
     private(set) var latestScannedHeight: BlockHeight = .zero
     private(set) var latestScannedTime: TimeInterval = 0.0
+    private(set) var firstUnenhancedHeight: BlockHeight?
     // Valid value is stored here after block processor's `nextState` is called.
     private(set) var latestBlockHeight: BlockHeight = .zero
     // Valid values are stored here after Synchronizer's `prepare` is called.
@@ -54,7 +56,7 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
             latestBlockHeight = newLatestBlockHeight
         }
     }
-    
+
     func updateWalletBirthday(_ walletBirthday: BlockHeight) async {
         self.walletBirthday = walletBirthday
     }

@@ -9,14 +9,12 @@ import Foundation
 
 final class MigrateLegacyCacheDBAction {
     private let configProvider: CompactBlockProcessor.ConfigProvider
-    private let internalSyncProgress: InternalSyncProgress
     private let storage: CompactBlockRepository
     private let transactionRepository: TransactionRepository
     private let fileManager: ZcashFileManager
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider
-        internalSyncProgress = container.resolve(InternalSyncProgress.self)
         storage = container.resolve(CompactBlockRepository.self)
         transactionRepository = container.resolve(TransactionRepository.self)
         fileManager = container.resolve(ZcashFileManager.self)
@@ -43,7 +41,7 @@ extension MigrateLegacyCacheDBAction: Action {
 
         // Instance with alias `default` is same as instance before the Alias was introduced. So it makes sense that only this instance handles
         // legacy cache DB. Any instance with different than `default` alias was created after the Alias was introduced and at this point legacy
-        // cache DB is't anymore. So there is nothing to migrate for instances with not default Alias.
+        // cache DB doesn't exist anymore. So there is nothing to migrate for instances with not default Alias.
         guard config.alias == .default else {
             return await updateState(context)
         }
@@ -64,13 +62,6 @@ extension MigrateLegacyCacheDBAction: Action {
 
         // create the storage
         try await self.storage.create()
-
-        // The database has been deleted, so we have adjust the internal state of the
-        // `CompactBlockProcessor` so that it doesn't rely on download heights set
-        // by a previous processing cycle.
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
-
-        try await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
 
         return await updateState(context)
     }

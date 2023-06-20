@@ -9,7 +9,7 @@ import Foundation
 
 final class ClearCacheAction {
     let storage: CompactBlockRepository
-    
+
     init(container: DIContainer) {
         storage = container.resolve(CompactBlockRepository.self)
     }
@@ -20,7 +20,11 @@ extension ClearCacheAction: Action {
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         try await storage.clear()
-        await context.update(state: .finished)
+        if await context.prevState == .idle {
+            await context.update(state: .migrateLegacyCacheDB)
+        } else {
+            await context.update(state: .finished)
+        }
         return context
     }
 

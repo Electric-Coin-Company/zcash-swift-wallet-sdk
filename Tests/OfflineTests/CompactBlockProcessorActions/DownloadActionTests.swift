@@ -17,11 +17,12 @@ final class DownloadActionTests: ZcashTestCase {
         let blockDownloaderMock = BlockDownloaderMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1
+        transactionRepositoryMock.lastScannedHeightReturnValue = 1000
         blockDownloaderMock.setSyncRangeBatchSizeClosure = { _, _ in }
         blockDownloaderMock.setDownloadLimitClosure = { _ in }
         blockDownloaderMock.startDownloadMaxBlockBufferSizeClosure = { _ in }
         blockDownloaderMock.waitUntilRequestedBlocksAreDownloadedInClosure = { _ in }
+        blockDownloaderMock.updateLatestDownloadedBlockHeightClosure = { _ in }
 
         let downloadAction = setupAction(
             blockDownloaderMock,
@@ -146,17 +147,13 @@ final class DownloadActionTests: ZcashTestCase {
     private func setupActionContext() async -> ActionContext {
         let syncContext: ActionContext = .init(state: .download)
 
-        let syncRanges = SyncRanges(
-            latestBlockHeight: 0,
-            downloadRange: underlyingDownloadRange,
-            scanRange: underlyingScanRange,
-            enhanceRange: nil,
-            fetchUTXORange: nil,
-            latestScannedHeight: nil,
-            latestDownloadedBlockHeight: nil
+        let syncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: underlyingScanRange?.lowerBound,
+            firstUnenhancedHeight: nil
         )
         
-        await syncContext.update(syncRanges: syncRanges)
+        await syncContext.update(syncControlData: syncControlData)
 
         return syncContext
     }

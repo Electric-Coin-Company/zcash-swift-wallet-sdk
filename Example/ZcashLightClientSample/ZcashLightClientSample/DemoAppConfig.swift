@@ -20,6 +20,7 @@ enum DemoAppConfig {
 
     static let host = ZcashSDK.isMainnet ? "lightwalletd.electriccoin.co" : "lightwalletd.testnet.electriccoin.co"
     static let port: Int = 9067
+
     static let defaultBirthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 935000 : 1386000
     static let defaultSeed = try! Mnemonic.deterministicSeedBytes(from: """
     live combine flight accident slow soda mind bright absent bid hen shy decade biology amazing mix enlist ensure biology rhythm snap duty soap armor

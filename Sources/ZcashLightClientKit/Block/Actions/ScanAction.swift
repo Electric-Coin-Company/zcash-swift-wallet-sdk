@@ -30,16 +30,17 @@ extension ScanAction: Action {
     var removeBlocksCacheWhenFailed: Bool { true }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
-        guard let scanRange = await context.syncRanges.scanRange else {
+        guard let lastScannedHeight = await context.syncControlData.latestScannedHeight else {
             return await update(context: context)
         }
 
         let config = await configProvider.config
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        let lastScannedHeightDB = try await transactionRepository.lastScannedHeight()
+        let latestBlockHeight = await context.syncControlData.latestBlockHeight
         // This action is executed for each batch (batch size is 100 blocks by default) until all the blocks in whole `scanRange` are scanned.
         // So the right range for this batch must be computed.
-        let batchRangeStart = max(scanRange.lowerBound, lastScannedHeight)
-        let batchRangeEnd = min(scanRange.upperBound, batchRangeStart + config.batchSize)
+        let batchRangeStart = max(lastScannedHeightDB, lastScannedHeight)
+        let batchRangeEnd = min(latestBlockHeight, batchRangeStart + config.batchSize)
 
         guard batchRangeStart <= batchRangeEnd else {
             return await update(context: context)

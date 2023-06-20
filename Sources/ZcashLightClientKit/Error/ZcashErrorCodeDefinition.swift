@@ -589,7 +589,10 @@ enum ZcashErrorDefinition {
     /// Consensus BranchIDs don't match this is probably an API or programming error.
     // sourcery: code="ZCBPEO0017"
     case compactBlockProcessorConsensusBranchID
-    
+    /// Rewind of DownloadBlockAction failed as no action is possible to unwrapp.
+    // sourcery: code="ZCBPEO0018"
+    case compactBlockProcessorDownloadBlockActionRewind
+
     // MARK: - SDKSynchronizer
     
     /// The synchronizer is unprepared.
@@ -610,13 +613,4 @@ enum ZcashErrorDefinition {
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     // sourcery: code="ZSYNCO0006"
     case synchronizerDisconnected
-
-    // MARK: - InternalSyncProgressDiskStorage
-
-    /// `InternalSyncProgressDiskStorage` can't read data from specific file.
-    // sourcery: code="ZISPDS0001"
-    case ispStorageCantLoad(_ fileURL: URL, _ error: Error)
-    /// `InternalSyncProgressDiskStorage` can't write data from specific file.
-    // sourcery: code="ZISPDS0002"
-    case ispStorageCantWrite(_ fileURL: URL, _ error: Error)
 }

@@ -40,7 +40,6 @@ public class SDKSynchronizer: Synchronizer {
     private let transactionEncoder: TransactionEncoder
     private let transactionRepository: TransactionRepository
     private let utxoRepository: UnspentTransactionOutputRepository
-    let internalSyncProgress: InternalSyncProgress
 
     private let syncSessionIDGenerator: SyncSessionIDGenerator
     private let syncSession: SyncSession
@@ -88,7 +87,6 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
         self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
-        internalSyncProgress = initializer.container.resolve(InternalSyncProgress.self)
         
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -139,7 +137,6 @@ public class SDKSynchronizer: Synchronizer {
         }
 
         try await utxoRepository.initialise()
-        try await internalSyncProgress.initialize()
 
         if case .seedRequired = try await self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
             return .seedRequired
