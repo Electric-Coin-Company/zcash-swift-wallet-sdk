@@ -49,6 +49,10 @@ class TransactionSQLDAO: TransactionRepository {
         try blockDao.latestBlock()
     }
 
+    func firstUnenhancedHeight() throws -> BlockHeight? {
+        try blockDao.firstUnenhancedHeight()
+    }
+
     func isInitialized() async throws -> Bool {
         true
     }

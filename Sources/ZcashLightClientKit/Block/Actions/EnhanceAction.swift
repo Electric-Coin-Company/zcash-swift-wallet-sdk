@@ -13,6 +13,7 @@ final class EnhanceAction {
     let internalSyncProgress: InternalSyncProgress
     let logger: Logger
     let transactionRepository: TransactionRepository
+    
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         blockEnhancer = container.resolve(BlockEnhancer.self)
         self.configProvider = configProvider
