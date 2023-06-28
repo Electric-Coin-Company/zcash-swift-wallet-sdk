@@ -17,7 +17,7 @@ final class FetchUTXOsActionTests: ZcashTestCase {
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         let insertedEntity = UnspentTransactionOutputEntityMock(address: "addr", txid: Data(), index: 0, script: Data(), valueZat: 1, height: 2)
         let skippedEntity = UnspentTransactionOutputEntityMock(address: "addr2", txid: Data(), index: 1, script: Data(), valueZat: 2, height: 3)
-        uTXOFetcherMock.fetchAtDidFetchReturnValue = (inserted: [insertedEntity], skipped: [skippedEntity])
+        uTXOFetcherMock.fetchDidFetchReturnValue = (inserted: [insertedEntity], skipped: [skippedEntity])
         
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
         mockContainer.mock(type: UTXOFetcher.self, isSingleton: true) { _ in uTXOFetcherMock }
@@ -26,17 +26,13 @@ final class FetchUTXOsActionTests: ZcashTestCase {
         
         let syncContext: ActionContext = .init(state: .fetchUTXO)
         
-        let syncRanges = SyncRanges(
+        let syncControlData = SyncControlData(
             latestBlockHeight: 0,
-            downloadRange: nil,
-            scanRange: nil,
-            enhanceRange: nil,
-            fetchUTXORange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
-            latestScannedHeight: nil,
-            latestDownloadedBlockHeight: nil
+            latestScannedHeight: 0,
+            firstUnenhancedHeight: nil
         )
         
-        await syncContext.update(syncRanges: syncRanges)
+        await syncContext.update(syncControlData: syncControlData)
         
         do {
             let nextContext = try await fetchUTXOsAction.run(with: syncContext) { event in
@@ -48,7 +44,7 @@ final class FetchUTXOsActionTests: ZcashTestCase {
                 XCTAssertEqual(result.skipped as! [UnspentTransactionOutputEntityMock], [skippedEntity])
             }
             XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
-            XCTAssertTrue(uTXOFetcherMock.fetchAtDidFetchCalled, "utxoFetcher.fetch() is expected to be called.")
+            XCTAssertTrue(uTXOFetcherMock.fetchDidFetchCalled, "utxoFetcher.fetch() is expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .handleSaplingParams,

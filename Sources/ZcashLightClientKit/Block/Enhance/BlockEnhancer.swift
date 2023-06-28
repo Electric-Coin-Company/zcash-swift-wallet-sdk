@@ -57,7 +57,6 @@ protocol BlockEnhancer {
 
 struct BlockEnhancerImpl {
     let blockDownloaderService: BlockDownloaderService
-    let internalSyncProgress: InternalSyncProgress
     let rustBackend: ZcashRustBackendWelding
     let transactionRepository: TransactionRepository
     let metrics: SDKMetrics
@@ -96,7 +95,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
             let transactions = try await transactionRepository.find(in: range, limit: Int.max, kind: .all)
 
             guard !transactions.isEmpty else {
-                try await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
                 logger.debug("no transactions detected on range: \(range.lowerBound)...\(range.upperBound)")
                 return nil
             }
@@ -126,10 +124,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
                         )
 
                         await didEnhance(progress)
-
-                        if let minedHeight = confirmedTx.minedHeight {
-                            try await internalSyncProgress.set(minedHeight, .latestEnhancedHeight)
-                        }
                     } catch {
                         retries += 1
                         logger.error("could not enhance txId \(transaction.rawID.toHexStringTxId()) - Error: \(error)")
@@ -155,8 +149,6 @@ extension BlockEnhancerImpl: BlockEnhancer {
             logger.error("error enhancing transactions! \(error)")
             throw error
         }
-
-        try await internalSyncProgress.set(range.upperBound, .latestEnhancedHeight)
         
         if Task.isCancelled {
             logger.debug("Warning: compactBlockEnhancement on range \(range) cancelled")

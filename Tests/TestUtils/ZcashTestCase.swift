@@ -59,22 +59,12 @@ class ZcashTestCase: XCTestCase {
         testGeneralStorageDirectory = nil
     }
 
-    // MARK: - InternalSyncProgress
-
-    func resetDefaultInternalSyncProgress(to height: BlockHeight = 0) async throws {
-        let storage = InternalSyncProgressDiskStorage(storageURL: testGeneralStorageDirectory, logger: logger)
-        let internalSyncProgress = InternalSyncProgress(alias: .default, storage: storage, logger: logger)
-        try await internalSyncProgress.initialize()
-        try await internalSyncProgress.rewind(to: 0)
-    }
-
     // MARK: - XCTestCase
 
     override func setUp() async throws {
         try await super.setUp()
         createMockContainer()
         try createPaths()
-        try await resetDefaultInternalSyncProgress()
     }
 
     override func setUp() {

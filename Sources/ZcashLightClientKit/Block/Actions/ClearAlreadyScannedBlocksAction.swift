@@ -10,6 +10,7 @@ import Foundation
 final class ClearAlreadyScannedBlocksAction {
     let storage: CompactBlockRepository
     let transactionRepository: TransactionRepository
+    
     init(container: DIContainer) {
         storage = container.resolve(CompactBlockRepository.self)
         transactionRepository = container.resolve(TransactionRepository.self)

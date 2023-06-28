@@ -66,11 +66,6 @@ class TestCoordinator {
         let databases = TemporaryDbBuilder.build()
         self.databases = databases
 
-        let storage = InternalSyncProgressDiskStorage(storageURL: databases.generalStorageURL, logger: logger)
-        let internalSyncProgress = InternalSyncProgress(alias: alias, storage: storage, logger: logger)
-        try await internalSyncProgress.initialize()
-        try await internalSyncProgress.rewind(to: 0)
-
         let initializer = Initializer(
             container: container,
             cacheDbURL: nil,

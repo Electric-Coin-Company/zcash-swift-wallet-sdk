@@ -88,12 +88,6 @@ enum Dependencies {
         container.register(type: SyncSessionIDGenerator.self, isSingleton: false) { _ in
             UniqueSyncSessionIDGenerator()
         }
-
-        container.register(type: InternalSyncProgress.self, isSingleton: true) { di in
-            let logger = di.resolve(Logger.self)
-            let storage = InternalSyncProgressDiskStorage(storageURL: urls.generalStorageURL, logger: logger)
-            return InternalSyncProgress(alias: alias, storage: storage, logger: logger)
-        }
         
         container.register(type: ZcashFileManager.self, isSingleton: true) { _ in
             FileManager.default
@@ -109,7 +103,6 @@ enum Dependencies {
             let service = di.resolve(LightWalletService.self)
             let blockDownloaderService = di.resolve(BlockDownloaderService.self)
             let storage = di.resolve(CompactBlockRepository.self)
-            let internalSyncProgress = di.resolve(InternalSyncProgress.self)
             let metrics = di.resolve(SDKMetrics.self)
             let logger = di.resolve(Logger.self)
 
@@ -117,7 +110,6 @@ enum Dependencies {
                 service: service,
                 downloaderService: blockDownloaderService,
                 storage: storage,
-                internalSyncProgress: internalSyncProgress,
                 metrics: metrics,
                 logger: logger
             )
@@ -159,7 +151,6 @@ enum Dependencies {
         
         container.register(type: BlockEnhancer.self, isSingleton: true) { di in
             let blockDownloaderService = di.resolve(BlockDownloaderService.self)
-            let internalSyncProgress = di.resolve(InternalSyncProgress.self)
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
             let transactionRepository = di.resolve(TransactionRepository.self)
             let metrics = di.resolve(SDKMetrics.self)
@@ -167,7 +158,6 @@ enum Dependencies {
 
             return BlockEnhancerImpl(
                 blockDownloaderService: blockDownloaderService,
-                internalSyncProgress: internalSyncProgress,
                 rustBackend: rustBackend,
                 transactionRepository: transactionRepository,
                 metrics: metrics,
@@ -178,7 +168,6 @@ enum Dependencies {
         container.register(type: UTXOFetcher.self, isSingleton: true) { di in
             let blockDownloaderService = di.resolve(BlockDownloaderService.self)
             let utxoFetcherConfig = UTXOFetcherConfig(walletBirthdayProvider: config.walletBirthdayProvider)
-            let internalSyncProgress = di.resolve(InternalSyncProgress.self)
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)
             let metrics = di.resolve(SDKMetrics.self)
             let logger = di.resolve(Logger.self)
@@ -187,7 +176,6 @@ enum Dependencies {
                 accountRepository: accountRepository,
                 blockDownloaderService: blockDownloaderService,
                 config: utxoFetcherConfig,
-                internalSyncProgress: internalSyncProgress,
                 rustBackend: rustBackend,
                 metrics: metrics,
                 logger: logger

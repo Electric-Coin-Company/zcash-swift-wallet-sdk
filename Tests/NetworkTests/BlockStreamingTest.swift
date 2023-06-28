@@ -15,7 +15,6 @@ class BlockStreamingTest: ZcashTestCase {
     var endpoint: LightWalletEndpoint!
     var service: LightWalletService!
     var storage: FSCompactBlockRepository!
-    var internalSyncProgress: InternalSyncProgress!
     var processorConfig: CompactBlockProcessor.Configuration!
     var latestBlockHeight: BlockHeight!
     var startHeight: BlockHeight!
@@ -65,7 +64,6 @@ class BlockStreamingTest: ZcashTestCase {
         endpoint = nil
         service = nil
         storage = nil
-        internalSyncProgress = nil
         processorConfig = nil
     }
 
@@ -92,10 +90,6 @@ class BlockStreamingTest: ZcashTestCase {
         )
         try await storage.create()
 
-        let internalSyncProgressStorage = InternalSyncProgressMemoryStorage()
-        try await internalSyncProgressStorage.set(startHeight, for: InternalSyncProgress.Key.latestDownloadedBlockHeight.rawValue)
-        internalSyncProgress = InternalSyncProgress(alias: .default, storage: internalSyncProgressStorage, logger: logger)
-
         processorConfig = CompactBlockProcessor.Configuration.standard(
             for: ZcashNetworkBuilder.network(for: .testnet),
             walletBirthday: ZcashNetworkBuilder.network(for: .testnet).constants.saplingActivationHeight
@@ -113,7 +107,6 @@ class BlockStreamingTest: ZcashTestCase {
             service: service,
             downloaderService: BlockDownloaderServiceImpl(service: service, storage: storage),
             storage: storage,
-            internalSyncProgress: internalSyncProgress,
             metrics: SDKMetrics(),
             logger: logger
         )
@@ -141,24 +134,21 @@ class BlockStreamingTest: ZcashTestCase {
         try await makeDependencies(timeout: 10000)
 
         let action = DownloadAction(container: mockContainer, configProvider: CompactBlockProcessor.ConfigProvider(config: processorConfig))
-        let syncRanges = SyncRanges(
+        let blockDownloader = mockContainer.resolve(BlockDownloader.self)
+        let syncControlData = SyncControlData(
             latestBlockHeight: latestBlockHeight,
-            downloadRange: startHeight...latestBlockHeight,
-            scanRange: nil,
-            enhanceRange: nil,
-            fetchUTXORange: nil,
             latestScannedHeight: startHeight,
-            latestDownloadedBlockHeight: startHeight
+            firstUnenhancedHeight: nil
         )
         let context = ActionContext(state: .download)
-        await context.update(syncRanges: syncRanges)
+        await context.update(syncControlData: syncControlData)
 
         let expectation = XCTestExpectation()
 
         let cancelableTask = Task {
             do {
                 _ = try await action.run(with: context, didUpdate: { _ in })
-                let lastDownloadedHeight = try await internalSyncProgress.latestDownloadedBlockHeight
+                let lastDownloadedHeight = await blockDownloader.latestDownloadedBlockHeight()
                 // Just to be sure that download was interrupted before download was finished.
                 XCTAssertLessThan(lastDownloadedHeight, latestBlockHeight)
                 expectation.fulfill()
@@ -180,17 +170,13 @@ class BlockStreamingTest: ZcashTestCase {
         try await makeDependencies(timeout: 100)
 
         let action = DownloadAction(container: mockContainer, configProvider: CompactBlockProcessor.ConfigProvider(config: processorConfig))
-        let syncRanges = SyncRanges(
+        let syncControlData = SyncControlData(
             latestBlockHeight: latestBlockHeight,
-            downloadRange: startHeight...latestBlockHeight,
-            scanRange: nil,
-            enhanceRange: nil,
-            fetchUTXORange: nil,
             latestScannedHeight: startHeight,
-            latestDownloadedBlockHeight: startHeight
+            firstUnenhancedHeight: nil
         )
         let context = ActionContext(state: .download)
-        await context.update(syncRanges: syncRanges)
+        await context.update(syncControlData: syncControlData)
 
         let date = Date()
 

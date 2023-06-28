@@ -9,25 +9,32 @@ import Foundation
 
 actor ActionContext {
     var state: CBPState
-    var syncRanges: SyncRanges
+    var prevState: CBPState?
+    var syncControlData: SyncControlData
     var totalProgressRange: CompactBlockRange = 0...0
+    var lastDownloadedHeight: BlockHeight?
+    var lastEnhancedHeight: BlockHeight?
 
     init(state: CBPState) {
         self.state = state
-        syncRanges = SyncRanges.empty
+        syncControlData = SyncControlData.empty
     }
 
-    func update(state: CBPState) async { self.state = state }
-    func update(syncRanges: SyncRanges) async { self.syncRanges = syncRanges }
+    func update(state: CBPState) async {
+        prevState = self.state
+        self.state = state
+    }
+    func update(syncControlData: SyncControlData) async { self.syncControlData = syncControlData }
     func update(totalProgressRange: CompactBlockRange) async { self.totalProgressRange = totalProgressRange }
+    func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
+    func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }
 }
 
 enum CBPState: CaseIterable {
     case idle
     case migrateLegacyCacheDB
     case validateServer
-    case computeSyncRanges
-    case checksBeforeSync
+    case computeSyncControlData
     case download
     case validate
     case scan

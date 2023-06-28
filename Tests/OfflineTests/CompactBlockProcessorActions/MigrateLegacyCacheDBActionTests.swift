@@ -26,13 +26,11 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         let zcashFileManagerMock = ZcashFileManagerMock()
-        let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
 
         let migrateLegacyCacheDBAction = setupAction(
             compactBlockRepositoryMock,
             transactionRepositoryMock,
-            zcashFileManagerMock,
-            internalSyncProgressStorageMock
+            zcashFileManagerMock
         )
 
         do {
@@ -45,7 +43,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             )
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
-            XCTAssertFalse(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is not expected to be called.")
 
             let nextState = await nextContext.state
             XCTAssertTrue(
@@ -61,15 +58,13 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         let zcashFileManagerMock = ZcashFileManagerMock()
-        let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
-
+        
         underlyingCacheDbURL = DefaultResourceProvider(network: ZcashNetworkBuilder.network(for: .testnet)).fsCacheURL
 
         let migrateLegacyCacheDBAction = setupAction(
             compactBlockRepositoryMock,
             transactionRepositoryMock,
-            zcashFileManagerMock,
-            internalSyncProgressStorageMock
+            zcashFileManagerMock
         )
 
         do {
@@ -83,7 +78,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             )
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
-            XCTAssertFalse(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is not expected to be called.")
         } catch {
             XCTFail("""
             testMigrateLegacyCacheDBAction_noFsBlockCacheRoot is expected to fail with \
@@ -96,7 +90,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         let zcashFileManagerMock = ZcashFileManagerMock()
-        let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
 
         // any valid URL needed...
         underlyingCacheDbURL = DefaultResourceProvider(network: ZcashNetworkBuilder.network(for: .testnet)).fsCacheURL
@@ -107,8 +100,7 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let migrateLegacyCacheDBAction = setupAction(
             compactBlockRepositoryMock,
             transactionRepositoryMock,
-            zcashFileManagerMock,
-            internalSyncProgressStorageMock
+            zcashFileManagerMock
         )
 
         do {
@@ -121,7 +113,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             )
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
-            XCTAssertFalse(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is not expected to be called.")
 
             let nextState = await nextContext.state
             XCTAssertTrue(
@@ -137,7 +128,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         let zcashFileManagerMock = ZcashFileManagerMock()
-        let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
 
         // any valid URL needed...
         underlyingCacheDbURL = DefaultResourceProvider(network: ZcashNetworkBuilder.network(for: .testnet)).fsCacheURL
@@ -148,8 +138,7 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let migrateLegacyCacheDBAction = setupAction(
             compactBlockRepositoryMock,
             transactionRepositoryMock,
-            zcashFileManagerMock,
-            internalSyncProgressStorageMock
+            zcashFileManagerMock
         )
 
         do {
@@ -162,7 +151,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             )
             XCTAssertTrue(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
-            XCTAssertFalse(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is not expected to be called.")
 
             let nextState = await nextContext.state
             XCTAssertTrue(
@@ -178,7 +166,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         let zcashFileManagerMock = ZcashFileManagerMock()
-        let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
 
         // any valid URL needed...
         underlyingCacheDbURL = DefaultResourceProvider(network: ZcashNetworkBuilder.network(for: .testnet)).fsCacheURL
@@ -190,8 +177,7 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let migrateLegacyCacheDBAction = setupAction(
             compactBlockRepositoryMock,
             transactionRepositoryMock,
-            zcashFileManagerMock,
-            internalSyncProgressStorageMock
+            zcashFileManagerMock
         )
 
         do {
@@ -204,7 +190,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             )
             XCTAssertTrue(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is expected to be called.")
             XCTAssertTrue(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is expected to be called.")
-            XCTAssertFalse(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is not expected to be called.")
         } catch {
             XCTFail("""
             testMigrateLegacyCacheDBAction_removeItemFailed is expected to fail with \
@@ -217,7 +202,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         let compactBlockRepositoryMock = CompactBlockRepositoryMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         let zcashFileManagerMock = ZcashFileManagerMock()
-        let internalSyncProgressStorageMock = InternalSyncProgressStorageMock()
 
         // any valid URL needed...
         underlyingCacheDbURL = DefaultResourceProvider(network: ZcashNetworkBuilder.network(for: .testnet)).fsCacheURL
@@ -226,24 +210,19 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         zcashFileManagerMock.isReadableFileAtPathReturnValue = true
         zcashFileManagerMock.removeItemAtClosure = { _ in }
         compactBlockRepositoryMock.createClosure = { }
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1
-        internalSyncProgressStorageMock.setForClosure = { _, _ in }
         
         let migrateLegacyCacheDBAction = setupAction(
             compactBlockRepositoryMock,
             transactionRepositoryMock,
-            zcashFileManagerMock,
-            internalSyncProgressStorageMock
+            zcashFileManagerMock
         )
 
         do {
             let nextContext = try await migrateLegacyCacheDBAction.run(with: .init(state: .migrateLegacyCacheDB)) { _ in }
             
             XCTAssertTrue(compactBlockRepositoryMock.createCalled, "storage.create() is expected to be called.")
-            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertTrue(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is expected to be called.")
             XCTAssertTrue(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is expected to be called.")
-            XCTAssertTrue(internalSyncProgressStorageMock.setForCalled, "internalSyncProgress.set() is expected to be called.")
 
             let nextState = await nextContext.state
             XCTAssertTrue(
@@ -259,12 +238,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         _ compactBlockRepositoryMock: CompactBlockRepositoryMock = CompactBlockRepositoryMock(),
         _ transactionRepositoryMock: TransactionRepositoryMock = TransactionRepositoryMock(),
         _ zcashFileManagerMock: ZcashFileManagerMock = ZcashFileManagerMock(),
-        _ internalSyncProgressStorageMock: InternalSyncProgressStorageMock = InternalSyncProgressStorageMock(),
         _ loggerMock: LoggerMock = LoggerMock()
     ) -> MigrateLegacyCacheDBAction {
-        mockContainer.register(type: InternalSyncProgress.self, isSingleton: true) { _ in
-            InternalSyncProgress(alias: .default, storage: internalSyncProgressStorageMock, logger: loggerMock)
-        }
         mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in compactBlockRepositoryMock }
         mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }
         mockContainer.mock(type: ZcashFileManager.self, isSingleton: true) { _ in zcashFileManagerMock }

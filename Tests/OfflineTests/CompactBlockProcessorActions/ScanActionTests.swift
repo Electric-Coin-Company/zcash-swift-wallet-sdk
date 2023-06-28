@@ -108,17 +108,13 @@ final class ScanActionTests: ZcashTestCase {
     private func setupActionContext() async -> ActionContext {
         let syncContext: ActionContext = .init(state: .scan)
         
-        let syncRanges = SyncRanges(
-            latestBlockHeight: 0,
-            downloadRange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
-            scanRange: CompactBlockRange(uncheckedBounds: (1000, 2000)),
-            enhanceRange: nil,
-            fetchUTXORange: nil,
-            latestScannedHeight: nil,
-            latestDownloadedBlockHeight: nil
+        let syncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: 1000,
+            firstUnenhancedHeight: nil
         )
         
-        await syncContext.update(syncRanges: syncRanges)
+        await syncContext.update(syncControlData: syncControlData)
         await syncContext.update(totalProgressRange: CompactBlockRange(uncheckedBounds: (1000, 2000)))
 
         return syncContext

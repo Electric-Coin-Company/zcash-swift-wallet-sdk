@@ -30,7 +30,6 @@ actor CompactBlockProcessor {
 
     private let accountRepository: AccountRepository
     let blockDownloaderService: BlockDownloaderService
-    private let internalSyncProgress: InternalSyncProgress
     private let latestBlocksDataProvider: LatestBlocksDataProvider
     private let logger: Logger
     private let metrics: SDKMetrics
@@ -190,7 +189,6 @@ actor CompactBlockProcessor {
         self.metrics = container.resolve(SDKMetrics.self)
         self.logger = container.resolve(Logger.self)
         self.latestBlocksDataProvider = container.resolve(LatestBlocksDataProvider.self)
-        self.internalSyncProgress = container.resolve(InternalSyncProgress.self)
         self.blockDownloaderService = container.resolve(BlockDownloaderService.self)
         self.service = container.resolve(LightWalletService.self)
         self.rustBackend = container.resolve(ZcashRustBackendWelding.self)
@@ -216,10 +214,8 @@ actor CompactBlockProcessor {
                 action = MigrateLegacyCacheDBAction(container: container, configProvider: configProvider)
             case .validateServer:
                 action = ValidateServerAction(container: container, configProvider: configProvider)
-            case .computeSyncRanges:
-                action = ComputeSyncRangesAction(container: container, configProvider: configProvider)
-            case .checksBeforeSync:
-                action = ChecksBeforeSyncAction(container: container)
+            case .computeSyncControlData:
+                action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
             case .download:
                 action = DownloadAction(container: container, configProvider: configProvider)
             case .validate:
@@ -313,7 +309,7 @@ extension CompactBlockProcessor {
 
     private func doRewind(context: AfterSyncHooksManager.RewindContext) async throws {
         logger.debug("Executing rewind.")
-        let lastDownloaded = try await internalSyncProgress.latestDownloadedBlockHeight
+        let lastDownloaded = await latestBlocksDataProvider.latestScannedHeight
         let height = Int32(context.height ?? lastDownloaded)
 
         let nearestHeight: Int32
@@ -328,6 +324,7 @@ extension CompactBlockProcessor {
         let rewindHeight = max(Int32(nearestHeight - 1), Int32(config.walletBirthday))
 
         do {
+            try await rewindDownloadBlockAction(to: BlockHeight(rewindHeight))
             try await rustBackend.rewindToHeight(height: rewindHeight)
         } catch {
             await failure(error)
@@ -342,9 +339,19 @@ extension CompactBlockProcessor {
             return await context.completion(.failure(error))
         }
 
-        try await internalSyncProgress.rewind(to: rewindBlockHeight)
-
         await context.completion(.success(rewindBlockHeight))
+    }
+}
+
+// MARK: - Actions
+
+private extension CompactBlockProcessor {
+    func rewindDownloadBlockAction(to rewindHeight: BlockHeight?) async throws {
+        if let downloadAction = actions[.download] as? DownloadAction {
+            await downloadAction.downloader.rewind(latestDownloadedBlockHeight: rewindHeight)
+        } else {
+            throw ZcashError.compactBlockProcessorDownloadBlockActionRewind
+        }
     }
 }
 
@@ -369,7 +376,6 @@ extension CompactBlockProcessor {
 
         do {
             try await self.storage.clear()
-            try await internalSyncProgress.rewind(to: 0)
 
             wipeLegacyCacheDbIfNeeded()
 
@@ -377,6 +383,8 @@ extension CompactBlockProcessor {
             if fileManager.fileExists(atPath: config.dataDb.path) {
                 try fileManager.removeItem(at: config.dataDb)
             }
+
+            try await rewindDownloadBlockAction(to: nil)
 
             await context.completion(nil)
         } catch {
@@ -468,7 +476,7 @@ extension CompactBlockProcessor {
                 // Side effect of calling stop is to delete last used download stream. To be sure that it doesn't keep any data in memory.
                 await stopAllActions()
                 // Update state to the first state in state machine that can be handled by action.
-                await context.update(state: .migrateLegacyCacheDB)
+                await context.update(state: .clearCache)
                 await syncStarted()
 
                 if backoffTimer == nil {
@@ -579,9 +587,7 @@ extension CompactBlockProcessor {
             break
         case .validateServer:
             break
-        case .computeSyncRanges:
-            break
-        case .checksBeforeSync:
+        case .computeSyncControlData:
             break
         case .download:
             break
@@ -609,7 +615,9 @@ extension CompactBlockProcessor {
     }
 
     private func resetContext() async {
+        let lastEnhancedheight = await context.lastEnhancedHeight
         context = ActionContext(state: .idle)
+        await context.update(lastEnhancedHeight: lastEnhancedheight)
         await compactBlockProgress.reset()
     }
 
@@ -621,7 +629,7 @@ extension CompactBlockProcessor {
 
     private func syncFinished() async -> Bool {
         logger.debug("Sync finished")
-        let latestBlockHeightWhenSyncing = await context.syncRanges.latestBlockHeight
+        let latestBlockHeightWhenSyncing = await context.syncControlData.latestBlockHeight
         let latestBlockHeight = await latestBlocksDataProvider.latestBlockHeight
         // If `latestBlockHeightWhenSyncing` is 0 then it means that there was nothing to sync in last sync process.
         let newerBlocksWereMinedDuringSync =
@@ -659,7 +667,8 @@ extension CompactBlockProcessor {
         try await rustBackend.rewindToHeight(height: Int32(rewindHeight))
 
         try await blockDownloaderService.rewind(to: rewindHeight)
-        try await internalSyncProgress.rewind(to: rewindHeight)
+
+        try await rewindDownloadBlockAction(to: rewindHeight)
 
         await send(event: .handledReorg(height, rewindHeight))
     }
@@ -758,20 +767,7 @@ extension CompactBlockProcessor {
 
     private func ifTaskIsNotCanceledClearCompactBlockCache() async {
         guard !Task.isCancelled else { return }
-        let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
         do {
-            // Blocks download work in parallel with scanning. So imagine this scenario:
-            //
-            // Scanning is done until height 10300. Blocks are downloaded until height 10400.
-            // And now validation fails and this method is called. And `.latestDownloadedBlockHeight` in `internalSyncProgress` is set to 10400. And
-            // all the downloaded blocks are removed here.
-            //
-            // If this line doesn't happen then when sync starts next time it thinks that all the blocks are downloaded until 10400. But all were
-            // removed. So blocks between 10300 and 10400 wouldn't ever be scanned.
-            //
-            // Scanning is done until 10300 so the SDK can be sure that blocks with height below 10300 are not required. So it makes sense to set
-            // `.latestDownloadedBlockHeight` to `lastScannedHeight`. And sync will work fine in next run.
-            try await internalSyncProgress.set(lastScannedHeight, .latestDownloadedBlockHeight)
             try await clearCompactBlockCache()
         } catch {
             logger.error("`clearCompactBlockCache` failed after error: \(error)")

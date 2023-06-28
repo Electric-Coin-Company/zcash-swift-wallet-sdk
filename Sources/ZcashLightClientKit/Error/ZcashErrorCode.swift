@@ -57,8 +57,12 @@ public enum ZcashErrorCode: String {
     case blockDAOLatestBlockHeight = "ZBDAO0003"
     /// SQLite query failed when fetching the latest block from the database.
     case blockDAOLatestBlock = "ZBDAO0004"
-    /// Fetched latesxt block information from DB but can't decode them.
+    /// Fetched latest block information from DB but can't decode them.
     case blockDAOLatestBlockCantDecode = "ZBDAO0005"
+    /// SQLite query failed when fetching the first unenhanced block from the database.
+    case blockDAOFirstUnenhancedHeight = "ZBDAO0006"
+    /// Fetched unenhanced block information from DB but can't decode them.
+    case blockDAOFirstUnenhancedCantDecode = "ZBDAO0007"
     /// Error from rust layer when calling ZcashRustBackend.createAccount
     case rustCreateAccount = "ZRUST0001"
     /// Error from rust layer when calling ZcashRustBackend.createToAddress
@@ -297,6 +301,8 @@ public enum ZcashErrorCode: String {
     case compactBlockProcessorChainName = "ZCBPEO0016"
     /// Consensus BranchIDs don't match this is probably an API or programming error.
     case compactBlockProcessorConsensusBranchID = "ZCBPEO0017"
+    /// Rewind of DownloadBlockAction failed as no action is possible to unwrapp.
+    case compactBlockProcessorDownloadBlockActionRewind = "ZCBPEO0018"
     /// The synchronizer is unprepared.
     case synchronizerNotPrepared = "ZSYNCO0001"
     /// Memos can't be sent to transparent addresses.
@@ -309,8 +315,4 @@ public enum ZcashErrorCode: String {
     case synchronizerRewindUnknownArchorHeight = "ZSYNCO0005"
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     case synchronizerDisconnected = "ZSYNCO0006"
-    /// `InternalSyncProgressDiskStorage` can't read data from specific file.
-    case ispStorageCantLoad = "ZISPDS0001"
-    /// `InternalSyncProgressDiskStorage` can't write data from specific file.
-    case ispStorageCantWrite = "ZISPDS0002"
 }

@@ -115,6 +115,10 @@ extension MockTransactionRepository: TransactionRepository {
         nil
     }
 
+    func firstUnenhancedHeight() throws -> ZcashLightClientKit.BlockHeight? {
+        nil
+    }
+
     func isInitialized() throws -> Bool {
         true
     }

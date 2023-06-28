@@ -52,6 +52,14 @@ protocol BlockDownloader {
     /// called before then nothing is downloaded.
     /// - Parameter range: Wait until blocks from `range` are downloaded.
     func waitUntilRequestedBlocksAreDownloaded(in range: CompactBlockRange) async throws
+    
+    /// Updates the internal in memory value of latest downloaded block height. This way the `BlockDownloader` works with the current latest height and can
+    /// continue on parallel downloading of next batch.
+    func update(latestDownloadedBlockHeight: BlockHeight) async
+    /// Provides the value of latest downloaded height.
+    func latestDownloadedBlockHeight() async -> BlockHeight
+    /// In case rewind is needed, the latestDownloadedBlockHeight is rewritten forcefully.
+    func rewind(latestDownloadedBlockHeight: BlockHeight?) async
 }
 
 actor BlockDownloaderImpl {
@@ -62,9 +70,9 @@ actor BlockDownloaderImpl {
     let service: LightWalletService
     let downloaderService: BlockDownloaderService
     let storage: CompactBlockRepository
-    let internalSyncProgress: InternalSyncProgress
     let metrics: SDKMetrics
     let logger: Logger
+    var latestDownloadedBlockHeight: BlockHeight = -1
 
     private var downloadStreamCreatedAtRange: CompactBlockRange = 0...0
     private var downloadStream: BlockDownloaderStream?
@@ -80,14 +88,12 @@ actor BlockDownloaderImpl {
         service: LightWalletService,
         downloaderService: BlockDownloaderService,
         storage: CompactBlockRepository,
-        internalSyncProgress: InternalSyncProgress,
         metrics: SDKMetrics,
         logger: Logger
     ) {
         self.service = service
         self.downloaderService = downloaderService
         self.storage = storage
-        self.internalSyncProgress = internalSyncProgress
         self.metrics = metrics
         self.logger = logger
     }
@@ -99,8 +105,6 @@ actor BlockDownloaderImpl {
                 logger.error("Dont have downloadStream. Trying to download blocks before sync range is not set.")
                 throw ZcashError.blockDownloadSyncRangeNotSet
             }
-
-            let latestDownloadedBlockHeight = try await internalSyncProgress.latestDownloadedBlockHeight
 
             let downloadFrom = max(syncRange.lowerBound, latestDownloadedBlockHeight + 1)
             let downloadTo = min(downloadToHeight, syncRange.upperBound)
@@ -240,11 +244,25 @@ actor BlockDownloaderImpl {
 
     private func blocksBufferWritten(_ buffer: [ZcashCompactBlock]) async throws {
         guard let lastBlock = buffer.last else { return }
-        try await internalSyncProgress.set(lastBlock.height, .latestDownloadedBlockHeight)
+        latestDownloadedBlockHeight = lastBlock.height
     }
 }
 
 extension BlockDownloaderImpl: BlockDownloader {
+    func rewind(latestDownloadedBlockHeight: BlockHeight?) async {
+        self.latestDownloadedBlockHeight = latestDownloadedBlockHeight ?? -1
+    }
+    
+    func update(latestDownloadedBlockHeight: BlockHeight) async {
+        if latestDownloadedBlockHeight >= self.latestDownloadedBlockHeight {
+            self.latestDownloadedBlockHeight = latestDownloadedBlockHeight
+        }
+    }
+
+    func latestDownloadedBlockHeight() async -> BlockHeight {
+        latestDownloadedBlockHeight
+    }
+
     func setDownloadLimit(_ limit: BlockHeight) async {
         downloadToHeight = limit
     }
@@ -283,13 +301,13 @@ extension BlockDownloaderImpl: BlockDownloader {
 
     func waitUntilRequestedBlocksAreDownloaded(in range: CompactBlockRange) async throws {
         logger.debug("Waiting until requested blocks are downloaded at \(range)")
-        var latestDownloadedBlock = try await internalSyncProgress.latestDownloadedBlockHeight
+        var latestDownloadedBlock = latestDownloadedBlockHeight
         while latestDownloadedBlock < range.upperBound {
             if let error = lastError {
                 throw error
             }
             try await Task.sleep(milliseconds: 10)
-            latestDownloadedBlock = try await internalSyncProgress.latestDownloadedBlockHeight
+            latestDownloadedBlock = latestDownloadedBlockHeight
         }
         logger.debug("Waiting done. Blocks are downloaded at \(range)")
     }

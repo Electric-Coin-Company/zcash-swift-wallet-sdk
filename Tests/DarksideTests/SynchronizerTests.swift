@@ -231,16 +231,6 @@ final class SynchronizerTests: ZcashTestCase {
         XCTAssertTrue(fm.fileExists(atPath: storage.blocksDirectory.path), "FS Cache directory should exist")
         XCTAssertEqual(try fm.contentsOfDirectory(atPath: storage.blocksDirectory.path), [], "FS Cache directory should be empty")
 
-        let internalSyncProgress = coordinator.synchronizer.internalSyncProgress
-
-        let latestDownloadedBlockHeight = try await internalSyncProgress.load(.latestDownloadedBlockHeight)
-        let latestEnhancedHeight = try await internalSyncProgress.load(.latestEnhancedHeight)
-        let latestUTXOFetchedHeight = try await internalSyncProgress.load(.latestUTXOFetchedHeight)
-
-        XCTAssertEqual(latestDownloadedBlockHeight, 0, "internalSyncProgress latestDownloadedBlockHeight should be 0")
-        XCTAssertEqual(latestEnhancedHeight, 0, "internalSyncProgress latestEnhancedHeight should be 0")
-        XCTAssertEqual(latestUTXOFetchedHeight, 0, "internalSyncProgress latestUTXOFetchedHeight should be 0")
-
         let status = await coordinator.synchronizer.status
         XCTAssertEqual(status, .unprepared, "SDKSynchronizer state should be unprepared")
     }
