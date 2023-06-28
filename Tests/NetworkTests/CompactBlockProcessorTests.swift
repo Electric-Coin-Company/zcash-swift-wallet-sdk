@@ -17,7 +17,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
     var processorEventHandler: CompactBlockProcessorEventHandler! = CompactBlockProcessorEventHandler()
     var rustBackend: ZcashRustBackendWelding!
     var processor: CompactBlockProcessor!
-    var syncStartedExpect: XCTestExpectation!
+    var syncStartedExpectation: XCTestExpectation!
     var updatedNotificationExpectation: XCTestExpectation!
     var stopNotificationExpectation: XCTestExpectation!
     var finishedNotificationExpectation: XCTestExpectation!
@@ -29,10 +29,6 @@ class CompactBlockProcessorTests: ZcashTestCase {
     override func setUp() async throws {
         try await super.setUp()
         logger = OSLogger(logLevel: .debug)
-
-        for key in InternalSyncProgress.Key.allCases {
-            UserDefaults.standard.set(0, forKey: key.with(.default))
-        }
 
         let pathProvider = DefaultResourceProvider(network: network)
         processorConfig = CompactBlockProcessor.Configuration(
@@ -109,7 +105,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
             return
         }
         
-        syncStartedExpect = XCTestExpectation(description: "\(self.description) syncStartedExpect")
+        syncStartedExpectation = XCTestExpectation(description: "\(self.description) syncStartedExpectation")
         stopNotificationExpectation = XCTestExpectation(description: "\(self.description) stopNotificationExpectation")
         updatedNotificationExpectation = XCTestExpectation(description: "\(self.description) updatedNotificationExpectation")
         finishedNotificationExpectation = XCTestExpectation(description: "\(self.description) finishedNotificationExpectation")
@@ -147,7 +143,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
         XCTAssertNotNil(processor)
 
         let expectations: [CompactBlockProcessorEventHandler.EventIdentifier: XCTestExpectation] = [
-            .startedSyncing: syncStartedExpect,
+            .startedSyncing: syncStartedExpectation,
             .stopped: stopNotificationExpectation,
             .progressUpdated: updatedNotificationExpectation,
             .finished: finishedNotificationExpectation
@@ -162,7 +158,7 @@ class CompactBlockProcessorTests: ZcashTestCase {
    
         await fulfillment(
             of: [
-                syncStartedExpect,
+                syncStartedExpectation,
                 finishedNotificationExpectation
             ],
             timeout: 30,
@@ -184,108 +180,6 @@ class CompactBlockProcessorTests: ZcashTestCase {
     
     private func expectedBatches(currentHeight: BlockHeight, targetHeight: BlockHeight, batchSize: Int) -> Int {
         (abs(currentHeight - targetHeight) / batchSize)
-    }
-    
-    func testNextBatchBlockRange() async throws {
-        // test first range
-        var latestDownloadedHeight = processorConfig.walletBirthday // this can be either this or Wallet Birthday.
-        var latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
-        
-        var expectedSyncRanges = SyncRanges(
-            latestBlockHeight: latestBlockchainHeight,
-            downloadRange: latestDownloadedHeight...latestBlockchainHeight,
-            scanRange: latestDownloadedHeight...latestBlockchainHeight,
-            enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
-            latestScannedHeight: 0,
-            latestDownloadedBlockHeight: latestDownloadedHeight
-        )
-
-        var internalSyncProgress = InternalSyncProgress(
-            alias: .default,
-            storage: InternalSyncProgressMemoryStorage(),
-            logger: logger
-        )
-        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight, alias: .default)
-
-        var syncRanges = try await internalSyncProgress.computeSyncRanges(
-            birthday: processorConfig.walletBirthday,
-            latestBlockHeight: latestBlockchainHeight,
-            latestScannedHeight: 0
-        )
-
-        XCTAssertEqual(
-            expectedSyncRanges,
-            syncRanges,
-            "Failure when testing first range"
-        )
-
-        // Test mid-range
-        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + ZcashSDK.DefaultBatchSize)
-        latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
-
-        expectedSyncRanges = SyncRanges(
-            latestBlockHeight: latestBlockchainHeight,
-            downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
-            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
-            latestScannedHeight: 0,
-            latestDownloadedBlockHeight: latestDownloadedHeight
-        )
-
-        internalSyncProgress = InternalSyncProgress(
-            alias: .default,
-            storage: InternalSyncProgressMemoryStorage(),
-            logger: logger
-        )
-        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight, alias: .default)
-
-        syncRanges = try await internalSyncProgress.computeSyncRanges(
-            birthday: processorConfig.walletBirthday,
-            latestBlockHeight: latestBlockchainHeight,
-            latestScannedHeight: 0
-        )
-        
-        XCTAssertEqual(
-            expectedSyncRanges,
-            syncRanges,
-            "Failure when testing mid range"
-        )
-        
-        // Test last batch range
-        
-        latestDownloadedHeight = BlockHeight(network.constants.saplingActivationHeight + 950)
-        latestBlockchainHeight = BlockHeight(network.constants.saplingActivationHeight + 1000)
-
-        expectedSyncRanges = SyncRanges(
-            latestBlockHeight: latestBlockchainHeight,
-            downloadRange: latestDownloadedHeight + 1...latestBlockchainHeight,
-            scanRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            enhanceRange: processorConfig.walletBirthday...latestBlockchainHeight,
-            fetchUTXORange: processorConfig.walletBirthday...latestBlockchainHeight,
-            latestScannedHeight: 0,
-            latestDownloadedBlockHeight: latestDownloadedHeight
-        )
-
-        internalSyncProgress = InternalSyncProgress(
-            alias: .default,
-            storage: InternalSyncProgressMemoryStorage(),
-            logger: logger
-        )
-        try await internalSyncProgress.migrateIfNeeded(latestDownloadedBlockHeightFromCacheDB: latestDownloadedHeight, alias: .default)
-
-        syncRanges = try await internalSyncProgress.computeSyncRanges(
-            birthday: processorConfig.walletBirthday,
-            latestBlockHeight: latestBlockchainHeight,
-            latestScannedHeight: 0
-        )
-        
-        XCTAssertEqual(
-            expectedSyncRanges,
-            syncRanges,
-            "Failure when testing last range"
-        )
     }
     
     func testDetermineLowerBoundPastBirthday() async {

@@ -92,7 +92,6 @@ class SynchronizerTests: ZcashTestCase {
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             sdkSynchronizerInternalSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
             
-            try await resetDefaultInternalSyncProgress(to: birthday)
             await (synchronizer.blockProcessor.service as? LightWalletGRPCService)?.latestBlockHeightProvider = MockLatestBlockHeightProvider(
                 birthday: self.birthday + 99
             )

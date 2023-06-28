@@ -509,6 +509,9 @@ public enum ZcashError: Equatable, Error {
     /// Consensus BranchIDs don't match this is probably an API or programming error.
     /// ZCBPEO0017
     case compactBlockProcessorConsensusBranchID
+    /// Rewind of DownloadBlockAction failed as no action is possible to unwrapp.
+    /// ZCBPEO0018
+    case compactBlockProcessorDownloadBlockActionRewind
     /// The synchronizer is unprepared.
     /// ZSYNCO0001
     case synchronizerNotPrepared
@@ -527,12 +530,6 @@ public enum ZcashError: Equatable, Error {
     /// Indicates that this Synchronizer is disconnected from its lightwalletd server.
     /// ZSYNCO0006
     case synchronizerDisconnected
-    /// `InternalSyncProgressDiskStorage` can't read data from specific file.
-    /// ZISPDS0001
-    case ispStorageCantLoad(_ fileURL: URL, _ error: Error)
-    /// `InternalSyncProgressDiskStorage` can't write data from specific file.
-    /// ZISPDS0002
-    case ispStorageCantWrite(_ fileURL: URL, _ error: Error)
 
     public var message: String {
         switch self {
@@ -682,14 +679,13 @@ public enum ZcashError: Equatable, Error {
         case .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb: return "Deletion of readable file at the provided URL failed."
         case .compactBlockProcessorChainName: return "Chain name does not match. Expected either 'test' or 'main'. This is probably an API or programming error."
         case .compactBlockProcessorConsensusBranchID: return "Consensus BranchIDs don't match this is probably an API or programming error."
+        case .compactBlockProcessorDownloadBlockActionRewind: return "Rewind of DownloadBlockAction failed as no action is possible to unwrapp."
         case .synchronizerNotPrepared: return "The synchronizer is unprepared."
         case .synchronizerSendMemoToTransparentAddress: return "Memos can't be sent to transparent addresses."
         case .synchronizerShieldFundsInsuficientTransparentFunds: return "There is not enough transparent funds to cover fee for the shielding."
         case .synchronizerLatestUTXOsInvalidTAddress: return "LatestUTXOs for the address failed, invalid t-address."
         case .synchronizerRewindUnknownArchorHeight: return "Rewind failed, unknown archor height"
         case .synchronizerDisconnected: return "Indicates that this Synchronizer is disconnected from its lightwalletd server."
-        case .ispStorageCantLoad: return "`InternalSyncProgressDiskStorage` can't read data from specific file."
-        case .ispStorageCantWrite: return "`InternalSyncProgressDiskStorage` can't write data from specific file."
         }
     }
 
@@ -841,14 +837,13 @@ public enum ZcashError: Equatable, Error {
         case .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb: return .compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb
         case .compactBlockProcessorChainName: return .compactBlockProcessorChainName
         case .compactBlockProcessorConsensusBranchID: return .compactBlockProcessorConsensusBranchID
+        case .compactBlockProcessorDownloadBlockActionRewind: return .compactBlockProcessorDownloadBlockActionRewind
         case .synchronizerNotPrepared: return .synchronizerNotPrepared
         case .synchronizerSendMemoToTransparentAddress: return .synchronizerSendMemoToTransparentAddress
         case .synchronizerShieldFundsInsuficientTransparentFunds: return .synchronizerShieldFundsInsuficientTransparentFunds
         case .synchronizerLatestUTXOsInvalidTAddress: return .synchronizerLatestUTXOsInvalidTAddress
         case .synchronizerRewindUnknownArchorHeight: return .synchronizerRewindUnknownArchorHeight
         case .synchronizerDisconnected: return .synchronizerDisconnected
-        case .ispStorageCantLoad: return .ispStorageCantLoad
-        case .ispStorageCantWrite: return .ispStorageCantWrite
         }
     }
 

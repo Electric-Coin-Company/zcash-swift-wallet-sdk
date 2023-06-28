@@ -52,7 +52,7 @@ extension ValidateServerAction: Action {
             throw ZcashError.compactBlockProcessorWrongConsensusBranchId(localBranch, remoteBranchID)
         }
 
-        await context.update(state: .computeSyncRanges)
+        await context.update(state: .computeSyncControlData)
         return context
     }
 

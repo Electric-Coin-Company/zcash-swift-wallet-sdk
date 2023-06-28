@@ -29,6 +29,6 @@ class GetBalanceViewController: UIViewController {
 
 extension Zatoshi {
     var formattedString: String? {
-        NumberFormatter.zcashNumberFormatter.string(from: NSNumber(value: self.amount))
+        decimalString(formatter: NumberFormatter.zcashNumberFormatter)
     }
 }
