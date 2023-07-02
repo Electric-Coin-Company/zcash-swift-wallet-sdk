@@ -336,17 +336,26 @@ public enum SyncStatus: Equatable {
     case error(_ error: Error)
     
     public var isSyncing: Bool {
-        guard case .syncing = self else { return true }
+        if case .syncing = self {
+            return true
+        }
+        
         return false
     }
     
     public var isSynced: Bool {
-        guard case .upToDate = self else { return true }
+        if case .upToDate = self {
+            return true
+        }
+        
         return false
     }
 
     public var isPrepared: Bool {
-        guard case .unprepared = self else { return false }
+        if case .unprepared = self {
+            return false
+        }
+        
         return true
     }
 
@@ -383,27 +392,27 @@ enum InternalSyncStatus: Equatable {
     case error(_ error: Error)
     
     public var isSyncing: Bool {
-        switch self {
-        case .syncing:
+        if case .syncing = self {
             return true
-        default:
-            return false
         }
+        
+        return false
     }
     
     public var isSynced: Bool {
-        switch self {
-        case .synced:   return true
-        default:        return false
+        if case .synced = self {
+            return true
         }
+        
+        return false
     }
 
     public var isPrepared: Bool {
         if case .unprepared = self {
             return false
-        } else {
-            return true
         }
+        
+        return true
     }
 
     public var briefDebugDescription: String {
