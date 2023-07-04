@@ -13,7 +13,12 @@ end note
 
 [*] -> idle
 
-idle -[#green,bold]-> migrateLegacyCacheDB
+idle -[#green,bold]-> clearCacheA
+
+clearCacheA : ClearCacheAction
+clearCacheA --> migrateLegacyCacheDB
+clearCacheA -[#red]-> failed : Error occured.
+clearCacheA -[#blue]-> stopped : Sync was stopped.
 
 migrateLegacyCacheDB : MigrateLegacyCacheDBAction
 migrateLegacyCacheDB -[#green,bold]-> validateServer
@@ -26,14 +31,9 @@ validateServer -[#red]-> failed : Error occured.
 validateServer -[#blue]-> stopped : Sync was stopped.
 
 computeSyncRanges : ComputeSyncRangesAction
-computeSyncRanges -[#green,bold]-> checksBeforeSync
+computeSyncRanges -[#green,bold]-> fetchUTXO
 computeSyncRanges -[#red]-> failed : Error occured.
 computeSyncRanges -[#blue]-> stopped : Sync was stopped.
-
-checksBeforeSync : ChecksBeforeSyncAction
-checksBeforeSync -[#green,bold]-> fetchUTXO
-checksBeforeSync -[#red]-> failed : Error occured.
-checksBeforeSync -[#blue]-> stopped : Sync was stopped.
 
 fetchUTXO : FetchUTXOAction
 fetchUTXO -[#green,bold]-> handleSaplingParams
