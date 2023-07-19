@@ -50,13 +50,14 @@ extension BlockScannerImpl: BlockScanner {
             try Task.checkCancellation()
 
             let previousScannedHeight = lastScannedHeight
+            let startHeight = previousScannedHeight + 1
 
             // TODO: [#576] remove this arbitrary batch size https://github.com/zcash/ZcashLightClientKit/issues/576
-            let batchSize = scanBatchSize(startScanHeight: previousScannedHeight + 1, network: config.networkType)
+            let batchSize = scanBatchSize(startScanHeight: startHeight, network: config.networkType)
 
             let scanStartTime = Date()
             do {
-                try await self.rustBackend.scanBlocks(limit: batchSize)
+                try await self.rustBackend.scanBlocks(fromHeight: Int32(startHeight), limit: batchSize)
             } catch {
                 logger.debug("block scanning failed with error: \(String(describing: error))")
                 throw error

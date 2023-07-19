@@ -379,31 +379,6 @@ class BlockScannerMock: BlockScanner {
     }
 
 }
-class BlockValidatorMock: BlockValidator {
-
-
-    init(
-    ) {
-    }
-
-    // MARK: - validate
-
-    var validateThrowableError: Error?
-    var validateCallsCount = 0
-    var validateCalled: Bool {
-        return validateCallsCount > 0
-    }
-    var validateClosure: (() async throws -> Void)?
-
-    func validate() async throws {
-        if let error = validateThrowableError {
-            throw error
-        }
-        validateCallsCount += 1
-        try await validateClosure!()
-    }
-
-}
 class CompactBlockRepositoryMock: CompactBlockRepository {
 
 
@@ -2555,31 +2530,6 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - validateCombinedChain
-
-    var validateCombinedChainLimitThrowableError: Error?
-    func setValidateCombinedChainLimitThrowableError(_ param: Error?) async {
-        validateCombinedChainLimitThrowableError = param
-    }
-    var validateCombinedChainLimitCallsCount = 0
-    var validateCombinedChainLimitCalled: Bool {
-        return validateCombinedChainLimitCallsCount > 0
-    }
-    var validateCombinedChainLimitReceivedLimit: UInt32?
-    var validateCombinedChainLimitClosure: ((UInt32) async throws -> Void)?
-    func setValidateCombinedChainLimitClosure(_ param: ((UInt32) async throws -> Void)?) async {
-        validateCombinedChainLimitClosure = param
-    }
-
-    func validateCombinedChain(limit: UInt32) async throws {
-        if let error = validateCombinedChainLimitThrowableError {
-            throw error
-        }
-        validateCombinedChainLimitCallsCount += 1
-        validateCombinedChainLimitReceivedLimit = limit
-        try await validateCombinedChainLimitClosure!(limit)
-    }
-
     // MARK: - rewindToHeight
 
     var rewindToHeightHeightThrowableError: Error?
@@ -2630,6 +2580,37 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         try await rewindCacheToHeightHeightClosure!(height)
     }
 
+    // MARK: - suggestScanRanges
+
+    var suggestScanRangesThrowableError: Error?
+    func setSuggestScanRangesThrowableError(_ param: Error?) async {
+        suggestScanRangesThrowableError = param
+    }
+    var suggestScanRangesCallsCount = 0
+    var suggestScanRangesCalled: Bool {
+        return suggestScanRangesCallsCount > 0
+    }
+    var suggestScanRangesReturnValue: [ScanRange]!
+    func setSuggestScanRangesReturnValue(_ param: [ScanRange]) async {
+        suggestScanRangesReturnValue = param
+    }
+    var suggestScanRangesClosure: (() async throws -> [ScanRange])?
+    func setSuggestScanRangesClosure(_ param: (() async throws -> [ScanRange])?) async {
+        suggestScanRangesClosure = param
+    }
+
+    func suggestScanRanges() async throws -> [ScanRange] {
+        if let error = suggestScanRangesThrowableError {
+            throw error
+        }
+        suggestScanRangesCallsCount += 1
+        if let closure = suggestScanRangesClosure {
+            return try await closure()
+        } else {
+            return suggestScanRangesReturnValue
+        }
+    }
+
     // MARK: - scanBlocks
 
     var scanBlocksLimitThrowableError: Error?
@@ -2640,19 +2621,21 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
     var scanBlocksLimitCalled: Bool {
         return scanBlocksLimitCallsCount > 0
     }
+    var scanBlocksLimitReceivedFromHeight: Int32?
     var scanBlocksLimitReceivedLimit: UInt32?
-    var scanBlocksLimitClosure: ((UInt32) async throws -> Void)?
-    func setScanBlocksLimitClosure(_ param: ((UInt32) async throws -> Void)?) async {
+    var scanBlocksLimitClosure: ((Int32, UInt32) async throws -> Void)?
+    func setScanBlocksLimitClosure(_ param: ((Int32, UInt32) async throws -> Void)?) async {
         scanBlocksLimitClosure = param
     }
 
-    func scanBlocks(limit: UInt32) async throws {
+    func scanBlocks(fromHeight: Int32, limit: UInt32) async throws {
         if let error = scanBlocksLimitThrowableError {
             throw error
         }
         scanBlocksLimitCallsCount += 1
+        scanBlocksLimitReceivedFromHeight = fromHeight
         scanBlocksLimitReceivedLimit = limit
-        try await scanBlocksLimitClosure!(limit)
+        try await scanBlocksLimitClosure!(fromHeight, limit)
     }
 
     // MARK: - putUnspentTransparentOutput

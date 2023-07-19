@@ -114,18 +114,6 @@ enum Dependencies {
                 logger: logger
             )
         }
-        
-        container.register(type: BlockValidator.self, isSingleton: true) { di in
-            let rustBackend = di.resolve(ZcashRustBackendWelding.self)
-            let metrics = di.resolve(SDKMetrics.self)
-            let logger = di.resolve(Logger.self)
-
-            return BlockValidatorImpl(
-                rustBackend: rustBackend,
-                metrics: metrics,
-                logger: logger
-            )
-        }
 
         container.register(type: BlockScanner.self, isSingleton: true) { di in
             let rustBackend = di.resolve(ZcashRustBackendWelding.self)

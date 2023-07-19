@@ -21,7 +21,7 @@ final class DownloadAction {
     }
 
     private func update(context: ActionContext) async -> ActionContext {
-        await context.update(state: .validate)
+        await context.update(state: .scan)
         return context
     }
 }

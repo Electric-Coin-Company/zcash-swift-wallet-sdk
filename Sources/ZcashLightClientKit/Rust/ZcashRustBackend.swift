@@ -490,21 +490,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func validateCombinedChain(limit: UInt32 = 0) async throws {
-        let result = zcashlc_validate_combined_chain(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, limit, networkType.networkId)
-
-        switch result {
-        case -1:
-            return
-        case 0:
-            throw ZcashError.rustValidateCombinedChainValidationFailed(
-                lastErrorMessage(fallback: "`validateCombinedChain` failed with unknown error")
-            )
-        default:
-            throw ZcashError.rustValidateCombinedChainInvalidChain(result)
-        }
-    }
-
     func rewindToHeight(height: Int32) async throws {
         let result = zcashlc_rewind_to_height(dbData.0, dbData.1, height, networkType.networkId)
 
@@ -521,8 +506,97 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func scanBlocks(limit: UInt32 = 0) async throws {
-        let result = zcashlc_scan_blocks(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, limit, networkType.networkId)
+    func putSaplingSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws {
+        var ffiSubtreeRootsVec: [FfiSubtreeRoot] = []
+
+        for root in roots {
+            let hashPtr = UnsafeMutablePointer<UInt8>.allocate(capacity: root.rootHash.count)
+
+            let contiguousHashBytes = ContiguousArray(root.rootHash.bytes)
+
+            let result: Void? = contiguousHashBytes.withContiguousStorageIfAvailable { hashBytesPtr in
+                // swiftlint:disable:next force_unwrapping
+                hashPtr.initialize(from: hashBytesPtr.baseAddress!, count: hashBytesPtr.count)
+            }
+
+            guard result != nil else {
+                defer {
+                    hashPtr.deallocate()
+                    ffiSubtreeRootsVec.deallocateElements()
+                }
+                throw ZcashError.rustPutSaplingSubtreeRootsAllocationProblem
+            }
+
+            ffiSubtreeRootsVec.append(
+                FfiSubtreeRoot(
+                    root_hash_ptr: hashPtr,
+                    root_hash_ptr_len: UInt(contiguousHashBytes.count),
+                    completing_block_height: UInt32(root.completingBlockHeight)
+                )
+            )
+        }
+
+        var contiguousFfiRoots = ContiguousArray(ffiSubtreeRootsVec)
+
+        let len = UInt(contiguousFfiRoots.count)
+
+        let rootsPtr = UnsafeMutablePointer<FfiSubtreeRoots>.allocate(capacity: 1)
+
+        defer { ffiSubtreeRootsVec.deallocateElements() }
+
+        try contiguousFfiRoots.withContiguousMutableStorageIfAvailable { ptr in
+            var roots = FfiSubtreeRoots()
+            roots.ptr = ptr.baseAddress
+            roots.len = len
+
+            rootsPtr.initialize(to: roots)
+
+            let res = zcashlc_put_sapling_subtree_roots(dbData.0, dbData.1, startIndex, rootsPtr, networkType.networkId)
+
+            guard res else {
+                throw ZcashError.rustPutSaplingSubtreeRoots(lastErrorMessage(fallback: "`putSaplingSubtreeRoots` failed with unknown error"))
+            }
+        }
+    }
+
+    func updateChainTip(height: Int32) async throws {
+        let result = zcashlc_update_chain_tip(dbData.0, dbData.1, height, networkType.networkId)
+
+        guard result else {
+            throw ZcashError.rustUpdateChainTip(lastErrorMessage(fallback: "`updateChainTip` failed with unknown error"))
+        }
+    }
+
+    func suggestScanRanges() async throws -> [ScanRange] {
+        let scanRangesPtr = zcashlc_suggest_scan_ranges(dbData.0, dbData.1, networkType.networkId)
+
+        guard let scanRangesPtr else {
+            throw ZcashError.rustSuggestScanRanges(lastErrorMessage(fallback: "`suggestScanRanges` failed with unknown error"))
+        }
+
+        defer { zcashlc_free_scan_ranges(scanRangesPtr) }
+
+        var scanRanges: [ScanRange] = []
+
+        for i in (0 ..< Int(scanRangesPtr.pointee.len)) {
+            let scanRange = scanRangesPtr.pointee.ptr.advanced(by: i).pointee
+
+            scanRanges.append(
+                ScanRange(
+                    range: Range(uncheckedBounds: (
+                        BlockHeight(scanRange.start),
+                        BlockHeight(scanRange.end)
+                    )),
+                    priority: scanRange.priority
+                )
+            )
+        }
+
+        return scanRanges
+    }
+
+    func scanBlocks(fromHeight: Int32, limit: UInt32 = 0) async throws {
+        let result = zcashlc_scan_blocks(fsBlockDbRoot.0, fsBlockDbRoot.1, dbData.0, dbData.1, fromHeight, limit, networkType.networkId)
 
         guard result != 0 else {
             throw ZcashError.rustScanBlocks(lastErrorMessage(fallback: "`scanBlocks` failed with unknown error"))
@@ -654,6 +728,14 @@ extension Array where Element == FFIBlockMeta {
     func deallocateElements() {
         self.forEach { element in
             element.block_hash_ptr.deallocate()
+        }
+    }
+}
+
+extension Array where Element == FfiSubtreeRoot {
+    func deallocateElements() {
+        self.forEach { element in
+            element.root_hash_ptr.deallocate()
         }
     }
 }

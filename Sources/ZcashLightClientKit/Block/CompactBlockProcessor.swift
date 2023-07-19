@@ -218,8 +218,6 @@ actor CompactBlockProcessor {
                 action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
             case .download:
                 action = DownloadAction(container: container, configProvider: configProvider)
-            case .validate:
-                action = ValidateAction(container: container)
             case .scan:
                 action = ScanAction(container: container, configProvider: configProvider)
             case .clearAlreadyScannedBlocks:
@@ -590,8 +588,6 @@ extension CompactBlockProcessor {
         case .computeSyncControlData:
             break
         case .download:
-            break
-        case .validate:
             break
         case .scan:
             break

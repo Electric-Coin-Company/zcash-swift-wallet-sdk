@@ -36,7 +36,6 @@ enum CBPState: CaseIterable {
     case validateServer
     case computeSyncControlData
     case download
-    case validate
     case scan
     case clearAlreadyScannedBlocks
     case enhance
