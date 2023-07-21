@@ -48,8 +48,8 @@ final class DownloadActionTests: ZcashTestCase {
 
             let nextState = await nextContext.state
             XCTAssertTrue(
-                nextState == .validate,
-                "nextContext after .download is expected to be .validate but received \(nextState)"
+                nextState == .scan,
+                "nextContext after .download is expected to be .scan but received \(nextState)"
             )
         } catch {
             XCTFail("testDownloadAction_NextAction is not expected to fail. \(error)")
@@ -84,8 +84,8 @@ final class DownloadActionTests: ZcashTestCase {
             
             let nextState = await nextContext.state
             XCTAssertTrue(
-                nextState == .validate,
-                "nextContext after .download is expected to be .validate but received \(nextState)"
+                nextState == .scan,
+                "nextContext after .download is expected to be .scan but received \(nextState)"
             )
         } catch {
             XCTFail("testDownloadAction_NoDownloadAndScanRange is not expected to fail. \(error)")
@@ -122,8 +122,8 @@ final class DownloadActionTests: ZcashTestCase {
             
             let nextState = await nextContext.state
             XCTAssertTrue(
-                nextState == .validate,
-                "nextContext after .download is expected to be .validate but received \(nextState)"
+                nextState == .scan,
+                "nextContext after .download is expected to be .scan but received \(nextState)"
             )
         } catch {
             XCTFail("testDownloadAction_NothingMoreToDownload is not expected to fail. \(error)")

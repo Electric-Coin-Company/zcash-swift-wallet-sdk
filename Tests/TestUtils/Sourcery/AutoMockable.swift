@@ -16,7 +16,6 @@ extension BlockDownloader { }
 extension BlockDownloaderService { }
 extension BlockEnhancer { }
 extension BlockScanner { }
-extension BlockValidator { }
 extension CompactBlockRepository { }
 extension LatestBlocksDataProvider { }
 extension LightWalletdInfo { }

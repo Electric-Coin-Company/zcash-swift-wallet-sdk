@@ -159,26 +159,6 @@ protocol ZcashRustBackendWelding {
     ///     - `rustGetVerifiedTransparentBalance` if rust layer returns error.
     func getVerifiedTransparentBalance(account: Int32) async throws -> Int64
 
-    /// Checks that the scanned blocks in the data database, when combined with the recent
-    /// `CompactBlock`s in the cache database, form a valid chain.
-    /// This function is built on the core assumption that the information provided in the
-    /// cache database is more likely to be accurate than the previously-scanned information.
-    /// This follows from the design (and trust) assumption that the `lightwalletd` server
-    /// provides accurate block information as of the time it was requested.
-    /// - parameter fsBlockDbRoot: `URL` pointing to the filesystem root directory where the fsBlock cache is.
-    /// this directory  is expected to contain a `/blocks` sub-directory with the blocks stored in the convened filename
-    /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
-    /// - parameter dbData: location of the data db file
-    /// - parameter networkType: the network type
-    /// - parameter limit: a limit to validate a fixed number of blocks instead of the whole cache.
-    /// - Throws:
-    ///  - `rustValidateCombinedChainValidationFailed` if there was an error during validation unrelated to chain validity.
-    ///  - `rustValidateCombinedChainInvalidChain(upperBound)` if the combined chain is invalid. `upperBound` is the height of the highest invalid
-    ///    block(on the assumption that the highest block in the cache database is correct).
-    ///
-    /// - Important: This function does not mutate either of the databases.
-    func validateCombinedChain(limit: UInt32) async throws
-
     /// Resets the state of the database to only contain block and transaction information up to the given height. clears up all derived data as well
     /// - parameter height: height to rewind to.
     /// - Throws: `rustRewindToHeight` if rust layer returns error.
@@ -190,21 +170,35 @@ protocol ZcashRustBackendWelding {
     /// - Throws: `rustRewindCacheToHeight` if rust layer returns error.
     func rewindCacheToHeight(height: Int32) async throws
 
+    /// Returns a list of suggested scan ranges based upon the current wallet state.
+    ///
+    /// This method should only be used in cases where the `CompactBlock` data that will be
+    /// made available to `scanBlocks` for the requested block ranges includes note
+    /// commitment tree size information for each block; or else the scan is likely to fail if
+    /// notes belonging to the wallet are detected.
+    func suggestScanRanges() async throws -> [ScanRange]
+
     /// Scans new blocks added to the cache for any transactions received by the tracked
-    /// accounts.
-    /// This function pays attention only to cached blocks with heights greater than the
-    /// highest scanned block in `db_data`. Cached blocks with lower heights are not verified
-    /// against previously-scanned blocks. In particular, this function **assumes** that the
-    /// caller is handling rollbacks.
+    /// accounts, while checking that they form a valid chan.
+    ///
+    /// This function is built on the core assumption that the information provided in the
+    /// block cache is more likely to be accurate than the previously-scanned information.
+    /// This follows from the design (and trust) assumption that the `lightwalletd` server
+    /// provides accurate block information as of the time it was requested.
+    ///
+    /// This function **assumes** that the caller is handling rollbacks.
+    ///
     /// For brand-new light client databases, this function starts scanning from the Sapling
     /// activation height. This height can be fast-forwarded to a more recent block by calling
     /// [`initBlocksTable`] before this function.
+    ///
     /// Scanned blocks are required to be height-sequential. If a block is missing from the
     /// cache, an error will be signalled.
     ///
-    /// - parameter limit: scan up to limit blocks. pass 0 to set no limit.
+    /// - parameter fromHeight: scan starting from the given height.
+    /// - parameter limit: scan up to limit blocks.
     /// - Throws: `rustScanBlocks` if rust layer returns error.
-    func scanBlocks(limit: UInt32) async throws
+    func scanBlocks(fromHeight: Int32, limit: UInt32) async throws
 
     /// Upserts a UTXO into the data db database
     /// - parameter txid: the txid bytes for the UTXO

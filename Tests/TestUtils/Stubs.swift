@@ -132,40 +132,18 @@ class RustBackendMockHelper {
             return try await rustBackend.getVerifiedBalance(account: account)
         }
 
-        await rustBackendMock.setValidateCombinedChainLimitClosure() { [weak self] limit in
-            guard let self else { throw ZcashError.rustValidateCombinedChainValidationFailed("Self is nil") }
-            if let rate = mockValidateCombinedChainSuccessRate {
-                if Self.shouldSucceed(successRate: rate) {
-                    return try await rustBackend.validateCombinedChain(limit: limit)
-                } else {
-                    throw mockValidateCombinedChainFailureError
-                }
-            } else if let attempts = self.mockValidateCombinedChainFailAfterAttempts {
-                self.mockValidateCombinedChainFailAfterAttempts = attempts - 1
-                if attempts > 0 {
-                    return try await rustBackend.validateCombinedChain(limit: limit)
-                } else {
-                    if attempts == 0 {
-                        throw mockValidateCombinedChainFailureError
-                    } else if attempts < 0 && mockValidateCombinedChainKeepFailing {
-                        throw mockValidateCombinedChainFailureError
-                    } else {
-                        return try await rustBackend.validateCombinedChain(limit: limit)
-                    }
-                }
-            } else {
-                return try await rustBackend.validateCombinedChain(limit: limit)
-            }
-        }
-
         await rustBackendMock.setRewindToHeightHeightClosure() { height in
             try await rustBackend.rewindToHeight(height: height)
         }
 
         await rustBackendMock.setRewindCacheToHeightHeightClosure() { _ in }
 
-        await rustBackendMock.setScanBlocksLimitClosure() { limit in
-            try await rustBackend.scanBlocks(limit: limit)
+        await rustBackendMock.setSuggestScanRangesClosure() {
+            try await rustBackend.suggestScanRanges()
+        }
+
+        await rustBackendMock.setScanBlocksLimitClosure() { fromHeight, limit in
+            try await rustBackend.scanBlocks(fromHeight: fromHeight, limit: limit)
         }
     }
 
