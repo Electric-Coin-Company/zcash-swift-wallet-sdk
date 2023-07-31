@@ -34,6 +34,7 @@ enum CBPState: CaseIterable {
     case idle
     case migrateLegacyCacheDB
     case validateServer
+    case updateSubtreeRoots
     case computeSyncControlData
     case download
     case scan

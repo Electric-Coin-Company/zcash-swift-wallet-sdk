@@ -193,4 +193,11 @@ protocol LightWalletService: AnyObject {
     ) -> AsyncThrowingStream<ZcashCompactBlock, Error>
 
     func closeConnection()
+    
+    /// Returns a stream of information about roots of subtrees of the Sapling and Orchard
+    /// note commitment trees.
+    ///
+    /// - Parameters:
+    ///   - request: Request to send to GetSubtreeRoots.
+    func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>
 }

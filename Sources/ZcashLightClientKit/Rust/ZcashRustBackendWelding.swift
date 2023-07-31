@@ -170,6 +170,10 @@ protocol ZcashRustBackendWelding {
     /// - Throws: `rustRewindCacheToHeight` if rust layer returns error.
     func rewindCacheToHeight(height: Int32) async throws
 
+    func putSaplingSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws
+    
+    func updateChainTip(height: Int32) async throws
+    
     /// Returns a list of suggested scan ranges based upon the current wallet state.
     ///
     /// This method should only be used in cases where the `CompactBlock` data that will be

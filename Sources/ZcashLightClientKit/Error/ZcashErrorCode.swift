@@ -39,6 +39,8 @@ public enum ZcashErrorCode: String {
     case serviceFetchUTXOsFailed = "ZSRVC0008"
     /// LightWalletService.blockStream failed.
     case serviceBlockStreamFailed = "ZSRVC0000"
+    /// LightWalletService.getSubtreeRoots failed.
+    case serviceSubtreeRootsStreamFailed = "ZSRVC0009"
     /// SimpleConnectionProvider init of Connection failed.
     case simpleConnectionProvider = "ZSCPC0001"
     /// Downloaded file with sapling spending parameters isn't valid.
@@ -311,6 +313,8 @@ public enum ZcashErrorCode: String {
     case compactBlockProcessorConsensusBranchID = "ZCBPEO0017"
     /// Rewind of DownloadBlockAction failed as no action is possible to unwrapp.
     case compactBlockProcessorDownloadBlockActionRewind = "ZCBPEO0018"
+    /// Put sapling subtree roots to the DB failed.
+    case compactBlockProcessorPutSaplingSubtreeRoots = "ZCBPEO0019"
     /// The synchronizer is unprepared.
     case synchronizerNotPrepared = "ZSYNCO0001"
     /// Memos can't be sent to transparent addresses.
