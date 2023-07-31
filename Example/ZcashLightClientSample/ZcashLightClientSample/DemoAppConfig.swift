@@ -30,7 +30,7 @@ enum DemoAppConfig {
     static let defaultSeed = try! Mnemonic.deterministicSeedBytes(from: """
     kitchen renew wide common vague fold vacuum tilt amazing pear square gossip jewel month tree shock scan alpha just spot fluid toilet view dinner
     """)
-
+    
     static let otherSynchronizers: [SynchronizerInitData] = [
         SynchronizerInitData(
             alias: .custom("alt-sync-1"),
