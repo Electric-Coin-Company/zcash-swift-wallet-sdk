@@ -646,7 +646,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
 private extension ZcashRustBackend {
     static func enableTracing() {
-        zcashlc_init_on_load()
+        zcashlc_init_on_load(false)
     }
 }
 
