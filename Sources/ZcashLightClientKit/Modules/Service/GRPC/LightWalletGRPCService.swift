@@ -262,6 +262,21 @@ extension LightWalletGRPCService: LightWalletService {
             }
         }
     }
+    
+    func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error> {
+        let stream = compactTxStreamer.getSubtreeRoots(request)
+        var iterator = stream.makeAsyncIterator()
+        
+        return AsyncThrowingStream() {
+            do {
+                guard let subtreeRoot = try await iterator.next() else { return nil }
+                return subtreeRoot
+            } catch {
+                let serviceError = error.mapToServiceError()
+                throw ZcashError.serviceSubtreeRootsStreamFailed(serviceError)
+            }
+        }
+    }
 
     func closeConnection() {
         _ = channel.close()
