@@ -31,8 +31,8 @@ final class ValidateServerActionTests: ZcashTestCase {
             let nextContext = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
             let nextState = await nextContext.state
             XCTAssertTrue(
-                nextState == .computeSyncControlData,
-                "nextContext after .validateServer is expected to be .computeSyncControlData but received \(nextState)"
+                nextState == .updateSubtreeRoots,
+                "nextContext after .validateServer is expected to be .updateSubtreeRoots but received \(nextState)"
             )
         } catch {
             XCTFail("testValidateServerAction_NextAction is not expected to fail. \(error)")
