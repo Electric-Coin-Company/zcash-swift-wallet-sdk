@@ -141,7 +141,7 @@ public class SDKSynchronizer: Synchronizer {
         if case .seedRequired = try await self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
             return .seedRequired
         }
-
+        
         await latestBlocksDataProvider.updateWalletBirthday(initializer.walletBirthday)
         await latestBlocksDataProvider.updateScannedData()
         

@@ -214,6 +214,8 @@ actor CompactBlockProcessor {
                 action = MigrateLegacyCacheDBAction(container: container, configProvider: configProvider)
             case .validateServer:
                 action = ValidateServerAction(container: container, configProvider: configProvider)
+            case .updateSubtreeRoots:
+                action = UpdateSubtreeRootsAction(container: container)
             case .computeSyncControlData:
                 action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
             case .download:
@@ -584,6 +586,8 @@ extension CompactBlockProcessor {
         case .migrateLegacyCacheDB:
             break
         case .validateServer:
+            break
+        case .updateSubtreeRoots:
             break
         case .computeSyncControlData:
             break

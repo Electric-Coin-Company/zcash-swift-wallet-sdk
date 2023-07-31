@@ -820,6 +820,26 @@ class LightWalletServiceMock: LightWalletService {
         closeConnectionClosure!()
     }
 
+    // MARK: - getSubtreeRoots
+
+    var getSubtreeRootsCallsCount = 0
+    var getSubtreeRootsCalled: Bool {
+        return getSubtreeRootsCallsCount > 0
+    }
+    var getSubtreeRootsReceivedRequest: GetSubtreeRootsArg?
+    var getSubtreeRootsReturnValue: AsyncThrowingStream<SubtreeRoot, Error>!
+    var getSubtreeRootsClosure: ((GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error>)?
+
+    func getSubtreeRoots(_ request: GetSubtreeRootsArg) -> AsyncThrowingStream<SubtreeRoot, Error> {
+        getSubtreeRootsCallsCount += 1
+        getSubtreeRootsReceivedRequest = request
+        if let closure = getSubtreeRootsClosure {
+            return closure(request)
+        } else {
+            return getSubtreeRootsReturnValue
+        }
+    }
+
 }
 class LightWalletdInfoMock: LightWalletdInfo {
 
@@ -2572,6 +2592,56 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         rewindCacheToHeightHeightCallsCount += 1
         rewindCacheToHeightHeightReceivedHeight = height
         try await rewindCacheToHeightHeightClosure!(height)
+    }
+
+    // MARK: - putSaplingSubtreeRoots
+
+    var putSaplingSubtreeRootsStartIndexRootsThrowableError: Error?
+    func setPutSaplingSubtreeRootsStartIndexRootsThrowableError(_ param: Error?) async {
+        putSaplingSubtreeRootsStartIndexRootsThrowableError = param
+    }
+    var putSaplingSubtreeRootsStartIndexRootsCallsCount = 0
+    var putSaplingSubtreeRootsStartIndexRootsCalled: Bool {
+        return putSaplingSubtreeRootsStartIndexRootsCallsCount > 0
+    }
+    var putSaplingSubtreeRootsStartIndexRootsReceivedArguments: (startIndex: UInt64, roots: [SubtreeRoot])?
+    var putSaplingSubtreeRootsStartIndexRootsClosure: ((UInt64, [SubtreeRoot]) async throws -> Void)?
+    func setPutSaplingSubtreeRootsStartIndexRootsClosure(_ param: ((UInt64, [SubtreeRoot]) async throws -> Void)?) async {
+        putSaplingSubtreeRootsStartIndexRootsClosure = param
+    }
+
+    func putSaplingSubtreeRoots(startIndex: UInt64, roots: [SubtreeRoot]) async throws {
+        if let error = putSaplingSubtreeRootsStartIndexRootsThrowableError {
+            throw error
+        }
+        putSaplingSubtreeRootsStartIndexRootsCallsCount += 1
+        putSaplingSubtreeRootsStartIndexRootsReceivedArguments = (startIndex: startIndex, roots: roots)
+        try await putSaplingSubtreeRootsStartIndexRootsClosure!(startIndex, roots)
+    }
+
+    // MARK: - updateChainTip
+
+    var updateChainTipHeightThrowableError: Error?
+    func setUpdateChainTipHeightThrowableError(_ param: Error?) async {
+        updateChainTipHeightThrowableError = param
+    }
+    var updateChainTipHeightCallsCount = 0
+    var updateChainTipHeightCalled: Bool {
+        return updateChainTipHeightCallsCount > 0
+    }
+    var updateChainTipHeightReceivedHeight: Int32?
+    var updateChainTipHeightClosure: ((Int32) async throws -> Void)?
+    func setUpdateChainTipHeightClosure(_ param: ((Int32) async throws -> Void)?) async {
+        updateChainTipHeightClosure = param
+    }
+
+    func updateChainTip(height: Int32) async throws {
+        if let error = updateChainTipHeightThrowableError {
+            throw error
+        }
+        updateChainTipHeightCallsCount += 1
+        updateChainTipHeightReceivedHeight = height
+        try await updateChainTipHeightClosure!(height)
     }
 
     // MARK: - suggestScanRanges
