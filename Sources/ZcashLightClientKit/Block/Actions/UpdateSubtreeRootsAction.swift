@@ -52,9 +52,7 @@ extension UpdateSubtreeRootsAction: Action {
             do {
                 try await rustBackend.putSaplingSubtreeRoots(startIndex: UInt64(request.startIndex), roots: roots)
                 
-                // TODO: [#1167] Switching back to linear sync for now before step 3 & 4 are implemented
-                // https://github.com/zcash/ZcashLightClientKit/issues/1167
-                await context.update(state: .computeSyncControlData)
+                await context.update(state: .updateChainTip)
             } catch {
                 logger.debug("putSaplingSubtreeRoots failed with error \(error.localizedDescription)")
                 throw ZcashError.compactBlockProcessorPutSaplingSubtreeRoots(error)
