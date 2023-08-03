@@ -12,6 +12,7 @@ actor ActionContext {
     var prevState: CBPState?
     var syncControlData: SyncControlData
     var totalProgressRange: CompactBlockRange = 0...0
+    var lastScannedHeight: BlockHeight?
     var lastDownloadedHeight: BlockHeight?
     var lastEnhancedHeight: BlockHeight?
 
@@ -26,6 +27,7 @@ actor ActionContext {
     }
     func update(syncControlData: SyncControlData) async { self.syncControlData = syncControlData }
     func update(totalProgressRange: CompactBlockRange) async { self.totalProgressRange = totalProgressRange }
+    func update(lastScannedHeight: BlockHeight) async { self.lastScannedHeight = lastScannedHeight }
     func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
     func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }
 }
@@ -36,6 +38,7 @@ enum CBPState: CaseIterable {
     case validateServer
     case updateSubtreeRoots
     case updateChainTip
+    case validatePreviousWalletSession
     case computeSyncControlData
     case download
     case scan

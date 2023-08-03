@@ -23,7 +23,8 @@ extension ClearCacheAction: Action {
         if await context.prevState == .idle {
             await context.update(state: .migrateLegacyCacheDB)
         } else {
-            await context.update(state: .finished)
+            //await context.update(state: .finished) // Linear
+            await context.update(state: .validatePreviousWalletSession)
         }
         return context
     }
