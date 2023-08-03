@@ -21,7 +21,12 @@ extension ClearAlreadyScannedBlocksAction: Action {
     var removeBlocksCacheWhenFailed: Bool { false }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        guard let lastScannedHeight = await context.lastScannedHeight else {
+            fatalError("it must be valid")
+            return context
+        }
+        
+        //let lastScannedHeight =  //try await transactionRepository.lastScannedHeight()
         try await storage.clear(upTo: lastScannedHeight)
 
         await context.update(state: .enhance)

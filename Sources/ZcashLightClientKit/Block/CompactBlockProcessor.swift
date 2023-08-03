@@ -218,6 +218,8 @@ actor CompactBlockProcessor {
                 action = UpdateSubtreeRootsAction(container: container)
             case .updateChainTip:
                 action = UpdateChainTipAction(container: container)
+            case .validatePreviousWalletSession:
+                action = ValidatePreviousWalletSessionAction(container: container)
             case .computeSyncControlData:
                 action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
             case .download:
@@ -592,6 +594,8 @@ extension CompactBlockProcessor {
         case .updateSubtreeRoots:
             break
         case .updateChainTip:
+            break
+        case .validatePreviousWalletSession:
             break
         case .computeSyncControlData:
             break
