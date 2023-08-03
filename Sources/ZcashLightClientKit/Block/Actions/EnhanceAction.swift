@@ -22,15 +22,18 @@ final class EnhanceAction {
 
     func decideWhatToDoNext(context: ActionContext, lastScannedHeight: BlockHeight) async -> ActionContext {
         guard await context.syncControlData.latestScannedHeight != nil else {
-            await context.update(state: .clearCache)
+            await context.update(state: .clearCache) // linear
+//            await context.update(state: .validatePreviousWalletSession) // SbS
             return context
         }
 
         let latestBlockHeight = await context.syncControlData.latestBlockHeight
         if lastScannedHeight >= latestBlockHeight {
-            await context.update(state: .clearCache)
+            await context.update(state: .clearCache) // linear
+//            await context.update(state: .validatePreviousWalletSession) // SbS
         } else {
-            await context.update(state: .download)
+            await context.update(state: .download) // Linear
+//            await context.update(state: .validatePreviousWalletSession) // SbS
         }
 
         return context
@@ -49,7 +52,11 @@ extension EnhanceAction: Action {
         // download and scan.
 
         let config = await configProvider.config
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        //let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        guard let lastScannedHeight = await context.lastScannedHeight else {
+            await context.update(state: .validatePreviousWalletSession)
+            return context
+        }
 
         guard let firstUnenhancedHeight = await context.syncControlData.firstUnenhancedHeight else {
             return await decideWhatToDoNext(context: context, lastScannedHeight: lastScannedHeight)
