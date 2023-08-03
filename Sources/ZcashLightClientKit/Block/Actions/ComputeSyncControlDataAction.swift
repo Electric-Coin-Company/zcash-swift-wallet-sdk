@@ -64,6 +64,7 @@ extension ComputeSyncControlDataAction: Action {
             firstUnenhancedHeight: enhanceStart
         )
         
+        await context.update(lastScannedHeight: latestScannedHeight)
         await context.update(lastDownloadedHeight: latestScannedHeight)
         await context.update(syncControlData: syncControlData)
         await context.update(totalProgressRange: latestScannedHeight...latestBlockHeight)
@@ -72,7 +73,7 @@ extension ComputeSyncControlDataAction: Action {
         if latestBlockHeight < latestScannedHeight || latestBlockHeight == latestScannedHeight {
             await context.update(state: .finished)
         } else {
-            await context.update(state: .fetchUTXO)
+            await context.update(state: .download)
         }
         
         return context

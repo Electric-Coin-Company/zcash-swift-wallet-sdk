@@ -40,7 +40,7 @@ extension BlockScannerImpl: BlockScanner {
         logger.debug("Going to scan blocks in range: \(range)")
         try Task.checkCancellation()
 
-        let scanStartHeight = try await transactionRepository.lastScannedHeight()
+        let scanStartHeight = range.lowerBound//try await transactionRepository.lastScannedHeight()
         let targetScanHeight = range.upperBound
 
         var scannedNewBlocks = false
@@ -65,11 +65,13 @@ extension BlockScannerImpl: BlockScanner {
 
             let scanFinishTime = Date()
 
-            if let lastScannedBlock = try await transactionRepository.lastScannedBlock() {
-                lastScannedHeight = lastScannedBlock.height
+//            if let lastScannedBlock = try await transactionRepository.lastScannedBlock() {
+//                lastScannedHeight = lastScannedBlock.height
+            lastScannedHeight = startHeight + Int(batchSize) - 1
                 await latestBlocksDataProvider.updateLatestScannedHeight(lastScannedHeight)
-                await latestBlocksDataProvider.updateLatestScannedTime(TimeInterval(lastScannedBlock.time))
-            }
+//                await latestBlocksDataProvider.updateLatestScannedTime(TimeInterval(lastScannedBlock.time))
+//            }
+//            lastScannedHeight = targetScanHeight
             
             scannedNewBlocks = previousScannedHeight != lastScannedHeight
             if scannedNewBlocks {

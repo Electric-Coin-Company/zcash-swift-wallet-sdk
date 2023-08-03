@@ -97,17 +97,17 @@ class BlockDownloaderMock: BlockDownloader {
 
     // MARK: - update
 
-    var updateLatestDownloadedBlockHeightCallsCount = 0
-    var updateLatestDownloadedBlockHeightCalled: Bool {
-        return updateLatestDownloadedBlockHeightCallsCount > 0
+    var updateLatestDownloadedBlockHeightForceCallsCount = 0
+    var updateLatestDownloadedBlockHeightForceCalled: Bool {
+        return updateLatestDownloadedBlockHeightForceCallsCount > 0
     }
-    var updateLatestDownloadedBlockHeightReceivedLatestDownloadedBlockHeight: BlockHeight?
-    var updateLatestDownloadedBlockHeightClosure: ((BlockHeight) async -> Void)?
+    var updateLatestDownloadedBlockHeightForceReceivedArguments: (latestDownloadedBlockHeight: BlockHeight, force: Bool)?
+    var updateLatestDownloadedBlockHeightForceClosure: ((BlockHeight, Bool) async -> Void)?
 
-    func update(latestDownloadedBlockHeight: BlockHeight) async {
-        updateLatestDownloadedBlockHeightCallsCount += 1
-        updateLatestDownloadedBlockHeightReceivedLatestDownloadedBlockHeight = latestDownloadedBlockHeight
-        await updateLatestDownloadedBlockHeightClosure!(latestDownloadedBlockHeight)
+    func update(latestDownloadedBlockHeight: BlockHeight, force: Bool) async {
+        updateLatestDownloadedBlockHeightForceCallsCount += 1
+        updateLatestDownloadedBlockHeightForceReceivedArguments = (latestDownloadedBlockHeight: latestDownloadedBlockHeight, force: force)
+        await updateLatestDownloadedBlockHeightForceClosure!(latestDownloadedBlockHeight, force)
     }
 
     // MARK: - latestDownloadedBlockHeight

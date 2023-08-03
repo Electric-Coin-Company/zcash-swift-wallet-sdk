@@ -50,7 +50,7 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
             latestScannedTime = TimeInterval(time)
         }
     }
-    
+
     func updateBlockData() async {
         if let newLatestBlockHeight = try? await service.latestBlockHeight(),
         latestBlockHeight < newLatestBlockHeight {
