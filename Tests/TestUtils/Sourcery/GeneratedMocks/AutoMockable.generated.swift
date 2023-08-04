@@ -546,6 +546,19 @@ class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
         await updateBlockDataClosure!()
     }
 
+    // MARK: - updateUnenhancedData
+
+    var updateUnenhancedDataCallsCount = 0
+    var updateUnenhancedDataCalled: Bool {
+        return updateUnenhancedDataCallsCount > 0
+    }
+    var updateUnenhancedDataClosure: (() async -> Void)?
+
+    func updateUnenhancedData() async {
+        updateUnenhancedDataCallsCount += 1
+        await updateUnenhancedDataClosure!()
+    }
+
     // MARK: - updateWalletBirthday
 
     var updateWalletBirthdayCallsCount = 0
@@ -2613,29 +2626,27 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
 
     // MARK: - scanBlocks
 
-    var scanBlocksLimitThrowableError: Error?
-    func setScanBlocksLimitThrowableError(_ param: Error?) async {
-        scanBlocksLimitThrowableError = param
+    var scanBlocksFromHeightLimitThrowableError: Error?
+    func setScanBlocksFromHeightLimitThrowableError(_ param: Error?) async {
+        scanBlocksFromHeightLimitThrowableError = param
     }
-    var scanBlocksLimitCallsCount = 0
-    var scanBlocksLimitCalled: Bool {
-        return scanBlocksLimitCallsCount > 0
+    var scanBlocksFromHeightLimitCallsCount = 0
+    var scanBlocksFromHeightLimitCalled: Bool {
+        return scanBlocksFromHeightLimitCallsCount > 0
     }
-    var scanBlocksLimitReceivedFromHeight: Int32?
-    var scanBlocksLimitReceivedLimit: UInt32?
-    var scanBlocksLimitClosure: ((Int32, UInt32) async throws -> Void)?
-    func setScanBlocksLimitClosure(_ param: ((Int32, UInt32) async throws -> Void)?) async {
-        scanBlocksLimitClosure = param
+    var scanBlocksFromHeightLimitReceivedArguments: (fromHeight: Int32, limit: UInt32)?
+    var scanBlocksFromHeightLimitClosure: ((Int32, UInt32) async throws -> Void)?
+    func setScanBlocksFromHeightLimitClosure(_ param: ((Int32, UInt32) async throws -> Void)?) async {
+        scanBlocksFromHeightLimitClosure = param
     }
 
     func scanBlocks(fromHeight: Int32, limit: UInt32) async throws {
-        if let error = scanBlocksLimitThrowableError {
+        if let error = scanBlocksFromHeightLimitThrowableError {
             throw error
         }
-        scanBlocksLimitCallsCount += 1
-        scanBlocksLimitReceivedFromHeight = fromHeight
-        scanBlocksLimitReceivedLimit = limit
-        try await scanBlocksLimitClosure!(fromHeight, limit)
+        scanBlocksFromHeightLimitCallsCount += 1
+        scanBlocksFromHeightLimitReceivedArguments = (fromHeight: fromHeight, limit: limit)
+        try await scanBlocksFromHeightLimitClosure!(fromHeight, limit)
     }
 
     // MARK: - putUnspentTransparentOutput

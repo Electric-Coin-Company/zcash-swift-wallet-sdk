@@ -16,6 +16,7 @@ protocol LatestBlocksDataProvider {
 
     func updateScannedData() async
     func updateBlockData() async
+    func updateUnenhancedData() async
     func updateWalletBirthday(_ walletBirthday: BlockHeight) async
     func updateLatestScannedHeight(_ latestScannedHeight: BlockHeight) async
     func updateLatestScannedTime(_ latestScannedTime: TimeInterval) async
@@ -55,6 +56,10 @@ actor LatestBlocksDataProviderImpl: LatestBlocksDataProvider {
         latestBlockHeight < newLatestBlockHeight {
             latestBlockHeight = newLatestBlockHeight
         }
+    }
+
+    func updateUnenhancedData() async {
+        firstUnenhancedHeight = try? transactionRepository.firstUnenhancedHeight()
     }
 
     func updateWalletBirthday(_ walletBirthday: BlockHeight) async {
