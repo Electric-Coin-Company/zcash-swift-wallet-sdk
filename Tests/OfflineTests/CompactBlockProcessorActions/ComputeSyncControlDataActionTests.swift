@@ -135,6 +135,7 @@ final class ComputeSyncControlDataActionTests: ZcashTestCase {
         latestBlocksDataProviderMock.underlyingLatestScannedHeight = 1
         latestBlocksDataProviderMock.updateScannedDataClosure = { }
         latestBlocksDataProviderMock.updateBlockDataClosure = { }
+        latestBlocksDataProviderMock.updateUnenhancedDataClosure = { }
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         
         return setupAction(

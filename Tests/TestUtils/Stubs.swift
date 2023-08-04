@@ -142,7 +142,7 @@ class RustBackendMockHelper {
             try await rustBackend.suggestScanRanges()
         }
 
-        await rustBackendMock.setScanBlocksLimitClosure() { fromHeight, limit in
+        await rustBackendMock.setScanBlocksFromHeightLimitClosure() { fromHeight, limit in
             try await rustBackend.scanBlocks(fromHeight: fromHeight, limit: limit)
         }
     }

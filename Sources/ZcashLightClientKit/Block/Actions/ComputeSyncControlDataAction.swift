@@ -29,6 +29,7 @@ extension ComputeSyncControlDataAction: Action {
 
         await latestBlocksDataProvider.updateScannedData()
         await latestBlocksDataProvider.updateBlockData()
+        await latestBlocksDataProvider.updateUnenhancedData()
 
         // Here we know:
         // - latest scanned height from the DB, if none the wallet's birthday is automatically used
