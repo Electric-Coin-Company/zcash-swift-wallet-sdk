@@ -35,6 +35,10 @@ struct DarksideMetaState {
 
   var chainName: String = String()
 
+  var startSaplingCommitmentTreeSize: UInt32 = 0
+
+  var startOrchardCommitmentTreeSize: UInt32 = 0
+
   var unknownFields = SwiftProtobuf.UnknownStorage()
 
   init() {}
@@ -131,6 +135,8 @@ extension DarksideMetaState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     1: .same(proto: "saplingActivation"),
     2: .same(proto: "branchID"),
     3: .same(proto: "chainName"),
+    4: .same(proto: "startSaplingCommitmentTreeSize"),
+    5: .same(proto: "startOrchardCommitmentTreeSize"),
   ]
 
   mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
@@ -142,6 +148,8 @@ extension DarksideMetaState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
       case 1: try { try decoder.decodeSingularInt32Field(value: &self.saplingActivation) }()
       case 2: try { try decoder.decodeSingularStringField(value: &self.branchID) }()
       case 3: try { try decoder.decodeSingularStringField(value: &self.chainName) }()
+      case 4: try { try decoder.decodeSingularUInt32Field(value: &self.startSaplingCommitmentTreeSize) }()
+      case 5: try { try decoder.decodeSingularUInt32Field(value: &self.startOrchardCommitmentTreeSize) }()
       default: break
       }
     }
@@ -157,6 +165,12 @@ extension DarksideMetaState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     if !self.chainName.isEmpty {
       try visitor.visitSingularStringField(value: self.chainName, fieldNumber: 3)
     }
+    if self.startSaplingCommitmentTreeSize != 0 {
+      try visitor.visitSingularUInt32Field(value: self.startSaplingCommitmentTreeSize, fieldNumber: 4)
+    }
+    if self.startOrchardCommitmentTreeSize != 0 {
+      try visitor.visitSingularUInt32Field(value: self.startOrchardCommitmentTreeSize, fieldNumber: 5)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -164,6 +178,8 @@ extension DarksideMetaState: SwiftProtobuf.Message, SwiftProtobuf._MessageImplem
     if lhs.saplingActivation != rhs.saplingActivation {return false}
     if lhs.branchID != rhs.branchID {return false}
     if lhs.chainName != rhs.chainName {return false}
+    if lhs.startSaplingCommitmentTreeSize != rhs.startSaplingCommitmentTreeSize {return false}
+    if lhs.startOrchardCommitmentTreeSize != rhs.startOrchardCommitmentTreeSize {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

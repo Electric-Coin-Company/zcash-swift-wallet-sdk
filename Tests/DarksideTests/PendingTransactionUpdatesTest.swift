@@ -30,7 +30,7 @@ class PendingTransactionUpdatesTest: ZcashTestCase {
             walletBirthday: birthday,
             network: network
         )
-        try await coordinator.reset(saplingActivation: 663150, branchID: "e9ff75a6", chainName: "main")
+        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: "e9ff75a6", chainName: "main")
     }
 
     override func tearDown() async throws {

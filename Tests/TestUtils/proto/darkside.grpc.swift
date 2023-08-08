@@ -1069,3 +1069,696 @@ internal enum DarksideStreamerClientMetadata {
   }
 }
 
+/// Darksidewalletd maintains two staging areas, blocks and transactions. The
+/// Stage*() gRPCs add items to the staging area; ApplyStaged() "applies" everything
+/// in the staging area to the working (operational) state that the mock zcashd
+/// serves; transactions are placed into their corresponding blocks (by height).
+///
+/// To build a server, implement a class that conforms to this protocol.
+internal protocol DarksideStreamerProvider: CallHandlerProvider {
+  var interceptors: DarksideStreamerServerInterceptorFactoryProtocol? { get }
+
+  /// Reset reverts all darksidewalletd state (active block range, latest height,
+  /// staged blocks and transactions) and lightwalletd state (cache) to empty,
+  /// the same as the initial state. This occurs synchronously and instantaneously;
+  /// no reorg happens in lightwalletd. This is good to do before each independent
+  /// test so that no state leaks from one test to another.
+  /// Also sets (some of) the values returned by GetLightdInfo(). The Sapling
+  /// activation height specified here must be where the block range starts.
+  func reset(request: DarksideMetaState, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// StageBlocksStream accepts a list of blocks and saves them into the blocks
+  /// staging area until ApplyStaged() is called; there is no immediate effect on
+  /// the mock zcashd. Blocks are hex-encoded. Order is important, see ApplyStaged.
+  func stageBlocksStream(context: UnaryResponseCallContext<Empty>) -> EventLoopFuture<(StreamEvent<DarksideBlock>) -> Void>
+
+  /// StageBlocks is the same as StageBlocksStream() except the blocks are fetched
+  /// from the given URL. Blocks are one per line, hex-encoded (not JSON).
+  func stageBlocks(request: DarksideBlocksURL, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// StageBlocksCreate is like the previous two, except it creates 'count'
+  /// empty blocks at consecutive heights starting at height 'height'. The
+  /// 'nonce' is part of the header, so it contributes to the block hash; this
+  /// lets you create identical blocks (same transactions and height), but with
+  /// different hashes.
+  func stageBlocksCreate(request: DarksideEmptyBlocks, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// StageTransactionsStream stores the given transaction-height pairs in the
+  /// staging area until ApplyStaged() is called. Note that these transactions
+  /// are not returned by the production GetTransaction() gRPC until they
+  /// appear in a "mined" block (contained in the active blockchain presented
+  /// by the mock zcashd).
+  func stageTransactionsStream(context: UnaryResponseCallContext<Empty>) -> EventLoopFuture<(StreamEvent<RawTransaction>) -> Void>
+
+  /// StageTransactions is the same except the transactions are fetched from
+  /// the given url. They are all staged into the block at the given height.
+  /// Staging transactions to different heights requires multiple calls.
+  func stageTransactions(request: DarksideTransactionsURL, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// ApplyStaged iterates the list of blocks that were staged by the
+  /// StageBlocks*() gRPCs, in the order they were staged, and "merges" each
+  /// into the active, working blocks list that the mock zcashd is presenting
+  /// to lightwalletd. Even as each block is applied, the active list can't
+  /// have gaps; if the active block range is 1000-1006, and the staged block
+  /// range is 1003-1004, the resulting range is 1000-1004, with 1000-1002
+  /// unchanged, blocks 1003-1004 from the new range, and 1005-1006 dropped.
+  ///
+  /// After merging all blocks, ApplyStaged() appends staged transactions (in
+  /// the order received) into each one's corresponding (by height) block
+  /// The staging area is then cleared.
+  ///
+  /// The argument specifies the latest block height that mock zcashd reports
+  /// (i.e. what's returned by GetLatestBlock). Note that ApplyStaged() can
+  /// also be used to simply advance the latest block height presented by mock
+  /// zcashd. That is, there doesn't need to be anything in the staging area.
+  func applyStaged(request: DarksideHeight, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// Calls to the production gRPC SendTransaction() store the transaction in
+  /// a separate area (not the staging area); this method returns all transactions
+  /// in this separate area, which is then cleared. The height returned
+  /// with each transaction is -1 (invalid) since these transactions haven't
+  /// been mined yet. The intention is that the transactions returned here can
+  /// then, for example, be given to StageTransactions() to get them "mined"
+  /// into a specified block on the next ApplyStaged().
+  func getIncomingTransactions(request: Empty, context: StreamingResponseCallContext<RawTransaction>) -> EventLoopFuture<GRPCStatus>
+
+  /// Clear the incoming transaction pool.
+  func clearIncomingTransactions(request: Empty, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// Add a GetAddressUtxosReply entry to be returned by GetAddressUtxos().
+  /// There is no staging or applying for these, very simple.
+  func addAddressUtxo(request: GetAddressUtxosReply, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// Clear the list of GetAddressUtxos entries (can't fail)
+  func clearAddressUtxo(request: Empty, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// Adds a GetTreeState to the tree state cache
+  func addTreeState(request: TreeState, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// Removes a GetTreeState for the given height from cache if present (can't fail)
+  func removeTreeState(request: BlockID, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+
+  /// Clear the list of GetTreeStates entries (can't fail)
+  func clearAllTreeStates(request: Empty, context: StatusOnlyCallContext) -> EventLoopFuture<Empty>
+}
+
+extension DarksideStreamerProvider {
+  internal var serviceName: Substring {
+    return DarksideStreamerServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  /// Determines, calls and returns the appropriate request handler, depending on the request's method.
+  /// Returns nil for methods not handled by this service.
+  internal func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "Reset":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideMetaState>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeResetInterceptors() ?? [],
+        userFunction: self.reset(request:context:)
+      )
+
+    case "StageBlocksStream":
+      return ClientStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideBlock>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageBlocksStreamInterceptors() ?? [],
+        observerFactory: self.stageBlocksStream(context:)
+      )
+
+    case "StageBlocks":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideBlocksURL>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageBlocksInterceptors() ?? [],
+        userFunction: self.stageBlocks(request:context:)
+      )
+
+    case "StageBlocksCreate":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideEmptyBlocks>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageBlocksCreateInterceptors() ?? [],
+        userFunction: self.stageBlocksCreate(request:context:)
+      )
+
+    case "StageTransactionsStream":
+      return ClientStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<RawTransaction>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageTransactionsStreamInterceptors() ?? [],
+        observerFactory: self.stageTransactionsStream(context:)
+      )
+
+    case "StageTransactions":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideTransactionsURL>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageTransactionsInterceptors() ?? [],
+        userFunction: self.stageTransactions(request:context:)
+      )
+
+    case "ApplyStaged":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideHeight>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeApplyStagedInterceptors() ?? [],
+        userFunction: self.applyStaged(request:context:)
+      )
+
+    case "GetIncomingTransactions":
+      return ServerStreamingServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetIncomingTransactionsInterceptors() ?? [],
+        userFunction: self.getIncomingTransactions(request:context:)
+      )
+
+    case "ClearIncomingTransactions":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeClearIncomingTransactionsInterceptors() ?? [],
+        userFunction: self.clearIncomingTransactions(request:context:)
+      )
+
+    case "AddAddressUtxo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetAddressUtxosReply>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeAddAddressUtxoInterceptors() ?? [],
+        userFunction: self.addAddressUtxo(request:context:)
+      )
+
+    case "ClearAddressUtxo":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeClearAddressUtxoInterceptors() ?? [],
+        userFunction: self.clearAddressUtxo(request:context:)
+      )
+
+    case "AddTreeState":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<TreeState>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeAddTreeStateInterceptors() ?? [],
+        userFunction: self.addTreeState(request:context:)
+      )
+
+    case "RemoveTreeState":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeRemoveTreeStateInterceptors() ?? [],
+        userFunction: self.removeTreeState(request:context:)
+      )
+
+    case "ClearAllTreeStates":
+      return UnaryServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeClearAllTreeStatesInterceptors() ?? [],
+        userFunction: self.clearAllTreeStates(request:context:)
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+/// Darksidewalletd maintains two staging areas, blocks and transactions. The
+/// Stage*() gRPCs add items to the staging area; ApplyStaged() "applies" everything
+/// in the staging area to the working (operational) state that the mock zcashd
+/// serves; transactions are placed into their corresponding blocks (by height).
+///
+/// To implement a server, implement an object which conforms to this protocol.
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+internal protocol DarksideStreamerAsyncProvider: CallHandlerProvider, Sendable {
+  static var serviceDescriptor: GRPCServiceDescriptor { get }
+  var interceptors: DarksideStreamerServerInterceptorFactoryProtocol? { get }
+
+  /// Reset reverts all darksidewalletd state (active block range, latest height,
+  /// staged blocks and transactions) and lightwalletd state (cache) to empty,
+  /// the same as the initial state. This occurs synchronously and instantaneously;
+  /// no reorg happens in lightwalletd. This is good to do before each independent
+  /// test so that no state leaks from one test to another.
+  /// Also sets (some of) the values returned by GetLightdInfo(). The Sapling
+  /// activation height specified here must be where the block range starts.
+  func reset(
+    request: DarksideMetaState,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// StageBlocksStream accepts a list of blocks and saves them into the blocks
+  /// staging area until ApplyStaged() is called; there is no immediate effect on
+  /// the mock zcashd. Blocks are hex-encoded. Order is important, see ApplyStaged.
+  func stageBlocksStream(
+    requestStream: GRPCAsyncRequestStream<DarksideBlock>,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// StageBlocks is the same as StageBlocksStream() except the blocks are fetched
+  /// from the given URL. Blocks are one per line, hex-encoded (not JSON).
+  func stageBlocks(
+    request: DarksideBlocksURL,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// StageBlocksCreate is like the previous two, except it creates 'count'
+  /// empty blocks at consecutive heights starting at height 'height'. The
+  /// 'nonce' is part of the header, so it contributes to the block hash; this
+  /// lets you create identical blocks (same transactions and height), but with
+  /// different hashes.
+  func stageBlocksCreate(
+    request: DarksideEmptyBlocks,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// StageTransactionsStream stores the given transaction-height pairs in the
+  /// staging area until ApplyStaged() is called. Note that these transactions
+  /// are not returned by the production GetTransaction() gRPC until they
+  /// appear in a "mined" block (contained in the active blockchain presented
+  /// by the mock zcashd).
+  func stageTransactionsStream(
+    requestStream: GRPCAsyncRequestStream<RawTransaction>,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// StageTransactions is the same except the transactions are fetched from
+  /// the given url. They are all staged into the block at the given height.
+  /// Staging transactions to different heights requires multiple calls.
+  func stageTransactions(
+    request: DarksideTransactionsURL,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// ApplyStaged iterates the list of blocks that were staged by the
+  /// StageBlocks*() gRPCs, in the order they were staged, and "merges" each
+  /// into the active, working blocks list that the mock zcashd is presenting
+  /// to lightwalletd. Even as each block is applied, the active list can't
+  /// have gaps; if the active block range is 1000-1006, and the staged block
+  /// range is 1003-1004, the resulting range is 1000-1004, with 1000-1002
+  /// unchanged, blocks 1003-1004 from the new range, and 1005-1006 dropped.
+  ///
+  /// After merging all blocks, ApplyStaged() appends staged transactions (in
+  /// the order received) into each one's corresponding (by height) block
+  /// The staging area is then cleared.
+  ///
+  /// The argument specifies the latest block height that mock zcashd reports
+  /// (i.e. what's returned by GetLatestBlock). Note that ApplyStaged() can
+  /// also be used to simply advance the latest block height presented by mock
+  /// zcashd. That is, there doesn't need to be anything in the staging area.
+  func applyStaged(
+    request: DarksideHeight,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// Calls to the production gRPC SendTransaction() store the transaction in
+  /// a separate area (not the staging area); this method returns all transactions
+  /// in this separate area, which is then cleared. The height returned
+  /// with each transaction is -1 (invalid) since these transactions haven't
+  /// been mined yet. The intention is that the transactions returned here can
+  /// then, for example, be given to StageTransactions() to get them "mined"
+  /// into a specified block on the next ApplyStaged().
+  func getIncomingTransactions(
+    request: Empty,
+    responseStream: GRPCAsyncResponseStreamWriter<RawTransaction>,
+    context: GRPCAsyncServerCallContext
+  ) async throws
+
+  /// Clear the incoming transaction pool.
+  func clearIncomingTransactions(
+    request: Empty,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// Add a GetAddressUtxosReply entry to be returned by GetAddressUtxos().
+  /// There is no staging or applying for these, very simple.
+  func addAddressUtxo(
+    request: GetAddressUtxosReply,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// Clear the list of GetAddressUtxos entries (can't fail)
+  func clearAddressUtxo(
+    request: Empty,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// Adds a GetTreeState to the tree state cache
+  func addTreeState(
+    request: TreeState,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// Removes a GetTreeState for the given height from cache if present (can't fail)
+  func removeTreeState(
+    request: BlockID,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+
+  /// Clear the list of GetTreeStates entries (can't fail)
+  func clearAllTreeStates(
+    request: Empty,
+    context: GRPCAsyncServerCallContext
+  ) async throws -> Empty
+}
+
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+extension DarksideStreamerAsyncProvider {
+  internal static var serviceDescriptor: GRPCServiceDescriptor {
+    return DarksideStreamerServerMetadata.serviceDescriptor
+  }
+
+  internal var serviceName: Substring {
+    return DarksideStreamerServerMetadata.serviceDescriptor.fullName[...]
+  }
+
+  internal var interceptors: DarksideStreamerServerInterceptorFactoryProtocol? {
+    return nil
+  }
+
+  internal func handle(
+    method name: Substring,
+    context: CallHandlerContext
+  ) -> GRPCServerHandlerProtocol? {
+    switch name {
+    case "Reset":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideMetaState>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeResetInterceptors() ?? [],
+        wrapping: { try await self.reset(request: $0, context: $1) }
+      )
+
+    case "StageBlocksStream":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideBlock>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageBlocksStreamInterceptors() ?? [],
+        wrapping: { try await self.stageBlocksStream(requestStream: $0, context: $1) }
+      )
+
+    case "StageBlocks":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideBlocksURL>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageBlocksInterceptors() ?? [],
+        wrapping: { try await self.stageBlocks(request: $0, context: $1) }
+      )
+
+    case "StageBlocksCreate":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideEmptyBlocks>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageBlocksCreateInterceptors() ?? [],
+        wrapping: { try await self.stageBlocksCreate(request: $0, context: $1) }
+      )
+
+    case "StageTransactionsStream":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<RawTransaction>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageTransactionsStreamInterceptors() ?? [],
+        wrapping: { try await self.stageTransactionsStream(requestStream: $0, context: $1) }
+      )
+
+    case "StageTransactions":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideTransactionsURL>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeStageTransactionsInterceptors() ?? [],
+        wrapping: { try await self.stageTransactions(request: $0, context: $1) }
+      )
+
+    case "ApplyStaged":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<DarksideHeight>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeApplyStagedInterceptors() ?? [],
+        wrapping: { try await self.applyStaged(request: $0, context: $1) }
+      )
+
+    case "GetIncomingTransactions":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<RawTransaction>(),
+        interceptors: self.interceptors?.makeGetIncomingTransactionsInterceptors() ?? [],
+        wrapping: { try await self.getIncomingTransactions(request: $0, responseStream: $1, context: $2) }
+      )
+
+    case "ClearIncomingTransactions":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeClearIncomingTransactionsInterceptors() ?? [],
+        wrapping: { try await self.clearIncomingTransactions(request: $0, context: $1) }
+      )
+
+    case "AddAddressUtxo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<GetAddressUtxosReply>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeAddAddressUtxoInterceptors() ?? [],
+        wrapping: { try await self.addAddressUtxo(request: $0, context: $1) }
+      )
+
+    case "ClearAddressUtxo":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeClearAddressUtxoInterceptors() ?? [],
+        wrapping: { try await self.clearAddressUtxo(request: $0, context: $1) }
+      )
+
+    case "AddTreeState":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<TreeState>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeAddTreeStateInterceptors() ?? [],
+        wrapping: { try await self.addTreeState(request: $0, context: $1) }
+      )
+
+    case "RemoveTreeState":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<BlockID>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeRemoveTreeStateInterceptors() ?? [],
+        wrapping: { try await self.removeTreeState(request: $0, context: $1) }
+      )
+
+    case "ClearAllTreeStates":
+      return GRPCAsyncServerHandler(
+        context: context,
+        requestDeserializer: ProtobufDeserializer<Empty>(),
+        responseSerializer: ProtobufSerializer<Empty>(),
+        interceptors: self.interceptors?.makeClearAllTreeStatesInterceptors() ?? [],
+        wrapping: { try await self.clearAllTreeStates(request: $0, context: $1) }
+      )
+
+    default:
+      return nil
+    }
+  }
+}
+
+internal protocol DarksideStreamerServerInterceptorFactoryProtocol: Sendable {
+
+  /// - Returns: Interceptors to use when handling 'reset'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeResetInterceptors() -> [ServerInterceptor<DarksideMetaState, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'stageBlocksStream'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeStageBlocksStreamInterceptors() -> [ServerInterceptor<DarksideBlock, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'stageBlocks'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeStageBlocksInterceptors() -> [ServerInterceptor<DarksideBlocksURL, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'stageBlocksCreate'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeStageBlocksCreateInterceptors() -> [ServerInterceptor<DarksideEmptyBlocks, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'stageTransactionsStream'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeStageTransactionsStreamInterceptors() -> [ServerInterceptor<RawTransaction, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'stageTransactions'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeStageTransactionsInterceptors() -> [ServerInterceptor<DarksideTransactionsURL, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'applyStaged'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeApplyStagedInterceptors() -> [ServerInterceptor<DarksideHeight, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'getIncomingTransactions'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeGetIncomingTransactionsInterceptors() -> [ServerInterceptor<Empty, RawTransaction>]
+
+  /// - Returns: Interceptors to use when handling 'clearIncomingTransactions'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeClearIncomingTransactionsInterceptors() -> [ServerInterceptor<Empty, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'addAddressUtxo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeAddAddressUtxoInterceptors() -> [ServerInterceptor<GetAddressUtxosReply, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'clearAddressUtxo'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeClearAddressUtxoInterceptors() -> [ServerInterceptor<Empty, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'addTreeState'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeAddTreeStateInterceptors() -> [ServerInterceptor<TreeState, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'removeTreeState'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeRemoveTreeStateInterceptors() -> [ServerInterceptor<BlockID, Empty>]
+
+  /// - Returns: Interceptors to use when handling 'clearAllTreeStates'.
+  ///   Defaults to calling `self.makeInterceptors()`.
+  func makeClearAllTreeStatesInterceptors() -> [ServerInterceptor<Empty, Empty>]
+}
+
+internal enum DarksideStreamerServerMetadata {
+  internal static let serviceDescriptor = GRPCServiceDescriptor(
+    name: "DarksideStreamer",
+    fullName: "cash.z.wallet.sdk.rpc.DarksideStreamer",
+    methods: [
+      DarksideStreamerServerMetadata.Methods.reset,
+      DarksideStreamerServerMetadata.Methods.stageBlocksStream,
+      DarksideStreamerServerMetadata.Methods.stageBlocks,
+      DarksideStreamerServerMetadata.Methods.stageBlocksCreate,
+      DarksideStreamerServerMetadata.Methods.stageTransactionsStream,
+      DarksideStreamerServerMetadata.Methods.stageTransactions,
+      DarksideStreamerServerMetadata.Methods.applyStaged,
+      DarksideStreamerServerMetadata.Methods.getIncomingTransactions,
+      DarksideStreamerServerMetadata.Methods.clearIncomingTransactions,
+      DarksideStreamerServerMetadata.Methods.addAddressUtxo,
+      DarksideStreamerServerMetadata.Methods.clearAddressUtxo,
+      DarksideStreamerServerMetadata.Methods.addTreeState,
+      DarksideStreamerServerMetadata.Methods.removeTreeState,
+      DarksideStreamerServerMetadata.Methods.clearAllTreeStates,
+    ]
+  )
+
+  internal enum Methods {
+    internal static let reset = GRPCMethodDescriptor(
+      name: "Reset",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/Reset",
+      type: GRPCCallType.unary
+    )
+
+    internal static let stageBlocksStream = GRPCMethodDescriptor(
+      name: "StageBlocksStream",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageBlocksStream",
+      type: GRPCCallType.clientStreaming
+    )
+
+    internal static let stageBlocks = GRPCMethodDescriptor(
+      name: "StageBlocks",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageBlocks",
+      type: GRPCCallType.unary
+    )
+
+    internal static let stageBlocksCreate = GRPCMethodDescriptor(
+      name: "StageBlocksCreate",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageBlocksCreate",
+      type: GRPCCallType.unary
+    )
+
+    internal static let stageTransactionsStream = GRPCMethodDescriptor(
+      name: "StageTransactionsStream",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageTransactionsStream",
+      type: GRPCCallType.clientStreaming
+    )
+
+    internal static let stageTransactions = GRPCMethodDescriptor(
+      name: "StageTransactions",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/StageTransactions",
+      type: GRPCCallType.unary
+    )
+
+    internal static let applyStaged = GRPCMethodDescriptor(
+      name: "ApplyStaged",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ApplyStaged",
+      type: GRPCCallType.unary
+    )
+
+    internal static let getIncomingTransactions = GRPCMethodDescriptor(
+      name: "GetIncomingTransactions",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/GetIncomingTransactions",
+      type: GRPCCallType.serverStreaming
+    )
+
+    internal static let clearIncomingTransactions = GRPCMethodDescriptor(
+      name: "ClearIncomingTransactions",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ClearIncomingTransactions",
+      type: GRPCCallType.unary
+    )
+
+    internal static let addAddressUtxo = GRPCMethodDescriptor(
+      name: "AddAddressUtxo",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/AddAddressUtxo",
+      type: GRPCCallType.unary
+    )
+
+    internal static let clearAddressUtxo = GRPCMethodDescriptor(
+      name: "ClearAddressUtxo",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ClearAddressUtxo",
+      type: GRPCCallType.unary
+    )
+
+    internal static let addTreeState = GRPCMethodDescriptor(
+      name: "AddTreeState",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/AddTreeState",
+      type: GRPCCallType.unary
+    )
+
+    internal static let removeTreeState = GRPCMethodDescriptor(
+      name: "RemoveTreeState",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/RemoveTreeState",
+      type: GRPCCallType.unary
+    )
+
+    internal static let clearAllTreeStates = GRPCMethodDescriptor(
+      name: "ClearAllTreeStates",
+      path: "/cash.z.wallet.sdk.rpc.DarksideStreamer/ClearAllTreeStates",
+      type: GRPCCallType.unary
+    )
+  }
+}

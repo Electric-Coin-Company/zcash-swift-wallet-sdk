@@ -122,11 +122,19 @@ class DarksideWalletService: LightWalletService {
         }
     }
 
-    func reset(saplingActivation: BlockHeight, branchID: String = "d3adb33f", chainName: String = "test") throws {
+    func reset(
+        saplingActivation: BlockHeight,
+        startSaplingTreeSize: UInt32,
+        startOrchardTreeSize: UInt32,
+        branchID: String = "d3adb33f",
+        chainName: String = "test"
+    ) throws {
         var metaState = DarksideMetaState()
         metaState.saplingActivation = Int32(saplingActivation)
         metaState.branchID = branchID
         metaState.chainName = chainName
+        metaState.startSaplingCommitmentTreeSize = startSaplingTreeSize
+        metaState.startOrchardCommitmentTreeSize = startOrchardTreeSize
         // TODO: [#718] complete meta state correctly, https://github.com/zcash/ZcashLightClientKit/issues/718
         _ = try darksideService.reset(metaState).response.wait()
     }
