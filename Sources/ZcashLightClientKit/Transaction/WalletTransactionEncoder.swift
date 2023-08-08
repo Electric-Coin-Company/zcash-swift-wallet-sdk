@@ -71,7 +71,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         )
 
         logger.debug("transaction id: \(txId)")
-        return try await repository.find(id: txId)
+        return try await repository.find(rawID: txId)
     }
     
     func createSpend(
@@ -80,7 +80,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         to address: String,
         memoBytes: MemoBytes?,
         from accountIndex: Int
-    ) async throws -> Int {
+    ) async throws -> Data {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw ZcashError.walletTransEncoderCreateTransactionMissingSaplingParams
         }
@@ -92,7 +92,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             memo: memoBytes
         )
 
-        return Int(txId)
+        return txId
     }
     
     func createShieldingTransaction(
@@ -109,7 +109,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         )
         
         logger.debug("transaction id: \(txId)")
-        return try await repository.find(id: txId)
+        return try await repository.find(rawID: txId)
     }
 
     func createShieldingSpend(
@@ -117,7 +117,7 @@ class WalletTransactionEncoder: TransactionEncoder {
         shieldingThreshold: Zatoshi,
         memo: MemoBytes?,
         accountIndex: Int
-    ) async throws -> Int {
+    ) async throws -> Data {
         guard ensureParams(spend: self.spendParamsURL, output: self.outputParamsURL) else {
             throw ZcashError.walletTransEncoderShieldFundsMissingSaplingParams
         }
@@ -128,7 +128,7 @@ class WalletTransactionEncoder: TransactionEncoder {
             shieldingThreshold: shieldingThreshold
         )
                 
-        return Int(txId)
+        return txId
     }
 
     func submit(

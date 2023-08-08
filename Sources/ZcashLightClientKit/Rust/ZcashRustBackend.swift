@@ -70,31 +70,38 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         to address: String,
         value: Int64,
         memo: MemoBytes?
-    ) async throws -> Int64 {
-        let result = usk.bytes.withUnsafeBufferPointer { uskPtr in
-            zcashlc_create_to_address(
-                dbData.0,
-                dbData.1,
-                uskPtr.baseAddress,
-                UInt(usk.bytes.count),
-                [CChar](address.utf8CString),
-                value,
-                memo?.bytes,
-                spendParamsPath.0,
-                spendParamsPath.1,
-                outputParamsPath.0,
-                outputParamsPath.1,
-                networkType.networkId,
-                minimumConfirmations,
-                useZIP317Fees
-            )
+    ) async throws -> Data {
+        var contiguousTxIdBytes = ContiguousArray<UInt8>([UInt8](repeating: 0x0, count: 32))
+
+        let success = contiguousTxIdBytes.withUnsafeMutableBufferPointer { txIdBytePtr in
+            usk.bytes.withUnsafeBufferPointer { uskPtr in
+                zcashlc_create_to_address(
+                    dbData.0,
+                    dbData.1,
+                    uskPtr.baseAddress,
+                    UInt(usk.bytes.count),
+                    [CChar](address.utf8CString),
+                    value,
+                    memo?.bytes,
+                    spendParamsPath.0,
+                    spendParamsPath.1,
+                    outputParamsPath.0,
+                    outputParamsPath.1,
+                    networkType.networkId,
+                    minimumConfirmations,
+                    useZIP317Fees,
+                    txIdBytePtr.baseAddress
+                )
+            }
         }
 
-        guard result > 0 else {
+        guard success else {
             throw ZcashError.rustCreateToAddress(lastErrorMessage(fallback: "`createToAddress` failed with unknown error"))
         }
 
-        return result
+        return contiguousTxIdBytes.withUnsafeBufferPointer { txIdBytePtr in
+            Data(txIdBytePtr)
+        }
     }
 
     func decryptAndStoreTransaction(txBytes: [UInt8], minedHeight: Int32) async throws {
@@ -179,25 +186,16 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         return UnifiedAddress(validatedEncoding: address, networkType: networkType)
     }
 
-    func getReceivedMemo(idNote: Int64) async -> Memo? {
+    func getMemo(txId: Data, outputIndex: UInt16) async throws -> Memo? {
+        guard txId.count == 32 else {
+            throw ZcashError.rustGetMemoInvalidTxIdLength
+        }
+
         var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
         var success = false
 
         contiguousMemoBytes.withUnsafeMutableBufferPointer { memoBytePtr in
-            success = zcashlc_get_received_memo(dbData.0, dbData.1, idNote, memoBytePtr.baseAddress, networkType.networkId)
-        }
-
-        guard success else { return nil }
-
-        return (try? MemoBytes(contiguousBytes: contiguousMemoBytes)).flatMap { try? $0.intoMemo() }
-    }
-
-    func getSentMemo(idNote: Int64) async -> Memo? {
-        var contiguousMemoBytes = ContiguousArray<UInt8>(MemoBytes.empty().bytes)
-        var success = false
-
-        contiguousMemoBytes.withUnsafeMutableBytes { memoBytePtr in
-            success = zcashlc_get_sent_memo(dbData.0, dbData.1, idNote, memoBytePtr.baseAddress, networkType.networkId)
+            success = zcashlc_get_memo(dbData.0, dbData.1, txId.bytes, outputIndex, memoBytePtr.baseAddress, networkType.networkId)
         }
 
         guard success else { return nil }
@@ -607,30 +605,37 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         usk: UnifiedSpendingKey,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi
-    ) async throws -> Int64 {
-        let result = usk.bytes.withUnsafeBufferPointer { uskBuffer in
-            zcashlc_shield_funds(
-                dbData.0,
-                dbData.1,
-                uskBuffer.baseAddress,
-                UInt(usk.bytes.count),
-                memo?.bytes,
-                UInt64(shieldingThreshold.amount),
-                spendParamsPath.0,
-                spendParamsPath.1,
-                outputParamsPath.0,
-                outputParamsPath.1,
-                networkType.networkId,
-                minimumConfirmations,
-                useZIP317Fees
-            )
+    ) async throws -> Data {
+        var contiguousTxIdBytes = ContiguousArray<UInt8>([UInt8](repeating: 0x0, count: 32))
+
+        let success = contiguousTxIdBytes.withUnsafeMutableBufferPointer { txIdBytePtr in
+            usk.bytes.withUnsafeBufferPointer { uskBuffer in
+                zcashlc_shield_funds(
+                    dbData.0,
+                    dbData.1,
+                    uskBuffer.baseAddress,
+                    UInt(usk.bytes.count),
+                    memo?.bytes,
+                    UInt64(shieldingThreshold.amount),
+                    spendParamsPath.0,
+                    spendParamsPath.1,
+                    outputParamsPath.0,
+                    outputParamsPath.1,
+                    networkType.networkId,
+                    minimumConfirmations,
+                    useZIP317Fees,
+                    txIdBytePtr.baseAddress
+                )
+            }
         }
 
-        guard result > 0 else {
+        guard success else {
             throw ZcashError.rustShieldFunds(lastErrorMessage(fallback: "`shieldFunds` failed with unknown error"))
         }
 
-        return result
+        return contiguousTxIdBytes.withUnsafeBufferPointer { txIdBytePtr in
+            Data(txIdBytePtr)
+        }
     }
 
     nonisolated func consensusBranchIdFor(height: Int32) throws -> Int32 {

@@ -2097,16 +2097,16 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return createToAddressUskToValueMemoCallsCount > 0
     }
     var createToAddressUskToValueMemoReceivedArguments: (usk: UnifiedSpendingKey, address: String, value: Int64, memo: MemoBytes?)?
-    var createToAddressUskToValueMemoReturnValue: Int64!
-    func setCreateToAddressUskToValueMemoReturnValue(_ param: Int64) async {
+    var createToAddressUskToValueMemoReturnValue: Data!
+    func setCreateToAddressUskToValueMemoReturnValue(_ param: Data) async {
         createToAddressUskToValueMemoReturnValue = param
     }
-    var createToAddressUskToValueMemoClosure: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Int64)?
-    func setCreateToAddressUskToValueMemoClosure(_ param: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Int64)?) async {
+    var createToAddressUskToValueMemoClosure: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Data)?
+    func setCreateToAddressUskToValueMemoClosure(_ param: ((UnifiedSpendingKey, String, Int64, MemoBytes?) async throws -> Data)?) async {
         createToAddressUskToValueMemoClosure = param
     }
 
-    func createToAddress(usk: UnifiedSpendingKey, to address: String, value: Int64, memo: MemoBytes?) async throws -> Int64 {
+    func createToAddress(usk: UnifiedSpendingKey, to address: String, value: Int64, memo: MemoBytes?) async throws -> Data {
         if let error = createToAddressUskToValueMemoThrowableError {
             throw error
         }
@@ -2276,55 +2276,36 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         }
     }
 
-    // MARK: - getReceivedMemo
+    // MARK: - getMemo
 
-    var getReceivedMemoIdNoteCallsCount = 0
-    var getReceivedMemoIdNoteCalled: Bool {
-        return getReceivedMemoIdNoteCallsCount > 0
+    var getMemoTxIdOutputIndexThrowableError: Error?
+    func setGetMemoTxIdOutputIndexThrowableError(_ param: Error?) async {
+        getMemoTxIdOutputIndexThrowableError = param
     }
-    var getReceivedMemoIdNoteReceivedIdNote: Int64?
-    var getReceivedMemoIdNoteReturnValue: Memo?
-    func setGetReceivedMemoIdNoteReturnValue(_ param: Memo?) async {
-        getReceivedMemoIdNoteReturnValue = param
+    var getMemoTxIdOutputIndexCallsCount = 0
+    var getMemoTxIdOutputIndexCalled: Bool {
+        return getMemoTxIdOutputIndexCallsCount > 0
     }
-    var getReceivedMemoIdNoteClosure: ((Int64) async -> Memo?)?
-    func setGetReceivedMemoIdNoteClosure(_ param: ((Int64) async -> Memo?)?) async {
-        getReceivedMemoIdNoteClosure = param
+    var getMemoTxIdOutputIndexReceivedArguments: (txId: Data, outputIndex: UInt16)?
+    var getMemoTxIdOutputIndexReturnValue: Memo?
+    func setGetMemoTxIdOutputIndexReturnValue(_ param: Memo?) async {
+        getMemoTxIdOutputIndexReturnValue = param
+    }
+    var getMemoTxIdOutputIndexClosure: ((Data, UInt16) async throws -> Memo?)?
+    func setGetMemoTxIdOutputIndexClosure(_ param: ((Data, UInt16) async throws -> Memo?)?) async {
+        getMemoTxIdOutputIndexClosure = param
     }
 
-    func getReceivedMemo(idNote: Int64) async -> Memo? {
-        getReceivedMemoIdNoteCallsCount += 1
-        getReceivedMemoIdNoteReceivedIdNote = idNote
-        if let closure = getReceivedMemoIdNoteClosure {
-            return await closure(idNote)
-        } else {
-            return getReceivedMemoIdNoteReturnValue
+    func getMemo(txId: Data, outputIndex: UInt16) async throws -> Memo? {
+        if let error = getMemoTxIdOutputIndexThrowableError {
+            throw error
         }
-    }
-
-    // MARK: - getSentMemo
-
-    var getSentMemoIdNoteCallsCount = 0
-    var getSentMemoIdNoteCalled: Bool {
-        return getSentMemoIdNoteCallsCount > 0
-    }
-    var getSentMemoIdNoteReceivedIdNote: Int64?
-    var getSentMemoIdNoteReturnValue: Memo?
-    func setGetSentMemoIdNoteReturnValue(_ param: Memo?) async {
-        getSentMemoIdNoteReturnValue = param
-    }
-    var getSentMemoIdNoteClosure: ((Int64) async -> Memo?)?
-    func setGetSentMemoIdNoteClosure(_ param: ((Int64) async -> Memo?)?) async {
-        getSentMemoIdNoteClosure = param
-    }
-
-    func getSentMemo(idNote: Int64) async -> Memo? {
-        getSentMemoIdNoteCallsCount += 1
-        getSentMemoIdNoteReceivedIdNote = idNote
-        if let closure = getSentMemoIdNoteClosure {
-            return await closure(idNote)
+        getMemoTxIdOutputIndexCallsCount += 1
+        getMemoTxIdOutputIndexReceivedArguments = (txId: txId, outputIndex: outputIndex)
+        if let closure = getMemoTxIdOutputIndexClosure {
+            return try await closure(txId, outputIndex)
         } else {
-            return getSentMemoIdNoteReturnValue
+            return getMemoTxIdOutputIndexReturnValue
         }
     }
 
@@ -2685,16 +2666,16 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         return shieldFundsUskMemoShieldingThresholdCallsCount > 0
     }
     var shieldFundsUskMemoShieldingThresholdReceivedArguments: (usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi)?
-    var shieldFundsUskMemoShieldingThresholdReturnValue: Int64!
-    func setShieldFundsUskMemoShieldingThresholdReturnValue(_ param: Int64) async {
+    var shieldFundsUskMemoShieldingThresholdReturnValue: Data!
+    func setShieldFundsUskMemoShieldingThresholdReturnValue(_ param: Data) async {
         shieldFundsUskMemoShieldingThresholdReturnValue = param
     }
-    var shieldFundsUskMemoShieldingThresholdClosure: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Int64)?
-    func setShieldFundsUskMemoShieldingThresholdClosure(_ param: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Int64)?) async {
+    var shieldFundsUskMemoShieldingThresholdClosure: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Data)?
+    func setShieldFundsUskMemoShieldingThresholdClosure(_ param: ((UnifiedSpendingKey, MemoBytes?, Zatoshi) async throws -> Data)?) async {
         shieldFundsUskMemoShieldingThresholdClosure = param
     }
 
-    func shieldFunds(usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> Int64 {
+    func shieldFunds(usk: UnifiedSpendingKey, memo: MemoBytes?, shieldingThreshold: Zatoshi) async throws -> Data {
         if let error = shieldFundsUskMemoShieldingThresholdThrowableError {
             throw error
         }
