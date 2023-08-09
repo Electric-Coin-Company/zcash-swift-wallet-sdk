@@ -28,7 +28,7 @@ extension UpdateChainTipAction: Action {
         logger.info("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))
         
-        await context.update(state: .validatePreviousWalletSession)
+        await context.update(state: .processSuggestedScanRanges)
 
         return context
     }

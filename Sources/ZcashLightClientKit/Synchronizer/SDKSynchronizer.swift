@@ -24,7 +24,9 @@ public class SDKSynchronizer: Synchronizer {
 
     public let metrics: SDKMetrics
     public let logger: Logger
-    
+    public var syncAlgorithm: SyncAlgorithm = .linear
+    private var requestedSyncAlgorithm: SyncAlgorithm?
+
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
     var status: InternalSyncStatus {
@@ -87,6 +89,7 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
         self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
+        self.syncAlgorithm = initializer.syncAlgorithm
         
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -542,7 +545,7 @@ public class SDKSynchronizer: Synchronizer {
 
         return subject.eraseToAnyPublisher()
     }
-
+    
     // MARK: notify state
 
     private func snapshotState(status: InternalSyncStatus) async -> SynchronizerState {

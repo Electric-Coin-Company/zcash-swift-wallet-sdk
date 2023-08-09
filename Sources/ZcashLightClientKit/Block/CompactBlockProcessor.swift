@@ -70,6 +70,7 @@ actor CompactBlockProcessor {
         let network: ZcashNetwork
         let saplingActivation: BlockHeight
         let cacheDbURL: URL?
+        let syncAlgorithm: SyncAlgorithm
         var blockPollInterval: TimeInterval {
             TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
         }
@@ -89,6 +90,7 @@ actor CompactBlockProcessor {
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             saplingActivation: BlockHeight,
+            syncAlgorithm: SyncAlgorithm = .linear,
             network: ZcashNetwork
         ) {
             self.alias = alias
@@ -106,6 +108,7 @@ actor CompactBlockProcessor {
             self.walletBirthdayProvider = walletBirthdayProvider
             self.saplingActivation = saplingActivation
             self.cacheDbURL = cacheDbURL
+            self.syncAlgorithm = syncAlgorithm
         }
 
         init(
@@ -121,6 +124,7 @@ actor CompactBlockProcessor {
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
             walletBirthdayProvider: @escaping () -> BlockHeight,
+            syncAlgorithm: SyncAlgorithm = .linear,
             network: ZcashNetwork
         ) {
             self.alias = alias
@@ -138,6 +142,7 @@ actor CompactBlockProcessor {
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
+            self.syncAlgorithm = syncAlgorithm
         }
     }
 
@@ -169,13 +174,18 @@ actor CompactBlockProcessor {
                 outputParamsURL: initializer.outputParamsURL,
                 saplingParamsSourceURL: initializer.saplingParamsSourceURL,
                 walletBirthdayProvider: walletBirthdayProvider,
+                syncAlgorithm: initializer.syncAlgorithm,
                 network: initializer.network
             ),
             accountRepository: initializer.accountRepository
         )
     }
 
-    init(container: DIContainer, config: Configuration, accountRepository: AccountRepository) {
+    init(
+        container: DIContainer,
+        config: Configuration,
+        accountRepository: AccountRepository
+    ) {
         Dependencies.setupCompactBlockProcessor(
             in: container,
             config: config,
@@ -183,7 +193,7 @@ actor CompactBlockProcessor {
         )
 
         let configProvider = ConfigProvider(config: config)
-        context = ActionContext(state: .idle)
+        context = ActionContext(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
         actions = Self.makeActions(container: container, configProvider: configProvider)
 
         self.metrics = container.resolve(SDKMetrics.self)
@@ -218,8 +228,8 @@ actor CompactBlockProcessor {
                 action = UpdateSubtreeRootsAction(container: container)
             case .updateChainTip:
                 action = UpdateChainTipAction(container: container)
-            case .validatePreviousWalletSession:
-                action = ValidatePreviousWalletSessionAction(container: container)
+            case .processSuggestedScanRanges:
+                action = ProcessSuggestedScanRangesAction(container: container)
             case .computeSyncControlData:
                 action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
             case .download:
@@ -595,7 +605,7 @@ extension CompactBlockProcessor {
             break
         case .updateChainTip:
             break
-        case .validatePreviousWalletSession:
+        case .processSuggestedScanRanges:
             break
         case .computeSyncControlData:
             break
@@ -624,7 +634,7 @@ extension CompactBlockProcessor {
 
     private func resetContext() async {
         let lastEnhancedheight = await context.lastEnhancedHeight
-        context = ActionContext(state: .idle)
+        context = ActionContext(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
         await context.update(lastEnhancedHeight: lastEnhancedheight)
         await compactBlockProgress.reset()
     }
