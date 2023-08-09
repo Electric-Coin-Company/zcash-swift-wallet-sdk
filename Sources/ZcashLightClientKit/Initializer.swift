@@ -126,6 +126,7 @@ public class Initializer {
     let network: ZcashNetwork
     let logger: Logger
     let rustBackend: ZcashRustBackendWelding
+    let syncAlgorithm: SyncAlgorithm
 
     /// The effective birthday of the wallet based on the height provided when initializing and the checkpoints available on this SDK.
     ///
@@ -165,6 +166,7 @@ public class Initializer {
         outputParamsURL: URL,
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias = .default,
+        syncAlgorithm: SyncAlgorithm = .linear,
         loggingPolicy: LoggingPolicy = .default(.debug),
         enableBackendTracing: Bool = false
     ) {
@@ -197,6 +199,7 @@ public class Initializer {
             saplingParamsSourceURL: saplingParamsSourceURL,
             alias: alias,
             urlsParsingError: parsingError,
+            syncAlgorithm: syncAlgorithm,
             loggingPolicy: loggingPolicy
         )
     }
@@ -257,6 +260,7 @@ public class Initializer {
         saplingParamsSourceURL: SaplingParamsSourceURL,
         alias: ZcashSynchronizerAlias,
         urlsParsingError: ZcashError?,
+        syncAlgorithm: SyncAlgorithm = .linear,
         loggingPolicy: LoggingPolicy = .default(.debug)
     ) {
         self.container = container
@@ -284,6 +288,7 @@ public class Initializer {
         self.walletBirthday = Checkpoint.birthday(with: 0, network: network).height
         self.urlsParsingError = urlsParsingError
         self.logger = container.resolve(Logger.self)
+        self.syncAlgorithm = syncAlgorithm
     }
     
     private static func makeLightWalletServiceFactory(endpoint: LightWalletEndpoint) -> LightWalletServiceFactory {

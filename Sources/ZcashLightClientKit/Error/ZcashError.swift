@@ -556,6 +556,12 @@ public enum ZcashError: Equatable, Error {
     /// Put sapling subtree roots to the DB failed.
     /// ZCBPEO0019
     case compactBlockProcessorPutSaplingSubtreeRoots(_ error: Error)
+    /// Getting the `lastScannedHeight` failed but it's supposed to always provide some value.
+    /// ZCBPEO0020
+    case compactBlockProcessorLastScannedHeight
+    /// Getting the `supportedSyncAlgorithm` failed but it's supposed to always provide some value.
+    /// ZCBPEO0021
+    case compactBlockProcessorSupportedSyncAlgorithm
     /// The synchronizer is unprepared.
     /// ZSYNCO0001
     case synchronizerNotPrepared
@@ -735,6 +741,8 @@ public enum ZcashError: Equatable, Error {
         case .compactBlockProcessorConsensusBranchID: return "Consensus BranchIDs don't match this is probably an API or programming error."
         case .compactBlockProcessorDownloadBlockActionRewind: return "Rewind of DownloadBlockAction failed as no action is possible to unwrapp."
         case .compactBlockProcessorPutSaplingSubtreeRoots: return "Put sapling subtree roots to the DB failed."
+        case .compactBlockProcessorLastScannedHeight: return "Getting the `lastScannedHeight` failed but it's supposed to always provide some value."
+        case .compactBlockProcessorSupportedSyncAlgorithm: return "Getting the `supportedSyncAlgorithm` failed but it's supposed to always provide some value."
         case .synchronizerNotPrepared: return "The synchronizer is unprepared."
         case .synchronizerSendMemoToTransparentAddress: return "Memos can't be sent to transparent addresses."
         case .synchronizerShieldFundsInsuficientTransparentFunds: return "There is not enough transparent funds to cover fee for the shielding."
@@ -904,6 +912,8 @@ public enum ZcashError: Equatable, Error {
         case .compactBlockProcessorConsensusBranchID: return .compactBlockProcessorConsensusBranchID
         case .compactBlockProcessorDownloadBlockActionRewind: return .compactBlockProcessorDownloadBlockActionRewind
         case .compactBlockProcessorPutSaplingSubtreeRoots: return .compactBlockProcessorPutSaplingSubtreeRoots
+        case .compactBlockProcessorLastScannedHeight: return .compactBlockProcessorLastScannedHeight
+        case .compactBlockProcessorSupportedSyncAlgorithm: return .compactBlockProcessorSupportedSyncAlgorithm
         case .synchronizerNotPrepared: return .synchronizerNotPrepared
         case .synchronizerSendMemoToTransparentAddress: return .synchronizerSendMemoToTransparentAddress
         case .synchronizerShieldFundsInsuficientTransparentFunds: return .synchronizerShieldFundsInsuficientTransparentFunds

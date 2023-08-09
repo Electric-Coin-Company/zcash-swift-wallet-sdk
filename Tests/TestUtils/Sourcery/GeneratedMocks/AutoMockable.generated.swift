@@ -1047,6 +1047,10 @@ class SynchronizerMock: Synchronizer {
         get { return underlyingMetrics }
     }
     var underlyingMetrics: SDKMetrics!
+    var syncAlgorithm: SyncAlgorithm {
+        get { return underlyingSyncAlgorithm }
+    }
+    var underlyingSyncAlgorithm: SyncAlgorithm!
     var pendingTransactions: [ZcashTransaction.Overview] {
         get async { return underlyingPendingTransactions }
     }

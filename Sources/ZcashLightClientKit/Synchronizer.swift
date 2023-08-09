@@ -120,6 +120,9 @@ public protocol Synchronizer: AnyObject {
     /// An object that when enabled collects mertrics from the synchronizer
     var metrics: SDKMetrics { get }
     
+    /// Default algorithm used to sync the stored wallet with the blockchain.
+    var syncAlgorithm: SyncAlgorithm { get }
+
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
     /// not provided this will fail with `InitializationResult.seedRequired`. It could
@@ -423,6 +426,15 @@ enum InternalSyncStatus: Equatable {
         case .error: return "error"
         }
     }
+}
+
+/// Algorithm used to sync the sdk with the blockchain
+public enum SyncAlgorithm: Equatable {
+    /// Linear sync processes the unsynced blocks in a linear way up to the chain tip
+    case linear
+    /// Spend before Sync processes the unsynced blocks non-lineary, in prioritised ranges relevant to the stored wallet.
+    /// Note: This feature is in development (alpha version) so use carefully.
+    case spendBeforeSync
 }
 
 /// Kind of transactions handled by a Synchronizer

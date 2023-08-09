@@ -25,9 +25,11 @@ final class ClearAlreadyScannedBlocksActionTests: ZcashTestCase {
         )
 
         do {
-            let nextContext = try await clearAlreadyScannedBlocksAction.run(with: .init(state: .clearAlreadyScannedBlocks)) { _ in }
+            let context = ActionContext(state: .clearAlreadyScannedBlocks)
+            await context.update(lastScannedHeight: -1)
+            
+            let nextContext = try await clearAlreadyScannedBlocksAction.run(with: context) { _ in }
             XCTAssertTrue(compactBlockRepositoryMock.clearUpToCalled, "storage.clear(upTo:) is expected to be called.")
-            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
                 nextState == .enhance,
