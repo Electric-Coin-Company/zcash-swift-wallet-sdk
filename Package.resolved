@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "csqlite",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/stephencelis/CSQLite.git",
+      "state" : {
+        "revision" : "9106e983d5e3d5149ee35281ec089484b0def018",
+        "version" : "0.0.3"
+      }
+    },
+    {
       "identity" : "grpc-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/grpc/grpc-swift.git",
@@ -59,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio-extras.git",
       "state" : {
-        "revision" : "a75e92bde3683241c15df3dd905b7a6dcac4d551",
-        "version" : "1.12.1"
+        "revision" : "0e0d0aab665ff1a0659ce75ac003081f2b1c8997",
+        "version" : "1.19.0"
       }
     },
     {
