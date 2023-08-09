@@ -63,9 +63,15 @@ extension ScanAction: Action {
                 // ScanAction is controlled locally so it must report back the updated scanned height
                 await context.update(lastScannedHeight: lastScannedHeight)
             }
+        } catch ZcashError.rustScanBlocks(let errorMsg) {
+            if isContinuityError(errorMsg) {
+                await context.update(requestedRewindHeight: batchRange.lowerBound - 10)
+                await context.update(state: .download)
+                return context
+            } else {
+                throw ZcashError.rustScanBlocks(errorMsg)
+            }
         } catch {
-            // TODO: [#1189] check isContinuityError, https://github.com/zcash/ZcashLightClientKit/issues/1189
-            // if YES, REWIND to height at what error occured - at least 1 block
             throw error
         }
 
@@ -73,4 +79,12 @@ extension ScanAction: Action {
     }
 
     func stop() async { }
+}
+
+private extension ScanAction {
+    func isContinuityError(_ errorMsg: String) -> Bool {
+        errorMsg.contains("The parent hash of proposed block does not correspond to the block hash at height")
+        || errorMsg.contains("Block height discontinuity at height")
+        || errorMsg.contains("note commitment tree size provided by a compact block did not match the expected size at height")
+    }
 }
