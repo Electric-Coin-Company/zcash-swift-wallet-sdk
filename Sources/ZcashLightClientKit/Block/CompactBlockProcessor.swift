@@ -230,6 +230,8 @@ actor CompactBlockProcessor {
                 action = UpdateChainTipAction(container: container)
             case .processSuggestedScanRanges:
                 action = ProcessSuggestedScanRangesAction(container: container)
+            case .rewind:
+                action = RewindAction(container: container)
             case .computeSyncControlData:
                 action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
             case .download:
@@ -606,6 +608,8 @@ extension CompactBlockProcessor {
         case .updateChainTip:
             break
         case .processSuggestedScanRanges:
+            break
+        case .rewind:
             break
         case .computeSyncControlData:
             break
