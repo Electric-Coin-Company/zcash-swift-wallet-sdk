@@ -161,6 +161,8 @@ public enum ZcashErrorCode: String {
     case rustUpdateChainTip = "ZRUST0048"
     /// Error from rust layer when calling ZcashRustBackend.suggestScanRanges
     case rustSuggestScanRanges = "ZRUST0049"
+    /// Invalid transaction ID length when calling ZcashRustBackend.getMemo
+    case rustGetMemoInvalidTxIdLength = "ZRUST0050"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

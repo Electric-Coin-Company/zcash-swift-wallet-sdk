@@ -50,7 +50,7 @@ protocol ZcashRustBackendWelding {
         to address: String,
         value: Int64,
         memo: MemoBytes?
-    ) async throws -> Int64
+    ) async throws -> Data
 
     /// Scans a transaction for any information that can be decrypted by the accounts in the wallet, and saves it to the wallet.
     /// - parameter tx:     the transaction to decrypt
@@ -89,14 +89,10 @@ protocol ZcashRustBackendWelding {
     ///     - `rustGetNextAvailableAddressInvalidAddress` if generated unified address isn't valid.
     func getNextAvailableAddress(account: Int32) async throws -> UnifiedAddress
 
-    /// Get received memo from note.
-    /// - parameter idNote: note_id of note where the memo is located
-    func getReceivedMemo(idNote: Int64) async -> Memo?
-
-    /// Get sent memo from note.
-    /// - parameter idNote: note_id of note where the memo is located
-    /// - Returns: a `Memo` if any
-    func getSentMemo(idNote: Int64) async -> Memo?
+    /// Get memo from note.
+    /// - parameter txId: ID of transaction containing the note
+    /// - parameter outputIndex: output index of note
+    func getMemo(txId: Data, outputIndex: UInt16) async throws -> Memo?
 
     /// Get the verified cached transparent balance for the given address
     /// - parameter account; the account index to query
@@ -223,7 +219,7 @@ protocol ZcashRustBackendWelding {
         usk: UnifiedSpendingKey,
         memo: MemoBytes?,
         shieldingThreshold: Zatoshi
-    ) async throws -> Int64
+    ) async throws -> Data
 
     /// Gets the consensus branch id for the given height
     /// - Parameter height: the height you what to know the branch id for
