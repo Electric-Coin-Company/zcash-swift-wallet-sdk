@@ -46,8 +46,10 @@ extension UpdateSubtreeRootsAction: Action {
         // Likewise, no subtree roots results in switching to linear sync.
         if err != nil || roots.isEmpty {
             logger.info("Spend before Sync is not possible, switching to linear sync.")
+            await context.update(supportedSyncAlgorithm: .linear)
             await context.update(state: .computeSyncControlData)
         } else {
+            await context.update(supportedSyncAlgorithm: .spendBeforeSync)
             logger.info("Sapling tree has \(roots.count) subtrees")
             do {
                 try await rustBackend.putSaplingSubtreeRoots(startIndex: UInt64(request.startIndex), roots: roots)

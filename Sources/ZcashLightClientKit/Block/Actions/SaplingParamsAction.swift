@@ -23,8 +23,12 @@ extension SaplingParamsAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         logger.debug("Fetching sapling parameters")
         try await saplingParametersHandler.handleIfNeeded()
-//        await context.update(state: .computeSyncControlData) // Linear
-        await context.update(state: .updateSubtreeRoots) // SbS
+        
+        if context.preferredSyncAlgorithm == .spendBeforeSync {
+            await context.update(state: .updateSubtreeRoots)
+        } else {
+            await context.update(state: .computeSyncControlData)
+        }
         return context
     }
 

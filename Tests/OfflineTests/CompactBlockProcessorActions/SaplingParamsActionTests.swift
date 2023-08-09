@@ -28,8 +28,8 @@ final class SaplingParamsActionTests: ZcashTestCase {
             XCTAssertTrue(saplingParametersHandlerMock.handleIfNeededCalled, "saplingParametersHandler.handleIfNeeded() is expected to be called.")
             let nextState = await nextContext.state
             XCTAssertTrue(
-                nextState == .updateSubtreeRoots,
-                "nextContext after .handleSaplingParams is expected to be .updateSubtreeRoots but received \(nextState)"
+                nextState == .computeSyncControlData,
+                "nextContext after .handleSaplingParams is expected to be .computeSyncControlData but received \(nextState)"
             )
         } catch {
             XCTFail("testSaplingParamsAction_NextAction is not expected to fail. \(error)")
