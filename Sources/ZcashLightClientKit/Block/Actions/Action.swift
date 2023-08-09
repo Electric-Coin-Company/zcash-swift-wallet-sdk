@@ -13,6 +13,7 @@ actor ActionContext {
     var syncControlData: SyncControlData
     let preferredSyncAlgorithm: SyncAlgorithm
     var supportedSyncAlgorithm: SyncAlgorithm?
+    var requestedRewindHeight: BlockHeight?
     var totalProgressRange: CompactBlockRange = 0...0
     var lastScannedHeight: BlockHeight?
     var lastDownloadedHeight: BlockHeight?
@@ -34,6 +35,7 @@ actor ActionContext {
     func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
     func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }
     func update(supportedSyncAlgorithm: SyncAlgorithm) async { self.supportedSyncAlgorithm = supportedSyncAlgorithm }
+    func update(requestedRewindHeight: BlockHeight) async { self.requestedRewindHeight = requestedRewindHeight }
 }
 
 enum CBPState: CaseIterable {
@@ -43,6 +45,7 @@ enum CBPState: CaseIterable {
     case updateSubtreeRoots
     case updateChainTip
     case processSuggestedScanRanges
+    case rewind
     case computeSyncControlData
     case download
     case scan

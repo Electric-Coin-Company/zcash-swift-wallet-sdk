@@ -27,13 +27,6 @@ extension ProcessSuggestedScanRangesAction: Action {
         let scanRanges = try await rustBackend.suggestScanRanges()
         
         if let firstRange = scanRanges.first {
-            // If there is a range of blocks that needs to be verified, it will always
-            // be returned as the first element of the vector of suggested ranges.
-            if firstRange.priority == .verify {
-                // TODO: [#1189] handle rewind, https://github.com/zcash/ZcashLightClientKit/issues/1189
-                // REWIND to download.start height HERE
-            }
-            
             let lowerBound = firstRange.range.lowerBound - 1
             let upperBound = firstRange.range.upperBound - 1
             
@@ -55,7 +48,14 @@ extension ProcessSuggestedScanRangesAction: Action {
             await context.update(syncControlData: syncControlData)
             await context.update(totalProgressRange: lowerBound...upperBound)
             
-            await context.update(state: .download)
+            // If there is a range of blocks that needs to be verified, it will always
+            // be returned as the first element of the vector of suggested ranges.
+            if firstRange.priority == .verify {
+                await context.update(requestedRewindHeight: lowerBound + 1)
+                await context.update(state: .rewind)
+            } else {
+                await context.update(state: .download)
+            }
         } else {
             await context.update(state: .finished)
         }
