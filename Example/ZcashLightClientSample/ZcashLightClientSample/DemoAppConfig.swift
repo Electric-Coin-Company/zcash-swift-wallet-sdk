@@ -18,7 +18,7 @@ enum DemoAppConfig {
         let seed: [UInt8]
     }
 
-    static let host = ZcashSDK.isMainnet ? "mainnet.lightwalletd.com" : "testnet.lightwalletd.com"
+    static let host = ZcashSDK.isMainnet ? "mainnet.lightwalletd.com" : "lightwalletd.testnet.electriccoin.co"
     static let port: Int = 9067
 
 //    static let defaultBirthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 935000 : 1386000
@@ -30,7 +30,7 @@ enum DemoAppConfig {
     static let defaultSeed = try! Mnemonic.deterministicSeedBytes(from: """
     kitchen renew wide common vague fold vacuum tilt amazing pear square gossip jewel month tree shock scan alpha just spot fluid toilet view dinner
     """)
-    
+
     static let otherSynchronizers: [SynchronizerInitData] = [
         SynchronizerInitData(
             alias: .custom("alt-sync-1"),
