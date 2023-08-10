@@ -361,11 +361,11 @@ class BlockScannerMock: BlockScanner {
     var scanBlocksAtTotalProgressRangeDidScanCalled: Bool {
         return scanBlocksAtTotalProgressRangeDidScanCallsCount > 0
     }
-    var scanBlocksAtTotalProgressRangeDidScanReceivedArguments: (range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: (BlockHeight) async -> Void)?
+    var scanBlocksAtTotalProgressRangeDidScanReceivedArguments: (range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: (BlockHeight, UInt32) async -> Void)?
     var scanBlocksAtTotalProgressRangeDidScanReturnValue: BlockHeight!
-    var scanBlocksAtTotalProgressRangeDidScanClosure: ((CompactBlockRange, CompactBlockRange, @escaping (BlockHeight) async -> Void) async throws -> BlockHeight)?
+    var scanBlocksAtTotalProgressRangeDidScanClosure: ((CompactBlockRange, CompactBlockRange, @escaping (BlockHeight, UInt32) async -> Void) async throws -> BlockHeight)?
 
-    func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: @escaping (BlockHeight) async -> Void) async throws -> BlockHeight {
+    func scanBlocks(at range: CompactBlockRange, totalProgressRange: CompactBlockRange, didScan: @escaping (BlockHeight, UInt32) async -> Void) async throws -> BlockHeight {
         if let error = scanBlocksAtTotalProgressRangeDidScanThrowableError {
             throw error
         }

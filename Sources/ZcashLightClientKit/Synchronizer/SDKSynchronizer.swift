@@ -368,7 +368,7 @@ public class SDKSynchronizer: Synchronizer {
     }
 
     public func allPendingTransactions() async throws -> [ZcashTransaction.Overview] {
-        let latestScannedHeight = self.latestState.latestScannedHeight
+        let latestScannedHeight = try await transactionRepository.lastScannedHeight()
         
         return try await transactionRepository.findPendingTransactions(latestHeight: latestScannedHeight, offset: 0, limit: .max)
     }

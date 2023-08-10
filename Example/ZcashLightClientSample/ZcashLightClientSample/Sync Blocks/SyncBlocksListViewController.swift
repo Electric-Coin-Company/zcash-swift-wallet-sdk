@@ -107,7 +107,6 @@ class SyncBlocksListViewController: UIViewController {
             outputParamsURL: try! outputParamsURLHelper(),
             saplingParamsSourceURL: SaplingParamsSourceURL.default,
             alias: data.alias,
-            syncAlgorithm: .spendBeforeSync,
             loggingPolicy: .default(.debug),
             enableBackendTracing: true
         )
