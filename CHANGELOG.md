@@ -1,5 +1,9 @@
 # Unreleased
 
+### [#1196] Check logging level priorities
+The levels for logging have been updated according to Log Levels in Swift. (https://www.swift.org/server/guides/libraries/log-levels.html).
+There's one naming difference, instead of `notice` we use `event`. So the order is debug, info, event, warning, error.  
+
 ### [#1111] Change how the sync progress is stored inside the SDK
 
 `Initializer` has now a new parameter called `generalStorageURL`. This URL is the location of the directory 

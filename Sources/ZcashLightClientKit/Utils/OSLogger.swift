@@ -13,10 +13,10 @@ public class OSLogger: Logger {
     
     public enum LogLevel: Int {
         case debug
-        case error
-        case warning
-        case event
         case info
+        case event
+        case warning
+        case error
     }
 
     public let oslog: OSLog?
