@@ -46,7 +46,21 @@ extension ProcessSuggestedScanRangesAction: Action {
             await context.update(lastScannedHeight: lowerBound)
             await context.update(lastDownloadedHeight: lowerBound)
             await context.update(syncControlData: syncControlData)
-            await context.update(totalProgressRange: lowerBound...upperBound)
+            
+            // the total progress range is computed only for the first time
+            // as a sum of all ranges
+            let totalProgressRange = await context.totalProgressRange
+            if totalProgressRange.lowerBound == 0 && totalProgressRange.upperBound == 0 {
+                var minHeight = Int.max
+                var maxHeight = 0
+                scanRanges.forEach { range in
+                    if range.range.lowerBound < minHeight { minHeight = range.range.lowerBound }
+                    if range.range.upperBound > maxHeight { maxHeight = range.range.upperBound }
+                }
+                
+                logger.info("Setting the total range for Spend before Sync to \(minHeight...maxHeight).")
+                await context.update(totalProgressRange: minHeight...maxHeight)
+            }
             
             // If there is a range of blocks that needs to be verified, it will always
             // be returned as the first element of the vector of suggested ranges.

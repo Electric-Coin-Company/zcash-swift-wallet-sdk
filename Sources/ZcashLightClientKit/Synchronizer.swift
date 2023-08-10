@@ -42,13 +42,8 @@ public struct SynchronizerState: Equatable {
     /// status of the whole sync process
     var internalSyncStatus: InternalSyncStatus
     public var syncStatus: SyncStatus
-    /// height of the latest scanned block known to this synchronizer.
-    public var latestScannedHeight: BlockHeight
     /// height of the latest block on the blockchain known to this synchronizer.
     public var latestBlockHeight: BlockHeight
-    /// timestamp of the latest scanned block on the blockchain known to this synchronizer.
-    /// The anchor point is timeIntervalSince1970
-    public var latestScannedTime: TimeInterval
 
     /// Represents a synchronizer that has made zero progress hasn't done a sync attempt
     public static var zero: SynchronizerState {
@@ -76,9 +71,7 @@ public struct SynchronizerState: Equatable {
         self.shieldedBalance = shieldedBalance
         self.transparentBalance = transparentBalance
         self.internalSyncStatus = internalSyncStatus
-        self.latestScannedHeight = latestScannedHeight
         self.latestBlockHeight = latestBlockHeight
-        self.latestScannedTime = latestScannedTime
         self.syncStatus = internalSyncStatus.mapToSyncStatus()
     }
 }

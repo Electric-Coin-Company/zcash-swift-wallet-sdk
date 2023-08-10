@@ -84,10 +84,7 @@ class SyncBlocksViewController: UIViewController {
 
             progressBar.progress = progress
             progressLabel.text = "\(floor(progress * 1000) / 10)%"
-            let syncedDate = dateFormatter.string(from: Date(timeIntervalSince1970: state.latestScannedTime))
             let progressText = """
-            synced date         \(syncedDate)
-            synced block        \(state.latestScannedHeight)
             latest block height \(state.latestBlockHeight)
             """
             progressDataLabel.text = progressText
