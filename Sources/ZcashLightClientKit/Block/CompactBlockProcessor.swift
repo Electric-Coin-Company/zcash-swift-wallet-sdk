@@ -225,7 +225,7 @@ actor CompactBlockProcessor {
             case .validateServer:
                 action = ValidateServerAction(container: container, configProvider: configProvider)
             case .updateSubtreeRoots:
-                action = UpdateSubtreeRootsAction(container: container)
+                action = UpdateSubtreeRootsAction(container: container, configProvider: configProvider)
             case .updateChainTip:
                 action = UpdateChainTipAction(container: container)
             case .processSuggestedScanRanges:
