@@ -46,7 +46,7 @@ extension ProcessSuggestedScanRangesAction: Action {
             await context.update(lastScannedHeight: lowerBound)
             await context.update(lastDownloadedHeight: lowerBound)
             await context.update(syncControlData: syncControlData)
-            
+
             // the total progress range is computed only for the first time
             // as a sum of all ranges
             let totalProgressRange = await context.totalProgressRange
