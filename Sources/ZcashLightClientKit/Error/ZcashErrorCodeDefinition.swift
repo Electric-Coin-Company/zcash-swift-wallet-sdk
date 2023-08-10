@@ -613,6 +613,12 @@ enum ZcashErrorDefinition {
     /// Put sapling subtree roots to the DB failed.
     // sourcery: code="ZCBPEO0019"
     case compactBlockProcessorPutSaplingSubtreeRoots(_ error: Error)
+    /// Getting the `lastScannedHeight` failed but it's supposed to always provide some value.
+    // sourcery: code="ZCBPEO0020"
+    case compactBlockProcessorLastScannedHeight
+    /// Getting the `supportedSyncAlgorithm` failed but it's supposed to always provide some value.
+    // sourcery: code="ZCBPEO0021"
+    case compactBlockProcessorSupportedSyncAlgorithm
 
     // MARK: - SDKSynchronizer
     

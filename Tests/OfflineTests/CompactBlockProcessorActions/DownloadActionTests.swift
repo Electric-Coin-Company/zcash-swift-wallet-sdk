@@ -22,7 +22,7 @@ final class DownloadActionTests: ZcashTestCase {
         blockDownloaderMock.setDownloadLimitClosure = { _ in }
         blockDownloaderMock.startDownloadMaxBlockBufferSizeClosure = { _ in }
         blockDownloaderMock.waitUntilRequestedBlocksAreDownloadedInClosure = { _ in }
-        blockDownloaderMock.updateLatestDownloadedBlockHeightClosure = { _ in }
+        blockDownloaderMock.updateLatestDownloadedBlockHeightForceClosure = { _, _ in }
 
         let downloadAction = setupAction(
             blockDownloaderMock,
@@ -33,11 +33,11 @@ final class DownloadActionTests: ZcashTestCase {
         underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 
         let syncContext = await setupActionContext()
+        await syncContext.update(lastScannedHeight: 1000)
 
         do {
             let nextContext = try await downloadAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertTrue(blockDownloaderMock.setSyncRangeBatchSizeCalled, "downloader.setSyncRange() is expected to be called.")
             XCTAssertTrue(blockDownloaderMock.setDownloadLimitCalled, "downloader.setDownloadLimit() is expected to be called.")
             XCTAssertTrue(blockDownloaderMock.startDownloadMaxBlockBufferSizeCalled, "downloader.startDownload() is expected to be called.")
@@ -111,7 +111,6 @@ final class DownloadActionTests: ZcashTestCase {
         do {
             let nextContext = try await downloadAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertFalse(blockDownloaderMock.setSyncRangeBatchSizeCalled, "downloader.setSyncRange() is not expected to be called.")
             XCTAssertFalse(blockDownloaderMock.setDownloadLimitCalled, "downloader.setDownloadLimit() is not expected to be called.")
             XCTAssertFalse(blockDownloaderMock.startDownloadMaxBlockBufferSizeCalled, "downloader.startDownload() is not expected to be called.")

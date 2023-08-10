@@ -49,7 +49,9 @@ extension EnhanceAction: Action {
         // download and scan.
 
         let config = await configProvider.config
-        let lastScannedHeight = try await transactionRepository.lastScannedHeight()
+        guard let lastScannedHeight = await context.lastScannedHeight else {
+            throw ZcashError.compactBlockProcessorLastScannedHeight
+        }
 
         guard let firstUnenhancedHeight = await context.syncControlData.firstUnenhancedHeight else {
             return await decideWhatToDoNext(context: context, lastScannedHeight: lastScannedHeight)

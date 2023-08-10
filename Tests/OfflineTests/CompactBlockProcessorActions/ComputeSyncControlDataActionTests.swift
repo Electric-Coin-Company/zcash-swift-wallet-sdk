@@ -81,8 +81,8 @@ final class ComputeSyncControlDataActionTests: ZcashTestCase {
 
             let nextState = await nextContext.state
             XCTAssertTrue(
-                nextState == .fetchUTXO,
-                "nextContext after .computeSyncControlData is expected to be .fetchUTXO but received \(nextState)"
+                nextState == .download,
+                "nextContext after .computeSyncControlData is expected to be .download but received \(nextState)"
             )
         } catch {
             XCTFail("testComputeSyncControlDataAction_checksBeforeSyncCase is not expected to fail. \(error)")

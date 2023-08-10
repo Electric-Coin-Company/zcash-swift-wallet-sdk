@@ -22,6 +22,8 @@ final class ScanActionTests: ZcashTestCase {
         let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
         let syncContext = await setupActionContext()
         
+        await syncContext.update(lastScannedHeight: 1500)
+        
         do {
             let nextContext = try await scanAction.run(with: syncContext) { event in
                 guard case .progressPartialUpdate(.syncing(let progress)) = event else {
@@ -32,7 +34,6 @@ final class ScanActionTests: ZcashTestCase {
                 XCTAssertEqual(progress.targetHeight, BlockHeight(2000))
                 XCTAssertEqual(progress.progressHeight, BlockHeight(1500))
             }
-            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
             XCTAssertTrue(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
             let nextState = await nextContext.state
@@ -78,7 +79,6 @@ final class ScanActionTests: ZcashTestCase {
         
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
-            XCTAssertTrue(transactionRepositoryMock.lastScannedHeightCalled, "transactionRepository.lastScannedHeight() is expected to be called.")
             XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
             XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is not expected to be called.")
         } catch {

@@ -317,6 +317,10 @@ public enum ZcashErrorCode: String {
     case compactBlockProcessorDownloadBlockActionRewind = "ZCBPEO0018"
     /// Put sapling subtree roots to the DB failed.
     case compactBlockProcessorPutSaplingSubtreeRoots = "ZCBPEO0019"
+    /// Getting the `lastScannedHeight` failed but it's supposed to always provide some value.
+    case compactBlockProcessorLastScannedHeight = "ZCBPEO0020"
+    /// Getting the `supportedSyncAlgorithm` failed but it's supposed to always provide some value.
+    case compactBlockProcessorSupportedSyncAlgorithm = "ZCBPEO0021"
     /// The synchronizer is unprepared.
     case synchronizerNotPrepared = "ZSYNCO0001"
     /// Memos can't be sent to transparent addresses.

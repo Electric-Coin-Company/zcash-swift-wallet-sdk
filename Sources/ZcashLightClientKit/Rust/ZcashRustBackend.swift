@@ -585,7 +585,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
                         BlockHeight(scanRange.start),
                         BlockHeight(scanRange.end)
                     )),
-                    priority: scanRange.priority
+                    priority: ScanRange.Priority(scanRange.priority)
                 )
             )
         }

@@ -28,9 +28,7 @@ extension UpdateChainTipAction: Action {
         logger.info("Latest block height is \(latestBlockHeight)")
         try await rustBackend.updateChainTip(height: Int32(latestBlockHeight))
         
-        // TODO: [#1169] Switching back to linear sync for now before step 5 & 6 are implemented
-        // https://github.com/zcash/ZcashLightClientKit/issues/1169
-        await context.update(state: .computeSyncControlData)
+        await context.update(state: .processSuggestedScanRanges)
 
         return context
     }

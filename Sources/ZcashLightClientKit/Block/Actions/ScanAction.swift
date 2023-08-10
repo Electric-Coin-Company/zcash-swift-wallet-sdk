@@ -30,16 +30,15 @@ extension ScanAction: Action {
     var removeBlocksCacheWhenFailed: Bool { true }
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
-        guard let lastScannedHeight = await context.syncControlData.latestScannedHeight else {
+        guard let lastScannedHeight = await context.lastScannedHeight else {
             return await update(context: context)
         }
 
         let config = await configProvider.config
-        let lastScannedHeightDB = try await transactionRepository.lastScannedHeight()
         let latestBlockHeight = await context.syncControlData.latestBlockHeight
         // This action is executed for each batch (batch size is 100 blocks by default) until all the blocks in whole `scanRange` are scanned.
         // So the right range for this batch must be computed.
-        let batchRangeStart = max(lastScannedHeightDB, lastScannedHeight)
+        let batchRangeStart = lastScannedHeight
         let batchRangeEnd = min(latestBlockHeight, batchRangeStart + config.batchSize)
 
         guard batchRangeStart <= batchRangeEnd else {
@@ -50,14 +49,24 @@ extension ScanAction: Action {
         
         logger.debug("Starting scan blocks with range: \(batchRange.lowerBound)...\(batchRange.upperBound)")
         let totalProgressRange = await context.totalProgressRange
-        try await blockScanner.scanBlocks(at: batchRange, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
-            let progress = BlockProgress(
-                startHeight: totalProgressRange.lowerBound,
-                targetHeight: totalProgressRange.upperBound,
-                progressHeight: lastScannedHeight
-            )
-            self?.logger.debug("progress: \(progress)")
-            await didUpdate(.progressPartialUpdate(.syncing(progress)))
+        
+        do {
+            try await blockScanner.scanBlocks(at: batchRange, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
+                let progress = BlockProgress(
+                    startHeight: totalProgressRange.lowerBound,
+                    targetHeight: totalProgressRange.upperBound,
+                    progressHeight: lastScannedHeight
+                )
+                self?.logger.debug("progress: \(progress)")
+                await didUpdate(.progressPartialUpdate(.syncing(progress)))
+                
+                // ScanAction is controlled locally so it must report back the updated scanned height
+                await context.update(lastScannedHeight: lastScannedHeight)
+            }
+        } catch {
+            // TODO: [#1189] check isContinuityError, https://github.com/zcash/ZcashLightClientKit/issues/1189
+            // if YES, REWIND to height at what error occured - at least 1 block
+            throw error
         }
 
         return await update(context: context)

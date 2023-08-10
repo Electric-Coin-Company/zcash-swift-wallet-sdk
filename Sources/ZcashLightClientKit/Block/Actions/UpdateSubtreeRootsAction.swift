@@ -27,7 +27,7 @@ extension UpdateSubtreeRootsAction: Action {
         request.shieldedProtocol = .sapling
         request.maxEntries = 65536
         
-        logger.info("Attempt to get subtree roots, this may fail because lightwalletd may not support DAG sync.")
+        logger.info("Attempt to get subtree roots, this may fail because lightwalletd may not support Spend before Sync.")
         let stream = service.getSubtreeRoots(request)
         
         var roots: [SubtreeRoot] = []
@@ -42,12 +42,14 @@ extension UpdateSubtreeRootsAction: Action {
             err = error
         }
 
-        // In case of error, the lightwalletd doesn't support DAG sync -> switching to linear sync.
+        // In case of error, the lightwalletd doesn't support Spend before Sync -> switching to linear sync.
         // Likewise, no subtree roots results in switching to linear sync.
         if err != nil || roots.isEmpty {
-            logger.info("DAG sync is not possible, switching to linear sync.")
+            logger.info("Spend before Sync is not possible, switching to linear sync.")
+            await context.update(supportedSyncAlgorithm: .linear)
             await context.update(state: .computeSyncControlData)
         } else {
+            await context.update(supportedSyncAlgorithm: .spendBeforeSync)
             logger.info("Sapling tree has \(roots.count) subtrees")
             do {
                 try await rustBackend.putSaplingSubtreeRoots(startIndex: UInt64(request.startIndex), roots: roots)

@@ -23,7 +23,19 @@ extension ClearCacheAction: Action {
         if await context.prevState == .idle {
             await context.update(state: .migrateLegacyCacheDB)
         } else {
-            await context.update(state: .finished)
+            if context.preferredSyncAlgorithm == .linear {
+                await context.update(state: .finished)
+            } else {
+                if let supportedSyncAlgorithm = await context.supportedSyncAlgorithm {
+                    if supportedSyncAlgorithm == .linear {
+                        await context.update(state: .finished)
+                    } else {
+                        await context.update(state: .processSuggestedScanRanges)
+                    }
+                } else {
+                    throw ZcashError.compactBlockProcessorSupportedSyncAlgorithm
+                }
+            }
         }
         return context
     }
