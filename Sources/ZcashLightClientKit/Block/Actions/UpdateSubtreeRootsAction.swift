@@ -8,11 +8,13 @@
 import Foundation
 
 final class UpdateSubtreeRootsAction {
+    let configProvider: CompactBlockProcessor.ConfigProvider
     let rustBackend: ZcashRustBackendWelding
     let service: LightWalletService
     let logger: Logger
     
-    init(container: DIContainer) {
+    init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
+        self.configProvider = configProvider
         service = container.resolve(LightWalletService.self)
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
         logger = container.resolve(Logger.self)
@@ -25,7 +27,7 @@ extension UpdateSubtreeRootsAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         var request = GetSubtreeRootsArg()
         request.shieldedProtocol = .sapling
-        request.maxEntries = 65536
+        request.maxEntries = await configProvider.config.network.networkType == .testnet ? 65536 : 0
         
         logger.info("Attempt to get subtree roots, this may fail because lightwalletd may not support Spend before Sync.")
         let stream = service.getSubtreeRoots(request)
