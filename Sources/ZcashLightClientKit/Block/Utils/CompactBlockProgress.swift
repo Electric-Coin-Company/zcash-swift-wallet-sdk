@@ -19,7 +19,7 @@ final actor CompactBlockProgress {
             switch self {
             case .enhance: return 0.08
             case .fetch: return 0.02
-            case .scan: return 0.9
+            case .scan: return 1.0
             }
         }
     }
@@ -35,18 +35,13 @@ final actor CompactBlockProgress {
         return overallProgress
     }
     
-    func event(_ event: CompactBlockProcessor.Event) -> Bool {
+    func hasProgressUpdated(_ event: CompactBlockProcessor.Event) -> Bool {
         guard case .progressPartialUpdate(let update) = event else {
             return false
         }
         
-        switch update {
-        case .syncing(let progress):
+        if case let .syncing(progress) = update {
             actionProgresses[.scan] = progress.progress
-        case .enhance(let progress):
-            actionProgresses[.enhance] = progress.progress
-        case .fetch(let progress):
-            actionProgresses[.fetch] = progress
         }
         
         return true

@@ -17,7 +17,7 @@ protocol BlockScanner {
     func scanBlocks(
         at range: CompactBlockRange,
         totalProgressRange: CompactBlockRange,
-        didScan: @escaping (BlockHeight) async -> Void
+        didScan: @escaping (BlockHeight, UInt32) async -> Void
     ) async throws -> BlockHeight
 }
 
@@ -35,7 +35,7 @@ extension BlockScannerImpl: BlockScanner {
     func scanBlocks(
         at range: CompactBlockRange,
         totalProgressRange: CompactBlockRange,
-        didScan: @escaping (BlockHeight) async -> Void
+        didScan: @escaping (BlockHeight, UInt32) async -> Void
     ) async throws -> BlockHeight {
         logger.debug("Going to scan blocks in range: \(range)")
         try Task.checkCancellation()
@@ -69,7 +69,7 @@ extension BlockScannerImpl: BlockScanner {
             
             scannedNewBlocks = previousScannedHeight != lastScannedHeight
             if scannedNewBlocks {
-                await didScan(lastScannedHeight)
+                await didScan(lastScannedHeight, batchSize)
 
                 let progress = BlockProgress(
                     startHeight: totalProgressRange.lowerBound,

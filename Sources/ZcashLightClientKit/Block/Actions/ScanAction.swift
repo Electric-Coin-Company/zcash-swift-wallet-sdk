@@ -51,11 +51,20 @@ extension ScanAction: Action {
         let totalProgressRange = await context.totalProgressRange
         
         do {
-            try await blockScanner.scanBlocks(at: batchRange, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight in
+            try await blockScanner.scanBlocks(at: batchRange, totalProgressRange: totalProgressRange) { [weak self] lastScannedHeight, increment in
+                let processedHeight = await context.processedHeight
+                let incrementedprocessedHeight = processedHeight + BlockHeight(increment)
+                await context.update(
+                    processedHeight:
+                        incrementedprocessedHeight < totalProgressRange.upperBound
+                        ? incrementedprocessedHeight
+                        : totalProgressRange.upperBound
+                )
+
                 let progress = BlockProgress(
                     startHeight: totalProgressRange.lowerBound,
                     targetHeight: totalProgressRange.upperBound,
-                    progressHeight: lastScannedHeight
+                    progressHeight: incrementedprocessedHeight
                 )
                 self?.logger.debug("progress: \(progress)")
                 await didUpdate(.progressPartialUpdate(.syncing(progress)))

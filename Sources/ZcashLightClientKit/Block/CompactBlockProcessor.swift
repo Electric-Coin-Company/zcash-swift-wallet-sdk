@@ -521,7 +521,7 @@ extension CompactBlockProcessor {
                 // Execute action.
                 context = try await action.run(with: context) { [weak self] event in
                     await self?.send(event: event)
-                    if let progressChanged = await self?.compactBlockProgress.event(event), progressChanged {
+                    if let progressChanged = await self?.compactBlockProgress.hasProgressUpdated(event), progressChanged {
                         if let progress = await self?.compactBlockProgress.progress {
                             await self?.send(event: .progressUpdated(progress))
                         }
