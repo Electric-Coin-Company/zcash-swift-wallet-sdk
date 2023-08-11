@@ -14,7 +14,10 @@ actor ActionContext {
     let preferredSyncAlgorithm: SyncAlgorithm
     var supportedSyncAlgorithm: SyncAlgorithm?
     var requestedRewindHeight: BlockHeight?
+    /// Represents the overall range of blocks that will be synced, `SyncAlgorithm` doesn't matter.
     var totalProgressRange: CompactBlockRange = 0...0
+    /// Amount of blocks that have been processed so far
+    var processedHeight: BlockHeight = 0
     var lastScannedHeight: BlockHeight?
     var lastDownloadedHeight: BlockHeight?
     var lastEnhancedHeight: BlockHeight?
@@ -30,7 +33,11 @@ actor ActionContext {
         self.state = state
     }
     func update(syncControlData: SyncControlData) async { self.syncControlData = syncControlData }
-    func update(totalProgressRange: CompactBlockRange) async { self.totalProgressRange = totalProgressRange }
+    func update(totalProgressRange: CompactBlockRange) async {
+        self.processedHeight = totalProgressRange.lowerBound
+        self.totalProgressRange = totalProgressRange
+    }
+    func update(processedHeight: BlockHeight) async { self.processedHeight = processedHeight }
     func update(lastScannedHeight: BlockHeight) async { self.lastScannedHeight = lastScannedHeight }
     func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
     func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }

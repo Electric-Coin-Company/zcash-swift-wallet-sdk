@@ -8,6 +8,13 @@ be able to write to this location after it creates this directory. It is suggest
 a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the
 system itself won't remove these data.
 
+### Removed
+
+### [#1181] Correct computation of progress for Spend before Sync
+`latestScannedHeight` and `latestScannedTime` have been removed from `SynchronizerState`. With multiple algorithms
+of syncing the amount of data provided is reduced so it's consistent. Spend before Sync is done in non-linear order
+so both Height and Time don't make sense anymore. 
+
 # 0.22.0-beta
 
 ## Checkpoints
