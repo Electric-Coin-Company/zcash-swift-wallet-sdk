@@ -1484,6 +1484,21 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
+    // MARK: - useZIP317Fees
+
+    var useZIP317FeesCallsCount = 0
+    var useZIP317FeesCalled: Bool {
+        return useZIP317FeesCallsCount > 0
+    }
+    var useZIP317FeesReceivedState: Bool?
+    var useZIP317FeesClosure: ((Bool) async -> Void)?
+
+    func useZIP317Fees(_ state: Bool) async {
+        useZIP317FeesCallsCount += 1
+        useZIP317FeesReceivedState = state
+        await useZIP317FeesClosure!(state)
+    }
+
     // MARK: - wipe
 
     var wipeCallsCount = 0
@@ -2765,6 +2780,24 @@ actor ZcashRustBackendWeldingMock: ZcashRustBackendWelding {
         } else {
             return latestCachedBlockHeightReturnValue
         }
+    }
+
+    // MARK: - useZIP317Fees
+
+    var useZIP317FeesCallsCount = 0
+    var useZIP317FeesCalled: Bool {
+        return useZIP317FeesCallsCount > 0
+    }
+    var useZIP317FeesReceivedState: Bool?
+    var useZIP317FeesClosure: ((Bool) async -> Void)?
+    func setUseZIP317FeesClosure(_ param: ((Bool) async -> Void)?) async {
+        useZIP317FeesClosure = param
+    }
+
+    func useZIP317Fees(_ state: Bool) async {
+        useZIP317FeesCallsCount += 1
+        useZIP317FeesReceivedState = state
+        await useZIP317FeesClosure!(state)
     }
 
 }

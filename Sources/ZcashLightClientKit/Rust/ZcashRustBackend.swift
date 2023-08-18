@@ -11,7 +11,7 @@ import libzcashlc
 
 actor ZcashRustBackend: ZcashRustBackendWelding {
     let minimumConfirmations: UInt32 = 10
-    let useZIP317Fees = false
+    var useZIP317Fees = false
 
     let dbData: (String, UInt)
     let fsBlockDbRoot: (String, UInt)
@@ -646,6 +646,10 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
 
         return branchId
+    }
+    
+    func useZIP317Fees(_ state: Bool) async {
+        useZIP317Fees = state
     }
 }
 

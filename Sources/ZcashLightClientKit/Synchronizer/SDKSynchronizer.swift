@@ -508,6 +508,12 @@ public class SDKSynchronizer: Synchronizer {
         return subject.eraseToAnyPublisher()
     }
 
+    // MARK: Zip 317 fees
+
+    public func useZIP317Fees(_ state: Bool) async {
+        await initializer.rustBackend.useZIP317Fees(state)
+    }
+
     // MARK: Wipe
 
     public func wipe() -> AnyPublisher<Void, Error> {

@@ -243,4 +243,7 @@ protocol ZcashRustBackendWelding {
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - Returns `BlockHeight` of the latest cached block or `.empty` if no blocks are stored.
     func latestCachedBlockHeight() async -> BlockHeight
+
+    /// The SDK previously hardcoded the ZIP 317 flag to `false`. This API allows users to turn it on/off.
+    func useZIP317Fees(_ state: Bool) async
 }

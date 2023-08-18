@@ -12,6 +12,11 @@ be able to write to this location after it creates this directory. It is suggest
 a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the
 system itself won't remove these data.
 
+### [#1204] Expose ZIP 317
+
+The SDK has been prepared but untested for ZIP 317 proposal for a while. Internally it uses a flag `useZIP317Fees` but it's been hardcoded to false.
+Ticket #1024 exposes new public API that allows users to turn the flag on/off. Synchronizer now offers an async method `useZIP317Fees(Bool)`.
+
 # 0.22.0-beta
 
 ## Checkpoints

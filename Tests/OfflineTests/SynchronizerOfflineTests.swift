@@ -475,6 +475,49 @@ class SynchronizerOfflineTests: ZcashTestCase {
         }
     }
 
+    func testUseZIP317FeesToggle() async throws {
+        let validFileURL = URL(fileURLWithPath: "/some/valid/path/to.file")
+        let validDirectoryURL = URL(fileURLWithPath: "/some/valid/path/to/directory")
+        let invalidPathURL = URL(string: "https://whatever")!
+
+        let initializer = Initializer(
+            cacheDbURL: nil,
+            fsBlockDbRoot: validDirectoryURL,
+            generalStorageURL: validDirectoryURL,
+            dataDbURL: invalidPathURL,
+            endpoint: LightWalletEndpointBuilder.default,
+            network: ZcashNetworkBuilder.network(for: .testnet),
+            spendParamsURL: validFileURL,
+            outputParamsURL: validFileURL,
+            saplingParamsSourceURL: .default,
+            alias: .default,
+            loggingPolicy: .default(.debug)
+        )
+
+        XCTAssertNotNil(initializer.urlsParsingError)
+
+        let synchronizer = SDKSynchronizer(initializer: initializer)
+
+        let backend = initializer.container.resolve(ZcashRustBackendWelding.self)
+        
+        guard let rustBackend = backend as? ZcashRustBackend else {
+            return XCTFail()
+        }
+
+        let unused = await rustBackend.useZIP317Fees
+        XCTAssertFalse(unused)
+        
+        await synchronizer.useZIP317Fees(true)
+
+        let used = await rustBackend.useZIP317Fees
+        XCTAssertTrue(used)
+
+        await synchronizer.useZIP317Fees(false)
+
+        let unusedAgain = await rustBackend.useZIP317Fees
+        XCTAssertFalse(unusedAgain)
+    }
+    
     func synchronizerState(for internalSyncStatus: InternalSyncStatus) -> SynchronizerState {
         SynchronizerState(
             syncSessionID: .nullID,

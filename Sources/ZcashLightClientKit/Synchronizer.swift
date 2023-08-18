@@ -289,6 +289,9 @@ public protocol Synchronizer: AnyObject {
     /// - Parameter policy: the rewind policy
     func rewind(_ policy: RewindPolicy) -> AnyPublisher<Void, Error>
 
+    /// The SDK previously hardcoded the ZIP 317 flag to `false`. This API allows users to turn it on/off.
+    func useZIP317Fees(_ state: Bool) async
+    
     /// Wipes out internal data structures of the SDK. After this call, everything is the same as before any sync. The state of the synchronizer is
     /// switched to `unprepared`. So before the next sync, it's required to call `prepare()`.
     ///
