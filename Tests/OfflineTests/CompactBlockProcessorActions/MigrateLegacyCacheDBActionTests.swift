@@ -34,7 +34,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         )
 
         do {
-            let nextContext = try await migrateLegacyCacheDBAction.run(with: .init(state: .migrateLegacyCacheDB)) { _ in }
+            let context = ActionContextMock.default()
+            let nextContext = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
             
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
             XCTAssertFalse(
@@ -44,11 +45,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
 
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .validateServer,
-                "nextContext after .migrateLegacyCacheDB is expected to be .validateServer but received \(nextState)"
-            )
+            let acResult = nextContext.checkStateIs(.validateServer)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testMigrateLegacyCacheDBAction_noCacheDbURL is not expected to fail. \(error)")
         }
@@ -68,7 +66,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         )
 
         do {
-            _ = try await migrateLegacyCacheDBAction.run(with: .init(state: .migrateLegacyCacheDB)) { _ in }
+            let context = ActionContextMock.default()
+            _ = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
             XCTFail("testMigrateLegacyCacheDBAction_noFsBlockCacheRoot is expected to fail.")
         } catch ZcashError.compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL {
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
@@ -104,7 +103,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         )
 
         do {
-            let nextContext = try await migrateLegacyCacheDBAction.run(with: .init(state: .migrateLegacyCacheDB)) { _ in }
+            let context = ActionContextMock.default()
+            let nextContext = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
             
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
             XCTAssertFalse(
@@ -114,11 +114,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
 
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .validateServer,
-                "nextContext after .migrateLegacyCacheDB is expected to be .validateServer but received \(nextState)"
-            )
+            let acResult = nextContext.checkStateIs(.validateServer)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testMigrateLegacyCacheDBAction_aliasDoesntMatchDefault is not expected to fail. \(error)")
         }
@@ -142,8 +139,9 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         )
 
         do {
-            let nextContext = try await migrateLegacyCacheDBAction.run(with: .init(state: .migrateLegacyCacheDB)) { _ in }
-            
+            let context = ActionContextMock.default()
+            let nextContext = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
+
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
             XCTAssertFalse(
                 transactionRepositoryMock.lastScannedHeightCalled,
@@ -152,11 +150,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             XCTAssertTrue(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
 
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .validateServer,
-                "nextContext after .migrateLegacyCacheDB is expected to be .validateServer but received \(nextState)"
-            )
+            let acResult = nextContext.checkStateIs(.validateServer)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testMigrateLegacyCacheDBAction_isNotReadableFile is not expected to fail. \(error)")
         }
@@ -181,7 +176,8 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         )
 
         do {
-            _ = try await migrateLegacyCacheDBAction.run(with: .init(state: .migrateLegacyCacheDB)) { _ in }
+            let context = ActionContextMock.default()
+            _ = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
         } catch ZcashError.compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb {
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
             XCTAssertFalse(
@@ -218,17 +214,15 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
         )
 
         do {
-            let nextContext = try await migrateLegacyCacheDBAction.run(with: .init(state: .migrateLegacyCacheDB)) { _ in }
-            
+            let context = ActionContextMock.default()
+            let nextContext = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
+
             XCTAssertTrue(compactBlockRepositoryMock.createCalled, "storage.create() is expected to be called.")
             XCTAssertTrue(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is expected to be called.")
             XCTAssertTrue(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is expected to be called.")
 
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .validateServer,
-                "nextContext after .migrateLegacyCacheDB is expected to be .validateServer but received \(nextState)"
-            )
+            let acResult = nextContext.checkStateIs(.validateServer)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testMigrateLegacyCacheDBAction_nextAction is not expected to fail. \(error)")
         }

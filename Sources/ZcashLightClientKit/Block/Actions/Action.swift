@@ -7,7 +7,32 @@
 
 import Foundation
 
-actor ActionContext {
+protocol ActionContext {
+    var state: CBPState { get async }
+    var prevState: CBPState? { get async }
+    var syncControlData: SyncControlData { get async }
+    var preferredSyncAlgorithm: SyncAlgorithm { get }
+    var supportedSyncAlgorithm: SyncAlgorithm? { get async }
+    var requestedRewindHeight: BlockHeight? { get async }
+    var totalProgressRange: CompactBlockRange { get async }
+    var processedHeight: BlockHeight { get async }
+    var lastChainTipUpdateTime: TimeInterval { get async }
+    var lastScannedHeight: BlockHeight? { get async }
+    var lastEnhancedHeight: BlockHeight? { get async }
+    
+    func update(state: CBPState) async
+    func update(syncControlData: SyncControlData) async
+    func update(totalProgressRange: CompactBlockRange) async
+    func update(processedHeight: BlockHeight) async
+    func update(lastChainTipUpdateTime: TimeInterval) async
+    func update(lastScannedHeight: BlockHeight) async
+    func update(lastDownloadedHeight: BlockHeight) async
+    func update(lastEnhancedHeight: BlockHeight?) async
+    func update(supportedSyncAlgorithm: SyncAlgorithm) async
+    func update(requestedRewindHeight: BlockHeight) async
+}
+
+actor ActionContextImpl: ActionContext {
     var state: CBPState
     var prevState: CBPState?
     var syncControlData: SyncControlData

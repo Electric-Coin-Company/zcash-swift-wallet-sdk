@@ -193,7 +193,7 @@ actor CompactBlockProcessor {
         )
 
         let configProvider = ConfigProvider(config: config)
-        context = ActionContext(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
+        context = ActionContextImpl(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
         actions = Self.makeActions(container: container, configProvider: configProvider)
 
         self.metrics = container.resolve(SDKMetrics.self)
@@ -638,7 +638,7 @@ extension CompactBlockProcessor {
 
     private func resetContext() async {
         let lastEnhancedheight = await context.lastEnhancedHeight
-        context = ActionContext(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
+        context = ActionContextImpl(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
         await context.update(lastEnhancedHeight: lastEnhancedheight)
         await compactBlockProgress.reset()
     }

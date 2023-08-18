@@ -11,7 +11,7 @@ import XCTest
 
 final class ActionContextStateTests: XCTestCase {
     func testPreviousState() async throws {
-        let syncContext: ActionContext = .init(state: .idle)
+        let syncContext = ActionContextImpl(state: .idle)
         
         await syncContext.update(state: .clearCache)
         
@@ -31,5 +31,16 @@ final class ActionContextStateTests: XCTestCase {
         } else {
             XCTFail("syncContext.prevState is not expected to be nil.")
         }
+    }
+    
+    func testDefaultSyncAlgorith() async throws {
+        let syncContext = ActionContextImpl(state: .idle)
+        
+        let preferredSyncAlgorithm = await syncContext.preferredSyncAlgorithm
+        
+        XCTAssertTrue(
+            preferredSyncAlgorithm == .linear,
+            "ActionContext default preferredSyncAlgorithm is expected to be .linear but received \(preferredSyncAlgorithm)"
+        )
     }
 }

@@ -28,12 +28,11 @@ final class ValidateServerActionTests: ZcashTestCase {
         let validateServerAction = setupAction()
         
         do {
-            let nextContext = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .fetchUTXO,
-                "nextContext after .validateServer is expected to be .fetchUTXO but received \(nextState)"
-            )
+            let context = ActionContextMock.default()
+            let nextContext = try await validateServerAction.run(with: context) { _ in }
+            
+            let acResult = nextContext.checkStateIs(.fetchUTXO)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testValidateServerAction_NextAction is not expected to fail. \(error)")
         }
@@ -45,7 +44,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         let validateServerAction = setupAction()
         
         do {
-            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: ActionContextMock()) { _ in }
             XCTFail("testValidateServerAction_ChainNameError is expected to fail.")
         } catch ZcashError.compactBlockProcessorChainName(let chainName) {
             XCTAssertEqual(chainName, "invalid")
@@ -63,7 +62,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         let validateServerAction = setupAction()
         
         do {
-            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: ActionContextMock()) { _ in }
             XCTFail("testValidateServerAction_NetworkMatchError is expected to fail.")
         } catch let ZcashError.compactBlockProcessorNetworkMismatch(expected, found) {
             XCTAssertEqual(expected, .mainnet)
@@ -82,7 +81,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         let validateServerAction = setupAction()
         
         do {
-            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: ActionContextMock()) { _ in }
             XCTFail("testValidateServerAction_SaplingActivationError is expected to fail.")
         } catch let ZcashError.compactBlockProcessorSaplingActivationMismatch(expected, found) {
             XCTAssertEqual(expected, 280_000)
@@ -101,7 +100,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         let validateServerAction = setupAction()
 
         do {
-            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: ActionContextMock()) { _ in }
             XCTFail("testValidateServerAction_ConsensusBranchIDError_InvalidRemoteBranch is expected to fail.")
         } catch ZcashError.compactBlockProcessorConsensusBranchID {
         } catch {
@@ -118,7 +117,7 @@ final class ValidateServerActionTests: ZcashTestCase {
         let validateServerAction = setupAction()
 
         do {
-            _ = try await validateServerAction.run(with: .init(state: .validateServer)) { _ in }
+            _ = try await validateServerAction.run(with: ActionContextMock()) { _ in }
             XCTFail("testValidateServerAction_ConsensusBranchIDError_ValidRemoteBranch is expected to fail.")
         } catch let ZcashError.compactBlockProcessorWrongConsensusBranchId(expected, found) {
             XCTAssertEqual(expected, -1026109260)

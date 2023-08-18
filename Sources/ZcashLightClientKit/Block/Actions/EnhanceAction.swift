@@ -11,13 +11,11 @@ final class EnhanceAction {
     let blockEnhancer: BlockEnhancer
     let configProvider: CompactBlockProcessor.ConfigProvider
     let logger: Logger
-    let transactionRepository: TransactionRepository
     
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         blockEnhancer = container.resolve(BlockEnhancer.self)
         self.configProvider = configProvider
         logger = container.resolve(Logger.self)
-        transactionRepository = container.resolve(TransactionRepository.self)
     }
 
     func decideWhatToDoNext(context: ActionContext, lastScannedHeight: BlockHeight) async -> ActionContext {

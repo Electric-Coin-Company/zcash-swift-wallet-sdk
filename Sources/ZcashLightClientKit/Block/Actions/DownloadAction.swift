@@ -50,6 +50,7 @@ extension DownloadAction: Action {
         let downloadLimit = await context.syncControlData.latestBlockHeight >= potentialDownloadLimit ? potentialDownloadLimit : batchRangeEnd
 
         logger.debug("Starting download with range: \(batchRange.lowerBound)...\(batchRange.upperBound)")
+        
         await downloader.update(latestDownloadedBlockHeight: batchRange.lowerBound, force: true) // SbS
         try await downloader.setSyncRange(lastScannedHeight...latestBlockHeight, batchSize: config.batchSize)
         await downloader.setDownloadLimit(downloadLimit)
