@@ -7,6 +7,193 @@ import Foundation
 
 
 // MARK: - AutoMockable protocols
+class ActionContextMock: ActionContext {
+
+
+    init(
+    ) {
+    }
+    var state: CBPState {
+        get { return underlyingState }
+    }
+    var underlyingState: CBPState!
+    var prevState: CBPState?
+    var syncControlData: SyncControlData {
+        get { return underlyingSyncControlData }
+    }
+    var underlyingSyncControlData: SyncControlData!
+    var preferredSyncAlgorithm: SyncAlgorithm {
+        get { return underlyingPreferredSyncAlgorithm }
+    }
+    var underlyingPreferredSyncAlgorithm: SyncAlgorithm!
+    var supportedSyncAlgorithm: SyncAlgorithm?
+    var requestedRewindHeight: BlockHeight?
+    var totalProgressRange: CompactBlockRange {
+        get { return underlyingTotalProgressRange }
+    }
+    var underlyingTotalProgressRange: CompactBlockRange!
+    var processedHeight: BlockHeight {
+        get { return underlyingProcessedHeight }
+    }
+    var underlyingProcessedHeight: BlockHeight!
+    var lastChainTipUpdateTime: TimeInterval {
+        get { return underlyingLastChainTipUpdateTime }
+    }
+    var underlyingLastChainTipUpdateTime: TimeInterval!
+    var lastScannedHeight: BlockHeight?
+    var lastEnhancedHeight: BlockHeight?
+
+    // MARK: - update
+
+    var updateStateCallsCount = 0
+    var updateStateCalled: Bool {
+        return updateStateCallsCount > 0
+    }
+    var updateStateReceivedState: CBPState?
+    var updateStateClosure: ((CBPState) async -> Void)?
+
+    func update(state: CBPState) async {
+        updateStateCallsCount += 1
+        updateStateReceivedState = state
+        await updateStateClosure!(state)
+    }
+
+    // MARK: - update
+
+    var updateSyncControlDataCallsCount = 0
+    var updateSyncControlDataCalled: Bool {
+        return updateSyncControlDataCallsCount > 0
+    }
+    var updateSyncControlDataReceivedSyncControlData: SyncControlData?
+    var updateSyncControlDataClosure: ((SyncControlData) async -> Void)?
+
+    func update(syncControlData: SyncControlData) async {
+        updateSyncControlDataCallsCount += 1
+        updateSyncControlDataReceivedSyncControlData = syncControlData
+        await updateSyncControlDataClosure!(syncControlData)
+    }
+
+    // MARK: - update
+
+    var updateTotalProgressRangeCallsCount = 0
+    var updateTotalProgressRangeCalled: Bool {
+        return updateTotalProgressRangeCallsCount > 0
+    }
+    var updateTotalProgressRangeReceivedTotalProgressRange: CompactBlockRange?
+    var updateTotalProgressRangeClosure: ((CompactBlockRange) async -> Void)?
+
+    func update(totalProgressRange: CompactBlockRange) async {
+        updateTotalProgressRangeCallsCount += 1
+        updateTotalProgressRangeReceivedTotalProgressRange = totalProgressRange
+        await updateTotalProgressRangeClosure!(totalProgressRange)
+    }
+
+    // MARK: - update
+
+    var updateProcessedHeightCallsCount = 0
+    var updateProcessedHeightCalled: Bool {
+        return updateProcessedHeightCallsCount > 0
+    }
+    var updateProcessedHeightReceivedProcessedHeight: BlockHeight?
+    var updateProcessedHeightClosure: ((BlockHeight) async -> Void)?
+
+    func update(processedHeight: BlockHeight) async {
+        updateProcessedHeightCallsCount += 1
+        updateProcessedHeightReceivedProcessedHeight = processedHeight
+        await updateProcessedHeightClosure!(processedHeight)
+    }
+
+    // MARK: - update
+
+    var updateLastChainTipUpdateTimeCallsCount = 0
+    var updateLastChainTipUpdateTimeCalled: Bool {
+        return updateLastChainTipUpdateTimeCallsCount > 0
+    }
+    var updateLastChainTipUpdateTimeReceivedLastChainTipUpdateTime: TimeInterval?
+    var updateLastChainTipUpdateTimeClosure: ((TimeInterval) async -> Void)?
+
+    func update(lastChainTipUpdateTime: TimeInterval) async {
+        updateLastChainTipUpdateTimeCallsCount += 1
+        updateLastChainTipUpdateTimeReceivedLastChainTipUpdateTime = lastChainTipUpdateTime
+        await updateLastChainTipUpdateTimeClosure!(lastChainTipUpdateTime)
+    }
+
+    // MARK: - update
+
+    var updateLastScannedHeightCallsCount = 0
+    var updateLastScannedHeightCalled: Bool {
+        return updateLastScannedHeightCallsCount > 0
+    }
+    var updateLastScannedHeightReceivedLastScannedHeight: BlockHeight?
+    var updateLastScannedHeightClosure: ((BlockHeight) async -> Void)?
+
+    func update(lastScannedHeight: BlockHeight) async {
+        updateLastScannedHeightCallsCount += 1
+        updateLastScannedHeightReceivedLastScannedHeight = lastScannedHeight
+        await updateLastScannedHeightClosure!(lastScannedHeight)
+    }
+
+    // MARK: - update
+
+    var updateLastDownloadedHeightCallsCount = 0
+    var updateLastDownloadedHeightCalled: Bool {
+        return updateLastDownloadedHeightCallsCount > 0
+    }
+    var updateLastDownloadedHeightReceivedLastDownloadedHeight: BlockHeight?
+    var updateLastDownloadedHeightClosure: ((BlockHeight) async -> Void)?
+
+    func update(lastDownloadedHeight: BlockHeight) async {
+        updateLastDownloadedHeightCallsCount += 1
+        updateLastDownloadedHeightReceivedLastDownloadedHeight = lastDownloadedHeight
+        await updateLastDownloadedHeightClosure!(lastDownloadedHeight)
+    }
+
+    // MARK: - update
+
+    var updateLastEnhancedHeightCallsCount = 0
+    var updateLastEnhancedHeightCalled: Bool {
+        return updateLastEnhancedHeightCallsCount > 0
+    }
+    var updateLastEnhancedHeightReceivedLastEnhancedHeight: BlockHeight?
+    var updateLastEnhancedHeightClosure: ((BlockHeight?) async -> Void)?
+
+    func update(lastEnhancedHeight: BlockHeight?) async {
+        updateLastEnhancedHeightCallsCount += 1
+        updateLastEnhancedHeightReceivedLastEnhancedHeight = lastEnhancedHeight
+        await updateLastEnhancedHeightClosure!(lastEnhancedHeight)
+    }
+
+    // MARK: - update
+
+    var updateSupportedSyncAlgorithmCallsCount = 0
+    var updateSupportedSyncAlgorithmCalled: Bool {
+        return updateSupportedSyncAlgorithmCallsCount > 0
+    }
+    var updateSupportedSyncAlgorithmReceivedSupportedSyncAlgorithm: SyncAlgorithm?
+    var updateSupportedSyncAlgorithmClosure: ((SyncAlgorithm) async -> Void)?
+
+    func update(supportedSyncAlgorithm: SyncAlgorithm) async {
+        updateSupportedSyncAlgorithmCallsCount += 1
+        updateSupportedSyncAlgorithmReceivedSupportedSyncAlgorithm = supportedSyncAlgorithm
+        await updateSupportedSyncAlgorithmClosure!(supportedSyncAlgorithm)
+    }
+
+    // MARK: - update
+
+    var updateRequestedRewindHeightCallsCount = 0
+    var updateRequestedRewindHeightCalled: Bool {
+        return updateRequestedRewindHeightCallsCount > 0
+    }
+    var updateRequestedRewindHeightReceivedRequestedRewindHeight: BlockHeight?
+    var updateRequestedRewindHeightClosure: ((BlockHeight) async -> Void)?
+
+    func update(requestedRewindHeight: BlockHeight) async {
+        updateRequestedRewindHeightCallsCount += 1
+        updateRequestedRewindHeightReceivedRequestedRewindHeight = requestedRewindHeight
+        await updateRequestedRewindHeightClosure!(requestedRewindHeight)
+    }
+
+}
 class BlockDownloaderMock: BlockDownloader {
 
 

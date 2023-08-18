@@ -13,7 +13,7 @@ final class DownloadActionTests: ZcashTestCase {
     var underlyingDownloadRange: CompactBlockRange?
     var underlyingScanRange: CompactBlockRange?
 
-    func testDownloadAction_NextAction() async throws {
+    func testDownloadAction_FullPass() async throws {
         let blockDownloaderMock = BlockDownloaderMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         
@@ -32,25 +32,69 @@ final class DownloadActionTests: ZcashTestCase {
         underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 
-        let syncContext = await setupActionContext()
-        await syncContext.update(lastScannedHeight: 1000)
+        let syncContext = ActionContextMock.default()
+        syncContext.lastScannedHeight = 1000
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: underlyingScanRange?.lowerBound,
+            firstUnenhancedHeight: nil
+        )
 
         do {
             let nextContext = try await downloadAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(blockDownloaderMock.setSyncRangeBatchSizeCalled, "downloader.setSyncRange() is expected to be called.")
-            XCTAssertTrue(blockDownloaderMock.setDownloadLimitCalled, "downloader.setDownloadLimit() is expected to be called.")
-            XCTAssertTrue(blockDownloaderMock.startDownloadMaxBlockBufferSizeCalled, "downloader.startDownload() is expected to be called.")
             XCTAssertTrue(
-                blockDownloaderMock.waitUntilRequestedBlocksAreDownloadedInCalled,
-                "downloader.waitUntilRequestedBlocksAreDownloaded() is expected to be called."
+                blockDownloaderMock.setSyncRangeBatchSizeCallsCount == 1,
+                "downloader.setSyncRange() is expected to be called exatcly once."
+            )
+            XCTAssertTrue(blockDownloaderMock.setDownloadLimitCallsCount == 1, "downloader.setDownloadLimit() is expected to be called exatcly once.")
+            XCTAssertTrue(
+                blockDownloaderMock.startDownloadMaxBlockBufferSizeCallsCount == 1,
+                "downloader.startDownload() is expected to be called exatcly once."
+            )
+            XCTAssertTrue(
+                blockDownloaderMock.updateLatestDownloadedBlockHeightForceCallsCount == 1,
+                "downloader.update(latestDownloadedBlockHeight:) expected to be called exactly once."
+            )
+            XCTAssertTrue(
+                blockDownloaderMock.waitUntilRequestedBlocksAreDownloadedInCallsCount == 1,
+                "downloader.waitUntilRequestedBlocksAreDownloaded() is expected to be called exatcly once."
             )
 
-            let nextState = await nextContext.state
+            let acResult = nextContext.checkStateIs(.scan)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
+        } catch {
+            XCTFail("testDownloadAction_NextAction is not expected to fail. \(error)")
+        }
+    }
+    
+    func testDownloadAction_LastScanHeightNil() async throws {
+        let blockDownloaderMock = BlockDownloaderMock()
+
+        let downloadAction = setupAction(blockDownloaderMock)
+        
+        let syncContext = ActionContextMock.default()
+
+        do {
+            let nextContext = try await downloadAction.run(with: syncContext) { _ in }
+
+            XCTAssertTrue(blockDownloaderMock.setSyncRangeBatchSizeCallsCount == 0, "downloader.setSyncRange() is not expected to be called.")
+            XCTAssertTrue(blockDownloaderMock.setDownloadLimitCallsCount == 0, "downloader.setDownloadLimit() is not expected to be called.")
             XCTAssertTrue(
-                nextState == .scan,
-                "nextContext after .download is expected to be .scan but received \(nextState)"
+                blockDownloaderMock.startDownloadMaxBlockBufferSizeCallsCount == 0,
+                "downloader.startDownload() is not expected to be called."
             )
+            XCTAssertTrue(
+                blockDownloaderMock.updateLatestDownloadedBlockHeightForceCallsCount == 0,
+                "downloader.update(latestDownloadedBlockHeight:) is not expected to be called."
+            )
+            XCTAssertTrue(
+                blockDownloaderMock.waitUntilRequestedBlocksAreDownloadedInCallsCount == 0,
+                "downloader.waitUntilRequestedBlocksAreDownloaded() is not expected to be called."
+            )
+
+            let acResult = nextContext.checkStateIs(.scan)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testDownloadAction_NextAction is not expected to fail. \(error)")
         }
@@ -65,7 +109,13 @@ final class DownloadActionTests: ZcashTestCase {
             transactionRepositoryMock
         )
         
-        let syncContext = await setupActionContext()
+        let syncContext = ActionContextMock.default()
+        syncContext.lastScannedHeight = 1000
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 999,
+            latestScannedHeight: underlyingScanRange?.lowerBound,
+            firstUnenhancedHeight: nil
+        )
 
         do {
             let nextContext = try await downloadAction.run(with: syncContext) { _ in }
@@ -82,50 +132,10 @@ final class DownloadActionTests: ZcashTestCase {
                 "downloader.waitUntilRequestedBlocksAreDownloaded() is not expected to be called."
             )
             
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .scan,
-                "nextContext after .download is expected to be .scan but received \(nextState)"
-            )
+            let acResult = nextContext.checkStateIs(.scan)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testDownloadAction_NoDownloadAndScanRange is not expected to fail. \(error)")
-        }
-    }
-    
-    func testDownloadAction_NothingMoreToDownload() async throws {
-        let blockDownloaderMock = BlockDownloaderMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
-        
-        transactionRepositoryMock.lastScannedHeightReturnValue = 2001
-
-        let downloadAction = setupAction(
-            blockDownloaderMock,
-            transactionRepositoryMock
-        )
-        
-        underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-        underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-
-        let syncContext = await setupActionContext()
-
-        do {
-            let nextContext = try await downloadAction.run(with: syncContext) { _ in }
-
-            XCTAssertFalse(blockDownloaderMock.setSyncRangeBatchSizeCalled, "downloader.setSyncRange() is not expected to be called.")
-            XCTAssertFalse(blockDownloaderMock.setDownloadLimitCalled, "downloader.setDownloadLimit() is not expected to be called.")
-            XCTAssertFalse(blockDownloaderMock.startDownloadMaxBlockBufferSizeCalled, "downloader.startDownload() is not expected to be called.")
-            XCTAssertFalse(
-                blockDownloaderMock.waitUntilRequestedBlocksAreDownloadedInCalled,
-                "downloader.waitUntilRequestedBlocksAreDownloaded() is not expected to be called."
-            )
-            
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .scan,
-                "nextContext after .download is expected to be .scan but received \(nextState)"
-            )
-        } catch {
-            XCTFail("testDownloadAction_NothingMoreToDownload is not expected to fail. \(error)")
         }
     }
     
@@ -142,21 +152,7 @@ final class DownloadActionTests: ZcashTestCase {
         
         XCTAssertTrue(blockDownloaderMock.stopDownloadCalled, "downloader.stopDownload() is expected to be called.")
     }
-
-    private func setupActionContext() async -> ActionContext {
-        let syncContext: ActionContext = .init(state: .download)
-
-        let syncControlData = SyncControlData(
-            latestBlockHeight: 2000,
-            latestScannedHeight: underlyingScanRange?.lowerBound,
-            firstUnenhancedHeight: nil
-        )
-        
-        await syncContext.update(syncControlData: syncControlData)
-
-        return syncContext
-    }
-    
+       
     private func setupAction(
         _ blockDownloaderMock: BlockDownloaderMock = BlockDownloaderMock(),
         _ transactionRepositoryMock: TransactionRepositoryMock = TransactionRepositoryMock(),

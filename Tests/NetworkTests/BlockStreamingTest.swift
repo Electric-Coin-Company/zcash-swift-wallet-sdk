@@ -140,7 +140,7 @@ class BlockStreamingTest: ZcashTestCase {
             latestScannedHeight: startHeight,
             firstUnenhancedHeight: nil
         )
-        let context = ActionContext(state: .download)
+        let context = ActionContextMock()
         await context.update(syncControlData: syncControlData)
 
         let expectation = XCTestExpectation()
@@ -175,7 +175,7 @@ class BlockStreamingTest: ZcashTestCase {
             latestScannedHeight: startHeight,
             firstUnenhancedHeight: nil
         )
-        let context = ActionContext(state: .download)
+        let context = ActionContextMock()
         await context.update(syncControlData: syncControlData)
 
         let date = Date()
