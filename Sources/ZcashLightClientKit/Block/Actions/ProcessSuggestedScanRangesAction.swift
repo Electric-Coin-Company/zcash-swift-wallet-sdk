@@ -25,7 +25,7 @@ extension ProcessSuggestedScanRangesAction: Action {
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         logger.info("Getting the suggested scan ranges from the wallet database.")
         let scanRanges = try await rustBackend.suggestScanRanges()
-        
+
         if let firstRange = scanRanges.first {
             let lowerBound = firstRange.range.lowerBound - 1
             let upperBound = firstRange.range.upperBound - 1
@@ -42,7 +42,7 @@ extension ProcessSuggestedScanRangesAction: Action {
                 latestScannedHeight [DB]:       \(lowerBound)
                 firstUnenhancedHeight [DB]:     \(lowerBound + 1)
                 """)
-            
+
             await context.update(lastScannedHeight: lowerBound)
             await context.update(lastDownloadedHeight: lowerBound)
             await context.update(syncControlData: syncControlData)
@@ -61,7 +61,7 @@ extension ProcessSuggestedScanRangesAction: Action {
                 logger.info("Setting the total range for Spend before Sync to \(minHeight...maxHeight).")
                 await context.update(totalProgressRange: minHeight...maxHeight)
             }
-            
+
             // If there is a range of blocks that needs to be verified, it will always
             // be returned as the first element of the vector of suggested ranges.
             if firstRange.priority == .verify {
