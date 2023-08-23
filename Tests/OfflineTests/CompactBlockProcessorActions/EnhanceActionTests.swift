@@ -50,7 +50,7 @@ final class EnhanceActionTests: ZcashTestCase {
         )
     }
 
-    func testEnhanceAction_decideWhatToDoNext_DownloadExpected() async throws {
+    func testEnhanceAction_decideWhatToDoNext_UpdateChainTipExpected() async throws {
         let enhanceAction = setupAction()
         underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
@@ -60,8 +60,8 @@ final class EnhanceActionTests: ZcashTestCase {
         let nextState = await nextContext.state
 
         XCTAssertTrue(
-            nextState == .download,
-            "testEnhanceAction_decideWhatToDoNext_DownloadExpected is expected to be .download but received \(nextState)"
+            nextState == .updateChainTip,
+            "testEnhanceAction_decideWhatToDoNext_DownloadExpected is expected to be .updateChainTip but received \(nextState)"
         )
     }
 

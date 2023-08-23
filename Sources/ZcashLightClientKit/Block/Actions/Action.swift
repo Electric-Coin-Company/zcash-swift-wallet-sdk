@@ -18,6 +18,8 @@ actor ActionContext {
     var totalProgressRange: CompactBlockRange = 0...0
     /// Amount of blocks that have been processed so far
     var processedHeight: BlockHeight = 0
+    /// Update chain tip must be called repeatadly, this value stores the previous update and help to decide when to call it again
+    var lastChainTipUpdateTime: TimeInterval = 0.0
     var lastScannedHeight: BlockHeight?
     var lastDownloadedHeight: BlockHeight?
     var lastEnhancedHeight: BlockHeight?
@@ -38,6 +40,7 @@ actor ActionContext {
         self.totalProgressRange = totalProgressRange
     }
     func update(processedHeight: BlockHeight) async { self.processedHeight = processedHeight }
+    func update(lastChainTipUpdateTime: TimeInterval) async { self.lastChainTipUpdateTime = lastChainTipUpdateTime }
     func update(lastScannedHeight: BlockHeight) async { self.lastScannedHeight = lastScannedHeight }
     func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
     func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }
