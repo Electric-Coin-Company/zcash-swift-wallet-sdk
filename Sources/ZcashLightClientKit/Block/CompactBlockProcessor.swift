@@ -725,7 +725,7 @@ extension CompactBlockProcessor {
                                 """
                             )
                             await self.start()
-                        } else if await hasRetryAttempt() {
+                        } else if await self.hasRetryAttempt() {
                             await self.failure(ZcashError.compactBlockProcessorMaxAttemptsReached(self.config.retries))
                         }
                     } else {
