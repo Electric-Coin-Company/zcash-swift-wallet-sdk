@@ -18,7 +18,7 @@ enum DemoAppConfig {
         let seed: [UInt8]
     }
 
-    static let host = ZcashSDK.isMainnet ? "lightwalletd.electriccoin.co" : "lightwalletd.testnet.electriccoin.co"
+    static let host = ZcashSDK.isMainnet ? "mainnet.lightwalletd.com" : "lightwalletd.testnet.electriccoin.co"
     static let port: Int = 9067
 
     static let defaultBirthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 935000 : 1386000
