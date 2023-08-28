@@ -50,7 +50,7 @@ class ReOrgTests: ZcashTestCase {
             network: self.network
         )
 
-        try await coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
+        try await coordinator.reset(saplingActivation: self.birthday, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: self.branchID, chainName: self.chainName)
 
         try self.coordinator.resetBlocks(dataset: .default)
 
@@ -128,7 +128,7 @@ class ReOrgTests: ZcashTestCase {
         targetHeight: BlockHeight
     ) async throws {
         do {
-            try await coordinator.reset(saplingActivation: birthday, branchID: branchID, chainName: chainName)
+            try await coordinator.reset(saplingActivation: birthday, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: branchID, chainName: chainName)
             try coordinator.resetBlocks(dataset: .predefined(dataset: .beforeReOrg))
             try coordinator.applyStaged(blockheight: firstLatestHeight)
             sleep(1)

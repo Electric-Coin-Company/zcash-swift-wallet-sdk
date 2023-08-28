@@ -33,7 +33,7 @@ class DarksideSanityCheckTests: ZcashTestCase {
             network: network
         )
 
-        try await coordinator.reset(saplingActivation: self.birthday, branchID: self.branchID, chainName: self.chainName)
+        try await coordinator.reset(saplingActivation: self.birthday, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: self.branchID, chainName: self.chainName)
         try self.coordinator.resetBlocks(dataset: .default)
     }
 

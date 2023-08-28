@@ -30,7 +30,7 @@ class ShieldFundsTests: ZcashTestCase {
             walletBirthday: birthday,
             network: network
         )
-        try await coordinator.reset(saplingActivation: birthday, branchID: self.branchID, chainName: self.chainName)
+        try await coordinator.reset(saplingActivation: birthday, startSaplingTreeSize: 1120954, startOrchardTreeSize: 0, branchID: self.branchID, chainName: self.chainName)
         try coordinator.service.clearAddedUTXOs()
     }
 
