@@ -68,6 +68,36 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
         }
     }
     
+    func testUpdateSubtreeRootsAction_getSubtreeRootsTimeout() async throws {
+        let loggerMock = LoggerMock()
+        
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+
+        let tupple = setupAction(loggerMock)
+        let updateSubtreeRootsActionAction = tupple.action
+        tupple.serviceMock.getSubtreeRootsClosure = { _ in
+            AsyncThrowingStream { continuation in continuation.finish(throwing: ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)) }
+        }
+
+        do {
+            let context = ActionContextMock.default()
+            context.updateSupportedSyncAlgorithmClosure = { _ in }
+            
+            _ = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
+            XCTFail("The test is expected to fail but continued.")
+        } catch ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut) {
+            // this is expected, the action must be terminated as there is no connectivity
+        } catch {
+            XCTFail(
+                """
+                testUpdateSubtreeRootsAction_getSubtreeRootsTimeout is expected to fail with
+                ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)
+                but received \(error)".
+                """
+            )
+        }
+    }
+    
     func testUpdateSubtreeRootsAction_getSubtreeRootsEmpty() async throws {
         let loggerMock = LoggerMock()
         

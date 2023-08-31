@@ -39,6 +39,8 @@ extension UpdateSubtreeRootsAction: Action {
             for try await subtreeRoot in stream {
                 roots.append(subtreeRoot)
             }
+        } catch ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut) {
+            throw ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)
         } catch {
             logger.debug("getSubtreeRoots failed with error \(error.localizedDescription)")
             err = error
