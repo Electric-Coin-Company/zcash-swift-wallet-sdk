@@ -25,14 +25,12 @@ final class EnhanceActionTests: ZcashTestCase {
     func testEnhanceAction_decideWhatToDoNext_NoDownloadAndScanRange() async throws {
         let enhanceAction = setupAction()
 
-        let syncContext = await setupActionContext()
-        let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 1)
-        let nextState = await nextContext.state
+        let syncContext = setupActionContext()
 
-        XCTAssertTrue(
-            nextState == .clearCache,
-            "testEnhanceAction_decideWhatToDoNext_NoDownloadAndScanRange is expected to be .clearCache but received \(nextState)"
-        )
+        let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 1)
+
+        let acResult = nextContext.checkStateIs(.clearCache)
+        XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
     }
     
     func testEnhanceAction_decideWhatToDoNext_NothingToDownloadAndScanLeft() async throws {
@@ -40,14 +38,12 @@ final class EnhanceActionTests: ZcashTestCase {
         underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 
-        let syncContext = await setupActionContext()
-        let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 2000)
-        let nextState = await nextContext.state
+        let syncContext = setupActionContext()
 
-        XCTAssertTrue(
-            nextState == .clearCache,
-            "testEnhanceAction_decideWhatToDoNext_NothingToDownloadAndScanLeft is expected to be .clearCache but received \(nextState)"
-        )
+        let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 2000)
+
+        let acResult = nextContext.checkStateIs(.clearCache)
+        XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
     }
 
     func testEnhanceAction_decideWhatToDoNext_UpdateChainTipExpected() async throws {
@@ -55,28 +51,62 @@ final class EnhanceActionTests: ZcashTestCase {
         underlyingDownloadRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
         underlyingScanRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
 
-        let syncContext = await setupActionContext()
-        let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 1500)
-        let nextState = await nextContext.state
+        let syncContext = setupActionContext()
 
-        XCTAssertTrue(
-            nextState == .updateChainTip,
-            "testEnhanceAction_decideWhatToDoNext_DownloadExpected is expected to be .updateChainTip but received \(nextState)"
-        )
+        let nextContext = await enhanceAction.decideWhatToDoNext(context: syncContext, lastScannedHeight: 1500)
+
+        let acResult = nextContext.checkStateIs(.updateChainTip)
+        XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
     }
 
+    func testEnhanceAction_LastScanHeightNil() async throws {
+        let blockEnhancerMock = BlockEnhancerMock()
+        
+        let enhanceAction = setupAction(blockEnhancerMock)
+        
+        let syncContext = setupActionContext()
+
+        do {
+            _ = try await enhanceAction.run(with: syncContext) { _ in }
+            XCTFail("testEnhanceAction_LastScanHeightNil is expected to fail.")
+        } catch ZcashError.compactBlockProcessorLastScannedHeight {
+            XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
+        } catch {
+            XCTFail("testEnhanceAction_LastScanHeightNil is not expected to fail. \(error)")
+        }
+    }
+    
+    func testEnhanceAction_firstUnenhancedHeightNil() async throws {
+        let blockEnhancerMock = BlockEnhancerMock()
+        
+        let enhanceAction = setupAction(blockEnhancerMock)
+        
+        let syncContext = setupActionContext()
+        syncContext.lastScannedHeight = 1
+
+        do {
+            let nextContext = try await enhanceAction.run(with: syncContext) { _ in }
+            XCTAssertFalse(blockEnhancerMock.enhanceAtDidEnhanceCalled, "blockEnhancer.enhance() is not expected to be called.")
+            
+            let acResult = nextContext.checkStateIs(.clearCache)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
+        } catch {
+            XCTFail("testEnhanceAction_NoEnhanceRange is not expected to fail. \(error)")
+        }
+    }
+    
     func testEnhanceAction_NoEnhanceRange() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
         
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1
+        let enhanceAction = setupAction(blockEnhancerMock)
         
-        let enhanceAction = setupAction(
-            blockEnhancerMock,
-            transactionRepositoryMock
+        let syncContext = setupActionContext()
+        syncContext.lastScannedHeight = 1
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: underlyingScanRange?.lowerBound,
+            firstUnenhancedHeight: 2000
         )
-        
-        let syncContext = await setupActionContext()
 
         do {
             _ = try await enhanceAction.run(with: syncContext) { _ in }
@@ -88,18 +118,17 @@ final class EnhanceActionTests: ZcashTestCase {
     
     func testEnhanceAction_1000BlocksConditionNotFulfilled() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
         
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1
+        let enhanceAction = setupAction(blockEnhancerMock)
         
-        let enhanceAction = setupAction(
-            blockEnhancerMock,
-            transactionRepositoryMock
+        let syncContext = setupActionContext()
+        syncContext.lastScannedHeight = 1000
+        syncContext.lastEnhancedHeight = 1000
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: 1000,
+            firstUnenhancedHeight: 1000
         )
-        
-        underlyingEnhanceRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-        
-        let syncContext = await setupActionContext()
 
         do {
             _ = try await enhanceAction.run(with: syncContext) { _ in }
@@ -111,10 +140,7 @@ final class EnhanceActionTests: ZcashTestCase {
     
     func testEnhanceAction_EnhancementOfBlocksCalled_FoundTransactions() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
-        
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1500
-        
+
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
             blockTime: 1.0,
@@ -138,14 +164,17 @@ final class EnhanceActionTests: ZcashTestCase {
             return [transaction]
         }
         
-        let enhanceAction = setupAction(
-            blockEnhancerMock,
-            transactionRepositoryMock
+        let enhanceAction = setupAction(blockEnhancerMock)
+        
+        let syncContext = setupActionContext()
+        syncContext.lastScannedHeight = 2000
+        syncContext.lastEnhancedHeight = 1500
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: 1,
+            firstUnenhancedHeight: 1000
         )
-        
-        underlyingEnhanceRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-        
-        let syncContext = await setupActionContext()
+        syncContext.updateLastEnhancedHeightClosure = { _ in }
 
         do {
             _ = try await enhanceAction.run(with: syncContext) { event in
@@ -168,9 +197,6 @@ final class EnhanceActionTests: ZcashTestCase {
     
     func testEnhanceAction_EnhancementOfBlocksCalled_minedTransaction() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
-        
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1500
         
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
@@ -203,14 +229,17 @@ final class EnhanceActionTests: ZcashTestCase {
             return nil
         }
         
-        let enhanceAction = setupAction(
-            blockEnhancerMock,
-            transactionRepositoryMock
+        let enhanceAction = setupAction(blockEnhancerMock)
+        
+        let syncContext = setupActionContext()
+        syncContext.lastScannedHeight = 2000
+        syncContext.lastEnhancedHeight = 1500
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: 1,
+            firstUnenhancedHeight: 1000
         )
-        
-        underlyingEnhanceRange = CompactBlockRange(uncheckedBounds: (1000, 2000))
-        
-        let syncContext = await setupActionContext()
+        syncContext.updateLastEnhancedHeightClosure = { _ in }
 
         do {
             _ = try await enhanceAction.run(with: syncContext) { event in
@@ -229,9 +258,6 @@ final class EnhanceActionTests: ZcashTestCase {
 
     func testEnhanceAction_EnhancementOfBlocksCalled_usingSmallRange_minedTransaction() async throws {
         let blockEnhancerMock = BlockEnhancerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
-
-        transactionRepositoryMock.lastScannedHeightReturnValue = 2000
 
         let transaction = ZcashTransaction.Overview(
             accountId: 0,
@@ -264,15 +290,18 @@ final class EnhanceActionTests: ZcashTestCase {
             return nil
         }
 
-        let enhanceAction = setupAction(
-            blockEnhancerMock,
-            transactionRepositoryMock
+        let enhanceAction = setupAction(blockEnhancerMock)
+        
+        let syncContext = setupActionContext()
+        syncContext.lastScannedHeight = 2000
+        syncContext.lastEnhancedHeight = 1500
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: 1,
+            firstUnenhancedHeight: 1000
         )
-
-        underlyingEnhanceRange = CompactBlockRange(uncheckedBounds: (1900, 2000))
-
-        let syncContext = await setupActionContext()
-
+        syncContext.updateLastEnhancedHeightClosure = { _ in }
+        
         do {
             _ = try await enhanceAction.run(with: syncContext) { event in
                 if case .progressPartialUpdate = event { return }
@@ -288,18 +317,14 @@ final class EnhanceActionTests: ZcashTestCase {
         }
     }
     
-    private func setupActionContext() async -> ActionContext {
-        let syncContext: ActionContext = .init(state: .enhance)
-        
-        let syncControlData = SyncControlData(
+    private func setupActionContext() -> ActionContextMock {
+        let syncContext = ActionContextMock.default()
+
+        syncContext.underlyingSyncControlData = SyncControlData(
             latestBlockHeight: 2000,
             latestScannedHeight: underlyingScanRange?.lowerBound,
             firstUnenhancedHeight: underlyingEnhanceRange?.lowerBound
         )
-        
-        await syncContext.update(syncControlData: syncControlData)
-        await syncContext.update(totalProgressRange: CompactBlockRange(uncheckedBounds: (1000, 2000)))
-        await syncContext.update(lastScannedHeight: underlyingScanRange?.lowerBound ?? -1)
 
         return syncContext
     }

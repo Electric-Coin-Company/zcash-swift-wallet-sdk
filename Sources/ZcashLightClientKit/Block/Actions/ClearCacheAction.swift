@@ -20,6 +20,7 @@ extension ClearCacheAction: Action {
 
     func run(with context: ActionContext, didUpdate: @escaping (CompactBlockProcessor.Event) async -> Void) async throws -> ActionContext {
         try await storage.clear()
+        
         if await context.prevState == .idle {
             await context.update(state: .migrateLegacyCacheDB)
         } else {
@@ -37,6 +38,7 @@ extension ClearCacheAction: Action {
                 }
             }
         }
+        
         return context
     }
 

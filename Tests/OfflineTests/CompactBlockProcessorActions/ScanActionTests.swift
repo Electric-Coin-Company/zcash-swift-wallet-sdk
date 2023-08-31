@@ -20,10 +20,16 @@ final class ScanActionTests: ZcashTestCase {
         blockScannerMock.scanBlocksAtTotalProgressRangeDidScanClosure = { _, _, _ in 2 }
 
         let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
-        let syncContext = await setupActionContext()
-        
-        await syncContext.update(lastScannedHeight: 1500)
-        
+
+        let syncContext = ActionContextMock.default()
+        syncContext.lastScannedHeight = 1500
+        syncContext.underlyingTotalProgressRange = 1000...2000
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: 1000,
+            firstUnenhancedHeight: nil
+        )
+
         do {
             let nextContext = try await scanAction.run(with: syncContext) { event in
                 guard case .progressPartialUpdate(.syncing(let progress)) = event else {
@@ -36,11 +42,9 @@ final class ScanActionTests: ZcashTestCase {
             }
             XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
             XCTAssertTrue(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .clearAlreadyScannedBlocks,
-                "nextContext after .scan is expected to be .clearAlreadyScannedBlocks but received \(nextState)"
-            )
+            
+            let acResult = nextContext.checkStateIs(.clearAlreadyScannedBlocks)
+            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testScanAction_NextAction is not expected to fail. \(error)")
         }
@@ -52,7 +56,7 @@ final class ScanActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
                 
         let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
-        let syncContext: ActionContext = .init(state: .scan)
+        let syncContext = ActionContextMock.default()
         
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
@@ -75,7 +79,7 @@ final class ScanActionTests: ZcashTestCase {
         transactionRepositoryMock.lastScannedHeightReturnValue = 2001
 
         let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
-        let syncContext = await setupActionContext()
+        let syncContext = ActionContextMock.default()
         
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
@@ -103,20 +107,5 @@ final class ScanActionTests: ZcashTestCase {
             container: mockContainer,
             configProvider: CompactBlockProcessor.ConfigProvider(config: config)
         )
-    }
-    
-    private func setupActionContext() async -> ActionContext {
-        let syncContext: ActionContext = .init(state: .scan)
-        
-        let syncControlData = SyncControlData(
-            latestBlockHeight: 2000,
-            latestScannedHeight: 1000,
-            firstUnenhancedHeight: nil
-        )
-        
-        await syncContext.update(syncControlData: syncControlData)
-        await syncContext.update(totalProgressRange: CompactBlockRange(uncheckedBounds: (1000, 2000)))
-
-        return syncContext
     }
 }

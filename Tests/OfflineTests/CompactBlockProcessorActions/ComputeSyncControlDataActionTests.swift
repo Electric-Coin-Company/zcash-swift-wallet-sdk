@@ -30,32 +30,24 @@ final class ComputeSyncControlDataActionTests: ZcashTestCase {
             latestBlocksDataProviderMock,
             loggerMock
         )
+        latestBlocksDataProviderMock.underlyingLatestBlockHeight = 123
+        latestBlocksDataProviderMock.underlyingLatestScannedHeight = 123
 
         let syncContext = await setupActionContext()
 
         do {
             let nextContext = try await computeSyncControlDataAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(
-                latestBlocksDataProviderMock.updateScannedDataCalled,
-                "latestBlocksDataProvider.updateScannedData() is expected to be called."
-            )
-            XCTAssertTrue(
-                latestBlocksDataProviderMock.updateBlockDataCalled,
-                "latestBlocksDataProvider.updateBlockData() is expected to be called."
-            )
-
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .finished,
-                "nextContext after .computeSyncControlData is expected to be .finished but received \(nextState)"
-            )
+            checkLatestBlocksDataProvider(latestBlocksDataProviderMock)
+            checkActionContext(nextContext, expectedNextState: .finished)
+            
+            XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug() is expected to be called.")
         } catch {
             XCTFail("testComputeSyncControlDataAction_finishProcessingCase is not expected to fail. \(error)")
         }
     }
     
-    func testComputeSyncControlDataAction_fetchUTXOsCase() async throws {
+    func testComputeSyncControlDataAction_DownloadCase() async throws {
         let blockDownloaderServiceMock = BlockDownloaderServiceMock()
         let latestBlocksDataProviderMock = LatestBlocksDataProviderMock()
         let loggerMock = LoggerMock()
@@ -65,45 +57,51 @@ final class ComputeSyncControlDataActionTests: ZcashTestCase {
             latestBlocksDataProviderMock,
             loggerMock
         )
-        latestBlocksDataProviderMock.underlyingLatestBlockHeight = 10
+        latestBlocksDataProviderMock.underlyingLatestBlockHeight = 1234
+        latestBlocksDataProviderMock.underlyingLatestScannedHeight = 123
 
         let syncContext = await setupActionContext()
 
         do {
             let nextContext = try await computeSyncControlDataAction.run(with: syncContext) { _ in }
 
-            XCTAssertTrue(
-                latestBlocksDataProviderMock.updateScannedDataCalled,
-                "latestBlocksDataProvider.updateScannedData() is expected to be called."
-            )
-            XCTAssertTrue(latestBlocksDataProviderMock.updateBlockDataCalled, "latestBlocksDataProvider.updateBlockData() is expected to be called.")
-            XCTAssertFalse(loggerMock.infoFileFunctionLineCalled, "logger.info() is not expected to be called.")
+            checkLatestBlocksDataProvider(latestBlocksDataProviderMock)
+            checkActionContext(nextContext, expectedNextState: .download)
 
-            let nextState = await nextContext.state
-            XCTAssertTrue(
-                nextState == .download,
-                "nextContext after .computeSyncControlData is expected to be .download but received \(nextState)"
-            )
+            XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug() is expected to be called.")
         } catch {
             XCTFail("testComputeSyncControlDataAction_checksBeforeSyncCase is not expected to fail. \(error)")
         }
     }
     
-    private func setupSyncControlData() -> SyncControlData {
-        SyncControlData(
-            latestBlockHeight: 0,
-            latestScannedHeight: underlyingScanRange?.lowerBound,
-            firstUnenhancedHeight: nil
-        )
+    private func setupActionContext() async -> ActionContextMock {
+        let syncContext = ActionContextMock()
+
+        syncContext.updateLastScannedHeightClosure = { _ in }
+        syncContext.updateLastDownloadedHeightClosure = { _ in }
+        syncContext.updateSyncControlDataClosure = { _ in }
+        syncContext.updateTotalProgressRangeClosure = { _ in }
+        syncContext.updateStateClosure = { _ in }
+        syncContext.underlyingState = .idle
+        
+        return syncContext
     }
     
-    private func setupActionContext() async -> ActionContext {
-        let syncContext: ActionContext = .init(state: .computeSyncControlData)
+    private func setupDefaultMocksAndReturnAction(
+        _ blockDownloaderServiceMock: BlockDownloaderServiceMock = BlockDownloaderServiceMock(),
+        _ latestBlocksDataProviderMock: LatestBlocksDataProviderMock = LatestBlocksDataProviderMock(),
+        _ loggerMock: LoggerMock = LoggerMock()
+    ) -> ComputeSyncControlDataAction {
+        latestBlocksDataProviderMock.updateScannedDataClosure = { }
+        latestBlocksDataProviderMock.updateBlockDataClosure = { }
+        latestBlocksDataProviderMock.updateUnenhancedDataClosure = { }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         
-        await syncContext.update(syncControlData: setupSyncControlData())
-        await syncContext.update(totalProgressRange: CompactBlockRange(uncheckedBounds: (1000, 2000)))
-
-        return syncContext
+        return setupAction(
+            blockDownloaderServiceMock,
+            latestBlocksDataProviderMock,
+            loggerMock
+        )
     }
     
     private func setupAction(
@@ -125,23 +123,44 @@ final class ComputeSyncControlDataActionTests: ZcashTestCase {
         )
     }
     
-    private func setupDefaultMocksAndReturnAction(
-        _ blockDownloaderServiceMock: BlockDownloaderServiceMock = BlockDownloaderServiceMock(),
-        _ latestBlocksDataProviderMock: LatestBlocksDataProviderMock = LatestBlocksDataProviderMock(),
-        _ loggerMock: LoggerMock = LoggerMock()
-    ) -> ComputeSyncControlDataAction {
-        blockDownloaderServiceMock.lastDownloadedBlockHeightReturnValue = 1
-        latestBlocksDataProviderMock.underlyingLatestBlockHeight = 1
-        latestBlocksDataProviderMock.underlyingLatestScannedHeight = 1
-        latestBlocksDataProviderMock.updateScannedDataClosure = { }
-        latestBlocksDataProviderMock.updateBlockDataClosure = { }
-        latestBlocksDataProviderMock.updateUnenhancedDataClosure = { }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+    private func checkLatestBlocksDataProvider(_ latestBlocksDataProviderMock: LatestBlocksDataProviderMock) {
+        XCTAssertTrue(
+            latestBlocksDataProviderMock.updateScannedDataCalled,
+            "latestBlocksDataProvider.updateScannedData() is expected to be called."
+        )
+        XCTAssertTrue(
+            latestBlocksDataProviderMock.updateBlockDataCalled,
+            "latestBlocksDataProvider.updateBlockData() is expected to be called."
+        )
+        XCTAssertTrue(
+            latestBlocksDataProviderMock.updateUnenhancedDataCalled,
+            "latestBlocksDataProvider.updateUnenhancedData() is expected to be called."
+        )
+    }
+
+    private func checkActionContext(_ actionContext: ActionContext, expectedNextState: CBPState) {
+        guard let nextContextMock = actionContext as? ActionContextMock else {
+            return XCTFail("Result of run(with:) is expected to be an ActionContextMock")
+        }
         
-        return setupAction(
-            blockDownloaderServiceMock,
-            latestBlocksDataProviderMock,
-            loggerMock
+        XCTAssertTrue(nextContextMock.updateStateCallsCount == 1)
+        XCTAssertTrue(nextContextMock.updateStateReceivedState == expectedNextState)
+        
+        XCTAssertTrue(
+            nextContextMock.updateLastScannedHeightCallsCount == 1,
+            "actionContext.update(lastScannedHeight:) is expected to be called."
+        )
+        XCTAssertTrue(
+            nextContextMock.updateLastDownloadedHeightCallsCount == 1,
+            "actionContext.update(lastDownloadedHeight:) is expected to be called."
+        )
+        XCTAssertTrue(
+            nextContextMock.updateSyncControlDataCallsCount == 1,
+            "actionContext.update(syncControlData:) is expected to be called."
+        )
+        XCTAssertTrue(
+            nextContextMock.updateTotalProgressRangeCallsCount == 1,
+            "actionContext.update(totalProgressRange:) is expected to be called."
         )
     }
 }
