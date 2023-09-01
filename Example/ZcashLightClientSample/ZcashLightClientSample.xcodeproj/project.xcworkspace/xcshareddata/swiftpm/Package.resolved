@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/grpc/grpc-swift.git",
       "state" : {
-        "revision" : "130467153ff0acd642d2f098b69c1ac33373b24e",
-        "version" : "1.15.0"
+        "revision" : "84bac657e9930d26e9124bac082f26586dc2d209",
+        "version" : "1.19.1"
       }
     },
     {
@@ -104,8 +104,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-nio.git",
       "state" : {
-        "revision" : "d1690f85419fdac8d54e350fb6d2ab9fd95afd75",
-        "version" : "2.51.1"
+        "revision" : "cf281631ff10ec6111f2761052aa81896a83a007",
+        "version" : "2.58.0"
       }
     },
     {

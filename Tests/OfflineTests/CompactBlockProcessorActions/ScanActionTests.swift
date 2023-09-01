@@ -12,14 +12,12 @@ import XCTest
 final class ScanActionTests: ZcashTestCase {
     func testScanAction_NextAction() async throws {
         let blockScannerMock = BlockScannerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
         let loggerMock = LoggerMock()
         
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1500
         loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
         blockScannerMock.scanBlocksAtTotalProgressRangeDidScanClosure = { _, _, _ in 2 }
 
-        let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
+        let scanAction = setupAction(blockScannerMock, loggerMock)
 
         let syncContext = ActionContextMock.default()
         syncContext.lastScannedHeight = 1500
@@ -52,18 +50,13 @@ final class ScanActionTests: ZcashTestCase {
     
     func testScanAction_EarlyOutForNoDownloadAndScanRangeSet() async throws {
         let blockScannerMock = BlockScannerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
         let loggerMock = LoggerMock()
                 
-        let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
+        let scanAction = setupAction(blockScannerMock, loggerMock)
         let syncContext = ActionContextMock.default()
         
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
-            XCTAssertFalse(
-                transactionRepositoryMock.lastScannedHeightCalled,
-                "transactionRepository.lastScannedHeight() is not expected to be called."
-            )
             XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
             XCTAssertFalse(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is not expected to be called.")
         } catch {
@@ -73,14 +66,17 @@ final class ScanActionTests: ZcashTestCase {
     
     func testScanAction_StartRangeHigherThanEndRange() async throws {
         let blockScannerMock = BlockScannerMock()
-        let transactionRepositoryMock = TransactionRepositoryMock()
         let loggerMock = LoggerMock()
-                
-        transactionRepositoryMock.lastScannedHeightReturnValue = 2001
 
-        let scanAction = setupAction(blockScannerMock, transactionRepositoryMock, loggerMock)
+        let scanAction = setupAction(blockScannerMock, loggerMock)
         let syncContext = ActionContextMock.default()
-        
+        syncContext.lastScannedHeight = 2001
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 2000,
+            latestScannedHeight: 1000,
+            firstUnenhancedHeight: nil
+        )
+
         do {
             _ = try await scanAction.run(with: syncContext) { _ in }
             XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is not expected to be called.")
@@ -90,13 +86,71 @@ final class ScanActionTests: ZcashTestCase {
         }
     }
     
+    func testScanAction_EndRangeProperlySetLowerThanBatchSize() async throws {
+        let blockScannerMock = BlockScannerMock()
+        let loggerMock = LoggerMock()
+        
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        blockScannerMock.scanBlocksAtTotalProgressRangeDidScanClosure = { _, _, _ in 2 }
+
+        let scanAction = setupAction(blockScannerMock, loggerMock)
+        let syncContext = ActionContextMock.default()
+        syncContext.lastScannedHeight = 1001
+        syncContext.underlyingTotalProgressRange = 1000...1078
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 1078,
+            latestScannedHeight: 1000,
+            firstUnenhancedHeight: nil
+        )
+
+        do {
+            _ = try await scanAction.run(with: syncContext) { _ in }
+            XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
+            XCTAssertTrue(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
+            
+            if let scanArguments = blockScannerMock.scanBlocksAtTotalProgressRangeDidScanReceivedArguments {
+                XCTAssertEqual(scanArguments.range.upperBound, 1078)
+            }
+        } catch {
+            XCTFail("testScanAction_EndRangeProperlySetLowerThanBatchSize is not expected to fail. \(error)")
+        }
+    }
+    
+    func testScanAction_EndRangeProperlySetBatchSize() async throws {
+        let blockScannerMock = BlockScannerMock()
+        let loggerMock = LoggerMock()
+        
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
+        blockScannerMock.scanBlocksAtTotalProgressRangeDidScanClosure = { _, _, _ in 2 }
+
+        let scanAction = setupAction(blockScannerMock, loggerMock)
+        let syncContext = ActionContextMock.default()
+        syncContext.lastScannedHeight = 1001
+        syncContext.underlyingTotalProgressRange = 1000...1978
+        syncContext.underlyingSyncControlData = SyncControlData(
+            latestBlockHeight: 1978,
+            latestScannedHeight: 1000,
+            firstUnenhancedHeight: nil
+        )
+
+        do {
+            _ = try await scanAction.run(with: syncContext) { _ in }
+            XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
+            XCTAssertTrue(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")
+            
+            if let scanArguments = blockScannerMock.scanBlocksAtTotalProgressRangeDidScanReceivedArguments {
+                XCTAssertEqual(scanArguments.range.upperBound, 1101)
+            }
+        } catch {
+            XCTFail("testScanAction_EndRangeProperlySetBatchSize is not expected to fail. \(error)")
+        }
+    }
+    
     private func setupAction(
         _ blockScannerMock: BlockScannerMock,
-        _ transactionRepositoryMock: TransactionRepositoryMock,
         _ loggerMock: LoggerMock
     ) -> ScanAction {
         mockContainer.mock(type: BlockScanner.self, isSingleton: true) { _ in blockScannerMock }
-        mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
         
         let config: CompactBlockProcessor.Configuration = .standard(
