@@ -11,12 +11,10 @@ final class ScanAction {
     let configProvider: CompactBlockProcessor.ConfigProvider
     let blockScanner: BlockScanner
     let logger: Logger
-    let transactionRepository: TransactionRepository
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider
         blockScanner = container.resolve(BlockScanner.self)
-        transactionRepository = container.resolve(TransactionRepository.self)
         logger = container.resolve(Logger.self)
     }
 
@@ -45,7 +43,7 @@ extension ScanAction: Action {
             return await update(context: context)
         }
 
-        let batchRange = batchRangeStart...batchRangeStart + config.batchSize
+        let batchRange = batchRangeStart...batchRangeEnd
         
         logger.debug("Starting scan blocks with range: \(batchRange.lowerBound)...\(batchRange.upperBound)")
         let totalProgressRange = await context.totalProgressRange
