@@ -9,11 +9,13 @@ import Foundation
 
 final class UpdateChainTipAction {
     let rustBackend: ZcashRustBackendWelding
+    let downloader: BlockDownloader
     let service: LightWalletService
     let logger: Logger
     
     init(container: DIContainer) {
         service = container.resolve(LightWalletService.self)
+        downloader = container.resolve(BlockDownloader.self)
         rustBackend = container.resolve(ZcashRustBackendWelding.self)
         logger = container.resolve(Logger.self)
     }
@@ -36,8 +38,9 @@ extension UpdateChainTipAction: Action {
 
         // Update chain tip can be called from different contexts
         if await context.prevState == .updateSubtreeRoots || now - lastChainTipUpdateTime > 600 {
+            await downloader.stopDownload()
             try await updateChainTip(context, time: now)
-            await context.update(state: .processSuggestedScanRanges)
+            await context.update(state: .clearCache)
         } else if await context.prevState == .enhance {
             await context.update(state: .download)
         }

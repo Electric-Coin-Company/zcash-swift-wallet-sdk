@@ -26,10 +26,12 @@ final class UpdateChainTipActionTests: ZcashTestCase {
 
     func testUpdateChainTipAction_UpdateChainTipTimeTriggered() async throws {
         let loggerMock = LoggerMock()
-        
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        let blockDownloaderMock = BlockDownloaderMock()
 
-        let updateChainTipAction = await setupAction(loggerMock)
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        blockDownloaderMock.stopDownloadClosure = { }
+
+        let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
 
         do {
             let context = ActionContextMock.default()
@@ -39,7 +41,9 @@ final class UpdateChainTipActionTests: ZcashTestCase {
 
             let nextContext = try await updateChainTipAction.run(with: context) { _ in }
             
-            let acResult = nextContext.checkStateIs(.processSuggestedScanRanges)
+            XCTAssertTrue(blockDownloaderMock.stopDownloadCallsCount == 1, "downloader.stopDownload() is expected to be called exactly once.")
+
+            let acResult = nextContext.checkStateIs(.clearCache)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testUpdateChainTipAction_UpdateChainTipTimeTriggered is not expected to fail. \(error)")
@@ -48,10 +52,12 @@ final class UpdateChainTipActionTests: ZcashTestCase {
     
     func testUpdateChainTipAction_UpdateChainTipPrevActionTriggered() async throws {
         let loggerMock = LoggerMock()
-        
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        let blockDownloaderMock = BlockDownloaderMock()
 
-        let updateChainTipAction = await setupAction(loggerMock)
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        blockDownloaderMock.stopDownloadClosure = { }
+
+        let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
 
         do {
             let context = ActionContextMock.default()
@@ -61,7 +67,9 @@ final class UpdateChainTipActionTests: ZcashTestCase {
 
             let nextContext = try await updateChainTipAction.run(with: context) { _ in }
             
-            let acResult = nextContext.checkStateIs(.processSuggestedScanRanges)
+            XCTAssertTrue(blockDownloaderMock.stopDownloadCallsCount == 1, "downloader.stopDownload() is expected to be called exactly once.")
+
+            let acResult = nextContext.checkStateIs(.clearCache)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
             XCTFail("testUpdateChainTipAction_UpdateChainTipPrevActionTriggered is not expected to fail. \(error)")
@@ -70,10 +78,12 @@ final class UpdateChainTipActionTests: ZcashTestCase {
     
     func testUpdateChainTipAction_UpdateChainTipSkipped() async throws {
         let loggerMock = LoggerMock()
-        
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        let blockDownloaderMock = BlockDownloaderMock()
 
-        let updateChainTipAction = await setupAction(loggerMock)
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        blockDownloaderMock.stopDownloadClosure = { }
+
+        let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
 
         do {
             let context = ActionContextMock.default()
@@ -83,6 +93,8 @@ final class UpdateChainTipActionTests: ZcashTestCase {
 
             let nextContext = try await updateChainTipAction.run(with: context) { _ in }
             
+            XCTAssertFalse(blockDownloaderMock.stopDownloadCalled, "downloader.stopDownload() is not expected to be called.")
+            
             let acResult = nextContext.checkStateIs(.download)
             XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
         } catch {
@@ -91,7 +103,8 @@ final class UpdateChainTipActionTests: ZcashTestCase {
     }
     
     private func setupAction(
-        _ loggerMock: LoggerMock = LoggerMock()
+        _ loggerMock: LoggerMock = LoggerMock(),
+        _ blockDownloaderMock: BlockDownloaderMock = BlockDownloaderMock()
     ) async -> UpdateChainTipAction {
         let config: CompactBlockProcessor.Configuration = .standard(
             for: ZcashNetworkBuilder.network(for: underlyingNetworkType), walletBirthday: 0
@@ -119,6 +132,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: LightWalletService.self, isSingleton: true) { _ in serviceMock }
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
+        mockContainer.mock(type: BlockDownloader.self, isSingleton: true) { _ in blockDownloaderMock }
 
         return UpdateChainTipAction(container: mockContainer)
     }
