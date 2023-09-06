@@ -82,9 +82,13 @@ class TransactionEnhancementTests: ZcashTestCase {
         let viewingKey = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
 
         do {
-            try await rustBackend.initAccountsTable(ufvks: [viewingKey])
+            _ = try await rustBackend.createAccount(
+                seed: Environment.seedBytes,
+                treeState: birthday.treeState().serializedData(partial: false).bytes,
+                recoverUntil: nil
+            )
         } catch {
-            XCTFail("Failed to init accounts table error: \(error)")
+            XCTFail("Failed to create account. Error: \(error)")
             return
         }
         
@@ -93,13 +97,6 @@ class TransactionEnhancementTests: ZcashTestCase {
             return
         }
 
-        _ = try await rustBackend.initBlocksTable(
-            height: Int32(birthday.height),
-            hash: birthday.hash,
-            time: birthday.time,
-            saplingTree: birthday.saplingTree
-        )
-        
         let service = DarksideWalletService()
         darksideWalletService = service
         

@@ -64,8 +64,8 @@ extension FSCompactBlockRepository: CompactBlockRepository {
         }
     }
 
-    func latestHeight() async -> BlockHeight {
-        await metadataStore.latestHeight()
+    func latestHeight() async throws -> BlockHeight {
+        try await metadataStore.latestHeight()
     }
 
     func write(blocks: [ZcashCompactBlock]) async throws {
@@ -251,7 +251,7 @@ struct FSMetadataStore {
     let saveBlocksMeta: ([ZcashCompactBlock]) async throws -> Void
     let rewindToHeight: (BlockHeight) async throws -> Void
     let initFsBlockDbRoot: () async throws -> Void
-    let latestHeight: () async -> BlockHeight
+    let latestHeight: () async throws -> BlockHeight
 }
 
 extension FSMetadataStore {
@@ -268,7 +268,7 @@ extension FSMetadataStore {
         } initFsBlockDbRoot: {
             try await rustBackend.initBlockMetadataDb()
         } latestHeight: {
-            await rustBackend.latestCachedBlockHeight()
+            try await rustBackend.latestCachedBlockHeight()
         }
     }
 }

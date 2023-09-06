@@ -163,6 +163,14 @@ public enum ZcashErrorCode: String {
     case rustSuggestScanRanges = "ZRUST0049"
     /// Invalid transaction ID length when calling ZcashRustBackend.getMemo
     case rustGetMemoInvalidTxIdLength = "ZRUST0050"
+    /// Error from rust layer when calling ZcashRustBackend.getScanProgress
+    case rustGetScanProgress = "ZRUST0051"
+    /// Error from rust layer when calling ZcashRustBackend.fullyScannedHeight
+    case rustFullyScannedHeight = "ZRUST0052"
+    /// Error from rust layer when calling ZcashRustBackend.maxScannedHeight
+    case rustMaxScannedHeight = "ZRUST0053"
+    /// Error from rust layer when calling ZcashRustBackend.latestCachedBlockHeight
+    case rustLatestCachedBlockHeight = "ZRUST0054"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

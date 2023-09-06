@@ -67,7 +67,7 @@ class DownloadTests: ZcashTestCase {
             XCTFail("Download failed with error: \(error)")
         }
 
-        let latestHeight = await storage.latestHeight()
+        let latestHeight = try await storage.latestHeight()
         XCTAssertEqual(latestHeight, range.upperBound)
 
         await compactBlockProcessor.stop()

@@ -110,7 +110,7 @@ class TestCoordinator {
     }
 
     func prepare(seed: [UInt8]) async throws -> Initializer.InitializationResult {
-        return try await synchronizer.prepare(with: seed, viewingKeys: [viewingKey], walletBirthday: self.birthday)
+        return try await synchronizer.prepare(with: seed, walletBirthday: self.birthday)
     }
     
     func stop() async throws {

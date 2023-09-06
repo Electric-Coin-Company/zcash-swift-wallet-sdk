@@ -47,12 +47,15 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey {
+    func createAccount(seed: [UInt8], treeState: [UInt8], recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
         let ffiBinaryKeyPtr = zcashlc_create_account(
             dbData.0,
             dbData.1,
             seed,
             UInt(seed.count),
+            treeState,
+            UInt(treeState.count),
+            recoverUntil != nil ? Int64(recoverUntil!) : -1,
             networkType.networkId
         )
 
@@ -278,57 +281,6 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws {
-        var ffiUfvks: [FFIEncodedKey] = []
-        for ufvk in ufvks {
-            guard !ufvk.encoding.containsCStringNullBytesBeforeStringEnding() else {
-                throw ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes
-            }
-
-            guard self.keyDeriving.isValidUnifiedFullViewingKey(ufvk.encoding) else {
-                throw ZcashError.rustInitAccountsTableViewingKeyIsInvalid
-            }
-
-            let ufvkCStr = [CChar](String(ufvk.encoding).utf8CString)
-
-            let ufvkPtr = UnsafeMutablePointer<CChar>.allocate(capacity: ufvkCStr.count)
-            ufvkPtr.initialize(from: ufvkCStr, count: ufvkCStr.count)
-
-            ffiUfvks.append(
-                FFIEncodedKey(account_id: ufvk.account, encoding: ufvkPtr)
-            )
-        }
-
-        var contiguousUVKs = ContiguousArray(ffiUfvks)
-
-        var result = false
-
-        contiguousUVKs.withContiguousMutableStorageIfAvailable { ufvksPtr in
-            result = zcashlc_init_accounts_table_with_keys(
-                dbData.0,
-                dbData.1,
-                ufvksPtr.baseAddress,
-                UInt(ufvks.count),
-                networkType.networkId
-            )
-        }
-
-        defer {
-            for ufvk in ffiUfvks {
-                ufvk.encoding.deallocate()
-            }
-        }
-
-        guard result else {
-            let message = lastErrorMessage(fallback: "`initAccountsTable` failed with unknown error")
-            if message.isDbNotEmptyErrorMessage() {
-                throw ZcashError.rustInitAccountsTableDataDbNotEmpty
-            } else {
-                throw ZcashError.rustInitAccountsTable(message)
-            }
-        }
-    }
-
     func initBlockMetadataDb() async throws {
         let result = zcashlc_init_block_metadata_db(fsBlockDbRoot.0, fsBlockDbRoot.1)
 
@@ -394,42 +346,16 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         }
     }
 
-    func initBlocksTable(
-        height: Int32,
-        hash: String,
-        time: UInt32,
-        saplingTree: String
-    ) async throws {
-        guard !hash.containsCStringNullBytesBeforeStringEnding() else {
-            throw ZcashError.rustInitBlocksTableHashContainsNullBytes
+    func latestCachedBlockHeight() async throws -> BlockHeight {
+        let height = zcashlc_latest_cached_block_height(fsBlockDbRoot.0, fsBlockDbRoot.1)
+
+        if height >= 0 {
+            return BlockHeight(height)
+        } else if height == -1 {
+            return BlockHeight.empty()
+        } else {
+            throw ZcashError.rustLatestCachedBlockHeight(lastErrorMessage(fallback: "`latestCachedBlockHeight` failed with unknown error"))
         }
-
-        guard !saplingTree.containsCStringNullBytesBeforeStringEnding() else {
-            throw ZcashError.rustInitBlocksTableSaplingTreeContainsNullBytes
-        }
-
-        let result = zcashlc_init_blocks_table(
-            dbData.0,
-            dbData.1,
-            height,
-            [CChar](hash.utf8CString),
-            time,
-            [CChar](saplingTree.utf8CString),
-            networkType.networkId
-        )
-
-        guard result != 0 else {
-            let message = lastErrorMessage(fallback: "`initBlocksTable` failed with unknown error")
-            if message.isDbNotEmptyErrorMessage() {
-                throw ZcashError.rustInitBlocksTableDataDbNotEmpty
-            } else {
-                throw ZcashError.rustInitBlocksTable(message)
-            }
-        }
-    }
-
-    func latestCachedBlockHeight() async -> BlockHeight {
-        return BlockHeight(zcashlc_latest_cached_block_height(fsBlockDbRoot.0, fsBlockDbRoot.1))
     }
 
     func listTransparentReceivers(account: Int32) async throws -> [TransparentAddress] {
@@ -562,6 +488,45 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
 
         guard result else {
             throw ZcashError.rustUpdateChainTip(lastErrorMessage(fallback: "`updateChainTip` failed with unknown error"))
+        }
+    }
+
+    func fullyScannedHeight() async throws -> BlockHeight? {
+        let height = zcashlc_fully_scanned_height(dbData.0, dbData.1, networkType.networkId)
+
+        if height >= 0 {
+            return BlockHeight(height)
+        } else if height == -1 {
+            return nil
+        } else {
+            throw ZcashError.rustFullyScannedHeight(lastErrorMessage(fallback: "`fullyScannedHeight` failed with unknown error"))
+        }
+    }
+
+    func maxScannedHeight() async throws -> BlockHeight? {
+        let height = zcashlc_max_scanned_height(dbData.0, dbData.1, networkType.networkId)
+
+        if height >= 0 {
+            return BlockHeight(height)
+        } else if height == -1 {
+            return nil
+        } else {
+            throw ZcashError.rustMaxScannedHeight(lastErrorMessage(fallback: "`maxScannedHeight` failed with unknown error"))
+        }
+    }
+
+    func getScanProgress() async throws -> ScanProgress? {
+        let result = zcashlc_get_scan_progress(dbData.0, dbData.1, networkType.networkId)
+
+        if result.denominator == 0 {
+            switch result.numerator {
+            case 0:
+                return nil;
+            default:
+                throw ZcashError.rustGetScanProgress(lastErrorMessage(fallback: "`getScanProgress` failed with unknown error"))
+            }
+        } else {
+            return ScanProgress(numerator: result.numerator, denominator: result.denominator)
         }
     }
 

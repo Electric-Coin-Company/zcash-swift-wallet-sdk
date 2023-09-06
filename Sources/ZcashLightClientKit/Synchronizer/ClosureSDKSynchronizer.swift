@@ -33,12 +33,11 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
 
     public func prepare(
         with seed: [UInt8]?,
-        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         completion: @escaping (Result<Initializer.InitializationResult, Error>) -> Void
     ) {
         AsyncToClosureGateway.executeThrowingAction(completion) {
-            return try await self.synchronizer.prepare(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday)
+            return try await self.synchronizer.prepare(with: seed, walletBirthday: walletBirthday)
         }
     }
 

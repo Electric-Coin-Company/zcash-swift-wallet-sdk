@@ -71,6 +71,18 @@ extension Checkpoint: Decodable {
         }
         return height
     }
+
+    public func treeState() -> TreeState {
+        var ret = TreeState()
+        ret.height = UInt64(height)
+        ret.hash = hash
+        ret.time = time
+        ret.saplingTree = saplingTree
+        if let tree = orchardTree {
+            ret.orchardTree = tree
+        }
+        return ret
+    }
 }
 
 public extension BlockHeight {

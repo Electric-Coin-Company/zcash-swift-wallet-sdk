@@ -409,7 +409,7 @@ public class Initializer {
     /// - Parameter seed: ZIP-32 Seed bytes for the wallet that will be initialized
     /// - Throws: `InitializerError.dataDbInitFailed` if the creation of the dataDb fails
     /// `InitializerError.accountInitFailed` if the account table can't be initialized. 
-    func initialize(with seed: [UInt8]?, viewingKeys: [UnifiedFullViewingKey], walletBirthday: BlockHeight) async throws -> InitializationResult {
+    func initialize(with seed: [UInt8]?, walletBirthday: BlockHeight) async throws -> InitializationResult {
         try await storage.create()
 
         if case .seedRequired = try await rustBackend.initDataDb(seed: seed) {
@@ -417,28 +417,10 @@ public class Initializer {
         }
 
         let checkpoint = Checkpoint.birthday(with: walletBirthday, network: network)
-        do {
-            try await rustBackend.initBlocksTable(
-                height: Int32(checkpoint.height),
-                hash: checkpoint.hash,
-                time: checkpoint.time,
-                saplingTree: checkpoint.saplingTree
-            )
-        } catch ZcashError.rustInitBlocksTableDataDbNotEmpty {
-            // this is fine
-        } catch {
-            throw error
-        }
 
         self.walletBirthday = checkpoint.height
- 
-        do {
-            try await rustBackend.initAccountsTable(ufvks: viewingKeys)
-        } catch ZcashError.rustInitAccountsTableDataDbNotEmpty {
-            // this is fine
-        } catch {
-            throw error
-        }
+
+        // TODO: Initialize accounts if desired.
 
         return .success
     }

@@ -131,8 +131,7 @@ public protocol Synchronizer: AnyObject {
     /// do not already exist). These files can be given a prefix for scenarios where multiple wallets
     ///
     /// - Parameters:
-    ///   - seed: ZIP-32 Seed bytes for the wallet that will be initialized.
-    ///   - viewingKeys: Viewing key derived from seed.
+    ///   - seed: ZIP-32 Seed bytes for the wallet that will be initialized
     ///   - walletBirthday: Birthday of wallet.
     /// - Throws:
     ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
@@ -142,7 +141,6 @@ public protocol Synchronizer: AnyObject {
     ///     - Some other `ZcashError` thrown by lower layer of the SDK.
     func prepare(
         with seed: [UInt8]?,
-        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
     ) async throws -> Initializer.InitializationResult
 

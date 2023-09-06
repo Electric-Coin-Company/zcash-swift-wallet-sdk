@@ -76,7 +76,7 @@ class BlockDownloaderTests: XCTestCase {
             try await downloader.downloadBlockRange(range)
             
             // check what was 'stored'
-            let latestHeight = await self.storage.latestHeight()
+            let latestHeight = try await self.storage.latestHeight()
             XCTAssertEqual(latestHeight, upperRange)
             
             let resultHeight = try await self.downloader.lastDownloadedBlockHeight()

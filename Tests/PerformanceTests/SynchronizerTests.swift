@@ -48,17 +48,11 @@ class SynchronizerTests: ZcashTestCase {
     }
 
     func testHundredBlocksSync() async throws {
-        let derivationTool = DerivationTool(networkType: .mainnet)
         guard let seedData = Data(base64Encoded: "9VDVOZZZOWWHpZtq1Ebridp3Qeux5C+HwiRR0g7Oi7HgnMs8Gfln83+/Q1NnvClcaSwM4ADFL1uZHxypEWlWXg==") else {
             XCTFail("seedData expected to be successfuly instantiated.")
             return
         }
         let seedBytes = [UInt8](seedData)
-        let spendingKey = try derivationTool.deriveUnifiedSpendingKey(
-            seed: seedBytes,
-            accountIndex: 0
-        )
-        let ufvk = try derivationTool.deriveUnifiedFullViewingKey(from: spendingKey)
         let network = ZcashNetworkBuilder.network(for: .mainnet)
         let endpoint = LightWalletEndpoint(address: "lightwalletd.electriccoin.co", port: 9067, secure: true)
 
@@ -87,7 +81,7 @@ class SynchronizerTests: ZcashTestCase {
             guard let synchronizer else { fatalError("Synchronizer not initialized.") }
             
             synchronizer.metrics.enableMetrics()
-            _ = try await synchronizer.prepare(with: seedBytes, viewingKeys: [ufvk], walletBirthday: birthday)
+            _ = try await synchronizer.prepare(with: seedBytes, walletBirthday: birthday)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             sdkSynchronizerInternalSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])

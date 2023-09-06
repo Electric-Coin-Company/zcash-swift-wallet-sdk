@@ -15,7 +15,7 @@ protocol CompactBlockRepository {
     /**
     Gets the height of the highest block that is currently stored.
     */
-    func latestHeight() async -> BlockHeight
+    func latestHeight() async throws -> BlockHeight
 
     /**
     Write the given blocks to this store, which may be anything from an in-memory cache to a DB.
