@@ -107,8 +107,8 @@ extension BlockDownloaderServiceImpl: BlockDownloaderService {
         try await self.storage.rewind(to: height)
     }
 
-    func lastDownloadedBlockHeight() async -> BlockHeight {
-        await self.storage.latestHeight()
+    func lastDownloadedBlockHeight() async throws -> BlockHeight {
+        try await self.storage.latestHeight()
     }
     
     func fetchTransaction(txId: Data) async throws -> ZcashTransaction.Fetched {

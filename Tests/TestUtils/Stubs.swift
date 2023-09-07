@@ -90,17 +90,15 @@ class RustBackendMockHelper {
         await rustBackendMock.setLatestCachedBlockHeightReturnValue(.empty())
         await rustBackendMock.setInitBlockMetadataDbClosure() { }
         await rustBackendMock.setWriteBlocksMetadataBlocksClosure() { _ in }
-        await rustBackendMock.setInitAccountsTableUfvksClosure() { _ in }
         await rustBackendMock.setGetTransparentBalanceAccountReturnValue(0)
         await rustBackendMock.setGetVerifiedBalanceAccountReturnValue(0)
         await rustBackendMock.setListTransparentReceiversAccountReturnValue([])
         await rustBackendMock.setGetCurrentAddressAccountThrowableError(ZcashError.rustGetCurrentAddress("mocked error"))
         await rustBackendMock.setGetNextAvailableAddressAccountThrowableError(ZcashError.rustGetNextAvailableAddress("mocked error"))
-        await rustBackendMock.setCreateAccountSeedThrowableError(ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes)
+        await rustBackendMock.setCreateAccountSeedTreeStateRecoverUntilThrowableError(ZcashError.rustInitAccountsTableViewingKeyCotainsNullBytes)
         await rustBackendMock.setGetMemoTxIdOutputIndexReturnValue(nil)
         await rustBackendMock.setInitDataDbSeedReturnValue(.seedRequired)
         await rustBackendMock.setGetNearestRewindHeightHeightReturnValue(-1)
-        await rustBackendMock.setInitBlocksTableHeightHashTimeSaplingTreeClosure() { _, _, _, _ in }
         await rustBackendMock.setPutUnspentTransparentOutputTxidIndexScriptValueHeightClosure() { _, _, _, _, _ in }
         await rustBackendMock.setCreateToAddressUskToValueMemoThrowableError(ZcashError.rustCreateToAddress("mocked error"))
         await rustBackendMock.setShieldFundsUskMemoShieldingThresholdThrowableError(ZcashError.rustShieldFunds("mocked error"))
@@ -108,15 +106,6 @@ class RustBackendMockHelper {
 
         await rustBackendMock.setInitDataDbSeedClosure() { seed in
             return try await rustBackend.initDataDb(seed: seed)
-        }
-
-        await rustBackendMock.setInitBlocksTableHeightHashTimeSaplingTreeClosure() { height, hash, time, saplingTree in
-            try await rustBackend.initBlocksTable(
-                height: height,
-                hash: hash,
-                time: time,
-                saplingTree: saplingTree
-            )
         }
 
         await rustBackendMock.setGetBalanceAccountClosure() { account in

@@ -45,7 +45,6 @@ class SendViewController: UIViewController {
 
         closureSynchronizer.prepare(
             with: DemoAppConfig.defaultSeed,
-            viewingKeys: [AppDelegate.shared.sharedViewingKey],
             walletBirthday: DemoAppConfig.defaultBirthdayHeight
         ) { result in
             loggerProxy.debug("Prepare result: \(result)")

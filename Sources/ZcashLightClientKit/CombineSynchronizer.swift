@@ -24,7 +24,6 @@ public protocol CombineSynchronizer {
 
     func prepare(
         with seed: [UInt8]?,
-        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
     ) -> SinglePublisher<Initializer.InitializationResult, Error>
 

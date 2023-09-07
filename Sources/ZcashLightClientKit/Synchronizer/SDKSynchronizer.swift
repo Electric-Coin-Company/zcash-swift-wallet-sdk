@@ -127,7 +127,6 @@ public class SDKSynchronizer: Synchronizer {
 
     public func prepare(
         with seed: [UInt8]?,
-        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
     ) async throws -> Initializer.InitializationResult {
         guard await status == .unprepared else { return .success }
@@ -138,7 +137,7 @@ public class SDKSynchronizer: Synchronizer {
 
         try await utxoRepository.initialise()
 
-        if case .seedRequired = try await self.initializer.initialize(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday) {
+        if case .seedRequired = try await self.initializer.initialize(with: seed, walletBirthday: walletBirthday) {
             return .seedRequired
         }
 

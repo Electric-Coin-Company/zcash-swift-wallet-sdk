@@ -35,9 +35,11 @@ protocol ZcashRustBackendWelding {
     /// have been received by the currently-available account (in order to enable
     /// automated account recovery).
     /// - parameter seed: byte array of the zip32 seed
+    /// - parameter treeState: byte array containing the TreeState Protobuf object for the height prior to the account birthday
+    /// - parameter recoverUntil: the fully-scanned height up to which the account will be treated as "being recovered"
     /// - Returns: The `UnifiedSpendingKey` structs for the number of accounts created
     /// - Throws: `rustCreateAccount`.
-    func createAccount(seed: [UInt8]) async throws -> UnifiedSpendingKey
+    func createAccount(seed: [UInt8], treeState: [UInt8], recoverUntil: UInt32?) async throws -> UnifiedSpendingKey
 
     /// Creates a transaction to the given address from the given account
     /// - Parameter usk: `UnifiedSpendingKey` for the account that controls the funds to be spent.
@@ -101,14 +103,6 @@ protocol ZcashRustBackendWelding {
     ///     - `rustGetTransparentBalance` if rust layer returns error.
     func getTransparentBalance(account: Int32) async throws -> Int64
 
-    /// Initialize the accounts table from a set of unified full viewing keys.
-    /// - Note: this function should only be used when restoring an existing seed phrase. when creating a new wallet, use `createAccount()` instead.
-    /// - Parameter ufvks: an array of UnifiedFullViewingKeys
-    /// - Throws:
-    ///     - `rustInitAccountsTableViewingKeyCotainsNullBytes` if any of the key in `ufvks` contains null bytes before end.
-    ///     - `rustInitAccountsTableViewingKeyIsInvalid` if any of the key in `ufvks` isn't valid.
-    func initAccountsTable(ufvks: [UnifiedFullViewingKey]) async throws
-
     /// Initializes the data db. This will performs any migrations needed on the sqlite file
     /// provided. Some migrations might need that callers provide the seed bytes.
     /// - Parameter seed: ZIP-32 compliant seed bytes for this wallet
@@ -117,23 +111,6 @@ protocol ZcashRustBackendWelding {
     /// in order to be completed successfully.
     /// Throws `rustInitDataDb` if rust layer returns error.
     func initDataDb(seed: [UInt8]?) async throws -> DbInitResult
-
-    /// Initialize the blocks table from a given checkpoint (heigh, hash, time, saplingTree and networkType).
-    /// - parameter height: represents the block height of the given checkpoint
-    /// - parameter hash: hash of the merkle tree
-    /// - parameter time: in milliseconds from reference
-    /// - parameter saplingTree: hash of the sapling tree
-    /// - Throws:
-    ///     - `rustInitBlocksTableHashContainsNullBytes` if `hash` contains null bytes before end.
-    ///     - `rustInitBlocksTableSaplingTreeContainsNullBytes` if `saplingTree` contains null bytes before end.
-    ///     - `rustInitBlocksTableDataDbNotEmpty` if data DB is not empty.
-    ///     - `rustInitBlocksTable` if rust layer returns error.
-    func initBlocksTable(
-        height: Int32,
-        hash: String,
-        time: UInt32,
-        saplingTree: String
-    ) async throws
 
     /// Returns a list of the transparent receivers for the diversified unified addresses that have
     /// been allocated for the provided account.
@@ -165,6 +142,31 @@ protocol ZcashRustBackendWelding {
     /// - parameter height: height to rewind to. DON'T PASS ARBITRARY HEIGHT. Use `getNearestRewindHeight` when unsure
     /// - Throws: `rustRewindCacheToHeight` if rust layer returns error.
     func rewindCacheToHeight(height: Int32) async throws
+
+    /// Updates the wallet's view of the blockchain.
+    ///
+    /// This method is used to provide the wallet with information about the state of the blockchain,
+    /// and detect any previously scanned data that needs to be re-validated before proceeding with
+    /// scanning. It should be called at wallet startup prior to calling `suggestScanRanges`
+    /// in order to provide the wallet with the information it needs to correctly prioritize scanning
+    /// operations.
+    func updateChainTip(height: Int32) async throws
+
+    /// Returns the height to which the wallet has been fully scanned.
+    ///
+    /// This is the height for which the wallet has fully trial-decrypted this and all
+    /// preceding blocks beginning with the wallet's birthday height.
+    func fullyScannedHeight() async throws -> BlockHeight?
+
+    /// Returns the maximum height that the wallet has scanned.
+    ///
+    /// If the wallet is fully synced, this will be equivalent to `fullyScannedHeight`;
+    /// otherwise the maximal scanned height is likely to be greater than the fully scanned
+    /// height due to the fact that out-of-order scanning can leave gaps.
+    func maxScannedHeight() async throws -> BlockHeight?
+
+    /// Returns the scan progress derived from the current wallet state.
+    func getScanProgress() async throws -> ScanProgress?
 
     /// Returns a list of suggested scan ranges based upon the current wallet state.
     ///
@@ -242,5 +244,5 @@ protocol ZcashRustBackendWelding {
     /// this directory  is expected to contain a `/blocks` sub-directory with the blocks stored in the convened filename
     /// format `{height}-{hash}-block`. This directory has must be granted both write and read permissions.
     /// - Returns `BlockHeight` of the latest cached block or `.empty` if no blocks are stored.
-    func latestCachedBlockHeight() async -> BlockHeight
+    func latestCachedBlockHeight() async throws -> BlockHeight
 }

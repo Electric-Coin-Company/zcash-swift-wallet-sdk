@@ -41,7 +41,7 @@ class CompactBlockRepositoryTests: ZcashTestCase {
 
         try await compactBlockRepository.create()
 
-        let latestHeight = await compactBlockRepository.latestHeight()
+        let latestHeight = try await compactBlockRepository.latestHeight()
         XCTAssertEqual(latestHeight, BlockHeight.empty())
     }
     
@@ -60,14 +60,14 @@ class CompactBlockRepositoryTests: ZcashTestCase {
 
         try await compactBlockRepository.create()
 
-        let initialHeight = await compactBlockRepository.latestHeight()
+        let initialHeight = try await compactBlockRepository.latestHeight()
         let startHeight = self.network.constants.saplingActivationHeight
         let blockCount = Int(1_000)
         let finalHeight = startHeight + blockCount
         
         try await TestDbBuilder.seed(db: compactBlockRepository, with: startHeight...finalHeight)
         
-        let latestHeight = await compactBlockRepository.latestHeight()
+        let latestHeight = try await compactBlockRepository.latestHeight()
         XCTAssertNotEqual(initialHeight, latestHeight)
         XCTAssertEqual(latestHeight, finalHeight)
     }
@@ -94,7 +94,7 @@ class CompactBlockRepositoryTests: ZcashTestCase {
         }
         try await compactBlockRepository.write(blocks: [block])
         
-        let result = await compactBlockRepository.latestHeight()
+        let result = try await compactBlockRepository.latestHeight()
         XCTAssertEqual(result, expectedHeight)
     }
     
@@ -121,7 +121,7 @@ class CompactBlockRepositoryTests: ZcashTestCase {
         let rewindHeight = BlockHeight(finalHeight - 233)
         
         try await compactBlockRepository.rewind(to: rewindHeight)
-        let latestHeight = await compactBlockRepository.latestHeight()
+        let latestHeight = try await compactBlockRepository.latestHeight()
         XCTAssertEqual(latestHeight, rewindHeight)
     }
 }

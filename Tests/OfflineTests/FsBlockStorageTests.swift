@@ -34,7 +34,7 @@ final class FsBlockStorageTests: ZcashTestCase {
 
         try await emptyCache.create()
 
-        let latestHeight = await emptyCache.latestHeight()
+        let latestHeight = try await emptyCache.latestHeight()
         XCTAssertEqual(latestHeight, .empty())
     }
 
@@ -180,7 +180,7 @@ final class FsBlockStorageTests: ZcashTestCase {
 
         try await freshCache.write(blocks: fakeBlocks)
 
-        let latestHeight = await freshCache.latestHeight()
+        let latestHeight = try await freshCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 2000)
     }
@@ -292,12 +292,12 @@ final class FsBlockStorageTests: ZcashTestCase {
         }
 
         try await fsBlockCache.write(blocks: stubBlocks)
-        var latestHeight = await fsBlockCache.latestHeight()
+        var latestHeight = try await fsBlockCache.latestHeight()
         XCTAssertEqual(latestHeight, 1010)
 
         try await fsBlockCache.clear()
 
-        latestHeight = await fsBlockCache.latestHeight()
+        latestHeight = try await fsBlockCache.latestHeight()
         XCTAssertEqual(latestHeight, .empty())
     }
 
@@ -332,7 +332,7 @@ final class FsBlockStorageTests: ZcashTestCase {
 
         try await realCache.write(blocks: sandblastedBlocks)
 
-        let latestHeight = await realCache.latestHeight()
+        let latestHeight = try await realCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 19)
     }
@@ -390,20 +390,20 @@ final class FsBlockStorageTests: ZcashTestCase {
 
         XCTAssertLessThan(timePassed, 0.5)
 
-        let latestHeight = await realCache.latestHeight()
+        let latestHeight = try await realCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 19)
 
         try await realCache.rewind(to: 14)
 
-        let rewoundHeight = await realCache.latestHeight()
+        let rewoundHeight = try await realCache.latestHeight()
 
         XCTAssertEqual(rewoundHeight, 14)
 
         let blockSlice = [ZcashCompactBlock](sandblastedBlocks[5...])
         try await realCache.write(blocks: blockSlice)
 
-        let newLatestHeight = await realCache.latestHeight()
+        let newLatestHeight = try await realCache.latestHeight()
 
         XCTAssertEqual(newLatestHeight, 19)
     }
@@ -480,7 +480,7 @@ final class FsBlockStorageTests: ZcashTestCase {
         try await freshCache.write(blocks: fakeBlocks)
         let endTime = Date()
 
-        let latestHeight = await freshCache.latestHeight()
+        let latestHeight = try await freshCache.latestHeight()
 
         XCTAssertEqual(latestHeight, 2000)
 

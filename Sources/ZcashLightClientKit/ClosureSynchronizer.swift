@@ -24,7 +24,6 @@ public protocol ClosureSynchronizer {
 
     func prepare(
         with seed: [UInt8]?,
-        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight,
         completion: @escaping (Result<Initializer.InitializationResult, Error>) -> Void
     )

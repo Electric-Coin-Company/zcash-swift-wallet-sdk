@@ -33,11 +33,10 @@ extension CombineSDKSynchronizer: CombineSynchronizer {
 
     public func prepare(
         with seed: [UInt8]?,
-        viewingKeys: [UnifiedFullViewingKey],
         walletBirthday: BlockHeight
     ) -> SinglePublisher<Initializer.InitializationResult, Error> {
         AsyncToCombineGateway.executeThrowingAction() {
-            return try await self.synchronizer.prepare(with: seed, viewingKeys: viewingKeys, walletBirthday: walletBirthday)
+            return try await self.synchronizer.prepare(with: seed, walletBirthday: walletBirthday)
         }
     }
 
