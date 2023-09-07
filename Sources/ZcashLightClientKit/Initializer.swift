@@ -420,7 +420,15 @@ public class Initializer {
 
         self.walletBirthday = checkpoint.height
 
-        // TODO: Initialize accounts if desired.
+        // If there are no accounts it must be created, the default amount of accounts is 1
+        if let seed, try accountRepository.getAll().isEmpty {
+            // TODO: [#1236] set the recoverUntil properly, https://github.com/zcash/ZcashLightClientKit/issues/1236
+            _ = try await rustBackend.createAccount(
+                seed: seed,
+                treeState: try checkpoint.treeState().serializedData(partial: false).bytes,
+                recoverUntil: nil
+            )
+        }
 
         return .success
     }

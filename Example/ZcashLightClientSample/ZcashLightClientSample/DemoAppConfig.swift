@@ -28,7 +28,7 @@ enum DemoAppConfig {
 
     static let defaultBirthdayHeight: BlockHeight = ZcashSDK.isMainnet ? 1935000 : 2170000
     static let defaultSeed = try! Mnemonic.deterministicSeedBytes(from: """
-    kitchen renew wide common vague fold vacuum tilt amazing pear square gossip jewel month tree shock scan alpha just spot fluid toilet view dinner
+    wish puppy smile loan doll curve hole maze file ginger hair nose key relax knife witness cannon grab despair throw review deal slush frame
     """)
 
     static let otherSynchronizers: [SynchronizerInitData] = [
