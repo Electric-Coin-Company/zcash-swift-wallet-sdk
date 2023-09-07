@@ -92,12 +92,6 @@ extension ClosureSDKSynchronizer: ClosureSynchronizer {
         }
     }
 
-    public func pendingTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
-        AsyncToClosureGateway.executeAction(completion) {
-            await self.synchronizer.pendingTransactions
-        }
-    }
-
     public func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void) {
         AsyncToClosureGateway.executeAction(completion) {
             await self.synchronizer.transactions

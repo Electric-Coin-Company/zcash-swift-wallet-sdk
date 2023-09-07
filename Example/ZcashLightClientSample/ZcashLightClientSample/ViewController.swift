@@ -82,13 +82,7 @@ class MainTableViewController: UITableViewController {
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let destination = segue.destination as? TransactionsTableViewController {
-            if let id = segue.identifier, id == "Pending" {
-                destination.datasource = TransactionsDataSource(
-                    status: .pending,
-                    synchronizer: AppDelegate.shared.sharedSynchronizer
-                )
-                destination.title = "Pending Transactions"
-            } else if let id = segue.identifier, id == "Sent" {
+            if let id = segue.identifier, id == "Sent" {
                 destination.datasource = TransactionsDataSource(
                     status: .sent,
                     synchronizer: AppDelegate.shared.sharedSynchronizer

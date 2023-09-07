@@ -27,7 +27,6 @@ struct BlockScannerImpl {
     let transactionRepository: TransactionRepository
     let metrics: SDKMetrics
     let logger: Logger
-    let latestBlocksDataProvider: LatestBlocksDataProvider
 }
 
 extension BlockScannerImpl: BlockScanner {

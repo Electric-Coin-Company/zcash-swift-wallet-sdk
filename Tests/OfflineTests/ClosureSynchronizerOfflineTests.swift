@@ -408,20 +408,6 @@ class ClosureSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testPendingTransactionsSucceed() {
-        synchronizerMock.underlyingPendingTransactions = [data.pendingTransactionEntity]
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.pendingTransactions() { transactions in
-            XCTAssertEqual(transactions.count, 1)
-            XCTAssertEqual(transactions[0].id, self.data.pendingTransactionEntity.id)
-            expectation.fulfill()
-        }
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
     func testClearedTransactionsSucceed() {
         synchronizerMock.underlyingTransactions = [data.clearedTransaction]
 

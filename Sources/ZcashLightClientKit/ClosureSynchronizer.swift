@@ -50,7 +50,6 @@ public protocol ClosureSynchronizer {
         completion: @escaping (Result<ZcashTransaction.Overview, Error>) -> Void
     )
 
-    func pendingTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func clearedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func sentTranscations(completion: @escaping ([ZcashTransaction.Overview]) -> Void)
     func receivedTransactions(completion: @escaping ([ZcashTransaction.Overview]) -> Void)

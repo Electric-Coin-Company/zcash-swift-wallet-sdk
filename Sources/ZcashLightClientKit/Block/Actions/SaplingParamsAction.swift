@@ -24,11 +24,8 @@ extension SaplingParamsAction: Action {
         logger.debug("Fetching sapling parameters")
         try await saplingParametersHandler.handleIfNeeded()
         
-        if context.preferredSyncAlgorithm == .spendBeforeSync {
-            await context.update(state: .updateSubtreeRoots)
-        } else {
-            await context.update(state: .computeSyncControlData)
-        }
+        await context.update(state: .updateSubtreeRoots)
+        
         return context
     }
 

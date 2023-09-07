@@ -33,7 +33,6 @@ extension UpdateSubtreeRootsAction: Action {
         let stream = service.getSubtreeRoots(request)
         
         var roots: [SubtreeRoot] = []
-        var err: Error?
         
         do {
             for try await subtreeRoot in stream {
@@ -41,28 +40,16 @@ extension UpdateSubtreeRootsAction: Action {
             }
         } catch ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut) {
             throw ZcashError.serviceSubtreeRootsStreamFailed(LightWalletServiceError.timeOut)
-        } catch {
-            logger.debug("getSubtreeRoots failed with error \(error.localizedDescription)")
-            err = error
         }
 
-        // In case of error, the lightwalletd doesn't support Spend before Sync -> switching to linear sync.
-        // Likewise, no subtree roots results in switching to linear sync.
-        if err != nil || roots.isEmpty {
-            logger.info("Spend before Sync is not possible, switching to linear sync.")
-            await context.update(supportedSyncAlgorithm: .linear)
-            await context.update(state: .computeSyncControlData)
-        } else {
-            await context.update(supportedSyncAlgorithm: .spendBeforeSync)
-            logger.info("Sapling tree has \(roots.count) subtrees")
-            do {
-                try await rustBackend.putSaplingSubtreeRoots(startIndex: UInt64(request.startIndex), roots: roots)
-                
-                await context.update(state: .updateChainTip)
-            } catch {
-                logger.debug("putSaplingSubtreeRoots failed with error \(error.localizedDescription)")
-                throw ZcashError.compactBlockProcessorPutSaplingSubtreeRoots(error)
-            }
+        logger.info("Sapling tree has \(roots.count) subtrees")
+        do {
+            try await rustBackend.putSaplingSubtreeRoots(startIndex: UInt64(request.startIndex), roots: roots)
+            
+            await context.update(state: .updateChainTip)
+        } catch {
+            logger.debug("putSaplingSubtreeRoots failed with error \(error.localizedDescription)")
+            throw ZcashError.compactBlockProcessorPutSaplingSubtreeRoots(error)
         }
         
         return context

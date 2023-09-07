@@ -92,8 +92,6 @@ We don't like reinventing the wheel, so we gently borrowed swift lint rules from
 ## `Spend before Sync` synchronization algorithm
 
 The CompactBlockProcessor is responsible for downloading and processing blocks from the lightwalletd. Since the inception of the SDK the blocks were processed in a linear order up to the chain tip. Latests SDK has introduced brand new algorithm for syncing of the blocks. It's called `Spend before Sync` and processes blocks in non-linear order so the spendable funds are discovered as soon as possible - allowing users to create a transaction while still syncing.
-
-By default the syncing algorithm is set to `.linear` so users of the SDK are not affected by this new feature. To switch to the `Spend before Sync` synchronization, set `syncAlgorithm: .spendBeforeSync` in the Initializer's init. 
   
 # Versioning
 

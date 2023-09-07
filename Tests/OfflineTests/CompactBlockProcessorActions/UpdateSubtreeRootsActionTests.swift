@@ -23,55 +23,11 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
         underlyingSaplingActivationHeight = nil
         underlyingConsensusBranchID = "c2d6d0b4"
     }
-
-    func testUpdateSubtreeRootsAction_getSubtreeRootsFailure() async throws {
-        let loggerMock = LoggerMock()
-        
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
-
-        let tupple = setupAction(loggerMock)
-        let updateSubtreeRootsActionAction = tupple.action
-        tupple.serviceMock.getSubtreeRootsClosure = { _ in
-            AsyncThrowingStream { continuation in continuation.finish(throwing: ZcashError.serviceSubmitFailed(.invalidBlock)) }
-        }
-
-        do {
-            let context = ActionContextMock.default()
-            context.updateSupportedSyncAlgorithmClosure = { _ in }
-
-            let nextContext = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
-
-            if let nextContextMock = nextContext as? ActionContextMock {
-                if let supportedSyncAlgorithm = nextContextMock.updateSupportedSyncAlgorithmReceivedSupportedSyncAlgorithm {
-                    XCTAssertTrue(
-                        supportedSyncAlgorithm == .linear,
-                        "supportedSyncAlgorithm is expected to be .linear but received \(supportedSyncAlgorithm)"
-                    )
-                } else {
-                    XCTFail("`nextContextMock` supportedSyncAlgorithm not set")
-                }
-            } else {
-                XCTFail("`nextContext` is not the ActionContextMock")
-            }
-
-            if let debugArguments = loggerMock.debugFileFunctionLineReceivedArguments {
-                XCTAssertTrue(debugArguments.message.contains("getSubtreeRoots failed with error"))
-            } else {
-                XCTFail("`debugArguments` unavailable.")
-            }
-
-            let acResult = nextContext.checkStateIs(.computeSyncControlData)
-            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
-        } catch {
-            XCTFail("testUpdateSubtreeRootsAction_getSubtreeRootsFailure is not expected to fail. \(error)")
-        }
-    }
     
     func testUpdateSubtreeRootsAction_getSubtreeRootsTimeout() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
@@ -81,7 +37,6 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
 
         do {
             let context = ActionContextMock.default()
-            context.updateSupportedSyncAlgorithmClosure = { _ in }
             
             _ = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
             XCTFail("The test is expected to fail but continued.")
@@ -98,51 +53,11 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
         }
     }
     
-    func testUpdateSubtreeRootsAction_getSubtreeRootsEmpty() async throws {
-        let loggerMock = LoggerMock()
-        
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
-
-        let tupple = setupAction(loggerMock)
-        let updateSubtreeRootsActionAction = tupple.action
-        tupple.serviceMock.getSubtreeRootsClosure = { _ in
-            AsyncThrowingStream { continuation in continuation.finish() }
-        }
-
-        do {
-            let context = ActionContextMock.default()
-            context.updateSupportedSyncAlgorithmClosure = { _ in }
-
-            let nextContext = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
-
-            if let nextContextMock = nextContext as? ActionContextMock {
-                if let supportedSyncAlgorithm = nextContextMock.updateSupportedSyncAlgorithmReceivedSupportedSyncAlgorithm {
-                    XCTAssertTrue(
-                        supportedSyncAlgorithm == .linear,
-                        "supportedSyncAlgorithm is expected to be .linear but received \(supportedSyncAlgorithm)"
-                    )
-                } else {
-                    XCTFail("`nextContextMock` supportedSyncAlgorithm not set")
-                }
-            } else {
-                XCTFail("`nextContext` is not the ActionContextMock")
-            }
-            
-            XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug() is not expected to be called.")
-            
-            let acResult = nextContext.checkStateIs(.computeSyncControlData)
-            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
-        } catch {
-            XCTFail("testUpdateSubtreeRootsAction_getSubtreeRootsEmpty is not expected to fail. \(error)")
-        }
-    }
-    
     func testUpdateSubtreeRootsAction_RootsAvailablePutRootsSuccess() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
@@ -152,27 +67,13 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
                 continuation.finish()
             }
         }
-        await tupple.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsClosure( { _, _ in } )
+        await tupple.rustBackendMock.setPutSaplingSubtreeRootsStartIndexRootsClosure({ _, _ in })
 
         do {
             let context = ActionContextMock.default()
-            context.updateSupportedSyncAlgorithmClosure = { _ in }
 
             let nextContext = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
 
-            if let nextContextMock = nextContext as? ActionContextMock {
-                if let supportedSyncAlgorithm = nextContextMock.updateSupportedSyncAlgorithmReceivedSupportedSyncAlgorithm {
-                    XCTAssertTrue(
-                        supportedSyncAlgorithm == .spendBeforeSync,
-                        "supportedSyncAlgorithm is expected to be .linear but received \(supportedSyncAlgorithm)"
-                    )
-                } else {
-                    XCTFail("`nextContextMock` supportedSyncAlgorithm not set")
-                }
-            } else {
-                XCTFail("`nextContext` is not the ActionContextMock")
-            }
-            
             XCTAssertFalse(loggerMock.debugFileFunctionLineCalled, "logger.debug() is not expected to be called.")
             
             let acResult = nextContext.checkStateIs(.updateChainTip)
@@ -185,8 +86,8 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
     func testUpdateSubtreeRootsAction_RootsAvailablePutRootsFailure() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
         let updateSubtreeRootsActionAction = tupple.action
@@ -200,7 +101,6 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
 
         do {
             let context = ActionContextMock.default()
-            context.updateSupportedSyncAlgorithmClosure = { _ in }
             
             _ = try await updateSubtreeRootsActionAction.run(with: context) { _ in }
             
@@ -247,7 +147,8 @@ final class UpdateSubtreeRootsActionTests: ZcashTestCase {
             action:
                 UpdateSubtreeRootsAction(
                     container: mockContainer,
-                    configProvider: CompactBlockProcessor.ConfigProvider(config: config)),
+                    configProvider: CompactBlockProcessor.ConfigProvider(config: config)
+                ),
             serviceMock: serviceMock,
             rustBackendMock: rustBackendMock
         )

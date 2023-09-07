@@ -70,7 +70,6 @@ actor CompactBlockProcessor {
         let network: ZcashNetwork
         let saplingActivation: BlockHeight
         let cacheDbURL: URL?
-        let syncAlgorithm: SyncAlgorithm
         var blockPollInterval: TimeInterval {
             TimeInterval.random(in: ZcashSDK.defaultPollInterval / 2 ... ZcashSDK.defaultPollInterval * 1.5)
         }
@@ -90,7 +89,6 @@ actor CompactBlockProcessor {
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
             walletBirthdayProvider: @escaping () -> BlockHeight,
             saplingActivation: BlockHeight,
-            syncAlgorithm: SyncAlgorithm = .linear,
             network: ZcashNetwork
         ) {
             self.alias = alias
@@ -108,7 +106,6 @@ actor CompactBlockProcessor {
             self.walletBirthdayProvider = walletBirthdayProvider
             self.saplingActivation = saplingActivation
             self.cacheDbURL = cacheDbURL
-            self.syncAlgorithm = syncAlgorithm
         }
 
         init(
@@ -124,7 +121,6 @@ actor CompactBlockProcessor {
             maxBackoffInterval: TimeInterval = ZcashSDK.defaultMaxBackOffInterval,
             rewindDistance: Int = ZcashSDK.defaultRewindDistance,
             walletBirthdayProvider: @escaping () -> BlockHeight,
-            syncAlgorithm: SyncAlgorithm = .linear,
             network: ZcashNetwork
         ) {
             self.alias = alias
@@ -142,7 +138,6 @@ actor CompactBlockProcessor {
             self.retries = retries
             self.maxBackoffInterval = maxBackoffInterval
             self.rewindDistance = rewindDistance
-            self.syncAlgorithm = syncAlgorithm
         }
     }
 
@@ -174,7 +169,6 @@ actor CompactBlockProcessor {
                 outputParamsURL: initializer.outputParamsURL,
                 saplingParamsSourceURL: initializer.saplingParamsSourceURL,
                 walletBirthdayProvider: walletBirthdayProvider,
-                syncAlgorithm: initializer.syncAlgorithm,
                 network: initializer.network
             ),
             accountRepository: initializer.accountRepository
@@ -193,7 +187,7 @@ actor CompactBlockProcessor {
         )
 
         let configProvider = ConfigProvider(config: config)
-        context = ActionContextImpl(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
+        context = ActionContextImpl(state: .idle)
         actions = Self.makeActions(container: container, configProvider: configProvider)
 
         self.metrics = container.resolve(SDKMetrics.self)
@@ -232,8 +226,6 @@ actor CompactBlockProcessor {
                 action = ProcessSuggestedScanRangesAction(container: container)
             case .rewind:
                 action = RewindAction(container: container)
-            case .computeSyncControlData:
-                action = ComputeSyncControlDataAction(container: container, configProvider: configProvider)
             case .download:
                 action = DownloadAction(container: container, configProvider: configProvider)
             case .scan:
@@ -325,7 +317,7 @@ extension CompactBlockProcessor {
 
     private func doRewind(context: AfterSyncHooksManager.RewindContext) async throws {
         logger.debug("Executing rewind.")
-        let lastDownloaded = await latestBlocksDataProvider.latestScannedHeight
+        let lastDownloaded = await latestBlocksDataProvider.maxScannedHeight
         let height = Int32(context.height ?? lastDownloaded)
 
         let nearestHeight: Int32
@@ -611,8 +603,6 @@ extension CompactBlockProcessor {
             break
         case .rewind:
             break
-        case .computeSyncControlData:
-            break
         case .download:
             break
         case .scan:
@@ -638,7 +628,7 @@ extension CompactBlockProcessor {
 
     private func resetContext() async {
         let lastEnhancedheight = await context.lastEnhancedHeight
-        context = ActionContextImpl(state: .idle, preferredSyncAlgorithm: config.syncAlgorithm)
+        context = ActionContextImpl(state: .idle)
         await context.update(lastEnhancedHeight: lastEnhancedheight)
         await compactBlockProgress.reset()
     }
@@ -660,7 +650,7 @@ extension CompactBlockProcessor {
         retryAttempts = 0
         consecutiveChainValidationErrors = 0
 
-        let lastScannedHeight = await latestBlocksDataProvider.latestScannedHeight
+        let lastScannedHeight = await latestBlocksDataProvider.maxScannedHeight
         // Some actions may not run. For example there are no transactions to enhance and therefore there is no enhance progress. And in
         // cases like this computation of final progress won't work properly. So let's fake 100% progress at the end of the sync process.
         await send(event: .progressUpdated(1))
@@ -746,7 +736,6 @@ extension CompactBlockProcessor {
                                 """
                                 Timer triggered: Starting compact Block processor!.
                                 Processor State: \(await self.context.state)
-                                latestHeight: \(try await self.transactionRepository.lastScannedHeight())
                                 attempts: \(await self.retryAttempts)
                                 """
                             )

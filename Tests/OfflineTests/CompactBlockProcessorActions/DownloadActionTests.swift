@@ -17,7 +17,6 @@ final class DownloadActionTests: ZcashTestCase {
         let blockDownloaderMock = BlockDownloaderMock()
         let transactionRepositoryMock = TransactionRepositoryMock()
         
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1000
         blockDownloaderMock.setSyncRangeBatchSizeClosure = { _, _ in }
         blockDownloaderMock.setDownloadLimitClosure = { _ in }
         blockDownloaderMock.startDownloadMaxBlockBufferSizeClosure = { _ in }
@@ -120,10 +119,6 @@ final class DownloadActionTests: ZcashTestCase {
         do {
             let nextContext = try await downloadAction.run(with: syncContext) { _ in }
 
-            XCTAssertFalse(
-                transactionRepositoryMock.lastScannedHeightCalled,
-                "transactionRepository.lastScannedHeight() is not expected to be called."
-            )
             XCTAssertFalse(blockDownloaderMock.setSyncRangeBatchSizeCalled, "downloader.setSyncRange() is not expected to be called.")
             XCTAssertFalse(blockDownloaderMock.setDownloadLimitCalled, "downloader.setDownloadLimit() is not expected to be called.")
             XCTAssertFalse(blockDownloaderMock.startDownloadMaxBlockBufferSizeCalled, "downloader.startDownload() is not expected to be called.")

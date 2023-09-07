@@ -38,10 +38,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             let nextContext = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
             
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
-            XCTAssertFalse(
-                transactionRepositoryMock.lastScannedHeightCalled,
-                "transactionRepository.lastScannedHeight() is not expected to be called."
-            )
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
 
@@ -71,10 +67,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             XCTFail("testMigrateLegacyCacheDBAction_noFsBlockCacheRoot is expected to fail.")
         } catch ZcashError.compactBlockProcessorCacheDbMigrationFsCacheMigrationFailedSameURL {
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
-            XCTAssertFalse(
-                transactionRepositoryMock.lastScannedHeightCalled,
-                "transactionRepository.lastScannedHeight() is not expected to be called."
-            )
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
         } catch {
@@ -107,10 +99,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             let nextContext = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
             
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
-            XCTAssertFalse(
-                transactionRepositoryMock.lastScannedHeightCalled,
-                "transactionRepository.lastScannedHeight() is not expected to be called."
-            )
             XCTAssertFalse(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is not expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
 
@@ -143,10 +131,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             let nextContext = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
 
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
-            XCTAssertFalse(
-                transactionRepositoryMock.lastScannedHeightCalled,
-                "transactionRepository.lastScannedHeight() is not expected to be called."
-            )
             XCTAssertTrue(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is expected to be called.")
             XCTAssertFalse(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is not expected to be called.")
 
@@ -180,10 +164,6 @@ final class MigrateLegacyCacheDBActionTests: ZcashTestCase {
             _ = try await migrateLegacyCacheDBAction.run(with: context) { _ in }
         } catch ZcashError.compactBlockProcessorCacheDbMigrationFailedToDeleteLegacyDb {
             XCTAssertFalse(compactBlockRepositoryMock.createCalled, "storage.create() is not expected to be called.")
-            XCTAssertFalse(
-                transactionRepositoryMock.lastScannedHeightCalled,
-                "transactionRepository.lastScannedHeight() is not expected to be called."
-            )
             XCTAssertTrue(zcashFileManagerMock.isReadableFileAtPathCalled, "fileManager.isReadableFile() is expected to be called.")
             XCTAssertTrue(zcashFileManagerMock.removeItemAtCalled, "fileManager.removeItem() is expected to be called.")
         } catch {

@@ -48,7 +48,6 @@ public protocol CombineSynchronizer {
     ) -> SinglePublisher<ZcashTransaction.Overview, Error>
 
     var allTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
-    var pendingTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var sentTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
     var receivedTransactions: SinglePublisher<[ZcashTransaction.Overview], Never> { get }
 
@@ -57,8 +56,6 @@ public protocol CombineSynchronizer {
     func getMemos(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[Memo], Error>
 
     func getRecipients(for transaction: ZcashTransaction.Overview) -> SinglePublisher<[TransactionRecipient], Never>
-
-    func allPendingTransactions() -> SinglePublisher<[ZcashTransaction.Overview], Error>
 
     func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) -> SinglePublisher<[ZcashTransaction.Overview], Error>
 

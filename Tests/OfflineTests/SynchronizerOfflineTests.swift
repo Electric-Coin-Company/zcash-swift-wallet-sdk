@@ -468,25 +468,6 @@ class SynchronizerOfflineTests: ZcashTestCase {
             XCTFail("Syncing is expected to be 100% (1.0) but received \(data).")
         }
     }
-
-    func testLinearIsSetAsDefault() async throws {
-        let databases = TemporaryDbBuilder.build()
-        let initializer = Initializer(
-            cacheDbURL: nil,
-            fsBlockDbRoot: databases.fsCacheDbRoot,
-            generalStorageURL: testGeneralStorageDirectory,
-            dataDbURL: databases.dataDB,
-            endpoint: LightWalletEndpoint(address: "lightwalletd.electriccoin.co", port: 9067, secure: true),
-            network: ZcashNetworkBuilder.network(for: .mainnet),
-            spendParamsURL: try __spendParamsURL(),
-            outputParamsURL: try __outputParamsURL(),
-            saplingParamsSourceURL: SaplingParamsSourceURL.tests,
-            alias: .default,
-            loggingPolicy: .default(.debug)
-        )
-        
-        XCTAssertTrue(initializer.syncAlgorithm == .linear, "Spend before Sync is a beta feature so linear syncing is set to default.")
-    }
     
     func synchronizerState(for internalSyncStatus: InternalSyncStatus) -> SynchronizerState {
         SynchronizerState(
@@ -494,9 +475,7 @@ class SynchronizerOfflineTests: ZcashTestCase {
             shieldedBalance: .zero,
             transparentBalance: .zero,
             internalSyncStatus: internalSyncStatus,
-            latestScannedHeight: .zero,
-            latestBlockHeight: .zero,
-            latestScannedTime: 0
+            latestBlockHeight: .zero
         )
     }
 }

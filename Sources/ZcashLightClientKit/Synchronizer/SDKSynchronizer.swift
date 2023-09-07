@@ -24,8 +24,6 @@ public class SDKSynchronizer: Synchronizer {
 
     public let metrics: SDKMetrics
     public let logger: Logger
-    public var syncAlgorithm: SyncAlgorithm = .linear
-    private var requestedSyncAlgorithm: SyncAlgorithm?
 
     // Don't read this variable directly. Use `status` instead. And don't update this variable directly use `updateStatus()` methods instead.
     private var underlyingStatus: GenericActor<InternalSyncStatus>
@@ -89,7 +87,6 @@ public class SDKSynchronizer: Synchronizer {
         self.syncSession = SyncSession(.nullID)
         self.syncSessionTicker = syncSessionTicker
         self.latestBlocksDataProvider = initializer.container.resolve(LatestBlocksDataProvider.self)
-        self.syncAlgorithm = initializer.syncAlgorithm
         
         initializer.lightWalletService.connectionStateChange = { [weak self] oldState, newState in
             self?.connectivityStateChanged(oldState: oldState, newState: newState)
@@ -313,8 +310,8 @@ public class SDKSynchronizer: Synchronizer {
         let accountIndex = Int(spendingKey.account)
         let tBalance = try await self.getTransparentBalance(accountIndex: accountIndex)
 
-        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding   wallet.
-        guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.latestScannedHeight) else {
+        // Verify that at least there are funds for the fee. Ideally this logic will be improved by the shielding wallet.
+        guard tBalance.verified >= self.network.constants.defaultFee(for: await self.latestBlocksDataProvider.maxScannedHeight) else {
             throw ZcashError.synchronizerShieldFundsInsuficientTransparentFunds
         }
 
@@ -365,12 +362,6 @@ public class SDKSynchronizer: Synchronizer {
 
     public func allReceivedTransactions() async throws -> [ZcashTransaction.Overview] {
         try await transactionRepository.findReceived(offset: 0, limit: Int.max)
-    }
-
-    public func allPendingTransactions() async throws -> [ZcashTransaction.Overview] {
-        let latestScannedHeight = try await transactionRepository.lastScannedHeight()
-        
-        return try await transactionRepository.findPendingTransactions(latestHeight: latestScannedHeight, offset: 0, limit: .max)
     }
 
     public func allTransactions() async throws -> [ZcashTransaction.Overview] {
@@ -556,9 +547,7 @@ public class SDKSynchronizer: Synchronizer {
             ),
             transparentBalance: (try? await blockProcessor.getTransparentBalance(accountIndex: 0)) ?? .zero,
             internalSyncStatus: status,
-            latestScannedHeight: latestBlocksDataProvider.latestScannedHeight,
-            latestBlockHeight: latestBlocksDataProvider.latestBlockHeight,
-            latestScannedTime: latestBlocksDataProvider.latestScannedTime
+            latestBlockHeight: latestBlocksDataProvider.latestBlockHeight
         )
     }
 
@@ -620,12 +609,6 @@ extension SDKSynchronizer {
     public var receivedTransactions: [ZcashTransaction.Overview] {
         get async {
             (try? await allReceivedTransactions()) ?? []
-        }
-    }
-
-    public var pendingTransactions: [ZcashTransaction.Overview] {
-        get async {
-            (try? await allPendingTransactions()) ?? []
         }
     }
 }
