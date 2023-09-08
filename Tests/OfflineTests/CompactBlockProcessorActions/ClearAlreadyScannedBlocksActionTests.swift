@@ -57,7 +57,6 @@ final class ClearAlreadyScannedBlocksActionTests: ZcashTestCase {
         let transactionRepositoryMock = TransactionRepositoryMock()
 
         compactBlockRepositoryMock.clearUpToClosure = { _ in }
-        transactionRepositoryMock.lastScannedHeightReturnValue = 1
 
         mockContainer.mock(type: CompactBlockRepository.self, isSingleton: true) { _ in compactBlockRepositoryMock }
         mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }

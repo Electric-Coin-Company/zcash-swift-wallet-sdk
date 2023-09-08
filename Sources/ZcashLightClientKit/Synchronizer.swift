@@ -52,9 +52,7 @@ public struct SynchronizerState: Equatable {
             shieldedBalance: .zero,
             transparentBalance: .zero,
             internalSyncStatus: .unprepared,
-            latestScannedHeight: .zero,
-            latestBlockHeight: .zero,
-            latestScannedTime: 0
+            latestBlockHeight: .zero
         )
     }
     
@@ -63,9 +61,7 @@ public struct SynchronizerState: Equatable {
         shieldedBalance: WalletBalance,
         transparentBalance: WalletBalance,
         internalSyncStatus: InternalSyncStatus,
-        latestScannedHeight: BlockHeight,
-        latestBlockHeight: BlockHeight,
-        latestScannedTime: TimeInterval
+        latestBlockHeight: BlockHeight
     ) {
         self.syncSessionID = syncSessionID
         self.shieldedBalance = shieldedBalance
@@ -112,9 +108,6 @@ public protocol Synchronizer: AnyObject {
 
     /// An object that when enabled collects mertrics from the synchronizer
     var metrics: SDKMetrics { get }
-    
-    /// Default algorithm used to sync the stored wallet with the blockchain.
-    var syncAlgorithm: SyncAlgorithm { get }
 
     /// Initialize the wallet. The ZIP-32 seed bytes can optionally be passed to perform
     /// database migrations. most of the times the seed won't be needed. If they do and are
@@ -193,9 +186,6 @@ public protocol Synchronizer: AnyObject {
         shieldingThreshold: Zatoshi
     ) async throws -> ZcashTransaction.Overview
 
-    /// all outbound pending transactions that have been sent but are awaiting confirmations
-    var pendingTransactions: [ZcashTransaction.Overview] { get async }
-
     /// all the transactions that are on the blockchain
     var transactions: [ZcashTransaction.Overview] { get async }
 
@@ -235,10 +225,6 @@ public protocol Synchronizer: AnyObject {
     ///     - limit: the maximum amount of items this should return if available
     /// - Returns: an array with the given Transactions or an empty array
     func allTransactions(from transaction: ZcashTransaction.Overview, limit: Int) async throws -> [ZcashTransaction.Overview]
-
-    /// Fetch all pending transactions
-    /// - Returns: an array of transactions which are considered pending confirmation. can be empty
-    func allPendingTransactions() async throws -> [ZcashTransaction.Overview]
 
     /// Returns the latest block height from the provided Lightwallet endpoint
     func latestHeight() async throws -> BlockHeight
@@ -419,15 +405,6 @@ enum InternalSyncStatus: Equatable {
         case .error: return "error"
         }
     }
-}
-
-/// Algorithm used to sync the sdk with the blockchain
-public enum SyncAlgorithm: Equatable {
-    /// Linear sync processes the unsynced blocks in a linear way up to the chain tip
-    case linear
-    /// Spend before Sync processes the unsynced blocks non-lineary, in prioritised ranges relevant to the stored wallet.
-    /// Note: This feature is in development (alpha version) so use carefully.
-    case spendBeforeSync
 }
 
 /// Kind of transactions handled by a Synchronizer

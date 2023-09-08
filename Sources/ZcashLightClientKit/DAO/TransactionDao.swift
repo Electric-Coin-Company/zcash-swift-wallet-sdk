@@ -16,14 +16,12 @@ class TransactionSQLDAO: TransactionRepository {
 
     let dbProvider: ConnectionProvider
     
-    private let blockDao: BlockSQLDAO
     private let transactionsView = View("v_transactions")
     private let txOutputsView = View("v_tx_outputs")
     private let traceClosure: ((String) -> Void)?
     
     init(dbProvider: ConnectionProvider, traceClosure: ((String) -> Void)? = nil) {
         self.dbProvider = dbProvider
-        self.blockDao = BlockSQLDAO(dbProvider: dbProvider)
         self.traceClosure = traceClosure
     }
 
@@ -35,22 +33,6 @@ class TransactionSQLDAO: TransactionRepository {
 
     func closeDBConnection() {
         dbProvider.close()
-    }
-
-    func blockForHeight(_ height: BlockHeight) async throws -> Block? {
-        try blockDao.block(at: height)
-    }
-
-    func lastScannedHeight() async throws -> BlockHeight {
-        try blockDao.latestBlockHeight()
-    }
-
-    func lastScannedBlock() async throws -> Block? {
-        try blockDao.latestBlock()
-    }
-
-    func firstUnenhancedHeight() throws -> BlockHeight? {
-        try blockDao.firstUnenhancedHeight()
     }
 
     func isInitialized() async throws -> Bool {

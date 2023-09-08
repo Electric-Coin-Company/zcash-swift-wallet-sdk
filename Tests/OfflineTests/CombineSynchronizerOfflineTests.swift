@@ -430,30 +430,6 @@ class CombineSynchronizerOfflineTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-    func testPendingTransactionsSucceed() {
-        synchronizerMock.underlyingPendingTransactions = [data.pendingTransactionEntity]
-
-        let expectation = XCTestExpectation()
-
-        synchronizer.pendingTransactions
-            .sink(
-                receiveCompletion: { result in
-                    switch result {
-                    case .finished:
-                        expectation.fulfill()
-                    case let .failure(error):
-                        XCTFail("Unpected failure with error: \(error)")
-                    }
-                },
-                receiveValue: { value in
-                    XCTAssertEqual(value.map { $0.id }, [self.data.pendingTransactionEntity.id])
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
     func testClearedTransactionsSucceed() {
         synchronizerMock.underlyingTransactions = [data.clearedTransaction]
 

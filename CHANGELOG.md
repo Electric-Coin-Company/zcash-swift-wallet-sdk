@@ -19,6 +19,9 @@ system itself won't remove these data.
 of syncing the amount of data provided is reduced so it's consistent. Spend before Sync is done in non-linear order
 so both Height and Time don't make sense anymore. 
 
+### [#1230] Remove linear sync from the SDK
+`latestScannedHeight` and `latestScannedTime` removed from the SynchronizerState. Concept of pending transaction changed, `func allPendingTransactions()` is no longer available. Use `public func allTransactions()` instead. 
+
 # 0.22.0-beta
 
 ## Checkpoints

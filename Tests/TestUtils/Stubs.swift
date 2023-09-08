@@ -172,9 +172,7 @@ extension SynchronizerState {
             shieldedBalance: WalletBalance(verified: Zatoshi(100), total: Zatoshi(200)),
             transparentBalance: WalletBalance(verified: Zatoshi(200), total: Zatoshi(300)),
             internalSyncStatus: .syncing(0),
-            latestScannedHeight: 111111,
-            latestBlockHeight: 222222,
-            latestScannedTime: 12345678
+            latestBlockHeight: 222222
         )
     }
 }

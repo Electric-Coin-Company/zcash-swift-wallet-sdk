@@ -11,8 +11,6 @@ protocol ActionContext {
     var state: CBPState { get async }
     var prevState: CBPState? { get async }
     var syncControlData: SyncControlData { get async }
-    var preferredSyncAlgorithm: SyncAlgorithm { get }
-    var supportedSyncAlgorithm: SyncAlgorithm? { get async }
     var requestedRewindHeight: BlockHeight? { get async }
     var totalProgressRange: CompactBlockRange { get async }
     var processedHeight: BlockHeight { get async }
@@ -28,7 +26,6 @@ protocol ActionContext {
     func update(lastScannedHeight: BlockHeight) async
     func update(lastDownloadedHeight: BlockHeight) async
     func update(lastEnhancedHeight: BlockHeight?) async
-    func update(supportedSyncAlgorithm: SyncAlgorithm) async
     func update(requestedRewindHeight: BlockHeight) async
 }
 
@@ -36,8 +33,6 @@ actor ActionContextImpl: ActionContext {
     var state: CBPState
     var prevState: CBPState?
     var syncControlData: SyncControlData
-    let preferredSyncAlgorithm: SyncAlgorithm
-    var supportedSyncAlgorithm: SyncAlgorithm?
     var requestedRewindHeight: BlockHeight?
     /// Represents the overall range of blocks that will be synced, `SyncAlgorithm` doesn't matter.
     var totalProgressRange: CompactBlockRange = 0...0
@@ -49,9 +44,8 @@ actor ActionContextImpl: ActionContext {
     var lastDownloadedHeight: BlockHeight?
     var lastEnhancedHeight: BlockHeight?
 
-    init(state: CBPState, preferredSyncAlgorithm: SyncAlgorithm = .linear) {
+    init(state: CBPState) {
         self.state = state
-        self.preferredSyncAlgorithm = preferredSyncAlgorithm
         syncControlData = SyncControlData.empty
     }
 
@@ -69,7 +63,6 @@ actor ActionContextImpl: ActionContext {
     func update(lastScannedHeight: BlockHeight) async { self.lastScannedHeight = lastScannedHeight }
     func update(lastDownloadedHeight: BlockHeight) async { self.lastDownloadedHeight = lastDownloadedHeight }
     func update(lastEnhancedHeight: BlockHeight?) async { self.lastEnhancedHeight = lastEnhancedHeight }
-    func update(supportedSyncAlgorithm: SyncAlgorithm) async { self.supportedSyncAlgorithm = supportedSyncAlgorithm }
     func update(requestedRewindHeight: BlockHeight) async { self.requestedRewindHeight = requestedRewindHeight }
 }
 
@@ -81,7 +74,6 @@ enum CBPState: CaseIterable {
     case updateChainTip
     case processSuggestedScanRanges
     case rewind
-    case computeSyncControlData
     case download
     case scan
     case clearAlreadyScannedBlocks

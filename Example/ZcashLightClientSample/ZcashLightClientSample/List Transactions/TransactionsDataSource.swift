@@ -12,7 +12,6 @@ import ZcashLightClientKit
 
 class TransactionsDataSource: NSObject {
     enum TransactionType {
-        case pending
         case sent
         case received
         case cleared
@@ -32,17 +31,9 @@ class TransactionsDataSource: NSObject {
         self.synchronizer = synchronizer
     }
 
-    // swiftlint:disable:next cyclomatic_complexity
     func load() async throws {
         transactions = []
         switch status {
-        case .pending:
-            let rawTransactions = await synchronizer.pendingTransactions
-            for pendingTransaction in rawTransactions {
-                let memos = try await synchronizer.getMemos(for: pendingTransaction)
-                transactions.append(TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos))
-            }
-
         case .cleared:
             let rawTransactions = await synchronizer.transactions
             for transaction in rawTransactions {
@@ -62,12 +53,6 @@ class TransactionsDataSource: NSObject {
                 transactions.append(TransactionDetailModel(sendTransaction: transaction, memos: memos))
             }
         case .all:
-            let rawPendingTransactions = await synchronizer.pendingTransactions
-            for pendingTransaction in rawPendingTransactions {
-                let memos = try await synchronizer.getMemos(for: pendingTransaction)
-                transactions.append(TransactionDetailModel(pendingTransaction: pendingTransaction, memos: memos))
-            }
-
             let rawClearedTransactions = await synchronizer.transactions
             for transaction in rawClearedTransactions {
                 let memos = try await synchronizer.getMemos(for: transaction)

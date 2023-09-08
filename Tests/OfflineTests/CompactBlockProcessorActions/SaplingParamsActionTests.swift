@@ -10,28 +10,6 @@ import XCTest
 @testable import ZcashLightClientKit
 
 final class SaplingParamsActionTests: ZcashTestCase {
-    func testSaplingParamsAction_NextAction_linearSync() async throws {
-        let loggerMock = LoggerMock()
-        let saplingParametersHandlerMock = SaplingParametersHandlerMock()
-
-        let saplingParamsActionAction = setupAction(saplingParametersHandlerMock, loggerMock)
-        
-        do {
-            let context = ActionContextMock.default()
-            context.underlyingPreferredSyncAlgorithm = .linear
-            
-            let nextContext = try await saplingParamsActionAction.run(with: context) { _ in }
-
-            XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
-            XCTAssertTrue(saplingParametersHandlerMock.handleIfNeededCalled, "saplingParametersHandler.handleIfNeeded() is expected to be called.")
-            
-            let acResult = nextContext.checkStateIs(.computeSyncControlData)
-            XCTAssertTrue(acResult == .true, "Check of state failed with '\(acResult)'")
-        } catch {
-            XCTFail("testSaplingParamsAction_NextAction is not expected to fail. \(error)")
-        }
-    }
-    
     func testSaplingParamsAction_NextAction_SpendBeforeSync() async throws {
         let loggerMock = LoggerMock()
         let saplingParametersHandlerMock = SaplingParametersHandlerMock()
@@ -40,7 +18,6 @@ final class SaplingParamsActionTests: ZcashTestCase {
 
         do {
             let context = ActionContextMock.default()
-            context.underlyingPreferredSyncAlgorithm = .spendBeforeSync
             
             let nextContext = try await saplingParamsActionAction.run(with: context) { _ in }
 

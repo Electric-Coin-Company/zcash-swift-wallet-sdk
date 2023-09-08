@@ -22,11 +22,6 @@ class ActionContextMock: ActionContext {
         get { return underlyingSyncControlData }
     }
     var underlyingSyncControlData: SyncControlData!
-    var preferredSyncAlgorithm: SyncAlgorithm {
-        get { return underlyingPreferredSyncAlgorithm }
-    }
-    var underlyingPreferredSyncAlgorithm: SyncAlgorithm!
-    var supportedSyncAlgorithm: SyncAlgorithm?
     var requestedRewindHeight: BlockHeight?
     var totalProgressRange: CompactBlockRange {
         get { return underlyingTotalProgressRange }
@@ -161,21 +156,6 @@ class ActionContextMock: ActionContext {
         updateLastEnhancedHeightCallsCount += 1
         updateLastEnhancedHeightReceivedLastEnhancedHeight = lastEnhancedHeight
         await updateLastEnhancedHeightClosure!(lastEnhancedHeight)
-    }
-
-    // MARK: - update
-
-    var updateSupportedSyncAlgorithmCallsCount = 0
-    var updateSupportedSyncAlgorithmCalled: Bool {
-        return updateSupportedSyncAlgorithmCallsCount > 0
-    }
-    var updateSupportedSyncAlgorithmReceivedSupportedSyncAlgorithm: SyncAlgorithm?
-    var updateSupportedSyncAlgorithmClosure: ((SyncAlgorithm) async -> Void)?
-
-    func update(supportedSyncAlgorithm: SyncAlgorithm) async {
-        updateSupportedSyncAlgorithmCallsCount += 1
-        updateSupportedSyncAlgorithmReceivedSupportedSyncAlgorithm = supportedSyncAlgorithm
-        await updateSupportedSyncAlgorithmClosure!(supportedSyncAlgorithm)
     }
 
     // MARK: - update
@@ -693,14 +673,14 @@ class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
     init(
     ) {
     }
-    var latestScannedHeight: BlockHeight {
-        get { return underlyingLatestScannedHeight }
+    var fullyScannedHeight: BlockHeight {
+        get { return underlyingFullyScannedHeight }
     }
-    var underlyingLatestScannedHeight: BlockHeight!
-    var latestScannedTime: TimeInterval {
-        get { return underlyingLatestScannedTime }
+    var underlyingFullyScannedHeight: BlockHeight!
+    var maxScannedHeight: BlockHeight {
+        get { return underlyingMaxScannedHeight }
     }
-    var underlyingLatestScannedTime: TimeInterval!
+    var underlyingMaxScannedHeight: BlockHeight!
     var latestBlockHeight: BlockHeight {
         get { return underlyingLatestBlockHeight }
     }
@@ -709,7 +689,6 @@ class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
         get { return underlyingWalletBirthday }
     }
     var underlyingWalletBirthday: BlockHeight!
-    var firstUnenhancedHeight: BlockHeight?
 
     // MARK: - updateScannedData
 
@@ -737,19 +716,6 @@ class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
         await updateBlockDataClosure!()
     }
 
-    // MARK: - updateUnenhancedData
-
-    var updateUnenhancedDataCallsCount = 0
-    var updateUnenhancedDataCalled: Bool {
-        return updateUnenhancedDataCallsCount > 0
-    }
-    var updateUnenhancedDataClosure: (() async -> Void)?
-
-    func updateUnenhancedData() async {
-        updateUnenhancedDataCallsCount += 1
-        await updateUnenhancedDataClosure!()
-    }
-
     // MARK: - updateWalletBirthday
 
     var updateWalletBirthdayCallsCount = 0
@@ -763,36 +729,6 @@ class LatestBlocksDataProviderMock: LatestBlocksDataProvider {
         updateWalletBirthdayCallsCount += 1
         updateWalletBirthdayReceivedWalletBirthday = walletBirthday
         await updateWalletBirthdayClosure!(walletBirthday)
-    }
-
-    // MARK: - updateLatestScannedHeight
-
-    var updateLatestScannedHeightCallsCount = 0
-    var updateLatestScannedHeightCalled: Bool {
-        return updateLatestScannedHeightCallsCount > 0
-    }
-    var updateLatestScannedHeightReceivedLatestScannedHeight: BlockHeight?
-    var updateLatestScannedHeightClosure: ((BlockHeight) async -> Void)?
-
-    func updateLatestScannedHeight(_ latestScannedHeight: BlockHeight) async {
-        updateLatestScannedHeightCallsCount += 1
-        updateLatestScannedHeightReceivedLatestScannedHeight = latestScannedHeight
-        await updateLatestScannedHeightClosure!(latestScannedHeight)
-    }
-
-    // MARK: - updateLatestScannedTime
-
-    var updateLatestScannedTimeCallsCount = 0
-    var updateLatestScannedTimeCalled: Bool {
-        return updateLatestScannedTimeCallsCount > 0
-    }
-    var updateLatestScannedTimeReceivedLatestScannedTime: TimeInterval?
-    var updateLatestScannedTimeClosure: ((TimeInterval) async -> Void)?
-
-    func updateLatestScannedTime(_ latestScannedTime: TimeInterval) async {
-        updateLatestScannedTimeCallsCount += 1
-        updateLatestScannedTimeReceivedLatestScannedTime = latestScannedTime
-        await updateLatestScannedTimeClosure!(latestScannedTime)
     }
 
 }
@@ -1234,14 +1170,6 @@ class SynchronizerMock: Synchronizer {
         get { return underlyingMetrics }
     }
     var underlyingMetrics: SDKMetrics!
-    var syncAlgorithm: SyncAlgorithm {
-        get { return underlyingSyncAlgorithm }
-    }
-    var underlyingSyncAlgorithm: SyncAlgorithm!
-    var pendingTransactions: [ZcashTransaction.Overview] {
-        get async { return underlyingPendingTransactions }
-    }
-    var underlyingPendingTransactions: [ZcashTransaction.Overview] = []
     var transactions: [ZcashTransaction.Overview] {
         get async { return underlyingTransactions }
     }
@@ -1539,28 +1467,6 @@ class SynchronizerMock: Synchronizer {
         }
     }
 
-    // MARK: - allPendingTransactions
-
-    var allPendingTransactionsThrowableError: Error?
-    var allPendingTransactionsCallsCount = 0
-    var allPendingTransactionsCalled: Bool {
-        return allPendingTransactionsCallsCount > 0
-    }
-    var allPendingTransactionsReturnValue: [ZcashTransaction.Overview]!
-    var allPendingTransactionsClosure: (() async throws -> [ZcashTransaction.Overview])?
-
-    func allPendingTransactions() async throws -> [ZcashTransaction.Overview] {
-        if let error = allPendingTransactionsThrowableError {
-            throw error
-        }
-        allPendingTransactionsCallsCount += 1
-        if let closure = allPendingTransactionsClosure {
-            return try await closure()
-        } else {
-            return allPendingTransactionsReturnValue
-        }
-    }
-
     // MARK: - latestHeight
 
     var latestHeightThrowableError: Error?
@@ -1779,96 +1685,6 @@ class TransactionRepositoryMock: TransactionRepository {
             return try await closure()
         } else {
             return countUnminedReturnValue
-        }
-    }
-
-    // MARK: - blockForHeight
-
-    var blockForHeightThrowableError: Error?
-    var blockForHeightCallsCount = 0
-    var blockForHeightCalled: Bool {
-        return blockForHeightCallsCount > 0
-    }
-    var blockForHeightReceivedHeight: BlockHeight?
-    var blockForHeightReturnValue: Block?
-    var blockForHeightClosure: ((BlockHeight) async throws -> Block?)?
-
-    func blockForHeight(_ height: BlockHeight) async throws -> Block? {
-        if let error = blockForHeightThrowableError {
-            throw error
-        }
-        blockForHeightCallsCount += 1
-        blockForHeightReceivedHeight = height
-        if let closure = blockForHeightClosure {
-            return try await closure(height)
-        } else {
-            return blockForHeightReturnValue
-        }
-    }
-
-    // MARK: - lastScannedHeight
-
-    var lastScannedHeightThrowableError: Error?
-    var lastScannedHeightCallsCount = 0
-    var lastScannedHeightCalled: Bool {
-        return lastScannedHeightCallsCount > 0
-    }
-    var lastScannedHeightReturnValue: BlockHeight!
-    var lastScannedHeightClosure: (() async throws -> BlockHeight)?
-
-    func lastScannedHeight() async throws -> BlockHeight {
-        if let error = lastScannedHeightThrowableError {
-            throw error
-        }
-        lastScannedHeightCallsCount += 1
-        if let closure = lastScannedHeightClosure {
-            return try await closure()
-        } else {
-            return lastScannedHeightReturnValue
-        }
-    }
-
-    // MARK: - lastScannedBlock
-
-    var lastScannedBlockThrowableError: Error?
-    var lastScannedBlockCallsCount = 0
-    var lastScannedBlockCalled: Bool {
-        return lastScannedBlockCallsCount > 0
-    }
-    var lastScannedBlockReturnValue: Block?
-    var lastScannedBlockClosure: (() async throws -> Block?)?
-
-    func lastScannedBlock() async throws -> Block? {
-        if let error = lastScannedBlockThrowableError {
-            throw error
-        }
-        lastScannedBlockCallsCount += 1
-        if let closure = lastScannedBlockClosure {
-            return try await closure()
-        } else {
-            return lastScannedBlockReturnValue
-        }
-    }
-
-    // MARK: - firstUnenhancedHeight
-
-    var firstUnenhancedHeightThrowableError: Error?
-    var firstUnenhancedHeightCallsCount = 0
-    var firstUnenhancedHeightCalled: Bool {
-        return firstUnenhancedHeightCallsCount > 0
-    }
-    var firstUnenhancedHeightReturnValue: BlockHeight?
-    var firstUnenhancedHeightClosure: (() throws -> BlockHeight?)?
-
-    func firstUnenhancedHeight() throws -> BlockHeight? {
-        if let error = firstUnenhancedHeightThrowableError {
-            throw error
-        }
-        firstUnenhancedHeightCallsCount += 1
-        if let closure = firstUnenhancedHeightClosure {
-            return try closure()
-        } else {
-            return firstUnenhancedHeightReturnValue
         }
     }
 
