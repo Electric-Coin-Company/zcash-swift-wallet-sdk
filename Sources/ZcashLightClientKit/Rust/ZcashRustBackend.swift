@@ -48,6 +48,12 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
     }
 
     func createAccount(seed: [UInt8], treeState: [UInt8], recoverUntil: UInt32?) async throws -> UnifiedSpendingKey {
+        var rUntil: Int64 = -1
+        
+        if let recoverUntil {
+            rUntil = Int64(recoverUntil)
+        }
+        
         let ffiBinaryKeyPtr = zcashlc_create_account(
             dbData.0,
             dbData.1,
@@ -55,7 +61,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
             UInt(seed.count),
             treeState,
             UInt(treeState.count),
-            recoverUntil != nil ? Int64(recoverUntil!) : -1,
+            rUntil,
             networkType.networkId
         )
 
@@ -521,7 +527,7 @@ actor ZcashRustBackend: ZcashRustBackendWelding {
         if result.denominator == 0 {
             switch result.numerator {
             case 0:
-                return nil;
+                return nil
             default:
                 throw ZcashError.rustGetScanProgress(lastErrorMessage(fallback: "`getScanProgress` failed with unknown error"))
             }

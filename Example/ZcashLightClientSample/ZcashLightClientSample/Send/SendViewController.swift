@@ -79,8 +79,7 @@ class SendViewController: UIViewController {
     
     func setUp() {
         Task { @MainActor in
-            balanceLabel.text = format(balance: (try? await synchronizer.getShieldedBalance(accountIndex: 0)) ?? .zero)
-            verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero)
+            await updateBalance()
             await toggleSendButton()
         }
         memoField.text = ""
@@ -93,10 +92,18 @@ class SendViewController: UIViewController {
             .throttle(for: .seconds(0.2), scheduler: DispatchQueue.main, latest: true)
             .sink(
                 receiveValue: { [weak self] state in
+                    Task { @MainActor in
+                        await self?.updateBalance()
+                    }
                     self?.synchronizerStatusLabel.text = SDKSynchronizer.textFor(state: state.syncStatus)
                 }
             )
             .store(in: &cancellables)
+    }
+    
+    func updateBalance() async {
+        balanceLabel.text = format(balance: (try? await synchronizer.getShieldedBalance(accountIndex: 0)) ?? .zero)
+        verifiedBalanceLabel.text = format(balance: (try? await synchronizer.getShieldedVerifiedBalance(accountIndex: 0)) ?? .zero)
     }
     
     func format(balance: Zatoshi = Zatoshi()) -> String {
