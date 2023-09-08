@@ -122,6 +122,7 @@ public protocol Synchronizer: AnyObject {
     /// - Parameters:
     ///   - seed: ZIP-32 Seed bytes for the wallet that will be initialized
     ///   - walletBirthday: Birthday of wallet.
+    ///   - walletMode: Set `.newWallet` when preparing synchronizer for a brand new generated wallet, `.restoreWallet` when wallet is about to be restored from a seed and  `.existingWallet` for all other scenarios.
     /// - Throws:
     ///     - `aliasAlreadyInUse` if the Alias used to create this instance is already used by other instance.
     ///     - `cantUpdateURLWithAlias` if the updating of paths in `Initilizer` according to alias fails. When this happens it means that
@@ -130,7 +131,8 @@ public protocol Synchronizer: AnyObject {
     ///     - Some other `ZcashError` thrown by lower layer of the SDK.
     func prepare(
         with seed: [UInt8]?,
-        walletBirthday: BlockHeight
+        walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode
     ) async throws -> Initializer.InitializationResult
 
     /// Starts this synchronizer within the given scope.
@@ -405,6 +407,16 @@ enum InternalSyncStatus: Equatable {
         case .error: return "error"
         }
     }
+}
+
+/// Mode of the Synchronizer's initialization for the wallet.
+public enum WalletInitMode: Equatable {
+    /// For brand new wallet - typically when users creates a new wallet.
+    case newWallet
+    /// For a wallet that is about to be restored. Typically when a user wants to restore a wallet from a seed.
+    case restoreWallet
+    /// All other cases - typically when clients just start the process e.g. every regular app start for mobile apps.
+    case existingWallet
 }
 
 /// Kind of transactions handled by a Synchronizer

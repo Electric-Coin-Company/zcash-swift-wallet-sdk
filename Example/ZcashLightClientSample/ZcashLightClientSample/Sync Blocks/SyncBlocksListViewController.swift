@@ -69,7 +69,8 @@ class SyncBlocksListViewController: UIViewController {
                     if syncStatus == .unprepared {
                         _ = try! await synchronizer.prepare(
                             with: synchronizerData.seed,
-                            walletBirthday: synchronizerData.birthday
+                            walletBirthday: synchronizerData.birthday,
+                            for: .existingWallet
                         )
                     }
 

@@ -45,7 +45,8 @@ class SendViewController: UIViewController {
 
         closureSynchronizer.prepare(
             with: DemoAppConfig.defaultSeed,
-            walletBirthday: DemoAppConfig.defaultBirthdayHeight
+            walletBirthday: DemoAppConfig.defaultBirthdayHeight,
+            for: .existingWallet
         ) { result in
             loggerProxy.debug("Prepare result: \(result)")
         }

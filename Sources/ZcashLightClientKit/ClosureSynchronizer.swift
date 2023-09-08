@@ -25,6 +25,7 @@ public protocol ClosureSynchronizer {
     func prepare(
         with seed: [UInt8]?,
         walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode,
         completion: @escaping (Result<Initializer.InitializationResult, Error>) -> Void
     )
 

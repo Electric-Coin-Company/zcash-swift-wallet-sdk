@@ -150,7 +150,8 @@ class SyncBlocksViewController: UIViewController {
                     do {
                         _ = try await synchronizer.prepare(
                             with: DemoAppConfig.defaultSeed,
-                            walletBirthday: DemoAppConfig.defaultBirthdayHeight
+                            walletBirthday: DemoAppConfig.defaultBirthdayHeight,
+                            for: .existingWallet
                         )
                     } catch {
                         loggerProxy.error(error.toZcashError().message)
