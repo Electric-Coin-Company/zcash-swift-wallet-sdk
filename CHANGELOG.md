@@ -12,6 +12,12 @@ be able to write to this location after it creates this directory. It is suggest
 a subdirectory of the `Documents` directory. If this information is stored in `Documents` then the
 system itself won't remove these data.
 
+### Changed
+
+Synchronizer's prepare(...) public API changed, `viewingKeys: [UnifiedFullViewingKey]` has been removed and `for walletMode: WalletInitMode` added.  
+`WalletInitMode` is an enum with 3 cases: .newWallet, .restoreWallet and .existingWallet. Use `.newWallet` when preparing the SDKSynchronizer for a brand new wallet 
+that has been generated. Use `.restoreWallet` when wallet is about to be restored from a seed and `.existingWallet` for all other scenarios.
+
 ### Removed
 
 ### [#1181] Correct computation of progress for Spend before Sync

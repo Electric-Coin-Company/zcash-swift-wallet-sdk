@@ -24,7 +24,8 @@ public protocol CombineSynchronizer {
 
     func prepare(
         with seed: [UInt8]?,
-        walletBirthday: BlockHeight
+        walletBirthday: BlockHeight,
+        for walletMode: WalletInitMode
     ) -> SinglePublisher<Initializer.InitializationResult, Error>
 
     func start(retry: Bool) -> CompletablePublisher<Error>

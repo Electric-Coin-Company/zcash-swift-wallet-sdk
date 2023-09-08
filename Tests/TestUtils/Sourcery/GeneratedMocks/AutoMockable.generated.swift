@@ -1185,25 +1185,25 @@ class SynchronizerMock: Synchronizer {
 
     // MARK: - prepare
 
-    var prepareWithWalletBirthdayThrowableError: Error?
-    var prepareWithWalletBirthdayCallsCount = 0
-    var prepareWithWalletBirthdayCalled: Bool {
-        return prepareWithWalletBirthdayCallsCount > 0
+    var prepareWithWalletBirthdayForThrowableError: Error?
+    var prepareWithWalletBirthdayForCallsCount = 0
+    var prepareWithWalletBirthdayForCalled: Bool {
+        return prepareWithWalletBirthdayForCallsCount > 0
     }
-    var prepareWithWalletBirthdayReceivedArguments: (seed: [UInt8]?, walletBirthday: BlockHeight)?
-    var prepareWithWalletBirthdayReturnValue: Initializer.InitializationResult!
-    var prepareWithWalletBirthdayClosure: (([UInt8]?, BlockHeight) async throws -> Initializer.InitializationResult)?
+    var prepareWithWalletBirthdayForReceivedArguments: (seed: [UInt8]?, walletBirthday: BlockHeight, walletMode: WalletInitMode)?
+    var prepareWithWalletBirthdayForReturnValue: Initializer.InitializationResult!
+    var prepareWithWalletBirthdayForClosure: (([UInt8]?, BlockHeight, WalletInitMode) async throws -> Initializer.InitializationResult)?
 
-    func prepare(with seed: [UInt8]?, walletBirthday: BlockHeight) async throws -> Initializer.InitializationResult {
-        if let error = prepareWithWalletBirthdayThrowableError {
+    func prepare(with seed: [UInt8]?, walletBirthday: BlockHeight, for walletMode: WalletInitMode) async throws -> Initializer.InitializationResult {
+        if let error = prepareWithWalletBirthdayForThrowableError {
             throw error
         }
-        prepareWithWalletBirthdayCallsCount += 1
-        prepareWithWalletBirthdayReceivedArguments = (seed: seed, walletBirthday: walletBirthday)
-        if let closure = prepareWithWalletBirthdayClosure {
-            return try await closure(seed, walletBirthday)
+        prepareWithWalletBirthdayForCallsCount += 1
+        prepareWithWalletBirthdayForReceivedArguments = (seed: seed, walletBirthday: walletBirthday, walletMode: walletMode)
+        if let closure = prepareWithWalletBirthdayForClosure {
+            return try await closure(seed, walletBirthday, walletMode)
         } else {
-            return prepareWithWalletBirthdayReturnValue
+            return prepareWithWalletBirthdayForReturnValue
         }
     }
 
