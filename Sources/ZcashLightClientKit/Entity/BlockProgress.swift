@@ -11,6 +11,7 @@ public struct BlockProgress: Equatable {
     public let startHeight: BlockHeight
     public let targetHeight: BlockHeight
     public let progressHeight: BlockHeight
+    public let scanProgress: Float
 
     public var progress: Float {
         let overall = self.targetHeight - self.startHeight
@@ -20,5 +21,10 @@ public struct BlockProgress: Equatable {
 }
 
 public extension BlockProgress {
-    static let nullProgress = BlockProgress(startHeight: 0, targetHeight: 0, progressHeight: 0)
+    static let nullProgress = BlockProgress(
+        startHeight: 0,
+        targetHeight: 0,
+        progressHeight: 0,
+        scanProgress: 0
+    )
 }

@@ -41,7 +41,7 @@ final actor CompactBlockProgress {
         }
         
         if case let .syncing(progress) = update {
-            actionProgresses[.scan] = progress.progress
+            actionProgresses[.scan] = progress.scanProgress
         }
         
         return true

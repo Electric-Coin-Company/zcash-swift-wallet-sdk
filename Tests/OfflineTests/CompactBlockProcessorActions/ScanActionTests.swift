@@ -150,6 +150,14 @@ final class ScanActionTests: ZcashTestCase {
         _ blockScannerMock: BlockScannerMock,
         _ loggerMock: LoggerMock
     ) -> ScanAction {
+        let rustBackendMock = ZcashRustBackendWeldingMock(
+            consensusBranchIdForHeightClosure: { height in
+                XCTAssertEqual(height, 2, "")
+                return -1026109260
+            }
+        )
+
+        mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in rustBackendMock }
         mockContainer.mock(type: BlockScanner.self, isSingleton: true) { _ in blockScannerMock }
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
         

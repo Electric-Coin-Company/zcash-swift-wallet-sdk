@@ -10,11 +10,13 @@ import Foundation
 final class ScanAction {
     let configProvider: CompactBlockProcessor.ConfigProvider
     let blockScanner: BlockScanner
+    let rustBackend: ZcashRustBackendWelding
     let logger: Logger
 
     init(container: DIContainer, configProvider: CompactBlockProcessor.ConfigProvider) {
         self.configProvider = configProvider
         blockScanner = container.resolve(BlockScanner.self)
+        rustBackend = container.resolve(ZcashRustBackendWelding.self)
         logger = container.resolve(Logger.self)
     }
 
@@ -59,13 +61,19 @@ extension ScanAction: Action {
                         : totalProgressRange.upperBound
                 )
 
-                let progress = BlockProgress(
-                    startHeight: totalProgressRange.lowerBound,
-                    targetHeight: totalProgressRange.upperBound,
-                    progressHeight: incrementedprocessedHeight
-                )
-                self?.logger.debug("progress: \(progress)")
-                await didUpdate(.progressPartialUpdate(.syncing(progress)))
+                // report scan progress only if it's available
+                if let scanProgress = try? await self?.rustBackend.getScanProgress() {
+                    // TODO: [#1240] remove BlockProgress, https://github.com/zcash/ZcashLightClientKit/issues/1240
+                    let progress = BlockProgress(
+                        startHeight: totalProgressRange.lowerBound,
+                        targetHeight: totalProgressRange.upperBound,
+                        progressHeight: incrementedprocessedHeight,
+                        scanProgress: try scanProgress.progress()
+                    )
+                    
+                    self?.logger.debug("progress: \(progress)")
+                    await didUpdate(.progressPartialUpdate(.syncing(progress)))
+                }
                 
                 // ScanAction is controlled locally so it must report back the updated scanned height
                 await context.update(lastScannedHeight: lastScannedHeight)
