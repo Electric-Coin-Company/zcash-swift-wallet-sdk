@@ -138,7 +138,8 @@ extension BlockEnhancerImpl: BlockEnhancer {
                 progress: BlockProgress(
                     startHeight: range.lowerBound,
                     targetHeight: range.upperBound,
-                    progressHeight: range.upperBound
+                    progressHeight: range.upperBound,
+                    scanProgress: 0
                 ),
                 start: startTime,
                 end: Date(),

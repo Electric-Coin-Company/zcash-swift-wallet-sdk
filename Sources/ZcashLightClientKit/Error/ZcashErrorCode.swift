@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.0.2 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.0.3 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 /*
@@ -163,7 +163,7 @@ public enum ZcashErrorCode: String {
     case rustUpdateChainTip = "ZRUST0048"
     /// Error from rust layer when calling ZcashRustBackend.suggestScanRanges
     case rustSuggestScanRanges = "ZRUST0049"
-    /// Invalid transaction ID length when calling ZcashRustBackend.getMemo
+    /// Invalid transaction ID length when calling ZcashRustBackend.getMemo. txId must be 32 bytes.
     case rustGetMemoInvalidTxIdLength = "ZRUST0050"
     /// Error from rust layer when calling ZcashRustBackend.getScanProgress
     case rustGetScanProgress = "ZRUST0051"
@@ -173,6 +173,8 @@ public enum ZcashErrorCode: String {
     case rustMaxScannedHeight = "ZRUST0053"
     /// Error from rust layer when calling ZcashRustBackend.latestCachedBlockHeight
     case rustLatestCachedBlockHeight = "ZRUST0054"
+    /// Rust layer's call ZcashRustBackend.getScanProgress returned values that after computation are outside of allowed range 0-100%.
+    case rustScanProgressOutOfRange = "ZRUST0055"
     /// SQLite query failed when fetching all accounts from the database.
     case accountDAOGetAll = "ZADAO0001"
     /// Fetched accounts from SQLite but can't decode them.

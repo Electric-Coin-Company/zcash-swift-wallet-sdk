@@ -204,7 +204,8 @@ actor BlockDownloaderImpl {
                 progress: BlockProgress(
                     startHeight: totalProgressRange.lowerBound,
                     targetHeight: totalProgressRange.upperBound,
-                    progressHeight: Int(lastDownloadedBlockHeight)
+                    progressHeight: Int(lastDownloadedBlockHeight),
+                    scanProgress: 0
                 ),
                 start: startTime,
                 end: finishTime,

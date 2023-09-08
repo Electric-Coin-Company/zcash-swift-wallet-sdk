@@ -89,7 +89,8 @@ extension UTXOFetcherImpl: UTXOFetcher {
             progress: BlockProgress(
                 startHeight: 0,
                 targetHeight: 1,
-                progressHeight: 1
+                progressHeight: 1,
+                scanProgress: 0
             ),
             start: startTime,
             end: Date(),
