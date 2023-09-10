@@ -17,7 +17,8 @@ final class SDKMetricsTests: XCTestCase {
             progress: BlockProgress(
                 startHeight: 1_730_000,
                 targetHeight: 1_730_099,
-                progressHeight: 1_730_050
+                progressHeight: 1_730_050,
+                scanProgress: 0
             ),
             start: Date(timeIntervalSinceReferenceDate: 0.0),
             end: Date(timeIntervalSinceReferenceDate: 1.0),

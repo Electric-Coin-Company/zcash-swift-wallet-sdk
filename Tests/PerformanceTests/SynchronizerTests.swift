@@ -81,7 +81,7 @@ class SynchronizerTests: ZcashTestCase {
             guard let synchronizer else { fatalError("Synchronizer not initialized.") }
             
             synchronizer.metrics.enableMetrics()
-            _ = try await synchronizer.prepare(with: seedBytes, walletBirthday: birthday)
+            _ = try await synchronizer.prepare(with: seedBytes, walletBirthday: birthday, for: .existingWallet)
             
             let syncSyncedExpectation = XCTestExpectation(description: "synchronizerSynced Expectation")
             sdkSynchronizerInternalSyncStatusHandler.subscribe(to: synchronizer.stateStream, expectations: [.synced: syncSyncedExpectation])
