@@ -100,7 +100,6 @@ class BlockStreamingTest: ZcashTestCase {
         }
 
         let transactionRepositoryMock = TransactionRepositoryMock()
-        transactionRepositoryMock.lastScannedHeightReturnValue = startHeight
         mockContainer.mock(type: TransactionRepository.self, isSingleton: true) { _ in transactionRepositoryMock }
 
         let blockDownloader = BlockDownloaderImpl(

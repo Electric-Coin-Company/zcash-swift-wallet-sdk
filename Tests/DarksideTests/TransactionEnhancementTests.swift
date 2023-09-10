@@ -138,8 +138,8 @@ class TransactionEnhancementTests: ZcashTestCase {
             loggingPolicy: .default(.debug)
         )
         
-        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { _ in
-            LatestBlocksDataProviderImpl(service: service, transactionRepository: transactionRepository)
+        mockContainer.mock(type: LatestBlocksDataProvider.self, isSingleton: true) { [self] _ in
+            LatestBlocksDataProviderImpl(service: service, rustBackend: self.rustBackend)
         }
         mockContainer.mock(type: ZcashRustBackendWelding.self, isSingleton: true) { _ in self.rustBackend }
         
