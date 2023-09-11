@@ -27,13 +27,21 @@ class AdvancedReOrgTests: ZcashTestCase {
 
     override func setUp() async throws {
         try await super.setUp()
+        
         // don't use an exact birthday, users never do.
         self.coordinator = try await TestCoordinator(
             container: mockContainer,
             walletBirthday: birthday + 50,
             network: network
         )
-        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: self.branchID, chainName: self.chainName)
+        
+        try await coordinator.reset(
+            saplingActivation: 663150,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: self.branchID,
+            chainName: self.chainName
+        )
     }
 
     override func tearDown() async throws {
@@ -796,7 +804,7 @@ class AdvancedReOrgTests: ZcashTestCase {
         await fulfillment(of: [firstSyncExpectation], timeout: 5)
         
         sleep(1)
-        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
+//        let initialTotalBalance: Zatoshi = try await coordinator.synchronizer.getShieldedBalance()
         
         let sendExpectation = XCTestExpectation(description: "send expectation")
         var pendingEntity: ZcashTransaction.Overview?
@@ -1044,11 +1052,20 @@ class AdvancedReOrgTests: ZcashTestCase {
     /// 8. sync to latest height
     /// 9. verify that the balance is equal to the one before the reorg
     func testReOrgChangesInboundMinedHeight() async throws {
-        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: branchID, chainName: chainName)
+        try await coordinator.reset(
+            saplingActivation: 663150,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: branchID,
+            chainName: chainName
+        )
+        
         sleep(2)
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txHeightReOrgBefore))
+        
         sleep(2)
         try coordinator.applyStaged(blockheight: 663195)
+        
         sleep(2)
         let firstSyncExpectation = XCTestExpectation(description: "first sync")
         
@@ -1109,7 +1126,14 @@ class AdvancedReOrgTests: ZcashTestCase {
     // FIXME [#644]: Test works with lightwalletd v0.4.13 but is broken when using newer lightwalletd. More info is in #644.
     func testReOrgRemovesIncomingTxForever() async throws {
         await hookToReOrgNotification()
-        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: branchID, chainName: chainName)
+        
+        try await coordinator.reset(
+            saplingActivation: 663150,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: branchID,
+            chainName: chainName
+        )
         
         try coordinator.resetBlocks(dataset: .predefined(dataset: .txReOrgRemovesInboundTxBefore))
         

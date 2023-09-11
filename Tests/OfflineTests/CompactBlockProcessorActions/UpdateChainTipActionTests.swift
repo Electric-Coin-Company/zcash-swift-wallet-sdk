@@ -28,7 +28,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
         let blockDownloaderMock = BlockDownloaderMock()
 
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.stopDownloadClosure = { }
 
         let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
@@ -54,7 +54,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
         let blockDownloaderMock = BlockDownloaderMock()
 
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.stopDownloadClosure = { }
 
         let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
@@ -80,7 +80,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
         let loggerMock = LoggerMock()
         let blockDownloaderMock = BlockDownloaderMock()
 
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
         blockDownloaderMock.stopDownloadClosure = { }
 
         let updateChainTipAction = await setupAction(loggerMock, blockDownloaderMock)
@@ -117,7 +117,7 @@ final class UpdateChainTipActionTests: ZcashTestCase {
             }
         )
         
-        await rustBackendMock.setUpdateChainTipHeightClosure( { _ in } )
+        await rustBackendMock.setUpdateChainTipHeightClosure({ _ in })
         
         let lightWalletdInfoMock = LightWalletdInfoMock()
         lightWalletdInfoMock.underlyingConsensusBranchID = underlyingConsensusBranchID

@@ -35,7 +35,14 @@ class RewindRescanTests: ZcashTestCase {
             walletBirthday: birthday,
             network: network
         )
-        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: "e9ff75a6", chainName: "main")
+        
+        try await coordinator.reset(
+            saplingActivation: 663150,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: "e9ff75a6",
+            chainName: "main"
+        )
     }
 
     override func tearDown() async throws {
@@ -415,9 +422,9 @@ class RewindRescanTests: ZcashTestCase {
         try coordinator.applyStaged(blockheight: sentTxHeight)
         sleep(2)
         
-        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
-
         // TODO: [#1247] needs to review this to properly solve, https://github.com/zcash/ZcashLightClientKit/issues/1247
+//        let mineExpectation = XCTestExpectation(description: "mineTxExpectation")
+
 //        do {
 //            try await coordinator.sync(
 //                completion: { synchronizer in

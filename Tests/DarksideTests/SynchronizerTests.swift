@@ -33,7 +33,14 @@ final class SynchronizerTests: ZcashTestCase {
             walletBirthday: birthday + 50,
             network: network
         )
-        try await coordinator.reset(saplingActivation: 663150, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: self.branchID, chainName: self.chainName)
+        
+        try await coordinator.reset(
+            saplingActivation: 663150,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: self.branchID,
+            chainName: self.chainName
+        )
 
         let eventClosure: CompactBlockProcessor.EventClosure = { [weak self] event in
             switch event {

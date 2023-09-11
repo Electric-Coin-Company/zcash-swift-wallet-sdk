@@ -27,10 +27,10 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
     func testProcessSuggestedScanRangesAction_EmptyScanRanges() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure( { [] } )
+        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [] })
         
         let processSuggestedScanRangesActionAction = tupple.action
 
@@ -54,13 +54,13 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
     func testProcessSuggestedScanRangesAction_VerifyScanRangeSetTotalProgressRange() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure( { [
+        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [
             ScanRange(range: 0..<10, priority: .verify)
-        ] } )
+        ] })
         
         let processSuggestedScanRangesActionAction = tupple.action
 
@@ -110,13 +110,13 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
     func testProcessSuggestedScanRangesAction_VerifyScanRangeTotalProgressRangeSkipped() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure( { [
+        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [
             ScanRange(range: 0..<10, priority: .verify)
-        ] } )
+        ] })
         
         let processSuggestedScanRangesActionAction = tupple.action
 
@@ -160,13 +160,13 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
     func testProcessSuggestedScanRangesAction_ChainTipScanRange() async throws {
         let loggerMock = LoggerMock()
         
-        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in  }
-        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in  }
+        loggerMock.infoFileFunctionLineClosure = { _, _, _, _ in }
+        loggerMock.debugFileFunctionLineClosure = { _, _, _, _ in }
 
         let tupple = setupAction(loggerMock)
-        await tupple.rustBackendMock.setSuggestScanRangesClosure( { [
+        await tupple.rustBackendMock.setSuggestScanRangesClosure({ [
             ScanRange(range: 0..<10, priority: .chainTip)
-        ] } )
+        ] })
         
         let processSuggestedScanRangesActionAction = tupple.action
 
@@ -207,6 +207,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         }
     }
     
+    // swiftlint:disable large_tuple
     private func setupAction(
         _ loggerMock: LoggerMock = LoggerMock()
     ) -> (
@@ -239,7 +240,7 @@ final class ProcessSuggestedScanRangesActionTests: ZcashTestCase {
         mockContainer.mock(type: Logger.self, isSingleton: true) { _ in loggerMock }
 
         return (
-            action:ProcessSuggestedScanRangesAction(container: mockContainer),
+            action: ProcessSuggestedScanRangesAction(container: mockContainer),
             serviceMock: serviceMock,
             rustBackendMock: rustBackendMock
         )

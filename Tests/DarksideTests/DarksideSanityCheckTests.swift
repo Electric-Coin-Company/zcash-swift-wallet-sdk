@@ -33,7 +33,14 @@ class DarksideSanityCheckTests: ZcashTestCase {
             network: network
         )
 
-        try await coordinator.reset(saplingActivation: self.birthday, startSaplingTreeSize: 128607, startOrchardTreeSize: 0, branchID: self.branchID, chainName: self.chainName)
+        try await coordinator.reset(
+            saplingActivation: self.birthday,
+            startSaplingTreeSize: 128607,
+            startOrchardTreeSize: 0,
+            branchID: self.branchID,
+            chainName: self.chainName
+        )
+        
         try self.coordinator.resetBlocks(dataset: .default)
     }
 
@@ -48,7 +55,7 @@ class DarksideSanityCheckTests: ZcashTestCase {
     }
     
     func testDarkside() async throws {
-        let expectedFirstBlock = (height: BlockHeight(663150), hash: "0000000002fd3be4c24c437bd22620901617125ec2a3a6c902ec9a6c06f734fc")
+//        let expectedFirstBlock = (height: BlockHeight(663150), hash: "0000000002fd3be4c24c437bd22620901617125ec2a3a6c902ec9a6c06f734fc")
         let expectedLastBlock = (height: BlockHeight(663200), hash: "2fc7b4682f5ba6ba6f86e170b40f0aa9302e1d3becb2a6ee0db611ff87835e4a")
         
         try coordinator.applyStaged(blockheight: expectedLastBlock.height)
