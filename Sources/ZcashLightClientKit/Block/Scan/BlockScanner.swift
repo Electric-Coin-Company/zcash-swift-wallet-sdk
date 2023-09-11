@@ -70,15 +70,8 @@ extension BlockScannerImpl: BlockScanner {
             if scannedNewBlocks {
                 try await didScan(lastScannedHeight, batchSize)
 
-                let progress = BlockProgress(
-                    startHeight: totalProgressRange.lowerBound,
-                    targetHeight: totalProgressRange.upperBound,
-                    progressHeight: lastScannedHeight,
-                    scanProgress: 0
-                )
-
                 metrics.pushProgressReport(
-                    progress: progress,
+                    progress: 0,
                     start: scanStartTime,
                     end: scanFinishTime,
                     batchSize: Int(batchSize),

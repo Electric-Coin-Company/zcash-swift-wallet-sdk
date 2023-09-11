@@ -14,12 +14,7 @@ final class SDKMetricsTests: XCTestCase {
         metrics.enableMetrics()
                 
         metrics.pushProgressReport(
-            progress: BlockProgress(
-                startHeight: 1_730_000,
-                targetHeight: 1_730_099,
-                progressHeight: 1_730_050,
-                scanProgress: 0
-            ),
+            progress: 0,
             start: Date(timeIntervalSinceReferenceDate: 0.0),
             end: Date(timeIntervalSinceReferenceDate: 1.0),
             batchSize: 10,
@@ -149,18 +144,14 @@ final class SDKMetricsTests: XCTestCase {
 
 extension SDKMetrics.BlockMetricReport {
     static let placeholderA = Self(
-        startHeight: 1_730_000,
-        progressHeight: 1_730_050,
-        targetHeight: 1_730_099,
+        progress: 0,
         batchSize: 10,
         startTime: Date(timeIntervalSinceReferenceDate: 0.0).timeIntervalSinceReferenceDate,
         endTime: Date(timeIntervalSinceReferenceDate: 1.0).timeIntervalSinceReferenceDate
     )
     
     static let placeholderB = Self(
-        startHeight: 1_730_000,
-        progressHeight: 1_730_080,
-        targetHeight: 1_730_099,
+        progress: 0,
         batchSize: 10,
         startTime: Date(timeIntervalSinceReferenceDate: 0.0).timeIntervalSinceReferenceDate,
         endTime: Date(timeIntervalSinceReferenceDate: 6.0).timeIntervalSinceReferenceDate

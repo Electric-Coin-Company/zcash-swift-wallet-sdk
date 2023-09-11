@@ -256,18 +256,10 @@ struct ProcessorMetrics {
 
     static func accumulate(_ prev: ProcessorMetrics, current: SDKMetrics.BlockMetricReport) -> Self {
         .init(
-            minHeight: min(prev.minHeight, current.startHeight),
-            maxHeight: max(prev.maxHeight, current.progressHeight),
-            maxDuration: compareDuration(
-                prev.maxDuration,
-                (current.duration, current.progressHeight - current.batchSize ... current.progressHeight),
-                max
-            ),
-            minDuration: compareDuration(
-                prev.minDuration,
-                (current.duration, current.progressHeight - current.batchSize ... current.progressHeight),
-                min
-            ),
+            minHeight: prev.minHeight,
+            maxHeight: prev.maxHeight,
+            maxDuration: prev.maxDuration,
+            minDuration: prev.minDuration,
             cumulativeDuration: prev.cumulativeDuration + current.duration,
             measuredCount: prev.measuredCount + 1
         )
@@ -313,8 +305,6 @@ extension SDKMetrics.BlockMetricReport: CustomDebugStringConvertible {
     public var debugDescription: String {
         """
         BlockMetric:
-            startHeight: \(self.progressHeight - self.batchSize)
-            endHeight: \(self.progressHeight)
             batchSize: \(self.batchSize)
             duration: \(self.duration)
         """

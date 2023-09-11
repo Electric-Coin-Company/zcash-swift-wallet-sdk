@@ -431,7 +431,7 @@ extension CompactBlockProcessor {
         case handledReorg(_ reorgHeight: BlockHeight, _ rewindHeight: BlockHeight)
 
         /// Event sent when progress of some specific action happened.
-        case progressPartialUpdate(CompactBlockProgressUpdate)
+        case syncProgress(Float)
 
         /// Event sent when progress of the sync process changes.
         case progressUpdated(Float)
@@ -630,7 +630,6 @@ extension CompactBlockProcessor {
         let lastEnhancedheight = await context.lastEnhancedHeight
         context = ActionContextImpl(state: .idle)
         await context.update(lastEnhancedHeight: lastEnhancedheight)
-        await compactBlockProgress.reset()
     }
 
     private func syncStarted() async {

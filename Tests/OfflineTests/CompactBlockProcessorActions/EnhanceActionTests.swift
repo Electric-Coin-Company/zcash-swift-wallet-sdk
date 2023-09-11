@@ -243,7 +243,7 @@ final class EnhanceActionTests: ZcashTestCase {
 
         do {
             _ = try await enhanceAction.run(with: syncContext) { event in
-                if case .progressPartialUpdate = event { return }
+                if case .syncProgress = event { return }
 
                 guard case .minedTransaction(let minedTransaction) = event else {
                     XCTFail("Event is expected to be .minedTransaction but received \(event)")
@@ -304,7 +304,7 @@ final class EnhanceActionTests: ZcashTestCase {
         
         do {
             _ = try await enhanceAction.run(with: syncContext) { event in
-                if case .progressPartialUpdate = event { return }
+                if case .syncProgress = event { return }
 
                 guard case .minedTransaction(let minedTransaction) = event else {
                     XCTFail("Event is expected to be .minedTransaction but received \(event)")
