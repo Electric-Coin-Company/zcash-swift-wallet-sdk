@@ -216,7 +216,7 @@ public class SDKSynchronizer: Synchronizer {
             case let .progressUpdated(progress):
                 await self?.progressUpdated(progress: progress)
 
-            case .progressPartialUpdate:
+            case .syncProgress:
                 break
                 
             case let .storedUTXOs(utxos):

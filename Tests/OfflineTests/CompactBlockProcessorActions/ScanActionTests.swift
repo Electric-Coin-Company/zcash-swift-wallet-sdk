@@ -30,13 +30,10 @@ final class ScanActionTests: ZcashTestCase {
 
         do {
             let nextContext = try await scanAction.run(with: syncContext) { event in
-                guard case .progressPartialUpdate(.syncing(let progress)) = event else {
-                    XCTFail("event is expected to be .progressPartialUpdate(.syncing()) but received \(event)")
+                guard case .syncProgress = event else {
+                    XCTFail("event is expected to be .syncProgress() but received \(event)")
                     return
                 }
-                XCTAssertEqual(progress.startHeight, BlockHeight(1000))
-                XCTAssertEqual(progress.targetHeight, BlockHeight(2000))
-                XCTAssertEqual(progress.progressHeight, BlockHeight(1500))
             }
             XCTAssertTrue(loggerMock.debugFileFunctionLineCalled, "logger.debug(...) is expected to be called.")
             XCTAssertTrue(blockScannerMock.scanBlocksAtTotalProgressRangeDidScanCalled, "blockScanner.scanBlocks(...) is expected to be called.")

@@ -63,16 +63,9 @@ extension ScanAction: Action {
 
                 // report scan progress only if it's available
                 if let scanProgress = try? await self?.rustBackend.getScanProgress() {
-                    // TODO: [#1240] remove BlockProgress, https://github.com/zcash/ZcashLightClientKit/issues/1240
-                    let progress = BlockProgress(
-                        startHeight: totalProgressRange.lowerBound,
-                        targetHeight: totalProgressRange.upperBound,
-                        progressHeight: incrementedprocessedHeight,
-                        scanProgress: try scanProgress.progress()
-                    )
-                    
+                    let progress = try scanProgress.progress()
                     self?.logger.debug("progress: \(progress)")
-                    await didUpdate(.progressPartialUpdate(.syncing(progress)))
+                    await didUpdate(.syncProgress(progress))
                 }
                 
                 // ScanAction is controlled locally so it must report back the updated scanned height

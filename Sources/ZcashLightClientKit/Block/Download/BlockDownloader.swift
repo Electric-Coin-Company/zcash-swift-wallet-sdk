@@ -201,12 +201,7 @@ actor BlockDownloaderImpl {
 
         let pushMetrics: (BlockHeight, Date, Date) -> Void = { [metrics] lastDownloadedBlockHeight, startTime, finishTime in
             metrics.pushProgressReport(
-                progress: BlockProgress(
-                    startHeight: totalProgressRange.lowerBound,
-                    targetHeight: totalProgressRange.upperBound,
-                    progressHeight: Int(lastDownloadedBlockHeight),
-                    scanProgress: 0
-                ),
+                progress: 0,
                 start: startTime,
                 end: finishTime,
                 batchSize: maxBlockBufferSize,
